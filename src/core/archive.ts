@@ -130,49 +130,49 @@ export class ArchiveCommand {
           default: false
         });
         if (!proceed) {
-          console.log('Archive cancelled.');
+          console.log('アーカイブをキャンセルしました。');
           return;
         }
       } else {
-        console.log(chalk.yellow(`\n⚠️  WARNING: Skipping validation may archive invalid specs.`));
+        console.log(chalk.yellow(`\n⚠️  警告: 検証をスキップすると不正な仕様をアーカイブする可能性があります。`));
       }
       
-      console.log(chalk.yellow(`[${timestamp}] Validation skipped for change: ${changeName}`));
-      console.log(chalk.yellow(`Affected files: ${changeDir}`));
+      console.log(chalk.yellow(`[${timestamp}] 検証をスキップ: change=${changeName}`));
+      console.log(chalk.yellow(`対象ファイル: ${changeDir}`));
     }
 
     // Show progress and check for incomplete tasks
     const progress = await getTaskProgressForChange(changesDir, changeName);
     const status = formatTaskStatus(progress);
-    console.log(`Task status: ${status}`);
+    console.log(`タスクの進捗: ${status}`);
 
     const incompleteTasks = Math.max(progress.total - progress.completed, 0);
     if (incompleteTasks > 0) {
       if (!options.yes) {
         const proceed = await confirm({
-          message: `Warning: ${incompleteTasks} incomplete task(s) found. Continue?`,
+          message: `警告: 未完了タスクが ${incompleteTasks} 件あります。続行しますか？`,
           default: false
         });
         if (!proceed) {
-          console.log('Archive cancelled.');
+          console.log('アーカイブをキャンセルしました。');
           return;
         }
       } else {
-        console.log(`Warning: ${incompleteTasks} incomplete task(s) found. Continuing due to --yes flag.`);
+        console.log(`警告: 未完了タスクが ${incompleteTasks} 件ありますが --yes により続行します。`);
       }
     }
 
     // Handle spec updates unless skipSpecs flag is set
     if (options.skipSpecs) {
-      console.log('Skipping spec updates (--skip-specs flag provided).');
+      console.log('仕様更新をスキップします (--skip-specs 指定)。');
     } else {
       // Find specs to update
       const specUpdates = await this.findSpecUpdates(changeDir, mainSpecsDir);
       
       if (specUpdates.length > 0) {
-        console.log('\nSpecs to update:');
+        console.log('\n更新する仕様:');
         for (const update of specUpdates) {
-          const status = update.exists ? 'update' : 'create';
+          const status = update.exists ? '更新' : '新規作成';
           const capability = path.basename(path.dirname(update.target));
           console.log(`  ${capability}: ${status}`);
         }
@@ -180,11 +180,11 @@ export class ArchiveCommand {
         let shouldUpdateSpecs = true;
         if (!options.yes) {
           shouldUpdateSpecs = await confirm({
-            message: 'Proceed with spec updates?',
+            message: '仕様更新を実行しますか？',
             default: true
           });
           if (!shouldUpdateSpecs) {
-            console.log('Skipping spec updates. Proceeding with archive.');
+            console.log('仕様更新をスキップしてアーカイブを続行します。');
           }
         }
 

@@ -65,12 +65,12 @@ export class ValidateCommand {
 
   private async runInteractiveSelector(opts: { strict: boolean; json: boolean; concurrency?: string }): Promise<void> {
     const choice = await select({
-      message: 'What would you like to validate?',
+      message: '何を検証しますか？',
       choices: [
-        { name: 'All (changes + specs)', value: 'all' },
-        { name: 'All changes', value: 'changes' },
-        { name: 'All specs', value: 'specs' },
-        { name: 'Pick a specific change or spec', value: 'one' },
+        { name: 'すべて（変更 + 仕様）', value: 'all' },
+        { name: '変更をすべて', value: 'changes' },
+        { name: '仕様をすべて', value: 'specs' },
+        { name: '変更または仕様を選択', value: 'one' },
       ],
     });
 
@@ -84,21 +84,21 @@ export class ValidateCommand {
     items.push(...changes.map(id => ({ name: `change/${id}`, value: { type: 'change' as const, id } })));
     items.push(...specs.map(id => ({ name: `spec/${id}`, value: { type: 'spec' as const, id } })));
     if (items.length === 0) {
-      console.error('No items found to validate.');
+      console.error('検証できる項目が見つかりません。');
       process.exitCode = 1;
       return;
     }
-    const picked = await select<{ type: ItemType; id: string }>({ message: 'Pick an item', choices: items });
+    const picked = await select<{ type: ItemType; id: string }>({ message: '検証する項目を選択してください', choices: items });
     await this.validateByType(picked.type, picked.id, opts);
   }
 
   private printNonInteractiveHint(): void {
-    console.error('Nothing to validate. Try one of:');
+    console.error('検証対象がありません。次のいずれかを試してください:');
     console.error('  openspec validate --all');
     console.error('  openspec validate --changes');
     console.error('  openspec validate --specs');
     console.error('  openspec validate <item-name>');
-    console.error('Or run in an interactive terminal.');
+    console.error('または対話モードのターミナルで実行してください。');
   }
 
   private async validateDirectItem(itemName: string, opts: { typeOverride?: ItemType; strict: boolean; json: boolean }): Promise<void> {
@@ -109,16 +109,16 @@ export class ValidateCommand {
     const type = opts.typeOverride ?? (isChange ? 'change' : isSpec ? 'spec' : undefined);
 
     if (!type) {
-      console.error(`Unknown item '${itemName}'`);
+      console.error(`項目 '${itemName}' が見つかりません`);
       const suggestions = nearestMatches(itemName, [...changes, ...specs]);
-      if (suggestions.length) console.error(`Did you mean: ${suggestions.join(', ')}?`);
+      if (suggestions.length) console.error(`もしかして: ${suggestions.join(', ')} ?`);
       process.exitCode = 1;
       return;
     }
 
     if (!opts.typeOverride && isChange && isSpec) {
-      console.error(`Ambiguous item '${itemName}' matches both a change and a spec.`);
-      console.error('Pass --type change|spec, or use: openspec change validate / openspec spec validate');
+      console.error(`項目 '${itemName}' は変更と仕様の両方に該当し、あいまいです。`);
+      console.error('--type change|spec を指定するか、openspec change validate / openspec spec validate を使用してください。');
       process.exitCode = 1;
       return;
     }
@@ -153,9 +153,9 @@ export class ValidateCommand {
       return;
     }
     if (report.valid) {
-      console.log(`${type === 'change' ? 'Change' : 'Specification'} '${id}' is valid`);
+      console.log(`${type === 'change' ? '変更' : '仕様'} '${id}' は有効です`);
     } else {
-      console.error(`${type === 'change' ? 'Change' : 'Specification'} '${id}' has issues`);
+      console.error(`${type === 'change' ? '変更' : '仕様'} '${id}' に問題があります`);
       for (const issue of report.issues) {
         const label = issue.level === 'ERROR' ? 'ERROR' : issue.level;
         const prefix = issue.level === 'ERROR' ? '✗' : issue.level === 'WARNING' ? '⚠' : 'ℹ';
@@ -168,20 +168,20 @@ export class ValidateCommand {
   private printNextSteps(type: ItemType): void {
     const bullets: string[] = [];
     if (type === 'change') {
-      bullets.push('- Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements');
-      bullets.push('- Each requirement MUST include at least one #### Scenario: block');
-      bullets.push('- Debug parsed deltas: openspec change show <id> --json --deltas-only');
+      bullets.push('- 変更に specs/ 配下の差分があることを確認（## ADDED/MODIFIED/REMOVED/RENAMED Requirements 見出しを使用）');
+      bullets.push('- 各 Requirement には少なくとも1つの #### Scenario: ブロックが必要');
+      bullets.push('- パース結果の確認: openspec change show <id> --json --deltas-only');
     } else {
-      bullets.push('- Ensure spec includes ## Purpose and ## Requirements sections');
-      bullets.push('- Each requirement MUST include at least one #### Scenario: block');
-      bullets.push('- Re-run with --json to see structured report');
+      bullets.push('- 仕様に ## Purpose と ## Requirements セクションがあることを確認');
+      bullets.push('- 各 Requirement には少なくとも1つの #### Scenario: ブロックが必要');
+      bullets.push('- --json で再実行すると構造化レポートを確認できます');
     }
-    console.error('Next steps:');
+    console.error('次のステップ:');
     bullets.forEach(b => console.error(`  ${b}`));
   }
 
   private async runBulkValidation(scope: { changes: boolean; specs: boolean }, opts: { strict: boolean; json: boolean; concurrency?: string }): Promise<void> {
-    const spinner = !opts.json ? ora('Validating...').start() : undefined;
+    const spinner = !opts.json ? ora('検証中...').start() : undefined;
     const [changeIds, specIds] = await Promise.all([
       scope.changes ? getActiveChangeIds() : Promise.resolve<string[]>([]),
       scope.specs ? getSpecIds() : Promise.resolve<string[]>([]),
@@ -231,7 +231,7 @@ export class ValidateCommand {
               if (res.valid) passed++; else failed++;
             })
             .catch((error: any) => {
-              const message = error?.message || 'Unknown error';
+              const message = error?.message || '不明なエラー';
               const res: BulkItemResult = { id: getPlannedId(currentIndex, changeIds, specIds) ?? 'unknown', type: getPlannedType(currentIndex, changeIds, specIds) ?? 'change', valid: false, issues: [{ level: 'ERROR', path: 'file', message }], durationMs: 0 };
               results.push(res);
               failed++;
@@ -265,7 +265,7 @@ export class ValidateCommand {
         if (res.valid) console.log(`✓ ${res.type}/${res.id}`);
         else console.error(`✗ ${res.type}/${res.id}`);
       }
-      console.log(`Totals: ${summary.totals.passed} passed, ${summary.totals.failed} failed (${summary.totals.items} items)`);
+      console.log(`結果: 成功 ${summary.totals.passed} / 失敗 ${summary.totals.failed} （計 ${summary.totals.items} 件）`);
     }
 
     process.exitCode = failed > 0 ? 1 : 0;
@@ -301,5 +301,3 @@ function getPlannedType(index: number, changeIds: string[], specIds: string[]): 
   if (specIndex >= 0 && specIndex < specIds.length) return 'spec';
   return undefined;
 }
-
-

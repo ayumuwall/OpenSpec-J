@@ -20,11 +20,11 @@ const { version } = require('../../package.json');
 
 program
   .name('openspec')
-  .description('AI-native system for spec-driven development')
+  .description('仕様駆動開発のための AI ネイティブツール (AI-native system for spec-driven development)')
   .version(version);
 
 // Global options
-program.option('--no-color', 'Disable color output');
+program.option('--no-color', 'カラー出力を無効化');
 
 // Apply global flags before any command runs
 program.hook('preAction', (thisCommand) => {
@@ -35,11 +35,11 @@ program.hook('preAction', (thisCommand) => {
 });
 
 const availableToolIds = AI_TOOLS.filter((tool) => tool.available).map((tool) => tool.value);
-const toolsOptionDescription = `Configure AI tools non-interactively. Use "all", "none", or a comma-separated list of: ${availableToolIds.join(', ')}`;
+const toolsOptionDescription = `AI ツールを非対話で指定します。"all" "none" またはカンマ区切り (${availableToolIds.join(', ')}) を指定できます。`;
 
 program
   .command('init [path]')
-  .description('Initialize OpenSpec in your project')
+  .description('OpenSpec をプロジェクトに初期設定する')
   .option('--tools <tools>', toolsOptionDescription)
   .action(async (targetPath = '.', options?: { tools?: string }) => {
     try {
@@ -49,16 +49,16 @@ program
       try {
         const stats = await fs.stat(resolvedPath);
         if (!stats.isDirectory()) {
-          throw new Error(`Path "${targetPath}" is not a directory`);
+          throw new Error(`パス "${targetPath}" はディレクトリではありません`);
         }
       } catch (error: any) {
         if (error.code === 'ENOENT') {
           // Directory doesn't exist, but we can create it
-          console.log(`Directory "${targetPath}" doesn't exist, it will be created.`);
+          console.log(`ディレクトリ "${targetPath}" は存在しません。新規作成します。`);
         } else if (error.message && error.message.includes('not a directory')) {
           throw error;
         } else {
-          throw new Error(`Cannot access path "${targetPath}": ${error.message}`);
+          throw new Error(`パス "${targetPath}" にアクセスできません: ${error.message}`);
         }
       }
       
@@ -68,14 +68,14 @@ program
       await initCommand.execute(targetPath);
     } catch (error) {
       console.log(); // Empty line for spacing
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });
 
 program
   .command('update [path]')
-  .description('Update OpenSpec instruction files')
+  .description('OpenSpec の手順ファイルを更新する')
   .action(async (targetPath = '.') => {
     try {
       const resolvedPath = path.resolve(targetPath);
@@ -83,16 +83,16 @@ program
       await updateCommand.execute(resolvedPath);
     } catch (error) {
       console.log(); // Empty line for spacing
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });
 
 program
   .command('list')
-  .description('List items (changes by default). Use --specs to list specs.')
-  .option('--specs', 'List specs instead of changes')
-  .option('--changes', 'List changes explicitly (default)')
+  .description('アイテム一覧を表示（デフォルトは変更）。--specs で仕様を表示')
+  .option('--specs', '変更の代わりに仕様を一覧表示')
+  .option('--changes', '変更を明示的に一覧表示（デフォルト）')
   .action(async (options?: { specs?: boolean; changes?: boolean }) => {
     try {
       const listCommand = new ListCommand();
@@ -100,21 +100,21 @@ program
       await listCommand.execute('.', mode);
     } catch (error) {
       console.log(); // Empty line for spacing
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });
 
 program
   .command('view')
-  .description('Display an interactive dashboard of specs and changes')
+  .description('仕様と変更のインタラクティブダッシュボードを表示')
   .action(async () => {
     try {
       const viewCommand = new ViewCommand();
       await viewCommand.execute('.');
     } catch (error) {
       console.log(); // Empty line for spacing
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });
@@ -122,52 +122,52 @@ program
 // Change command with subcommands
 const changeCmd = program
   .command('change')
-  .description('Manage OpenSpec change proposals');
+  .description('OpenSpec の変更提案を管理');
 
 // Deprecation notice for noun-based commands
 changeCmd.hook('preAction', () => {
-  console.error('Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands (e.g., "openspec list", "openspec validate --changes").');
+  console.error('警告: "openspec change ..." は非推奨です。"openspec list" や "openspec validate --changes" など動詞先行のコマンドを使ってください。');
 });
 
 changeCmd
   .command('show [change-name]')
-  .description('Show a change proposal in JSON or markdown format')
-  .option('--json', 'Output as JSON')
-  .option('--deltas-only', 'Show only deltas (JSON only)')
-  .option('--requirements-only', 'Alias for --deltas-only (deprecated)')
-  .option('--no-interactive', 'Disable interactive prompts')
+  .description('変更提案を JSON もしくは Markdown で表示')
+  .option('--json', 'JSON で出力')
+  .option('--deltas-only', '差分のみを表示（JSON専用）')
+  .option('--requirements-only', 'deltas-only の非推奨エイリアス')
+  .option('--no-interactive', '対話プロンプトを無効化')
   .action(async (changeName?: string, options?: { json?: boolean; requirementsOnly?: boolean; deltasOnly?: boolean; noInteractive?: boolean }) => {
     try {
       const changeCommand = new ChangeCommand();
       await changeCommand.show(changeName, options);
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`エラー: ${(error as Error).message}`);
       process.exitCode = 1;
     }
   });
 
 changeCmd
   .command('list')
-  .description('List all active changes (DEPRECATED: use "openspec list" instead)')
-  .option('--json', 'Output as JSON')
-  .option('--long', 'Show id and title with counts')
+  .description('アクティブな変更を一覧（非推奨: 代わりに "openspec list" を使用)')
+  .option('--json', 'JSON で出力')
+  .option('--long', 'ID とタイトルを件数付きで表示')
   .action(async (options?: { json?: boolean; long?: boolean }) => {
     try {
-      console.error('Warning: "openspec change list" is deprecated. Use "openspec list".');
+      console.error('警告: "openspec change list" は非推奨です。"openspec list" を使ってください。');
       const changeCommand = new ChangeCommand();
       await changeCommand.list(options);
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`エラー: ${(error as Error).message}`);
       process.exitCode = 1;
     }
   });
 
 changeCmd
   .command('validate [change-name]')
-  .description('Validate a change proposal')
-  .option('--strict', 'Enable strict validation mode')
-  .option('--json', 'Output validation report as JSON')
-  .option('--no-interactive', 'Disable interactive prompts')
+  .description('変更提案を検証')
+  .option('--strict', '厳密検証モードを有効化')
+  .option('--json', '検証レポートを JSON 出力')
+  .option('--no-interactive', '対話プロンプトを無効化')
   .action(async (changeName?: string, options?: { strict?: boolean; json?: boolean; noInteractive?: boolean }) => {
     try {
       const changeCommand = new ChangeCommand();
@@ -176,24 +176,24 @@ changeCmd
         process.exit(process.exitCode);
       }
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`エラー: ${(error as Error).message}`);
       process.exitCode = 1;
     }
   });
 
 program
   .command('archive [change-name]')
-  .description('Archive a completed change and update main specs')
-  .option('-y, --yes', 'Skip confirmation prompts')
-  .option('--skip-specs', 'Skip spec update operations (useful for infrastructure, tooling, or doc-only changes)')
-  .option('--no-validate', 'Skip validation (not recommended, requires confirmation)')
+  .description('完了した変更をアーカイブし、仕様を更新')
+  .option('-y, --yes', '確認プロンプトをスキップ')
+  .option('--skip-specs', '仕様更新をスキップ（インフラ・ツール・ドキュメントのみ向け）')
+  .option('--no-validate', '検証をスキップ（非推奨、要確認）')
   .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean }) => {
     try {
       const archiveCommand = new ArchiveCommand();
       await archiveCommand.execute(changeName, options);
     } catch (error) {
       console.log(); // Empty line for spacing
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });
@@ -203,22 +203,22 @@ registerSpecCommand(program);
 // Top-level validate command
 program
   .command('validate [item-name]')
-  .description('Validate changes and specs')
-  .option('--all', 'Validate all changes and specs')
-  .option('--changes', 'Validate all changes')
-  .option('--specs', 'Validate all specs')
-  .option('--type <type>', 'Specify item type when ambiguous: change|spec')
-  .option('--strict', 'Enable strict validation mode')
-  .option('--json', 'Output validation results as JSON')
-  .option('--concurrency <n>', 'Max concurrent validations (defaults to env OPENSPEC_CONCURRENCY or 6)')
-  .option('--no-interactive', 'Disable interactive prompts')
+  .description('変更・仕様を検証')
+  .option('--all', '変更と仕様をまとめて検証')
+  .option('--changes', '変更のみ検証')
+  .option('--specs', '仕様のみ検証')
+  .option('--type <type>', 'あいまいなときに種別を指定: change|spec')
+  .option('--strict', '厳密検証モードを有効化')
+  .option('--json', '結果を JSON で出力')
+  .option('--concurrency <n>', '同時検証の上限（環境変数 OPENSPEC_CONCURRENCY または 6 がデフォルト）')
+  .option('--no-interactive', '対話プロンプトを無効化')
   .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string }) => {
     try {
       const validateCommand = new ValidateCommand();
       await validateCommand.execute(itemName, options);
     } catch (error) {
       console.log();
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });
@@ -226,17 +226,17 @@ program
 // Top-level show command
 program
   .command('show [item-name]')
-  .description('Show a change or spec')
-  .option('--json', 'Output as JSON')
-  .option('--type <type>', 'Specify item type when ambiguous: change|spec')
-  .option('--no-interactive', 'Disable interactive prompts')
+  .description('変更または仕様を表示')
+  .option('--json', 'JSON で出力')
+  .option('--type <type>', 'あいまいなときに種別を指定: change|spec')
+  .option('--no-interactive', '対話プロンプトを無効化')
   // change-only flags
-  .option('--deltas-only', 'Show only deltas (JSON only, change)')
-  .option('--requirements-only', 'Alias for --deltas-only (deprecated, change)')
+  .option('--deltas-only', '差分のみを表示（JSON専用、変更）')
+  .option('--requirements-only', 'deltas-only の非推奨エイリアス（変更）')
   // spec-only flags
-  .option('--requirements', 'JSON only: Show only requirements (exclude scenarios)')
-  .option('--no-scenarios', 'JSON only: Exclude scenario content')
-  .option('-r, --requirement <id>', 'JSON only: Show specific requirement by ID (1-based)')
+  .option('--requirements', 'JSON専用: 要件のみ表示（シナリオ除外）')
+  .option('--no-scenarios', 'JSON専用: シナリオを除外')
+  .option('-r, --requirement <id>', 'JSON専用: 指定 ID(1始まり) の要件のみ表示')
   // allow unknown options to pass-through to underlying command implementation
   .allowUnknownOption(true)
   .action(async (itemName?: string, options?: { json?: boolean; type?: string; noInteractive?: boolean; [k: string]: any }) => {
@@ -245,7 +245,7 @@ program
       await showCommand.execute(itemName, options ?? {});
     } catch (error) {
       console.log();
-      ora().fail(`Error: ${(error as Error).message}`);
+      ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
     }
   });

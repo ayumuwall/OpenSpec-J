@@ -46,7 +46,7 @@ export class UpdateCommand {
       try {
         if (fileExists && !await FileSystemUtils.canWriteFile(configFilePath)) {
           throw new Error(
-            `Insufficient permissions to modify ${configurator.configFileName}`
+            `${configurator.configFileName} を更新する権限がありません`
           );
         }
 
@@ -59,7 +59,7 @@ export class UpdateCommand {
       } catch (error) {
         failedFiles.push(configurator.configFileName);
         console.error(
-          `Failed to update ${configurator.configFileName}: ${
+          `${configurator.configFileName} の更新に失敗しました: ${
             error instanceof Error ? error.message : String(error)
           }`
         );
@@ -80,7 +80,7 @@ export class UpdateCommand {
       } catch (error) {
         failedSlashTools.push(slashConfigurator.toolId);
         console.error(
-          `Failed to update slash commands for ${slashConfigurator.toolId}: ${
+          `${slashConfigurator.toolId} 用のスラッシュコマンド更新に失敗しました: ${
             error instanceof Error ? error.message : String(error)
           }`
         );
@@ -97,18 +97,18 @@ export class UpdateCommand {
     }
 
     summaryParts.push(
-      `Updated OpenSpec instructions (${instructionFiles.join(', ')})`
+      `OpenSpec 手順を更新しました (${instructionFiles.join(', ')})`
     );
 
     const aiToolFiles = updatedFiles.filter((file) => file !== 'AGENTS.md');
     if (aiToolFiles.length > 0) {
-      summaryParts.push(`Updated AI tool files: ${aiToolFiles.join(', ')}`);
+      summaryParts.push(`AI ツール設定を更新: ${aiToolFiles.join(', ')}`);
     }
 
     if (updatedSlashFiles.length > 0) {
       // Normalize to forward slashes for cross-platform log consistency
       const normalized = updatedSlashFiles.map((p) => p.replace(/\\/g, '/'));
-      summaryParts.push(`Updated slash commands: ${normalized.join(', ')}`);
+      summaryParts.push(`スラッシュコマンドを更新: ${normalized.join(', ')}`);
     }
 
     const failedItems = [
@@ -119,7 +119,7 @@ export class UpdateCommand {
     ];
 
     if (failedItems.length > 0) {
-      summaryParts.push(`Failed to update: ${failedItems.join(', ')}`);
+      summaryParts.push(`更新に失敗: ${failedItems.join(', ')}`);
     }
 
     console.log(summaryParts.join(' | '));

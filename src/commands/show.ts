@@ -19,10 +19,10 @@ export class ShowCommand {
     if (!itemName) {
       if (interactive) {
         const type = await select<ItemType>({
-          message: 'What would you like to show?',
+          message: '何を表示しますか？',
           choices: [
-            { name: 'Change', value: 'change' as const },
-            { name: 'Spec', value: 'spec' as const },
+            { name: '変更', value: 'change' as const },
+            { name: '仕様', value: 'spec' as const },
           ],
         });
         await this.runInteractiveByType(type, options);
@@ -47,11 +47,11 @@ export class ShowCommand {
     if (type === 'change') {
       const changes = await getActiveChangeIds();
       if (changes.length === 0) {
-        console.error('No changes found.');
+        console.error('変更が見つかりません。');
         process.exitCode = 1;
         return;
       }
-      const picked = await select<string>({ message: 'Pick a change', choices: changes.map(id => ({ name: id, value: id })) });
+      const picked = await select<string>({ message: '変更を選択してください', choices: changes.map(id => ({ name: id, value: id })) });
       const cmd = new ChangeCommand();
       await cmd.show(picked, options as any);
       return;
@@ -59,11 +59,11 @@ export class ShowCommand {
 
     const specs = await getSpecIds();
     if (specs.length === 0) {
-      console.error('No specs found.');
+      console.error('仕様が見つかりません。');
       process.exitCode = 1;
       return;
     }
-    const picked = await select<string>({ message: 'Pick a spec', choices: specs.map(id => ({ name: id, value: id })) });
+    const picked = await select<string>({ message: '仕様を選択してください', choices: specs.map(id => ({ name: id, value: id })) });
     const cmd = new SpecCommand();
     await cmd.show(picked, options as any);
   }
@@ -89,16 +89,16 @@ export class ShowCommand {
     const resolvedType = params.typeOverride ?? (isChange ? 'change' : isSpec ? 'spec' : undefined);
 
     if (!resolvedType) {
-      console.error(`Unknown item '${itemName}'`);
+      console.error(`項目 '${itemName}' が見つかりません`);
       const suggestions = nearestMatches(itemName, [...changes, ...specs]);
-      if (suggestions.length) console.error(`Did you mean: ${suggestions.join(', ')}?`);
+      if (suggestions.length) console.error(`もしかして: ${suggestions.join(', ')} ?`);
       process.exitCode = 1;
       return;
     }
 
     if (!params.typeOverride && isChange && isSpec) {
-      console.error(`Ambiguous item '${itemName}' matches both a change and a spec.`);
-      console.error('Pass --type change|spec, or use: openspec change show / openspec spec show');
+      console.error(`項目 '${itemName}' は変更と仕様の両方に該当し、あいまいです。`);
+      console.error('--type change|spec を指定するか、openspec change show / openspec spec show を使用してください。');
       process.exitCode = 1;
       return;
     }
@@ -114,11 +114,11 @@ export class ShowCommand {
   }
 
   private printNonInteractiveHint(): void {
-    console.error('Nothing to show. Try one of:');
+    console.error('表示するものがありません。次のいずれかを試してください:');
     console.error('  openspec show <item>');
     console.error('  openspec change show');
     console.error('  openspec spec show');
-    console.error('Or run in an interactive terminal.');
+    console.error('または対話モードのターミナルで実行してください。');
   }
 
   private warnIrrelevantFlags(type: ItemType, options: { [k: string]: any }): boolean {
@@ -129,11 +129,10 @@ export class ShowCommand {
       for (const k of CHANGE_FLAG_KEYS) if (k in options) irrelevant.push(k);
     }
     if (irrelevant.length > 0) {
-      console.error(`Warning: Ignoring flags not applicable to ${type}: ${irrelevant.join(', ')}`);
+      console.error(`警告: ${type} には無効なフラグを無視します: ${irrelevant.join(', ')}`);
       return true;
     }
     return false;
   }
 }
-
 

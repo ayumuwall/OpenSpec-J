@@ -34,17 +34,17 @@ export class ChangeCommand {
       const changes = await this.getActiveChanges(changesPath);
       if (canPrompt && changes.length > 0) {
         const selected = await select({
-          message: 'Select a change to show',
+          message: '表示する変更を選んでください',
           choices: changes.map(id => ({ name: id, value: id })),
         });
         changeName = selected;
       } else {
         if (changes.length === 0) {
-          console.error('No change specified. No active changes found.');
+          console.error('変更が指定されていません。アクティブな変更も見つかりません。');
         } else {
-          console.error(`No change specified. Available IDs: ${changes.join(', ')}`);
+          console.error(`変更が指定されていません。利用可能な ID: ${changes.join(', ')}`);
         }
-        console.error('Hint: use "openspec change list" to view available changes.');
+        console.error('ヒント: 利用可能な変更は "openspec change list" で確認できます。');
         process.exitCode = 1;
         return;
       }
@@ -62,7 +62,7 @@ export class ChangeCommand {
       const jsonOutput = await this.converter.convertChangeToJson(proposalPath);
 
       if (options.requirementsOnly) {
-        console.error('Flag --requirements-only is deprecated; use --deltas-only instead.');
+        console.error('注意: --requirements-only は非推奨です。代わりに --deltas-only を使用してください。');
       }
 
       const parsed: Change = JSON.parse(jsonOutput);
@@ -131,7 +131,7 @@ export class ChangeCommand {
           } catch (error) {
             return {
               id: changeName,
-              title: 'Unknown',
+              title: '不明',
               deltaCount: 0,
               taskStatus: { total: 0, completed: 0 },
             };
@@ -143,7 +143,7 @@ export class ChangeCommand {
       console.log(JSON.stringify(sorted, null, 2));
     } else {
       if (changes.length === 0) {
-        console.log('No items found');
+        console.log('項目が見つかりません');
         return;
       }
       const sorted = [...changes].sort();
@@ -167,7 +167,7 @@ export class ChangeCommand {
             taskStatusText = ` [tasks ${completed}/${total}]`;
           } catch (error) {
             if (process.env.DEBUG) {
-              console.error(`Failed to read tasks file at ${tasksPath}:`, error);
+            console.error(`タスクファイルの読み込みに失敗しました: ${tasksPath}`, error);
             }
           }
           const changeDir = path.join(changesPath, changeName);
@@ -176,7 +176,7 @@ export class ChangeCommand {
           const deltaCountText = ` [deltas ${change.deltas.length}]`;
           console.log(`${changeName}: ${title}${deltaCountText}${taskStatusText}`);
         } catch {
-          console.log(`${changeName}: (unable to read)`);
+          console.log(`${changeName}: (読み取れませんでした)`);
         }
       }
     }
@@ -190,17 +190,17 @@ export class ChangeCommand {
       const changes = await getActiveChangeIds();
       if (canPrompt && changes.length > 0) {
         const selected = await select({
-          message: 'Select a change to validate',
+          message: '検証する変更を選んでください',
           choices: changes.map(id => ({ name: id, value: id })),
         });
         changeName = selected;
       } else {
         if (changes.length === 0) {
-          console.error('No change specified. No active changes found.');
+          console.error('変更が指定されていません。アクティブな変更も見つかりません。');
         } else {
-          console.error(`No change specified. Available IDs: ${changes.join(', ')}`);
+          console.error(`変更が指定されていません。利用可能な ID: ${changes.join(', ')}`);
         }
-        console.error('Hint: use "openspec change list" to view available changes.');
+        console.error('ヒント: 利用可能な変更は "openspec change list" で確認できます。');
         process.exitCode = 1;
         return;
       }
@@ -211,7 +211,7 @@ export class ChangeCommand {
     try {
       await fs.access(changeDir);
     } catch {
-      throw new Error(`Change "${changeName}" not found at ${changeDir}`);
+      throw new Error(`変更 "${changeName}" が見つかりません (${changeDir})`);
     }
     
     const validator = new Validator(options?.strict || false);
@@ -221,9 +221,9 @@ export class ChangeCommand {
       console.log(JSON.stringify(report, null, 2));
     } else {
       if (report.valid) {
-        console.log(`Change "${changeName}" is valid`);
+        console.log(`変更 "${changeName}" は有効です`);
       } else {
-        console.error(`Change "${changeName}" has issues`);
+        console.error(`変更 "${changeName}" に問題があります`);
         report.issues.forEach(issue => {
           const label = issue.level === 'ERROR' ? 'ERROR' : 'WARNING';
           const prefix = issue.level === 'ERROR' ? '✗' : '⚠';
