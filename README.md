@@ -28,6 +28,8 @@
 
 # OpenSpec
 
+このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。
+
 OpenSpec は、仕様駆動開発で人と AI コーディングアシスタントをそろえ、コードを書く前に「何を作るか」を合意できるようにします。**API キーは不要です。**
 
 ## なぜ OpenSpec か
@@ -53,33 +55,35 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 
 ```
 ┌────────────────────┐
-│ Draft Change       │
-│ Proposal           │
+│ 変更提案ドラフト（下書き） │
+│ (Draft Change)     │
 └────────┬───────────┘
-         │ share intent with your AI
+         │ AI と意図を共有
          ▼
 ┌────────────────────┐
-│ Review & Align     │
-│ (edit specs/tasks) │◀──── feedback loop ──────┐
+│ レビューと合意       │
+│ (仕様・タスク編集)   │◀──── フィードバックループ ─┐
 └────────┬───────────┘                          │
-         │ approved plan                        │
+         │ 承認済み計画                          │
          ▼                                      │
 ┌────────────────────┐                          │
-│ Implement Tasks    │──────────────────────────┘
-│ (AI writes code)   │
+│ タスク実装          │──────────────────────────┘
+│ (AI がコードを書く) │
 └────────┬───────────┘
-         │ ship the change
+         │ 変更をリリース
          ▼
 ┌────────────────────┐
-│ Archive & Update   │
-│ Specs (source)     │
+│ アーカイブと仕様更新 │
+│ (ソースの仕様)       │
 └────────────────────┘
 
-1. Draft a change proposal that captures the spec updates you want.
-2. Review the proposal with your AI assistant until everyone agrees.
-3. Implement tasks that reference the agreed specs.
-4. Archive the change to merge the approved updates back into the source-of-truth specs.
+1. 望む仕様更新を記述した変更提案をドラフト（下書き）する。
+2. AI アシスタントとレビューし、合意が取れるまで調整する。
+3. 合意済み仕様を参照しながらタスクを実装する。
+4. 変更をアーカイブし、承認済みの更新をソース・オブ・トゥルースの仕様に統合する。
 ```
+
+※ ソース・オブ・トゥルース（source of truth）は、その時点で「正」とみなされる唯一の仕様群を指します。OpenSpec では `openspec/specs/` 配下の仕様ファイルが該当し、承認済みの変更だけがここに反映されます。
 
 ## はじめ方
 
