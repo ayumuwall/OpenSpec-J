@@ -88,9 +88,9 @@ describe('ArchiveCommand', () => {
       // Execute archive with --yes flag
       await archiveCommand.execute(changeName, { yes: true });
       
-      // Verify warning was logged
+      // Verify warning was logged (Japanese message)
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Warning: 2 incomplete task(s) found')
+        expect.stringContaining('未完了タスクが 2 件あります')
       );
     });
 
@@ -200,9 +200,9 @@ Then expected result happens`;
       // Execute archive with --skip-specs flag and noValidate to skip validation
       await archiveCommand.execute(changeName, { yes: true, skipSpecs: true, noValidate: true });
       
-      // Verify skip message was logged
+      // Verify skip message was logged (Japanese message)
       expect(console.log).toHaveBeenCalledWith(
-        'Skipping spec updates (--skip-specs flag provided).'
+        '仕様更新をスキップします (--skip-specs 指定)。'
       );
       
       // Verify spec was NOT copied to main specs
@@ -289,13 +289,13 @@ Then expected result happens`;
       
       // Verify user was prompted about specs
       expect(mockConfirm).toHaveBeenCalledWith({
-        message: 'Proceed with spec updates?',
+        message: '仕様更新を実行しますか？',
         default: true
       });
       
       // Verify skip message was logged
       expect(console.log).toHaveBeenCalledWith(
-        'Skipping spec updates. Proceeding with archive.'
+        '仕様更新をスキップしてアーカイブを続行します。'
       );
       
       // Verify spec was NOT copied to main specs
@@ -645,7 +645,7 @@ E1 updated`);
       
       // Verify confirm was called
       expect(mockConfirm).toHaveBeenCalledWith({
-        message: 'Warning: 1 incomplete task(s) found. Continue?',
+        message: '警告: 未完了タスクが 1 件あります。続行しますか？',
         default: false
       });
     });
@@ -671,7 +671,7 @@ E1 updated`);
       await archiveCommand.execute(changeName, { noValidate: true });
       
       // Verify archive was cancelled
-      expect(console.log).toHaveBeenCalledWith('Archive cancelled.');
+      expect(console.log).toHaveBeenCalledWith('アーカイブをキャンセルしました。');
       
       // Verify change was not archived
       await expect(fs.access(changeDir)).resolves.not.toThrow();

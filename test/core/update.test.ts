@@ -66,10 +66,10 @@ More content after.`;
     // Check console output
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Updated AI tool files: CLAUDE.md');
+    expect(logMessage).toContain('AI ツール設定を更新: CLAUDE.md');
     consoleSpy.mockRestore();
   });
 
@@ -100,10 +100,10 @@ More notes here.`;
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Updated AI tool files: QWEN.md');
+    expect(logMessage).toContain('AI ツール設定を更新: QWEN.md');
 
     consoleSpy.mockRestore();
   });
@@ -139,11 +139,11 @@ Old slash content
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .claude/commands/openspec/proposal.md'
+      'スラッシュコマンドを更新: .claude/commands/openspec/proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -178,11 +178,11 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .qwen/commands/openspec-apply.toml'
+      'スラッシュコマンドを更新: .qwen/commands/openspec-apply.toml'
     );
 
     consoleSpy.mockRestore();
@@ -275,10 +275,10 @@ More rules after.`;
     // Check console output
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Updated AI tool files: CLINE.md');
+    expect(logMessage).toContain('AI ツール設定を更新: CLINE.md');
     consoleSpy.mockRestore();
   });
 
@@ -323,11 +323,11 @@ Old slash content
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .clinerules/workflows/openspec-proposal.md'
+      'スラッシュコマンドを更新: .clinerules/workflows/openspec-proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -358,11 +358,11 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .cursor/commands/openspec-apply.md'
+      'スラッシュコマンドを更新: .cursor/commands/openspec-apply.md'
     );
 
     consoleSpy.mockRestore();
@@ -396,11 +396,11 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .opencode/command/openspec-apply.md'
+      'スラッシュコマンドを更新: .opencode/command/openspec-apply.md'
     );
 
     consoleSpy.mockRestore();
@@ -428,7 +428,7 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .kilocode/workflows/openspec-apply.md'
+      'スラッシュコマンドを更新: .kilocode/workflows/openspec-apply.md'
     );
 
     consoleSpy.mockRestore();
@@ -458,7 +458,7 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .windsurf/workflows/openspec-apply.md'
+      'スラッシュコマンドを更新: .windsurf/workflows/openspec-apply.md'
     );
     consoleSpy.mockRestore();
   });
@@ -490,7 +490,7 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .agent/workflows/openspec-apply.md'
+      'スラッシュコマンドを更新: .agent/workflows/openspec-apply.md'
     );
     consoleSpy.mockRestore();
   });
@@ -518,7 +518,7 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .codex/prompts/openspec-apply.md'
+      'スラッシュコマンドを更新: .codex/prompts/openspec-apply.md'
     );
 
     consoleSpy.mockRestore();
@@ -581,7 +581,7 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .github/prompts/openspec-apply.prompt.md'
+      'スラッシュコマンドを更新: .github/prompts/openspec-apply.prompt.md'
     );
 
     consoleSpy.mockRestore();
@@ -658,7 +658,7 @@ Old Gemini body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .gemini/commands/openspec/proposal.toml'
+      'スラッシュコマンドを更新: .gemini/commands/openspec/proposal.toml'
     );
 
     consoleSpy.mockRestore();
@@ -705,7 +705,7 @@ Old IFlow body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated slash commands: .iflow/commands/openspec-proposal.md'
+      'スラッシュコマンドを更新: .iflow/commands/openspec-proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -939,11 +939,11 @@ Old slash content
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .codebuddy/commands/openspec/proposal.md'
+      'スラッシュコマンドを更新: .codebuddy/commands/openspec/proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -1017,11 +1017,11 @@ Old slash content
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .crush/commands/openspec/proposal.md'
+      'スラッシュコマンドを更新: .crush/commands/openspec/proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -1095,11 +1095,11 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .cospec/openspec/commands/openspec-proposal.md'
+      'スラッシュコマンドを更新: .cospec/openspec/commands/openspec-proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -1136,11 +1136,11 @@ Old slash content
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .qoder/commands/openspec/proposal.md'
+      'スラッシュコマンドを更新: .qoder/commands/openspec/proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -1176,11 +1176,11 @@ Old body
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     expect(logMessage).toContain(
-      'Updated slash commands: .roo/commands/openspec-proposal.md'
+      'スラッシュコマンドを更新: .roo/commands/openspec-proposal.md'
     );
 
     consoleSpy.mockRestore();
@@ -1322,10 +1322,10 @@ More instructions after.`;
     // Check console output
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Updated AI tool files: COSTRICT.md');
+    expect(logMessage).toContain('AI ツール設定を更新: COSTRICT.md');
     consoleSpy.mockRestore();
   });
 
@@ -1388,10 +1388,10 @@ More instructions after.`;
     expect(errorSpy).toHaveBeenCalled();
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Failed to update: COSTRICT.md');
+    expect(logMessage).toContain('更新に失敗: COSTRICT.md');
 
     consoleSpy.mockRestore();
     errorSpy.mockRestore();
@@ -1452,7 +1452,7 @@ More instructions after.`;
     // Should only update OpenSpec instructions
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
     consoleSpy.mockRestore();
@@ -1476,10 +1476,10 @@ More instructions after.`;
     // Should report updating with new format
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Updated AI tool files: CLAUDE.md');
+    expect(logMessage).toContain('AI ツール設定を更新: CLAUDE.md');
     consoleSpy.mockRestore();
   });
 
@@ -1579,7 +1579,7 @@ Old content
 
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md, AGENTS.md)'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md, AGENTS.md)'
     );
     expect(logMessage).not.toContain('AGENTS.md (created)');
 
@@ -1628,10 +1628,10 @@ Old content
     expect(errorSpy).toHaveBeenCalled();
     const [logMessage] = consoleSpy.mock.calls[0];
     expect(logMessage).toContain(
-      'Updated OpenSpec instructions (openspec/AGENTS.md'
+      'OpenSpec 手順を更新しました (openspec/AGENTS.md'
     );
     expect(logMessage).toContain('AGENTS.md (created)');
-    expect(logMessage).toContain('Failed to update: CLAUDE.md');
+    expect(logMessage).toContain('更新に失敗: CLAUDE.md');
 
     // Restore permissions for cleanup
     await fs.chmod(claudePath, 0o644);
