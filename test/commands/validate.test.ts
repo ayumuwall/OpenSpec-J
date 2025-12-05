@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { runCLI } from '../helpers/run-cli.js';
 
+const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
+
 describe('top-level validate command', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-validate-command-tmp');
@@ -66,7 +68,10 @@ describe('top-level validate command', () => {
   it('prints a helpful hint when no args in non-interactive mode', async () => {
     const result = await runCLI(['validate'], { cwd: testDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Nothing to validate. Try one of:');
+    const stderr = stripAnsi(result.stderr);
+    expect(stderr).toContain('検証対象がありません。次のいずれかを試してください:');
+    expect(stderr).toContain('openspec validate --all');
+    expect(stderr).toContain('openspec validate --changes');
   });
 
   it('validates all with --all and outputs JSON summary', async () => {
@@ -92,7 +97,9 @@ describe('top-level validate command', () => {
   it('errors on ambiguous item names and suggests type override', async () => {
     const result = await runCLI(['validate', 'dup'], { cwd: testDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Ambiguous item');
+    const stderr = stripAnsi(result.stderr);
+    expect(stderr).toContain("項目 'dup' は変更と仕様の両方に該当し、あいまいです。");
+    expect(stderr).toContain('--type change|spec を指定するか、openspec change validate / openspec spec validate を使用してください。');
   });
 
   it('accepts change proposals saved with CRLF line endings', async () => {

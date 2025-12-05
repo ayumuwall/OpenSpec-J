@@ -5,6 +5,8 @@ import { tmpdir } from 'os';
 import { runCLI, cliProjectRoot } from '../helpers/run-cli.js';
 import { AI_TOOLS } from '../../src/core/config.js';
 
+const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
+
 async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -46,10 +48,9 @@ describe('openspec CLI e2e basics', () => {
     const expectedTools = AI_TOOLS.filter((tool) => tool.available)
       .map((tool) => tool.value)
       .join(', ');
-    const normalizedOutput = result.stdout.replace(/\s+/g, ' ').trim();
-    expect(normalizedOutput).toContain(
-      `Use "all", "none", or a comma-separated list of: ${expectedTools}`
-    );
+    const normalizedOutput = stripAnsi(result.stdout).replace(/\s+/g, ' ').trim();
+    expect(normalizedOutput).toContain('AI ツールを非対話で指定します。');
+    expect(normalizedOutput).toContain(`"all" "none" またはカンマ区切り (${expectedTools}) を指定できます。`);
   });
 
   it('reports the package version', async () => {
@@ -75,7 +76,7 @@ describe('openspec CLI e2e basics', () => {
     const projectDir = await prepareFixture('tmp-init');
     const result = await runCLI(['validate', 'does-not-exist'], { cwd: projectDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain("Unknown item 'does-not-exist'");
+    expect(stripAnsi(result.stderr)).toContain("項目 'does-not-exist' が見つかりません");
   });
 
   describe('init command non-interactive options', () => {
@@ -90,7 +91,7 @@ describe('openspec CLI e2e basics', () => {
         env: { CODEX_HOME: codexHome },
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Tool summary:');
+      expect(stripAnsi(result.stdout)).toContain('設定サマリー:');
 
       // Check that tool configurations were created
       const claudePath = path.join(emptyProjectDir, 'CLAUDE.md');
@@ -106,7 +107,7 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'claude'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Tool summary:');
+      expect(stripAnsi(result.stdout)).toContain('設定サマリー:');
 
       const claudePath = path.join(emptyProjectDir, 'CLAUDE.md');
       const cursorProposal = path.join(emptyProjectDir, '.cursor/commands/openspec-proposal.md');
@@ -121,7 +122,7 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'none'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Tool summary:');
+      expect(stripAnsi(result.stdout)).toContain('設定サマリー:');
 
       const claudePath = path.join(emptyProjectDir, 'CLAUDE.md');
       const cursorProposal = path.join(emptyProjectDir, '.cursor/commands/openspec-proposal.md');
@@ -139,8 +140,9 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'invalid-tool'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain('Invalid tool(s): invalid-tool');
-      expect(result.stderr).toContain('Available values:');
+      const stderr = stripAnsi(result.stderr);
+      expect(stderr).toContain('無効なツールです: invalid-tool');
+      expect(stderr).toContain('利用可能な値:');
     });
 
     it('returns error when combining reserved keywords with explicit ids', async () => {
@@ -150,7 +152,7 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'all,claude'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain('Cannot combine reserved values "all" or "none" with specific tool IDs');
-    });
+      expect(stripAnsi(result.stderr)).toContain('予約値 "all" / "none" と個別のツール ID を同時に指定することはできません。');
+  });
   });
 });

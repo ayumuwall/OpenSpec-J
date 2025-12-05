@@ -29,7 +29,7 @@ describe('Validation Schemas', () => {
       const result = ScenarioSchema.safeParse(scenario);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Scenario text cannot be empty');
+        expect(result.error.issues[0].message).toBe('シナリオの本文を空にはできません');
       }
     });
   });
@@ -62,7 +62,7 @@ describe('Validation Schemas', () => {
       const result = RequirementSchema.safeParse(requirement);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Requirement must contain SHALL or MUST keyword');
+        expect(result.error.issues[0].message).toBe('要件には SHALL または MUST を含める必要があります');
       }
     });
 
@@ -75,7 +75,7 @@ describe('Validation Schemas', () => {
       const result = RequirementSchema.safeParse(requirement);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Requirement must have at least one scenario');
+        expect(result.error.issues[0].message).toBe('要件には少なくとも 1 つのシナリオが必要です');
       }
     });
   });
@@ -111,7 +111,7 @@ describe('Validation Schemas', () => {
       const result = SpecSchema.safeParse(spec);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Spec must have at least one requirement');
+        expect(result.error.issues[0].message).toBe('仕様には少なくとも 1 つの要件が必要です');
       }
     });
   });
@@ -152,7 +152,7 @@ describe('Validation Schemas', () => {
       const result = ChangeSchema.safeParse(change);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Why section must be at least 50 characters');
+        expect(result.error.issues[0].message).toBe('Why セクションは少なくとも 50 文字必要です');
       }
     });
 
@@ -173,7 +173,7 @@ describe('Validation Schemas', () => {
       const result = ChangeSchema.safeParse(change);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Consider splitting changes with more than 10 deltas');
+        expect(result.error.issues[0].message).toBe('デルタが 10 個を超える場合は分割を検討してください');
       }
     });
   });
@@ -427,7 +427,7 @@ The system will log all events.
 
       expect(report.valid).toBe(false);
       expect(report.summary.errors).toBeGreaterThan(0);
-      expect(report.issues.some(i => i.message.includes('must contain SHALL or MUST'))).toBe(true);
+      expect(report.issues.some(i => i.message.includes('SHALL または MUST'))).toBe(true);
     });
 
     it('should handle requirements without metadata fields', async () => {

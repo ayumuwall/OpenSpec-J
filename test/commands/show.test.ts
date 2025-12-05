@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
+const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
+
 describe('top-level show command', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-show-command-tmp');
@@ -40,11 +42,12 @@ describe('top-level show command', () => {
       } catch (e) { err = e; }
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
-      const stderr = err.stderr.toString();
-      expect(stderr).toContain('Nothing to show.');
+      const stderr = stripAnsi(err.stderr.toString());
+      expect(stderr).toContain('表示するものがありません。次のいずれかを試してください:');
       expect(stderr).toContain('openspec show <item>');
       expect(stderr).toContain('openspec change show');
       expect(stderr).toContain('openspec spec show');
+      expect(stderr).toContain('または対話モードのターミナルで実行してください。');
     } finally {
       process.chdir(originalCwd);
       process.env = originalEnv;
@@ -93,9 +96,9 @@ describe('top-level show command', () => {
       } catch (e) { err = e; }
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
-      const stderr = err.stderr.toString();
-      expect(stderr).toContain('Ambiguous item');
-      expect(stderr).toContain('--type change|spec');
+      const stderr = stripAnsi(err.stderr.toString());
+      expect(stderr).toContain("項目 'foo' は変更と仕様の両方に該当し、あいまいです。");
+      expect(stderr).toContain('--type change|spec を指定するか、openspec change show / openspec spec show を使用してください。');
     } finally {
       process.chdir(originalCwd);
     }
@@ -111,13 +114,12 @@ describe('top-level show command', () => {
       } catch (e) { err = e; }
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
-      const stderr = err.stderr.toString();
-      expect(stderr).toContain("Unknown item 'unknown-item'");
-      expect(stderr).toContain('Did you mean:');
+      const stderr = stripAnsi(err.stderr.toString());
+      expect(stderr).toContain("項目 'unknown-item' が見つかりません");
+      expect(stderr).toContain('もしかして:');
     } finally {
       process.chdir(originalCwd);
     }
   });
 });
-
 

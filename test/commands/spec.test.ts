@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
+const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
+
 describe('spec command', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-spec-command-tmp');
@@ -202,7 +204,7 @@ The system SHALL process credit card payments securely`;
           encoding: 'utf-8'
         });
         
-        expect(output).toContain("Specification 'auth' is valid");
+        expect(stripAnsi(output)).toContain("仕様 'auth' は有効です");
       } finally {
         process.chdir(originalCwd);
       }
@@ -302,7 +304,7 @@ This section has no actual requirements`;
       try {
         process.chdir(testDir);
         const output = execSync(`node ${openspecBin} spec list`, { encoding: 'utf-8' });
-        expect(output.trim()).toBe('No items found');
+        expect(stripAnsi(output.trim())).toBe('項目が見つかりません');
       } finally {
         process.chdir(originalCwd);
       }

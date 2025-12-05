@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
+const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
+
 describe('spec validate (interactive behavior)', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-spec-validate-tmp');
@@ -33,12 +35,11 @@ describe('spec validate (interactive behavior)', () => {
       } catch (e) { err = e; }
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
-      expect(err.stderr.toString()).toContain('Missing required argument <spec-id>');
+      expect(stripAnsi(err.stderr.toString())).toContain('エラー: 必須引数 <spec-id> がありません');
     } finally {
       process.chdir(originalCwd);
       process.env = originalEnv;
     }
   });
 });
-
 

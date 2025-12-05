@@ -4,6 +4,8 @@ import path from 'path';
 import os from 'os';
 import { InitCommand } from '../../src/core/init.js';
 
+const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
+
 const DONE = '__done__';
 
 type SelectionQueue = string[][];
@@ -857,8 +859,8 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      const calls = logSpy.mock.calls.flat().join('\n');
-      expect(calls).toContain('Copy these prompts to Claude Code');
+      const calls = stripAnsi(logSpy.mock.calls.flat().join('\n'));
+      expect(calls).toMatch(/次のステップ - このプロンプトを Claude Code にコピーしてください:/);
     });
 
     it('should reference AGENTS compatible assistants in success message', async () => {
@@ -867,10 +869,8 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      const calls = logSpy.mock.calls.flat().join('\n');
-      expect(calls).toContain(
-        'Copy these prompts to your AGENTS.md-compatible assistant'
-      );
+      const calls = stripAnsi(logSpy.mock.calls.flat().join('\n'));
+      expect(calls).toMatch(/次のステップ - このプロンプトを AGENTS\.md 互換のアシスタント\s*にコピーしてください:/);
     });
   });
 
@@ -883,7 +883,7 @@ describe('InitCommand', () => {
       expect(mockPrompt).toHaveBeenCalledWith(
         expect.objectContaining({
           baseMessage: expect.stringContaining(
-            'Which natively supported AI tools do you use?'
+            'どのネイティブ対応 AI ツールを使っていますか？'
           ),
         })
       );
@@ -1528,7 +1528,7 @@ describe('InitCommand', () => {
       const nonInteractiveCommand = new InitCommand({ tools: 'invalid-tool' });
 
       await expect(nonInteractiveCommand.execute(testDir)).rejects.toThrow(
-        /Invalid tool\(s\): invalid-tool\. Available values: /
+        /無効なツールです: invalid-tool。利用可能な値: /
       );
     });
 
@@ -1551,7 +1551,7 @@ describe('InitCommand', () => {
       const nonInteractiveCommand = new InitCommand({ tools: 'all,claude' });
 
       await expect(nonInteractiveCommand.execute(testDir)).rejects.toThrow(
-        /Cannot combine reserved values "all" or "none" with specific tool IDs/
+        /予約値 "all" \/ "none" と個別のツール ID を同時に指定することはできません/
       );
     });
   });

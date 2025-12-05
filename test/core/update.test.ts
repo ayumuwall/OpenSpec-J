@@ -1595,7 +1595,7 @@ Old content
 
     // Execute update command and expect error
     await expect(updateCommand.execute(testDir)).rejects.toThrow(
-      "No OpenSpec directory found. Run 'openspec init' first."
+      "OpenSpec ディレクトリが見つかりません。先に 'openspec init' を実行してください。"
     );
   });
 

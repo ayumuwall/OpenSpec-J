@@ -121,7 +121,7 @@ Then expected result happens`;
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain('# test-capability Specification');
       expect(updatedContent).toContain('## Purpose');
-      expect(updatedContent).toContain(`created by archiving change ${changeName}`);
+      expect(updatedContent).toContain(`change ${changeName} をアーカイブして作成されました`);
       expect(updatedContent).toContain('## Requirements');
       expect(updatedContent).toContain('### Requirement: The system SHALL provide test capability');
       expect(updatedContent).toContain('#### Scenario: Basic test');
@@ -471,7 +471,7 @@ new body`;
       expect(unchanged).toBe(mainContent);
       // Assert error message format and abort notice
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('delta validation failed')
+        expect.stringContaining('delta の検証に失敗')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('Aborted. No files were changed.')
@@ -589,7 +589,7 @@ E1 updated`);
       
       await expect(
         archiveCommand.execute('any-change', { yes: true })
-      ).rejects.toThrow("No OpenSpec changes directory found. Run 'openspec init' first.");
+      ).rejects.toThrow("OpenSpec の変更ディレクトリが見つかりません。先に 'openspec init' を実行してください。");
     });
   });
 
