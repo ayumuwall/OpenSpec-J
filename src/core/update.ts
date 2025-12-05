@@ -13,7 +13,7 @@ export class UpdateCommand {
 
     // 1. Check openspec directory exists
     if (!await FileSystemUtils.directoryExists(openspecPath)) {
-      throw new Error(`No OpenSpec directory found. Run 'openspec init' first.`);
+      throw new Error(`OpenSpec ディレクトリが見つかりません。先に 'openspec init' を実行してください。`);
     }
 
     // 2. Update AGENTS.md (full replacement)
@@ -114,7 +114,7 @@ export class UpdateCommand {
     const failedItems = [
       ...failedFiles,
       ...failedSlashTools.map(
-        (toolId) => `slash command refresh (${toolId})`
+        (toolId) => `スラッシュコマンド更新 (${toolId})`
       ),
     ];
 

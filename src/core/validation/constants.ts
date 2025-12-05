@@ -14,35 +14,35 @@ export const MAX_DELTAS_PER_CHANGE = 10;
 // Validation messages
 export const VALIDATION_MESSAGES = {
   // Required content
-  SCENARIO_EMPTY: 'Scenario text cannot be empty',
-  REQUIREMENT_EMPTY: 'Requirement text cannot be empty',
-  REQUIREMENT_NO_SHALL: 'Requirement must contain SHALL or MUST keyword',
-  REQUIREMENT_NO_SCENARIOS: 'Requirement must have at least one scenario',
-  SPEC_NAME_EMPTY: 'Spec name cannot be empty',
-  SPEC_PURPOSE_EMPTY: 'Purpose section cannot be empty',
-  SPEC_NO_REQUIREMENTS: 'Spec must have at least one requirement',
-  CHANGE_NAME_EMPTY: 'Change name cannot be empty',
-  CHANGE_WHY_TOO_SHORT: `Why section must be at least ${MIN_WHY_SECTION_LENGTH} characters`,
-  CHANGE_WHY_TOO_LONG: `Why section should not exceed ${MAX_WHY_SECTION_LENGTH} characters`,
-  CHANGE_WHAT_EMPTY: 'What Changes section cannot be empty',
-  CHANGE_NO_DELTAS: 'Change must have at least one delta',
-  CHANGE_TOO_MANY_DELTAS: `Consider splitting changes with more than ${MAX_DELTAS_PER_CHANGE} deltas`,
-  DELTA_SPEC_EMPTY: 'Spec name cannot be empty',
-  DELTA_DESCRIPTION_EMPTY: 'Delta description cannot be empty',
+  SCENARIO_EMPTY: 'シナリオの本文を空にはできません',
+  REQUIREMENT_EMPTY: '要件文を空にはできません',
+  REQUIREMENT_NO_SHALL: '要件には SHALL または MUST を含める必要があります',
+  REQUIREMENT_NO_SCENARIOS: '要件には少なくとも 1 つのシナリオが必要です',
+  SPEC_NAME_EMPTY: '仕様名を空にはできません',
+  SPEC_PURPOSE_EMPTY: 'Purpose セクションは必須です',
+  SPEC_NO_REQUIREMENTS: '仕様には少なくとも 1 つの要件が必要です',
+  CHANGE_NAME_EMPTY: '変更名を空にはできません',
+  CHANGE_WHY_TOO_SHORT: `Why セクションは少なくとも ${MIN_WHY_SECTION_LENGTH} 文字必要です`,
+  CHANGE_WHY_TOO_LONG: `Why セクションは ${MAX_WHY_SECTION_LENGTH} 文字を超えないでください`,
+  CHANGE_WHAT_EMPTY: 'What Changes セクションは必須です',
+  CHANGE_NO_DELTAS: '変更には少なくとも 1 つのデルタが必要です',
+  CHANGE_TOO_MANY_DELTAS: `デルタが ${MAX_DELTAS_PER_CHANGE} 個を超える場合は分割を検討してください`,
+  DELTA_SPEC_EMPTY: '仕様名を空にはできません',
+  DELTA_DESCRIPTION_EMPTY: 'デルタの説明を空にはできません',
   
   // Warnings
-  PURPOSE_TOO_BRIEF: `Purpose section is too brief (less than ${MIN_PURPOSE_LENGTH} characters)`,
-  REQUIREMENT_TOO_LONG: `Requirement text is very long (>${MAX_REQUIREMENT_TEXT_LENGTH} characters). Consider breaking it down.`,
-  DELTA_DESCRIPTION_TOO_BRIEF: 'Delta description is too brief',
-  DELTA_MISSING_REQUIREMENTS: 'Delta should include requirements',
+  PURPOSE_TOO_BRIEF: `Purpose セクションが短すぎます（${MIN_PURPOSE_LENGTH} 文字未満）`,
+  REQUIREMENT_TOO_LONG: `要件文が長すぎます（>${MAX_REQUIREMENT_TEXT_LENGTH} 文字）。分割を検討してください。`,
+  DELTA_DESCRIPTION_TOO_BRIEF: 'デルタの説明が短すぎます',
+  DELTA_MISSING_REQUIREMENTS: 'デルタには要件を含めてください',
   
   // Guidance snippets (appended to primary messages for remediation)
   GUIDE_NO_DELTAS:
-    'No deltas found. Ensure your change has a specs/ directory with capability folders (e.g. specs/http-server/spec.md) containing .md files that use delta headers (## ADDED/MODIFIED/REMOVED/RENAMED Requirements) and that each requirement includes at least one "#### Scenario:" block. Tip: run "openspec change show <change-id> --json --deltas-only" to inspect parsed deltas.',
+    'デルタが見つかりません。変更には specs/ ディレクトリ（例: specs/http-server/spec.md）とデルタヘッダー（## ADDED/MODIFIED/REMOVED/RENAMED Requirements）を使う .md ファイルを用意し、各要件に少なくとも 1 つの "#### Scenario:" ブロックを含めてください。ヒント: `openspec change show <change-id> --json --deltas-only` で解析結果を確認できます。',
   GUIDE_MISSING_SPEC_SECTIONS:
-    'Missing required sections. Expected headers: "## Purpose" and "## Requirements". Example:\n## Purpose\n[brief purpose]\n\n## Requirements\n### Requirement: Clear requirement statement\nUsers SHALL ...\n\n#### Scenario: Descriptive name\n- **WHEN** ...\n- **THEN** ...',
+    '必須セクションが不足しています。必要な見出し: "## Purpose" と "## Requirements"。例:\n## Purpose\n[簡潔な目的]\n\n## Requirements\n### Requirement: 明確な要件文\nUsers SHALL ...\n\n#### Scenario: シナリオ名\n- **WHEN** ...\n- **THEN** ...',
   GUIDE_MISSING_CHANGE_SECTIONS:
-    'Missing required sections. Expected headers: "## Why" and "## What Changes". Ensure deltas are documented in specs/ using delta headers.',
+    '必須セクションが不足しています。必要な見出し: "## Why" と "## What Changes"。デルタは specs/ 配下でデルタ用ヘッダーを使って記載してください。',
   GUIDE_SCENARIO_FORMAT:
-    'Scenarios must use level-4 headers. Convert bullet lists into:\n#### Scenario: Short name\n- **WHEN** ...\n- **THEN** ...\n- **AND** ...',
+    'シナリオは level-4 見出しを使ってください。箇条書きは次の形式に変換します:\n#### Scenario: 短い名前\n- **WHEN** ...\n- **THEN** ...\n- **AND** ...',
 } as const;

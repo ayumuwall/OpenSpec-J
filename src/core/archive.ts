@@ -32,14 +32,14 @@ export class ArchiveCommand {
     try {
       await fs.access(changesDir);
     } catch {
-      throw new Error("No OpenSpec changes directory found. Run 'openspec init' first.");
+      throw new Error("OpenSpec の変更ディレクトリが見つかりません。先に 'openspec init' を実行してください。");
     }
 
     // Get change name interactively if not provided
     if (!changeName) {
       const selectedChange = await this.selectChange(changesDir);
       if (!selectedChange) {
-        console.log('No change selected. Aborting.');
+        console.log('変更が選択されなかったため中止します。');
         return;
       }
       changeName = selectedChange;
@@ -51,7 +51,7 @@ export class ArchiveCommand {
     try {
       const stat = await fs.stat(changeDir);
       if (!stat.isDirectory()) {
-        throw new Error(`Change '${changeName}' not found.`);
+        throw new Error(`変更 '${changeName}' が見つかりません。`);
       }
     } catch {
       throw new Error(`Change '${changeName}' not found.`);
@@ -359,7 +359,7 @@ export class ArchiveCommand {
       const name = normalizeRequirementName(add.name);
       if (addedNames.has(name)) {
         throw new Error(
-          `${specName} validation failed - duplicate requirement in ADDED for header "### Requirement: ${add.name}"`
+          `${specName} の検証に失敗: ADDED セクションに重複する要件があります (ヘッダー "### Requirement: ${add.name}")`
         );
       }
       addedNames.add(name);
@@ -369,7 +369,7 @@ export class ArchiveCommand {
       const name = normalizeRequirementName(mod.name);
       if (modifiedNames.has(name)) {
         throw new Error(
-          `${specName} validation failed - duplicate requirement in MODIFIED for header "### Requirement: ${mod.name}"`
+          `${specName} の検証に失敗: MODIFIED セクションに重複する要件があります (ヘッダー "### Requirement: ${mod.name}")`
         );
       }
       modifiedNames.add(name);
@@ -379,7 +379,7 @@ export class ArchiveCommand {
       const name = normalizeRequirementName(rem);
       if (removedNamesSet.has(name)) {
         throw new Error(
-          `${specName} validation failed - duplicate requirement in REMOVED for header "### Requirement: ${rem}"`
+          `${specName} の検証に失敗: REMOVED セクションに重複する要件があります (ヘッダー "### Requirement: ${rem}")`
         );
       }
       removedNamesSet.add(name);
@@ -391,12 +391,12 @@ export class ArchiveCommand {
       const toNorm = normalizeRequirementName(to);
       if (renamedFromSet.has(fromNorm)) {
         throw new Error(
-          `${specName} validation failed - duplicate FROM in RENAMED for header "### Requirement: ${from}"`
+          `${specName} の検証に失敗: RENAMED セクションの FROM が重複しています (ヘッダー "### Requirement: ${from}")`
         );
       }
       if (renamedToSet.has(toNorm)) {
         throw new Error(
-          `${specName} validation failed - duplicate TO in RENAMED for header "### Requirement: ${to}"`
+          `${specName} の検証に失敗: RENAMED セクションの TO が重複しています (ヘッダー "### Requirement: ${to}")`
         );
       }
       renamedFromSet.add(fromNorm);
@@ -418,27 +418,27 @@ export class ArchiveCommand {
       const toNorm = normalizeRequirementName(to);
       if (modifiedNames.has(fromNorm)) {
         throw new Error(
-          `${specName} validation failed - when a rename exists, MODIFIED must reference the NEW header "### Requirement: ${to}"`
+          `${specName} の検証に失敗: RENAMED がある場合、MODIFIED は新しいヘッダー "### Requirement: ${to}" を参照する必要があります`
         );
       }
       // Detect ADDED colliding with a RENAMED TO
       if (addedNames.has(toNorm)) {
         throw new Error(
-          `${specName} validation failed - RENAMED TO header collides with ADDED for "### Requirement: ${to}"`
+          `${specName} の検証に失敗: RENAMED の TO ヘッダーが ADDED と衝突しています ("### Requirement: ${to}")`
         );
       }
     }
     if (conflicts.length > 0) {
       const c = conflicts[0];
       throw new Error(
-        `${specName} validation failed - requirement present in multiple sections (${c.a} and ${c.b}) for header "### Requirement: ${c.name}"`
+        `${specName} の検証に失敗: 要件が複数セクション (${c.a} / ${c.b}) に重複しています (ヘッダー "### Requirement: ${c.name}")`
       );
     }
     const hasAnyDelta = (plan.added.length + plan.modified.length + plan.removed.length + plan.renamed.length) > 0;
     if (!hasAnyDelta) {
       throw new Error(
-        `Delta parsing found no operations for ${path.basename(path.dirname(update.source))}. ` +
-        `Provide ADDED/MODIFIED/REMOVED/RENAMED sections in change spec.`
+        `${path.basename(path.dirname(update.source))} のデルタ解析で操作が見つかりませんでした。` +
+        `change の spec に ADDED/MODIFIED/REMOVED/RENAMED セクションを記述してください。`
       );
     }
 
@@ -450,7 +450,7 @@ export class ArchiveCommand {
       // Target spec does not exist; only ADDED operations are permitted
       if (plan.modified.length > 0 || plan.removed.length > 0 || plan.renamed.length > 0) {
         throw new Error(
-          `${specName}: target spec does not exist; only ADDED requirements are allowed for new specs.`
+          `${specName}: 対象の仕様が存在しません。新規仕様では ADDED 要件のみ許可されます。`
         );
       }
       targetContent = this.buildSpecSkeleton(specName, changeName);
@@ -470,12 +470,12 @@ export class ArchiveCommand {
       const to = normalizeRequirementName(r.to);
       if (!nameToBlock.has(from)) {
         throw new Error(
-          `${specName} RENAMED failed for header "### Requirement: ${r.from}" - source not found`
+          `${specName} の RENAMED 失敗: ヘッダー "### Requirement: ${r.from}" の元要件が見つかりません`
         );
       }
       if (nameToBlock.has(to)) {
         throw new Error(
-          `${specName} RENAMED failed for header "### Requirement: ${r.to}" - target already exists`
+          `${specName} の RENAMED 失敗: ヘッダー "### Requirement: ${r.to}" の対象が既に存在します`
         );
       }
       const block = nameToBlock.get(from)!;
@@ -496,7 +496,7 @@ export class ArchiveCommand {
       const key = normalizeRequirementName(name);
       if (!nameToBlock.has(key)) {
         throw new Error(
-          `${specName} REMOVED failed for header "### Requirement: ${name}" - not found`
+          `${specName} の REMOVED 失敗: ヘッダー "### Requirement: ${name}" が見つかりません`
         );
       }
       nameToBlock.delete(key);
@@ -507,14 +507,14 @@ export class ArchiveCommand {
       const key = normalizeRequirementName(mod.name);
       if (!nameToBlock.has(key)) {
         throw new Error(
-          `${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - not found`
+          `${specName} の MODIFIED 失敗: ヘッダー "### Requirement: ${mod.name}" が見つかりません`
         );
       }
       // Replace block with provided raw (ensure header line matches key)
       const modHeaderMatch = mod.raw.split('\n')[0].match(/^###\s*Requirement:\s*(.+)\s*$/);
       if (!modHeaderMatch || normalizeRequirementName(modHeaderMatch[1]) !== key) {
         throw new Error(
-          `${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - header mismatch in content`
+          `${specName} の MODIFIED 失敗: ヘッダー "### Requirement: ${mod.name}" と内容のヘッダーが一致しません`
         );
       }
       nameToBlock.set(key, mod);
@@ -525,7 +525,7 @@ export class ArchiveCommand {
       const key = normalizeRequirementName(add.name);
       if (nameToBlock.has(key)) {
         throw new Error(
-          `${specName} ADDED failed for header "### Requirement: ${add.name}" - already exists`
+          `${specName} の ADDED 失敗: ヘッダー "### Requirement: ${add.name}" は既に存在します`
         );
       }
       nameToBlock.set(key, add);
@@ -587,16 +587,16 @@ export class ArchiveCommand {
     await fs.writeFile(update.target, rebuilt);
 
     const specName = path.basename(path.dirname(update.target));
-    console.log(`Applying changes to openspec/specs/${specName}/spec.md:`);
-    if (counts.added) console.log(`  + ${counts.added} added`);
-    if (counts.modified) console.log(`  ~ ${counts.modified} modified`);
-    if (counts.removed) console.log(`  - ${counts.removed} removed`);
-    if (counts.renamed) console.log(`  → ${counts.renamed} renamed`);
+    console.log(`openspec/specs/${specName}/spec.md に変更を適用:`);
+    if (counts.added) console.log(`  + ${counts.added} 追加`);
+    if (counts.modified) console.log(`  ~ ${counts.modified} 更新`);
+    if (counts.removed) console.log(`  - ${counts.removed} 削除`);
+    if (counts.renamed) console.log(`  → ${counts.renamed} リネーム`);
   }
 
   private buildSpecSkeleton(specFolderName: string, changeName: string): string {
     const titleBase = specFolderName;
-    return `# ${titleBase} Specification\n\n## Purpose\nTBD - created by archiving change ${changeName}. Update Purpose after archive.\n\n## Requirements\n`;
+    return `# ${titleBase} Specification\n\n## Purpose\nTBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。\n\n## Requirements\n`;
   }
 
   private getArchiveDate(): string {

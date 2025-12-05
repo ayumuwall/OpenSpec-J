@@ -9,11 +9,11 @@ export class ViewCommand {
     const openspecDir = path.join(targetPath, 'openspec');
     
     if (!fs.existsSync(openspecDir)) {
-      console.error(chalk.red('No openspec directory found'));
+      console.error(chalk.red('openspec ディレクトリが見つかりません'));
       process.exit(1);
     }
 
-    console.log(chalk.bold('\nOpenSpec Dashboard\n'));
+    console.log(chalk.bold('\nOpenSpec ダッシュボード\n'));
     console.log('═'.repeat(60));
 
     // Get changes and specs data
@@ -25,7 +25,7 @@ export class ViewCommand {
 
     // Display active changes
     if (changesData.active.length > 0) {
-      console.log(chalk.bold.cyan('\nActive Changes'));
+      console.log(chalk.bold.cyan('\n進行中の変更'));
       console.log('─'.repeat(60));
       changesData.active.forEach(change => {
         const progressBar = this.createProgressBar(change.progress.completed, change.progress.total);
@@ -41,7 +41,7 @@ export class ViewCommand {
 
     // Display completed changes
     if (changesData.completed.length > 0) {
-      console.log(chalk.bold.green('\nCompleted Changes'));
+      console.log(chalk.bold.green('\n完了した変更'));
       console.log('─'.repeat(60));
       changesData.completed.forEach(change => {
         console.log(`  ${chalk.green('✓')} ${change.name}`);
@@ -50,14 +50,14 @@ export class ViewCommand {
 
     // Display specifications
     if (specsData.length > 0) {
-      console.log(chalk.bold.blue('\nSpecifications'));
+      console.log(chalk.bold.blue('\n仕様'));
       console.log('─'.repeat(60));
       
       // Sort specs by requirement count (descending)
       specsData.sort((a, b) => b.requirementCount - a.requirementCount);
       
       specsData.forEach(spec => {
-        const reqLabel = spec.requirementCount === 1 ? 'requirement' : 'requirements';
+        const reqLabel = '要件';
         console.log(
           `  ${chalk.blue('▪')} ${chalk.bold(spec.name.padEnd(30))} ${chalk.dim(`${spec.requirementCount} ${reqLabel}`)}`
         );
@@ -65,7 +65,7 @@ export class ViewCommand {
     }
 
     console.log('\n' + '═'.repeat(60));
-    console.log(chalk.dim(`\nUse ${chalk.white('openspec list --changes')} or ${chalk.white('openspec list --specs')} for detailed views`));
+    console.log(chalk.dim(`\n詳細を見るには ${chalk.white('openspec list --changes')} または ${chalk.white('openspec list --specs')} を実行してください`));
   }
 
   private async getChangesData(openspecDir: string): Promise<{

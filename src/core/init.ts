@@ -290,32 +290,32 @@ const toolSelectionWizard = createPrompt<string[], ToolWizardConfig>(
 
     const stepIndex = step === 'intro' ? 1 : step === 'select' ? 2 : 3;
     const lines: string[] = [];
-    lines.push(PALETTE.midGray(`Step ${stepIndex}/${totalSteps}`));
+    lines.push(PALETTE.midGray(`ステップ ${stepIndex}/${totalSteps}`));
     lines.push('');
 
     if (step === 'intro') {
       const introHeadline = config.extendMode
-        ? 'Extend your OpenSpec tooling'
-        : 'Configure your OpenSpec tooling';
+        ? 'OpenSpec のツール設定を拡張します'
+        : 'OpenSpec のツール設定を行います';
       const introBody = config.extendMode
-        ? 'We detected an existing setup. We will help you refresh or add integrations.'
-        : "Let's get your AI assistants connected so they understand OpenSpec.";
+        ? '既存のセットアップを検出しました。更新や連携追加を手伝います。'
+        : 'AI アシスタントが OpenSpec を理解できるよう接続しましょう。';
 
       lines.push(PALETTE.white(introHeadline));
       lines.push(PALETTE.midGray(introBody));
       lines.push('');
-      lines.push(PALETTE.midGray('Press Enter to continue.'));
+      lines.push(PALETTE.midGray('Enter を押して進みます。'));
     } else if (step === 'select') {
       lines.push(PALETTE.white(config.baseMessage));
       lines.push(
         PALETTE.midGray(
-          'Use ↑/↓ to move · Space to toggle · Enter selects highlighted tool and reviews.'
+          '↑/↓ で移動 · Space で選択切替 · Enter でハイライトを選択し確認へ進みます'
         )
       );
       lines.push('');
       lines.push(page);
       lines.push('');
-      lines.push(PALETTE.midGray('Selected configuration:'));
+      lines.push(PALETTE.midGray('選択中の構成:'));
       if (rootStubSelected && rootStubChoice) {
         lines.push(
           `  ${PALETTE.white('-')} ${formatSummaryLabel(rootStubChoice)}`
@@ -323,7 +323,7 @@ const toolSelectionWizard = createPrompt<string[], ToolWizardConfig>(
       }
       if (selectedNativeChoices.length === 0) {
         lines.push(
-          `  ${PALETTE.midGray('- No natively supported providers selected')}`
+          `  ${PALETTE.midGray('- ネイティブ対応プロバイダは未選択です')}`
         );
       } else {
         selectedNativeChoices.forEach((choice) => {
@@ -333,10 +333,8 @@ const toolSelectionWizard = createPrompt<string[], ToolWizardConfig>(
         });
       }
     } else {
-      lines.push(PALETTE.white('Review selections'));
-      lines.push(
-        PALETTE.midGray('Press Enter to confirm or Backspace to adjust.')
-      );
+      lines.push(PALETTE.white('選択内容の確認'));
+      lines.push(PALETTE.midGray('Enter で確定、Backspace で戻ります。'));
       lines.push('');
 
       if (rootStubSelected && rootStubChoice) {
@@ -348,7 +346,7 @@ const toolSelectionWizard = createPrompt<string[], ToolWizardConfig>(
       if (selectedNativeChoices.length === 0) {
         lines.push(
           PALETTE.midGray(
-            'No natively supported providers selected. Universal instructions will still be applied.'
+            'ネイティブ対応プロバイダは未選択です。共通の AGENTS.md は適用されます。'
           )
         );
       } else {
@@ -417,18 +415,18 @@ export class InitCommand {
     // Step 1: Create directory structure
     if (!extendMode) {
       const structureSpinner = this.startSpinner(
-        'Creating OpenSpec structure...'
+        'OpenSpec の構成を作成しています...'
       );
       await this.createDirectoryStructure(openspecPath);
       await this.generateFiles(openspecPath, config);
       structureSpinner.stopAndPersist({
         symbol: PALETTE.white('▌'),
-        text: PALETTE.white('OpenSpec structure created'),
+        text: PALETTE.white('OpenSpec の構成を作成しました'),
       });
     } else {
       ora({ stream: process.stdout }).info(
         PALETTE.midGray(
-          'ℹ OpenSpec already initialized. Checking for missing files...'
+          'ℹ OpenSpec はすでに初期化済みです。不足ファイルを確認しています...'
         )
       );
       await this.createDirectoryStructure(openspecPath);
@@ -436,7 +434,7 @@ export class InitCommand {
     }
 
     // Step 2: Configure AI tools
-    const toolSpinner = this.startSpinner('Configuring AI tools...');
+    const toolSpinner = this.startSpinner('AI ツールを設定しています...');
     const rootStubStatus = await this.configureAITools(
       projectPath,
       openspecDir,
@@ -444,7 +442,7 @@ export class InitCommand {
     );
     toolSpinner.stopAndPersist({
       symbol: PALETTE.white('▌'),
-      text: PALETTE.white('AI tools configured'),
+      text: PALETTE.white('AI ツールを設定しました'),
     });
 
     // Success message
@@ -501,7 +499,7 @@ export class InitCommand {
     const raw = this.toolsArg.trim();
     if (raw.length === 0) {
       throw new Error(
-        'The --tools option requires a value. Use "all", "none", or a comma-separated list of tool IDs.'
+        '--tools オプションには値が必要です。"all" / "none" またはツール ID のカンマ区切りを指定してください。'
       );
     }
 
@@ -526,14 +524,14 @@ export class InitCommand {
 
     if (tokens.length === 0) {
       throw new Error(
-        'The --tools option requires at least one tool ID when not using "all" or "none".'
+        '--tools オプションは "all" / "none" 以外では最低 1 つのツール ID が必要です。'
       );
     }
 
     const normalizedTokens = tokens.map((token) => token.toLowerCase());
 
     if (normalizedTokens.some((token) => token === 'all' || token === 'none')) {
-      throw new Error('Cannot combine reserved values "all" or "none" with specific tool IDs.');
+      throw new Error('予約値 "all" / "none" と個別のツール ID を同時に指定することはできません。');
     }
 
     const invalidTokens = tokens.filter(
@@ -542,7 +540,7 @@ export class InitCommand {
 
     if (invalidTokens.length > 0) {
       throw new Error(
-        `Invalid tool(s): ${invalidTokens.join(', ')}. Available values: ${availableList}`
+        `無効なツールです: ${invalidTokens.join(', ')}。利用可能な値: ${availableList}`
       );
     }
 
@@ -563,8 +561,8 @@ export class InitCommand {
     const availableTools = AI_TOOLS.filter((tool) => tool.available);
 
     const baseMessage = extendMode
-      ? 'Which natively supported AI tools would you like to add or refresh?'
-      : 'Which natively supported AI tools do you use?';
+      ? 'どのネイティブ対応 AI ツールを追加または更新しますか？'
+      : 'どのネイティブ対応 AI ツールを使っていますか？';
     const initialNativeSelection = extendMode
       ? availableTools
           .filter((tool) => existingTools[tool.value])
@@ -579,7 +577,7 @@ export class InitCommand {
         value: '__heading-native__',
         label: {
           primary:
-            'Natively supported providers (✔ OpenSpec custom slash commands available)',
+            'ネイティブ対応プロバイダ（✔ OpenSpec のスラッシュコマンドを自動生成）',
         },
         selectable: false,
       },
@@ -605,7 +603,7 @@ export class InitCommand {
         value: OTHER_TOOLS_HEADING_VALUE,
         label: {
           primary:
-            'Other tools (use Universal AGENTS.md for Amp, VS Code, GitHub Copilot, …)',
+            'その他のツール（Amp / VS Code / GitHub Copilot などは共通 AGENTS.md を利用）',
         },
         selectable: false,
       },
@@ -614,7 +612,7 @@ export class InitCommand {
         value: ROOT_STUB_CHOICE_VALUE,
         label: {
           primary: 'Universal AGENTS.md',
-          annotation: 'always available',
+          annotation: '常に利用可',
         },
         configured: extendMode,
         selectable: true,
@@ -813,41 +811,41 @@ export class InitCommand {
   ): void {
     console.log(); // Empty line for spacing
     const successHeadline = extendMode
-      ? 'OpenSpec tool configuration updated!'
-      : 'OpenSpec initialized successfully!';
+      ? 'OpenSpec のツール設定を更新しました！'
+      : 'OpenSpec を初期化しました！';
     ora().succeed(PALETTE.white(successHeadline));
 
     console.log();
-    console.log(PALETTE.lightGray('Tool summary:'));
+    console.log(PALETTE.lightGray('設定サマリー:'));
     const summaryLines = [
       rootStubStatus === 'created'
         ? `${PALETTE.white('▌')} ${PALETTE.white(
-            'Root AGENTS.md stub created for other assistants'
+            'その他のアシスタント向けに Root AGENTS.md スタブを作成'
           )}`
         : null,
       rootStubStatus === 'updated'
         ? `${PALETTE.lightGray('▌')} ${PALETTE.lightGray(
-            'Root AGENTS.md stub refreshed for other assistants'
+            'その他のアシスタント向け Root AGENTS.md スタブを更新'
           )}`
         : null,
       created.length
         ? `${PALETTE.white('▌')} ${PALETTE.white(
-            'Created:'
+            '作成:'
           )} ${this.formatToolNames(created)}`
         : null,
       refreshed.length
         ? `${PALETTE.lightGray('▌')} ${PALETTE.lightGray(
-            'Refreshed:'
+            '再生成:'
           )} ${this.formatToolNames(refreshed)}`
         : null,
       skippedExisting.length
         ? `${PALETTE.midGray('▌')} ${PALETTE.midGray(
-            'Skipped (already configured):'
+            'スキップ（既に設定済み）:'
           )} ${this.formatToolNames(skippedExisting)}`
         : null,
       skipped.length
         ? `${PALETTE.darkGray('▌')} ${PALETTE.darkGray(
-            'Skipped:'
+            'スキップ:'
           )} ${this.formatToolNames(skipped)}`
         : null,
     ].filter((line): line is string => Boolean(line));
@@ -858,22 +856,22 @@ export class InitCommand {
     console.log();
     console.log(
       PALETTE.midGray(
-        'Use `openspec update` to refresh shared OpenSpec instructions in the future.'
+        '今後、共有の OpenSpec 手順を更新するには `openspec update` を実行してください。'
       )
     );
 
     // Show restart instruction if any tools were configured
     if (created.length > 0 || refreshed.length > 0) {
       console.log();
-      console.log(PALETTE.white('Important: Restart your IDE'));
+      console.log(PALETTE.white('重要: IDE を再起動してください'));
       console.log(
         PALETTE.midGray(
-          'Slash commands are loaded at startup. Please restart your coding assistant'
+          'スラッシュコマンドは起動時に読み込まれます。コーディングアシスタントを再起動し'
         )
       );
       console.log(
         PALETTE.midGray(
-          'to ensure the new /openspec commands appear in your command palette.'
+          '新しい /openspec コマンドがコマンドパレットに反映されるようにしてください。'
         )
       );
     }
@@ -882,38 +880,38 @@ export class InitCommand {
     const toolName = this.formatToolNames(selectedTools);
 
     console.log();
-    console.log(`Next steps - Copy these prompts to ${toolName}:`);
+    console.log(`次のステップ - このプロンプトを ${toolName} にコピーしてください:`);
     console.log(
       chalk.gray('────────────────────────────────────────────────────────────')
     );
-    console.log(PALETTE.white('1. Populate your project context:'));
+    console.log(PALETTE.white('1. プロジェクトコンテキストを埋める:'));
     console.log(
       PALETTE.lightGray(
-        '   "Please read openspec/project.md and help me fill it out'
+        '   "openspec/project.md を読んで、プロジェクト/技術スタック/規約の情報を'
       )
     );
     console.log(
       PALETTE.lightGray(
-        '    with details about my project, tech stack, and conventions"\n'
+        '    追記するのを手伝ってください"\n'
       )
     );
-    console.log(PALETTE.white('2. Create your first change proposal:'));
+    console.log(PALETTE.white('2. 最初の変更提案を作る:'));
     console.log(
       PALETTE.lightGray(
-        '   "I want to add [YOUR FEATURE HERE]. Please create an'
+        '   "［追加したい機能］を実装したい。'
       )
     );
     console.log(
-      PALETTE.lightGray('    OpenSpec change proposal for this feature"\n')
+      PALETTE.lightGray('    この機能の OpenSpec 変更提案を作って"\n')
     );
-    console.log(PALETTE.white('3. Learn the OpenSpec workflow:'));
+    console.log(PALETTE.white('3. OpenSpec ワークフローを理解する:'));
     console.log(
       PALETTE.lightGray(
-        '   "Please explain the OpenSpec workflow from openspec/AGENTS.md'
+        '   "openspec/AGENTS.md をもとに、OpenSpec のワークフローと'
       )
     );
     console.log(
-      PALETTE.lightGray('    and how I should work with you on this project"')
+      PALETTE.lightGray('    このプロジェクトでの進め方を説明して"')
     );
     console.log(
       PALETTE.darkGray(
@@ -924,9 +922,9 @@ export class InitCommand {
     // Codex heads-up: prompts installed globally
     const selectedToolIds = new Set(selectedTools.map((t) => t.value));
     if (selectedToolIds.has('codex')) {
-      console.log(PALETTE.white('Codex setup note'));
+      console.log(PALETTE.white('Codex セットアップメモ'));
       console.log(
-        PALETTE.midGray('Prompts installed to ~/.codex/prompts (or $CODEX_HOME/prompts).')
+        PALETTE.midGray('プロンプトは ~/.codex/prompts (または $CODEX_HOME/prompts) に配置しました。')
       );
       console.log();
     }
@@ -938,14 +936,14 @@ export class InitCommand {
       .filter((name): name is string => Boolean(name));
 
     if (names.length === 0)
-      return PALETTE.lightGray('your AGENTS.md-compatible assistant');
+      return PALETTE.lightGray('AGENTS.md 互換のアシスタント');
     if (names.length === 1) return PALETTE.white(names[0]);
 
     const base = names.slice(0, -1).map((name) => PALETTE.white(name));
     const last = PALETTE.white(names[names.length - 1]);
 
-    return `${base.join(PALETTE.midGray(', '))}${
-      base.length ? PALETTE.midGray(', and ') : ''
+    return `${base.join(PALETTE.midGray('、'))}${
+      base.length ? PALETTE.midGray('、そして ') : ''
     }${last}`;
   }
 
@@ -971,7 +969,7 @@ export class InitCommand {
       console.log(rowStyles[index](row.replace(/\s+$/u, '')));
     });
     console.log();
-    console.log(PALETTE.white('Welcome to OpenSpec!'));
+    console.log(PALETTE.white('OpenSpec へようこそ！'));
     console.log();
   }
 
