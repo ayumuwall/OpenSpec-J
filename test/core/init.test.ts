@@ -97,12 +97,14 @@ describe('InitCommand', () => {
         'utf-8'
       );
       expect(agentsContent).toContain('OpenSpec Instructions');
+      expect(agentsContent).toContain('仕様駆動開発を進める AI コーディングアシスタント向けの指示です');
 
       const projectContent = await fs.readFile(
         path.join(openspecPath, 'project.md'),
         'utf-8'
       );
       expect(projectContent).toContain('Project Context');
+      expect(projectContent).toContain('プロジェクトの目的とゴールを記述してください');
     });
 
     it('should create CLAUDE.md when Claude Code is selected', async () => {
@@ -205,14 +207,14 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('auto_execution_mode: 3');
       expect(applyContent).toContain('<!-- OPENSPEC:START -->');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(wsArchive, 'utf-8');
       expect(archiveContent).toContain('---');
       expect(archiveContent).toContain('description: Archive a deployed OpenSpec change and update specs.');
       expect(archiveContent).toContain('auto_execution_mode: 3');
       expect(archiveContent).toContain('<!-- OPENSPEC:START -->');
-      expect(archiveContent).toContain('Run `openspec archive <id> --yes`');
+      expect(archiveContent).toContain('`openspec archive <id> --yes` を実行し');
     });
 
     it('should create Antigravity workflows when Antigravity is selected', async () => {
@@ -248,14 +250,14 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('---');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('<!-- OPENSPEC:START -->');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
       expect(applyContent).not.toContain('auto_execution_mode');
 
       const archiveContent = await fs.readFile(agArchive, 'utf-8');
       expect(archiveContent).toContain('---');
       expect(archiveContent).toContain('description: Archive a deployed OpenSpec change and update specs.');
       expect(archiveContent).toContain('<!-- OPENSPEC:START -->');
-      expect(archiveContent).toContain('Run `openspec archive <id> --yes`');
+      expect(archiveContent).toContain('`openspec archive <id> --yes` を実行し');
       expect(archiveContent).not.toContain('auto_execution_mode');
     });
 
@@ -306,14 +308,12 @@ describe('InitCommand', () => {
 
       const applyContent = await fs.readFile(claudeApply, 'utf-8');
       expect(applyContent).toContain('name: OpenSpec: Apply');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(claudeArchive, 'utf-8');
       expect(archiveContent).toContain('name: OpenSpec: Archive');
       expect(archiveContent).toContain('openspec archive <id>');
-      expect(archiveContent).toContain(
-        '`--skip-specs` only for tooling-only work'
-      );
+      expect(archiveContent).toContain('`--skip-specs` を付ける');
     });
 
     it('should create Cursor slash command files with templates', async () => {
@@ -344,7 +344,7 @@ describe('InitCommand', () => {
 
       const applyContent = await fs.readFile(cursorApply, 'utf-8');
       expect(applyContent).toContain('id: openspec-apply');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(cursorArchive, 'utf-8');
       expect(archiveContent).toContain('name: /openspec-archive');
@@ -382,7 +382,7 @@ describe('InitCommand', () => {
 
       const applyContent = await fs.readFile(geminiApply, 'utf-8');
       expect(applyContent).toContain('description = "Implement an approved OpenSpec change and keep tasks in sync."');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(geminiArchive, 'utf-8');
       expect(archiveContent).toContain('description = "Archive a deployed OpenSpec change and update specs."');
@@ -447,7 +447,7 @@ describe('InitCommand', () => {
 
       const applyContent = await fs.readFile(iflowApply, 'utf-8');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(iflowArchive, 'utf-8');
       expect(archiveContent).toContain('description: Archive a deployed OpenSpec change and update specs.');
@@ -505,7 +505,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain(
         'description: Implement an approved OpenSpec change and keep tasks in sync.'
       );
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(openCodeArchive, 'utf-8');
       expect(archiveContent).not.toContain('agent:');
@@ -551,7 +551,7 @@ describe('InitCommand', () => {
 
       const applyContent = await fs.readFile(applyPath, 'utf-8');
       expect(applyContent).toContain('description = "Implement an approved OpenSpec change and keep tasks in sync."');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(archivePath, 'utf-8');
       expect(archiveContent).toContain('description = "Archive a deployed OpenSpec change and update specs."');
@@ -606,7 +606,7 @@ describe('InitCommand', () => {
       const applyContent = await fs.readFile(clineApply, 'utf-8');
       expect(applyContent).toContain('# OpenSpec: Apply');
       expect(applyContent).toContain('Implement an approved OpenSpec change and keep tasks in sync.');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(clineArchive, 'utf-8');
       expect(archiveContent).toContain('# OpenSpec: Archive');
@@ -649,7 +649,7 @@ describe('InitCommand', () => {
       const applyContent = await fs.readFile(factoryApply, 'utf-8');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('argument-hint: change-id');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
       expect(
         /<!-- OPENSPEC:START -->([\s\S]*?)<!-- OPENSPEC:END -->/u.exec(
           applyContent
@@ -700,7 +700,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('argument-hint: change-id');
       expect(applyContent).toContain('$ARGUMENTS');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(archivePath, 'utf-8');
       expect(archiveContent).toContain('description: Archive a deployed OpenSpec change and update specs.');
@@ -737,7 +737,7 @@ describe('InitCommand', () => {
       expect(proposalContent).not.toContain('---\n');
 
       const applyContent = await fs.readFile(applyPath, 'utf-8');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
       expect(applyContent).not.toContain('---\n');
 
       const archiveContent = await fs.readFile(archivePath, 'utf-8');
@@ -778,7 +778,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('---');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('$ARGUMENTS');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(archivePath, 'utf-8');
       expect(archiveContent).toContain('---');
@@ -1075,7 +1075,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('---');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('argument-hint: change-id');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(auggieArchive, 'utf-8');
       expect(archiveContent).toContain('---');
@@ -1130,7 +1130,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('---');
       expect(applyContent).toContain('name: OpenSpec: Apply');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(codeBuddyArchive, 'utf-8');
       expect(archiveContent).toContain('---');
@@ -1221,7 +1221,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
       expect(applyContent).toContain('category: OpenSpec');
       expect(applyContent).toContain('tags: [openspec, apply]');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(crushArchive, 'utf-8');
       expect(archiveContent).toContain('---');
@@ -1277,7 +1277,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('---');
       expect(applyContent).toContain('description: "Implement an approved OpenSpec change and keep tasks in sync."');
       expect(applyContent).toContain('argument-hint: change-id');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(costrictArchive, 'utf-8');
       expect(archiveContent).toContain('---');
@@ -1326,7 +1326,7 @@ describe('InitCommand', () => {
 
       const applyContent = await fs.readFile(rooApply, 'utf-8');
       expect(applyContent).toContain('# OpenSpec: Apply');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(rooArchive, 'utf-8');
       expect(archiveContent).toContain('# OpenSpec: Archive');
@@ -1379,7 +1379,7 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('---');
       expect(applyContent).toContain('name: OpenSpec: Apply');
       expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
-      expect(applyContent).toContain('Work through tasks sequentially');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(qoderArchive, 'utf-8');
       expect(archiveContent).toContain('---');

@@ -133,7 +133,7 @@ Old slash content
     expect(updated).toContain('name: OpenSpec: Proposal');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old slash content');
 
@@ -173,7 +173,7 @@ Old body
     expect(updated).toContain('description = "Implement an approved OpenSpec change and keep tasks in sync."');
     expect(updated).toContain('prompt = """');
     expect(updated).toContain('<!-- OPENSPEC:START -->');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
 
     const [logMessage] = consoleSpy.mock.calls[0];
@@ -210,7 +210,7 @@ Old content
     await updateCommand.execute(testDir);
 
     const updatedApply = await fs.readFile(applyPath, 'utf-8');
-    expect(updatedApply).toContain('Work through tasks sequentially');
+    expect(updatedApply).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updatedApply).not.toContain('Old content');
 
     const proposalPath = path.join(
@@ -317,7 +317,7 @@ Old slash content
     expect(updated).toContain('# OpenSpec: Proposal');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old slash content');
 
@@ -353,7 +353,7 @@ Old body
 
     const updated = await fs.readFile(cursorPath, 'utf-8');
     expect(updated).toContain('id: openspec-apply');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
 
     const [logMessage] = consoleSpy.mock.calls[0];
@@ -391,7 +391,7 @@ Old body
 
     const updated = await fs.readFile(openCodePath, 'utf-8');
     expect(updated).toContain('id: openspec-apply');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
 
     const [logMessage] = consoleSpy.mock.calls[0];
@@ -422,7 +422,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(kilocodePath, 'utf-8');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
     expect(updated.startsWith('<!-- OPENSPEC:START -->')).toBe(true);
 
@@ -452,7 +452,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(wsPath, 'utf-8');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
     expect(updated).toContain('## OpenSpec: Apply (Windsurf)');
 
@@ -483,7 +483,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(agPath, 'utf-8');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
     expect(updated).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
     expect(updated).not.toContain('auto_execution_mode: 3');
@@ -512,7 +512,7 @@ Old body
     expect(updated).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
     expect(updated).toContain('argument-hint: change-id');
     expect(updated).toContain('$ARGUMENTS');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
     expect(updated).not.toContain('Old description');
 
@@ -576,7 +576,7 @@ Old body
     const updated = await fs.readFile(ghPath, 'utf-8');
     expect(updated).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
     expect(updated).toContain('$ARGUMENTS');
-    expect(updated).toContain('Work through tasks sequentially');
+    expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
 
     const [logMessage] = consoleSpy.mock.calls[0];
@@ -933,7 +933,7 @@ Old slash content
     expect(updated).toContain('name: OpenSpec: Proposal');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old slash content');
 
@@ -1011,7 +1011,7 @@ Old slash content
     expect(updated).toContain('name: OpenSpec: Proposal');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old slash content');
 
@@ -1089,7 +1089,7 @@ Old body
     expect(updated).toContain('argument-hint: old-hint');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old body');
 
@@ -1130,7 +1130,7 @@ Old slash content
     expect(updated).toContain('name: OpenSpec: Proposal');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old slash content');
 
@@ -1170,7 +1170,7 @@ Old body
     expect(updated).toContain('# OpenSpec: Proposal');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain(
-      'Validate with `openspec validate <id> --strict`'
+      '`openspec validate <id> --strict` を実行し'
     );
     expect(updated).not.toContain('Old body');
 
@@ -1357,7 +1357,7 @@ More instructions after.`;
     expect(updated).toContain('## Custom Intro Title');
     expect(updated).toContain('Footer stays');
     expect(updated).not.toContain('Old body');
-    expect(updated).toContain('Validate with `openspec validate <id> --strict`');
+    expect(updated).toContain('`openspec validate <id> --strict` を実行し');
   });
 
   it('should handle configurator errors gracefully for CoStrict', async () => {
@@ -1413,7 +1413,7 @@ More instructions after.`;
     expect(updated).toContain('## Custom Intro Title');
     expect(updated).toContain('Footer stays');
     expect(updated).not.toContain('Old body');
-    expect(updated).toContain('Validate with `openspec validate <id> --strict`');
+    expect(updated).toContain('`openspec validate <id> --strict` を実行し');
   });
 
   it('should not create missing Windsurf workflows on update', async () => {

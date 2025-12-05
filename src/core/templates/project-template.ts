@@ -8,31 +8,31 @@ export interface ProjectContext {
 export const projectTemplate = (context: ProjectContext = {}) => `# ${context.projectName || 'Project'} Context
 
 ## Purpose
-${context.description || '[Describe your project\'s purpose and goals]'}
+${context.description || '[プロジェクトの目的とゴールを記述してください]'}
 
 ## Tech Stack
-${context.techStack?.length ? context.techStack.map(tech => `- ${tech}`).join('\n') : '- [List your primary technologies]\n- [e.g., TypeScript, React, Node.js]'}
+${context.techStack?.length ? context.techStack.map(tech => `- ${tech}`).join('\n') : '- [主要な技術スタックを箇条書きで記載]\n- [例: TypeScript, React, Node.js]'}
 
 ## Project Conventions
 
 ### Code Style
-[Describe your code style preferences, formatting rules, and naming conventions]
+[利用するコードスタイルやフォーマッタ、命名規則を記述]
 
 ### Architecture Patterns
-[Document your architectural decisions and patterns]
+[採用しているアーキテクチャや設計パターンを記録]
 
 ### Testing Strategy
-[Explain your testing approach and requirements]
+[求められるテスト戦略やカバレッジ方針を説明]
 
 ### Git Workflow
-[Describe your branching strategy and commit conventions]
+[ブランチ戦略やコミット規約を記述]
 
 ## Domain Context
-[Add domain-specific knowledge that AI assistants need to understand]
+[AI アシスタントが理解しておくべきドメイン知識を共有]
 
 ## Important Constraints
-[List any technical, business, or regulatory constraints]
+[技術的・ビジネス的・規制上の制約を列挙]
 
 ## External Dependencies
-[Document key external services, APIs, or systems]
+[主要な外部サービスや API、システムを列挙]
 `;
