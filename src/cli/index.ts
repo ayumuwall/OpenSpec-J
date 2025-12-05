@@ -13,6 +13,7 @@ import { registerSpecCommand } from '../commands/spec.js';
 import { ChangeCommand } from '../commands/change.js';
 import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
+import { emitDeprecationWarning } from '../utils/deprecations.js';
 
 const program = new Command();
 const require = createRequire(import.meta.url);
@@ -126,7 +127,10 @@ const changeCmd = program
 
 // Deprecation notice for noun-based commands
 changeCmd.hook('preAction', () => {
-  console.error('警告: "openspec change ..." は非推奨です。"openspec list" や "openspec validate --changes" など動詞先行のコマンドを使ってください。');
+  emitDeprecationWarning(
+    'command:change',
+    '警告: "openspec change ..." は非推奨です。"openspec list" や "openspec validate --changes" など動詞先行のコマンドを使ってください。'
+  );
 });
 
 changeCmd
@@ -153,7 +157,10 @@ changeCmd
   .option('--long', 'ID とタイトルを件数付きで表示')
   .action(async (options?: { json?: boolean; long?: boolean }) => {
     try {
-      console.error('警告: "openspec change list" は非推奨です。"openspec list" を使ってください。');
+      emitDeprecationWarning(
+        'command:change-list',
+        '警告: "openspec change list" は非推奨です。"openspec list" を使ってください。'
+      );
       const changeCommand = new ChangeCommand();
       await changeCommand.list(options);
     } catch (error) {
