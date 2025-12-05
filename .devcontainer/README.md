@@ -1,92 +1,90 @@
-# Dev Container Setup
+# Dev Container セットアップ
 
-This directory contains the VS Code dev container configuration for OpenSpec development.
+このディレクトリには、OpenSpec 開発向けの VS Code Dev Container 設定が入っています。
 
-## What's Included
+## 含まれるもの
 
-- **Node.js 20 LTS** (>=20.19.0) - TypeScript/JavaScript runtime
-- **pnpm** - Fast, disk space efficient package manager
-- **Git + GitHub CLI** - Version control tools
-- **VS Code Extensions**:
-  - ESLint & Prettier for code quality
-  - Vitest Explorer for running tests
-  - GitLens for enhanced git integration
-  - Error Lens for inline error highlighting
+- **Node.js 20 LTS** (>=20.19.0) — TypeScript/JavaScript ランタイム
+- **pnpm** — 高速・省ディスクなパッケージマネージャ
+- **Git + GitHub CLI** — バージョン管理ツール
+- **VS Code 拡張機能**:
+  - ESLint & Prettier（コード品質）
+  - Vitest Explorer（テスト実行）
+  - GitLens（高度な Git 連携）
+  - Error Lens（インラインエラー表示）
   - Code Spell Checker
   - Path IntelliSense
 
-## How to Use
+## 使い方
 
-### First Time Setup
+### 初回セットアップ
 
-1. **Install Prerequisites** (on your local machine):
+1. **前提ツールをインストール**（ローカル環境）
    - [VS Code](https://code.visualstudio.com/)
    - [Docker Desktop](https://www.docker.com/products/docker-desktop)
-   - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+   - [Dev Containers 拡張機能](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
-2. **Open in Container**:
-   - Open this project in VS Code
-   - You'll see a notification: "Folder contains a Dev Container configuration file"
-   - Click "Reopen in Container"
+2. **コンテナーで開く**
+   - VS Code でこのプロジェクトを開く
+   - 「フォルダーに Dev Container 設定ファイルがあります」と通知が出たら「Reopen in Container」をクリック
 
-   OR
+   もしくは
 
-   - Open Command Palette (`Cmd/Ctrl+Shift+P`)
-   - Type "Dev Containers: Reopen in Container"
-   - Press Enter
+   - コマンドパレット（`Cmd/Ctrl+Shift+P`）を開く
+   - "Dev Containers: Reopen in Container" を実行
 
-3. **Wait for Setup**:
-   - The container will build (first time takes a few minutes)
-   - `pnpm install` runs automatically via `postCreateCommand`
-   - All extensions install automatically
+3. **セットアップを待つ**
+   - 初回はイメージビルドに数分かかります
+   - `postCreateCommand` で `pnpm install` が自動実行されます
+   - 拡張機能も自動でインストールされます
 
-### Daily Development
+### 日常開発
 
-Once set up, the container preserves your development environment:
+セットアップ後はコンテナーが環境を保持します:
 
 ```bash
-# Run development build
+# 開発ビルド
 pnpm run dev
 
-# Run CLI in development
+# CLI を開発モードで実行
 pnpm run dev:cli
 
-# Run tests
+# テスト
 pnpm test
 
-# Run tests in watch mode
+# テストのウォッチ実行
 pnpm test:watch
 
-# Build the project
+# ビルド
 pnpm run build
 ```
 
-### SSH Keys
+### SSH キー
 
-Your SSH keys are mounted read-only from `~/.ssh`, so git operations work seamlessly with GitHub/GitLab.
+`~/.ssh` が読み取り専用でマウントされるため、GitHub/GitLab への Git 操作がシームレスに行えます。
 
-### Rebuilding the Container
+### コンテナーの再ビルド
 
-If you modify `.devcontainer/devcontainer.json`:
-- Command Palette → "Dev Containers: Rebuild Container"
+`.devcontainer/devcontainer.json` を変更した場合:
+- コマンドパレット → "Dev Containers: Rebuild Container"
 
-## Benefits
+## メリット
 
-- No need to install Node.js or pnpm on your local machine
-- Consistent development environment across team members
-- Isolated from other Node.js projects on your machine
-- All dependencies and tools containerized
-- Easy onboarding for new developers
+- ローカルに Node.js や pnpm を入れなくてよい
+- メンバー間で開発環境を統一できる
+- 他の Node.js プロジェクトと分離
+- 依存やツールがコンテナー内にまとまる
+- 新メンバーのオンボーディングが簡単
 
-## Troubleshooting
+## トラブルシューティング
 
-**Container won't build:**
-- Ensure Docker Desktop is running
-- Check Docker has enough memory allocated (recommend 4GB+)
+**コンテナーがビルドできない:**
+- Docker Desktop が起動しているか確認
+- Docker のメモリ割り当て（推奨 4GB 以上）を確認
 
-**Extensions not appearing:**
-- Rebuild the container: "Dev Containers: Rebuild Container"
+**拡張機能が出てこない:**
+- 「Dev Containers: Rebuild Container」で再ビルド
 
-**Permission issues:**
-- The container runs as the `node` user (non-root)
-- Files created in the container are owned by this user
+**権限エラーが出る:**
+- コンテナーは `node` ユーザー（非 root）で動作しています
+- コンテナー内で作成したファイルの所有者はこのユーザーになります

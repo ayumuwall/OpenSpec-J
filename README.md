@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  Follow <a href="https://x.com/0xTab">@0xTab on X</a> for updates · Join the <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> for help and questions.
+  最新情報は <a href="https://x.com/0xTab">@0xTab on X</a> をフォロー · 質問やサポートは <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> へどうぞ。
 </p>
 
 # OpenSpec
@@ -80,7 +80,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 1. 望む仕様更新を記述した変更提案をドラフト（下書き）する。
 2. AI アシスタントとレビューし、合意が取れるまで調整する。
 3. 合意済み仕様を参照しながらタスクを実装する。
-4. 変更をアーカイブし、承認済みの更新をソース・オブ・トゥルースの仕様に統合する。
+4. 変更をアーカイブし、承認済みの更新をソース・オブ・トゥルース※の仕様に統合する。
 ```
 
 ※ ソース・オブ・トゥルース（source of truth）は、その時点で「正」とみなされる唯一の仕様群を指します。OpenSpec では `openspec/specs/` 配下の仕様ファイルが該当し、承認済みの変更だけがここに反映されます。
@@ -143,7 +143,7 @@ Kilo Code はチームのワークフローを自動検出します。生成さ�
 npm install -g @fission-ai/openspec@latest
 ```
 
-Verify installation:
+インストール確認:
 ```bash
 openspec --version
 ```
@@ -170,7 +170,7 @@ openspec init
 - `openspec list` を実行し、セットアップ確認とアクティブな変更の一覧を確認します。
 - スラッシュコマンドがすぐに表示されない場合は、アシスタントを再起動してください。起動時にコマンドが読み込まれます。
 
-### Optional: Populate Project Context
+### オプション: プロジェクトコンテキストの入力
 
 `openspec init` 完了後、プロジェクトコンテキストを埋めるための推奨プロンプトが提示されます:
 
@@ -189,59 +189,59 @@ Populate your project context:
 AI に変更提案の作成を依頼します:
 
 ```text
-You: Create an OpenSpec change proposal for adding profile search filters by role and team
-     (Shortcut for tools with slash commands: /openspec:proposal Add profile search filters)
+You: ロールとチームでプロフィール検索フィルターを追加する OpenSpec 変更提案を作って
+     （スラッシュコマンド対応ツールなら `/openspec:proposal Add profile search filters`）
 
-AI:  I'll create an OpenSpec change proposal for profile filters.
-     *Scaffolds openspec/changes/add-profile-filters/ with proposal.md, tasks.md, spec deltas.*
+AI:  プロフィールフィルター用の OpenSpec 変更提案を作成します。
+     *openspec/changes/add-profile-filters/ に proposal.md・tasks.md・spec 差分を生成*
 ```
 
 #### 2. 確認とレビュー
 変更が正しく作成されたか確認し、提案をレビューします:
 
 ```bash
-$ openspec list                             # Confirm the change folder exists
-$ openspec validate add-profile-filters     # Validate spec formatting
-$ openspec show add-profile-filters         # Review proposal, tasks, and spec delta
+$ openspec list                             # 変更フォルダがあるか確認
+$ openspec validate add-profile-filters     # 仕様フォーマットを検証
+$ openspec show add-profile-filters         # 提案・タスク・差分を確認
 ```
 
 #### 3. 仕様を磨き込む
 必要な状態になるまで仕様を調整します:
 
 ```text
-You: Can you add acceptance criteria for the role and team filters?
+You: ロール・チームフィルターの受け入れ条件を追加してもらえる？
 
-AI:  I'll update the spec delta with scenarios for role and team filters.
-     *Edits openspec/changes/add-profile-filters/specs/profile/spec.md and tasks.md.*
+AI:  仕様差分にシナリオを追加します。
+     *openspec/changes/add-profile-filters/specs/profile/spec.md と tasks.md を編集*
 ```
 
 #### 4. 変更を実装する
 仕様が固まったら実装を始めます:
 
 ```text
-You: The specs look good. Let's implement this change.
-     (Shortcut for tools with slash commands: /openspec:apply add-profile-filters)
+You: 仕様は良さそう。この変更を実装しよう。
+     （スラッシュコマンド対応ツール: `/openspec:apply add-profile-filters`）
 
-AI:  I'll work through the tasks in the add-profile-filters change.
-     *Implements tasks from openspec/changes/add-profile-filters/tasks.md*
-     *Marks tasks complete: Task 1.1 ✓, Task 1.2 ✓, Task 2.1 ✓...*
+AI:  add-profile-filters のタスクを順に進めます。
+     *openspec/changes/add-profile-filters/tasks.md のタスクを実装*
+     *タスク完了をチェック: Task 1.1 ✓, 1.2 ✓, 2.1 ✓...*
 ```
 
 #### 5. 完了した変更をアーカイブする
 実装完了後、変更をアーカイブします:
 
 ```text
-AI:  All tasks are complete. The implementation is ready.
+AI:  すべてのタスクが完了しました。実装の準備ができています。
 
-You: Please archive the change
-     (Shortcut for tools with slash commands: /openspec:archive add-profile-filters)
+You: 変更をアーカイブして
+     （スラッシュコマンド対応ツール: `/openspec:archive add-profile-filters`）
 
-AI:  I'll archive the add-profile-filters change.
-    *Runs: openspec archive add-profile-filters --yes*
-     ✓ Change archived successfully. Specs updated. Ready for the next feature!
+AI:  add-profile-filters をアーカイブします。
+    *実行: openspec archive add-profile-filters --yes*
+     ✓ アーカイブ成功。仕様を更新済み。次の機能へ進めます！
 ```
 
-Or run the command yourself in terminal:
+自分でターミナルから実行する場合:
 ```bash
 $ openspec archive add-profile-filters --yes  # Archive the completed change without prompts
 ```
@@ -251,11 +251,11 @@ $ openspec archive add-profile-filters --yes  # Archive the completed change wit
 ## コマンドリファレンス
 
 ```bash
-openspec list               # View active change folders
-openspec view               # Interactive dashboard of specs and changes
-openspec show <change>      # Display change details (proposal, tasks, spec updates)
-openspec validate <change>  # Check spec formatting and structure
-openspec archive <change> [--yes|-y]   # Move a completed change into archive/ (non-interactive with --yes)
+openspec list               # 進行中の変更フォルダを一覧
+openspec view               # 仕様と変更のダッシュボード
+openspec show <change>      # 変更の詳細（提案・タスク・仕様差分）を表示
+openspec validate <change>  # 仕様フォーマットと構造を検証
+openspec archive <change> [--yes|-y]   # 完了した変更を archive/ に移動（--yes で非対話）
 ```
 
 ## 例: AI が OpenSpec ファイルを生成する流れ
@@ -266,15 +266,15 @@ AI に「二要素認証を追加して」と依頼すると、次のように�
 openspec/
 ├── specs/
 │   └── auth/
-│       └── spec.md           # Current auth spec (if exists)
+│       └── spec.md           # 現行の認証仕様（既にあれば）
 └── changes/
-    └── add-2fa/              # AI creates this entire structure
-        ├── proposal.md       # Why and what changes
-        ├── tasks.md          # Implementation checklist
-        ├── design.md         # Technical decisions (optional)
+    └── add-2fa/              # AI が生成する変更フォルダ
+        ├── proposal.md       # 変更理由と内容
+        ├── tasks.md          # 実装チェックリスト
+        ├── design.md         # 技術方針（必要なら）
         └── specs/
             └── auth/
-                └── spec.md   # Delta showing additions
+                └── spec.md   # 追加差分
 ```
 
 ### 生成される仕様 (`openspec/specs/auth/spec.md`)
@@ -283,15 +283,15 @@ openspec/
 # Auth Specification
 
 ## Purpose
-Authentication and session management.
+認証とセッション管理。
 
 ## Requirements
 ### Requirement: User Authentication
-The system SHALL issue a JWT on successful login.
+システムはログイン成功時に JWT を発行する。
 
 #### Scenario: Valid credentials
-- WHEN a user submits valid credentials
-- THEN a JWT is returned
+- WHEN ユーザーが有効な資格情報を送信する
+- THEN JWT を返す
 ```
 
 ### 生成される変更差分 (`openspec/changes/add-2fa/specs/auth/spec.md`)
@@ -301,28 +301,28 @@ The system SHALL issue a JWT on successful login.
 
 ## ADDED Requirements
 ### Requirement: Two-Factor Authentication
-The system MUST require a second factor during login.
+システムはログイン時に第二要素を必須とする。
 
 #### Scenario: OTP required
-- WHEN a user submits valid credentials
-- THEN an OTP challenge is required
+- WHEN ユーザーが有効な資格情報を送信する
+- THEN OTP チャレンジを要求する
 ```
 
 ### 生成されるタスク (`openspec/changes/add-2fa/tasks.md`)
 
 ```markdown
 ## 1. Database Setup
-- [ ] 1.1 Add OTP secret column to users table
-- [ ] 1.2 Create OTP verification logs table
+- [ ] 1.1 users テーブルに OTP 秘密キー列を追加
+- [ ] 1.2 OTP 検証ログテーブルを作成
 
 ## 2. Backend Implementation  
-- [ ] 2.1 Add OTP generation endpoint
-- [ ] 2.2 Modify login flow to require OTP
-- [ ] 2.3 Add OTP verification endpoint
+- [ ] 2.1 OTP 生成エンドポイントを追加
+- [ ] 2.2 ログインフローを変更し OTP を必須にする
+- [ ] 2.3 OTP 検証エンドポイントを追加
 
 ## 3. Frontend Updates
-- [ ] 3.1 Create OTP input component
-- [ ] 3.2 Update login flow UI
+- [ ] 3.1 OTP 入力コンポーネントを作成
+- [ ] 3.2 ログインフロー UI を更新
 ```
 
 **重要:** これらのファイルを手作業で作る必要はありません。要件と既存コードに基づき、AI アシスタントが自動生成します。
