@@ -345,21 +345,17 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 > **TODO: コミット前に必ずこのセッションメモを更新し、実施内容・テスト状況・残タスクを記録すること。**
 
 ### 実施したこと
-- ルート `AGENTS.md` を日本語化。
-- `CHANGELOG.ja.md` を新規追加し英語版の主な変更を要約。
-- `openspec-parallel-merge-plan.ja.md` を追加し、英語原文には日本語サマリーを除去。
-- CLI コアの日本語化：`src/core/init.ts`, `list.ts`, `update.ts`, `view.ts`, `archive.ts`。
-- バリデーション関連メッセージの日本語化：`src/core/validation/constants.ts`, `validator.ts`。
-- テスト期待値を翻訳後のメッセージに合わせて更新：`test/core/list.test.ts`, `validation.test.ts`, `validation.enriched-messages.test.ts`, `archive.test.ts`, `update.test.ts`, `init.test.ts`。
+- CLI/コアの日本語化を完了し、デプリケーション警告を `src/utils/deprecations.ts` で集中管理。`OPENSPEC_SUPPRESS_DEPRECATIONS` による抑制も実装。
+- 主要テスト（`test/commands/*`, `test/core/*`, `test/cli-e2e/basic.test.ts` など）の期待値をすべて日本語メッセージに合わせて更新。
+- `CHANGELOG.ja.md` と `openspec-parallel-merge-plan.ja.md` を追加し、日本語ドキュメントの整備を開始。
+- `AGENTS.OpenSpec-J.md` に「チャットは日本語」「セッションメモをコミット前に更新」の明示ルールを追記。
 
 ### テスト状況
-- `pnpm vitest run test/core/update.test.ts` は成功。
-- フル `pnpm test` はローカル実行で終了コード 1（大量出力・デプリケーション警告含む）。直近の失敗は翻訳後の期待値未更新が原因だったが修正済み。再度クリーン環境での一括実行とログ確認が必要。
+- Node v22.20.0 / `pnpm test`（Vitest 全体）を実行し 279 件すべて成功。デプリケーション警告は環境変数で抑制済み。
 
 ### 残タスク（推奨）
-- [ ] 再度 `pnpm test` を実行し、まだ失敗があれば該当テストのログを精査して修正。
-- [ ] デプリケーション警告（`openspec spec ...` 系コマンド）対応方針を決めるか抑制設定を検討。
-- [ ] 必要に応じて `README.md` などトップレベルドキュメントの追加翻訳・整合確認を続行。
+- [ ] `.idea/` などエディタ由来ファイルを追跡除外するか、管理方針を決定。
+- [ ] README ほかトップレベル文書の残差分があれば継続的に同期。
 
 ### 運用ルール（セッションメモ）
 - 作業コミット時には、このセクション（セッションメモ）を更新し、実施内容・テスト状況・残タスクを追記すること。
