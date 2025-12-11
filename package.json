@@ -1,5 +1,5 @@
 {
-  "name": "@fission-ai/openspec",
+  "name": "@ayumuwall/openspec",
   "version": "0.16.0",
   "description": "AI-native system for spec-driven development",
   "keywords": [
@@ -69,5 +69,6 @@
     "commander": "^14.0.0",
     "ora": "^8.2.0",
     "zod": "^4.0.17"
-  }
+  },
+  "packageManager": "pnpm@10.25.0+sha512.5e82639027af37cf832061bcc6d639c219634488e0f2baebe785028a793de7b525ffcd3f7ff574f5e9860654e098fe852ba8ac5dd5cefe1767d23a020a92f501"
 }

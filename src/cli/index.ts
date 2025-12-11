@@ -15,6 +15,20 @@ import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
 import { emitDeprecationWarning } from '../utils/deprecations.js';
 
+const translateHelpHeadings = (text: string): string =>
+  text
+    .replace(/^Usage:/m, '使い方:')
+    .replace(/^Options:/m, 'オプション:')
+    .replace(/^Commands:/m, 'コマンド:')
+    .replace(/^Arguments:/m, '引数:');
+
+// Override commander のヘルプ出力を日本語見出しに差し替える
+const originalHelpInformation = Command.prototype.helpInformation;
+Command.prototype.helpInformation = function helpInformation(): string {
+  const original = originalHelpInformation.call(this);
+  return translateHelpHeadings(original);
+};
+
 const program = new Command();
 const require = createRequire(import.meta.url);
 const { version } = require('../../package.json');
@@ -22,7 +36,9 @@ const { version } = require('../../package.json');
 program
   .name('openspec')
   .description('仕様駆動開発のための AI ネイティブツール (AI-native system for spec-driven development)')
-  .version(version);
+  .version(version, '-V, --version', 'バージョンを表示')
+  .helpOption('-h, --help', 'ヘルプを表示')
+  .addHelpCommand('help [command]', 'コマンドのヘルプを表示');
 
 // Global options
 program.option('--no-color', 'カラー出力を無効化');
