@@ -172,11 +172,20 @@ openspec init
 
 ### オプション: プロジェクトコンテキストの入力
 
-`openspec init` 完了後、プロジェクトコンテキストを埋めるための推奨プロンプトが提示されます:
+`openspec init` 完了後、次のステップ用プロンプトが表示されます（実装と同じ 3 本のプロンプトです。そのまま AI ツールに貼り付けてください）:
 
 ```text
-Populate your project context:
-"Please read openspec/project.md and help me fill it out with details about my project, tech stack, and conventions"
+1. プロジェクトコンテキストを埋める:
+   "openspec/project.md を読んで、プロジェクト/技術スタック/規約の情報を
+    追記するのを手伝ってください"
+
+2. 最初の変更提案を作る:
+   "［追加したい機能］を実装したい。
+    この機能の OpenSpec 変更提案を作って"
+
+3. OpenSpec ワークフローを理解する:
+   "openspec/AGENTS.md をもとに、OpenSpec のワークフローと
+    このプロジェクトでの進め方を説明して"
 ```
 
 `openspec/project.md` には、プロジェクト共通の規約・標準・アーキテクチャパターン・ガイドラインなどを記載してください。
@@ -243,7 +252,7 @@ AI:  add-profile-filters をアーカイブします。
 
 自分でターミナルから実行する場合:
 ```bash
-$ openspec archive add-profile-filters --yes  # Archive the completed change without prompts
+$ openspec archive add-profile-filters --yes  # 対話なしで完了済みの変更をアーカイブする
 ```
 
 **補足:** スラッシュコマンド対応ツール（Claude Code, CodeBuddy, Cursor, Codex, Qoder, RooCode など）は上記ショートカットをそのまま使用できます。その他のツールでも「OpenSpec の提案を作成」「OpenSpec の変更を適用」「変更をアーカイブ」と自然文で依頼すれば動作します。
