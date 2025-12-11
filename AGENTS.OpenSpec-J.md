@@ -241,7 +241,7 @@ OpenSpec-J でのローカライズは、次の 3 レイヤーに分けて考え
 * change proposal → 変更提案
 * spec delta → 仕様差分
 * source-of-truth spec → ソース・オブ・トゥルース仕様 / 単一の真実の仕様
-* capability → 機能領域 / ケイパビリティ（文脈に応じて選択）
+* capability → 機能
 * tasks → タスク
 * archive (動詞) → アーカイブする
 * apply (動詞) → 適用する
@@ -353,11 +353,13 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - `src/core/templates/*.ts` のテンプレート本文を日本語化し、`test/core/init.test.ts` / `test/core/update.test.ts` の期待値を更新。
 - 配布される `openspec/AGENTS.md` と `openspec/project.md` を日本語テンプレートに揃え、関連テンプレート（`src/core/templates/*`）とスラッシュコマンド文面を統一し `.gitignore` に `.idea/` を追加。
 - `src/core/init.ts` の「(already configured)」表示と `src/commands/spec.ts` の英語メッセージを日本語化し、関連テストを更新。
+- 用語集の capability の訳語を「機能」に統一し、テンプレート・指示文中の「ケイパビリティ」表記を「機能」に置換。
 
 ### テスト状況
 - Node v22.20.0 / `pnpm test`（Vitest 全体）を実行し 279 件すべて成功。テンプレート日本語化後の回帰確認済み。
 - Node v22.20.0（`nvm use 22.20.0`）/ `npx vitest run test/core/init.test.ts test/core/update.test.ts` を実行し成功。
 - Node v20.19.6 / `pnpm test` を実行し 23 files / 279 tests すべて成功（CLI メッセージ日本語化後の回帰確認）。
+- 今回の訳語統一では文言変更のみのため追加テストは未実施。
 
 ### 残タスク（推奨）
 - [x] レイヤー2テンプレート（`src/core/templates/*.ts`）の本文を日本語化し、`init` テストを更新して `pnpm test` を実行する。

@@ -5,9 +5,9 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 ## TL;DR Quick Checklist
 
 - 既存の作業を検索: `openspec spec list --long`, `openspec list`（全文検索が必要な場合のみ `rg`）
-- スコープを決定: 新しいケイパビリティを追加するのか、既存ケイパビリティを更新するのか判断する
+- スコープを決定: 新しい機能を追加するのか、既存機能を更新するのか判断する
 - 一意の `change-id` を決める: kebab-case で動詞始まり（`add-`, `update-`, `remove-`, `refactor-` など）
-- スキャフォールド: `proposal.md`, `tasks.md`, 必要に応じた `design.md`、影響するケイパビリティ別の仕様差分
+- スキャフォールド: `proposal.md`, `tasks.md`, 必要に応じた `design.md`、影響する機能別の仕様差分
 - 仕様差分を書く: `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を使い、各要件に最低 1 個の `#### Scenario:` を含める
 - 検証する: `openspec validate [change-id] --strict` を実行し、指摘をすべて解消する
 - 承認を得る: 提案がレビュー・承認されるまで実装を開始しない
@@ -16,7 +16,7 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 
 ### Stage 1: Creating Changes
 次のような場合は必ず変更提案を作成します:
-- 機能やケイパビリティを追加するとき
+- 機能を追加するとき
 - API・スキーマなど破壊的な変更を実施するとき
 - アーキテクチャや設計パターンを更新するとき
 - 挙動が変わる性能最適化を行うとき
@@ -59,7 +59,7 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 ### Stage 3: Archiving Changes
 デプロイ後は別 PR で次を実施します:
 - `changes/[name]/` を `changes/archive/YYYY-MM-DD-[name]/` へ移動する
-- ケイパビリティに変更がある場合は `specs/` を更新する
+- 機能に変更がある場合は `specs/` を更新する
 - ツールのみの変更では `openspec archive <change-id> --skip-specs --yes` を使用（必ず change-id を渡す）
 - `openspec validate --strict` を再実行し、アーカイブ済み変更が検証を通過することを確認する
 
@@ -70,10 +70,10 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 - [ ] `changes/` にある他の変更と競合しないか確認する
 - [ ] `openspec/project.md` でプロジェクト固有の慣習を確認する
 - [ ] `openspec list` を実行し、進行中の変更を把握する
-- [ ] `openspec list --specs` を実行し、既存ケイパビリティを確認する
+- [ ] `openspec list --specs` を実行し、既存機能を確認する
 
 **Before Creating Specs:**
-- ケイパビリティが既に存在しないか必ず調べる
+- 機能が既に存在しないか必ず調べる
 - 新規ファイルを増やすより、既存仕様を更新することを優先する
 - 現状把握には `openspec show [spec]` を使う
 - 要求があいまいな場合は、スキャフォールド前に 1〜2 件の確認質問をする
@@ -148,7 +148,7 @@ openspec/
 新しい依頼がありますか？
 ├─ 仕様通りに戻すバグ修正？ → 直接修正
 ├─ 誤字・書式・コメント？ → 直接修正  
-├─ 新機能/ケイパビリティ？ → 提案を作成
+├─ 新機能？ → 提案を作成
 ├─ 破壊的変更？ → 提案を作成
 ├─ アーキテクチャ変更？ → 提案を作成
 └─ あいまいで判断できない？ → 提案を作成（安全策）
@@ -170,7 +170,7 @@ openspec/
 - [破壊的変更には **BREAKING** を付ける]
 
 ## Impact
-- Affected specs: [影響するケイパビリティ]
+- Affected specs: [影響する機能]
 - Affected code: [主なコード/システム]
 ```
 
@@ -193,7 +193,7 @@ openspec/
 **Reason**: [削除理由]
 **Migration**: [移行方法]
 ```
-複数のケイパビリティに影響する場合は、`changes/[change-id]/specs/<capability>/spec.md` をケイパビリティごとに作成してください。
+複数の機能に影響する場合は、`changes/[change-id]/specs/<capability>/spec.md` を機能ごとに作成してください。
 
 4. **tasks.md を作成:**
 ```markdown
@@ -265,7 +265,7 @@ openspec/
 
 ### Delta Operations
 
-- `## ADDED Requirements` - 新しい機能/ケイパビリティ
+- `## ADDED Requirements` - 新しい機能
 - `## MODIFIED Requirements` - 既存挙動の変更
 - `## REMOVED Requirements` - 廃止する機能
 - `## RENAMED Requirements` - 要件名の変更
@@ -400,6 +400,6 @@ notifications/spec.md
 
 ### Capability Naming
 - 動詞-名詞（例: `user-auth`, `payment-capture`）で命名
-- ケイパビリティは単一の目的に絞る
+- 機能は単一の目的に絞る
 - 「10 分で理解できる」ことを目安にする
 - 説明に AND が必要なら分割を検討する
