@@ -7,6 +7,7 @@ export const agentsTemplate = [
   "",
   "- 既存の作業を検索: `openspec spec list --long`, `openspec list`（全文検索が必要な場合のみ `rg`）",
   "- スコープを決定: 新しい機能を追加するのか、既存機能を更新するのか判断する",
+  "- 生成する `proposal.md` / `tasks.md` / `design.md` / 仕様差分は日本語で記述し、見出しやキーワード（Requirement/Scenario, WHEN/THEN, MUST/SHALL）は英語のまま維持する",
   "- 一意の `change-id` を決める: kebab-case で動詞始まり（`add-`, `update-`, `remove-`, `refactor-` など）",
   "- スキャフォールド: `proposal.md`, `tasks.md`, 必要に応じた `design.md`、影響する機能別の仕様差分",
   "- 仕様差分を書く: `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を使い、各要件に最低 1 個の `#### Scenario:` を含める",

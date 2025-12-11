@@ -4,6 +4,7 @@ const baseGuardrails = [
   "**Guardrails**",
   "- まずはシンプルで最小限の実装を優先し、明確な依頼や根拠がある場合のみ複雑化してください。",
   "- 変更のスコープを依頼された成果にきっちり合わせ、不要に広げないでください。",
+  "- 生成する `proposal.md` / `tasks.md` / `design.md` / 仕様差分は日本語で記述し、見出しやキーワード（Requirement/Scenario, WHEN/THEN, MUST/SHALL）は英語のまま維持してください。",
   "- 追加の OpenSpec 慣習が必要になったら `openspec/AGENTS.md`（`openspec/` ディレクトリ内。見つからなければ `ls openspec` や `openspec update`）を参照してください。"
 ].join("\n");
 
