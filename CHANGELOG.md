@@ -4,8 +4,8 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 0.16.0
 
-- CHANGELOG を OpenSpec-J 用に統一し、日本語 changelog を単一化。
-- OpenSpec-J 初版。upstream v0.16.0 をベースに、CLI 出力・テンプレート・AGENTS・スラッシュコマンド文面・デプリケーション警告などを日本語化。
+- [OpenSpec-J] CHANGELOG を OpenSpec-J 用に統一し、日本語 changelog を単一化。
+- [OpenSpec-J] 初版。upstream v0.16.0 をベースに、CLI 出力・テンプレート・AGENTS・スラッシュコマンド文面・デプリケーション警告などを日本語化。
 - iFlow CLI・Antigravity など新規 AI ツール連携を追加し、スラッシュコマンド生成を強化。
 - `init` 後に IDE 再起動が必要な場合の案内を追記。
 - Qwen Code の TOML コマンド生成を修正、プロポーザルのガイドラインを改善。
