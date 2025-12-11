@@ -245,6 +245,7 @@ OpenSpec-J でのローカライズは、次の 3 レイヤーに分けて考え
 * tasks → タスク
 * archive (動詞) → アーカイブする
 * apply (動詞) → 適用する
+* scaffold (動詞) → ひな形を作成する（テンプレートを生成する）
 * validate → 検証する
 * workflow → ワークフロー
 * requirements → 要件
@@ -340,12 +341,14 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 
 ---
 
-## 8. セッションメモ（2025-12-11）
+## 8. セッションメモ（2025-12-12）
 
 > **TODO: コミット前に必ずこのセッションメモを更新し、実施内容・テスト状況・残タスクを記録すること。**
 > **TODO: セッションメモの見出し日付（例: 2025-12-05）も、その作業日のものへ必ず更新すること。**
 
 ### 実施したこと
+- `test/cli-e2e/basic.test.ts` のヘルプ出力期待値を日本語表記（`使い方:`）に合わせて更新し、フルテストを実行。
+- スラッシュコマンドの frontmatter / description（全ツール）を日本語に統一し、テンプレート出力をローカライズ。
 - CLI/コアの日本語化を完了し、デプリケーション警告を `src/utils/deprecations.ts` で集中管理。`OPENSPEC_SUPPRESS_DEPRECATIONS` による抑制も実装。
 - 主要テスト（`test/commands/*`, `test/core/*`, `test/cli-e2e/basic.test.ts` など）の期待値をすべて日本語メッセージに合わせて更新。
 - `CHANGELOG.ja.md` と `openspec-parallel-merge-plan.ja.md` を追加し、日本語ドキュメントの整備を開始。
@@ -356,6 +359,7 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - 用語集の capability の訳語を「機能」に統一し、テンプレート・指示文中の「ケイパビリティ」表記を「機能」に置換。
 
 ### テスト状況
+- Node v22.20.0 / `pnpm test`（2025-12-12）を実行し 23 files / 279 tests すべて成功（ヘルプ出力・スラッシュコマンド文言日本語化後の確認）。
 - Node v22.20.0 / `pnpm test`（Vitest 全体）を実行し 279 件すべて成功。テンプレート日本語化後の回帰確認済み。
 - Node v22.20.0（`nvm use 22.20.0`）/ `npx vitest run test/core/init.test.ts test/core/update.test.ts` を実行し成功。
 - Node v20.19.6 / `pnpm test` を実行し 23 files / 279 tests すべて成功（CLI メッセージ日本語化後の回帰確認）。

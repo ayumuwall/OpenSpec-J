@@ -11,7 +11,7 @@ const FILE_PATHS: Record<SlashCommandId, string> = {
 
 const FRONTMATTER: Record<SlashCommandId, string> = {
   proposal: `---
-description: Scaffold a new OpenSpec change and validate strictly.
+description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 ---
 The user has requested the following change proposal. Use the openspec instructions to create their change proposal.
 <UserRequest>
@@ -19,7 +19,7 @@ The user has requested the following change proposal. Use the openspec instructi
 </UserRequest>
 `,
   apply: `---
-description: Implement an approved OpenSpec change and keep tasks in sync.
+description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 ---
 The user has requested to implement the following change proposal. Find the change proposal and follow the instructions below. If you're not sure or if ambiguous, ask for clarification from the user.
 <UserRequest>
@@ -27,7 +27,7 @@ The user has requested to implement the following change proposal. Find the chan
 </UserRequest>
 `,
   archive: `---
-description: Archive a deployed OpenSpec change and update specs.
+description: 適用済みの OpenSpec 変更をアーカイブし、仕様を更新します。
 ---
 <ChangeId>
   $ARGUMENTS

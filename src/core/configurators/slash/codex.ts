@@ -25,19 +25,19 @@ export class CodexSlashCommandConfigurator extends SlashCommandConfigurator {
     // plus $ARGUMENTS to capture all arguments as a single string.
     const frontmatter: Record<SlashCommandId, string> = {
       proposal: `---
-description: Scaffold a new OpenSpec change and validate strictly.
+description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 argument-hint: request or feature description
 ---
 
 $ARGUMENTS`,
       apply: `---
-description: Implement an approved OpenSpec change and keep tasks in sync.
+description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 argument-hint: change-id
 ---
 
 $ARGUMENTS`,
       archive: `---
-description: Archive a deployed OpenSpec change and update specs.
+description: 適用済みの OpenSpec 変更をアーカイブし、仕様を更新します。
 argument-hint: change-id
 ---
 

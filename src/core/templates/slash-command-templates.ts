@@ -17,7 +17,7 @@ const proposalGuardrails = [
 const proposalSteps = [
   "**Steps**",
   "1. `openspec/project.md` を確認し、`openspec list` と `openspec list --specs` を実行して現在の文脈を把握し、必要に応じて `rg` や `ls` で関連コード/ドキュメントを調査する。",
-  "2. 動詞始まりで一意な `change-id` を決め、`openspec/changes/<id>/` に `proposal.md`, `tasks.md`, 必要なら `design.md` をスキャフォールドする。",
+  "2. 動詞始まりで一意な `change-id` を決め、`openspec/changes/<id>/` に `proposal.md`, `tasks.md`, 必要なら `design.md` のひな形を作成する。",
   "3. 変更内容を具体的な機能や要件に割り付け、複数スコープが混ざる場合は関連性や順序が分かるように仕様差分を分割する。",
   "4. 解決策が複数のシステムにまたがる、新しいパターンを導入する、または実装前にトレードオフ整理が必要な場合は `design.md` に判断理由を記録する。",
   "5. `changes/<id>/specs/<capability>/spec.md`（機能ごとに 1 フォルダー）に `## ADDED|MODIFIED|REMOVED Requirements` を使って仕様差分を書き、各要件に最低 1 つの `#### Scenario:` を含め、関連機能を必要に応じて参照する。",

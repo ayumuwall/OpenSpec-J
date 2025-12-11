@@ -80,7 +80,7 @@ The following examples illustrate expected structure. If a tool does not support
 ```markdown
 ---
 name: OpenSpec: Proposal
-description: Scaffold a new OpenSpec change and validate strictly.
+description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 category: OpenSpec
 tags: [openspec, change]
 ---
@@ -97,7 +97,7 @@ Slash invocation: `/openspec/proposal` (namespaced)
 name: /openspec-proposal
 id: openspec-proposal
 category: OpenSpec
-description: Scaffold a new OpenSpec change and validate strictly.
+description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 ---
 <!-- OPENSPEC:START -->
 ...command body from shared template...

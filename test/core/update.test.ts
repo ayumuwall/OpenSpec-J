@@ -155,7 +155,7 @@ Old slash content
       '.qwen/commands/openspec-apply.toml'
     );
     await fs.mkdir(path.dirname(applyPath), { recursive: true });
-    const initialContent = `description = "Implement an approved OpenSpec change and keep tasks in sync."
+    const initialContent = `description = "承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。"
 
 prompt = """
 <!-- OPENSPEC:START -->
@@ -170,7 +170,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(applyPath, 'utf-8');
-    expect(updated).toContain('description = "Implement an approved OpenSpec change and keep tasks in sync."');
+    expect(updated).toContain('description = "承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。"');
     expect(updated).toContain('prompt = """');
     expect(updated).toContain('<!-- OPENSPEC:START -->');
     expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
@@ -302,7 +302,7 @@ More rules after.`;
     await fs.mkdir(path.dirname(proposalPath), { recursive: true });
     const initialContent = `# OpenSpec: Proposal
 
-Scaffold a new OpenSpec change and validate strictly.
+新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 
 <!-- OPENSPEC:START -->
 Old slash content
@@ -470,7 +470,7 @@ Old body
     );
     await fs.mkdir(path.dirname(agPath), { recursive: true });
     const initialContent = `---
-description: Implement an approved OpenSpec change and keep tasks in sync.
+description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 ---
 
 <!-- OPENSPEC:START -->
@@ -485,7 +485,7 @@ Old body
     const updated = await fs.readFile(agPath, 'utf-8');
     expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
-    expect(updated).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
+    expect(updated).toContain('description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。');
     expect(updated).not.toContain('auto_execution_mode: 3');
 
     const [logMessage] = consoleSpy.mock.calls[0];
@@ -509,7 +509,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(codexPath, 'utf-8');
-    expect(updated).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
+    expect(updated).toContain('description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。');
     expect(updated).toContain('argument-hint: change-id');
     expect(updated).toContain('$ARGUMENTS');
     expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
@@ -560,7 +560,7 @@ Old body
     );
     await fs.mkdir(path.dirname(ghPath), { recursive: true });
     const initialContent = `---
-description: Implement an approved OpenSpec change and keep tasks in sync.
+description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 ---
 
 $ARGUMENTS
@@ -574,7 +574,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(ghPath, 'utf-8');
-    expect(updated).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
+    expect(updated).toContain('description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。');
     expect(updated).toContain('$ARGUMENTS');
     expect(updated).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
     expect(updated).not.toContain('Old body');
@@ -622,7 +622,7 @@ Old body
       '.gemini/commands/openspec/proposal.toml'
     );
     await fs.mkdir(path.dirname(geminiProposal), { recursive: true });
-    const initialContent = `description = "Scaffold a new OpenSpec change and validate strictly."
+    const initialContent = `description = "新しい OpenSpec の変更のひな形を作成し、厳密に検証します。"
 
 prompt = """
 <!-- OPENSPEC:START -->
@@ -637,7 +637,7 @@ Old Gemini body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(geminiProposal, 'utf-8');
-    expect(updated).toContain('description = "Scaffold a new OpenSpec change and validate strictly."');
+    expect(updated).toContain('description = "新しい OpenSpec の変更のひな形を作成し、厳密に検証します。"');
     expect(updated).toContain('prompt = """');
     expect(updated).toContain('<!-- OPENSPEC:START -->');
     expect(updated).toContain('**Guardrails**');
@@ -670,7 +670,7 @@ Old Gemini body
       '.iflow/commands/openspec-proposal.md'
     );
     await fs.mkdir(path.dirname(iflowProposal), { recursive: true });
-    const initialContent = `description: Scaffold a new OpenSpec change and validate strictly."
+    const initialContent = `description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。"
 
 prompt = """
 <!-- OPENSPEC:START -->
@@ -685,7 +685,7 @@ Old IFlow body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(iflowProposal, 'utf-8');
-    expect(updated).toContain('description: Scaffold a new OpenSpec change and validate strictly.');
+    expect(updated).toContain('description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。');
     expect(updated).toContain('<!-- OPENSPEC:START -->');
     expect(updated).toContain('**Guardrails**');
     expect(updated).toContain('<!-- OPENSPEC:END -->');
@@ -718,7 +718,7 @@ Old IFlow body
     );
     await fs.mkdir(path.dirname(factoryPath), { recursive: true });
     const initialContent = `---
-description: Scaffold a new OpenSpec change and validate strictly.
+description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 argument-hint: request or feature description
 ---
 
@@ -732,7 +732,7 @@ Old body
     await updateCommand.execute(testDir);
 
     const updated = await fs.readFile(factoryPath, 'utf-8');
-    expect(updated).toContain('description: Scaffold a new OpenSpec change and validate strictly.');
+    expect(updated).toContain('description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。');
     expect(updated).toContain('argument-hint: request or feature description');
     expect(
       /<!-- OPENSPEC:START -->([\s\S]*?)<!-- OPENSPEC:END -->/u.exec(updated)?.[1]
@@ -788,7 +788,7 @@ Old body
     );
     await fs.mkdir(path.dirname(aqPath), { recursive: true });
     const initialContent = `---
-description: Implement an approved OpenSpec change and keep tasks in sync.
+description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 ---
 
 The user wants to apply the following change. Use the openspec instructions to implement the approved change.
@@ -854,7 +854,7 @@ Old body
     );
     await fs.mkdir(path.dirname(auggiePath), { recursive: true });
     const initialContent = `---
-description: Implement an approved OpenSpec change and keep tasks in sync.
+description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 argument-hint: change-id
 ---
 <!-- OPENSPEC:START -->

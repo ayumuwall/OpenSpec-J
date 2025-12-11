@@ -7,7 +7,7 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 - 既存の作業を検索: `openspec spec list --long`, `openspec list`（全文検索が必要な場合のみ `rg`）
 - スコープを決定: 新しい機能を追加するのか、既存機能を更新するのか判断する
 - 一意の `change-id` を決める: kebab-case で動詞始まり（`add-`, `update-`, `remove-`, `refactor-` など）
-- スキャフォールド: `proposal.md`, `tasks.md`, 必要に応じた `design.md`、影響する機能別の仕様差分
+- ひな形を作成: `proposal.md`, `tasks.md`, 必要に応じた `design.md`、影響する機能別の仕様差分
 - 仕様差分を書く: `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を使い、各要件に最低 1 個の `#### Scenario:` を含める
 - 検証する: `openspec validate [change-id] --strict` を実行し、指摘をすべて解消する
 - 承認を得る: 提案がレビュー・承認されるまで実装を開始しない
@@ -42,7 +42,7 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 
 **Workflow**
 1. `openspec/project.md`、`openspec list`、`openspec list --specs` を確認し、現在の文脈を理解する。
-2. 動詞始まりの一意な `change-id` を決め、`openspec/changes/<id>/` に `proposal.md`、`tasks.md`、必要なら `design.md` と仕様差分をスキャフォールドする。
+2. 動詞始まりの一意な `change-id` を決め、`openspec/changes/<id>/` に `proposal.md`、`tasks.md`、必要なら `design.md` と仕様差分のひな形を作成する。
 3. 仕様差分では `## ADDED|MODIFIED|REMOVED Requirements` 見出しを使い、各要件に最低 1 つの `#### Scenario:` を含める。
 4. `openspec validate <id> --strict` を実行し、問題をすべて解決してから提案を共有する。
 
@@ -76,7 +76,7 @@ OpenSpec で仕様駆動開発を進める AI コーディングアシスタン�
 - 機能が既に存在しないか必ず調べる
 - 新規ファイルを増やすより、既存仕様を更新することを優先する
 - 現状把握には `openspec show [spec]` を使う
-- 要求があいまいな場合は、スキャフォールド前に 1〜2 件の確認質問をする
+- 要求があいまいな場合は、ひな形作成前に 1〜2 件の確認質問をする
 
 ### Search Guidance
 - 仕様一覧: `openspec spec list --long`（スクリプト用途は `--json`）
@@ -331,7 +331,7 @@ openspec list
 # rg -n "Requirement:|Scenario:" openspec/specs
 # rg -n "^#|Requirement:" openspec/changes
 
-# 2) change-id を決めてスキャフォールド
+# 2) change-id を決めてひな形を作成
 CHANGE=add-two-factor-auth
 mkdir -p openspec/changes/$CHANGE/{specs/auth}
 printf "## Why\n...\n\n## What Changes\n- ...\n\n## Impact\n- ...\n" > openspec/changes/$CHANGE/proposal.md
