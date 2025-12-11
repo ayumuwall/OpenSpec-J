@@ -157,7 +157,7 @@ const toolSelectionWizard = createPrompt<string[], ToolWizardConfig>(
           ? PALETTE.midGray(` (${item.label.annotation})`)
           : '';
         const configuredNote = item.configured
-          ? PALETTE.midGray(' (already configured)')
+          ? PALETTE.midGray(' (設定済み)')
           : '';
         const label = `${nameColor(item.label.primary)}${annotation}${configuredNote}`;
         return `${cursorSymbol} ${indicator} ${label}`;
@@ -283,7 +283,7 @@ const toolSelectionWizard = createPrompt<string[], ToolWizardConfig>(
         ? PALETTE.midGray(` (${choice.label.annotation})`)
         : '';
       const configuredNote = choice.configured
-        ? PALETTE.midGray(' (already configured)')
+        ? PALETTE.midGray(' (設定済み)')
         : '';
       return `${PALETTE.white(choice.label.primary)}${annotation}${configuredNote}`;
     };

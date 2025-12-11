@@ -351,15 +351,17 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - `AGENTS.OpenSpec-J.md` に「チャットは日本語」「セッションメモをコミット前に更新」の明示ルールを追記。
 - `src/core/templates/*.ts` のテンプレート本文を日本語化し、`test/core/init.test.ts` / `test/core/update.test.ts` の期待値を更新。
 - 配布される `openspec/AGENTS.md` と `openspec/project.md` を日本語テンプレートに揃え、関連テンプレート（`src/core/templates/*`）とスラッシュコマンド文面を統一し `.gitignore` に `.idea/` を追加。
+- `src/core/init.ts` の「(already configured)」表示と `src/commands/spec.ts` の英語メッセージを日本語化し、関連テストを更新。
 
 ### テスト状況
 - Node v22.20.0 / `pnpm test`（Vitest 全体）を実行し 279 件すべて成功。テンプレート日本語化後の回帰確認済み。
 - Node v22.20.0（`nvm use 22.20.0`）/ `npx vitest run test/core/init.test.ts test/core/update.test.ts` を実行し成功。
+- Node v20.19.6 / `pnpm test` を実行し 23 files / 279 tests すべて成功（CLI メッセージ日本語化後の回帰確認）。
 
 ### 残タスク（推奨）
 - [x] レイヤー2テンプレート（`src/core/templates/*.ts`）の本文を日本語化し、`init` テストを更新して `pnpm test` を実行する。
 - [x] デフォルトで配布される `openspec/AGENTS.md` と `openspec/project.md` をテンプレートと同じ日本語文面に揃え、`openspec validate --strict` で整合性を確認する。
-- [ ] CLI 出力に残る英語メッセージ（例: `src/core/init.ts` の “already configured” 表記や `src/commands/spec.ts` のエラー文）を日本語化し、該当テストを更新して回帰確認する。
+- [x] CLI 出力に残る英語メッセージ（例: `src/core/init.ts` の “already configured” 表記や `src/commands/spec.ts` のエラー文）を日本語化し、該当テストを更新して回帰確認する。
 
 ### 運用ルール（セッションメモ）
 - 作業コミット時には、このセクション（セッションメモ）を更新し、実施内容・テスト状況・残タスクを追記すること。

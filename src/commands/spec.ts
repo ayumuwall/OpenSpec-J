@@ -30,7 +30,7 @@ function validateRequirementIndex(spec: Spec, requirementOpt?: string): number |
   if (!requirementOpt) return undefined;
   const index = Number.parseInt(requirementOpt, 10);
   if (!Number.isInteger(index) || index < 1 || index > spec.requirements.length) {
-    throw new Error(`Requirement ${requirementOpt} not found`);
+    throw new Error(`指定の要件 ${requirementOpt} が見つかりません（--requirement は 1 から始まる番号です）`);
   }
   return index - 1; // convert to 0-based
 }
@@ -85,7 +85,7 @@ export class SpecCommand {
 
     const specPath = join(this.SPECS_DIR, specId, 'spec.md');
     if (!existsSync(specPath)) {
-      throw new Error(`Spec '${specId}' not found at openspec/specs/${specId}/spec.md`);
+      throw new Error(`仕様 '${specId}' が見つかりません（openspec/specs/${specId}/spec.md を確認してください）`);
     }
 
     if (options.json) {
@@ -182,7 +182,7 @@ export function registerSpecCommand(rootProgram: typeof program) {
           console.log(JSON.stringify(specs, null, 2));
         } else {
           if (specs.length === 0) {
-            console.log('No items found');
+            console.log('項目が見つかりません');
             return;
           }
           if (!options.long) {
@@ -190,7 +190,7 @@ export function registerSpecCommand(rootProgram: typeof program) {
             return;
           }
           specs.forEach(spec => {
-            console.log(`${spec.id}: ${spec.title} [requirements ${spec.requirementCount}]`);
+            console.log(`${spec.id}: ${spec.title} [要件 ${spec.requirementCount}件]`);
           });
         }
       } catch (error) {
