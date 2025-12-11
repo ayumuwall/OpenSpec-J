@@ -11,8 +11,8 @@
 <p align="center">AI コーディングアシスタントのための仕様駆動開発。</p>
 <p align="center">
   <a href="https://github.com/Fission-AI/OpenSpec/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Fission-AI/OpenSpec/actions/workflows/ci.yml/badge.svg" /></a>
-  <a href="https://www.npmjs.com/package/@fission-ai/openspec"><img alt="npm version" src="https://img.shields.io/npm/v/@fission-ai/openspec?style=flat-square" /></a>
-  <a href="https://nodejs.org/"><img alt="node version" src="https://img.shields.io/node/v/@fission-ai/openspec?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@ayumuwall/openspec"><img alt="npm version" src="https://img.shields.io/npm/v/@ayumuwall/openspec?style=flat-square" /></a>
+  <a href="https://nodejs.org/"><img alt="node version" src="https://img.shields.io/node/v/@ayumuwall/openspec?style=flat-square" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
   <a href="https://conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square" /></a>
   <a href="https://discord.gg/YctCnvvshC"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white&style=flat-square" /></a>
@@ -140,7 +140,7 @@ Kilo Code はチームのワークフローを自動検出します。生成さ�
 #### ステップ 1: CLI をグローバルインストール
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+npm install -g @ayumuwall/openspec@latest
 ```
 
 インストール確認:
@@ -375,7 +375,7 @@ OpenSpec は機能ごとの変更を 1 フォルダ（`openspec/changes/feature-
 
 1. **パッケージをアップグレード**
    ```bash
-   npm install -g @fission-ai/openspec@latest
+   npm install -g @ayumuwall/openspec@latest
    ```
 2. **エージェントの手順を更新**
 - 各プロジェクトで `openspec update` を実行し、AI ガイダンスとスラッシュコマンドを最新化します。
