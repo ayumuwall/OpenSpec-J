@@ -212,6 +212,17 @@ export class ValidateCommand {
       });
     }
 
+    // NOTE(upstream-bug-workaround): upstream では --changes / --specs 実行時に
+    // 対象が 0 件だとスピナーが回りっぱなしになる既知問題あり。
+    // ここで空キューを検知して即終了し、CLI がハングしないようにする。
+    // exitCode は現状の挙動に合わせ 0 のまま。upstream で修正されたら削除すること。
+    if (queue.length === 0) {
+      spinner?.stop();
+      console.error('検証対象がありません（変更または仕様が見つかりません）。');
+      process.exitCode = 0;
+      return;
+    }
+
     const results: BulkItemResult[] = [];
     let index = 0;
     let running = 0;

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { runCLI } from '../helpers/run-cli.js';
@@ -136,5 +136,43 @@ describe('top-level validate command', () => {
 
     const result = await runCLI(['validate', changeId], { cwd: testDir });
     expect(result.exitCode).toBe(0);
+  });
+});
+
+describe('validate command with empty workspace (bulk flags)', () => {
+  const projectRoot = process.cwd();
+  const testDir = path.join(projectRoot, 'test-validate-empty');
+
+  beforeEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+    await fs.mkdir(testDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('prints a helpful message and exits cleanly when no changes/specs exist', async () => {
+    const originalCwd = process.cwd();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { ValidateCommand } = await import('../../src/commands/validate.js');
+    const itemDiscovery = await import('../../src/utils/item-discovery.js');
+    vi.spyOn(itemDiscovery, 'getActiveChangeIds').mockResolvedValue([]);
+    vi.spyOn(itemDiscovery, 'getSpecIds').mockResolvedValue([]);
+
+    process.chdir(testDir);
+    process.exitCode = 0;
+
+    try {
+      const cmd = new ValidateCommand();
+      await cmd.execute(undefined, { changes: true, noInteractive: true });
+      await cmd.execute(undefined, { specs: true, noInteractive: true });
+      expect(consoleErrorSpy).toHaveBeenCalledWith('検証対象がありません（変更または仕様が見つかりません）。');
+      expect(process.exitCode).toBe(0);
+    } finally {
+      process.chdir(originalCwd);
+      consoleErrorSpy.mockRestore();
+      vi.restoreAllMocks();
+    }
   });
 });
