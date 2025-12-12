@@ -346,15 +346,33 @@ export class Validator {
 
   private enrichTopLevelError(itemId: string, baseMessage: string): string {
     const msg = baseMessage.trim();
-    if (msg === VALIDATION_MESSAGES.CHANGE_NO_DELTAS) {
+
+    // NOTE: upstream は英語メッセージを吐くため includes 判定を残しつつ、
+    // 日本語化後のメッセージでもガイドを付けられるよう両方のパターンを確認する。
+    if (
+      msg === VALIDATION_MESSAGES.CHANGE_NO_DELTAS
+    ) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_NO_DELTAS}`;
     }
-    if (msg.includes('Spec must have a Purpose section') || msg.includes('Spec must have a Requirements section')) {
+
+    if (
+      msg.includes('Spec must have a Purpose section') ||
+      msg.includes('Spec must have a Requirements section') ||
+      msg.includes(VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY) ||
+      msg.includes(VALIDATION_MESSAGES.SPEC_NO_REQUIREMENTS)
+    ) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS}`;
     }
-    if (msg.includes('Change must have a Why section') || msg.includes('Change must have a What Changes section')) {
+
+    if (
+      msg.includes('Change must have a Why section') ||
+      msg.includes('Change must have a What Changes section') ||
+      msg.includes('Why セクション') || // 日本語でも Why が無い/短い場合
+      msg.includes(VALIDATION_MESSAGES.CHANGE_WHAT_EMPTY)
+    ) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_CHANGE_SECTIONS}`;
     }
+
     return msg;
   }
 
