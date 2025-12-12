@@ -1,6 +1,6 @@
 {
   "name": "@ayumuwall/openspec",
-  "version": "0.16.0",
+  "version": "0.16.0-1",
   "description": "AI-native system for spec-driven development",
   "keywords": [
     "openspec",
@@ -12,7 +12,7 @@
   "homepage": "https://github.com/ayumuwall/OpenSpec-J",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ayumuwall/OpenSpec-J.git"
+    "url": "git+https://github.com/ayumuwall/OpenSpec-J.git"
   },
   "license": "MIT",
   "author": "OpenSpec Contributors",
@@ -27,7 +27,7 @@
     }
   },
   "bin": {
-    "openspec": "./bin/openspec.js"
+    "openspec": "bin/openspec.js"
   },
   "files": [
     "dist",
