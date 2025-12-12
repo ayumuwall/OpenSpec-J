@@ -163,14 +163,14 @@ export class ViewCommand {
       // This is a simplification
     });
 
-    console.log(chalk.bold('Summary:'));
-    console.log(`  ${chalk.cyan('●')} Specifications: ${chalk.bold(totalSpecs)} specs, ${chalk.bold(totalRequirements)} requirements`);
-    console.log(`  ${chalk.yellow('●')} Active Changes: ${chalk.bold(changesData.active.length)} in progress`);
-    console.log(`  ${chalk.green('●')} Completed Changes: ${chalk.bold(changesData.completed.length)}`);
+    console.log(chalk.bold('概要:'));
+    console.log(`  ${chalk.cyan('●')} 仕様: ${chalk.bold(totalSpecs)} 件、要件 ${chalk.bold(totalRequirements)} 件`);
+    console.log(`  ${chalk.yellow('●')} 進行中の変更: ${chalk.bold(changesData.active.length)} 件`);
+    console.log(`  ${chalk.green('●')} 完了した変更: ${chalk.bold(changesData.completed.length)} 件`);
     
     if (totalTasks > 0) {
       const overallProgress = Math.round((completedTasks / totalTasks) * 100);
-      console.log(`  ${chalk.magenta('●')} Task Progress: ${chalk.bold(`${completedTasks}/${totalTasks}`)} (${overallProgress}% complete)`);
+      console.log(`  ${chalk.magenta('●')} タスク進捗: ${chalk.bold(`${completedTasks}/${totalTasks}`)} （${overallProgress}% 完了）`);
     }
   }
 
