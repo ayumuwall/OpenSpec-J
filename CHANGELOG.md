@@ -2,6 +2,27 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog です。以降のリリースはこのファイルで管理します。過去の項目は upstream @fission-ai/openspec の履歴を日本語で整理したものです。
 
+## 0.17.2
+
+- `validate` コマンドの `--no-interactive` がスピナー無効化に正しく効くよう修正し、pre-commit フックや CI のハングを防止。
+
+## 0.17.1
+
+- `config` コマンドで pre-commit フックがハングする問題を修正（`@inquirer/prompts` を動的 import に変更）。
+- 静的 import の回帰を防ぐため ESLint を追加。
+
+## 0.17.0
+
+- `openspec config` コマンドを追加。
+- XDG Base Directory 仕様に従うグローバル設定ディレクトリを追加。
+- Oh My Zsh 対応のシェル補完（Zsh）を追加。
+- pre-commit フックのハングを回避するため動的 import に切り替え。
+- `XDG_CONFIG_HOME` の尊重を全プラットフォームで徹底。
+- zsh-installer テストの Windows 互換性を改善。
+- `cli-completion` 仕様を実装に合わせて更新。
+- スラッシュコマンドのハードコードされた agent フィールドを削除。
+- README の AI ツール一覧をアルファベット順に整理し、折りたたみ表示に対応。
+
 ## 0.16.0
 
 - [OpenSpec-J] CHANGELOG を OpenSpec-J 用に統一し、日本語 changelog を単一化。
