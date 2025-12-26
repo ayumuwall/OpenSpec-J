@@ -43,7 +43,7 @@ There are changes proposed, but no delta specs provided yet.`;
     const report = await validator.validateSpec(specPath);
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toMatch(/Purpose セクションは必須です|Spec must have a Purpose section/);
+    expect(msg).toContain('Purpose セクションは必須です');
     expect(msg).toContain('必要な見出し: "## Purpose" と "## Requirements"');
   });
 
@@ -70,5 +70,4 @@ Text of requirement
     expect(warn?.message).toContain('#### Scenario:');
   });
 });
-
 

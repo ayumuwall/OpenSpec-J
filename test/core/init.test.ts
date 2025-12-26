@@ -1659,7 +1659,7 @@ describe('InitCommand', () => {
 
       queueSelections('claude', DONE);
       await expect(initCommand.execute(readOnlyDir)).rejects.toThrow(
-        /Insufficient permissions/
+        /書き込み権限がありません/
       );
     });
   });

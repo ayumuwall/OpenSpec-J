@@ -1,9 +1,16 @@
 # @ayumuwall/openspec 変更履歴
 
-OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog です。以降のリリースはこのファイルで管理します。過去の項目は upstream @fission-ai/openspec の履歴を日本語で整理したものです。
+OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
+
 
 ## 0.17.2
 
+- **[OpenSpec-J]** CLI 出力/エラー/ヘルプ/スピナー文言の日本語化と関連テストの期待値更新。
+- **[OpenSpec-J]** テンプレート（`openspec/AGENTS.md`/`openspec/project.md`/`src/core/templates/*`）とスラッシュコマンド文面の日本語化・表記統一。
+- **[OpenSpec-J]** README/運用ドキュメントの日本語化、図表の ASCII/レイアウト調整、プロジェクト案内文の整備。
+- **[OpenSpec-J]** 用語統一（capability→機能）と表記ゆれの整理。
+- **[OpenSpec-J]** バリデーション/デプリケーション周りの日本語ガイド強化（英日両対応のトリガー追加、集中管理）。
+- **[OpenSpec-J]** ローカライズ運用ルールの整理（差分分類、changelog 方針、セッションメモ運用、参照指針）。
 - `validate` コマンドの `--no-interactive` がスピナー無効化に正しく効くよう修正し、pre-commit フックや CI のハングを防止。
 
 ## 0.17.1
@@ -23,48 +30,10 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 - スラッシュコマンドのハードコードされた agent フィールドを削除。
 - README の AI ツール一覧をアルファベット順に整理し、折りたたみ表示に対応。
 
-## 0.17.2
-
-### Patch Changes
-
-- 455c65f: Fix `--no-interactive` flag in validate command to properly disable spinner, preventing hangs in pre-commit hooks and CI environments
-
-## 0.17.1
-
-### Patch Changes
-
-- a2757e7: Fix pre-commit hook hang issue in config command by using dynamic import for @inquirer/prompts
-
-  The config command was causing pre-commit hooks to hang indefinitely due to stdin event listeners being registered at module load time. This fix converts the static import to a dynamic import that only loads inquirer when the `config reset` command is actually used interactively.
-
-  Also adds ESLint with a rule to prevent static @inquirer imports, avoiding future regressions.
-
-## 0.17.0
-
-### Minor Changes
-
-- 2e71835: ### New Features
-
-  - Add `openspec config` command for managing global configuration settings
-  - Implement global config directory with XDG Base Directory specification support
-  - Add Oh-my-zsh shell completions support for enhanced CLI experience
-
-  ### Bug Fixes
-
-  - Fix hang in pre-commit hooks by using dynamic imports
-  - Respect XDG_CONFIG_HOME environment variable on all platforms
-  - Resolve Windows compatibility issues in zsh-installer tests
-  - Align cli-completion spec with implementation
-  - Remove hardcoded agent field from slash commands
-
-  ### Documentation
-
-  - Alphabetize AI tools list in README and make it collapsible
-
 ## 0.16.0
 
-- [OpenSpec-J] CHANGELOG を OpenSpec-J 用に統一し、日本語 changelog を単一化。
-- [OpenSpec-J] 初版。upstream v0.16.0 をベースに、CLI 出力・テンプレート・AGENTS・スラッシュコマンド文面・デプリケーション警告などを日本語化。
+- **[OpenSpec-J]** CHANGELOG を OpenSpec-J 用に統一し、日本語 changelog を単一化。
+- **[OpenSpec-J]** 初版。upstream v0.16.0 をベースに、CLI 出力・テンプレート・AGENTS・スラッシュコマンド文面・デプリケーション警告などを日本語化。
 - iFlow CLI・Antigravity など新規 AI ツール連携を追加し、スラッシュコマンド生成を強化。
 - `init` 後に IDE 再起動が必要な場合の案内を追記。
 - Qwen Code の TOML コマンド生成を修正、プロポーザルのガイドラインを改善。

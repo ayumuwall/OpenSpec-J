@@ -11,8 +11,7 @@ const FRONTMATTER: Record<SlashCommandId, string> = {
   proposal: `---
 description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 ---
-
-The user has requested the following change proposal. Use the openspec instructions to create their change proposal.
+ユーザーは次の変更提案の作成を求めています。openspec の手順に従って変更提案を作成してください。
 
 <UserRequest>
   $ARGUMENTS
@@ -20,8 +19,7 @@ The user has requested the following change proposal. Use the openspec instructi
   apply: `---
 description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 ---
-
-The user wants to apply the following change. Use the openspec instructions to implement the approved change.
+ユーザーは次の変更を適用したいと考えています。承認済みの変更を openspec の手順に従って実装してください。
 
 <ChangeId>
   $ARGUMENTS
@@ -29,8 +27,7 @@ The user wants to apply the following change. Use the openspec instructions to i
   archive: `---
 description: 適用済みの OpenSpec 変更をアーカイブし、仕様を更新します。
 ---
-
-The user wants to archive the following deployed change. Use the openspec instructions to archive the change and update specs.
+ユーザーは次のデプロイ済み変更をアーカイブしたいと考えています。openspec の手順に従って変更をアーカイブし、仕様を更新してください。
 
 <ChangeId>
   $ARGUMENTS

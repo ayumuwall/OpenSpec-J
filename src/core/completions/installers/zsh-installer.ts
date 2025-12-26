@@ -158,7 +158,7 @@ export class ZshInstaller {
       return true;
     } catch (error: any) {
       // Fail gracefully - don't break installation
-      console.debug(`Unable to configure .zshrc for completions: ${error.message}`);
+      console.debug(`.zshrc の補完設定に失敗しました: ${error.message}`);
       return false;
     }
   }
@@ -194,7 +194,7 @@ export class ZshInstaller {
       return !content.includes(completionsDir);
     } catch (error) {
       // If we can't read .zshrc, assume config is needed
-      console.debug(`Unable to read .zshrc to check fpath config: ${error instanceof Error ? error.message : String(error)}`);
+      console.debug(`fpath 設定確認のため .zshrc を読み込めませんでした: ${error instanceof Error ? error.message : String(error)}`);
       return true;
     }
   }
@@ -250,7 +250,7 @@ export class ZshInstaller {
       return true;
     } catch (error: any) {
       // Fail gracefully
-      console.debug(`Unable to remove .zshrc configuration: ${error.message}`);
+      console.debug(`.zshrc の設定削除に失敗しました: ${error.message}`);
       return false;
     }
   }
@@ -286,7 +286,7 @@ export class ZshInstaller {
         isUpdate = true;
       } catch (error: any) {
         // File doesn't exist or can't be read, proceed with installation
-        console.debug(`Unable to read existing completion file at ${targetPath}: ${error.message}`);
+        console.debug(`既存の補完ファイルを読み込めませんでした: ${targetPath} (${error.message})`);
       }
 
       // Ensure the directory exists

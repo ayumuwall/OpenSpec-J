@@ -13,7 +13,7 @@ const FRONTMATTER: Record<SlashCommandId, string> = {
   proposal: `---
 description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。
 ---
-The user has requested the following change proposal. Use the openspec instructions to create their change proposal.
+ユーザーは次の変更提案の作成を求めています。openspec の手順に従って変更提案を作成してください。
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
@@ -21,7 +21,7 @@ The user has requested the following change proposal. Use the openspec instructi
   apply: `---
 description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。
 ---
-The user has requested to implement the following change proposal. Find the change proposal and follow the instructions below. If you're not sure or if ambiguous, ask for clarification from the user.
+ユーザーは次の変更提案の実装を求めています。該当する変更提案を探し、以下の手順に従ってください。不明点やあいまいさがある場合はユーザーに確認してください。
 <UserRequest>
   $ARGUMENTS
 </UserRequest>

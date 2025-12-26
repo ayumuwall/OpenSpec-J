@@ -453,14 +453,7 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - CLI 補完/設定/タスク進捗の表示を日本語化し、postinstall 出力を翻訳。関連テスト（completion/config/archive/list/validate）を更新。
 
 #### テスト状況
-- 今回の更新はドキュメント/方針追記のみのため、追加テストは未実施。
-- Node v22.20.0 / `pnpm test`（2025-12-12）を実行し 23 files / 279 tests すべて成功（ヘルプ出力・スラッシュコマンド文言日本語化後の確認）。
-- Node v22.20.0 / `pnpm test`（Vitest 全体）を実行し 279 件すべて成功。テンプレート日本語化後の回帰確認済み。
-- Node v22.20.0（`nvm use 22.20.0`）/ `npx vitest run test/core/init.test.ts test/core/update.test.ts` を実行し成功。
-- Node v20.19.6 / `pnpm test` を実行し 23 files / 279 tests すべて成功（CLI メッセージ日本語化後の回帰確認）。
-- 今回の訳語統一では文言変更のみのため追加テストは未実施。
-- 今回の changelog 整理はドキュメント変更のみのため追加テストは実施していない。
-- `pnpm test -- test/commands/completion.test.ts test/commands/config.test.ts test/core/completions/installers/zsh-installer.test.ts test/core/global-config.test.ts test/commands/validate.enriched-output.test.ts test/commands/validate.test.ts test/core/archive.test.ts test/core/commands/change-command.list.test.ts test/core/list.test.ts` を実行し成功（507 tests）。
+- `pnpm test` を実行し成功（32 files / 507 tests）。
 
 #### 残タスク（推奨）
 - [x] 差分一覧を docs / templates / CLI / テストに分類して作業スコープを確定する。
@@ -468,10 +461,28 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - [ ] templates レイヤーの差分をローカライズして生成物との差分を確認する。
 - [x] CLI メッセージの差分をローカライズし、関連テスト期待値を更新する。
 - [x] 全体差分を再確認し、必要なテストを実行する。
-- [ ] ローカライズ完了後に `openspec-j-v0.17.2` タグを付与する。
+- [x] ローカライズ完了後に `openspec-j-v0.17.2` タグを付与する。
 - [x] レイヤー2テンプレート（`src/core/templates/*.ts`）の本文を日本語化し、`init` テストを更新して `pnpm test` を実行する。
 - [x] デフォルトで配布される `openspec/AGENTS.md` と `openspec/project.md` をテンプレートと同じ日本語文面に揃え、`openspec validate --strict` で整合性を確認する。
 - [x] CLI 出力に残る英語メッセージ（例: `src/core/init.ts` の “already configured” 表記や `src/commands/spec.ts` のエラー文）を日本語化し、該当テストを更新して回帰確認する。
+
+### 2025-12-26（追記）
+
+#### 実施したこと
+- v0.16.0 以降のローカライズ変更点を `CHANGELOG.md` に整理し、`[OpenSpec-J]` タグを太字化。
+- CLI/テンプレート/補完/スラッシュコマンドの英語文言を追加で日本語化し、関連テスト期待値を更新。
+
+#### テスト状況
+- 上記と同一（最新結果のみ記載）。
+
+### 2025-12-26（追記2）
+
+#### 実施したこと
+- README の CI バッジを本リポジトリ参照に変更。
+- CI バッジ/ワークフロー URL の到達性を確認（HTTP 200）。
+
+#### テスト状況
+- ローカルテストは未実施（ビルド/動作確認はユーザー側で実施済み）。
 
 ### 運用ルール（セッションメモ）
 - 作業コミット時には当日のエントリを**追記**すること（過去の記録は消さない）。

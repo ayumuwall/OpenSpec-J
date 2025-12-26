@@ -23,11 +23,11 @@ export class ChangeParser extends MarkdownParser {
     const whatChanges = this.findSection(sections, 'What Changes')?.content || '';
     
     if (!why) {
-      throw new Error('Change must have a Why section');
+      throw new Error('Why セクションは必須です');
     }
     
     if (!whatChanges) {
-      throw new Error('Change must have a What Changes section');
+      throw new Error('What Changes セクションは必須です');
     }
 
     // Parse deltas from the What Changes section (simple format)
@@ -93,7 +93,7 @@ export class ChangeParser extends MarkdownParser {
         deltas.push({
           spec: specName,
           operation: 'ADDED' as DeltaOperation,
-          description: `Add requirement: ${req.text}`,
+          description: `要件を追加: ${req.text}`,
           // Provide both single and plural forms for compatibility
           requirement: req,
           requirements: [req],
@@ -109,7 +109,7 @@ export class ChangeParser extends MarkdownParser {
         deltas.push({
           spec: specName,
           operation: 'MODIFIED' as DeltaOperation,
-          description: `Modify requirement: ${req.text}`,
+          description: `要件を変更: ${req.text}`,
           requirement: req,
           requirements: [req],
         });

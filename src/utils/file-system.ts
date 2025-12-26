@@ -159,7 +159,7 @@ export class FileSystemUtils {
       if (startIndex !== -1 && endIndex !== -1) {
         if (endIndex < startIndex) {
           throw new Error(
-            `Invalid marker state in ${filePath}. End marker appears before start marker.`
+            `マーカーの状態が不正です (${filePath})。終了マーカーが開始マーカーより前にあります。`
           );
         }
 
@@ -169,7 +169,9 @@ export class FileSystemUtils {
       } else if (startIndex === -1 && endIndex === -1) {
         existingContent = startMarker + '\n' + content + '\n' + endMarker + '\n\n' + existingContent;
       } else {
-        throw new Error(`Invalid marker state in ${filePath}. Found start: ${startIndex !== -1}, Found end: ${endIndex !== -1}`);
+        throw new Error(
+          `マーカーの状態が不正です (${filePath})。開始マーカー: ${startIndex !== -1}、終了マーカー: ${endIndex !== -1}`
+        );
       }
     } else {
       existingContent = startMarker + '\n' + content + '\n' + endMarker;
@@ -194,7 +196,7 @@ export class FileSystemUtils {
       await fs.unlink(testFile);
       return true;
     } catch (error: any) {
-      console.debug(`Insufficient permissions to write to ${dirPath}: ${error.message}`);
+      console.debug(`書き込み権限がありません: ${dirPath} (${error.message})`);
       return false;
     }
   }

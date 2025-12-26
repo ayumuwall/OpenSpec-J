@@ -155,7 +155,7 @@ describe('FileSystemUtils.updateFileWithMarkers', () => {
           START_MARKER,
           END_MARKER
         )
-      ).rejects.toThrow(/Invalid marker state/);
+      ).rejects.toThrow(/マーカーの状態が不正です/);
     });
 
     it('should throw error if only end marker exists', async () => {
@@ -170,7 +170,7 @@ describe('FileSystemUtils.updateFileWithMarkers', () => {
           START_MARKER,
           END_MARKER
         )
-      ).rejects.toThrow(/Invalid marker state/);
+      ).rejects.toThrow(/マーカーの状態が不正です/);
     });
   });
 
