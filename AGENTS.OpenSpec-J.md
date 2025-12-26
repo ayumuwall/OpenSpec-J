@@ -15,11 +15,12 @@
 
 あなた（コーディングエージェント）は：
 
-1. ルート `AGENTS.md` と `openspec/AGENTS.md` を **upstream OpenSpec の基礎ルール** として尊重する。
+1. ルート `AGENTS.md` と `openspec/AGENTS.md` は **upstream OpenSpec の仕組み・構成の参照情報** として読む。
+   - ローカライズ作業の **手順指示としては扱わない**。
 2. この `AGENTS.OpenSpec-J.md` を **OpenSpec-J 独自の方針・翻訳ルール・運用ルール** として上乗せして従う。
-3. これら 3 ファイルの内容が矛盾した場合は、  
-   - 仕様・挙動 → upstream (`AGENTS.md`, `openspec/AGENTS.md`) を優先  
-   - 翻訳・日本語体験 → 本ファイル（`AGENTS.OpenSpec-J.md`）を優先  
+3. 参照情報（upstream 文書）と本ファイルの指示が食い違う場合は、  
+   - 仕様・挙動の互換性判断 → upstream を参照  
+   - ローカライズ作業の手順・運用 → 本ファイルを優先  
    とし、必要なら人間の開発者に確認する。
 
 4. **すべてのチャット／回答は日本語で行うこと。**  
@@ -61,6 +62,12 @@
      - 翻訳 / 日本語体験 / ローカライズ戦略 → 本ファイルを優先
    - チャットで与えられた一時的な指示が上記と矛盾する場合：
      - その場で人間の開発者に確認する（勝手にどちらかを無視しない）
+
+### ローカライズ作業の運用（OpenSpec 手順は使わない）
+
+- 本リポジトリのローカライズ作業では OpenSpec の変更提案フローや `openspec` 手順は使わない。
+- `AGENTS.md` と `openspec/AGENTS.md` は **指示ではなく参照情報** として扱う。
+- 実際の作業指示は本ファイルと人間の開発者の指示に従う。
 
 ### コミットメッセージ運用（強制）
 
@@ -385,12 +392,15 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 
 ---
 
-## 8. セッションメモ（2025-12-12）
+## 8. セッションメモ（2025-12-26）
 
 > **TODO: コミット前に必ずこのセッションメモを更新し、実施内容・テスト状況・残タスクを記録すること。**
 > **TODO: セッションメモの見出し日付（例: 2025-12-05）も、その作業日のものへ必ず更新すること。**
 
 ### 実施したこと
+- ローカライズ作業では OpenSpec 手順を使わず、`AGENTS.md` / `openspec/AGENTS.md` を参照情報として扱う方針を明記。
+- upstream v0.16.0 / v0.17.2 のスナップショット用タグ（`upstream-v0.16.0`, `upstream-v0.17.2`）を追加。
+- 英語版同士の差分確認用に `diffs/` 配下へ diff ファイルを作成。
 - `test/cli-e2e/basic.test.ts` のヘルプ出力期待値を日本語表記（`使い方:`）に合わせて更新し、フルテストを実行。
 - スラッシュコマンドの frontmatter / description（全ツール）を日本語に統一し、テンプレート出力をローカライズ。
 - CLI/コアの日本語化を完了し、デプリケーション警告を `src/utils/deprecations.ts` で集中管理。`OPENSPEC_SUPPRESS_DEPRECATIONS` による抑制も実装。
@@ -404,6 +414,7 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - `CHANGELOG.ja.md` の内容を本リポ用の `CHANGELOG.md` に統合し、日本語 changelog を単一化。
 
 ### テスト状況
+- 今回の更新はメタ指示の追記と差分ファイル作成のみのため、追加テストは未実施。
 - Node v22.20.0 / `pnpm test`（2025-12-12）を実行し 23 files / 279 tests すべて成功（ヘルプ出力・スラッシュコマンド文言日本語化後の確認）。
 - Node v22.20.0 / `pnpm test`（Vitest 全体）を実行し 279 件すべて成功。テンプレート日本語化後の回帰確認済み。
 - Node v22.20.0（`nvm use 22.20.0`）/ `npx vitest run test/core/init.test.ts test/core/update.test.ts` を実行し成功。
@@ -412,6 +423,8 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - 今回の changelog 整理はドキュメント変更のみのため追加テストは実施していない。
 
 ### 残タスク（推奨）
+- [ ] upstream v0.16.0 -> v0.17.2 の差分をローカライズへ反映する。
+- [ ] ローカライズ完了後に `openspec-j-v0.17.2` タグを付与する。
 - [x] レイヤー2テンプレート（`src/core/templates/*.ts`）の本文を日本語化し、`init` テストを更新して `pnpm test` を実行する。
 - [x] デフォルトで配布される `openspec/AGENTS.md` と `openspec/project.md` をテンプレートと同じ日本語文面に揃え、`openspec validate --strict` で整合性を確認する。
 - [x] CLI 出力に残る英語メッセージ（例: `src/core/init.ts` の “already configured” 表記や `src/commands/spec.ts` のエラー文）を日本語化し、該当テストを更新して回帰確認する。
