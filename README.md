@@ -10,7 +10,7 @@
 </p>
 <p align="center">AI コーディングアシスタントのための仕様駆動開発。</p>
 <p align="center">
-  <a href="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml?query=branch%3Amain"><img alt="CI" src="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml/badge.svg?branch=main" /></a>
   <a href="https://www.npmjs.com/package/@ayumuwall/openspec"><img alt="npm version" src="https://img.shields.io/npm/v/@ayumuwall/openspec?style=flat-square" /></a>
   <a href="https://nodejs.org/"><img alt="node version" src="https://img.shields.io/node/v/@ayumuwall/openspec?style=flat-square" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
