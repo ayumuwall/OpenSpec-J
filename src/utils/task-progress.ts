@@ -35,9 +35,8 @@ export async function getTaskProgressForChange(changesDir: string, changeName: s
 }
 
 export function formatTaskStatus(progress: TaskProgress): string {
-  if (progress.total === 0) return 'No tasks';
-  if (progress.completed === progress.total) return '✓ Complete';
-  return `${progress.completed}/${progress.total} tasks`;
+  if (progress.total === 0) return 'タスクなし';
+  if (progress.completed === progress.total) return '✓ 完了';
+  return `${progress.completed}/${progress.total} タスク`;
 }
-
 

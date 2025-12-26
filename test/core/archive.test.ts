@@ -130,7 +130,7 @@ Then expected result happens`;
     it('should throw error if change does not exist', async () => {
       await expect(
         archiveCommand.execute('non-existent-change', { yes: true })
-      ).rejects.toThrow("Change 'non-existent-change' not found.");
+      ).rejects.toThrow("変更 'non-existent-change' が見つかりません。");
     });
 
     it('should throw error if archive already exists', async () => {
@@ -146,7 +146,7 @@ Then expected result happens`;
       // Try to archive
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(`Archive '${date}-${changeName}' already exists.`);
+      ).rejects.toThrow(`アーカイブ '${date}-${changeName}' は既に存在します。`);
     });
 
     it('should handle changes without tasks.md', async () => {
@@ -159,7 +159,7 @@ Then expected result happens`;
       
       // Should complete without warnings
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('incomplete task(s)')
+        expect.stringContaining('未完了タスク')
       );
       
       // Verify change was archived
@@ -474,7 +474,7 @@ new body`;
         expect.stringContaining('delta の検証に失敗')
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Aborted. No files were changed.')
+        expect.stringContaining('中止しました。ファイルは変更されませんでした。')
       );
 
       // Fix MODIFIED to reference New (should succeed)
@@ -577,7 +577,7 @@ E1 updated`);
 
       // Verify aggregated totals line was printed
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Totals: + 1, ~ 1, - 0, → 1')
+        expect.stringContaining('合計: + 1, ~ 1, - 0, → 1')
       );
     });
   });
@@ -612,7 +612,7 @@ E1 updated`);
       
       // Verify select was called with correct options (values matter, names may include progress)
       expect(mockSelect).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Select a change to archive',
+        message: 'アーカイブする変更を選択してください',
         choices: expect.arrayContaining([
           expect.objectContaining({ value: change1 }),
           expect.objectContaining({ value: change2 })

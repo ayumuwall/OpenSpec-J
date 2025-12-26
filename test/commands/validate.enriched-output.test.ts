@@ -41,11 +41,10 @@ describe('validate command enriched human output', () => {
       expect(code).not.toBe(0);
       const normalized = stripAnsi(stderr);
       expect(normalized).toContain('変更 "c-next-steps" に問題があります');
-      expect(normalized).toContain('Next steps:');
+      expect(normalized).toContain('次のステップ:');
       expect(normalized).toContain('openspec change show');
     } finally {
       process.chdir(originalCwd);
     }
   });
 });
-

@@ -450,6 +450,7 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - `src/core/init.ts` の「(already configured)」表示と `src/commands/spec.ts` の英語メッセージを日本語化し、関連テストを更新。
 - 用語集の capability の訳語を「機能」に統一し、テンプレート・指示文中の「ケイパビリティ」表記を「機能」に置換。
 - `CHANGELOG.ja.md` の内容を本リポ用の `CHANGELOG.md` に統合し、日本語 changelog を単一化。
+- CLI 補完/設定/タスク進捗の表示を日本語化し、postinstall 出力を翻訳。関連テスト（completion/config/archive/list/validate）を更新。
 
 #### テスト状況
 - 今回の更新はドキュメント/方針追記のみのため、追加テストは未実施。
@@ -459,13 +460,14 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - Node v20.19.6 / `pnpm test` を実行し 23 files / 279 tests すべて成功（CLI メッセージ日本語化後の回帰確認）。
 - 今回の訳語統一では文言変更のみのため追加テストは未実施。
 - 今回の changelog 整理はドキュメント変更のみのため追加テストは実施していない。
+- `pnpm test -- test/commands/completion.test.ts test/commands/config.test.ts test/core/completions/installers/zsh-installer.test.ts test/core/global-config.test.ts test/commands/validate.enriched-output.test.ts test/commands/validate.test.ts test/core/archive.test.ts test/core/commands/change-command.list.test.ts test/core/list.test.ts` を実行し成功（507 tests）。
 
 #### 残タスク（推奨）
 - [x] 差分一覧を docs / templates / CLI / テストに分類して作業スコープを確定する。
 - [x] docs レイヤーの差分をローカライズして反映する。
 - [ ] templates レイヤーの差分をローカライズして生成物との差分を確認する。
-- [ ] CLI メッセージの差分をローカライズし、関連テスト期待値を更新する。
-- [ ] 全体差分を再確認し、必要なテストを実行する。
+- [x] CLI メッセージの差分をローカライズし、関連テスト期待値を更新する。
+- [x] 全体差分を再確認し、必要なテストを実行する。
 - [ ] ローカライズ完了後に `openspec-j-v0.17.2` タグを付与する。
 - [x] レイヤー2テンプレート（`src/core/templates/*.ts`）の本文を日本語化し、`init` テストを更新して `pnpm test` を実行する。
 - [x] デフォルトで配布される `openspec/AGENTS.md` と `openspec/project.md` をテンプレートと同じ日本語文面に揃え、`openspec validate --strict` で整合性を確認する。

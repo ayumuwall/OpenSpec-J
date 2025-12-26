@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { select, confirm } from '@inquirer/prompts';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progress.js';
 import { Validator } from './validation/validator.js';
@@ -54,7 +53,7 @@ export class ArchiveCommand {
         throw new Error(`変更 '${changeName}' が見つかりません。`);
       }
     } catch {
-      throw new Error(`Change '${changeName}' not found.`);
+      throw new Error(`変更 '${changeName}' が見つかりません。`);
     }
 
     const skipValidation = options.validate === false || options.noValidate === true;
@@ -71,7 +70,7 @@ export class ArchiveCommand {
         const changeReport = await validator.validateChange(changeFile);
         // Proposal validation is informative only (do not block archive)
         if (!changeReport.valid) {
-          console.log(chalk.yellow(`\nProposal warnings in proposal.md (non-blocking):`));
+          console.log(chalk.yellow('\nproposal.md の警告（ブロックしません）:'));
           for (const issue of changeReport.issues) {
             const symbol = issue.level === 'ERROR' ? '⚠' : (issue.level === 'WARNING' ? '⚠' : 'ℹ');
             console.log(chalk.yellow(`  ${symbol} ${issue.message}`));
@@ -104,7 +103,7 @@ export class ArchiveCommand {
         const deltaReport = await validator.validateChangeDeltaSpecs(changeDir);
         if (!deltaReport.valid) {
           hasValidationErrors = true;
-          console.log(chalk.red(`\nValidation errors in change delta specs:`));
+          console.log(chalk.red('\n変更の差分仕様で検証エラーがありました:'));
           for (const issue of deltaReport.issues) {
             if (issue.level === 'ERROR') {
               console.log(chalk.red(`  ✗ ${issue.message}`));
@@ -116,8 +115,8 @@ export class ArchiveCommand {
       }
 
       if (hasValidationErrors) {
-        console.log(chalk.red('\nValidation failed. Please fix the errors before archiving.'));
-        console.log(chalk.yellow('To skip validation (not recommended), use --no-validate flag.'));
+        console.log(chalk.red('\n検証に失敗しました。アーカイブ前にエラーを修正してください。'));
+        console.log(chalk.yellow('検証をスキップする場合（非推奨）は --no-validate を使用してください。'));
         return;
       }
     } else {
@@ -125,8 +124,9 @@ export class ArchiveCommand {
       const timestamp = new Date().toISOString();
       
       if (!options.yes) {
+        const { confirm } = await import('@inquirer/prompts');
         const proceed = await confirm({
-          message: chalk.yellow('⚠️  WARNING: Skipping validation may archive invalid specs. Continue? (y/N)'),
+          message: chalk.yellow('⚠️  警告: 検証をスキップすると不正な仕様をアーカイブする可能性があります。続行しますか？ (y/N)'),
           default: false
         });
         if (!proceed) {
@@ -149,6 +149,7 @@ export class ArchiveCommand {
     const incompleteTasks = Math.max(progress.total - progress.completed, 0);
     if (incompleteTasks > 0) {
       if (!options.yes) {
+        const { confirm } = await import('@inquirer/prompts');
         const proceed = await confirm({
           message: `警告: 未完了タスクが ${incompleteTasks} 件あります。続行しますか？`,
           default: false
@@ -179,6 +180,7 @@ export class ArchiveCommand {
 
         let shouldUpdateSpecs = true;
         if (!options.yes) {
+          const { confirm } = await import('@inquirer/prompts');
           shouldUpdateSpecs = await confirm({
             message: '仕様更新を実行しますか？',
             default: true
@@ -198,7 +200,7 @@ export class ArchiveCommand {
             }
           } catch (err: any) {
             console.log(String(err.message || err));
-            console.log('Aborted. No files were changed.');
+            console.log('中止しました。ファイルは変更されませんでした。');
             return;
           }
 
@@ -209,12 +211,12 @@ export class ArchiveCommand {
             if (!skipValidation) {
               const report = await new Validator().validateSpecContent(specName, p.rebuilt);
               if (!report.valid) {
-                console.log(chalk.red(`\nValidation errors in rebuilt spec for ${specName} (will not write changes):`));
+                console.log(chalk.red(`\n再構築した仕様 ${specName} の検証エラー（変更は書き込みません）:`));
                 for (const issue of report.issues) {
                   if (issue.level === 'ERROR') console.log(chalk.red(`  ✗ ${issue.message}`));
                   else if (issue.level === 'WARNING') console.log(chalk.yellow(`  ⚠ ${issue.message}`));
                 }
-                console.log('Aborted. No files were changed.');
+                console.log('中止しました。ファイルは変更されませんでした。');
                 return;
               }
             }
@@ -225,9 +227,9 @@ export class ArchiveCommand {
             totals.renamed += p.counts.renamed;
           }
           console.log(
-            `Totals: + ${totals.added}, ~ ${totals.modified}, - ${totals.removed}, → ${totals.renamed}`
+            `合計: + ${totals.added}, ~ ${totals.modified}, - ${totals.removed}, → ${totals.renamed}`
           );
-          console.log('Specs updated successfully.');
+          console.log('仕様の更新が完了しました。');
         }
       }
     }
@@ -239,7 +241,7 @@ export class ArchiveCommand {
     // Check if archive already exists
     try {
       await fs.access(archivePath);
-      throw new Error(`Archive '${archiveName}' already exists.`);
+      throw new Error(`アーカイブ '${archiveName}' は既に存在します。`);
     } catch (error: any) {
       if (error.code !== 'ENOENT') {
         throw error;
@@ -252,10 +254,11 @@ export class ArchiveCommand {
     // Move change to archive
     await fs.rename(changeDir, archivePath);
     
-    console.log(`Change '${changeName}' archived as '${archiveName}'.`);
+    console.log(`変更 '${changeName}' を '${archiveName}' としてアーカイブしました。`);
   }
 
   private async selectChange(changesDir: string): Promise<string | null> {
+    const { select } = await import('@inquirer/prompts');
     // Get all directories in changes (excluding archive)
     const entries = await fs.readdir(changesDir, { withFileTypes: true });
     const changeDirs = entries
@@ -264,7 +267,7 @@ export class ArchiveCommand {
       .sort();
 
     if (changeDirs.length === 0) {
-      console.log('No active changes found.');
+      console.log('アクティブな変更が見つかりません。');
       return null;
     }
 
@@ -289,7 +292,7 @@ export class ArchiveCommand {
 
     try {
       const answer = await select({
-        message: 'Select a change to archive',
+        message: 'アーカイブする変更を選択してください',
         choices
       });
       return answer;

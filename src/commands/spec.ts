@@ -4,7 +4,6 @@ import { join } from 'path';
 import { MarkdownParser } from '../core/parsers/markdown-parser.js';
 import { Validator } from '../core/validation/validator.js';
 import type { Spec } from '../core/schemas/index.js';
-import { select } from '@inquirer/prompts';
 import { isInteractive } from '../utils/interactive.js';
 import { getSpecIds } from '../utils/item-discovery.js';
 import { emitDeprecationWarning } from '../utils/deprecations.js';
@@ -71,9 +70,10 @@ export class SpecCommand {
 
   async show(specId?: string, options: ShowOptions = {}): Promise<void> {
     if (!specId) {
-      const canPrompt = isInteractive(options?.noInteractive);
+      const canPrompt = isInteractive(options);
       const specIds = await getSpecIds();
       if (canPrompt && specIds.length > 0) {
+        const { select } = await import('@inquirer/prompts');
         specId = await select({
           message: '表示する仕様を選んでください',
           choices: specIds.map(id => ({ name: id, value: id })),
@@ -208,9 +208,10 @@ export function registerSpecCommand(rootProgram: typeof program) {
     .action(async (specId: string | undefined, options: { strict?: boolean; json?: boolean; noInteractive?: boolean }) => {
       try {
         if (!specId) {
-          const canPrompt = isInteractive(options?.noInteractive);
+          const canPrompt = isInteractive(options);
           const specIds = await getSpecIds();
           if (canPrompt && specIds.length > 0) {
+            const { select } = await import('@inquirer/prompts');
             specId = await select({
               message: '検証する仕様を選んでください',
               choices: specIds.map(id => ({ name: id, value: id })),

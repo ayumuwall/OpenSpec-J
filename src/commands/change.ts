@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { select } from '@inquirer/prompts';
 import { JsonConverter } from '../core/converters/json-converter.js';
 import { Validator } from '../core/validation/validator.js';
 import { ChangeParser } from '../core/parsers/change-parser.js';
@@ -30,9 +29,10 @@ export class ChangeCommand {
     const changesPath = path.join(process.cwd(), 'openspec', 'changes');
 
     if (!changeName) {
-      const canPrompt = isInteractive(options?.noInteractive);
+      const canPrompt = isInteractive(options);
       const changes = await this.getActiveChanges(changesPath);
       if (canPrompt && changes.length > 0) {
+        const { select } = await import('@inquirer/prompts');
         const selected = await select({
           message: '表示する変更を選んでください',
           choices: changes.map(id => ({ name: id, value: id })),
@@ -55,7 +55,7 @@ export class ChangeCommand {
     try {
       await fs.access(proposalPath);
     } catch {
-      throw new Error(`Change "${changeName}" not found at ${proposalPath}`);
+      throw new Error(`変更 "${changeName}" が ${proposalPath} に見つかりません`);
     }
 
     if (options?.json) {
@@ -118,7 +118,7 @@ export class ChangeCommand {
             } catch (error) {
               // Tasks file may not exist, which is okay
               if (process.env.DEBUG) {
-                console.error(`Failed to read tasks file at ${tasksPath}:`, error);
+                console.error(`tasks.md の読み取りに失敗しました: ${tasksPath}`, error);
               }
             }
             
@@ -164,7 +164,7 @@ export class ChangeCommand {
           try {
             const tasksContent = await fs.readFile(tasksPath, 'utf-8');
             const { total, completed } = this.countTasks(tasksContent);
-            taskStatusText = ` [tasks ${completed}/${total}]`;
+            taskStatusText = ` [タスク ${completed}/${total}]`;
           } catch (error) {
             if (process.env.DEBUG) {
             console.error(`タスクファイルの読み込みに失敗しました: ${tasksPath}`, error);
@@ -173,7 +173,7 @@ export class ChangeCommand {
           const changeDir = path.join(changesPath, changeName);
           const parser = new ChangeParser(await fs.readFile(proposalPath, 'utf-8'), changeDir);
           const change = await parser.parseChangeWithDeltas(changeName);
-          const deltaCountText = ` [deltas ${change.deltas.length}]`;
+          const deltaCountText = ` [差分 ${change.deltas.length}]`;
           console.log(`${changeName}: ${title}${deltaCountText}${taskStatusText}`);
         } catch {
           console.log(`${changeName}: (読み取れませんでした)`);
@@ -186,9 +186,10 @@ export class ChangeCommand {
     const changesPath = path.join(process.cwd(), 'openspec', 'changes');
     
     if (!changeName) {
-      const canPrompt = isInteractive(options?.noInteractive);
+      const canPrompt = isInteractive(options);
       const changes = await getActiveChangeIds();
       if (canPrompt && changes.length > 0) {
+        const { select } = await import('@inquirer/prompts');
         const selected = await select({
           message: '検証する変更を選んでください',
           choices: changes.map(id => ({ name: id, value: id })),
@@ -282,10 +283,10 @@ export class ChangeCommand {
 
   private printNextSteps(): void {
     const bullets: string[] = [];
-    bullets.push('- Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements');
-    bullets.push('- Each requirement MUST include at least one #### Scenario: block');
-    bullets.push('- Debug parsed deltas: openspec change show <id> --json --deltas-only');
-    console.error('Next steps:');
+    bullets.push('- 変更に specs/ 配下の差分があることを確認（## ADDED/MODIFIED/REMOVED/RENAMED Requirements 見出しを使用）');
+    bullets.push('- 各 Requirement には少なくとも1つの #### Scenario: ブロックが必要');
+    bullets.push('- パース結果の確認: openspec change show <id> --json --deltas-only');
+    console.error('次のステップ:');
     bullets.forEach(b => console.error(`  ${b}`));
   }
 }

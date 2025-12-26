@@ -1,8 +1,7 @@
-import { select } from '@inquirer/prompts';
 import ora from 'ora';
 import path from 'path';
 import { Validator } from '../core/validation/validator.js';
-import { isInteractive } from '../utils/interactive.js';
+import { isInteractive, resolveNoInteractive } from '../utils/interactive.js';
 import { getActiveChangeIds, getSpecIds } from '../utils/item-discovery.js';
 import { nearestMatches } from '../utils/match.js';
 
@@ -16,6 +15,7 @@ interface ExecuteOptions {
   strict?: boolean;
   json?: boolean;
   noInteractive?: boolean;
+  interactive?: boolean; // Commander sets this to false when --no-interactive is used
   concurrency?: string;
 }
 
@@ -29,14 +29,14 @@ interface BulkItemResult {
 
 export class ValidateCommand {
   async execute(itemName: string | undefined, options: ExecuteOptions = {}): Promise<void> {
-    const interactive = isInteractive(options.noInteractive);
+    const interactive = isInteractive(options);
 
     // Handle bulk flags first
     if (options.all || options.changes || options.specs) {
       await this.runBulkValidation({
         changes: !!options.all || !!options.changes,
         specs: !!options.all || !!options.specs,
-      }, { strict: !!options.strict, json: !!options.json, concurrency: options.concurrency });
+      }, { strict: !!options.strict, json: !!options.json, concurrency: options.concurrency, noInteractive: resolveNoInteractive(options) });
       return;
     }
 
@@ -64,6 +64,7 @@ export class ValidateCommand {
   }
 
   private async runInteractiveSelector(opts: { strict: boolean; json: boolean; concurrency?: string }): Promise<void> {
+    const { select } = await import('@inquirer/prompts');
     const choice = await select({
       message: '何を検証しますか？',
       choices: [
@@ -180,8 +181,8 @@ export class ValidateCommand {
     bullets.forEach(b => console.error(`  ${b}`));
   }
 
-  private async runBulkValidation(scope: { changes: boolean; specs: boolean }, opts: { strict: boolean; json: boolean; concurrency?: string }): Promise<void> {
-    const spinner = !opts.json ? ora('検証中...').start() : undefined;
+  private async runBulkValidation(scope: { changes: boolean; specs: boolean }, opts: { strict: boolean; json: boolean; concurrency?: string; noInteractive?: boolean }): Promise<void> {
+    const spinner = !opts.json && !opts.noInteractive ? ora('検証中...').start() : undefined;
     const [changeIds, specIds] = await Promise.all([
       scope.changes ? getActiveChangeIds() : Promise.resolve<string[]>([]),
       scope.specs ? getSpecIds() : Promise.resolve<string[]>([]),
@@ -212,13 +213,24 @@ export class ValidateCommand {
       });
     }
 
-    // NOTE(upstream-bug-workaround): upstream では --changes / --specs 実行時に
-    // 対象が 0 件だとスピナーが回りっぱなしになる既知問題あり。
-    // ここで空キューを検知して即終了し、CLI がハングしないようにする。
-    // exitCode は現状の挙動に合わせ 0 のまま。upstream で修正されたら削除すること。
     if (queue.length === 0) {
       spinner?.stop();
-      console.error('検証対象がありません（変更または仕様が見つかりません）。');
+
+      const summary = {
+        totals: { items: 0, passed: 0, failed: 0 },
+        byType: {
+          ...(scope.changes ? { change: { items: 0, passed: 0, failed: 0 } } : {}),
+          ...(scope.specs ? { spec: { items: 0, passed: 0, failed: 0 } } : {}),
+        },
+      } as const;
+
+      if (opts.json) {
+        const out = { items: [] as BulkItemResult[], summary, version: '1.0' };
+        console.log(JSON.stringify(out, null, 2));
+      } else {
+        console.log('検証対象がありません。');
+      }
+
       process.exitCode = 0;
       return;
     }
@@ -235,7 +247,7 @@ export class ValidateCommand {
           const currentIndex = index++;
           const task = queue[currentIndex];
           running++;
-          if (spinner) spinner.text = `Validating (${currentIndex + 1}/${queue.length})...`;
+          if (spinner) spinner.text = `検証中 (${currentIndex + 1}/${queue.length})...`;
           task()
             .then(res => {
               results.push(res);

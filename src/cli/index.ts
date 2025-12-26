@@ -3,7 +3,6 @@ import { createRequire } from 'module';
 import ora from 'ora';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { InitCommand } from '../core/init.js';
 import { AI_TOOLS } from '../core/config.js';
 import { UpdateCommand } from '../core/update.js';
 import { ListCommand } from '../core/list.js';
@@ -13,6 +12,8 @@ import { registerSpecCommand } from '../commands/spec.js';
 import { ChangeCommand } from '../commands/change.js';
 import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
+import { CompletionCommand } from '../commands/completion.js';
+import { registerConfigCommand } from '../commands/config.js';
 import { emitDeprecationWarning } from '../utils/deprecations.js';
 
 const translateHelpHeadings = (text: string): string =>
@@ -46,7 +47,7 @@ program.option('--no-color', 'カラー出力を無効化');
 // Apply global flags before any command runs
 program.hook('preAction', (thisCommand) => {
   const opts = thisCommand.opts();
-  if (opts.noColor) {
+  if (opts.color === false) {
     process.env.NO_COLOR = '1';
   }
 });
@@ -79,6 +80,7 @@ program
         }
       }
       
+      const { InitCommand } = await import('../core/init.js');
       const initCommand = new InitCommand({
         tools: options?.tools,
       });
@@ -222,6 +224,7 @@ program
   });
 
 registerSpecCommand(program);
+registerConfigCommand(program);
 
 // Top-level validate command
 program
@@ -270,6 +273,69 @@ program
       console.log();
       ora().fail(`エラー: ${(error as Error).message}`);
       process.exit(1);
+    }
+  });
+
+// Completion command with subcommands
+const completionCmd = program
+  .command('completion')
+  .description('OpenSpec CLI のシェル補完を管理');
+
+completionCmd
+  .command('generate [shell]')
+  .description('シェル補完スクリプトを生成（標準出力へ出力）')
+  .action(async (shell?: string) => {
+    try {
+      const completionCommand = new CompletionCommand();
+      await completionCommand.generate({ shell });
+    } catch (error) {
+      console.log();
+      ora().fail(`エラー: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+completionCmd
+  .command('install [shell]')
+  .description('シェル補完スクリプトをインストール')
+  .option('--verbose', '詳細なインストール内容を表示')
+  .action(async (shell?: string, options?: { verbose?: boolean }) => {
+    try {
+      const completionCommand = new CompletionCommand();
+      await completionCommand.install({ shell, verbose: options?.verbose });
+    } catch (error) {
+      console.log();
+      ora().fail(`エラー: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+completionCmd
+  .command('uninstall [shell]')
+  .description('シェル補完スクリプトをアンインストール')
+  .option('-y, --yes', '確認プロンプトをスキップ')
+  .action(async (shell?: string, options?: { yes?: boolean }) => {
+    try {
+      const completionCommand = new CompletionCommand();
+      await completionCommand.uninstall({ shell, yes: options?.yes });
+    } catch (error) {
+      console.log();
+      ora().fail(`エラー: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Hidden command for machine-readable completion data
+program
+  .command('__complete <type>', { hidden: true })
+  .description('シェル補完用データを機械可読形式で出力（内部用）')
+  .action(async (type: string) => {
+    try {
+      const completionCommand = new CompletionCommand();
+      await completionCommand.complete({ type });
+    } catch (error) {
+      // Silently fail for graceful shell completion experience
+      process.exitCode = 1;
     }
   });
 

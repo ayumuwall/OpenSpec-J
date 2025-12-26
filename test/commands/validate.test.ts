@@ -137,6 +137,20 @@ describe('top-level validate command', () => {
     const result = await runCLI(['validate', changeId], { cwd: testDir });
     expect(result.exitCode).toBe(0);
   });
+
+  it('respects --no-interactive flag passed via CLI', async () => {
+    // This test ensures Commander.js --no-interactive flag is correctly parsed
+    // and passed to the validate command. The flag sets options.interactive = false
+    // (not options.noInteractive = true) due to Commander.js convention.
+    const result = await runCLI(['validate', '--specs', '--no-interactive'], {
+      cwd: testDir,
+      // Don't set OPEN_SPEC_INTERACTIVE to ensure we're testing the flag itself
+      env: { ...process.env, OPEN_SPEC_INTERACTIVE: undefined },
+    });
+    expect(result.exitCode).toBe(0);
+    // Should complete without hanging and without prompts
+    expect(result.stderr).not.toContain('何を検証しますか？');
+  });
 });
 
 describe('validate command with empty workspace (bulk flags)', () => {
@@ -154,7 +168,7 @@ describe('validate command with empty workspace (bulk flags)', () => {
 
   it('prints a helpful message and exits cleanly when no changes/specs exist', async () => {
     const originalCwd = process.cwd();
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { ValidateCommand } = await import('../../src/commands/validate.js');
     const itemDiscovery = await import('../../src/utils/item-discovery.js');
     vi.spyOn(itemDiscovery, 'getActiveChangeIds').mockResolvedValue([]);
@@ -167,11 +181,11 @@ describe('validate command with empty workspace (bulk flags)', () => {
       const cmd = new ValidateCommand();
       await cmd.execute(undefined, { changes: true, noInteractive: true });
       await cmd.execute(undefined, { specs: true, noInteractive: true });
-      expect(consoleErrorSpy).toHaveBeenCalledWith('検証対象がありません（変更または仕様が見つかりません）。');
+      expect(consoleLogSpy).toHaveBeenCalledWith('検証対象がありません。');
       expect(process.exitCode).toBe(0);
     } finally {
       process.chdir(originalCwd);
-      consoleErrorSpy.mockRestore();
+      consoleLogSpy.mockRestore();
       vi.restoreAllMocks();
     }
   });
