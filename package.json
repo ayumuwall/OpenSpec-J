@@ -1,6 +1,6 @@
 {
   "name": "@ayumuwall/openspec",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "description": "仕様駆動開発のためのAIネイティブシステム",
   "keywords": [
     "openspec",
@@ -32,6 +32,7 @@
   "files": [
     "dist",
     "bin",
+    "schemas",
     "scripts/postinstall.js",
     "!dist/**/*.test.js",
     "!dist/**/__tests__",
@@ -73,7 +74,9 @@
     "@inquirer/prompts": "^7.8.0",
     "chalk": "^5.5.0",
     "commander": "^14.0.0",
+    "fast-glob": "^3.3.3",
     "ora": "^8.2.0",
+    "yaml": "^2.8.2",
     "zod": "^4.0.17"
   },
   "packageManager": "pnpm@10.25.0+sha512.5e82639027af37cf832061bcc6d639c219634488e0f2baebe785028a793de7b525ffcd3f7ff574f5e9860654e098fe852ba8ac5dd5cefe1767d23a020a92f501"

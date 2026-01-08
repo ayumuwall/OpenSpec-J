@@ -7,3 +7,9 @@ process.env.OPENSPEC_SUPPRESS_DEPRECATIONS = '1';
 export async function setup() {
   await ensureCliBuilt();
 }
+
+// Global teardown to ensure clean exit
+export async function teardown() {
+  // Clear any remaining timers
+  // This helps prevent hanging handles from keeping the process alive
+}

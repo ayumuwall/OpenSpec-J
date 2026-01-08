@@ -14,6 +14,7 @@ import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
 import { CompletionCommand } from '../commands/completion.js';
 import { registerConfigCommand } from '../commands/config.js';
+import { registerArtifactWorkflowCommands } from '../commands/artifact-workflow.js';
 import { emitDeprecationWarning } from '../utils/deprecations.js';
 
 const translateHelpHeadings = (text: string): string =>
@@ -112,11 +113,14 @@ program
   .description('アイテム一覧を表示（デフォルトは変更）。--specs で仕様を表示')
   .option('--specs', '変更の代わりに仕様を一覧表示')
   .option('--changes', '変更を明示的に一覧表示（デフォルト）')
-  .action(async (options?: { specs?: boolean; changes?: boolean }) => {
+  .option('--sort <order>', '並び順: "recent" (デフォルト) または "name"', 'recent')
+  .option('--json', 'JSON で出力（プログラム利用向け）')
+  .action(async (options?: { specs?: boolean; changes?: boolean; sort?: string; json?: boolean }) => {
     try {
       const listCommand = new ListCommand();
       const mode: 'changes' | 'specs' = options?.specs ? 'specs' : 'changes';
-      await listCommand.execute('.', mode);
+      const sort = options?.sort === 'name' ? 'name' : 'recent';
+      await listCommand.execute('.', mode, { sort, json: options?.json });
     } catch (error) {
       console.log(); // Empty line for spacing
       ora().fail(`エラー: ${(error as Error).message}`);
@@ -338,5 +342,8 @@ program
       process.exitCode = 1;
     }
   });
+
+// Register artifact workflow commands (experimental)
+registerArtifactWorkflowCommands(program);
 
 program.parse();

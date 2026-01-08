@@ -107,7 +107,7 @@ export class UpdateCommand {
 
     if (updatedSlashFiles.length > 0) {
       // Normalize to forward slashes for cross-platform log consistency
-      const normalized = updatedSlashFiles.map((p) => p.replace(/\\/g, '/'));
+      const normalized = updatedSlashFiles.map((p) => FileSystemUtils.toPosixPath(p));
       summaryParts.push(`スラッシュコマンドを更新: ${normalized.join(', ')}`);
     }
 
