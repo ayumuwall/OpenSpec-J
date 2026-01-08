@@ -25,7 +25,7 @@ export class ViewCommand {
 
     // Display draft changes
     if (changesData.draft.length > 0) {
-      console.log(chalk.bold.gray('\nDraft Changes'));
+      console.log(chalk.bold.gray('\n下書きの変更'));
       console.log('─'.repeat(60));
       changesData.draft.forEach((change) => {
         console.log(`  ${chalk.gray('○')} ${change.name}`);

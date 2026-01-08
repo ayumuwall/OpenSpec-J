@@ -52,12 +52,12 @@ describe('ViewCommand', () => {
     const output = logOutput.map(stripAnsi).join('\n');
 
     // Draft section should contain empty and no-tasks changes
-    expect(output).toContain('Draft Changes');
+    expect(output).toContain('下書きの変更');
     expect(output).toContain('empty-change');
     expect(output).toContain('no-tasks-change');
 
     // Completed section should only contain changes with all tasks done
-    expect(output).toContain('Completed Changes');
+    expect(output).toContain('完了した変更');
     expect(output).toContain('completed-change');
 
     // Verify empty-change and no-tasks-change are in Draft section (marked with ○)
@@ -126,4 +126,3 @@ describe('ViewCommand', () => {
     ]);
   });
 });
-
