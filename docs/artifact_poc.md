@@ -1,128 +1,128 @@
-# POC-OpenSpec-Core Analysis
+# POC-OpenSpec-Core 分析
 
 ---
 
-## Design Decisions & Terminology
+## 設計判断と用語
 
-### Philosophy: Not a Workflow System
+### 思想: ワークフローシステムではない
 
-This system is **not** a workflow engine. It's an **artifact tracker with dependency awareness**.
+このシステムは **ワークフローエンジンではありません**。**依存関係を把握するアーティファクトトラッカー**です。
 
-| What it's NOT | What it IS |
+| これは何ではないか | これは何か |
 |---------------|------------|
-| Linear step-by-step progression | Exploratory, iterative planning |
-| Bureaucratic checkpoints | Enablers that unlock possibilities |
-| "You must complete step 1 first" | "Here's what you could create now" |
-| Form-filling | Fluid document creation |
+| 直線的なステップ進行 | 探索的で反復的な計画 |
+| 官僚的なチェックポイント | 可能性を開く仕組み |
+| 「まずステップ 1 を終えないといけない」 | 「今作れるものはこれです」 |
+| フォーム入力 | 柔軟なドキュメント作成 |
 
-**Key insight:** Dependencies are *enablers*, not *gates*. You can't meaningfully write a design document if there's no proposal to design from - that's not bureaucracy, it's logic.
+**重要な洞察:** 依存関係は *ゲート* ではなく *エネーブラ* です。提案がなければ設計書は書けません。これは官僚主義ではなく、論理です。
 
-### Terminology
+### 用語
 
-| Term | Definition | Example |
+| 用語 | 定義 | 例 |
 |------|------------|---------|
-| **Change** | A unit of work being planned (feature, refactor, migration) | `openspec/changes/add-auth/` |
-| **Schema** | An artifact graph definition (what artifacts exist, their dependencies) | `spec-driven.yaml` |
-| **Artifact** | A node in the graph (a document to create) | `proposal`, `design`, `specs` |
-| **Template** | Instructions/guidance for creating an artifact | `templates/proposal.md` |
+| **Change** | 計画中の作業単位（機能追加、リファクタ、移行） | `openspec/changes/add-auth/` |
+| **Schema** | アーティファクトグラフの定義（アーティファクトと依存） | `spec-driven.yaml` |
+| **Artifact** | グラフ上のノード（作成するドキュメント） | `proposal`, `design`, `specs` |
+| **Template** | アーティファクト作成の指示・ガイド | `templates/proposal.md` |
 
-### Hierarchy
+### 階層
 
 ```
-Schema (defines) ──→ Artifacts (guided by) ──→ Templates
+スキーマ（定義） ──→ アーティファクト（指示に従う） ──→ テンプレート
 ```
 
-- **Schema** = the artifact graph (what exists, dependencies)
-- **Artifact** = a document to produce
-- **Template** = instructions for creating that artifact
+- **Schema** = アーティファクトグラフ（何が存在し、どう依存するか）
+- **Artifact** = 作成するドキュメント
+- **Template** = そのドキュメントの作成ガイド
 
-### Schema Variations
+### スキーマのバリエーション
 
-Schemas can vary across multiple dimensions:
+スキーマは複数の軸で変化します。
 
-| Dimension | Examples |
+| 軸 | 例 |
 |-----------|----------|
-| Philosophy | `spec-driven`, `tdd`, `prototype-first` |
-| Version | `v1`, `v2`, `v3` |
-| Language | `en`, `zh`, `es` |
-| Custom | `team-alpha`, `experimental` |
+| 思想 | `spec-driven`, `tdd`, `prototype-first` |
+| バージョン | `v1`, `v2`, `v3` |
+| 言語 | `en`, `zh`, `es` |
+| カスタム | `team-alpha`, `experimental` |
 
-### Schema Resolution (XDG Standard)
+### スキーマ解決（XDG 標準）
 
-Schemas follow the XDG Base Directory Specification with a 2-level resolution:
+スキーマは XDG Base Directory Specification に従い、2 段階で解決します。
 
 ```
-1. ${XDG_DATA_HOME}/openspec/schemas/<name>/schema.yaml   # Global user override
-2. <package>/schemas/<name>/schema.yaml                    # Built-in defaults
+1. ${XDG_DATA_HOME}/openspec/schemas/<name>/schema.yaml   # ユーザー上書き（グローバル）
+2. <package>/schemas/<name>/schema.yaml                    # 内蔵デフォルト
 ```
 
-**Platform-specific paths:**
+**プラットフォーム別パス:**
 - Unix/macOS: `~/.local/share/openspec/schemas/`
 - Windows: `%LOCALAPPDATA%/openspec/schemas/`
-- All platforms: `$XDG_DATA_HOME/openspec/schemas/` (when set)
+- 全プラットフォーム: `$XDG_DATA_HOME/openspec/schemas/`（設定時）
 
-**Why XDG?**
-- Schemas are workflow definitions (data), not user preferences (config)
-- Built-ins baked into package, never auto-copied
-- Users customize by creating files in global data dir
-- Consistent with modern CLI tooling standards
+**なぜ XDG か:**
+- スキーマはワークフロー定義（データ）であり、ユーザー設定（config）ではない
+- 内蔵はパッケージ内に焼き込み、勝手にコピーしない
+- ユーザーはグローバルデータディレクトリにファイルを置いてカスタマイズする
+- 現代的な CLI ツールの標準に沿う
 
-### Template Inheritance (2 Levels Max)
+### テンプレート継承（最大 2 段階）
 
-Templates are co-located with schemas in a `templates/` subdirectory:
+テンプレートはスキーマと同じ場所の `templates/` サブディレクトリに配置します。
 
 ```
-1. ${XDG_DATA_HOME}/openspec/schemas/<schema>/templates/<artifact>.md  # User override
-2. <package>/schemas/<schema>/templates/<artifact>.md                   # Built-in
+1. ${XDG_DATA_HOME}/openspec/schemas/<schema>/templates/<artifact>.md  # ユーザー上書き
+2. <package>/schemas/<schema>/templates/<artifact>.md                   # 内蔵
 ```
 
-**Rules:**
-- User overrides take precedence over package built-ins
-- A CLI command shows resolved paths (no guessing)
-- No inheritance between schemas (copy if you need to diverge)
-- Templates are always co-located with their schema
+**ルール:**
+- ユーザー上書きがパッケージ内蔵より優先
+- CLI コマンドは解決したパスを表示（推測しない）
+- スキーマ間の継承はしない（必要ならコピー）
+- テンプレートは常にスキーマと同じ場所に置く
 
-**Why this matters:**
-- Avoids "where does this come from?" debugging
-- No implicit magic that works until it doesn't
-- Schema + templates form a cohesive unit
+**これが重要な理由:**
+- 「どこから来たのか」問題を回避
+- 動く時は動くが壊れる時は壊れる、という暗黙の魔法を排除
+- スキーマとテンプレートを 1 つのユニットとして扱える
 
 ---
 
-## Executive Summary
+## エグゼクティブサマリー
 
-This is an **artifact tracker with dependency awareness** that guides iterative development through a structured artifact pipeline. The core innovation is using the **filesystem as a database** - artifact completion is detected by file existence, making the system stateless and version-control friendly.
+これは **依存関係を把握するアーティファクトトラッカー**であり、構造化されたアーティファクトパイプラインを通じて反復的な開発をガイドします。コアのイノベーションは **ファイルシステムをデータベースとして使う** ことです。ファイルの存在で完了を検出するため、ステートレスでバージョン管理に向きます。
 
-The system answers:
-- "What artifacts exist for this change?"
-- "What could I create next?" (not "what must I create")
-- "What's blocking X?" (informational, not prescriptive)
+このシステムが答える問い:
+- 「この変更にはどのアーティファクトがあるか？」
+- 「次に作れるものは何か？」（「必ず次はこれ」ではない）
+- 「X をブロックしているものは何か？」（情報提供であり強制ではない）
 
 ---
 
-## Core Components
+## コアコンポーネント
 
-### 1. ArtifactGraph (Slice 1 - COMPLETE)
+### 1. ArtifactGraph（スライス 1 - 完了）
 
-The dependency graph engine with XDG-compliant schema resolution.
+XDG 準拠のスキーマ解決を備えた依存グラフエンジンです。
 
-| Responsibility | Approach |
+| 責務 | 方針 |
 |----------------|----------|
-| Model artifacts as a DAG | Artifact with `requires: string[]` |
-| Track completion state | `Set<string>` for completed artifacts |
-| Calculate build order | Kahn's algorithm (topological sort) |
-| Find ready artifacts | Check if all dependencies are in `completed` set |
-| Resolve schemas | XDG global → package built-ins |
+| アーティファクトを DAG としてモデル化 | `requires: string[]` を持つアーティファクト |
+| 完了状態の追跡 | 完了済みを `Set<string>` で保持 |
+| ビルド順序の算出 | Kahn のアルゴリズム（トポロジカルソート） |
+| 準備できたアーティファクトの検出 | 依存がすべて `completed` にあるか確認 |
+| スキーマ解決 | XDG グローバル → パッケージ内蔵 |
 
-**Key Data Structures (Zod-validated):**
+**主要データ構造（Zod 検証）:**
 
 ```typescript
-// Zod schemas define types + validation
+// Zod スキーマで型とバリデーションを定義
 const ArtifactSchema = z.object({
   id: z.string().min(1),
-  generates: z.string().min(1),      // e.g., "proposal.md" or "specs/*.md"
+  generates: z.string().min(1),      // 例: "proposal.md" または "specs/*.md"
   description: z.string(),
-  template: z.string(),              // path to template file
+  template: z.string(),              // テンプレートファイルへのパス
   requires: z.array(z.string()).default([]),
 });
 
@@ -133,56 +133,56 @@ const SchemaYamlSchema = z.object({
   artifacts: z.array(ArtifactSchema).min(1),
 });
 
-// Derived types
+// 派生型
 type Artifact = z.infer<typeof ArtifactSchema>;
 type SchemaYaml = z.infer<typeof SchemaYamlSchema>;
 ```
 
-**Key Methods:**
-- `resolveSchema(name)` - Load schema with XDG fallback
-- `ArtifactGraph.fromSchema(schema)` - Build graph from schema
-- `detectState(graph, changeDir)` - Scan filesystem for completion
-- `getNextArtifacts(graph, completed)` - Find artifacts ready to create
-- `getBuildOrder(graph)` - Topological sort of all artifacts
-- `getBlocked(graph, completed)` - Artifacts with unmet dependencies
+**主要メソッド:**
+- `resolveSchema(name)` - XDG フォールバックを使ってスキーマを読み込む
+- `ArtifactGraph.fromSchema(schema)` - スキーマからグラフを構築
+- `detectState(graph, changeDir)` - ファイルシステムを走査して完了を検出
+- `getNextArtifacts(graph, completed)` - 作成準備ができたアーティファクトを取得
+- `getBuildOrder(graph)` - 全アーティファクトのトポロジカルソート
+- `getBlocked(graph, completed)` - 依存が満たされていないアーティファクトを取得
 
 ---
 
-### 2. Change Utilities (Slice 2)
+### 2. 変更ユーティリティ（スライス 2）
 
-Simple utility functions for programmatic change creation. No class, no abstraction layer.
+プログラムから変更を作成するためのシンプルなユーティリティ関数群です。クラスや抽象化は持ちません。
 
-| Responsibility | Approach |
+| 責務 | 方針 |
 |----------------|----------|
-| Create changes | Create dirs under `openspec/changes/<name>/` with README |
-| Name validation | Enforce kebab-case naming |
+| 変更の作成 | `openspec/changes/<name>/` を作成し README を生成 |
+| 名前の検証 | kebab-case を強制 |
 
-**Key Paths:**
+**主要パス:**
 
 ```
-openspec/changes/<name>/   → Change instances with artifacts (project-level)
+openspec/changes/<name>/   → アーティファクトを含む変更インスタンス（プロジェクト単位）
 ```
 
-**Key Functions** (`src/utils/change-utils.ts`):
-- `createChange(projectRoot, name, description?)` - Create new change directory + README
-- `validateChangeName(name)` - Validate kebab-case naming, returns `{ valid, error? }`
+**主要関数**（`src/utils/change-utils.ts`）:
+- `createChange(projectRoot, name, description?)` - 変更ディレクトリ + README を作成
+- `validateChangeName(name)` - kebab-case 検証。`{ valid, error? }` を返す
 
-**Note:** Existing CLI commands (`ListCommand`, `ChangeCommand`) already handle listing, path resolution, and existence checks. No need to extract that logic - it works fine as-is.
+**注記:** 既存の CLI コマンド（`ListCommand`, `ChangeCommand`）は、一覧表示、パス解決、存在確認をすでに扱っています。ロジックの抽出は不要で、現状のままで十分です。
 
 ---
 
-### 3. InstructionLoader (Slice 3)
+### 3. InstructionLoader（スライス 3）
 
-Template resolution and instruction enrichment.
+テンプレート解決と指示の拡張を担当します。
 
-| Responsibility | Approach |
+| 責務 | 方針 |
 |----------------|----------|
-| Resolve templates | XDG 2-level fallback (schema-specific → shared → built-in) |
-| Build dynamic context | Gather dependency status, change info |
-| Enrich templates | Inject context into base templates |
-| Generate status reports | Formatted markdown with progress |
+| テンプレート解決 | XDG の 2 段階フォールバック（スキーマ固有 → 共有 → 内蔵） |
+| 動的コンテキスト構築 | 依存関係の状態、変更情報を収集 |
+| テンプレート拡張 | ベーステンプレートにコンテキストを注入 |
+| ステータスレポート生成 | 進捗付き Markdown を生成 |
 
-**Key Class - ChangeState:**
+**主要クラス - ChangeState:**
 
 ```
 ChangeState {
@@ -191,70 +191,70 @@ ChangeState {
   graph: ArtifactGraph
   completed: Set<string>
 
-  // Methods
+  // メソッド
   getNextSteps(): string[]
   getStatus(artifactId): ArtifactStatus
   isComplete(): boolean
 }
 ```
 
-**Key Functions:**
-- `getTemplatePath(artifactId, schemaName?)` - Resolve with 2-level fallback
-- `getEnrichedInstructions(artifactId, projectRoot, changeName?)` - Main entry point
-- `getChangeStatus(projectRoot, changeName?)` - Formatted status report
+**主要関数:**
+- `getTemplatePath(artifactId, schemaName?)` - 2 段階フォールバックで解決
+- `getEnrichedInstructions(artifactId, projectRoot, changeName?)` - メインのエントリポイント
+- `getChangeStatus(projectRoot, changeName?)` - 整形されたステータスレポート
 
 ---
 
-### 4. CLI (Slice 4)
+### 4. CLI（スライス 4）
 
-User interface layer. **All commands are deterministic** - require explicit `--change` parameter.
+ユーザー向けインターフェース層です。**すべてのコマンドは決定的**で、明示的な `--change` パラメータが必要です。
 
-| Command | Function | Status |
+| コマンド | 機能 | 状態 |
 |---------|----------|--------|
-| `status --change <id>` | Show change progress (artifact graph) | **NEW** |
-| `next --change <id>` | Show artifacts ready to create | **NEW** |
-| `instructions <artifact> --change <id>` | Get enriched instructions for artifact | **NEW** |
-| `list` | List all changes | EXISTS (`openspec change list`) |
-| `new <name>` | Create change | **NEW** (uses `createChange()`) |
-| `init` | Initialize structure | EXISTS (`openspec init`) |
-| `templates --change <id>` | Show resolved template paths | **NEW** |
+| `status --change <id>` | 変更の進捗表示（アーティファクトグラフ） | **新規** |
+| `next --change <id>` | 作成準備が整ったアーティファクトを表示 | **新規** |
+| `instructions <artifact> --change <id>` | アーティファクトの指示を取得 | **新規** |
+| `list` | 変更一覧 | 既存（`openspec change list`） |
+| `new <name>` | 変更作成 | **新規**（`createChange()` を使用） |
+| `init` | 初期化 | 既存（`openspec init`） |
+| `templates --change <id>` | 解決されたテンプレートパスを表示 | **新規** |
 
-**Note:** Commands that operate on a change require `--change`. Missing parameter → error with list of available changes. Agent infers the change from conversation and passes it explicitly.
+**注記:** 変更を操作するコマンドは `--change` が必須です。省略すると、利用可能な変更一覧を含むエラーを返します。エージェントは会話から変更を推測し、必ず明示的に渡します。
 
-**Existing CLI commands** (not part of this slice):
+**既存の CLI コマンド**（このスライスの対象外）:
 - `openspec change list` / `openspec change show <id>` / `openspec change validate <id>`
 - `openspec list --changes` / `openspec list --specs`
-- `openspec view` (dashboard)
+- `openspec view`（ダッシュボード）
 - `openspec init` / `openspec archive <change>`
 
 ---
 
-### 5. Claude Commands
+### 5. Claude コマンド
 
-Integration layer for Claude Code. **Operational commands only** - artifact creation via natural language.
+Claude Code 連携レイヤーです。**運用コマンドのみ**を提供し、アーティファクト作成は自然言語で行います。
 
-| Command | Purpose |
+| コマンド | 目的 |
 |---------|---------|
-| `/status` | Show change progress |
-| `/next` | Show what's ready to create |
-| `/run [artifact]` | Execute a specific step (power users) |
-| `/list` | List all changes |
-| `/new <name>` | Create a new change |
-| `/init` | Initialize structure |
+| `/status` | 変更の進捗を表示 |
+| `/next` | 作成準備が整ったものを表示 |
+| `/run [artifact]` | 特定のステップを実行（上級者向け） |
+| `/list` | 変更一覧 |
+| `/new <name>` | 新しい変更を作成 |
+| `/init` | 初期化 |
 
-**Artifact creation:** Users say "create the proposal" or "write the tests" in natural language. The agent:
-1. Infers change from conversation (confirms if uncertain)
-2. Infers artifact from request
-3. Calls CLI with explicit `--change` parameter
-4. Creates artifact following instructions
+**アーティファクト作成:** ユーザーが「提案を作って」「テストを書いて」のように自然言語で依頼します。エージェントは次を実行します。
+1. 会話から変更を推測（不確実なら確認）
+2. 依頼からアーティファクトを推測
+3. 明示的な `--change` パラメータで CLI を呼ぶ
+4. 指示に従ってアーティファクトを作成
 
-This works for ANY artifact in ANY schema - no new slash commands needed when schemas change.
+この仕組みは、どのスキーマでも、どのアーティファクトでも機能します。スキーマが変わっても新しいスラッシュコマンドは不要です。
 
-**Note:** Legacy commands (`/openspec-proposal`, `/openspec-apply`, `/openspec-archive`) exist in the main project for backward compatibility but are separate from this architecture.
+**注記:** 後方互換のために、既存の `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` は残りますが、このアーキテクチャとは別物です。
 
 ---
 
-## Component Dependency Graph
+## コンポーネント依存関係図
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -299,58 +299,58 @@ This works for ANY artifact in ANY schema - no new slash commands needed when sc
 
 ---
 
-## Key Design Patterns
+## 主要な設計パターン
 
-### 1. Filesystem as Database
+### 1. ファイルシステムをデータベースとして使う
 
-No SQLite, no JSON state files. The existence of `proposal.md` means proposal is complete.
+SQLite も JSON の状態ファイルも使いません。`proposal.md` が存在すれば、提案は完了しています。
 
 ```
-// State detection is just file existence checking
+// 状態検出はファイルの存在確認だけ
 if (exists(artifactPath)) {
   completed.add(artifactId)
 }
 ```
 
-### 2. Deterministic CLI, Inferring Agent
+### 2. 決定的な CLI と、推論するエージェント
 
-**CLI layer:** Always deterministic - requires explicit `--change` parameter.
-
-```
-openspec status --change add-auth     # explicit, works
-openspec status                        # error: "No change specified"
-```
-
-**Agent layer:** Infers from conversation, confirms if uncertain, passes explicit `--change`.
-
-This separation means:
-- CLI is pure, testable, no state to corrupt
-- Agent handles all "smartness"
-- No config.yaml tracking of "active change"
-
-### 3. XDG-Compliant Schema Resolution
+**CLI 層:** 常に決定的で、明示的な `--change` が必要です。
 
 ```
-${XDG_DATA_HOME}/openspec/schemas/<name>/schema.yaml   # User override
+openspec status --change add-auth     # 明示指定なら動作する
+openspec status                        # エラー: "変更が指定されていません"
+```
+
+**エージェント層:** 会話から推測し、不確実なら確認し、明示的な `--change` を渡します。
+
+この分離により:
+- CLI は純粋でテスト可能。壊れうる状態を持たない
+- エージェントが「賢さ」を担当する
+- 「アクティブな変更」を追跡する config.yaml は不要
+
+### 3. XDG 準拠のスキーマ解決
+
+```
+${XDG_DATA_HOME}/openspec/schemas/<name>/schema.yaml   # ユーザー上書き
     ↓ (not found)
-<package>/schemas/<name>/schema.yaml                    # Built-in
+<package>/schemas/<name>/schema.yaml                    # 内蔵
     ↓ (not found)
 Error (schema not found)
 ```
 
-### 4. Two-Level Template Fallback
+### 4. 2 段階テンプレートフォールバック
 
 ```
-${XDG_DATA_HOME}/openspec/schemas/<schema>/templates/<artifact>.md  # User override
+${XDG_DATA_HOME}/openspec/schemas/<schema>/templates/<artifact>.md  # ユーザー上書き
     ↓ (not found)
-<package>/schemas/<schema>/templates/<artifact>.md                   # Built-in
+<package>/schemas/<schema>/templates/<artifact>.md                   # 内蔵
     ↓ (not found)
 Error (no silent fallback to avoid confusion)
 ```
 
-### 5. Glob Pattern Support
+### 5. グロブパターンサポート
 
-`specs/*.md` allows multiple files to satisfy a single artifact:
+`specs/*.md` は 1 つのアーティファクトを複数ファイルで満たせます。
 
 ```
 if (artifact.generates.includes("*")) {
@@ -361,15 +361,15 @@ if (artifact.generates.includes("*")) {
 }
 ```
 
-### 6. Stateless State Detection
+### 6. ステートレスな状態検出
 
-Every command re-scans the filesystem. No cached state to corrupt.
+すべてのコマンドが毎回ファイルシステムを再スキャンします。壊れうるキャッシュ状態はありません。
 
 ---
 
-## Artifact Pipeline (Default Schema)
+## アーティファクトパイプライン（デフォルトスキーマ）
 
-The default `spec-driven` schema:
+デフォルトの `spec-driven` スキーマ:
 
 ```
 ┌──────────┐
@@ -394,105 +394,105 @@ The default `spec-driven` schema:
 └──────────┘
 ```
 
-Other schemas (TDD, prototype-first) would have different graphs.
+TDD や prototype-first などの他スキーマでは、別のグラフになります。
 
 ---
 
-## Implementation Order
+## 実装順序
 
-Structured as **vertical slices** - each slice is independently testable.
-
----
-
-### Slice 1: "What's Ready?" (Core Query) ✅ COMPLETE
-
-**Delivers:** Types + Graph + State Detection + Schema Resolution
-
-**Implementation:** `src/core/artifact-graph/`
-- `types.ts` - Zod schemas and derived TypeScript types
-- `schema.ts` - YAML parsing with Zod validation
-- `graph.ts` - ArtifactGraph class with topological sort
-- `state.ts` - Filesystem-based state detection
-- `resolver.ts` - XDG-compliant schema resolution
-- `builtin-schemas.ts` - Package-bundled default schemas
-
-**Key decisions made:**
-- Zod for schema validation (consistent with project)
-- XDG for global schema overrides
-- `Set<string>` for completion state (immutable, functional)
-- `inProgress` and `failed` states deferred (require external tracking)
+**縦割りスライス**として構成し、それぞれ独立してテスト可能にします。
 
 ---
 
-### Slice 2: "Change Creation Utilities"
+### スライス 1: 「今何ができる？」（コアクエリ）✅ 完了
 
-**Delivers:** Utility functions for programmatic change creation
+**提供内容:** 型 + グラフ + 状態検出 + スキーマ解決
 
-**Scope:**
-- `createChange(projectRoot, name, description?)` → creates directory + README
-- `validateChangeName(name)` → kebab-case pattern enforcement
+**実装:** `src/core/artifact-graph/`
+- `types.ts` - Zod スキーマと TypeScript 型
+- `schema.ts` - Zod 検証付きの YAML パース
+- `graph.ts` - ArtifactGraph クラス（トポロジカルソート）
+- `state.ts` - ファイルシステムベースの状態検出
+- `resolver.ts` - XDG 準拠のスキーマ解決
+- `builtin-schemas.ts` - パッケージ同梱のデフォルトスキーマ
 
-**Not in scope (already exists in CLI commands):**
-- `listChanges()` → exists in `ListCommand` and `ChangeCommand.getActiveChanges()`
-- `getChangePath()` → simple `path.join()` inline
-- `changeExists()` → simple `fs.access()` inline
-- `isInitialized()` → simple directory check inline
-
-**Why simplified:** Extracting existing CLI logic into a class would require similar refactoring of `SpecCommand` for consistency. The existing code works fine (~15 lines each). Only truly new functionality is `createChange()` + name validation.
-
----
-
-### Slice 3: "Get Instructions" (Enrichment)
-
-**Delivers:** Template resolution + context injection
-
-**Testable behaviors:**
-- Template fallback: schema-specific → shared → built-in → error
-- Context injection: completed deps show ✓, missing show ✗
-- Output path shown correctly based on change directory
+**主要判断:**
+- スキーマ検証に Zod を使用（プロジェクトと整合）
+- グローバル上書きに XDG を採用
+- 完了状態は `Set<string>`（イミュータブルで関数的）
+- `inProgress` / `failed` 状態は後回し（外部追跡が必要）
 
 ---
 
-### Slice 4: "CLI + Integration"
+### スライス 2: 「変更作成ユーティリティ」
 
-**Delivers:** New artifact graph commands (builds on existing CLI)
+**提供内容:** 変更をプログラムから作成するユーティリティ
 
-**New commands:**
-- `status --change <id>` - Show artifact completion state
-- `next --change <id>` - Show ready-to-create artifacts
-- `instructions <artifact> --change <id>` - Get enriched template
-- `templates --change <id>` - Show resolved paths
-- `new <name>` - Create change (wrapper for `createChange()`)
+**スコープ:**
+- `createChange(projectRoot, name, description?)` → ディレクトリ + README を作成
+- `validateChangeName(name)` → kebab-case のパターンを強制
 
-**Already exists (not in scope):**
-- `openspec change list/show/validate` - change management
-- `openspec list --changes/--specs` - listing
-- `openspec view` - dashboard
-- `openspec init` - initialization
+**対象外（既存 CLI に存在）:**
+- `listChanges()` → `ListCommand` と `ChangeCommand.getActiveChanges()` に存在
+- `getChangePath()` → `path.join()` をそのまま使用
+- `changeExists()` → `fs.access()` をそのまま使用
+- `isInitialized()` → ディレクトリ有無の簡易チェック
 
-**Testable behaviors:**
-- Each new command produces expected output
-- Commands compose correctly (status → next → instructions flow)
-- Error handling for missing changes, invalid artifacts, etc.
+**簡素化した理由:** 既存 CLI ロジックをクラス化すると `SpecCommand` も同様のリファクタが必要になります。既存コードは十分に短く動作しているため、真に新しい機能である `createChange()` と名前検証だけを追加します。
 
 ---
 
-## Directory Structure
+### スライス 3: 「指示を取得」（拡張）
+
+**提供内容:** テンプレート解決 + コンテキスト注入
+
+**テスト可能な挙動:**
+- テンプレートフォールバック: スキーマ固有 → 共有 → 内蔵 → エラー
+- コンテキスト注入: 完了依存は ✓、未完了は ✗
+- 出力パスが変更ディレクトリに応じて正しく表示される
+
+---
+
+### スライス 4: 「CLI + 統合」
+
+**提供内容:** 新しいアーティファクトグラフコマンド（既存 CLI を拡張）
+
+**新規コマンド:**
+- `status --change <id>` - アーティファクト完了状態を表示
+- `next --change <id>` - 作成準備が整ったアーティファクトを表示
+- `instructions <artifact> --change <id>` - 拡張テンプレートを取得
+- `templates --change <id>` - 解決済みパスを表示
+- `new <name>` - 変更作成（`createChange()` のラッパ）
+
+**既存（対象外）:**
+- `openspec change list/show/validate` - 変更管理
+- `openspec list --changes/--specs` - 一覧
+- `openspec view` - ダッシュボード
+- `openspec init` - 初期化
+
+**テスト可能な挙動:**
+- 新規コマンドが期待通りの出力を返す
+- コマンドが連携して動く（status → next → instructions の流れ）
+- 変更がない、アーティファクトが不正などのエラーハンドリング
+
+---
+
+## ディレクトリ構成
 
 ```
-# Global (XDG paths - user overrides)
-~/.local/share/openspec/           # Unix/macOS ($XDG_DATA_HOME/openspec/)
+# グローバル（XDG パス - ユーザー上書き）
+~/.local/share/openspec/           # Unix/macOS（$XDG_DATA_HOME/openspec/）
 %LOCALAPPDATA%/openspec/           # Windows
-└── schemas/                       # Schema overrides
-    └── custom-workflow/           # User-defined schema directory
-        ├── schema.yaml            # Schema definition
-        └── templates/             # Co-located templates
+└── schemas/                       # スキーマ上書き
+    └── custom-workflow/           # ユーザー定義のスキーマディレクトリ
+        ├── schema.yaml            # スキーマ定義
+        └── templates/             # 同梱テンプレート
             └── proposal.md
 
-# Package (built-in defaults)
+# パッケージ（内蔵デフォルト）
 <package>/
-└── schemas/                       # Built-in schema definitions
-    ├── spec-driven/               # Default: proposal → specs → design → tasks
+└── schemas/                       # 内蔵スキーマ定義
+    ├── spec-driven/               # デフォルト: proposal → specs → design → tasks
     │   ├── schema.yaml
     │   └── templates/
     │       ├── proposal.md
@@ -507,33 +507,33 @@ Structured as **vertical slices** - each slice is independently testable.
             ├── spec.md
             └── docs.md
 
-# Project (change instances)
+# プロジェクト（変更インスタンス）
 openspec/
-└── changes/                       # Change instances
+└── changes/                       # 変更インスタンス
     ├── add-auth/
-    │   ├── README.md              # Auto-generated on creation
-    │   ├── proposal.md            # Created artifacts
+    │   ├── README.md              # 作成時に自動生成
+    │   ├── proposal.md            # 作成されたアーティファクト
     │   ├── design.md
     │   └── specs/
     │       └── *.md
     ├── refactor-db/
     │   └── ...
-    └── archive/                   # Completed changes
+    └── archive/                   # 完了した変更
         └── 2025-01-01-add-auth/
 
 .claude/
-├── settings.local.json            # Permissions
-└── commands/                      # Slash commands
+├── settings.local.json            # 権限
+└── commands/                      # スラッシュコマンド
     └── *.md
 ```
 
 ---
 
-## Schema YAML Format
+## スキーマ YAML 形式
 
 ```yaml
-# Built-in: <package>/schemas/spec-driven/schema.yaml
-# Or user override: ~/.local/share/openspec/schemas/spec-driven/schema.yaml
+# 内蔵: <package>/schemas/spec-driven/schema.yaml
+# またはユーザー上書き: ~/.local/share/openspec/schemas/spec-driven/schema.yaml
 name: spec-driven
 version: 1
 description: Specification-driven development
@@ -542,11 +542,11 @@ artifacts:
   - id: proposal
     generates: "proposal.md"
     description: "Create project proposal document"
-    template: "proposal.md"          # resolves from co-located templates/ directory
+    template: "proposal.md"          # 同梱テンプレートディレクトリから解決
     requires: []
 
   - id: specs
-    generates: "specs/*.md"          # glob pattern
+    generates: "specs/*.md"          # グロブパターン
     description: "Create technical specification documents"
     template: "specs.md"
     requires:
@@ -570,28 +570,28 @@ artifacts:
 
 ---
 
-## Summary
+## まとめ
 
-| Layer | Component | Responsibility | Status |
+| レイヤー | コンポーネント | 役割 | 状態 |
 |-------|-----------|----------------|--------|
-| Core | ArtifactGraph | Pure dependency logic + XDG schema resolution | ✅ Slice 1 COMPLETE |
-| Utils | change-utils | Change creation + name validation only | Slice 2 (new functionality only) |
-| Core | InstructionLoader | Template resolution + enrichment | Slice 3 (all new) |
-| Presentation | CLI | New artifact graph commands | Slice 4 (new commands only) |
-| Integration | Claude Commands | AI assistant glue | Slice 4 |
+| Core | ArtifactGraph | 依存ロジック + XDG スキーマ解決 | ✅ スライス 1 完了 |
+| Utils | change-utils | 変更作成 + 名前検証のみ | スライス 2（新機能のみ） |
+| Core | InstructionLoader | テンプレート解決 + 拡張 | スライス 3（すべて新規） |
+| Presentation | CLI | 新しいアーティファクトグラフコマンド | スライス 4（新規コマンドのみ） |
+| Integration | Claude Commands | AI アシスタント連携 | スライス 4 |
 
-**What already exists (not in this proposal):**
-- `getActiveChangeIds()` in `src/utils/item-discovery.ts` - list changes
+**すでに存在するもの（この提案の対象外）:**
+- `getActiveChangeIds()` in `src/utils/item-discovery.ts` - 変更一覧
 - `ChangeCommand.list/show/validate()` in `src/commands/change.ts`
 - `ListCommand.execute()` in `src/core/list.ts`
-- `ViewCommand.execute()` in `src/core/view.ts` - dashboard
-- `src/core/init.ts` - initialization
-- `src/core/archive.ts` - archiving
+- `ViewCommand.execute()` in `src/core/view.ts` - ダッシュボード
+- `src/core/init.ts` - 初期化
+- `src/core/archive.ts` - アーカイブ
 
-**Key Principles:**
-- **Filesystem IS the database** - stateless, version-control friendly
-- **Dependencies are enablers** - show what's possible, don't force order
-- **Deterministic CLI, inferring agent** - CLI requires explicit `--change`, agent infers from context
-- **XDG-compliant paths** - schemas and templates use standard user data directories
-- **2-level inheritance** - user override → package built-in (no deeper)
-- **Schemas are versioned** - support variations by philosophy, version, language
+**重要な原則:**
+- **ファイルシステムがデータベース** — ステートレスでバージョン管理向き
+- **依存関係はエネーブラ** — 順序を強制せず、可能性を示す
+- **決定的な CLI と推論するエージェント** — CLI は `--change` 必須、エージェントが文脈から推測
+- **XDG 準拠のパス** — スキーマとテンプレートは標準のユーザーデータディレクトリに置く
+- **2 段階継承** — ユーザー上書き → パッケージ内蔵（それ以上はしない）
+- **スキーマはバージョン化** — 思想・バージョン・言語によるバリエーションをサポート

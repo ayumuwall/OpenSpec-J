@@ -1,137 +1,137 @@
-# Schema Workflow: End-to-End Analysis
+# スキーマワークフロー: エンドツーエンド分析
 
-This document analyzes the complete user journey for working with schemas in OpenSpec, identifies gaps, and proposes a phased solution.
-
----
-
-## Current State
-
-### What Exists
-
-| Component | Status |
-|-----------|--------|
-| Schema resolution (XDG) | 2-level: user override → package built-in |
-| Built-in schemas | `spec-driven`, `tdd` |
-| Artifact workflow commands | `status`, `next`, `instructions`, `templates` with `--schema` flag |
-| Change creation | `openspec new change <name>` — no schema binding |
-
-### What's Missing
-
-| Component | Status |
-|-----------|--------|
-| Schema bound to change | Not stored — must pass `--schema` every time |
-| Project-local schemas | Not supported — can't version control with repo |
-| Schema management CLI | None — manual path discovery required |
-| Project default schema | None — hardcoded to `spec-driven` |
+このドキュメントでは、OpenSpec のスキーマを扱うユーザージャーニー全体を分析し、ギャップを特定し、段階的な解決策を提案します。
 
 ---
 
-## User Journey Analysis
+## 現状
 
-### Scenario 1: Using a Non-Default Schema
+### 存在するもの
 
-**Goal:** User wants to use TDD workflow for a new feature.
+| コンポーネント | 状態 |
+|-----------|--------|
+| スキーマ解決（XDG） | 2 段階: ユーザー上書き → パッケージ内蔵 |
+| 内蔵スキーマ | `spec-driven`, `tdd` |
+| アーティファクトワークフローコマンド | `status`, `next`, `instructions`, `templates`（`--schema` フラグあり） |
+| 変更作成 | `openspec new change <name>` — スキーマ紐付けなし |
 
-**Today's experience:**
+### 不足しているもの
+
+| コンポーネント | 状態 |
+|-----------|--------|
+| 変更へのスキーマ紐付け | 未保存 — 毎回 `--schema` を渡す必要がある |
+| プロジェクト内スキーマ | 非対応 — リポジトリで管理できない |
+| スキーマ管理 CLI | なし — パス発見が手作業 |
+| プロジェクトのデフォルトスキーマ | なし — `spec-driven` に固定 |
+
+---
+
+## ユーザージャーニー分析
+
+### シナリオ 1: デフォルト以外のスキーマを使う
+
+**目的:** 新機能で TDD ワークフローを使いたい。
+
+**現在の体験:**
 ```bash
 openspec new change add-auth
-# Creates directory, no schema info stored
+# ディレクトリだけ作成され、スキーマ情報は保存されない
 
 openspec status --change add-auth
-# Shows spec-driven artifacts (WRONG - user wanted TDD)
+# spec-driven のアーティファクトが表示される（誤り: ユーザーは TDD を希望）
 
-# User realizes mistake...
+# ユーザーが間違いに気付く...
 openspec status --change add-auth --schema tdd
-# Correct, but must remember --schema every time
+# 正しいが、毎回 --schema を覚えておく必要がある
 
-# 6 months later...
+# 6 か月後...
 openspec status --change add-auth
-# Wrong again - nobody remembers this was TDD
+# また誤り - これが TDD だったことを誰も覚えていない
 ```
 
-**Problems:**
-- Schema is a runtime argument, not persisted
-- Easy to forget `--schema` and get wrong results
-- No record of intended schema for future reference
+**問題点:**
+- スキーマがランタイム引数で、永続化されない
+- `--schema` を忘れやすく、誤った結果になる
+- 将来の参照のための記録がない
 
 ---
 
-### Scenario 2: Customizing a Schema
+### シナリオ 2: スキーマをカスタマイズする
 
-**Goal:** User wants to add a "research" artifact before "proposal".
+**目的:** `proposal` の前に `research` アーティファクトを追加したい。
 
-**Today's experience:**
+**現在の体験:**
 ```bash
-# Step 1: Figure out where to put overrides
-# Must know XDG conventions:
+# ステップ 1: 上書き先を確認
+# XDG の慣習を知っている必要がある:
 #   macOS/Linux: ~/.local/share/openspec/schemas/
 #   Windows: %LOCALAPPDATA%\openspec\schemas/
 
-# Step 2: Create directory structure
+# ステップ 2: ディレクトリ構造を作成
 mkdir -p ~/.local/share/openspec/schemas/my-workflow/templates
 
-# Step 3: Find the npm package to copy defaults
+# ステップ 3: デフォルトをコピーする npm パッケージの場所を探す
 npm list -g openspec --parseable
-# Output varies by package manager:
+# 出力はパッケージマネージャーで変わる:
 #   npm: /usr/local/lib/node_modules/openspec
 #   pnpm: ~/.local/share/pnpm/global/5/node_modules/openspec
 #   volta: ~/.volta/tools/image/packages/openspec/...
 #   yarn: ~/.config/yarn/global/node_modules/openspec
 
-# Step 4: Copy files
+# ステップ 4: ファイルをコピー
 cp -r <package-path>/schemas/spec-driven/* \
       ~/.local/share/openspec/schemas/my-workflow/
 
-# Step 5: Edit schema.yaml and templates
-# No way to verify override is active
-# No way to diff against original
+# ステップ 5: schema.yaml と templates を編集
+# 上書きが有効か確認する手段がない
+# 元の内容との差分を取る手段がない
 ```
 
-**Problems:**
-- Must know XDG path conventions
-- Finding npm package path varies by install method
-- No tooling to scaffold or verify
-- No diff capability when upgrading openspec
+**問題点:**
+- XDG パスの慣習を知っている必要がある
+- npm パッケージの場所がインストール方法で変わる
+- ひな形作成や検証のツールがない
+- openspec 更新時に差分を確認できない
 
 ---
 
-### Scenario 3: Team Sharing Custom Workflow
+### シナリオ 3: チームでカスタムワークフローを共有する
 
-**Goal:** Team wants everyone to use the same custom schema.
+**目的:** チーム全員に同じカスタムスキーマを使ってもらいたい。
 
-**Today's options:**
-1. Everyone manually sets up XDG override — error-prone, drift risk
-2. Document setup in README — still manual, easy to miss
-3. Publish separate npm package — overkill for most teams
-4. Check schema into repo — **not supported** (no project-local resolution)
+**現在の選択肢:**
+1. 全員が XDG 上書きを手作業で設定 — ミスやズレが起きやすい
+2. README に手順を書く — 依然として手作業で見落としが起きる
+3. 別の npm パッケージとして配布 — 多くのチームには大げさ
+4. リポジトリにスキーマをコミット — **非対応**（プロジェクト内解決がない）
 
-**Problems:**
-- No project-local schema resolution
-- Can't version control custom schemas with the codebase
-- No single source of truth for team workflow
+**問題点:**
+- プロジェクト内スキーマ解決がない
+- カスタムスキーマをコードベースと一緒にバージョン管理できない
+- チーム共通の単一ソースが作れない
 
 ---
 
-## Gap Summary
+## ギャップ一覧
 
-| Gap | Impact | Workaround |
+| ギャップ | 影響 | 回避策 |
 |-----|--------|------------|
-| Schema not bound to change | Wrong results, forgotten context | Remember to pass `--schema` |
-| No project-local schemas | Can't share via repo | Manual XDG setup per machine |
-| No schema management CLI | Manual path hunting | Know XDG + find npm package |
-| No project default schema | Must specify every time | Always pass `--schema` |
-| No init-time schema selection | Missed setup opportunity | Manual config |
+| 変更にスキーマが紐付かない | 誤った結果、文脈喪失 | `--schema` を覚えて渡す |
+| プロジェクト内スキーマがない | 共有不可 | 端末ごとの XDG 手作業 |
+| スキーマ管理 CLI がない | パス探しが手作業 | XDG 知識 + npm パス探索 |
+| プロジェクトのデフォルトがない | 毎回指定が必要 | 常に `--schema` を渡す |
+| init 時のスキーマ選択がない | セットアップ機会を逃す | 手動設定 |
 
 ---
 
-## Proposed Architecture
+## 提案アーキテクチャ
 
-### New File Structure
+### 新しいファイル構成
 
 ```
 openspec/
-├── config.yaml                 # Project config (NEW)
-├── schemas/                    # Project-local schemas (NEW)
+├── config.yaml                 # プロジェクト設定（新規）
+├── schemas/                    # プロジェクト内スキーマ（新規）
 │   └── my-workflow/
 │       ├── schema.yaml
 │       └── templates/
@@ -140,23 +140,23 @@ openspec/
 │           └── ...
 └── changes/
     └── add-auth/
-        ├── change.yaml         # Change metadata (NEW)
+        ├── change.yaml         # 変更メタデータ（新規）
         ├── proposal.md
         └── ...
 ```
 
-### config.yaml (Project Config)
+### config.yaml（プロジェクト設定）
 
 ```yaml
 # openspec/config.yaml
 defaultSchema: spec-driven
 ```
 
-Sets the project-wide default schema. Used when:
-- Creating new changes without `--schema`
-- Running commands on changes without `change.yaml`
+プロジェクト全体のデフォルトスキーマを設定します。次の場合に使用します:
+- `--schema` なしで新しい変更を作成する
+- `change.yaml` がない変更に対してコマンドを実行する
 
-### change.yaml (Change Metadata)
+### change.yaml（変更メタデータ）
 
 ```yaml
 # openspec/changes/add-auth/change.yaml
@@ -165,214 +165,214 @@ created: 2025-01-15T10:30:00Z
 description: Add user authentication system
 ```
 
-Binds a specific schema to a change. Created automatically by `openspec new change`.
+変更に特定のスキーマを紐付けます。`openspec new change` が自動的に作成します。
 
-### Schema Resolution Order
-
-```
-1. ./openspec/schemas/<name>/                    # Project-local
-2. ~/.local/share/openspec/schemas/<name>/       # User global (XDG)
-3. <npm-package>/schemas/<name>/                 # Built-in
-```
-
-Project-local takes priority, enabling version-controlled custom schemas.
-
-### Schema Selection Order (Per Command)
+### スキーマ解決順序
 
 ```
-1. --schema CLI flag                    # Explicit override
-2. change.yaml in change directory      # Change-specific binding
-3. openspec/config.yaml defaultSchema   # Project default
-4. "spec-driven"                        # Hardcoded fallback
+1. ./openspec/schemas/<name>/                    # プロジェクト内
+2. ~/.local/share/openspec/schemas/<name>/       # ユーザーグローバル（XDG）
+3. <npm-package>/schemas/<name>/                 # 内蔵
+```
+
+プロジェクト内が最優先になるため、カスタムスキーマをリポジトリで管理できます。
+
+### コマンドごとのスキーマ選択順序
+
+```
+1. --schema CLI flag                    # 明示的な上書き
+2. change.yaml in change directory      # 変更ごとの紐付け
+3. openspec/config.yaml defaultSchema   # プロジェクトのデフォルト
+4. "spec-driven"                        # ハードコードされたフォールバック
 ```
 
 ---
 
-## Ideal User Experience
+## 理想的なユーザー体験
 
-### Creating a Change
+### 変更を作成する
 
 ```bash
-# Uses project default (from config.yaml, or spec-driven)
+# プロジェクトのデフォルトを使用（config.yaml、なければ spec-driven）
 openspec new change add-auth
-# Creates openspec/changes/add-auth/change.yaml:
+# openspec/changes/add-auth/change.yaml を作成:
 #   schema: spec-driven
 #   created: 2025-01-15T10:30:00Z
 
-# Explicit schema for this change
+# この変更に明示的なスキーマを指定
 openspec new change add-auth --schema tdd
-# Creates change.yaml with schema: tdd
+# schema: tdd の change.yaml を作成
 ```
 
-### Working with Changes
+### 変更を操作する
 
 ```bash
-# Auto-reads schema from change.yaml — no --schema needed
+# change.yaml から自動取得 — --schema 不要
 openspec status --change add-auth
-# Output: "Change: add-auth (schema: tdd)"
-# Shows which artifacts are ready/blocked/done
+# 出力: "Change: add-auth (schema: tdd)"
+# 準備完了/ブロック/完了のアーティファクトを表示
 
-# Explicit override still works (with informational message)
+# 明示的な上書きも有効（情報メッセージ付き）
 openspec status --change add-auth --schema spec-driven
-# "Note: change.yaml specifies 'tdd', using 'spec-driven' per --schema flag"
+# "注記: change.yaml は 'tdd' を指定しています。--schema フラグにより 'spec-driven' を使用します"
 ```
 
-### Customizing Schemas
+### スキーマをカスタマイズする
 
 ```bash
-# See what's available
+# 利用可能なものを確認
 openspec schema list
-# Built-in:
+# 内蔵:
 #   spec-driven    proposal → specs → design → tasks
 #   tdd            spec → tests → implementation → docs
-# Project: (none)
-# User: (none)
+# プロジェクト: (なし)
+# ユーザー: (なし)
 
-# Copy to project for customization
+# プロジェクトにコピーしてカスタマイズ
 openspec schema copy spec-driven my-workflow
-# Created ./openspec/schemas/my-workflow/
-# Edit schema.yaml and templates/ to customize
+# ./openspec/schemas/my-workflow/ を作成
+# schema.yaml と templates/ を編集してカスタマイズ
 
-# Copy to global (user-level override)
+# グローバルにコピー（ユーザーレベルの上書き）
 openspec schema copy spec-driven --global
-# Created ~/.local/share/openspec/schemas/spec-driven/
+# ~/.local/share/openspec/schemas/spec-driven/ を作成
 
-# See where a schema resolves from
+# スキーマの解決先を確認
 openspec schema which spec-driven
-# ./openspec/schemas/spec-driven/ (project)
-# or: ~/.local/share/openspec/schemas/spec-driven/ (user)
-# or: /usr/local/lib/node_modules/openspec/schemas/spec-driven/ (built-in)
+# ./openspec/schemas/spec-driven/（プロジェクト）
+# または: ~/.local/share/openspec/schemas/spec-driven/（ユーザー）
+# または: /usr/local/lib/node_modules/openspec/schemas/spec-driven/（内蔵）
 
-# Compare override with built-in
+# 上書きと内蔵を比較
 openspec schema diff spec-driven
-# Shows diff between user/project version and package built-in
+# ユーザー/プロジェクト版と内蔵版の差分を表示
 
-# Remove override, revert to built-in
+# 上書きを削除して内蔵に戻す
 openspec schema reset spec-driven
-# Removes ./openspec/schemas/spec-driven/ (or --global for user dir)
+# ./openspec/schemas/spec-driven/ を削除（ユーザーディレクトリなら --global）
 ```
 
-### Project Setup
+### プロジェクトセットアップ
 
 ```bash
 openspec init
-# ? Select default workflow schema:
+# ? デフォルトのワークフロースキーマを選択:
 #   > spec-driven (proposal → specs → design → tasks)
 #     tdd (spec → tests → implementation → docs)
-#     (custom schemas if detected)
+#     （検出したカスタムスキーマ）
 #
-# Writes to openspec/config.yaml:
+# openspec/config.yaml に書き込む:
 #   defaultSchema: spec-driven
 ```
 
 ---
 
-## Implementation Phases
+## 実装フェーズ
 
-### Phase 1: Change Metadata (change.yaml)
+### フェーズ 1: 変更メタデータ（change.yaml）
 
-**Priority:** High
-**Solves:** "Forgot --schema", lost context, wrong results
+**優先度:** 高
+**解決する課題:** `--schema` の忘れ、文脈喪失、誤った結果
 
-**Scope:**
-- Create `change.yaml` when running `openspec new change`
-- Store `schema`, `created` timestamp
-- Modify workflow commands to read schema from `change.yaml`
-- `--schema` flag overrides (with informational message)
-- Backwards compatible: missing `change.yaml` → use default
+**スコープ:**
+- `openspec new change` 実行時に `change.yaml` を作成
+- `schema` と `created` タイムスタンプを保存
+- ワークフローコマンドで `change.yaml` を参照
+- `--schema` は上書き（情報メッセージ付き）
+- 後方互換: `change.yaml` がなければデフォルトを使う
 
-**change.yaml format:**
+**change.yaml フォーマット:**
 ```yaml
 schema: tdd
 created: 2025-01-15T10:30:00Z
 ```
 
-**Migration:**
-- Existing changes without `change.yaml` continue to work
-- Default to `spec-driven` (current behavior)
-- Optional: `openspec migrate` to add `change.yaml` to existing changes
+**移行:**
+- 既存の `change.yaml` がない変更も引き続き動作
+- デフォルトは `spec-driven`（現在の挙動）
+- 既存変更に `change.yaml` を追加する `openspec migrate`（任意）
 
 ---
 
-### Phase 2: Project-Local Schemas
+### フェーズ 2: プロジェクト内スキーマ
 
-**Priority:** High
-**Solves:** Team sharing, version control, no XDG knowledge needed
+**優先度:** 高
+**解決する課題:** チーム共有、バージョン管理、XDG 知識不要
 
-**Scope:**
-- Add `./openspec/schemas/` to resolution order (first priority)
-- `openspec schema copy <name> [new-name]` creates in project by default
-- `--global` flag for user-level XDG directory
-- Teams can commit `openspec/schemas/` to repo
+**スコープ:**
+- 解決順序に `./openspec/schemas/` を追加（最優先）
+- `openspec schema copy <name> [new-name]` がデフォルトでプロジェクト内へ作成
+- `--global` フラグでユーザーレベルの XDG へコピー
+- チームが `openspec/schemas/` をリポジトリにコミット可能
 
-**Resolution order:**
+**解決順序:**
 ```
-1. ./openspec/schemas/<name>/           # Project-local (NEW)
-2. ~/.local/share/openspec/schemas/<name>/  # User global
-3. <npm-package>/schemas/<name>/        # Built-in
+1. ./openspec/schemas/<name>/           # プロジェクト内（新規）
+2. ~/.local/share/openspec/schemas/<name>/  # ユーザーグローバル
+3. <npm-package>/schemas/<name>/        # 内蔵
 ```
 
 ---
 
-### Phase 3: Schema Management CLI
+### フェーズ 3: スキーマ管理 CLI
 
-**Priority:** Medium
-**Solves:** Path discovery, scaffolding, debugging
+**優先度:** 中
+**解決する課題:** パス探索、ひな形作成、デバッグ
 
-**Commands:**
+**コマンド:**
 ```bash
-openspec schema list              # Show available schemas with sources
-openspec schema which <name>      # Show resolution path
-openspec schema copy <name> [to]  # Copy for customization
-openspec schema diff <name>       # Compare with built-in
-openspec schema reset <name>      # Remove override
-openspec schema validate <name>   # Validate schema.yaml structure
+openspec schema list              # 利用可能なスキーマと出所を表示
+openspec schema which <name>      # 解決パスを表示
+openspec schema copy <name> [to]  # カスタマイズ用にコピー
+openspec schema diff <name>       # 内蔵との差分を比較
+openspec schema reset <name>      # 上書きを削除
+openspec schema validate <name>   # schema.yaml 構造を検証
 ```
 
 ---
 
-### Phase 4: Project Config + Init Enhancement
+### フェーズ 4: プロジェクト設定 + init 改善
 
-**Priority:** Low
-**Solves:** Project-wide defaults, streamlined setup
+**優先度:** 低
+**解決する課題:** プロジェクト全体のデフォルト、セットアップの簡略化
 
-**Scope:**
-- Add `openspec/config.yaml` with `defaultSchema` field
-- `openspec init` prompts for schema selection
-- Store selection in `config.yaml`
-- Commands use as fallback when no `change.yaml` exists
+**スコープ:**
+- `openspec/config.yaml` に `defaultSchema` を追加
+- `openspec init` でスキーマ選択を促す
+- 選択内容を `config.yaml` に保存
+- `change.yaml` がない場合のフォールバックとして利用
 
-**config.yaml format:**
+**config.yaml フォーマット:**
 ```yaml
 defaultSchema: spec-driven
 ```
 
 ---
 
-## Backwards Compatibility
+## 後方互換性
 
-| Scenario | Behavior |
-|----------|----------|
-| Existing change without `change.yaml` | Uses `--schema` flag or project default or `spec-driven` |
-| Existing project without `config.yaml` | Falls back to `spec-driven` |
-| `--schema` flag provided | Overrides `change.yaml` (with info message) |
-| No project-local schemas dir | Skipped in resolution, checks user/built-in |
+| シナリオ | 挙動 |
+|----------|------|
+| `change.yaml` がない既存変更 | `--schema` / プロジェクトデフォルト / `spec-driven` を使用 |
+| `config.yaml` がない既存プロジェクト | `spec-driven` にフォールバック |
+| `--schema` を指定 | `change.yaml` を上書き（情報メッセージ付き） |
+| プロジェクト内スキーマなし | そのままユーザー/内蔵を参照 |
 
-All existing functionality continues to work. New features are additive.
+既存の機能はすべて動作し、新機能は追加的に導入されます。
 
 ---
 
-## Related Documents
+## 関連ドキュメント
 
-- [Schema Customization](./schema-customization.md) — Details on manual override process and CLI gaps
-- [Artifact POC](./artifact_poc.md) — Core artifact graph architecture
+- [Schema Customization](./schema-customization.md) — 手作業の上書き手順と CLI のギャップ
+- [Artifact POC](./artifact_poc.md) — コアとなるアーティファクトグラフ設計
 
-## Related Code
+## 関連コード
 
-| File | Purpose |
+| ファイル | 目的 |
 |------|---------|
-| `src/core/artifact-graph/resolver.ts` | Schema resolution logic |
-| `src/core/artifact-graph/instruction-loader.ts` | Template loading |
-| `src/core/global-config.ts` | XDG path helpers |
-| `src/commands/artifact-workflow.ts` | CLI commands |
-| `src/utils/change-utils.ts` | Change creation utilities |
+| `src/core/artifact-graph/resolver.ts` | スキーマ解決ロジック |
+| `src/core/artifact-graph/instruction-loader.ts` | テンプレート読み込み |
+| `src/core/global-config.ts` | XDG パスのヘルパー |
+| `src/commands/artifact-workflow.ts` | CLI コマンド |
+| `src/utils/change-utils.ts` | 変更作成ユーティリティ |

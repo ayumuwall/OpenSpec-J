@@ -1,57 +1,57 @@
-# Schema Customization
+# スキーマのカスタマイズ
 
-This document describes how users can customize OpenSpec schemas and templates, the current manual process, and the gap that needs to be addressed.
-
----
-
-## Overview
-
-OpenSpec uses a 2-level schema resolution system following the XDG Base Directory Specification:
-
-1. **User override**: `${XDG_DATA_HOME}/openspec/schemas/<name>/`
-2. **Package built-in**: `<npm-package>/schemas/<name>/`
-
-When a schema is requested (e.g., `spec-driven`), the resolver checks the user directory first. If found, that entire schema directory is used. Otherwise, it falls back to the package's built-in schema.
+このドキュメントでは、OpenSpec のスキーマとテンプレートをユーザーがどのようにカスタマイズできるか、現状の手作業フロー、そして解消すべきギャップを説明します。
 
 ---
 
-## Current Manual Process
+## 概要
 
-To override the default `spec-driven` schema, a user must:
+OpenSpec は XDG Base Directory Specification に従った 2 段階のスキーマ解決を採用しています:
 
-### 1. Determine the correct directory path
+1. **ユーザー上書き**: `${XDG_DATA_HOME}/openspec/schemas/<name>/`
+2. **パッケージ内蔵**: `<npm-package>/schemas/<name>/`
 
-| Platform | Path |
+スキーマが要求されると（例: `spec-driven`）、リゾルバはまずユーザーディレクトリを確認します。見つかればそのスキーマディレクトリを丸ごと使用し、なければパッケージ内蔵のスキーマにフォールバックします。
+
+---
+
+## 現在の手作業フロー
+
+デフォルトの `spec-driven` スキーマを上書きするには、次の作業が必要です。
+
+### 1. 正しいディレクトリパスを特定する
+
+| プラットフォーム | パス |
 |----------|------|
 | macOS/Linux | `~/.local/share/openspec/schemas/` |
 | Windows | `%LOCALAPPDATA%\openspec\schemas\` |
-| All (if set) | `$XDG_DATA_HOME/openspec/schemas/` |
+| すべて（設定されている場合） | `$XDG_DATA_HOME/openspec/schemas/` |
 
-### 2. Create the directory structure
+### 2. ディレクトリ構造を作成する
 
 ```bash
-# macOS/Linux example
+# macOS/Linux の例
 mkdir -p ~/.local/share/openspec/schemas/spec-driven/templates
 ```
 
-### 3. Find and copy the default schema files
+### 3. デフォルトのスキーマファイルを探してコピーする
 
-The user must locate the installed npm package to copy the defaults:
+ユーザーは、デフォルトをコピーするためにインストール済み npm パッケージの場所を特定する必要があります。
 
 ```bash
-# Find the package location (varies by install method)
+# パッケージの場所を特定（インストール方法で変わる）
 npm list -g openspec --parseable
-# or
+# または
 which openspec && readlink -f $(which openspec)
 
-# Copy files from the package's schemas/ directory
+# パッケージの schemas/ からファイルをコピー
 cp <package-path>/schemas/spec-driven/schema.yaml ~/.local/share/openspec/schemas/spec-driven/
 cp <package-path>/schemas/spec-driven/templates/*.md ~/.local/share/openspec/schemas/spec-driven/templates/
 ```
 
-### 4. Modify the copied files
+### 4. コピーしたファイルを編集する
 
-Edit `schema.yaml` to change the workflow structure:
+`schema.yaml` を編集してワークフロー構造を変更します。
 
 ```yaml
 name: spec-driven
@@ -63,110 +63,110 @@ artifacts:
     description: Initial proposal
     template: proposal.md
     requires: []
-  # Add, remove, or modify artifacts...
+  # アーティファクトを追加/削除/変更する...
 ```
 
-Edit templates in `templates/` to customize the content guidance.
+`templates/` 配下のテンプレートを編集して内容のガイダンスをカスタマイズします。
 
-### 5. Verify the override is active
+### 5. 上書きが有効になっていることを確認する
 
-Currently there's no command to verify which schema is being used. Users must trust that the file exists in the right location.
+現状、どのスキーマが使われているかを確認するコマンドはありません。ユーザーは「正しい場所にファイルがあること」を信じるしかありません。
 
 ---
 
-## Gap Analysis
+## ギャップ分析
 
-The current process has several friction points:
+現在の手順には、いくつかの摩擦点があります。
 
-| Issue | Impact |
+| 課題 | 影響 |
 |-------|--------|
-| **Path discovery** | Users must know XDG conventions and platform-specific paths |
-| **Package location** | Finding the npm package path varies by install method (global, local, pnpm, yarn, volta, etc.) |
-| **No scaffolding** | Users must manually create directories and copy files |
-| **No verification** | No way to confirm which schema is actually being resolved |
-| **No diffing** | When upgrading openspec, users can't see what changed in built-in templates |
-| **Full copy required** | Must copy entire schema even to change one template |
+| **パスの発見** | ユーザーが XDG の慣習やプラットフォーム固有のパスを知る必要がある |
+| **パッケージ位置** | npm パッケージの場所はインストール方法（global/local/pnpm/yarn/volta など）で変わる |
+| **ひな形生成なし** | ディレクトリ作成とファイルコピーがすべて手作業 |
+| **検証手段なし** | どのスキーマが解決されたか確認できない |
+| **差分比較なし** | openspec を更新しても内蔵テンプレートの変更点が分からない |
+| **全体コピー必須** | 1 つのテンプレートを変えるだけでもスキーマ全体をコピーする必要がある |
 
-### User Stories Not Currently Supported
+### 現状サポートできないユーザーストーリー
 
-1. *"I want to add a `research` artifact before `proposal`"* — requires manual copy and edit
-2. *"I want to customize just the proposal template"* — must copy entire schema
-3. *"I want to see what the default schema looks like"* — must find package path
-4. *"I want to revert to defaults"* — must delete files and hope paths are correct
-5. *"I upgraded openspec, did the templates change?"* — no way to diff
+1. *「`proposal` の前に `research` アーティファクトを追加したい」* — 手作業でのコピーと編集が必要
+2. *「提案テンプレートだけをカスタマイズしたい」* — スキーマ全体をコピーする必要がある
+3. *「デフォルトスキーマの中身を見たい」* — パッケージの場所を探す必要がある
+4. *「デフォルトに戻したい」* — ファイルを削除して正しいパスか祈る必要がある
+5. *「openspec をアップグレードしたけどテンプレートは変わった？」* — 差分を取る方法がない
 
 ---
 
-## Proposed Solution: Schema Configurator
+## 提案: スキーマ構成コマンド
 
-A CLI command (or set of commands) that handles path resolution and file operations for users.
+ユーザー向けにパス解決とファイル操作を担う CLI コマンド（またはコマンド群）を用意します。
 
-### Option A: Single `openspec schema` command
+### Option A: 単一の `openspec schema` コマンド
 
 ```bash
-# List available schemas (built-in and user overrides)
+# 利用可能なスキーマ一覧（内蔵とユーザー上書き）
 openspec schema list
 
-# Show where a schema resolves from
+# スキーマの解決先を表示
 openspec schema which spec-driven
-# Output: /Users/me/.local/share/openspec/schemas/spec-driven/ (user override)
-# Output: /usr/local/lib/node_modules/openspec/schemas/spec-driven/ (built-in)
+# 出力例: /Users/me/.local/share/openspec/schemas/spec-driven/（ユーザー上書き）
+# 出力例: /usr/local/lib/node_modules/openspec/schemas/spec-driven/（内蔵）
 
-# Copy a built-in schema to user directory for customization
+# 内蔵スキーマをユーザーディレクトリにコピーしてカスタマイズ
 openspec schema copy spec-driven
-# Creates ~/.local/share/openspec/schemas/spec-driven/ with all files
+# ~/.local/share/openspec/schemas/spec-driven/ に全ファイルを作成
 
-# Show diff between user override and built-in
+# ユーザー上書きと内蔵の差分を表示
 openspec schema diff spec-driven
 
-# Remove user override (revert to built-in)
+# ユーザー上書きを削除（内蔵へ戻す）
 openspec schema reset spec-driven
 
-# Validate a schema
+# スキーマを検証
 openspec schema validate spec-driven
 ```
 
-### Option B: Dedicated `openspec customize` command
+### Option B: 専用の `openspec customize` コマンド
 
 ```bash
-# Interactive schema customization
+# 対話的にスキーマをカスタマイズ
 openspec customize
-# Prompts: Which schema? What do you want to change? etc.
+# プロンプト: どのスキーマ？何を変えたい？など
 
-# Copy and open for editing
+# コピーして編集のために開く
 openspec customize spec-driven
-# Copies to user dir, prints path, optionally opens in $EDITOR
+# ユーザーディレクトリにコピーしパスを表示、必要なら $EDITOR で開く
 ```
 
-### Option C: Init-time schema selection
+### Option C: init 時にスキーマを選択
 
 ```bash
-# During project init, offer schema customization
+# プロジェクト初期化時にスキーマ選択を提示
 openspec init
-# ? Select a workflow schema:
-#   > spec-driven (default)
+# ? ワークフロースキーマを選択:
+#   > spec-driven (デフォルト)
 #     tdd
 #     minimal
-#     custom (copy and edit)
+#     custom (コピーして編集)
 ```
 
-### Recommended Approach
+### 推奨アプローチ
 
-**Option A** provides the most flexibility and follows Unix conventions (subcommands for discrete operations). Key commands in priority order:
+**Option A** が最も柔軟で、Unix の慣習（離散操作のサブコマンド）にも沿います。優先度順の主なコマンドは次のとおりです。
 
-1. `openspec schema list` — see what's available
-2. `openspec schema which <name>` — debug resolution
-3. `openspec schema copy <name>` — scaffold customization
-4. `openspec schema diff <name>` — compare with built-in
-5. `openspec schema reset <name>` — revert to defaults
+1. `openspec schema list` — 使えるスキーマ一覧
+2. `openspec schema which <name>` — 解決先の確認
+3. `openspec schema copy <name>` — カスタマイズ用のひな形作成
+4. `openspec schema diff <name>` — 内蔵との比較
+5. `openspec schema reset <name>` — デフォルトへ戻す
 
 ---
 
-## Implementation Considerations
+## 実装上の考慮点
 
-### Path Resolution
+### パス解決
 
-The resolver already exists in `src/core/artifact-graph/resolver.ts`:
+リゾルバはすでに `src/core/artifact-graph/resolver.ts` に存在します:
 
 ```typescript
 export function getPackageSchemasDir(): string { ... }
@@ -175,17 +175,17 @@ export function getSchemaDir(name: string): string | null { ... }
 export function listSchemas(): string[] { ... }
 ```
 
-New commands would leverage these existing functions.
+新しいコマンドはこれらの既存関数を活用できます。
 
-### File Operations
+### ファイル操作
 
-- Copy should preserve file permissions
-- Copy should not overwrite existing user files without `--force`
-- Reset should prompt for confirmation
+- コピーはファイル権限を保持する
+- `--force` なしで既存ファイルを上書きしない
+- リセットは確認プロンプトを出す
 
-### Template-Only Overrides
+### テンプレート単体の上書き
 
-A future enhancement could support overriding individual templates without copying the entire schema. This would require changes to the resolution logic:
+将来の拡張として、スキーマ全体をコピーせずに個別テンプレートだけを上書きする案があります。これは解決ロジックの変更を伴います。
 
 ```
 Current: schema dir (user) OR schema dir (built-in)
@@ -193,19 +193,19 @@ Future:  schema.yaml from user OR built-in
          + each template from user OR built-in (independent fallback)
 ```
 
-This adds complexity but enables the "I just want to change one template" use case.
+複雑さは増えますが「1 つのテンプレートだけ変えたい」というユースケースを満たせます。
 
 ---
 
-## Related Documents
+## 関連ドキュメント
 
-- [Schema Workflow Gaps](./schema-workflow-gaps.md) — End-to-end workflow analysis and phased implementation plan
+- [Schema Workflow Gaps](./schema-workflow-gaps.md) — エンドツーエンドのワークフロー分析と段階的実装プラン
 
-## Related Files
+## 関連ファイル
 
-| File | Purpose |
+| ファイル | 目的 |
 |------|---------|
-| `src/core/artifact-graph/resolver.ts` | Schema resolution logic |
-| `src/core/artifact-graph/instruction-loader.ts` | Template loading |
-| `src/core/global-config.ts` | XDG path helpers |
-| `schemas/spec-driven/` | Default schema and templates |
+| `src/core/artifact-graph/resolver.ts` | スキーマ解決ロジック |
+| `src/core/artifact-graph/instruction-loader.ts` | テンプレート読み込み |
+| `src/core/global-config.ts` | XDG パスのヘルパー |
+| `schemas/spec-driven/` | デフォルトスキーマとテンプレート |

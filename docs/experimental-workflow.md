@@ -1,107 +1,107 @@
-# Experimental Workflow (OPSX)
+# 実験的ワークフロー（OPSX）
 
-> **Status:** Experimental. Things might break. Feedback welcome on [Discord](https://discord.gg/BYjPaKbqMt).
+> **ステータス:** 実験的です。壊れる可能性があります。フィードバックは [Discord](https://discord.gg/BYjPaKbqMt) へ。
 >
-> **Compatibility:** Claude Code only (for now)
+> **互換性:** 現時点では Claude Code のみ
 
-## What Is It?
+## 概要
 
-OPSX is a new way to work with OpenSpec changes. Instead of one big proposal, you build **artifacts** step-by-step:
+OPSX は OpenSpec の変更を扱う新しい方法です。1 つの大きな提案ではなく、**アーティファクト**を段階的に作成します:
 
 ```
 proposal → specs → design → tasks → implementation → archive
 ```
 
-Each artifact has dependencies. Can't write tasks until you have specs. Can't implement until you have tasks. The system tracks what's ready and what's blocked.
+各アーティファクトには依存関係があります。仕様がないとタスクを書けません。タスクがないと実装できません。システムが「今できること」と「ブロックされていること」を追跡します。
 
-## Setup
+## セットアップ
 
 ```bash
-# 1. Make sure you have openspec installed and initialized
+# 1. openspec がインストール済みで初期化されていることを確認
 openspec init
 
-# 2. Generate the experimental skills
+# 2. 実験的スキルを生成
 openspec artifact-experimental-setup
 ```
 
-This creates skills in `.claude/skills/` that Claude Code auto-detects.
+Claude Code が自動検出する `.claude/skills/` にスキルが作成されます。
 
-## Commands
+## コマンド
 
-| Command | What it does |
-|---------|--------------|
-| `/opsx:new` | Start a new change |
-| `/opsx:continue` | Create the next artifact |
-| `/opsx:ff` | Fast-forward (create all artifacts at once) |
-| `/opsx:apply` | Implement the tasks |
-| `/opsx:sync` | Sync delta specs to main specs |
-| `/opsx:archive` | Archive when done |
+| コマンド | 役割 |
+|---------|------|
+| `/opsx:new` | 新しい変更を開始 |
+| `/opsx:continue` | 次のアーティファクトを作成 |
+| `/opsx:ff` | 早送り（すべてのアーティファクトを一括生成） |
+| `/opsx:apply` | タスクを実装 |
+| `/opsx:sync` | 変更の仕様差分をメイン仕様に同期 |
+| `/opsx:archive` | 完了後にアーカイブ |
 
-## Usage
+## 使い方
 
-### Start a new change
+### 新しい変更を始める
 ```
 /opsx:new
 ```
-You'll be asked what you want to build and which workflow schema to use.
+何を作るかと、どのワークフロースキーマを使うかを尋ねられます。
 
-### Build artifacts step-by-step
+### アーティファクトを 1 つずつ作る
 ```
 /opsx:continue
 ```
-Creates one artifact at a time. Good for reviewing each step.
+1 回に 1 つのアーティファクトを作成します。各ステップを確認しながら進めたい場合に向いています。
 
-### Or fast-forward
+### まとめて作成する
 ```
 /opsx:ff add-dark-mode
 ```
-Creates all artifacts in one go. Good when you know what you want.
+すべてのアーティファクトを一括で作成します。やることが明確なときに便利です。
 
-### Implement
+### 実装する
 ```
 /opsx:apply
 ```
-Works through tasks, checking them off as you go.
+タスクを順に進め、完了したらチェックを付けます。
 
-### Sync specs and archive
+### 仕様を同期してアーカイブする
 ```
-/opsx:sync      # Update main specs with your delta specs
-/opsx:archive   # Move to archive when done
+/opsx:sync      # 変更の仕様差分をメイン仕様に反映
+/opsx:archive   # 完了後にアーカイブへ移動
 ```
 
-## What's Different?
+## 何が違うのか？
 
-**Standard workflow** (`/openspec:proposal`):
-- One big proposal document
-- Linear phases: plan → implement → archive
-- All-or-nothing artifact creation
+**標準ワークフロー**（`/openspec:proposal`）:
+- 1 つの大きな提案ドキュメント
+- 直線的なフェーズ: plan → implement → archive
+- アーティファクトを一括生成
 
-**Experimental workflow** (`/opsx:*`):
-- Discrete artifacts with dependencies
-- Fluid actions (not phases) - update artifacts anytime
-- Step-by-step or fast-forward
-- Schema-driven (can customize the workflow)
+**実験的ワークフロー**（`/opsx:*`）:
+- 依存関係を持つ離散的なアーティファクト
+- フェーズではなくアクション中心で柔軟
+- ステップごと／一括のどちらでも進行可能
+- スキーマ駆動（ワークフローをカスタマイズ可能）
 
-The key insight: work isn't linear. You implement, realize the design is wrong, update it, continue. OPSX supports this.
+重要な示唆は、作業は直線的ではないということです。実装してみたら設計が違うと気付き、設計を更新して続ける。OPSX はそうした往復を前提にしています。
 
-## Schemas
+## スキーマ
 
-Schemas define what artifacts exist and their dependencies. Currently available:
+スキーマは、どのアーティファクトが存在し、どのように依存するかを定義します。現在利用可能なもの:
 
-- **spec-driven** (default): proposal → specs → design → tasks
+- **spec-driven**（デフォルト）: proposal → specs → design → tasks
 - **tdd**: tests → implementation → docs
 
-Run `openspec schemas` to see available schemas.
+`openspec schemas` を実行すると利用可能なスキーマが表示されます。
 
-## Tips
+## ヒント
 
-- Use `/opsx:ff` when you have a clear idea, `/opsx:continue` when exploring
-- Tasks track progress via checkboxes in `tasks.md`
-- Delta specs (in `specs/`) get synced to main specs with `/opsx:sync`
-- If you get stuck, the status command shows what's blocked: `openspec status --change "name"`
+- `/opsx:ff` は方針が固まっているときに、`/opsx:continue` は探索中に向いています
+- `tasks.md` のチェックボックスで進捗を追跡します
+- `specs/` の差分仕様は `/opsx:sync` でメイン仕様に同期されます
+- 行き詰まったら `openspec status --change "name"` でブロック状況を確認できます
 
-## Feedback
+## フィードバック
 
-This is rough. That's intentional - we're learning what works.
+荒削りなのは意図的です。何がうまくいくかを学んでいます。
 
-Found a bug? Have ideas? Join us on [Discord](https://discord.gg/BYjPaKbqMt) or open an issue on [GitHub](https://github.com/Fission-AI/openspec/issues).
+バグやアイデアがあれば [Discord](https://discord.gg/BYjPaKbqMt) か [GitHub](https://github.com/Fission-AI/openspec/issues) へ。

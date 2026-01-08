@@ -1,926 +1,918 @@
-# OpenSpec Experimental Release Plan
+# OpenSpec 実験的リリース計画
 
-This document outlines the plan to release the experimental artifact workflow system for user testing.
+このドキュメントは、実験的なアーティファクトワークフローシステムをユーザーテスト向けにリリースする計画をまとめたものです。
 
-## Overview
+## 概要
 
-The goal is to allow users to test the new artifact-driven workflow system alongside the existing OpenSpec commands. This experimental system (`opsx`) provides a more granular, step-by-step approach to creating change artifacts.
+既存の OpenSpec コマンドと並行して、新しいアーティファクト駆動ワークフローをテストできるようにすることが目的です。この実験的システム（`opsx`）は、変更アーティファクトをより細かいステップで作成できるようにします。
 
-## Three Workflow Modes
+## 3 つのワークフローモード
 
-### 1. Old Workflow (Current Production)
-- **Commands**: `/openspec:proposal`, `/openspec:apply`, `/openspec:archive`
-- **Behavior**: Hardcoded slash commands that generate all artifacts in one command
-- **Status**: Production, unchanged
+### 1. 旧ワークフロー（現行本番）
+- **コマンド**: `/openspec:proposal`, `/openspec:apply`, `/openspec:archive`
+- **挙動**: 1 回のコマンドで全アーティファクトを生成するハードコードのスラッシュコマンド
+- **状態**: 本番運用中、変更なし
 
-### 2. New Artifact System - Batch Mode (Future)
-- **Commands**: Refactored `/openspec:proposal` using schemas
-- **Behavior**: Schema-driven but generates all artifacts at once (like legacy)
-- **Status**: Not in scope for this experimental release
-- **Note**: This is a future refactor to unify the old system with schemas
+### 2. 新アーティファクトシステム - バッチモード（将来）
+- **コマンド**: スキーマを使って `/openspec:proposal` を再実装
+- **挙動**: スキーマ駆動だが、従来どおり一括生成
+- **状態**: 今回の実験的リリースでは対象外
+- **注記**: 旧システムをスキーマへ統合する将来リファクタ
 
-### 3. New Artifact System - Granular Mode (Experimental)
-- **Commands**: `/opsx:new`, `/opsx:continue`
-- **Behavior**: One artifact at a time, dependency-driven, iterative
-- **Status**: Target for this experimental release
-
----
-
-## Work Items
-
-### 1. Rename AWF to OPSX
-
-**Current State:**
-- Commands: `/awf:start`, `/awf:continue`
-- Files: `.claude/commands/awf/start.md`, `.claude/commands/awf/continue.md`
-
-**Target State:**
-- Commands: `/opsx:new`, `/opsx:continue`
-- Files: `.claude/commands/opsx/new.md`, `.claude/commands/opsx/continue.md`
-
-**Tasks:**
-- [x] Create `.claude/commands/opsx/` directory
-- [x] Rename `start.md` → `new.md` and update content
-- [x] Copy `continue.md` with updated references
-- [x] Update all references from "awf" to "opsx" in command content
-- [x] Update frontmatter (name, description) to use "opsx" naming
-- [x] Remove `.claude/commands/awf/` directory
-
-**CLI Commands:**
-The underlying CLI commands (`openspec status`, `openspec instructions`, etc.) remain unchanged. Only the slash command names change.
+### 3. 新アーティファクトシステム - 段階モード（実験）
+- **コマンド**: `/opsx:new`, `/opsx:continue`
+- **挙動**: 依存関係に基づき、アーティファクトを 1 つずつ作成
+- **状態**: 今回の実験的リリースの対象
 
 ---
 
-### 2. Remove WF Skill Files
+## 作業項目
 
-**Current State:**
-- `.claude/commands/wf/start.md` - References non-existent `openspec wf` commands
-- `.claude/commands/wf/continue.md` - References non-existent `openspec wf` commands
+### 1. AWF を OPSX にリネーム
 
-**Target State:**
-- Directory and files removed
+**現状:**
+- コマンド: `/awf:start`, `/awf:continue`
+- ファイル: `.claude/commands/awf/start.md`, `.claude/commands/awf/continue.md`
 
-**Tasks:**
-- [x] Delete `.claude/commands/wf/start.md`
-- [x] Delete `.claude/commands/wf/continue.md`
-- [x] Delete `.claude/commands/wf/` directory
+**目標:**
+- コマンド: `/opsx:new`, `/opsx:continue`
+- ファイル: `.claude/commands/opsx/new.md`, `.claude/commands/opsx/continue.md`
+
+**タスク:**
+- [x] `.claude/commands/opsx/` ディレクトリを作成
+- [x] `start.md` → `new.md` にリネームして内容を更新
+- [x] `continue.md` を更新してコピー
+- [x] コマンド内容内の "awf" を "opsx" に置換
+- [x] frontmatter（name, description）を "opsx" に更新
+- [x] `.claude/commands/awf/` ディレクトリを削除
+
+**CLI コマンド:**
+基盤となる CLI コマンド（`openspec status`, `openspec instructions` など）は変更なし。スラッシュコマンド名のみ変更します。
 
 ---
 
-### 3. Add Agent Skills for Experimental Workflow
+### 2. WF スキルファイルを削除
 
-**Purpose:**
-Generate experimental workflow skills using the [Agent Skills](https://agentskills.io/specification) open standard.
+**現状:**
+- `.claude/commands/wf/start.md` - 存在しない `openspec wf` コマンドを参照
+- `.claude/commands/wf/continue.md` - 存在しない `openspec wf` コマンドを参照
 
-**Why Skills Instead of Slash Commands:**
-- **Cross-editor compatibility**: Skills work in Claude Code, Cursor, Windsurf, and other compatible editors automatically
-- **Simpler implementation**: Single directory (`.claude/skills/`) instead of 18+ editor-specific configurators
-- **Standard format**: Open standard with simple YAML frontmatter + markdown
-- **User invocation**: Users explicitly invoke skills when they want to use them
+**目標:**
+- ディレクトリとファイルを削除
 
-**Behavior:**
-1. Create `.claude/skills/` directory if it doesn't exist
-2. Generate two skills using the Agent Skills specification:
-   - `openspec-new-change/SKILL.md` - Start a new change with artifact workflow
-   - `openspec-continue-change/SKILL.md` - Continue working on a change (create next artifact)
-3. Skills are added **alongside** existing `/openspec:*` commands (not replacing)
+**タスク:**
+- [x] `.claude/commands/wf/start.md` を削除
+- [x] `.claude/commands/wf/continue.md` を削除
+- [x] `.claude/commands/wf/` ディレクトリを削除
 
-**Supported Editors:**
-- Claude Code (native support)
-- Cursor (native support via Settings → Rules → Import Settings)
-- Windsurf (imports `.claude` configs)
-- Cline, Codex, and other Agent Skills-compatible editors
+---
 
-**Tasks:**
-- [x] Create skill template content for `openspec-new-change` (based on current opsx:new)
-- [x] Create skill template content for `openspec-continue-change` (based on current opsx:continue)
-- [x] Add temporary `artifact-experimental-setup` command to CLI
-- [x] Implement skill file generation (YAML frontmatter + markdown body)
-- [x] Add success message with usage instructions
+### 3. 実験的ワークフローの Agent Skills を追加
 
-**Note:** The `artifact-experimental-setup` command is temporary and will be merged into `openspec init` once the experimental workflow is promoted to stable.
+**目的:**
+[Agent Skills](https://agentskills.io/specification) のオープン標準を使って、実験的ワークフロー用スキルを生成します。
 
-**Skill Format:**
-Each skill is a directory with a `SKILL.md` file:
+**スラッシュコマンドではなくスキルを使う理由:**
+- **クロスエディタ互換**: Claude Code / Cursor / Windsurf などで自動的に使える
+- **実装がシンプル**: 18+ エディタ別設定ではなく、単一ディレクトリ（`.claude/skills/`）
+- **標準フォーマット**: YAML frontmatter + markdown のシンプルな仕様
+- **ユーザー主導**: ユーザーが必要なときにスキルを呼び出せる
+
+**挙動:**
+1. `.claude/skills/` がなければ作成する
+2. Agent Skills 仕様に従って 2 つのスキルを生成する
+   - `openspec-new-change/SKILL.md` - アーティファクトワークフローで新しい変更を開始
+   - `openspec-continue-change/SKILL.md` - 変更を継続し次のアーティファクトを作成
+3. 既存の `/openspec:*` コマンドと**並行**して追加する（置き換えではない）
+
+**対応エディタ:**
+- Claude Code（ネイティブ対応）
+- Cursor（Settings → Rules → Import Settings）
+- Windsurf（`.claude` 設定を自動取り込み）
+- Cline / Codex など、Agent Skills 対応エディタ
+
+**タスク:**
+- [x] `openspec-new-change` 用スキルテンプレートを作成（opsx:new ベース）
+- [x] `openspec-continue-change` 用スキルテンプレートを作成（opsx:continue ベース）
+- [x] 一時的な `artifact-experimental-setup` コマンドを CLI に追加
+- [x] スキルファイル生成（YAML frontmatter + markdown 本文）を実装
+- [x] 使い方を案内する成功メッセージを追加
+
+**注記:** `artifact-experimental-setup` コマンドは一時的なものです。実験的ワークフローが安定版へ昇格した時点で `openspec init` に統合します。
+
+**スキル形式:**
+各スキルは `SKILL.md` を持つディレクトリです。
 ```
 .claude/skills/
 ├── openspec-new-change/
-│   └── SKILL.md          # name, description, instructions
+│   └── SKILL.md          # 必須フィールド: name, description, instructions
 ├── openspec-continue-change/
-│   └── SKILL.md          # name, description, instructions
+│   └── SKILL.md          # 必須フィールド: name, description, instructions
 └── openspec-apply-change/
-    └── SKILL.md          # name, description, instructions
+    └── SKILL.md          # 必須フィールド: name, description, instructions
 ```
 
-**CLI Interface:**
+**CLI インターフェース:**
 ```bash
 openspec artifact-experimental-setup
 
-# Output:
-# 🧪 Experimental Artifact Workflow Skills Created
+# 出力:
+# 🧪 実験的アーティファクトワークフロースキルを作成しました
 #
 #   ✓ .claude/skills/openspec-new-change/SKILL.md
 #   ✓ .claude/skills/openspec-continue-change/SKILL.md
 #   ✓ .claude/skills/openspec-apply-change/SKILL.md
 #
-# 📖 Usage:
+# 📖 使い方:
 #
-#   Skills work automatically in compatible editors:
-#   • Claude Code - Auto-detected, ready to use
-#   • Cursor - Enable in Settings → Rules → Import Settings
-#   • Windsurf - Auto-imports from .claude directory
+#   対応エディタではスキルが自動的に動作します:
+#   • Claude Code - 自動検出され、すぐに利用可能
+#   • Cursor - Settings → Rules → Import Settings を有効化
+#   • Windsurf - .claude ディレクトリから自動取り込み
 #
-#   Ask Claude naturally:
-#   • "I want to start a new OpenSpec change to add <feature>"
-#   • "Continue working on this change"
+#   Claude への自然な依頼例:
+#   • "OpenSpec の新しい変更を作って <feature> を追加したい"
+#   • "この変更を続けて"
 #
-#   Claude will automatically use the appropriate skill.
+#   Claude が適切なスキルを自動的に使います。
 #
-# 💡 This is an experimental feature.
-#    Feedback welcome at: https://github.com/Fission-AI/OpenSpec/issues
+# 💡 これは実験的機能です。
+#    フィードバックはこちら: https://github.com/Fission-AI/OpenSpec/issues
 ```
 
-**Implementation Notes:**
-- Simple file writing: Create directories and write templated `SKILL.md` files (no complex logic)
-- Use existing `FileSystemUtils.writeFile()` pattern like slash command configurators
-- Template structure: YAML frontmatter + markdown body
-- Keep existing `/opsx:*` slash commands for now (manual cleanup later)
-- Skills use invocation model (user explicitly asks Claude to use them)
-- Skill `description` field guides when Claude suggests using the skill
-- Each `SKILL.md` has required fields: `name` (matches directory) and `description`
+**実装メモ:**
+- シンプルなファイル書き込み: `SKILL.md` をテンプレートで生成
+- スラッシュコマンド生成と同じ `FileSystemUtils.writeFile()` を使う
+- テンプレート構造は YAML frontmatter + markdown 本文
+- 既存の `/opsx:*` スラッシュコマンドは当面維持（後で手動クリーンアップ）
+- スキルは「ユーザーが明示的に使う」モデル
+- `description` がスキル提案のトリガーになる
+- 各 `SKILL.md` には `name` と `description` が必須
 
 ---
 
-### 4. Update `/opsx:new` Command Content
+### 4. `/opsx:new` コマンド内容を更新
 
-**Current Behavior (awf:start):**
-1. Ask user what they want to build (if no input)
-2. Create change directory
-3. Show artifact status
-4. Show what's ready
-5. Get instructions for proposal
-6. STOP and wait
+**現状の挙動（awf:start）:**
+1. 何を作るか質問（入力がなければ）
+2. 変更ディレクトリを作成
+3. アーティファクト状況を表示
+4. 作成可能なものを表示
+5. STOP して待機
 
-**New Behavior (opsx:new):**
-Same flow but with updated naming:
-- References to "awf" → "opsx"
-- References to `/awf:continue` → `/opsx:continue`
-- Update frontmatter name/description
+**新しい挙動（opsx:new）:**
+名称だけ更新し、フローは同じ:
+- "awf" → "opsx" 参照に更新
+- `/awf:continue` → `/opsx:continue` に更新
+- frontmatter の name/description を更新
 
-**Tasks:**
-- [x] Update all "awf" references to "opsx"
-- [x] Update command references in prompt text
-- [x] Verify CLI commands still work (they use `openspec`, not `awf`)
+**タスク:**
+- [x] "awf" 参照を "opsx" に更新
+- [x] プロンプト内のコマンド参照を更新
+- [x] CLI コマンドは `openspec` のまま動作することを確認
 
 ---
 
-### 5. Update `/opsx:continue` Command Content
+### 5. `/opsx:continue` コマンド内容を更新
 
-**Current Behavior (awf:continue):**
-1. Prompt for change selection (if not provided)
-2. Check current status
-3. Create ONE artifact based on what's ready
-4. Show progress and what's unlocked
+**現状の挙動（awf:continue）:**
+1. 変更を選択（指定がなければ）
+2. 現在のステータスを確認
+3. 準備ができたアーティファクトを 1 つ作成
+4. 進捗と開放されたアーティファクトを表示
 5. STOP
 
-**New Behavior (opsx:continue):**
-Same flow with updated naming.
+**新しい挙動（opsx:continue）:**
+名称だけ更新し、フローは同じです。
 
-**Tasks:**
-- [x] Update all "awf" references to "opsx"
-- [x] Update command references in prompt text
-
----
-
-### 6. End-to-End Testing
-
-**Objective:**
-Run through a complete workflow with Claude using the new skills to create a real feature, validating the entire flow works.
-
-**Test Scenario:**
-Use a real OpenSpec feature as the test case (dog-fooding).
-
-**Test Flow:**
-1. Run `openspec artifact-experimental-setup` to create skills
-2. Verify `.claude/skills/openspec-new-change/SKILL.md` created
-3. Verify `.claude/skills/openspec-continue-change/SKILL.md` created
-4. Verify `.claude/skills/openspec-apply-change/SKILL.md` created
-5. Ask Claude: "I want to start a new OpenSpec change to add feature X"
-6. Verify Claude invokes the `openspec-new-change` skill
-7. Verify change directory created at `openspec/changes/add-feature-x/`
-8. Verify proposal template shown
-9. Ask Claude: "Continue working on this change"
-10. Verify Claude invokes the `openspec-continue-change` skill
-11. Verify `proposal.md` created with content
-12. Ask Claude: "Continue" (create specs)
-13. Verify `specs/*.md` created
-14. Ask Claude: "Continue" (create design)
-15. Verify `design.md` created
-16. Ask Claude: "Continue" (create tasks)
-17. Verify `tasks.md` created
-18. Verify status shows 4/4 complete
-19. Implement the feature based on tasks
-20. Run `/openspec:archive` to archive the change
-
-**Validation Checklist:**
-- [ ] `openspec artifact-experimental-setup` creates correct directory structure
-- [ ] Skills are auto-detected in Claude Code
-- [ ] Skill descriptions trigger appropriate invocations
-- [ ] Skills create change directory and show proposal template
-- [ ] Skills correctly identify ready artifacts
-- [ ] Skills create artifacts with meaningful content
-- [ ] Dependency detection works (specs requires proposal, etc.)
-- [ ] Progress tracking is accurate
-- [ ] Template content is useful and well-structured
-- [ ] Error handling works (invalid names, missing changes, etc.)
-- [ ] Works with different schemas (spec-driven, tdd)
-- [ ] Test in Cursor (Settings → Rules → Import Settings)
-
-**Document Results:**
-- Create test log documenting what worked and what didn't
-- Note any friction points or confusing UX
-- Identify bugs or improvements needed before user release
+**タスク:**
+- [x] "awf" 参照を "opsx" に更新
+- [x] プロンプト内のコマンド参照を更新
 
 ---
 
-### 7. Documentation for Users
+### 6. エンドツーエンドテスト
 
-**Create user-facing documentation explaining:**
+**目的:**
+新しいスキルを使って Claude と完全なワークフローを実行し、全体が正しく動くことを検証します。
 
-1. **What is the experimental workflow?**
-   - A new way to create OpenSpec changes step-by-step using Agent Skills
-   - One artifact at a time with dependency tracking
-   - More interactive and iterative than the batch approach
-   - Works across Claude Code, Cursor, Windsurf, and other compatible editors
+**テストシナリオ:**
+実際の OpenSpec 機能をテストケースに使います（ドッグフーディング）。
 
-2. **How to set up experimental workflow**
+**テストフロー:**
+1. `openspec artifact-experimental-setup` を実行してスキルを作成
+2. `.claude/skills/openspec-new-change/SKILL.md` が作成されたことを確認
+3. `.claude/skills/openspec-continue-change/SKILL.md` が作成されたことを確認
+4. `.claude/skills/openspec-apply-change/SKILL.md` が作成されたことを確認
+5. Claude に「OpenSpec の新しい変更を作って feature X を追加したい」と依頼
+6. Claude が `openspec-new-change` スキルを呼ぶことを確認
+7. `openspec/changes/add-feature-x/` が作成されたことを確認
+8. 提案テンプレートが表示されたことを確認
+9. Claude に「この変更を続けて」と依頼
+10. Claude が `openspec-continue-change` スキルを呼ぶことを確認
+11. `proposal.md` が作成され、内容が入っていることを確認
+12. Claude に「続けて」（仕様を作成）
+13. `specs/*.md` が作成されたことを確認
+14. Claude に「続けて」（設計を作成）
+15. `design.md` が作成されたことを確認
+16. Claude に「続けて」（タスクを作成）
+17. `tasks.md` が作成されたことを確認
+18. ステータスが 4/4 完了を示すことを確認
+19. タスクに従って機能を実装
+20. `/openspec:archive` を実行してアーカイブ
+
+**検証チェックリスト:**
+- [ ] `openspec artifact-experimental-setup` が正しいディレクトリ構成を作る
+- [ ] Claude Code でスキルが自動検出される
+- [ ] スキルの description が適切に起動トリガーになる
+- [ ] スキルが変更ディレクトリを作成し、提案テンプレートを表示する
+- [ ] スキルが次に作れるアーティファクトを正しく判定する
+- [ ] スキルが意味のある内容でアーティファクトを作成する
+- [ ] 依存関係検出が正しく動く（specs は proposal が必要 など）
+- [ ] 進捗トラッキングが正確
+- [ ] テンプレート内容が有用で構造化されている
+- [ ] エラーハンドリングが機能する（不正な名前、存在しない変更 など）
+- [ ] 異なるスキーマで動作する（spec-driven, tdd）
+- [ ] Cursor でも検証する（Settings → Rules → Import Settings）
+
+**結果の記録:**
+- 何がうまくいき、何がうまくいかなかったかをテストログに記録
+- 摩擦点やわかりにくい UX を記録
+- リリース前に必要な修正点や改善点を洗い出す
+
+---
+
+### 7. ユーザー向けドキュメント
+
+**ユーザー向けに以下を説明するドキュメントを作成:**
+
+1. **実験的ワークフローとは何か？**
+   - Agent Skills を使って OpenSpec の変更を段階的に作る新しい方法
+   - 依存関係を追跡しながら 1 つずつ作成
+   - バッチ方式よりも対話的で反復的
+   - Claude Code / Cursor / Windsurf など対応エディタで動作
+
+2. **実験的ワークフローのセットアップ方法**
    ```bash
    openspec artifact-experimental-setup
    ```
 
-   Note: This is a temporary command that will be integrated into `openspec init` once promoted to stable.
+   注記: これは一時的なコマンドで、安定版に昇格後は `openspec init` に統合します。
 
-3. **Available skills**
-   - `openspec-new-change` - Start a new change with artifact workflow
-   - `openspec-continue-change` - Continue working (create next artifact)
+3. **利用可能なスキル**
+   - `openspec-new-change` - アーティファクトワークフローで新しい変更を開始
+   - `openspec-continue-change` - 変更を継続（次のアーティファクトを作成）
 
-4. **How to use**
-   - **Claude Code**: Skills are auto-detected, just ask Claude naturally
-     - "I want to start a new OpenSpec change to add X"
-     - "Continue working on this change"
-   - **Cursor**: Enable in Settings → Rules → Import Settings
-   - **Windsurf**: Auto-imports `.claude` directory
+4. **使い方**
+   - **Claude Code**: スキルは自動検出されるので自然に依頼
+     - 「OpenSpec の新しい変更を作って X を追加したい」
+     - 「この変更を続けて」
+   - **Cursor**: Settings → Rules → Import Settings を有効化
+   - **Windsurf**: `.claude` ディレクトリを自動取り込み
 
-5. **Example workflow**
-   - Step-by-step walkthrough with natural language interactions
-   - Show how Claude invokes skills based on user requests
+5. **ワークフロー例**
+   - 自然言語での対話を含むステップバイステップ例
+   - ユーザーの依頼に応じてスキルが呼ばれる様子を示す
 
-6. **Feedback mechanism**
-   - GitHub issue template for feedback
-   - What to report (bugs, UX issues, suggestions)
+6. **フィードバック方法**
+   - GitHub issue テンプレートでフィードバックを受付
+   - 何を報告してほしいか（バグ、UX の問題、提案）
 
-**Tasks:**
-- [ ] Create `docs/experimental-workflow.md` user guide
-- [ ] Add GitHub issue template for experimental feedback
-- [ ] Update README with mention of experimental features
+**タスク:**
+- [ ] `docs/experimental-workflow.md` のユーザーガイドを作成
+- [ ] 実験的機能向けの GitHub issue テンプレートを追加
+- [ ] README に実験的機能への言及を追加
 
 ---
 
-## Dependency Graph
+## 依存関係グラフ
 
 ```
-1. Remove WF skill files
-   └── (no dependencies)
+1. WF スキルファイルを削除
+   └── （依存なし）
 
-2. Rename AWF to OPSX
-   └── (no dependencies)
+2. AWF を OPSX にリネーム
+   └── （依存なし）
 
-3. Add Agent Skills
-   └── Depends on: Rename AWF to OPSX (uses opsx content as templates)
+3. Agent Skills を追加
+   └── Depends on: AWF を OPSX にリネーム（opsx の内容をテンプレートに使う）
 
-4. Update opsx:new content
-   └── Depends on: Rename AWF to OPSX
+4. opsx:new の内容更新
+   └── Depends on: AWF を OPSX にリネーム
 
-5. Update opsx:continue content
-   └── Depends on: Rename AWF to OPSX
+5. opsx:continue の内容更新
+   └── Depends on: AWF を OPSX にリネーム
 
-6. E2E Testing
-   └── Depends on: Add Agent Skills (tests the skills workflow)
+6. E2E テスト
+   └── Depends on: Agent Skills を追加（スキルワークフローをテスト）
 
-7. User Documentation
-   └── Depends on: E2E Testing (need to know final behavior)
+7. ユーザー向けドキュメント
+   └── Depends on: E2E テスト（最終挙動が必要）
 ```
 
 ---
 
-## Out of Scope
+## 対象外
 
-The following are explicitly NOT part of this experimental release:
+今回の実験的リリースでは、次の項目は明確に対象外です。
 
-1. **Batch mode refactor** - Making legacy `/openspec:proposal` use schemas
-2. **New schemas** - Only shipping with existing `spec-driven` and `tdd`
-3. **Schema customization UI** - No `openspec schema list` or similar
-4. **Multiple editor support in CLI** - Skills work cross-editor automatically via `.claude/skills/`
-5. **Replacing existing commands** - Skills are additive, not replacing `/openspec:*` or `/opsx:*`
-
----
-
-## Success Criteria
-
-The experimental release is ready when:
-
-1. `openspec-new-change`, `openspec-continue-change`, and `openspec-apply-change` skills work end-to-end
-2. `openspec artifact-experimental-setup` creates skills in `.claude/skills/`
-3. Skills work in Claude Code and are compatible with Cursor/Windsurf
-4. At least one complete workflow has been tested manually
-5. User documentation exists explaining how to generate and use skills
-6. Feedback mechanism is in place
-7. WF skill files are removed
-8. No references to "awf" remain in user-facing content
+1. **バッチモードのリファクタ** - 旧 `/openspec:proposal` をスキーマ化する
+2. **新しいスキーマ** - 既存の `spec-driven` と `tdd` のみ提供
+3. **スキーマカスタマイズ UI** - `openspec schema list` などは未提供
+4. **CLI 側でのマルチエディタ対応** - スキルは `.claude/skills/` 経由で自動対応
+5. **既存コマンドの置き換え** - スキルは追加であり、`/openspec:*` / `/opsx:*` は残す
 
 ---
 
-## Open Questions
+## 成功条件
 
-1. **Schema selection** - Should `opsx:new` allow selecting a schema, or always use `spec-driven`?
-   - Current: Always uses `spec-driven` as default
-   - Consider: Add `--schema tdd` option or prompt
+実験的リリースは次を満たしたときに準備完了とする:
 
-2. **Namespace in CLI** - Should experimental CLI commands be namespaced?
-   - Current: `openspec status`, `openspec instructions` (no namespace)
-   - Alternative: `openspec opsx status` (explicit experimental namespace)
-   - Recommendation: Keep current, less typing for users
-
-3. **Deprecation path** - If opsx becomes the default, how do we migrate?
-   - Not needed for experimental release
-   - Document that command names may change
+1. `openspec-new-change`, `openspec-continue-change`, `openspec-apply-change` が E2E で動作
+2. `openspec artifact-experimental-setup` が `.claude/skills/` にスキルを作成
+3. Claude Code で動作し、Cursor/Windsurf と互換
+4. 少なくとも 1 回の完全なワークフローを手動テスト済み
+5. スキル生成と使用方法のドキュメントがある
+6. フィードバック手段が用意されている
+7. WF スキルファイルが削除されている
+8. ユーザー向け内容から "awf" 参照が消えている
 
 ---
 
-## Estimated Work Breakdown
+## 未決事項
 
-| Item | Complexity | Notes |
+1. **スキーマ選択** - `opsx:new` でスキーマを選択できるべきか？
+   - 現状: デフォルトで `spec-driven` を使う
+   - 検討: `--schema tdd` オプション追加またはプロンプト
+
+2. **CLI の名前空間** - 実験的 CLI を名前空間化するか？
+   - 現状: `openspec status`, `openspec instructions`（名前空間なし）
+   - 代替案: `openspec opsx status`（実験的であることを明示）
+   - 推奨: 現状維持（ユーザーの打鍵が少ない）
+
+3. **デプリケーションの道筋** - opsx をデフォルトにする場合の移行方法
+   - 実験的リリースでは不要
+   - 将来コマンド名が変わる可能性を明記する
+
+---
+
+## 見積り内訳
+
+| 項目 | 複雑度 | 注記 |
 |------|------------|-------|
-| Remove WF files | Trivial | Just delete 2 files + directory |
-| Rename AWF → OPSX | Low | File renames + content updates |
-| Add Agent Skills | **Low** | **Simple: 3-4 files, single output directory, standard format** |
-| Update opsx:new content | Low | Text replacements |
-| Update opsx:continue content | Low | Text replacements |
-| E2E Testing | Medium | Manual testing, documenting results |
-| User Documentation | Medium | New docs, issue template |
+| WF ファイル削除 | 極小 | 2 ファイル + ディレクトリ削除のみ |
+| AWF → OPSX | 低 | ファイルリネーム + 内容更新 |
+| Agent Skills 追加 | **低** | **シンプル: 3〜4 ファイル、単一出力ディレクトリ、標準形式** |
+| opsx:new 内容更新 | 低 | テキスト置換 |
+| opsx:continue 内容更新 | 低 | テキスト置換 |
+| E2E テスト | 中 | 手動テスト + 記録 |
+| ユーザー向けドキュメント | 中 | 新規ドキュメント、issue テンプレート |
 
-**Key Improvement:** Switching to Agent Skills reduces complexity significantly:
-- **Before:** 20+ files (type definitions, 18+ editor configurators, editor selection UI)
-- **After:** 3-4 files (skill templates, simple CLI command)
-- **Cross-editor:** Works automatically in Claude Code, Cursor, Windsurf without extra code
+**主要な改善点:** Agent Skills により大幅に簡素化される。
+- **従来:** 20+ ファイル（型定義、18+ エディタ別設定、エディタ選択 UI）
+- **改善後:** 3〜4 ファイル（スキルテンプレート、シンプルな CLI コマンド）
+- **クロスエディタ:** Claude Code / Cursor / Windsurf で追加作業なしに動作
 
 ---
 
-## User Feedback from E2E Testing
+## E2E テストからのユーザーフィードバック
 
-### What Worked Well
+### うまくいった点
 
-1. **Clear dependency graph** ⭐ HIGH PRIORITY - KEEP
-   - The status command showing blocked/unblocked artifacts was intuitive:
+1. **明確な依存グラフ** ⭐ 高優先度 - 維持
+   - status コマンドがブロック/未ブロックを示して直感的だった:
      ```
      [x] proposal
      [ ] design
      [-] tasks (blocked by: design, specs)
      ```
-   - Users always knew what they could work on next
-   - **Relevance**: Core UX strength to preserve
+   - 次に何をすべきかが常に分かった
+   - **意義**: 中核的な UX の強み
 
-2. **Structured instructions output** ⭐ HIGH PRIORITY - KEEP
-   - `openspec instructions <artifact>` gave templates, output paths, and context in one call
-   - Very helpful for understanding what to create
-   - **Relevance**: Essential for agent-driven workflow
+2. **構造化された指示出力** ⭐ 高優先度 - 維持
+   - `openspec instructions <artifact>` がテンプレート、出力パス、文脈を一度に示す
+   - 何を作るべきかが理解しやすい
+   - **意義**: エージェント駆動ワークフローに不可欠
 
-3. **Simple scaffolding** ✅ WORKS WELL
-   - `openspec new change "name"` just worked - created directory structure without fuss
-   - **Relevance**: Good baseline, room for improvement (see pain points)
-
----
-
-### Pain Points & Confusion
-
-1. **Redundant CLI calls** ⚠️ MEDIUM PRIORITY
-   - Users called both `status` AND `next` every time, but they overlap significantly
-   - `status` already shows what's blocked
-   - **Recommendation**: Consider merging or making `next` give actionable guidance beyond just listing names
-   - **Relevance**: Reduces friction in iterative workflow
-
-2. **Specs directory structure was ambiguous** 🔥 HIGH PRIORITY - FIX
-   - Instructions said: `Write to: .../specs/**/*.md`
-   - Users had to guess: `specs/spec.md`? `specs/game/spec.md`? `specs/tic-tac-toe/spec.md`?
-   - Users ended up doing manual `mkdir -p .../specs/tic-tac-toe` then writing `spec.md` inside
-   - **Recommendation**: CLI should scaffold this directory structure automatically
-   - **Relevance**: Critical agent UX - ambiguous paths cause workflow friction
-
-3. **Repetitive --change flag** ⚠️ MEDIUM PRIORITY
-   - Every command needed `--change "tic-tac-toe-game"`
-   - After 10+ calls, this felt verbose
-   - **Recommendation**: `openspec use "tic-tac-toe-game"` to set context, then subsequent commands assume that change
-   - **Relevance**: Quality of life improvement for iterative sessions
-
-4. **No validation feedback** 🔥 HIGH PRIORITY - ADD
-   - After writing each artifact, users just ran `status` hoping it would show `[x]`
-   - Questions raised:
-     - How did it know the artifact was "done"? File existence?
-     - What if spec format was wrong (e.g., wrong heading levels)?
-   - **Recommendation**: Add `openspec validate --change "name"` to check content quality
-   - **Relevance**: Critical for user confidence and catching errors early
-
-5. **Query-heavy, action-light CLI** 🔥 HIGH PRIORITY - ENHANCE
-   - Most commands retrieve info. The only "action" is `new change`
-   - Artifact creation is manual Write to guessed paths
-   - **Recommendation**: `openspec create proposal --change "name"` could scaffold the file with template pre-filled, then user just edits
-   - **Relevance**: Directly impacts agent productivity - reduce manual file writing
-
-6. **Instructions output was verbose** ⚠️ LOW PRIORITY
-   - XML-style output (`<artifact>`, `<template>`, `<instruction>`) was parseable but long
-   - Key info (output path, template) was buried in ~50 lines
-   - **Recommendation**: Add compact mode or structured JSON output for agents
-   - **Relevance**: Nice-to-have for agent parsing efficiency
+3. **シンプルなひな形作成** ✅ 良好
+   - `openspec new change "name"` が素直に動く
+   - **意義**: 良いベースライン（改善余地はあり）
 
 ---
 
-### Workflow Friction
+### 課題と混乱点
 
-1. **Mandatory "STOP and wait" after showing proposal template** ⚠️ MEDIUM PRIORITY
-   - The skill said "STOP and wait" after showing the proposal template
-   - This felt overly cautious when user had already provided enough context (e.g., "tic tac toe, single player vs AI, minimal aesthetics")
-   - **Recommendation**: Make the pause optional or conditional based on context clarity
-   - **Relevance**: Reduces unnecessary round-trips in agent conversations
+1. **CLI 呼び出しの冗長さ** ⚠️ 中優先度
+   - `status` と `next` を毎回呼ぶユーザーが多いが、内容が重複
+   - `status` だけでブロック状況は分かる
+   - **提案**: `next` を統合するか、より実用的なガイダンスにする
+   - **意義**: 反復ワークフローの摩擦軽減
 
-2. **No connection to implementation** 🔥 HIGH PRIORITY - ROADMAP ITEM
-   - After 4/4 artifacts complete, then what? The workflow ends at planning
-   - No `openspec apply` or guidance on how to execute the tasks
-   - User asked "would you like me to implement?" but that's outside OpenSpec's scope currently
-   - **Recommendation**: Add implementation bridge - either:
-     - `openspec apply` command to start execution phase
-     - Clear handoff to existing `/openspec:apply` workflow
-     - Documentation on next steps after planning completes
-   - **Relevance**: Critical missing piece - users expect end-to-end workflow
+2. **specs ディレクトリ構成が曖昧** 🔥 高優先度 - 修正
+   - 指示が `Write to: .../specs/**/*.md` となり、書き先が分からない
+   - `specs/spec.md`? `specs/game/spec.md`? `specs/tic-tac-toe/spec.md`?
+   - 実際は `mkdir -p .../specs/tic-tac-toe` を作って `spec.md` を書くケースが多い
+   - **提案**: CLI がディレクトリ構成を自動生成する
+   - **意義**: エージェント UX の核心。曖昧なパスは摩擦になる
+
+3. **`--change` フラグの繰り返し** ⚠️ 中優先度
+   - すべてのコマンドに `--change "tic-tac-toe-game"` が必要
+   - 10 回以上呼ぶと冗長に感じる
+   - **提案**: `openspec use "tic-tac-toe-game"` で文脈を固定
+   - **意義**: 反復セッションの品質向上
+
+4. **検証フィードバックがない** 🔥 高優先度 - 追加
+   - 各アーティファクト作成後、`status` が `[x]` になることを願うだけ
+   - 疑問点:
+     - どのように「完了」を判定しているのか？ファイル存在？
+     - 仕様フォーマットが不正な場合は？
+   - **提案**: `openspec validate --change "name"` で品質を確認
+   - **意義**: ユーザーの信頼と早期検出に不可欠
+
+5. **問い合わせが多く、アクションが少ない CLI** 🔥 高優先度 - 改善
+   - 多くのコマンドが情報取得で、実際の作成は手作業
+   - **提案**: `openspec create proposal --change "name"` のように雛形生成
+   - **意義**: エージェント生産性に直結。手作業を減らす
+
+6. **指示出力が冗長** ⚠️ 低優先度
+   - XML 風の出力は解析しやすいが長い
+   - 出力パスやテンプレートが 50 行の中に埋もれる
+   - **提案**: コンパクトモードや構造化 JSON 出力を追加
+   - **意義**: 解析効率の向上
 
 ---
 
-### Priority Summary
+### ワークフロー上の摩擦
 
-**MUST FIX (High Priority):**
-1. Specs directory structure ambiguity (#2)
-2. Add validation feedback (#4)
-3. Make CLI more action-oriented (#5)
-4. Bridge to implementation phase (#2 in Workflow Friction)
-5. Keep clear dependency graph (#1 in What Worked)
-6. Keep structured instructions (#2 in What Worked)
+1. **提案テンプレート表示後の「STOP and wait（停止して待機）」** ⚠️ 中優先度
+   - スキルが提案テンプレートを表示した後に必ず STOP する
+   - ユーザーが十分な文脈を渡している場合は過剰
+   - **提案**: 文脈が十分なら停止を省略する
+   - **意義**: 不要な往復を減らす
 
-**SHOULD FIX (Medium Priority):**
-1. Reduce redundant CLI calls (#1)
-2. Repetitive `--change` flag (#3)
-3. Mandatory STOP behavior (#1 in Workflow Friction)
-
-**NICE TO HAVE (Low Priority):**
-1. Compact instructions output mode (#6)
+2. **実装フェーズへの接続がない** 🔥 高優先度 - ロードマップ項目
+   - 4/4 完了後に次がない。計画で止まる
+   - `openspec apply` がなく、実行フェーズに繋がらない
+   - **提案**: 実装フェーズへの橋渡しを追加
+     - `openspec apply` コマンドで実行フェーズを開始
+     - 既存 `/openspec:apply` への明確なハンドオフ
+     - 計画完了後の次の手順をドキュメント化
+   - **意義**: エンドツーエンド体験の欠落
 
 ---
 
-## Design Decisions (from E2E Testing Feedback)
+### 優先度まとめ
 
-Based on dev testing and analysis of agent workflow friction, we identified three blockers for experimental release and made the following decisions.
+**必須（高優先度）:**
+1. specs ディレクトリの曖昧さ解消（#2）
+2. 検証フィードバック追加（#4）
+3. CLI をアクション指向に（#5）
+4. 実装フェーズへの橋渡し（摩擦 #2）
+5. 明確な依存グラフを維持（うまくいった点 #1）
+6. 構造化された指示出力を維持（うまくいった点 #2）
 
-### Blockers Identified
+**推奨（中優先度）:**
+1. 冗長な CLI 呼び出し削減（#1）
+2. `--change` の繰り返し削減（#3）
+3. 必須 STOP の緩和（摩擦 #1）
 
-From the pain points in E2E testing, three issues are blocking the experimental release:
+**あると良い（低優先度）:**
+1. 指示出力のコンパクトモード（#6）
 
-1. **Specs directory ambiguity** - Agents don't know where to write spec files or how to name capabilities
-2. **CLI is query-heavy** - Most commands retrieve info, artifact creation is manual
-3. **Apply integration missing** - After 4/4 artifacts complete, no guidance on implementation phase
+---
 
-### Decision 1: Capability Discovery in Proposal (RESOLVED)
+## 設計判断（E2E フィードバックより）
 
-**Problem:** The specs artifact instruction says "Create one spec file per capability in `specs/<name>/spec.md`" but:
-- Agent doesn't know what `<name>` should be
-- Capability identification requires research (existing specs, codebase)
-- Proposal template asks for "Affected specs" but doesn't structure it
-- Research happens implicitly, output isn't captured
+開発テストとエージェントワークフローの摩擦分析から、実験的リリースを妨げる 3 つのブロッカーを特定し、以下の判断を行いました。
 
-**Decision:** Enrich the proposal template to explicitly capture capability discovery.
+### ブロッカー
 
-**Current proposal template:**
+E2E テストの課題から、次の 3 つがブロッカーです。
+
+1. **specs ディレクトリの曖昧さ** - どこに書くべきか、機能名をどう決めるか分からない
+2. **CLI が問い合わせ中心** - 情報取得が多く、作成は手作業
+3. **apply 連携がない** - 4/4 完了後の実装ガイドがない
+
+### 決定 1: 提案での機能抽出（解決済み）
+
+**問題:** specs の指示が「`specs/<name>/spec.md` に 1 つずつ」と言うが:
+- `<name>` が分からない
+- 機能の特定には調査が必要（既存仕様、コードベース）
+- 提案テンプレートの "Affected specs" が曖昧
+- 調査内容が明文化されない
+
+**決定:** 提案テンプレートを拡張し、機能抽出を明示的に行う。
+
+**現在の提案テンプレート:**
 ```markdown
 ## Why
 ## What Changes
 ## Impact
-- Affected specs: List capabilities...  ← vague, easy to skip
+- Affected specs: 機能を列挙...  ← 曖昧で飛ばしやすい
 - Affected code: ...
 ```
 
-**New proposal template:**
+**新しい提案テンプレート:**
 ```markdown
 ## Why
 ## What Changes
 ## Capabilities
 
 ### New Capabilities
-<!-- Capabilities being introduced (will create new specs/<name>/spec.md) -->
+<!-- 追加する機能（specs/<name>/spec.md を作成） -->
 - `<name>`: <brief description of what this capability covers>
 
 ### Modified Capabilities
-<!-- Existing capabilities being changed (will update existing specs) -->
+<!-- 変更する既存機能（既存の仕様を更新） -->
 - `<existing-name>`: <what's changing>
 
 ## Impact
-<!-- Affected code, APIs, dependencies, systems -->
+<!-- 影響するコード、API、依存関係、システム -->
 ```
 
-**Rationale:**
-- Proposal already asks for capabilities (just poorly) - this makes it explicit
-- Captured output is reviewable (vs implicit research that can't be verified)
-- Creates clear contract between proposal and specs phases
-- Distinguishes NEW vs MODIFIED upfront (critical for specs phase)
-- Agent can't skip research - it's part of the deliverable
+**理由:**
+- 提案は元々機能を尋ねていた（ただ曖昧だった）
+- 明文化されることでレビュー可能になる
+- 提案と仕様フェーズの契約が明確になる
+- 新規と変更を先に分けられる（仕様フェーズで重要）
+- エージェントの調査が省略されない
 
-**Implementation:**
-- Update `schemas/spec-driven/templates/proposal.md`
-- Update proposal instruction in `schemas/spec-driven/schema.yaml`
-- Update skill instructions to guide capability discovery
+**実装:**
+- `schemas/spec-driven/templates/proposal.md` を更新
+- `schemas/spec-driven/schema.yaml` の提案指示を更新
+- スキル指示に機能抽出ガイドを追加
 
-### Decision 2: CLI Action Commands (IN PROGRESS)
+### 決定 2: CLI アクションコマンド（進行中）
 
-**Problem:** CLI is mostly query-oriented. Agents run `openspec status`, `openspec next`, `openspec instructions` but then must manually write files.
+**問題:** CLI は問い合わせ中心。`openspec status`, `openspec next`, `openspec instructions` を使うが、ファイル作成は手作業。
 
-#### Decision 2a: Remove `openspec next` command (RESOLVED)
+#### 決定 2a: `openspec next` を削除（解決済み）
 
-**Problem:** The `next` command is redundant. It only shows which artifacts are ready, but `status` already shows this information (artifacts with status "ready" vs "blocked" vs "done").
+**問題:** `next` は冗長です。準備済みアーティファクトの一覧は `status` に含まれています。
 
-**Current behavior:**
+**現状:**
 ```bash
-openspec status --change "X"  # Shows: proposal (done), specs (ready), design (blocked), tasks (blocked)
-openspec next --change "X"    # Shows: ["specs"]  ← redundant
+openspec status --change "X"  # proposal（完了）、specs（準備完了）、design（ブロック）、tasks（ブロック）を表示
+openspec next --change "X"    # ["specs"] を表示  ← 冗長
 ```
 
-**Decision:** Remove the `next` command. Agents should use `status` which provides the same info plus more context.
+**決定:** `next` コマンドを削除する。`status` が同等以上の情報を提供します。
 
-**Implementation:**
-- Remove `next` command from CLI
-- Update skill instructions to use `status` instead of `next`
-- Update AGENTS.md references
+**実装:**
+- CLI から `next` を削除
+- スキル指示で `status` を使用
+- AGENTS.md の参照を更新
 
-#### Decision 2b: CLI Scaffolding (RESOLVED - NO)
+#### 決定 2b: CLI ひな形生成（解決済み - しない）
 
-**Problem:** After getting instructions, agents manually write files. Should CLI scaffold artifacts instead?
+**問題:** 指示を得た後、エージェントが手作業でファイルを書き込む。CLI が生成すべきか？
 
-**Options considered:**
-- Add `openspec create <artifact>` commands that scaffold files with templates
-- Keep current approach where agent writes files directly from instructions
-- Hybrid: CLI can scaffold, agent can also write directly
+**検討した選択肢:**
+- `openspec create <artifact>` を追加しテンプレートで雛形生成
+- 現状どおり、指示を見てエージェントが直接作成
+- ハイブリッド: CLI でも生成、エージェントでも直接書ける
 
-**Decision:** Keep current flow. No scaffolding commands.
+**決定:** 現状を維持。ひな形生成コマンドは追加しない。
 
-**Rationale (from agent ergonomics perspective):**
-- One Write is better than multiple Edits - agent composes full content atomically
-- `instructions` already provides template in context - scaffolding just moves it to a file
-- Fewer tool calls: `instructions` + Write (2) vs `create` + `instructions` + Read + Edit×N (4+)
-- Scaffolding doesn't solve the real problem (not knowing WHAT to write)
-- Real problem solved by proposal template change (capability discovery)
+**理由（エージェント作業の観点）:**
+- 1 回の書き込みで完結するほうが良い
+- `instructions` がテンプレートを提供済み
+- ツール呼び出しが増える（`instructions` + Write で済む）
+- 本質的な問題は「何を書くか」であり、雛形生成では解決しない
+- 仕様名が未確定の `specs` は CLI で生成できない
 
-**For multi-file artifacts (specs):** Scaffolding can't help because CLI doesn't know capability names until proposal is complete. The capability discovery in proposal solves this.
+**補足:** 機能抽出を提案テンプレートに組み込むことで、未確定問題を解消する。
 
-### Decision 3: Apply Integration (RESOLVED)
+### 決定 3: apply 連携（解決済み）
 
-**Original problem:** After planning completes (4/4 artifacts), the experimental workflow ends. No guidance on implementation.
+**元の問題:** 計画が完了すると実験的ワークフローが終わる。実装へのガイドがない。
 
-**Key insight: No phases, just actions.**
+**重要な洞察: フェーズではなくアクション**
 
-Through discussion, we realized phases (planning → implementation → archive) are an artificial constraint. Work is fluid:
-- You might start implementing, realize the design is wrong → update design.md
-- You're halfway through tasks, discover a new requirement → update specs
-- You bounce between "planning" and "implementing" constantly
+議論の結果、フェーズ（計画 → 実装 → アーカイブ）は人工的な制約だと分かりました。作業は流動的です:
+- 実装中に設計が違うと気づけば design.md を更新
+- タスク途中に新要件が見つかれば specs を更新
+- 計画と実装を行き来する
 
-**The better model: Actions on a Change**
+**より良いモデル: 変更に対するアクション**
 
-A change is a thing (with artifacts). Actions are verbs you perform on a change. Actions aren't phases - they're fluid operations you can perform anytime.
+変更は「もの」。アクションは「動詞」です。フェーズではなく、いつでも実行できる操作として扱います。
 
-| Action | What it does | Skill | CLI Command |
+| アクション | 役割 | スキル | CLI コマンド |
 |--------|--------------|-------|-------------|
-| `new` | Create a change (scaffold directory) | `opsx:new` | `openspec new change` |
-| `continue` | Create next artifact (dependency-aware) | `opsx:continue` | `openspec instructions` |
-| `apply` | Implement tasks (execute, check off) | `opsx:apply` (NEW) | TBD |
-| `update` | Refresh/update artifacts based on learnings | `opsx:update` (NEW) | TBD |
-| `explore` | Research, ask questions, understand | `opsx:explore` (NEW) | TBD |
-| `validate` | Check artifacts are correct/complete | TBD | `openspec validate` |
-| `archive` | Finalize and move to archive | existing | `openspec archive` |
+| `new` | 変更を作成（ディレクトリ作成） | `opsx:new` | `openspec new change` |
+| `continue` | 次のアーティファクトを作成 | `opsx:continue` | `openspec instructions` |
+| `apply` | タスク実装 | `opsx:apply`（新規） | 未定 |
+| `update` | 学びに合わせてアーティファクトを更新 | `opsx:update`（新規） | 未定 |
+| `explore` | 調査・理解・質問 | `opsx:explore`（新規） | 未定 |
+| `validate` | アーティファクト検証 | 未定 | `openspec validate` |
+| `archive` | 完了後にアーカイブ | 既存 | `openspec archive` |
 
-**Key principles:**
-- Actions are modeled as skills (primary interface for agents)
-- Some skills have matching CLI commands for convenience
-- Skills and CLI commands are decoupled - not everything needs both
-- Actions can be performed in any order (with soft prerequisites)
-- No linear phase gates
+**重要原則:**
+- アクションはスキルとしてモデル化（エージェントの主要インターフェース）
+- いくつかは CLI コマンドも持つ（利便性のため）
+- スキルと CLI は分離。両方必要とは限らない
+- どの順序でも実行可能（ソフトな前提条件）
+- フェーズによるゲートは設けない
 
-**What the schema defines:**
-- Artifacts (what they are, where they go)
-- Dependencies (what must exist first)
-- Required vs optional
-- Templates + instructions
+**スキーマが定義するもの:**
+- アーティファクト（何か、どこに置くか）
+- 依存関係（先に必要なもの）
+- 必須 / 任意
+- テンプレートと指示
 
-**What the schema does NOT define:**
-- Phases
-- When you can modify things
-- Linear workflow
+**スキーマが定義しないもの:**
+- フェーズ
+- 変更可能なタイミング
+- 直線的なワークフロー
 
-**Progress tracking:**
-- tasks.md checkboxes = implementation progress
-- Artifact existence = planning progress
-- Archive readiness = user decides (or all tasks done)
+**進捗トラッキング:**
+- tasks.md のチェックボックス = 実装進捗
+- アーティファクトの存在 = 計画進捗
+- アーカイブのタイミング = ユーザー判断
 
-**For experimental release:**
-- Create `opsx:apply` skill (guidance for implementing tasks)
-- Document the "actions on a change" model
-- Other actions (update, explore) can come later
+**実験的リリースでは:**
+- `opsx:apply` スキルを追加（タスク実装のガイダンス）
+- 「変更に対するアクション」モデルをドキュメント化
+- 他のアクション（update, explore）は後回し
 
 ---
 
-### Design: `openspec-apply-change` Skill
+### デザイン: `openspec-apply-change` スキル
 
-#### Overview
+#### 概要
 
-The apply skill guides agents through implementing tasks from a completed (or in-progress) change. Unlike the old `/openspec:apply` command, this skill:
-- Is **fluid** - can be invoked anytime, not just after all artifacts are done
-- Allows **artifact updates** - if implementation reveals issues, update design/specs
-- Works **until done** - keeps going through tasks until complete or blocked
-- Tracks **progress via checkboxes** - tasks.md is the source of truth
+この apply スキルは、完了済みまたは進行中の変更からタスクを実装する際にガイドします。旧 `/openspec:apply` と異なり:
+- **流動的** - すべて完了後でなくても使える
+- **アーティファクト更新を許容** - 実装で問題が出たら設計や仕様を更新
+- **完了まで継続** - 完了またはブロックされるまでタスクを進める
+- **チェックボックスで進捗管理** - tasks.md が真実のソース
 
-#### Skill Metadata
+#### スキルメタデータ
 
 ```yaml
 name: openspec-apply-change
-description: Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.
+description: OpenSpec の変更に含まれるタスクを実装する。実装を開始するとき、継続するとき、タスクを進めるときに使用する。
 ```
 
-#### When to Invoke
+#### 起動タイミング
 
-The skill should be invoked when:
-- User says "implement this change" or "start implementing"
-- User says "work on the tasks" or "do the next task"
-- User says "apply this change"
-- All artifacts are complete and user wants to proceed
-- User wants to continue implementation after a break
+次の場合にスキルを起動します。
+- ユーザーが「この変更を実装して」「実装を始めて」と言ったとき
+- ユーザーが「タスクを進めて」「次のタスクをやって」と言ったとき
+- ユーザーが「apply して」と言ったとき
+- アーティファクトが揃い、実装に進みたいとき
+- 休憩後に実装を再開するとき
 
-#### Input
+#### 入力
 
-- Optionally: change name
-- Optionally: specific task number to work on
-- If omitted: prompt for change selection (same pattern as continue-change)
+- 任意: 変更名
+- 任意: 特定のタスク番号
+- 未指定なら変更選択を促す（continue-change と同じパターン）
 
-#### Steps
+#### 手順
 
-```markdown
-**Steps**
+1. **変更名が指定されていない場合は選択を促す**
 
-1. **If no change name provided, prompt for selection**
+   `openspec list --json` を実行して利用可能な変更を取得し、**AskUserQuestion** で選択させる。
 
-   Run `openspec list --json` to get available changes. Use **AskUserQuestion** to let user select.
+   tasks.md を持つ変更（実装可能）を表示し、未完了の変更には「(In Progress)」を付ける。
 
-   Show changes that have tasks.md (implementation-ready).
-   Mark changes with incomplete tasks as "(In Progress)".
-
-2. **Get apply instructions**
+2. **apply 指示を取得する**
 
    ```bash
    openspec instructions apply --change "<name>" --json
    ```
 
-   This returns:
-   - Context file paths (proposal, specs, design, tasks)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
+   返ってくる内容:
+   - 文脈ファイルのパス（proposal, specs, design, tasks）
+   - 進捗（合計 / 完了 / 残り）
+   - ステータス付きのタスクリスト
+   - 現在の状態に応じた動的な指示
 
-   **Handle states:**
-   - If blocked (missing artifacts): show message, suggest `openspec-continue-change`
-   - If all done: congratulate, suggest archive
-   - Otherwise: proceed to implementation
+   **状態ごとの扱い:**
+   - 依存が足りずブロックされている場合: メッセージを表示し `openspec-continue-change` を提案
+   - すべて完了している場合: 祝辞を出し、アーカイブを提案
+   - それ以外: 実装へ進む
 
-3. **Read context files**
+3. **文脈ファイルを読む**
 
-   Read the files listed in the instructions:
-   - `proposal.md` - why and what
-   - `specs/*.md` - requirements and scenarios
-   - `design.md` - technical approach (if exists)
-   - `tasks.md` - the implementation checklist
+   指示に列挙されたファイルを読む:
+   - `proposal.md` - なぜ・何をするか
+   - `specs/*.md` - 要件とシナリオ
+   - `design.md` - 技術的な方針（存在する場合）
+   - `tasks.md` - 実装チェックリスト
 
-4. **Show current progress**
+4. **現在の進捗を表示する**
 
-   Display:
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Dynamic instruction from CLI
+   表示内容:
+   - 進捗: "N/M tasks complete"
+   - 残タスクの概要
+   - CLI からの動的指示
 
-5. **Implement tasks (loop until done or blocked)**
+5. **タスクを実装する（完了またはブロックまでループ）**
 
-   For each pending task:
-   - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in tasks.md: `- [ ]` → `- [x]`
-   - Continue to next task
+   未完了タスクごとに:
+   - 取り組むタスクを明示する
+   - 必要なコード変更を行う
+   - 変更は最小限かつ集中させる
+   - tasks.md の完了チェックを付ける: `- [ ]` → `- [x]`
+   - 次のタスクへ進む
 
-   **Pause if:**
-   - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
-   - Error or blocker encountered → report and wait for guidance
-   - User interrupts
+   **一時停止する条件:**
+   - タスクが曖昧 → 確認する
+   - 実装で設計問題が判明 → アーティファクト更新を提案
+   - エラーやブロッカーに遭遇 → 報告して指示待ち
+   - ユーザーが中断
 
-6. **On completion or pause, show status**
+6. **完了または一時停止時に状態を表示する**
 
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
-   - If paused: explain why and wait for guidance
+   表示内容:
+   - このセッションで完了したタスク
+   - 全体進捗: "N/M tasks complete"
+   - 完了していればアーカイブを提案
+   - 一時停止なら理由を説明して指示待ち
+
+#### 出力形式
+
+**実装中:**
+```
+## 実装中: add-user-auth
+
+タスク 3/7 を実行中: UserAuth サービスクラスを作成
+[...実装中...]
+✓ タスク完了
+
+タスク 4/7 を実行中: AuthController にログインエンドポイントを追加
+[...実装中...]
+✓ タスク完了
+
+タスク 5/7 を実行中: JWT トークン生成を追加
+[...実装中...]
 ```
 
-#### Output Format
-
-**During implementation:**
+**完了時:**
 ```
-## Implementing: add-user-auth
-
-Working on task 3/7: Create UserAuth service class
-[...implementation happening...]
-✓ Task complete
-
-Working on task 4/7: Add login endpoint to AuthController
-[...implementation happening...]
-✓ Task complete
-
-Working on task 5/7: Add JWT token generation
-[...implementation happening...]
-```
-
-**On completion:**
-```
-## Implementation Complete
+## 実装完了
 
 **Change:** add-user-auth
-**Progress:** 7/7 tasks complete ✓
+**進捗:** 7/7 タスク完了 ✓
 
-### Completed This Session
-- [x] Create UserAuth service class
-- [x] Add login endpoint to AuthController
-- [x] Add JWT token generation
-- [x] Add logout endpoint
-- [x] Add auth middleware
-- [x] Write unit tests
-- [x] Update API documentation
+### このセッションで完了した内容
+- [x] UserAuth サービスクラスを作成
+- [x] AuthController にログインエンドポイントを追加
+- [x] JWT トークン生成を追加
+- [x] ログアウトエンドポイントを追加
+- [x] 認証ミドルウェアを追加
+- [x] ユニットテストを追加
+- [x] API ドキュメントを更新
 
-All tasks complete! Ready to archive this change.
+すべてのタスクが完了しました。この変更をアーカイブできます。
 ```
 
-**On pause (issue encountered):**
+**一時停止時（問題発生）:**
 ```
-## Implementation Paused
+## 実装を一時停止
 
 **Change:** add-user-auth
-**Progress:** 4/7 tasks complete
+**進捗:** 4/7 タスク完了
 
-### Issue Encountered
-Task 5 "Add JWT token generation" - the design specifies using RS256 but
-the existing auth library only supports HS256.
+### 発生した問題
+タスク 5「JWT トークン生成を追加」: 設計では RS256 を指定しているが、
+既存の認証ライブラリは HS256 のみ対応。
 
-**Options:**
-1. Update design.md to use HS256 instead
-2. Add a new JWT library that supports RS256
-3. Other approach
+**選択肢:**
+1. design.md を更新して HS256 を使う
+2. RS256 をサポートする新しい JWT ライブラリを追加
+3. その他の方法
 
-What would you like to do?
+どう進めますか？
 ```
 
-#### Guardrails
+#### ガードレール
 
-- Keep going through tasks until done or blocked
-- Always read context before starting (specs, design)
-- If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
+- 完了またはブロックまでタスクを進める
+- 開始前に必ず文脈を読む（specs, design）
+- タスクが曖昧なら実装前に確認
+- 実装で問題が見つかれば一時停止し、アーティファクト更新を提案
+- 変更は最小限かつタスク単位で行う
+- タスク完了後はすぐにチェックを入れる
+- エラー/ブロッカー/不明点では停止して指示を待つ
 
-#### Fluid Workflow Integration
+#### 流動的ワークフローへの統合
 
-The apply skill supports the "actions on a change" model:
+apply スキルは「変更に対するアクション」モデルを支えます。
 
-**Can be invoked anytime:**
-- Before all artifacts are done (if tasks.md exists)
-- After partial implementation
-- Interleaved with other actions (update, continue)
+**いつでも起動できる:**
+- アーティファクトが揃っていない段階でも（tasks.md があれば）
+- 部分的な実装後
+- 他のアクション（update, continue）と交互に使える
 
-**Allows artifact updates:**
-- If implementation reveals design issues → suggest `opsx:update` or manual edit
-- If requirements need clarification → suggest updating specs
-- Not phase-locked - work fluidly
+**アーティファクト更新を許容:**
+- 実装で設計問題が判明 → `opsx:update` を提案（将来）
+- 要件が曖昧 → specs の更新を提案
+- フェーズに縛られない
 
-**Example fluid workflow:**
+**流動的ワークフロー例:**
 ```
-User: "Implement add-user-auth"
-→ openspec-apply-change: implements tasks 1, 2, 3, 4...
-→ Pauses at task 5: "Design says RS256 but library only supports HS256"
+User: "add-user-auth を実装して"
+→ openspec-apply-change: タスク 1, 2, 3, 4 を実行...
+→ タスク 5 で一時停止: "設計は RS256 だがライブラリは HS256 のみ対応"
 
-User: "Let's use HS256 instead, update the design"
-→ User edits design.md (or uses opsx:update in future)
+User: "HS256 で進めよう、設計を更新して"
+→ ユーザーが design.md を編集（または将来的に opsx:update を使用）
 
-User: "Continue implementing"
-→ openspec-apply-change: implements tasks 5, 6, 7
-→ "All tasks complete! Ready to archive."
+User: "実装を続けて"
+→ openspec-apply-change: タスク 5, 6, 7 を実行
+→ "すべてのタスクが完了しました。アーカイブできます。"
 ```
 
-#### CLI Commands Used
+#### 使用する CLI コマンド
 
 ```bash
-openspec list --json                        # List changes for selection
-openspec status --change "<name>"           # Check artifact completion
-openspec instructions apply --change "<name>" # Get apply instructions (NEW)
-# File reads via Read tool for proposal, specs, design, tasks
-# File edits via Edit tool for checking off tasks
+openspec list --json                        # 選択用の変更一覧を取得
+openspec status --change "<name>"           # アーティファクトの完了状況を確認
+openspec instructions apply --change "<name>" # apply 指示を取得（新規）
+# proposal/specs/design/tasks は Read ツールで読む
+# タスクのチェックは Edit ツールで更新
 ```
 
-#### New CLI Command: `openspec instructions apply`
+#### 新 CLI コマンド: `openspec instructions apply`
 
-For consistency with artifact instructions.
+アーティファクト指示と同じパターンで使います。
 
-**Usage:**
+**使い方:**
 ```bash
 openspec instructions apply --change "<name>" [--json]
 ```
 
-**Output (Markdown format):**
+**出力（Markdown 形式）:**
 ```markdown
 ## Apply: add-user-auth
 
-### Context Files
+### 文脈ファイル
 - proposal: openspec/changes/add-user-auth/proposal.md
 - specs: openspec/changes/add-user-auth/specs/**/*.md
 - design: openspec/changes/add-user-auth/design.md
 - tasks: openspec/changes/add-user-auth/tasks.md
 
-### Progress
-2/7 complete
+### 進捗
+2/7 完了
 
-### Tasks
-- [x] Create UserAuth service class
-- [x] Add login endpoint
-- [ ] Add JWT token generation
-- [ ] Add logout endpoint
-- [ ] Add auth middleware
-- [ ] Write unit tests
-- [ ] Update API documentation
+### タスク
+- [x] UserAuth サービスクラスを作成
+- [x] ログインエンドポイントを追加
+- [ ] JWT トークン生成を追加
+- [ ] ログアウトエンドポイントを追加
+- [ ] 認証ミドルウェアを追加
+- [ ] ユニットテストを追加
+- [ ] API ドキュメントを更新
 
-### Instruction
-Read context files, work through pending tasks, mark complete as you go.
-Pause if you hit blockers or need clarification.
+### 指示
+文脈ファイルを読み、未完了のタスクを進めながら完了マークを付けてください。
+ブロッカーや確認事項があれば一時停止します。
 ```
 
-**Benefits of CLI command:**
-- **Consistency** - same pattern as `openspec instructions <artifact>`
-- **Structured output** - progress, tasks, context paths in one call
-- **Clean format** - markdown is readable and compact (vs verbose XML)
-- **Extensibility** - can add more sections later if needed
-- **JSON option** - `--json` flag available for programmatic use
+**CLI コマンドのメリット:**
+- **一貫性** - `openspec instructions <artifact>` と同じパターン
+- **構造化出力** - 進捗、タスク、文脈パスを一度に取得
+- **見やすい形式** - 冗長な XML ではなく読みやすい Markdown
+- **拡張性** - セクション追加が容易
+- **JSON 対応** - `--json` で機械利用可能
 
-#### Differences from Old `/openspec:apply`
+#### 旧 `/openspec:apply` との違い
 
-| Aspect | Old `/openspec:apply` | New `openspec-apply-change` |
+| 項目 | 旧 `/openspec:apply` | 新 `openspec-apply-change` |
 |--------|----------------------|----------------------------|
-| Invocation | After all artifacts done | Anytime (if tasks.md exists) |
-| Granularity | All tasks at once | All tasks, but pauses on issues |
-| Artifact updates | Not mentioned | Encouraged when needed |
-| Progress tracking | Update all at end | Update after each task |
-| Flow control | Push through everything | Pause on blockers, resume after |
-| Context loading | Read once at start | Read context, reference as needed |
-| Issue handling | Not specified | Pause, present options, wait for guidance |
+| 起動タイミング | 全アーティファクト完了後 | tasks.md があればいつでも |
+| 粒度 | すべてのタスクを一括 | 問題があれば一時停止 |
+| アーティファクト更新 | 言及なし | 必要に応じて推奨 |
+| 進捗管理 | 最後にまとめて更新 | タスクごとに更新 |
+| フロー制御 | すべて押し通す | ブロッカーで停止、再開可 |
+| 文脈ロード | 最初に一度読む | 必要に応じて参照 |
+| 問題対応 | 不明 | 停止して選択肢提示 |
 
-#### Implementation Notes
+#### 実装メモ
 
-1. **Add CLI command**: Add `openspec instructions apply` to artifact-workflow.ts
-   - Parse tasks.md for progress (count done/pending)
-   - Return context paths, progress, task list, simple instruction
-2. **Add to skill-templates.ts**: Create `getApplyChangeSkillTemplate()` function
-3. **Update artifact-experimental-setup**: Generate this skill alongside new/continue
-4. **Update skills list**: Add to `.claude/skills/` directory
-5. **Test the flow**: Verify it works with existing changes that have tasks.md
+1. **CLI コマンドを追加**: `openspec instructions apply` を `artifact-workflow.ts` に追加
+   - tasks.md を解析し進捗を取得
+   - 文脈パス、進捗、タスク一覧、簡潔な指示を返す
+2. **skill-templates.ts に追加**: `getApplyChangeSkillTemplate()` を作る
+3. **artifact-experimental-setup を更新**: new/continue と同様に apply スキルを生成
+4. **スキル一覧を更新**: `.claude/skills/` に追加
+5. **フローをテスト**: tasks.md のある既存変更で動作確認
 
 ---
 
-## Next Steps
+## 次のステップ
 
-1. ~~Review this plan and confirm scope~~ (Done - blockers identified)
-2. ~~Design decisions~~ (Done - all 3 blockers resolved)
-3. ~~Design apply skill~~ (Done - documented above)
-4. ~~Implement proposal template change (Decision 1 - capability discovery)~~ (Done)
-5. ~~Remove `openspec next` command (Decision 2a)~~ (Done)
-6. ~~Add `openspec instructions apply` CLI command~~ (Done)
-7. ~~Create `openspec-apply-change` skill~~ (Done)
-8. Conduct E2E testing with updated workflow
-9. Write user docs (document "actions on a change" model)
-10. Release to test users
+1. ~~計画をレビューしてスコープ確定~~（完了 - ブロッカー特定）
+2. ~~設計判断~~（完了 - 3 ブロッカーすべて解決）
+3. ~~apply スキル設計~~（完了 - 上記に記載）
+4. ~~提案テンプレート変更（決定 1: 機能抽出）~~（完了）
+5. ~~`openspec next` 削除（決定 2a）~~（完了）
+6. ~~`openspec instructions apply` 追加~~（完了）
+7. ~~`openspec-apply-change` スキル作成~~（完了）
+8. 更新後のフローで E2E テストを実施
+9. ユーザー向けドキュメントを作成（「変更に対するアクション」モデル）
+10. テストユーザーへリリース

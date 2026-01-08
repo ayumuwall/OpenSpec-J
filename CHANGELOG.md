@@ -5,34 +5,34 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 0.18.0
 
-### Minor Changes
+### マイナー変更
 
-- 8dfd824: Add OPSX experimental workflow commands and enhanced artifact system
+- 8dfd824: OPSX 実験的ワークフローコマンドとアーティファクトシステムの拡張を追加
 
-  **New Commands:**
+  **新しいコマンド:**
 
-  - `/opsx:ff` - Fast-forward through artifact creation, generating all needed artifacts in one go
-  - `/opsx:sync` - Sync delta specs from a change to main specs
-  - `/opsx:archive` - Archive completed changes with smart sync check
+  - `/opsx:ff` - アーティファクト作成を早送りし、必要なアーティファクトを一括生成
+  - `/opsx:sync` - 変更の仕様差分をメイン仕様に同期
+  - `/opsx:archive` - 完了した変更をスマートな同期チェック付きでアーカイブ
 
-  **Artifact Workflow Enhancements:**
+  **アーティファクトワークフローの強化:**
 
-  - Schema-aware apply instructions with inline guidance and XML output
-  - Agent schema selection for experimental artifact workflow
-  - Per-change schema metadata via `.openspec.yaml` files
-  - Agent Skills for experimental artifact workflow
-  - Instruction loader for template loading and change context
-  - Restructured schemas as directories with templates
+  - スキーマ認識の apply 指示（インラインガイド付き、XML 出力）
+  - 実験的アーティファクトワークフロー向けのスキーマ選択（エージェント）
+  - `.openspec.yaml` による変更ごとのスキーマメタデータ
+  - 実験的アーティファクトワークフロー向け Agent Skills
+  - テンプレート読み込みと変更コンテキストのための instruction loader
+  - スキーマをテンプレート同梱のディレクトリ構成に再編
 
-  **Improvements:**
+  **改善:**
 
-  - Enhanced list command with last modified timestamps and sorting
-  - Change creation utilities for better workflow support
+  - list コマンドに最終更新日時とソートを追加
+  - ワークフロー支援のための変更作成ユーティリティを追加
 
-  **Fixes:**
+  **修正:**
 
-  - Normalize paths for cross-platform glob compatibility
-  - Allow REMOVED requirements when creating new spec files
+  - クロスプラットフォームの glob 互換性のためパスを正規化
+  - 新規仕様ファイル作成時に REMOVED 要件を許可
 
 ## 0.17.2
 
