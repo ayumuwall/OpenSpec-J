@@ -32,8 +32,7 @@
 
 # OpenSpec
 
-このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) 
-をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v0.19.0 です。**
+このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v0.20.0 です。**
 
 OpenSpec は、仕様駆動開発で人と AI コーディングアシスタントをそろえ、コードを書く前に「何を作るか」を合意できるようにします。**API キーは不要です。**
 
@@ -50,7 +49,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 ## OpenSpec の特徴（ざっくり比較）
 
 - **軽量**: シンプルなワークフロー、API キー不要、最小セットアップ。
-- **既存コード重視**: 0→1 だけでなく既存機能の改修にも強い。`openspec/specs/`（現在の真実）と `openspec/changes/`（提案中の更新）を分離し、機能間の差分を明示的に管理。
+- **既存コード重視**: 0→1 だけでなく既存機能の改修にも強い。OpenSpec は `openspec/specs/`（現在の真実）と `openspec/changes/`（提案中の更新）を分離し、機能間の差分を明示的に管理。
 - **変更追跡**: 提案・タスク・仕様差分を同居させ、アーカイブ時に承認済みの更新を仕様へ統合。
 - **spec-kit / Kiro との比較**: これらは 0→1 の新機能で強いが、OpenSpec は既存挙動を変える 1→n 改修や複数仕様にまたがる更新でも力を発揮。
 
@@ -59,36 +58,34 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 ## 仕組み
 
 ```
-┌──────────────────────────────┐
-│ 変更提案ドラフト（下書き）       │
-│ (Draft Change)               │
-└───────────────┬──────────────┘
-                │ AI と意図を共有
-                ▼
-┌──────────────────────────────┐
-│ レビューと合意                  │
-│ (仕様・タスク編集)              │ ◀──── フィードバックループ ────┐
-└───────────────┬──────────────┘                             │
-                │ 承認済み計画                                 │
-                ▼                                            │
-┌──────────────────────────────┐                             │
-│ タスク実装                     │─────────────────────────────┘
-│ (AI がコードを書く)            │
-└───────────────┬──────────────┘
-                │ 変更をリリース
-                ▼
-┌──────────────────────────────┐
-│ アーカイブと仕様更新            │
-│ (ソースの仕様)                 │
-└──────────────────────────────┘
+┌────────────────────┐
+│ 変更提案ドラフト     │
+│ (下書き)            │
+└────────┬───────────┘
+         │ AI と意図を共有
+         ▼
+┌────────────────────┐
+│ レビューと合意      │
+│ (仕様・タスク編集)  │◀──── フィードバックループ ──────┐
+└────────┬───────────┘                              │
+         │ 承認済み計画                              │
+         ▼                                          │
+┌────────────────────┐                              │
+│ タスク実装          │──────────────────────────────┘
+│ (AI がコードを書く) │
+└────────┬───────────┘
+         │ 変更をリリース
+         ▼
+┌────────────────────┐
+│ アーカイブと仕様更新 │
+│ (ソースの仕様)      │
+└────────────────────┘
 
 1. 望む仕様更新を記述した変更提案をドラフト（下書き）する。
 2. AI アシスタントとレビューし、合意が取れるまで調整する。
 3. 合意済み仕様を参照しながらタスクを実装する。
-4. 変更をアーカイブし、承認済みの更新をソース・オブ・トゥルース※の仕様に統合する。
+4. 変更をアーカイブし、承認済みの更新をソース・オブ・トゥルースの仕様に統合する。
 ```
-
-※ ソース・オブ・トゥルース（source of truth）は、その時点で「正」とみなされる唯一の仕様群を指します。OpenSpec では `openspec/specs/` 配下の仕様ファイルが該当し、承認済みの変更だけがここに反映されます。
 
 ## はじめ方
 
@@ -109,7 +106,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 | **CodeBuddy Code (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.codebuddy/commands/`) — 詳細は [ドキュメント](https://www.codebuddy.ai/cli) |
 | **Codex** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (グローバル: `~/.codex/prompts`, 自動インストール) |
 | **Continue** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.continue/prompts/`) |
-| **CoStrict** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.cospec/openspec/commands/`) — 詳細は [ドキュメント](https://costrict.ai)|
+| **CoStrict** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.cospec/openspec/commands/`) — 詳細は [ドキュメント](https://costrict.ai) |
 | **Crush** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.crush/commands/openspec/`) |
 | **Cursor** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` |
 | **Factory Droid** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.factory/commands/`) |
@@ -178,20 +175,12 @@ openspec init
 
 ### オプション: プロジェクトコンテキストの入力
 
-`openspec init` 完了後、次のステップ用プロンプトが表示されます。そのまま AI ツールに貼り付けてください。:
+`openspec init` 完了後、次のステップ用プロンプトが表示されます。そのまま AI ツールに貼り付けてください。
 
 ```text
-1. プロジェクトコンテキストを埋める:
-   "openspec/project.md を読んで、プロジェクト/技術スタック/規約の情報を
-    追記するのを手伝ってください"
-
-2. 最初の変更提案を作る:
-   "［追加したい機能］を実装したい。
-    この機能の OpenSpec 変更提案を作って"
-
-3. OpenSpec ワークフローを理解する:
-   "openspec/AGENTS.md をもとに、OpenSpec のワークフローと
-    このプロジェクトでの進め方を説明して"
+プロジェクトコンテキストを埋める:
+"openspec/project.md を読んで、プロジェクト/技術スタック/規約の情報を
+追記するのを手伝ってください"
 ```
 
 `openspec/project.md` には、プロジェクト共通の規約・標準・アーキテクチャパターン・ガイドラインなどを記載してください。
@@ -275,18 +264,18 @@ openspec archive <change> [--yes|-y]   # 完了した変更を archive/ に移�
 
 ## 例: AI が OpenSpec ファイルを生成する流れ
 
-AI に「二要素認証を追加して」と依頼すると、次のように生成します:
+AI に「二要素認証を追加したい」と伝えると、次の構造が生成されます:
 
 ```
 openspec/
 ├── specs/
 │   └── auth/
-│       └── spec.md           # 現行の認証仕様（既にあれば）
+│       └── spec.md           # 現在の認証仕様（存在する場合）
 └── changes/
-    └── add-2fa/              # AI が生成する変更フォルダ
-        ├── proposal.md       # 変更理由と内容
-        ├── tasks.md          # 実装チェックリスト
-        ├── design.md         # 技術方針（必要なら）
+    └── add-2fa/              # AI がこの構造を生成
+        ├── proposal.md       # 変更理由と概要
+        ├── tasks.md          # 実装タスク
+        ├── design.md         # 技術的判断（任意）
         └── specs/
             └── auth/
                 └── spec.md   # 追加差分
@@ -298,15 +287,15 @@ openspec/
 # Auth Specification
 
 ## Purpose
-認証とセッション管理。
+Authentication and session management.
 
 ## Requirements
 ### Requirement: User Authentication
-システムはログイン成功時に JWT を発行する。
+The system SHALL issue a JWT on successful login.
 
 #### Scenario: Valid credentials
-- WHEN ユーザーが有効な資格情報を送信する
-- THEN JWT を返す
+- WHEN a user submits valid credentials
+- THEN a JWT is returned
 ```
 
 ### 生成される変更差分 (`openspec/changes/add-2fa/specs/auth/spec.md`)
@@ -316,107 +305,107 @@ openspec/
 
 ## ADDED Requirements
 ### Requirement: Two-Factor Authentication
-システムはログイン時に第二要素を必須とする。
+The system MUST require a second factor during login.
 
 #### Scenario: OTP required
-- WHEN ユーザーが有効な資格情報を送信する
-- THEN OTP チャレンジを要求する
+- WHEN a user submits valid credentials
+- THEN an OTP challenge is required
 ```
 
 ### 生成されるタスク (`openspec/changes/add-2fa/tasks.md`)
 
 ```markdown
 ## 1. Database Setup
-- [ ] 1.1 users テーブルに OTP 秘密キー列を追加
-- [ ] 1.2 OTP 検証ログテーブルを作成
+- [ ] 1.1 Add OTP secret column to users table
+- [ ] 1.2 Create OTP verification logs table
 
 ## 2. Backend Implementation  
-- [ ] 2.1 OTP 生成エンドポイントを追加
-- [ ] 2.2 ログインフローを変更し OTP を必須にする
-- [ ] 2.3 OTP 検証エンドポイントを追加
+- [ ] 2.1 Add OTP generation endpoint
+- [ ] 2.2 Modify login flow to require OTP
+- [ ] 2.3 Add OTP verification endpoint
 
 ## 3. Frontend Updates
-- [ ] 3.1 OTP 入力コンポーネントを作成
-- [ ] 3.2 ログインフロー UI を更新
+- [ ] 3.1 Create OTP input component
+- [ ] 3.2 Update login flow UI
 ```
 
-**重要:** これらのファイルを手作業で作る必要はありません。要件と既存コードに基づき、AI アシスタントが自動生成します。
+**重要:** これらのファイルを手動で作成する必要はありません。AI アシスタントが要件と既存コードベースを参照して自動生成します。
 
 ## OpenSpec ファイルの理解
 
 ### 差分フォーマット
 
-差分は仕様がどのように変わるかを示す「パッチ」です:
+差分は「パッチ」として仕様の変更を表現します:
 
 - **`## ADDED Requirements`** - 新しい機能
-- **`## MODIFIED Requirements`** - 挙動変更（更新後の全文を記載）
-- **`## REMOVED Requirements`** - 廃止する機能
+- **`## MODIFIED Requirements`** - 仕様変更（更新後の全文を記述）
+- **`## REMOVED Requirements`** - 既存機能の廃止
 
 **フォーマット要件:**
-- 見出しは `### Requirement: <name>`
-- 各要件に少なくとも 1 つの `#### Scenario:` ブロックが必要
-- 要件文では SHALL/MUST を使用
+- 見出しは `### Requirement: <name>` を使用
+- 各要件に最低 1 つの `#### Scenario:` が必要
+- 要件本文では SHALL/MUST を使用
 
 ## OpenSpec の比較
 
 ### spec-kit との比較
-OpenSpec の 2 フォルダモデル（現在の真実は `openspec/specs/`、提案中の更新は `openspec/changes/`）で状態と差分を分離します。既存機能の改修や複数仕様にまたがる更新でもスケールしやすく、spec-kit が得意とする 0→1 の新規開発よりも既存機能の進化に強みがあります。
+OpenSpec は二段階フォルダ（`openspec/specs/` が現在の真実、`openspec/changes/` が提案中の更新）で状態と差分を分離します。既存機能の改修や複数仕様の同時変更でもスケールしやすく、spec-kit が得意な 0→1 の新規開発よりも広いケースで活躍します。
 
 ### Kiro.dev との比較
-OpenSpec は機能ごとの変更を 1 フォルダ（`openspec/changes/feature-name/`）にまとめ、関連する仕様・タスク・設計を一括で追跡できます。Kiro は更新が複数仕様フォルダに分散しやすく、機能単位の追跡が難しくなりがちです。
+OpenSpec は変更単位を 1 つのフォルダ（`openspec/changes/feature-name/`）にまとめるため、仕様・タスク・設計が追いやすい構造です。Kiro は複数の仕様フォルダに分散するため、機能単位の追跡が難しくなることがあります。
 
 ### 仕様なしの場合
-仕様がないと、AI はあいまいなプロンプトからコードを生成し、要件抜けや不要機能が生まれがちです。OpenSpec はコードを書く前に望む挙動への合意を作り、予測可能性をもたらします。
+仕様が無いと、AI コーディングアシスタントは曖昧なプロンプトからコードを生成してしまい、要件漏れや余計な実装が起きがちです。OpenSpec は事前に期待する挙動を合意することで、再現性の高い成果を得られます。
 
 ## チーム導入
 
-1. **OpenSpec を初期化** – リポジトリで `openspec init` を実行。
-2. **新機能から始める** – 近々の作業を変更提案として AI にまとめてもらう。
-3. **段階的に拡張** – 各変更をアーカイブし、仕様としてシステムドキュメントを育てる。
-4. **柔軟性を維持** – メンバーは Claude Code、CodeBuddy、Cursor、AGENTS.md 互換ツールなど好きなアシスタントを使いつつ、同じ仕様を共有できる。
+1. **OpenSpec を初期化** – リポジトリで `openspec init` を実行する。
+2. **新機能から始める** – 今後の作業を変更提案として AI にまとめてもらう。
+3. **継続的に蓄積** – 各変更はアーカイブされ、生きた仕様として蓄積される。
+4. **柔軟に共有** – Claude Code, CodeBuddy, Cursor など複数ツールを跨いでも同じ仕様を共有可能。
 
-メンバーがツールを切り替えたら `openspec update` を実行し、最新の手順とスラッシュコマンド設定を反映させてください。
+ツールを切り替える場合は `openspec update` を実行し、最新の指示とスラッシュコマンドを反映してください。
 
 ## OpenSpec のアップデート
 
-1. **パッケージをアップグレード**
+1. **パッケージを更新**
    ```bash
    npm install -g @ayumuwall/openspec@latest
    ```
-2. **エージェントの手順を更新**
-- 各プロジェクトで `openspec update` を実行し、AI ガイダンスとスラッシュコマンドを最新化します。
+2. **AI 指示を更新**
+   - 各プロジェクトで `openspec update` を実行し、最新のスラッシュコマンドとガイダンスを反映します。
 
 ## 実験的機能
 
 <details>
 <summary><strong>🧪 OPSX: 流動的で反復的なワークフロー</strong>（Claude Code のみ）</summary>
 
-**背景:**
-- 標準ワークフローは固定されており、手順の調整やカスタマイズができない
-- AI の出力が悪いときに、プロンプトを自分で改善できない
-- 全員が同じワークフローで、チームのやり方に合わせられない
+**なぜ必要か:**
+- 標準ワークフローは固定で、指示やテンプレートをカスタマイズできない
+- AI 出力が悪いときに、プロンプトを自分で改善できない
+- 全員同じワークフローしか使えず、チームの流儀と合わない
 
-**違い:**
-- **改造可能** — テンプレートやスキーマを直接編集し、ビルドなしで即テストできる
-- **粒度が細かい** — アーティファクトごとに手順があり、個別にテスト・調整できる
-- **カスタマイズ可能** — 独自のワークフロー、アーティファクト、依存関係を定義できる
-- **流動的** — フェーズのゲートがなく、いつでもどのアーティファクトでも更新できる
+**何が違うか:**
+- **ハック可能** — テンプレートやスキーマを自分で編集し、即時にテスト可能
+- **細分化** — アーティファクトごとに指示を分離し、個別に改善できる
+- **カスタマイズ** — 独自ワークフローや依存関係を自由に定義できる
+- **流動的** — フェーズのゲートがなく、いつでも更新できる
 
 ```
-You can always go back:
+いつでも戻って調整できます:
 
   proposal ──→ specs ──→ design ──→ tasks ──→ implement
      ▲           ▲          ▲                    │
      └───────────┴──────────┴────────────────────┘
 ```
 
-| コマンド | 役割 |
-|---------|------|
-| `/opsx:new` | 新しい変更を開始 |
-| `/opsx:continue` | 次のアーティファクトを作成 |
-| `/opsx:ff` | 早送り（すべての計画アーティファクトを一括生成） |
-| `/opsx:apply` | タスクを実装し、必要に応じて更新 |
-| `/opsx:archive` | 完了後にアーカイブ |
+| コマンド | できること |
+|---------|------------|
+| `/opsx:new` | 新規変更を開始 |
+| `/opsx:continue` | 次のアーティファクトを作成（準備が整ったものから） |
+| `/opsx:ff` | 一括で前倒し作成（planning artifact 全生成） |
+| `/opsx:apply` | 必要に応じてアーティファクトを更新しつつタスクを実装 |
+| `/opsx:archive` | 完了時にアーカイブ |
 
 **セットアップ:** `openspec artifact-experimental-setup`
 
@@ -425,9 +414,9 @@ You can always go back:
 </details>
 
 <details>
-<summary><strong>テレメトリー</strong> – OpenSpec は匿名の利用統計を収集します（オプトアウト: <code>OPENSPEC_TELEMETRY=0</code>）</summary>
+<summary><strong>テレメトリ</strong> – OpenSpec は匿名の利用統計を収集します（オプトアウト: <code>OPENSPEC_TELEMETRY=0</code>）</summary>
 
-利用状況を把握するためにコマンド名とバージョンのみを収集します。引数、パス、内容、PII は収集しません。CI では自動的に無効化されます。
+収集するのはコマンド名とバージョンのみです。引数・パス・内容・個人情報は収集しません。CI では自動で無効化されます。
 
 **オプトアウト:** `export OPENSPEC_TELEMETRY=0` または `export DO_NOT_TRACK=1`
 
@@ -435,11 +424,18 @@ You can always go back:
 
 ## コントリビュート
 
-- 依存をインストール: `pnpm install`
+- 依存関係のインストール: `pnpm install`
 - ビルド: `pnpm run build`
 - テスト: `pnpm test`
-- CLI ローカル開発: `pnpm run dev` または `pnpm run dev:cli`
+- ローカル開発: `pnpm run dev` または `pnpm run dev:cli`
 - Conventional Commits（1 行）: `type(scope): subject`
+
+<details>
+<summary><strong>Maintainers & Advisors</strong></summary>
+
+プロジェクトを支えるメンテナとアドバイザー一覧は [MAINTAINERS.md](MAINTAINERS.md) を参照してください。
+
+</details>
 
 ## ライセンス
 

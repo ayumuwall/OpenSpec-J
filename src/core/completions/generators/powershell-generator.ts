@@ -8,6 +8,11 @@ import { POWERSHELL_DYNAMIC_HELPERS } from '../templates/powershell-templates.js
 export class PowerShellGenerator implements CompletionGenerator {
   readonly shell = 'powershell' as const;
 
+  private stripTrailingCommaFromLastLine(lines: string[]): void {
+    if (lines.length === 0) return;
+    lines[lines.length - 1] = lines[lines.length - 1].replace(/,\s*$/, '');
+  }
+
   /**
    * Generate a PowerShell completion script
    *
@@ -20,6 +25,7 @@ export class PowerShellGenerator implements CompletionGenerator {
     for (const cmd of commands) {
       commandLines.push(`            @{Name="${cmd.name}"; Description="${this.escapeDescription(cmd.description)}"},`);
     }
+    this.stripTrailingCommaFromLastLine(commandLines);
     const topLevelCommands = commandLines.join('\n');
 
     // Build command cases using push() for loop clarity
@@ -35,8 +41,8 @@ export class PowerShellGenerator implements CompletionGenerator {
     const helpers = POWERSHELL_DYNAMIC_HELPERS;
 
     // Assemble final script with template literal
-    return `# PowerShell completion script for OpenSpec CLI
-# Auto-generated - do not edit manually
+    return `# OpenSpec CLI 用 PowerShell 補完スクリプト
+# 自動生成 - 手動編集しないでください
 
 ${helpers}
 $openspecCompleter = {
@@ -88,6 +94,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
             lines.push(`${indent}        @{Name="${longFlag}"; Description="${this.escapeDescription(flag.description)}"},`);
           }
         }
+        this.stripTrailingCommaFromLastLine(lines);
         lines.push(`${indent}    )`);
         lines.push(`${indent}    $flags | Where-Object { $_.Name -like "$wordToComplete*" } | ForEach-Object {`);
         lines.push(`${indent}        [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, "ParameterName", $_.Description)`);
@@ -103,6 +110,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
       for (const subcmd of cmd.subcommands) {
         lines.push(`${indent}        @{Name="${subcmd.name}"; Description="${this.escapeDescription(subcmd.description)}"},`);
       }
+      this.stripTrailingCommaFromLastLine(lines);
       lines.push(`${indent}    )`);
       lines.push(`${indent}    $subcommands | Where-Object { $_.Name -like "$wordToComplete*" } | ForEach-Object {`);
       lines.push(`${indent}        [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, "ParameterValue", $_.Description)`);
@@ -148,6 +156,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
           lines.push(`${indent}        @{Name="${longFlag}"; Description="${this.escapeDescription(flag.description)}"},`);
         }
       }
+      this.stripTrailingCommaFromLastLine(lines);
       lines.push(`${indent}    )`);
       lines.push(`${indent}    $flags | Where-Object { $_.Name -like "$wordToComplete*" } | ForEach-Object {`);
       lines.push(`${indent}        [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, "ParameterName", $_.Description)`);
@@ -174,12 +183,12 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
     switch (positionalType) {
       case 'change-id':
         lines.push(`${indent}Get-OpenSpecChanges | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {`);
-        lines.push(`${indent}    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", "Change: $_")`);
+        lines.push(`${indent}    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", "変更: $_")`);
         lines.push(`${indent}}`);
         break;
       case 'spec-id':
         lines.push(`${indent}Get-OpenSpecSpecs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {`);
-        lines.push(`${indent}    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", "Spec: $_")`);
+        lines.push(`${indent}    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", "仕様: $_")`);
         lines.push(`${indent}}`);
         break;
       case 'change-or-spec-id':
@@ -191,7 +200,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
       case 'shell':
         lines.push(`${indent}$shells = @("zsh", "bash", "fish", "powershell")`);
         lines.push(`${indent}$shells | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {`);
-        lines.push(`${indent}    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", "Shell: $_")`);
+        lines.push(`${indent}    [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", "シェル: $_")`);
         lines.push(`${indent}}`);
         break;
       case 'path':

@@ -1,11 +1,11 @@
 /**
- * Agent Skill Templates
+ * エージェントスキルテンプレート
  *
- * Templates for generating Agent Skills compatible with:
+ * 互換性のあるエージェントスキルを生成するテンプレート:
  * - Claude Code
- * - Cursor (Settings → Rules → Import Settings)
+ * - Cursor（Settings → Rules → Import Settings）
  * - Windsurf
- * - Other Agent Skills-compatible editors
+ * - その他の Agent Skills 互換エディタ
  */
 
 export interface SkillTemplate {
@@ -15,873 +15,754 @@ export interface SkillTemplate {
 }
 
 /**
- * Template for openspec-explore skill
- * Explore mode - adaptive thinking partner for exploring ideas and problems
+ * openspec-explore スキルのテンプレート
+ * Explore モード - アイデアや問題を探索する思考パートナー
  */
 export function getExploreSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-explore',
     description: 'アイデア探索・問題調査・要件整理のための思考パートナーとして explore モードに入ります。変更の前後で思考整理したいときに使います。',
-    instructions: `Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
+    instructions: `explore モードに入る。深く考え、自由に可視化し、会話の流れに沿って進める。
 
-**This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
-
----
-
-## The Stance
-
-- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
-- **Adaptive** - Follow interesting threads, pivot when new information emerges
-- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
-- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+**これはワークフローではなくスタンスです。** 固定手順・必須順序・必須アウトプットはありません。ユーザーの探索を助ける思考パートナーとして振る舞ってください。
 
 ---
 
-## What You Might Do
+## スタンス
 
-Depending on what the user brings, you might:
+- **好奇心** - 台本ではなく自然に湧く問いを投げる
+- **可視化重視** - 思考が整理できるなら ASCII 図を積極的に使う
+- **適応的** - 面白い糸をたどり、新情報が出たら方向転換する
+- **焦らない** - 結論を急がず、問題の形が見えるまで待つ
+- **現実に寄せる** - 必要ならコードベースを読み、推測だけで終わらせない
 
-**Explore the problem space**
-- Ask clarifying questions that emerge from what they said
-- Challenge assumptions
-- Reframe the problem
-- Find analogies
+---
 
-**Investigate the codebase**
-- Map existing architecture relevant to the discussion
-- Find integration points
-- Identify patterns already in use
-- Surface hidden complexity
+## できること
 
-**Compare options**
-- Brainstorm multiple approaches
-- Build comparison tables
-- Sketch tradeoffs
-- Recommend a path (if asked)
+ユーザーの状況に応じて、次のように動く。
 
-**Visualize**
-\`\`\`
+**問題空間を探索する**
+- 話から自然に生まれる確認質問をする
+- 前提を疑う
+- 問題を再定義する
+- たとえ話を探す
+
+**コードベースを調べる**
+- 関連アーキテクチャを整理する
+- 統合ポイントを見つける
+- 既存パターンを把握する
+- 見えにくい複雑さを掘り出す
+
+**選択肢を比較する**
+- 複数案を出す
+- 比較表を作る
+- トレードオフをスケッチする
+- 求められたら推奨案を示す
+
+**可視化する**
+```
 ┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
+│     ASCII 図は積極的に使う             │
 ├─────────────────────────────────────────┤
 │                                         │
 │   ┌────────┐         ┌────────┐        │
-│   │ State  │────────▶│ State  │        │
-│   │   A    │         │   B    │        │
+│   │ 状態 A │────────▶│ 状態 B │        │
 │   └────────┘         └────────┘        │
 │                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
+│   システム図/状態遷移/データフロー/     │
+│   アーキテクチャのスケッチ/依存関係/   │
+│   比較表 など                           │
 │                                         │
 └─────────────────────────────────────────┘
-\`\`\`
+```
 
-**Surface risks and unknowns**
-- Identify what could go wrong
-- Find gaps in understanding
-- Suggest spikes or investigations
+**リスクと未知を浮かび上がらせる**
+- 何が壊れうるかを列挙する
+- 理解の穴を見つける
+- 調査や検証を提案する
 
 ---
 
-## OpenSpec Awareness
+## OpenSpec の文脈
 
-You have full context of the OpenSpec system. Use it naturally, don't force it.
+OpenSpec の全体像を理解したうえで、自然に活用する。押し付けない。
 
-### Check for context
+### 文脈チェック
 
-At the start, quickly check what exists:
-\`\`\`bash
+開始時に存在する変更を確認する:
+```bash
 openspec list --json
-\`\`\`
+```
 
-This tells you:
-- If there are active changes
-- Their names, schemas, and status
-- What the user might be working on
+これで分かること:
+- 進行中の変更があるか
+- 変更名 / スキーマ / 状態
+- ユーザーが今触っていそうな対象
 
-### When no change exists
+### 変更が無い場合
 
-Think freely. When insights crystallize, you might offer:
+自由に考える。洞察が固まってきたら提案してよい:
 
-- "This feels solid enough to start a change. Want me to create one?"
-  → Can transition to \`/opsx:new\` or \`/opsx:ff\`
-- Or keep exploring - no pressure to formalize
+- 「ここまで固まったなら変更を作ってみませんか？」
+  → `/opsx:new` または `/opsx:ff` に誘導できる
+- そのまま探索を続けてもよい（形式化の圧はかけない）
 
-### When a change exists
+### 変更がある場合
 
-If the user mentions a change or you detect one is relevant:
+ユーザーが変更に触れている、または関連があると判断したら:
 
-1. **Read existing artifacts for context**
-   - \`openspec/changes/<name>/proposal.md\`
-   - \`openspec/changes/<name>/design.md\`
-   - \`openspec/changes/<name>/tasks.md\`
-   - etc.
+1. **既存アーティファクトを読む**
+   - `openspec/changes/<name>/proposal.md`
+   - `openspec/changes/<name>/design.md`
+   - `openspec/changes/<name>/tasks.md`
+   - など
 
-2. **Reference them naturally in conversation**
-   - "Your design mentions using Redis, but we just realized SQLite fits better..."
-   - "The proposal scopes this to premium users, but we're now thinking everyone..."
+2. **会話の中で自然に参照する**
+   - 「設計では Redis を使う前提でしたが、今なら SQLite の方が合いそうです」
+   - 「提案ではプレミアム限定でしたが、全員対象に広げる流れになっています」
 
-3. **Offer to capture when decisions are made**
+3. **意思決定が固まったら記録を促す**
 
-   | Insight Type | Where to Capture |
-   |--------------|------------------|
-   | New requirement discovered | \`specs/<capability>/spec.md\` |
-   | Requirement changed | \`specs/<capability>/spec.md\` |
-   | Design decision made | \`design.md\` |
-   | Scope changed | \`proposal.md\` |
-   | New work identified | \`tasks.md\` |
-   | Assumption invalidated | Relevant artifact |
+   | 気づきの種別 | 記録先 |
+   |--------------|--------|
+   | 新しい要件 | `specs/<capability>/spec.md` |
+   | 要件の変更 | `specs/<capability>/spec.md` |
+   | 設計判断 | `design.md` |
+   | スコープ変更 | `proposal.md` |
+   | 新規タスク | `tasks.md` |
+   | 前提崩壊 | 関連アーティファクト |
 
-   Example offers:
-   - "That's a design decision. Capture it in design.md?"
-   - "This is a new requirement. Add it to specs?"
-   - "This changes scope. Update the proposal?"
+   例:
+   - 「これは設計判断ですね。design.md に残しますか？」
+   - 「新しい要件です。specs に追加しますか？」
+   - 「スコープが変わりました。proposal を更新しますか？」
 
-4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
-
----
-
-## What You Don't Have To Do
-
-- Follow a script
-- Ask the same questions every time
-- Produce a specific artifact
-- Reach a conclusion
-- Stay on topic if a tangent is valuable
-- Be brief (this is thinking time)
+4. **最終判断はユーザー** - 促したら引き下がる。勝手に保存しない。
 
 ---
 
-## Handling Different Entry Points
+## しなくていいこと
 
-**User brings a vague idea:**
-\`\`\`
-User: I'm thinking about adding real-time collaboration
+- 台本どおりに進める
+- 毎回同じ質問をする
+- 特定アーティファクトを必ず作る
+- その場で結論を出す
+- 価値ある脱線を避ける
+- 短くまとめる（考える時間を確保する）
 
-You: Real-time collab is a big space. Let me think about this...
+---
 
-      COLLABORATION SPECTRUM
+## 入口別の対応
+
+**曖昧なアイデアから始まる場合:**
+```
+ユーザー: リアルタイム共同編集を追加したい
+
+あなた: リアルタイム協調は広い領域ですね。整理しながら考えます...
+
+      コラボレーションのスペクトラム
       ════════════════════════════════════════════
 
-      Awareness          Coordination         Sync
+      認知          調整         同期
           │                   │                 │
           ▼                   ▼                 ▼
       ┌────────┐         ┌────────┐        ┌────────┐
-      │Presence│         │Cursors │        │  CRDT  │
-      │  "3    │         │ Multi  │        │Conflict│
-      │online" │         │ select │        │  free  │
+      │プレゼンス│         │カーソル │        │  CRDT  │
+      │  "3    │         │ マルチ  │        │競合│
+      │オンライン" │       │ 選択 │        │  なし  │
       └────────┘         └────────┘        └────────┘
           │                   │                 │
-       trivial            moderate           complex
+       容易            中程度           複雑
 
-      Where's your head at?
-\`\`\`
+      いま想定しているのはどの辺りですか？
+```
 
-**User brings a specific problem:**
-\`\`\`
-User: The auth system is a mess
+**具体的な問題がある場合:**
+```
+ユーザー: 認証がごちゃごちゃしている
 
-You: [reads codebase]
+あなた: [コードを読む]
 
      ┌─────────────────────────────────────────────┐
-     │              CURRENT AUTH FLOW              │
+     │              現在の認証フロー              │
      └─────────────────────────────────────────────┘
                         │
           ┌─────────────┼─────────────┐
           ▼             ▼             ▼
      ┌─────────┐  ┌─────────┐  ┌─────────┐
-     │ Google  │  │  GitHub │  │  Email  │
-     │  OAuth  │  │  OAuth  │  │  Magic  │
+     │ Google  │  │  GitHub │  │  メール  │
+     │  OAuth  │  │  OAuth  │  │  マジック  │
      └────┬────┘  └────┬────┘  └────┬────┘
           │             │             │
           └─────────────┼─────────────┘
                         ▼
                   ┌───────────┐
-                  │  Session  │
+                  │  セッション  │
                   └─────┬─────┘
                         │
                         ▼
                   ┌───────────┐
-                  │   Perms   │
+                  │   権限   │
                   └───────────┘
 
-     I see three tangles. Which one's burning?
-\`\`\`
+     3 箇所に絡みが見えます。どこが一番困っていますか？
+```
 
-**User is stuck mid-implementation:**
-\`\`\`
-User: /opsx:explore add-auth-system
-      The OAuth integration is more complex than expected
+**実装途中で詰まっている場合:**
+```
+ユーザー: /opsx:explore add-auth-system
+      OAuth 連携が想定より複雑だった
 
-You: [reads change artifacts]
+あなた: [変更アーティファクトを読む]
 
-     You're on task 4: "Implement OAuth flow"
+     タスク 4 の "OAuth フローを実装" まで進んでいますね
+     ただし "OAuth プロバイダ" の仕様が無いのでブロックされています
+     先に仕様を書きましょうか？
+```
 
-     Let me trace what's involved...
+## 探索の終わり方
 
-     [draws diagram, explores options, suggests paths]
+必須の終わりはない。探索の結果は次のどれでもよい:
 
-     Want to update the design to reflect this?
-     Or add a spike task to investigate?
-\`\`\`
+- **行動に移る**: 「始めますか？ /opsx:new または /opsx:ff」
+- **アーティファクト更新**: 「design.md に判断を反映しました」
+- **整理で終える**: 十分に見通せたので前進する
+- **後で続ける**: 「いつでも続きをやりましょう」
 
-**User wants to compare options:**
-\`\`\`
-User: Should we use Postgres or SQLite?
+整理できたと感じたら、簡潔にまとめてもよい:
 
-You: Generic answer is boring. What's the context?
+```
+## 分かったこと
 
-User: A CLI tool that tracks local dev environments
+**問題**: [理解した問題]
 
-You: That changes everything.
+**方針**: [方針があれば]
 
-     ┌─────────────────────────────────────────────────┐
-     │         CLI TOOL DATA STORAGE                  │
-     └─────────────────────────────────────────────────┘
+**未解決の問い**: [残っている問い]
 
-     Key constraints:
-     • No daemon running
-     • Must work offline
-     • Single user
+**次のステップ**（準備ができていれば）:
+- 変更を作成: /opsx:new <name>
+- タスクまで早送り: /opsx:ff <name>
+- もう少し探索: このまま会話を続ける
+```
 
-                  SQLite          Postgres
-     Deployment   embedded ✓      needs server ✗
-     Offline      yes ✓           no ✗
-     Single file  yes ✓           no ✗
-
-     SQLite. Not even close.
-
-     Unless... is there a sync component?
-\`\`\`
+ただし、このまとめは必須ではない。思考の過程そのものが価値になることもある。
 
 ---
 
-## Ending Discovery
+## ガードレール
 
-There's no required ending. Discovery might:
-
-- **Flow into action**: "Ready to start? /opsx:new or /opsx:ff"
-- **Result in artifact updates**: "Updated design.md with these decisions"
-- **Just provide clarity**: User has what they need, moves on
-- **Continue later**: "We can pick this up anytime"
-
-When it feels like things are crystallizing, you might summarize:
-
-\`\`\`
-## What We Figured Out
-
-**The problem**: [crystallized understanding]
-
-**The approach**: [if one emerged]
-
-**Open questions**: [if any remain]
-
-**Next steps** (if ready):
-- Create a change: /opsx:new <name>
-- Fast-forward to tasks: /opsx:ff <name>
-- Keep exploring: just keep talking
-\`\`\`
-
-But this summary is optional. Sometimes the thinking IS the value.
-
----
-
-## Guardrails
-
-- **Don't fake understanding** - If something is unclear, dig deeper
-- **Don't rush** - Discovery is thinking time, not task time
-- **Don't force structure** - Let patterns emerge naturally
-- **Don't auto-capture** - Offer to save insights, don't just do it
-- **Do visualize** - A good diagram is worth many paragraphs
-- **Do explore the codebase** - Ground discussions in reality
-- **Do question assumptions** - Including the user's and your own`
+- **理解したふりをしない** - 不明な点は掘る
+- **急がない** - 探索はタスクではなく思考の時間
+- **構造を押し付けない** - 自然にパターンが見えるまで待つ
+- **勝手に記録しない** - 記録は提案し、実行はユーザーに委ねる
+- **可視化する** - 良い図は文章より強い
+- **コードベースを読む** - 現実の実装に結び付ける
+- **前提を疑う** - ユーザーの前提も自分の前提も``
   };
 }
 
 /**
- * Template for openspec-new-change skill
- * Based on /opsx:new command
+ * openspec-new-change スキルのテンプレート
+ * /opsx:new コマンドに基づく
  */
 export function getNewChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-new-change',
     description: '実験的アーティファクトワークフローで新しい OpenSpec 変更を開始します。新機能・修正・改修を段階的に進めたいときに使います。',
-    instructions: `Start a new change using the experimental artifact-driven approach.
+    instructions: `実験的なアーティファクト駆動の方式で新しい変更を開始する。
 
-**Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
+**入力**: 変更名（kebab-case）または作りたい内容の説明が含まれていること。
 
-**Steps**
+**手順**
 
-1. **If no clear input provided, ask what they want to build**
+1. **入力が不明確なら作りたい内容を確認する**
 
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
+   **AskUserQuestion tool**（自由入力）で次を聞く:
+   > "どんな変更を進めたいですか？作りたいもの・直したいものを教えてください。"
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → \`add-user-auth\`).
+   説明から kebab-case の名称を作る（例: "ユーザー認証を追加" → `add-user-auth`）。
 
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+   **重要**: 何を作るか理解できるまでは進めない。
 
-2. **Determine the workflow schema**
+2. **ワークフロースキーマを決める**
 
-   Use the default schema (omit \`--schema\`) unless the user explicitly requests a different workflow.
+   ユーザーが明示しない限り、デフォルト（`--schema` を省略）を使う。
 
-   **Use a different schema only if the user mentions:**
-   - "tdd" or "test-driven" → use \`--schema tdd\`
-   - A specific schema name → use \`--schema <name>\`
-   - "show workflows" or "what workflows" → run \`openspec schemas --json\` and let them choose
+   **別スキーマにするのは次の場合のみ:**
+   - "tdd" / "test-driven" → `--schema tdd`
+   - 明示的なスキーマ名 → `--schema <name>`
+   - "workflows を見せて" → `openspec schemas --json` で選ばせる
 
-   **Otherwise**: Omit \`--schema\` to use the default.
+   **それ以外**: `--schema` は省略する。
 
-3. **Create the change directory**
-   \`\`\`bash
+3. **変更ディレクトリを作成する**
+   ```bash
    openspec new change "<name>"
-   \`\`\`
-   Add \`--schema <name>\` only if the user requested a specific workflow.
-   This creates a scaffolded change at \`openspec/changes/<name>/\` with the selected schema.
+   ```
+   特定スキーマが指定された場合のみ `--schema <name>` を付ける。
+   選択したスキーマで `openspec/changes/<name>/` にひな形が作成される。
 
-4. **Show the artifact status**
-   \`\`\`bash
+4. **アーティファクトの状態を表示する**
+   ```bash
    openspec status --change "<name>"
-   \`\`\`
-   This shows which artifacts need to be created and which are ready (dependencies satisfied).
+   ```
+   どのアーティファクトが必要で、どれが ready か（依存関係が満たされているか）を確認する。
 
-5. **Get instructions for the first artifact**
-   The first artifact depends on the schema (e.g., \`proposal\` for spec-driven, \`spec\` for tdd).
-   Check the status output to find the first artifact with status "ready".
-   \`\`\`bash
+5. **最初のアーティファクトの指示を取得する**
+   最初のアーティファクトはスキーマによって変わる（例: spec-driven は `proposal`、tdd は `spec`）。
+   status 出力から `status: "ready"` の最初のアーティファクトを選ぶ。
+   ```bash
    openspec instructions <first-artifact-id> --change "<name>"
-   \`\`\`
-   This outputs the template and context for creating the first artifact.
+   ```
+   これで最初のアーティファクト用テンプレートと文脈が出力される。
 
-6. **STOP and wait for user direction**
+6. **STOP してユーザーの指示を待つ**
 
-**Output**
+**出力**
 
-After completing the steps, summarize:
-- Change name and location
-- Schema/workflow being used and its artifact sequence
-- Current status (0/N artifacts complete)
-- The template for the first artifact
-- Prompt: "Ready to create the first artifact? Just describe what this change is about and I'll draft it, or ask me to continue."
+完了後に次を要約する:
+- 変更名と作成場所
+- 使用中のスキーマ/ワークフローとアーティファクト順序
+- 現在の進捗（0/N 完了）
+- 最初のアーティファクトのテンプレート
+- 促し: "最初のアーティファクトを作りますか？内容を教えてくれれば下書きを作成します。続けるなら指示してください。"
 
-**Guardrails**
-- Do NOT create any artifacts yet - just show the instructions
-- Do NOT advance beyond showing the first artifact template
-- If the name is invalid (not kebab-case), ask for a valid name
-- If a change with that name already exists, suggest continuing that change instead
-- Pass --schema if using a non-default workflow`
+**ガードレール**
+- まだアーティファクトは作らない（指示表示のみ）
+- 最初のアーティファクトテンプレート表示より先に進めない
+- 名前が kebab-case でない場合は修正を求める
+- 同名の変更が既にある場合は継続を提案する
+- 非デフォルトの場合のみ `--schema` を付ける``
   };
 }
 
 /**
- * Template for openspec-continue-change skill
- * Based on /opsx:continue command
+ * openspec-continue-change スキルのテンプレート
+ * /opsx:continue コマンドに基づく
  */
 export function getContinueChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-continue-change',
     description: 'OpenSpec 変更を継続し、次のアーティファクトを作成します。変更を進めたいときに使います。',
-    instructions: `Continue working on a change by creating the next artifact.
+    instructions: `変更を継続し、次のアーティファクトを作成する。
 
-**Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
+**入力**: change 名は任意。未指定の場合は利用可能な変更を必ず確認させる。
 
-**Steps**
+**手順**
 
-1. **If no change name provided, prompt for selection**
+1. **change 名が無い場合は選択させる**
 
-   Run \`openspec list --json\` to get available changes sorted by most recently modified. Then use the **AskUserQuestion tool** to let the user select which change to work on.
+   
+   `openspec list --json` を実行し、更新日時の新しい順で取得する。**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Present the top 3-4 most recently modified changes as options, showing:
-   - Change name
-   - Schema (from \`schema\` field if present, otherwise "spec-driven")
-   - Status (e.g., "0/5 tasks", "complete", "no tasks")
-   - How recently it was modified (from \`lastModified\` field)
+   候補は直近 3〜4 件を提示し、次を表示する:
+   - 変更名
+   - スキーマ（`schema` があればそれ、無ければ "spec-driven"）
+   - 状態（例: "0/5 tasks", "complete", "no tasks"）
+   - 最終更新日時（`lastModified`）
 
-   Mark the most recently modified change as "(Recommended)" since it's likely what the user wants to continue.
+   最も新しいものには "(推奨)" を付ける。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
-2. **Check current status**
-   \`\`\`bash
+2. **現在の状態を確認する**
+   ```bash
    openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to understand current state. The response includes:
-   - \`schemaName\`: The workflow schema being used (e.g., "spec-driven", "tdd")
-   - \`artifacts\`: Array of artifacts with their status ("done", "ready", "blocked")
-   - \`isComplete\`: Boolean indicating if all artifacts are complete
+   ```
+   JSON から次を把握する:
+   - `schemaName`: 使用中のスキーマ（例: "spec-driven", "tdd"）
+   - `artifacts`: 各アーティファクトの状態（"done" / "ready" / "blocked"）
+   - `isComplete`: 全完了かどうか
 
-3. **Act based on status**:
+3. **状態に応じて行動する**
 
    ---
 
-   **If all artifacts are complete (\`isComplete: true\`)**:
-   - Congratulate the user
-   - Show final status including the schema used
-   - Suggest: "All artifacts created! You can now implement this change or archive it."
+   **全アーティファクト完了（`isComplete: true`）の場合**:
+   - ねぎらいと完了報告
+   - スキーマと最終状態を表示
+   - "すべて完了しました。次は実装またはアーカイブに進めます" と案内
    - STOP
 
    ---
 
-   **If artifacts are ready to create** (status shows artifacts with \`status: "ready"\`):
-   - Pick the FIRST artifact with \`status: "ready"\` from the status output
-   - Get its instructions:
-     \`\`\`bash
+   **作成可能なアーティファクトがある場合**（`status: "ready"`）:
+   - 最初の `ready` を選ぶ
+   - 指示を取得:
+     ```bash
      openspec instructions <artifact-id> --change "<name>" --json
-     \`\`\`
-   - Parse the JSON to get template, dependencies, and what it unlocks
-   - **Create the artifact file** using the template as a starting point:
-     - Read any completed dependency files for context
-     - Fill in the template based on context and user's goals
-     - Write to the output path specified in instructions
-   - Show what was created and what's now unlocked
-   - STOP after creating ONE artifact
+     ```
+   - JSON からテンプレート/依存関係/解放先を取得
+   - **アーティファクトを作成する**:
+     - 依存済みファイルを読む
+     - テンプレートを文脈と目的に合わせて埋める
+     - 指示された出力先に書く
+   - 作成内容と解放されたアーティファクトを表示
+   - 1 回につき 1 つで STOP
 
    ---
 
-   **If no artifacts are ready (all blocked)**:
-   - This shouldn't happen with a valid schema
-   - Show status and suggest checking for issues
+   **すべて blocked の場合**:
+   - 正常スキーマなら基本的に起きない
+   - ステータスを示し、問題の確認を提案
 
-4. **After creating an artifact, show progress**
-   \`\`\`bash
+4. **作成後に進捗を表示する**
+   ```bash
    openspec status --change "<name>"
-   \`\`\`
+   ```
 
-**Output**
+**出力**
 
-After each invocation, show:
-- Which artifact was created
-- Schema workflow being used
-- Current progress (N/M complete)
-- What artifacts are now unlocked
-- Prompt: "Want to continue? Just ask me to continue or tell me what to do next."
+毎回次を表示する:
+- 作成したアーティファクト
+- 使用中のスキーマ
+- 進捗（N/M 完了）
+- 新たに解放されたアーティファクト
+- 促し: "続けますか？続けるか次の指示をください。"
 
-**Artifact Creation Guidelines**
+**アーティファクト作成ガイドライン**
 
-The artifact types and their purpose depend on the schema. Use the \`instruction\` field from the instructions output to understand what to create.
+アーティファクトの種類と目的はスキーマで異なる。`instruction` フィールドを読み、何を作るべきか理解する。
 
-Common artifact patterns:
+一般的なパターン:
 
-**spec-driven schema** (proposal → specs → design → tasks):
-- **proposal.md**: Ask user about the change if not clear. Fill in Why, What Changes, Capabilities, Impact.
-  - The Capabilities section is critical - each capability listed will need a spec file.
-- **specs/*.md**: Create one spec per capability listed in the proposal.
-- **design.md**: Document technical decisions, architecture, and implementation approach.
-- **tasks.md**: Break down implementation into checkboxed tasks.
+**spec-driven**（proposal → specs → design → tasks）:
+- **proposal.md**: 変更内容が不明なら確認する。Why/What Changes/Capabilities/Impact を埋める。
+  - Capabilities は必須。ここに書いた機能ごとに spec が必要。
+- **specs/*.md**: capability ごとに 1 つずつ作成。
+- **design.md**: 技術判断/アーキテクチャ/実装方針。
+- **tasks.md**: 実装をチェックボックスで分解。
 
-**tdd schema** (spec → tests → implementation → docs):
-- **spec.md**: Feature specification defining what to build.
-- **tests/*.test.ts**: Write tests BEFORE implementation (TDD red phase).
-- **src/*.ts**: Implement to make tests pass (TDD green phase).
-- **docs/*.md**: Document the implemented feature.
+**tdd**（spec → tests → implementation → docs）:
+- **spec.md**: 仕様記述。
+- **tests/*.test.ts**: 実装前にテストを書く（赤）。
+- **src/*.ts**: テストを通す実装（緑）。
+- **docs/*.md**: 実装内容を文書化。
 
-For other schemas, follow the \`instruction\` field from the CLI output.
+その他のスキーマは CLI の `instruction` に従う。
 
-**Guardrails**
-- Create ONE artifact per invocation
-- Always read dependency artifacts before creating a new one
-- Never skip artifacts or create out of order
-- If context is unclear, ask the user before creating
-- Verify the artifact file exists after writing before marking progress
-- Use the schema's artifact sequence, don't assume specific artifact names`
+**ガードレール**
+- 1 回の実行で 1 アーティファクトのみ作成する
+- 依存するアーティファクトを先に読む
+- スキップや順序入れ替えはしない
+- 文脈が不明なら作成前に確認する
+- 書き込み後にファイルが存在することを確認してから進捗更新
+- スキーマ順序に従い、独自判断で名前を決めない``
   };
 }
 
 /**
- * Template for openspec-apply-change skill
- * For implementing tasks from a completed (or in-progress) change
+ * openspec-apply-change スキルのテンプレート
+ * 完了済み（または進行中）の変更からタスクを実装するため
  */
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-apply-change',
     description: 'OpenSpec 変更のタスクを実装します。実装の開始・継続やタスク消化に使います。',
-    instructions: `Implement tasks from an OpenSpec change.
+    instructions: `OpenSpec 変更のタスクを実装する。
 
-**Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
+**入力**: change 名は任意。未指定の場合は利用可能な変更を必ず確認させる。
 
-**Steps**
+**手順**
 
-1. **If no change name provided, prompt for selection**
+1. **change 名が無い場合は選択させる**
 
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Show changes that are implementation-ready (have tasks artifact).
-   Include the schema used for each change if available.
-   Mark changes with incomplete tasks as "(In Progress)".
+   tasks がある変更（実装対象）だけ表示する。
+   可能なら各変更の schema を併記する。
+   未完了タスクがあるものは "(進行中)" を付ける。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
-2. **Check status to understand the schema**
-   \`\`\`bash
+2. **ステータス確認でスキーマを把握する**
+   ```bash
    openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven", "tdd")
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
+   ```
+   JSON から以下を把握する:
+   - `schemaName`: 使用中のワークフロー
+   - この変更で存在するアーティファクト
 
-3. **Get apply instructions**
-
-   \`\`\`bash
+3. **適用指示を取得する**
+   ```bash
    openspec instructions apply --change "<name>" --json
-   \`\`\`
+   ```
+   ここから change ディレクトリ、contextFiles、タスク一覧、進捗、状態を取得する。
 
-   This returns:
-   - Context file paths (varies by schema - could be proposal/specs/design/tasks or spec/tests/implementation/docs)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
+4. **状態に応じて対応する**
 
-   **Handle states:**
-   - If \`state: "blocked"\` (missing artifacts): show message, suggest using openspec-continue-change
-   - If \`state: "all_done"\`: congratulate, suggest archive
-   - Otherwise: proceed to implementation
+   - **blocked**: 不足アーティファクトがある。指示に従い `openspec-continue-change` で作成するよう案内する。
+   - **all_done**: タスクは完了。アーカイブ準備として検証やレビューを促す。
+   - **ready**: タスク実装に進む。
 
-4. **Read context files**
+5. **タスクを実装する（完了まで繰り返し）**
 
-   Read the files listed in \`contextFiles\` from the apply instructions output.
-   The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
-   - **tdd**: spec, tests, implementation, docs
-   - Other schemas: follow the contextFiles from CLI output
+   - tasks.md を読み、順番に処理する
+   - 変更のスコープを守る
+   - 実装したらチェックを付ける
+   - 追加の文脈が必要なら関連ファイルを読む
 
-5. **Show current progress**
+6. **検証とまとめ**
 
-   Display:
-   - Schema being used
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Dynamic instruction from CLI
+   実装後、必要に応じてテストや検証を実行し、完了状況をまとめる。
 
-6. **Implement tasks (loop until done or blocked)**
+**出力**
 
-   For each pending task:
-   - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in the tasks file: \`- [ ]\` → \`- [x]\`
-   - Continue to next task
+- 進捗（完了/残り）
+- 実装した内容と主な変更
+- 追加で必要な作業（テスト/レビュー/アーカイブ）
 
-   **Pause if:**
-   - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
-   - Error or blocker encountered → report and wait for guidance
-   - User interrupts
-
-7. **On completion or pause, show status**
-
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
-   - If paused: explain why and wait for guidance
-
-**Output During Implementation**
-
-\`\`\`
-## Implementing: <change-name> (schema: <schema-name>)
-
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
-
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
-\`\`\`
-
-**Output On Completion**
-
-\`\`\`
-## Implementation Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
-
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
-...
-
-All tasks complete! Ready to archive this change.
-\`\`\`
-
-**Output On Pause (Issue Encountered)**
-
-\`\`\`
-## Implementation Paused
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
-
-### Issue Encountered
-<description of the issue>
-
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
-
-What would you like to do?
-\`\`\`
-
-**Guardrails**
-- Keep going through tasks until done or blocked
-- Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
-- Use contextFiles from CLI output, don't assume specific file names
-
-**Fluid Workflow Integration**
-
-This skill supports the "actions on a change" model:
-
-- **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly`
+**ガードレール**
+- tasks.md に記載された順序を尊重する
+- 依頼内容の範囲外に広げない
+- 必要なら確認質問を入れる
+- 既存のスタイルやパターンを守る``
   };
 }
 
 /**
- * Template for openspec-ff-change skill
- * Fast-forward through artifact creation
+ * openspec-ff-change スキルのテンプレート
+ * アーティファクト作成を早送り
  */
 export function getFfChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-ff-change',
     description: 'OpenSpec のアーティファクト作成を早送りし、実装に必要なものを一括作成します。',
-    instructions: `Fast-forward through artifact creation - generate everything needed to start implementation in one go.
+    instructions: `アーティファクト作成を一気に進め、実装開始に必要なものをまとめて生成する。
 
-**Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
+**入力**: change 名は任意。未指定の場合は利用可能な変更を必ず確認させる。
 
-**Steps**
+**手順**
 
-1. **If no clear input provided, ask what they want to build**
+1. **change 名が無い場合は選択させる**
 
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
+   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → \`add-user-auth\`).
-
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
-
-2. **Create the change directory**
-   \`\`\`bash
-   openspec new change "<name>"
-   \`\`\`
-   This creates a scaffolded change at \`openspec/changes/<name>/\`.
-
-3. **Get the artifact build order**
-   \`\`\`bash
+2. **ステータスを確認する**
+   ```bash
    openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to get:
-   - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
-   - \`artifacts\`: list of all artifacts with their status and dependencies
+   ```
+   完了済みと未完了のアーティファクトを把握する。
 
-4. **Create artifacts in sequence until apply-ready**
+3. **未完了アーティファクトを順番に作成する**
 
-   Use the **TodoWrite tool** to track progress through the artifacts.
+   - `status: "ready"` の順で進める
+   - 各アーティファクトごとに `openspec instructions <artifact-id> --change "<name>" --json` を取得
+   - 依存するアーティファクトを読み、テンプレートを埋めて書き込む
 
-   Loop through artifacts in dependency order (artifacts with no pending dependencies first):
+4. **すべて作成するまで繰り返す**
 
-   a. **For each artifact that is \`ready\` (dependencies satisfied)**:
-      - Get instructions:
-        \`\`\`bash
-        openspec instructions <artifact-id> --change "<name>" --json
-        \`\`\`
-      - The instructions JSON includes:
-        - \`template\`: The template content to use
-        - \`instruction\`: Schema-specific guidance for this artifact type
-        - \`outputPath\`: Where to write the artifact
-        - \`dependencies\`: Completed artifacts to read for context
-      - Read any completed dependency files for context
-      - Create the artifact file following the schema's \`instruction\`
-      - Show brief progress: "✓ Created <artifact-id>"
-
-   b. **Continue until all \`applyRequires\` artifacts are complete**
-      - After creating each artifact, re-run \`openspec status --change "<name>" --json\`
-      - Check if every artifact ID in \`applyRequires\` has \`status: "done"\` in the artifacts array
-      - Stop when all \`applyRequires\` artifacts are done
-
-   c. **If an artifact requires user input** (unclear context):
-      - Use **AskUserQuestion tool** to clarify
-      - Then continue with creation
-
-5. **Show final status**
-   \`\`\`bash
+5. **完了ステータスを表示する**
+   ```bash
    openspec status --change "<name>"
-   \`\`\`
+   ```
 
-**Output**
+**出力**
 
-After completing all artifacts, summarize:
-- Change name and location
-- List of artifacts created with brief descriptions
-- What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run \`/opsx:apply\` or ask me to implement to start working on the tasks."
+- 作成したアーティファクト一覧
+- 現在の進捗（N/M 完了）
+- 次に実装へ進めることを案内
 
-**Artifact Creation Guidelines**
-
-- Follow the \`instruction\` field from \`openspec instructions\` for each artifact type
-- The schema defines what each artifact should contain - follow it
-- Read dependency artifacts for context before creating new ones
-- Use the \`template\` as a starting point, filling in based on context
-
-**Guardrails**
-- Create ALL artifacts needed for implementation (as defined by schema's \`apply.requires\`)
-- Always read dependency artifacts before creating a new one
-- If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
-- If a change with that name already exists, suggest continuing that change instead
-- Verify each artifact file exists after writing before proceeding to next`
+**ガードレール**
+- 依存順序を守る
+- 文脈が不明なら作成前に確認する
+- 1 つずつ作成し、完了を確認して次へ進む``
   };
 }
 
 /**
- * Template for openspec-sync-specs skill
- * For syncing delta specs from a change to main specs (agent-driven)
+ * openspec-sync-specs スキルのテンプレート
+ * 変更の差分仕様をメイン仕様へ同期するため（エージェント駆動）
  */
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-sync-specs',
     description: '変更の仕様差分をメイン仕様へ同期します。アーカイブせずに仕様を更新したいときに使います。',
-    instructions: `Sync delta specs from a change to main specs.
+    instructions: `変更の差分仕様をメイン仕様に同期する。
 
-This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
+**入力**: change 名は任意。未指定の場合は利用可能な変更を必ず確認させる。
 
-**Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
+**手順**
 
-**Steps**
+1. **change 名が無い場合は選択させる**
 
-1. **If no change name provided, prompt for selection**
+   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+2. **差分仕様の存在を確認する**
 
-   Show changes that have delta specs (under \`specs/\` directory).
+   `openspec/changes/<name>/specs/` を探索し、`spec.md` があるか確認する。
+   無い場合は同期不要と伝える。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+3. **差分仕様を読み、メイン仕様へ反映する**
 
-2. **Find delta specs**
+   - `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を読み取る
+   - メイン仕様に追加/更新/削除/名称変更を適用する
+   - 差分に書かれていない既存内容は維持する
 
-   Look for delta spec files in \`openspec/changes/<name>/specs/*/spec.md\`.
+4. **書き込み後の整合性を確認する**
 
-   Each delta spec file contains sections like:
-   - \`## ADDED Requirements\` - New requirements to add
-   - \`## MODIFIED Requirements\` - Changes to existing requirements
-   - \`## REMOVED Requirements\` - Requirements to remove
-   - \`## RENAMED Requirements\` - Requirements to rename (FROM:/TO: format)
+   - 更新されたメイン仕様を確認する
 
-   If no delta specs found, inform user and stop.
+**成功時の出力**
 
-3. **For each delta spec, apply changes to main specs**
+```
+## 仕様同期完了: <change-name>
 
-   For each capability with a delta spec at \`openspec/changes/<name>/specs/<capability>/spec.md\`:
-
-   a. **Read the delta spec** to understand the intended changes
-
-   b. **Read the main spec** at \`openspec/specs/<capability>/spec.md\` (may not exist yet)
-
-   c. **Apply changes intelligently**:
-
-      **ADDED Requirements:**
-      - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
-
-      **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
-        - Adding new scenarios (don't need to copy existing ones)
-        - Modifying existing scenarios
-        - Changing the requirement description
-      - Preserve scenarios/content not mentioned in the delta
-
-      **REMOVED Requirements:**
-      - Remove the entire requirement block from main spec
-
-      **RENAMED Requirements:**
-      - Find the FROM requirement, rename to TO
-
-   d. **Create new main spec** if capability doesn't exist yet:
-      - Create \`openspec/specs/<capability>/spec.md\`
-      - Add Purpose section (can be brief, mark as TBD)
-      - Add Requirements section with the ADDED requirements
-
-4. **Show summary**
-
-   After applying all changes, summarize:
-   - Which capabilities were updated
-   - What changes were made (requirements added/modified/removed/renamed)
-
-**Delta Spec Format Reference**
-
-\`\`\`markdown
-## ADDED Requirements
-
-### Requirement: New Feature
-The system SHALL do something new.
-
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
-
-## MODIFIED Requirements
-
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
-
-## REMOVED Requirements
-
-### Requirement: Deprecated Feature
-
-## RENAMED Requirements
-
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
-\`\`\`
-
-**Key Principle: Intelligent Merging**
-
-Unlike programmatic merging, you can apply **partial updates**:
-- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
-- The delta represents *intent*, not a wholesale replacement
-- Use your judgment to merge changes sensibly
-
-**Output On Success**
-
-\`\`\`
-## Specs Synced: <change-name>
-
-Updated main specs:
+メイン仕様を更新しました:
 
 **<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
+- 追加: "新機能"
+- 更新: "既存機能"（シナリオ 1 件追加）
 
 **<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
+- 仕様ファイルを新規作成
+- 追加: "別の機能"
 
-Main specs are now updated. The change remains active - archive when implementation is complete.
+メイン仕様は更新済み。変更はアクティブのままなので、実装完了後にアーカイブしてください。
+```
+
+**ガードレール**
+- 差分とメイン仕様を両方読む
+- 差分に書かれていない既存内容を維持する
+- 不明点があれば確認する
+- 変更内容を明示する
+- 冪等性を保つ（複数回実行しても同じ結果）`
+  };
+}
+
+/**
+ * openspec-archive-change スキルのテンプレート
+ * 実験的ワークフローで完了した変更をアーカイブするため
+ */
+export function getArchiveChangeSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-archive-change',
+    description: '実験的ワークフローで完了した変更をアーカイブします。実装完了後に変更を確定してアーカイブしたいときに使います。',
+    instructions: `実験的ワークフローで完了した変更をアーカイブする。
+
+**入力**: change 名は任意。未指定の場合は利用可能な変更を必ず確認させる。
+
+**手順**
+
+1. **change 名が無い場合は選択させる**
+
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+
+   アクティブな変更のみ表示する（アーカイブ済みは除外）。
+   可能なら各変更の schema を併記する。
+
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
+
+2. **アーティファクト完了状況を確認する**
+
+   \`openspec status --change "<name>" --json\` を実行する。
+
+   JSON から以下を把握する:
+   - \`schemaName\`: 使用中のワークフロー
+   - \`artifacts\`: アーティファクトの状態
+
+   **未完了がある場合**:
+   - 警告を出す
+   - **AskUserQuestion tool** で続行確認する
+   - 同意があれば続行する
+
+3. **タスク完了状況を確認する**
+
+   tasks.md（通常）を読み、未完了タスクがあるか確認する。
+
+   \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計する。
+
+   **未完了がある場合**:
+   - 警告と件数を表示する
+   - **AskUserQuestion tool** で続行確認する
+   - 同意があれば続行する
+
+   **tasks が無い場合**: タスク警告は省略する。
+
+4. **差分仕様の同期が必要か確認する**
+
+   変更内に \`specs/\` があるか確認する。
+
+   **差分仕様がある場合は簡易同期チェックを行う:**
+
+   a. **各差分仕様**（\`openspec/changes/<name>/specs/<capability>/spec.md\`）:
+      - 要件名（\`### Requirement: <name>\`）を抽出
+      - ADDED/MODIFIED/REMOVED の存在を確認
+
+   b. **対応するメイン仕様**（\`openspec/specs/<capability>/spec.md\`）:
+      - 無ければ同期が必要
+      - ADDED の要件名が存在するか確認
+
+   c. **結果の提示:**
+
+      **同期が必要な場合:**
+      \`\`\`
+      ⚠️ 差分仕様が同期されていない可能性があります:
+      - specs/auth/spec.md → メイン仕様に "トークン更新" が無い
+      - specs/api/spec.md → メイン仕様が存在しない
+
+      アーカイブ前に同期しますか？
+      \`\`\`
+      - 選択肢: "今すぐ同期" / "同期せずにアーカイブ"
+      - 同期を選んだ場合は /opsx:sync を実行する
+
+      **同期済みの場合:**
+      - そのまま進める
+
+   **差分仕様が無い場合**: 同期チェックは省略する。
+
+5. **アーカイブを実行する**
+
+   \`openspec/changes/archive\` が無ければ作成する:
+   \`\`\`bash
+   mkdir -p openspec/changes/archive
+   \`\`\`
+
+   日付付きのターゲット名を生成: \`YYYY-MM-DD-<change-name>\`
+
+   **ターゲットが既に存在する場合**:
+   - エラーで停止し、リネーム/別日付を提案する
+
+   **存在しない場合**:
+   \`\`\`bash
+   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
+   \`\`\`
+
+6. **サマリーを表示する**
+
+   - 変更名
+   - 使用スキーマ
+   - アーカイブ先
+   - 仕様同期の有無
+   - 警告があればその内容
+
+**成功時の出力**
+
+\`\`\`
+## アーカイブ完了
+
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** ✓ メイン仕様へ同期済み（「差分仕様なし」または「⚠️ 未同期」）
+
+すべてのアーティファクトとタスクが完了しています。
 \`\`\`
 
-**Guardrails**
-- Read both delta and main specs before making changes
-- Preserve existing content not mentioned in delta
-- If something is unclear, ask for clarification
-- Show what you're changing as you go
-- The operation should be idempotent - running twice should give same result`
+**ガードレール**
+- change 名が無ければ必ず選択させる
+- アーティファクト完了チェックは \`openspec status --json\` を使う
+- 警告でブロックしない。通知と確認のみ
+- .openspec.yaml はディレクトリと一緒に移動する
+- 同期要求があれば openspec-sync-specs を使う
+- 差分仕様の要件名がメイン仕様にあるかを簡易チェックする`
   };
 }
 
 // -----------------------------------------------------------------------------
-// Slash Command Templates
+// スラッシュコマンドテンプレート
 // -----------------------------------------------------------------------------
 
 export interface CommandTemplate {
@@ -893,8 +774,8 @@ export interface CommandTemplate {
 }
 
 /**
- * Template for /opsx:explore slash command
- * Explore mode - adaptive thinking partner
+ * /opsx:explore スラッシュコマンドのテンプレート
+ * Explore モード - 思考パートナー
  */
 export function getOpsxExploreCommandTemplate(): CommandTemplate {
   return {
@@ -902,174 +783,145 @@ export function getOpsxExploreCommandTemplate(): CommandTemplate {
     description: 'Explore モードに入り、アイデア整理・問題調査・要件明確化を行います',
     category: 'Workflow',
     tags: ['workflow', 'explore', 'experimental', 'thinking'],
-    content: `Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
+    content: `explore モードに入り、深く考え、自由に可視化し、会話の流れに沿って進める。
 
-**This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
+**これはワークフローではなくスタンス。** 固定手順や必須アウトプットはない。
 
-**Input**: The argument after \`/opsx:explore\` is whatever the user wants to think about. Could be:
-- A vague idea: "real-time collaboration"
-- A specific problem: "the auth system is getting unwieldy"
-- A change name: "add-dark-mode" (to explore in context of that change)
-- A comparison: "postgres vs sqlite for this"
-- Nothing (just enter explore mode)
-
----
-
-## The Stance
-
-- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
-- **Adaptive** - Follow interesting threads, pivot when new information emerges
-- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
-- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+**入力**: `/opsx:explore` の後の引数は検討したい内容なら何でもよい:
+- 曖昧なアイデア: "リアルタイムコラボレーション"
+- 具体的な問題: "認証が複雑になりすぎた"
+- change 名: "add-dark-mode"（変更文脈で探索）
+- 比較: "postgres と sqlite"
+- 何もなし（探索だけ）
 
 ---
 
-## What You Might Do
+## スタンス
 
-Depending on what the user brings, you might:
+- **好奇心** - 台本ではなく自然に湧く問いを投げる
+- **可視化重視** - 思考が整理できるなら ASCII 図を積極的に使う
+- **適応的** - 面白い糸をたどり、新情報が出たら方向転換する
+- **焦らない** - 結論を急がず、問題の形が見えるまで待つ
+- **現実に寄せる** - 必要ならコードベースを読み、推測だけで終わらせない
 
-**Explore the problem space**
-- Ask clarifying questions that emerge from what they said
-- Challenge assumptions
-- Reframe the problem
-- Find analogies
+---
 
-**Investigate the codebase**
-- Map existing architecture relevant to the discussion
-- Find integration points
-- Identify patterns already in use
-- Surface hidden complexity
+## できること
 
-**Compare options**
-- Brainstorm multiple approaches
-- Build comparison tables
-- Sketch tradeoffs
-- Recommend a path (if asked)
+**問題空間を探索する**
+- 話から自然に生まれる確認質問をする
+- 前提を疑う
+- 問題を再定義する
+- たとえ話を探す
 
-**Visualize**
-\`\`\`
+**コードベースを調べる**
+- 関連アーキテクチャを整理する
+- 統合ポイントを見つける
+- 既存パターンを把握する
+- 見えにくい複雑さを掘り出す
+
+**選択肢を比較する**
+- 複数案を出す
+- 比較表を作る
+- トレードオフをスケッチする
+- 求められたら推奨案を示す
+
+**可視化する**
+```
 ┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
+│     ASCII 図は積極的に使う             │
 ├─────────────────────────────────────────┤
 │                                         │
 │   ┌────────┐         ┌────────┐        │
-│   │ State  │────────▶│ State  │        │
-│   │   A    │         │   B    │        │
+│   │ 状態 A │────────▶│ 状態 B │        │
 │   └────────┘         └────────┘        │
 │                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
+│   システム図/状態遷移/データフロー/     │
+│   アーキテクチャのスケッチ/依存関係/   │
+│   比較表 など                           │
 │                                         │
 └─────────────────────────────────────────┘
-\`\`\`
+```
 
-**Surface risks and unknowns**
-- Identify what could go wrong
-- Find gaps in understanding
-- Suggest spikes or investigations
+**リスクと未知を浮かび上がらせる**
+- 何が壊れうるかを列挙する
+- 理解の穴を見つける
+- 調査や検証を提案する
 
 ---
 
-## OpenSpec Awareness
+## OpenSpec の文脈
 
-You have full context of the OpenSpec system. Use it naturally, don't force it.
-
-### Check for context
-
-At the start, quickly check what exists:
-\`\`\`bash
+開始時に存在する変更を確認する:
+```bash
 openspec list --json
-\`\`\`
+```
 
-This tells you:
-- If there are active changes
-- Their names, schemas, and status
-- What the user might be working on
+- 進行中の変更があるか
+- 変更名 / スキーマ / 状態
+- ユーザーが今触っていそうな対象
 
-If the user mentioned a specific change name, read its artifacts for context.
+特定の change 名があれば、そのアーティファクトを読む。
 
-### When no change exists
+### 変更が無い場合
 
-Think freely. When insights crystallize, you might offer:
+自由に考える。洞察が固まってきたら提案してよい:
+- 「ここまで固まったなら変更を作ってみませんか？」
+  → `/opsx:new` または `/opsx:ff` に誘導
+- そのまま探索を続けてもよい
 
-- "This feels solid enough to start a change. Want me to create one?"
-  → Can transition to \`/opsx:new\` or \`/opsx:ff\`
-- Or keep exploring - no pressure to formalize
+### 変更がある場合
 
-### When a change exists
+1. **既存アーティファクトを読む**
+   - `openspec/changes/<name>/proposal.md`
+   - `openspec/changes/<name>/design.md`
+   - `openspec/changes/<name>/tasks.md`
 
-If the user mentions a change or you detect one is relevant:
+2. **会話の中で自然に参照する**
+   - 「設計では Redis を使う前提でしたが、今なら SQLite が合いそうです」
+   - 「提案ではプレミアム限定でしたが、全員対象に広げる流れです」
 
-1. **Read existing artifacts for context**
-   - \`openspec/changes/<name>/proposal.md\`
-   - \`openspec/changes/<name>/design.md\`
-   - \`openspec/changes/<name>/tasks.md\`
-   - etc.
+3. **意思決定が固まったら記録を促す**
 
-2. **Reference them naturally in conversation**
-   - "Your design mentions using Redis, but we just realized SQLite fits better..."
-   - "The proposal scopes this to premium users, but we're now thinking everyone..."
+   | 気づきの種別 | 記録先 |
+   |--------------|--------|
+   | 新しい要件 | `specs/<capability>/spec.md` |
+   | 要件の変更 | `specs/<capability>/spec.md` |
+   | 設計判断 | `design.md` |
+   | スコープ変更 | `proposal.md` |
+   | 新規タスク | `tasks.md` |
+   | 前提崩壊 | 関連アーティファクト |
 
-3. **Offer to capture when decisions are made**
-
-   | Insight Type | Where to Capture |
-   |--------------|------------------|
-   | New requirement discovered | \`specs/<capability>/spec.md\` |
-   | Requirement changed | \`specs/<capability>/spec.md\` |
-   | Design decision made | \`design.md\` |
-   | Scope changed | \`proposal.md\` |
-   | New work identified | \`tasks.md\` |
-   | Assumption invalidated | Relevant artifact |
-
-   Example offers:
-   - "That's a design decision. Capture it in design.md?"
-   - "This is a new requirement. Add it to specs?"
-   - "This changes scope. Update the proposal?"
-
-4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
+4. **最終判断はユーザー** - 促したら引き下がる。勝手に記録しない。
 
 ---
 
-## What You Don't Have To Do
+## 探索の終わり方
 
-- Follow a script
-- Ask the same questions every time
-- Produce a specific artifact
-- Reach a conclusion
-- Stay on topic if a tangent is valuable
-- Be brief (this is thinking time)
+必須の終わりはない。探索の結果は次のどれでもよい:
+- **行動に移る**: 「始めますか？ `/opsx:new` または `/opsx:ff`」
+- **アーティファクト更新**: 「design.md に判断を反映しました」
+- **整理で終える**: 十分に見通せたので前進する
+- **後で続ける**: 「いつでも続きをやりましょう」
 
----
-
-## Ending Discovery
-
-There's no required ending. Discovery might:
-
-- **Flow into action**: "Ready to start? \`/opsx:new\` or \`/opsx:ff\`"
-- **Result in artifact updates**: "Updated design.md with these decisions"
-- **Just provide clarity**: User has what they need, moves on
-- **Continue later**: "We can pick this up anytime"
-
-When things crystallize, you might offer a summary - but it's optional. Sometimes the thinking IS the value.
+必要ならまとめてもよいが、必須ではない。思考の過程そのものが価値になることもある。
 
 ---
 
-## Guardrails
+## ガードレール
 
-- **Don't fake understanding** - If something is unclear, dig deeper
-- **Don't rush** - Discovery is thinking time, not task time
-- **Don't force structure** - Let patterns emerge naturally
-- **Don't auto-capture** - Offer to save insights, don't just do it
-- **Do visualize** - A good diagram is worth many paragraphs
-- **Do explore the codebase** - Ground discussions in reality
-- **Do question assumptions** - Including the user's and your own`
+- **理解したふりをしない** - 不明な点は掘る
+- **急がない** - 探索はタスクではなく思考の時間
+- **構造を押し付けない** - 自然にパターンが見えるまで待つ
+- **勝手に記録しない** - 記録は提案し、実行はユーザーに委ねる
+- **可視化する** - 良い図は文章より強い
+- **コードベースを読む** - 現実の実装に結び付ける
+- **前提を疑う** - ユーザーの前提も自分の前提も``
   };
 }
 
 /**
- * Template for /opsx:new slash command
+ * /opsx:new スラッシュコマンドのテンプレート
  */
 export function getOpsxNewCommandTemplate(): CommandTemplate {
   return {
@@ -1077,74 +929,67 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
     description: '実験的アーティファクトワークフロー（OPSX）で新しい変更を開始',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
-    content: `Start a new change using the experimental artifact-driven approach.
+    content: `実験的アーティファクト駆動の方式で新しい変更を開始する。
 
-**Input**: The argument after \`/opsx:new\` is the change name (kebab-case), OR a description of what the user wants to build.
+**入力**: `/opsx:new` の後の引数は change 名（kebab-case）または作りたい内容の説明。
 
-**Steps**
+**手順**
 
-1. **If no input provided, ask what they want to build**
+1. **入力が無い場合は作りたい内容を確認する**
 
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
+   **AskUserQuestion tool**（自由入力）で次を聞く:
+   > "どんな変更を進めたいですか？作りたいもの・直したいものを教えてください。"
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → \`add-user-auth\`).
+   説明から kebab-case の名称を作る（例: "ユーザー認証を追加" → `add-user-auth`）。
 
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+   **重要**: 何を作るか理解できるまでは進めない。
 
-2. **Determine the workflow schema**
+2. **ワークフロースキーマを決める**
 
-   Use the default schema (omit \`--schema\`) unless the user explicitly requests a different workflow.
+   ユーザーが明示しない限り、デフォルト（`--schema` を省略）を使う。
 
-   **Use a different schema only if the user mentions:**
-   - "tdd" or "test-driven" → use \`--schema tdd\`
-   - A specific schema name → use \`--schema <name>\`
-   - "show workflows" or "what workflows" → run \`openspec schemas --json\` and let them choose
+   **別スキーマにするのは次の場合のみ:**
+   - "tdd" / "test-driven" → `--schema tdd`
+   - 明示的なスキーマ名 → `--schema <name>`
+   - "workflows を見せて" → `openspec schemas --json` で選ばせる
 
-   **Otherwise**: Omit \`--schema\` to use the default.
-
-3. **Create the change directory**
-   \`\`\`bash
+3. **変更ディレクトリを作成する**
+   ```bash
    openspec new change "<name>"
-   \`\`\`
-   Add \`--schema <name>\` only if the user requested a specific workflow.
-   This creates a scaffolded change at \`openspec/changes/<name>/\` with the selected schema.
+   ```
+   特定スキーマが指定された場合のみ `--schema <name>` を付ける。
 
-4. **Show the artifact status**
-   \`\`\`bash
+4. **アーティファクトの状態を表示する**
+   ```bash
    openspec status --change "<name>"
-   \`\`\`
-   This shows which artifacts need to be created and which are ready (dependencies satisfied).
+   ```
 
-5. **Get instructions for the first artifact**
-   The first artifact depends on the schema. Check the status output to find the first artifact with status "ready".
-   \`\`\`bash
+5. **最初のアーティファクトの指示を取得する**
+   ```bash
    openspec instructions <first-artifact-id> --change "<name>"
-   \`\`\`
-   This outputs the template and context for creating the first artifact.
+   ```
 
-6. **STOP and wait for user direction**
+6. **STOP してユーザーの指示を待つ**
 
-**Output**
+**出力**
 
-After completing the steps, summarize:
-- Change name and location
-- Schema/workflow being used and its artifact sequence
-- Current status (0/N artifacts complete)
-- The template for the first artifact
-- Prompt: "Ready to create the first artifact? Run \`/opsx:continue\` or just describe what this change is about and I'll draft it."
+- 変更名と作成場所
+- 使用中のスキーマ/ワークフローとアーティファクト順序
+- 現在の進捗（0/N 完了）
+- 最初のアーティファクトのテンプレート
+- 促し: "最初のアーティファクトを作りますか？`/opsx:continue` で進めるか、内容を教えてください。"
 
-**Guardrails**
-- Do NOT create any artifacts yet - just show the instructions
-- Do NOT advance beyond showing the first artifact template
-- If the name is invalid (not kebab-case), ask for a valid name
-- If a change with that name already exists, suggest using \`/opsx:continue\` instead
-- Pass --schema if using a non-default workflow`
+**ガードレール**
+- アーティファクトはまだ作らない
+- 最初のテンプレート提示より先に進めない
+- 名前が kebab-case でなければ修正を求める
+- 同名の変更が既にある場合は `/opsx:continue` を提案する
+- 非デフォルトの場合のみ `--schema` を付ける``
   };
 }
 
 /**
- * Template for /opsx:continue slash command
+ * /opsx:continue スラッシュコマンドのテンプレート
  */
 export function getOpsxContinueCommandTemplate(): CommandTemplate {
   return {
@@ -1152,114 +997,61 @@ export function getOpsxContinueCommandTemplate(): CommandTemplate {
     description: '変更を継続し、次のアーティファクトを作成（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
-    content: `Continue working on a change by creating the next artifact.
+    content: `変更を継続し、次のアーティファクトを作成する。
 
-**Input**: Optionally specify \`--change <name>\` after \`/opsx:continue\`. If omitted, MUST prompt for available changes.
+**入力**: `/opsx:continue` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
-**Steps**
+**手順**
 
-1. **If no change name provided, prompt for selection**
+1. **change 名が無い場合は選択させる**
 
-   Run \`openspec list --json\` to get available changes sorted by most recently modified. Then use the **AskUserQuestion tool** to let the user select which change to work on.
+   `openspec list --json` を実行し、更新日時の新しい順で取得する。**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Present the top 3-4 most recently modified changes as options, showing:
-   - Change name
-   - Schema (from \`schema\` field if present, otherwise "spec-driven")
-   - Status (e.g., "0/5 tasks", "complete", "no tasks")
-   - How recently it was modified (from \`lastModified\` field)
+   候補は直近 3〜4 件を提示し、次を表示する:
+   - 変更名
+   - スキーマ（`schema` があればそれ、無ければ "spec-driven"）
+   - 状態（例: "0/5 tasks", "complete", "no tasks"）
+   - 最終更新日時（`lastModified`）
 
-   Mark the most recently modified change as "(Recommended)" since it's likely what the user wants to continue.
+   最も新しいものには "(推奨)" を付ける。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
-2. **Check current status**
-   \`\`\`bash
+2. **現在の状態を確認する**
+   ```bash
    openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to understand current state. The response includes:
-   - \`schemaName\`: The workflow schema being used (e.g., "spec-driven", "tdd")
-   - \`artifacts\`: Array of artifacts with their status ("done", "ready", "blocked")
-   - \`isComplete\`: Boolean indicating if all artifacts are complete
+   ```
+   JSON から `schemaName` / `artifacts` / `isComplete` を把握する。
 
-3. **Act based on status**:
+3. **状態に応じて行動する**
 
-   ---
+   - **全完了**: 完了報告し、実装やアーカイブへ進める旨を伝える
+   - **ready がある**: 最初の ready を選び、指示を取得して 1 つだけ作成する
+   - **すべて blocked**: 状況を共有し、問題確認を促す
 
-   **If all artifacts are complete (\`isComplete: true\`)**:
-   - Congratulate the user
-   - Show final status including the schema used
-   - Suggest: "All artifacts created! You can now implement this change or archive it."
-   - STOP
-
-   ---
-
-   **If artifacts are ready to create** (status shows artifacts with \`status: "ready"\`):
-   - Pick the FIRST artifact with \`status: "ready"\` from the status output
-   - Get its instructions:
-     \`\`\`bash
-     openspec instructions <artifact-id> --change "<name>" --json
-     \`\`\`
-   - Parse the JSON to get template, dependencies, and what it unlocks
-   - **Create the artifact file** using the template as a starting point:
-     - Read any completed dependency files for context
-     - Fill in the template based on context and user's goals
-     - Write to the output path specified in instructions
-   - Show what was created and what's now unlocked
-   - STOP after creating ONE artifact
-
-   ---
-
-   **If no artifacts are ready (all blocked)**:
-   - This shouldn't happen with a valid schema
-   - Show status and suggest checking for issues
-
-4. **After creating an artifact, show progress**
-   \`\`\`bash
+4. **作成後に進捗を表示する**
+   ```bash
    openspec status --change "<name>"
-   \`\`\`
+   ```
 
-**Output**
+**出力**
 
-After each invocation, show:
-- Which artifact was created
-- Schema workflow being used
-- Current progress (N/M complete)
-- What artifacts are now unlocked
-- Prompt: "Run \`/opsx:continue\` to create the next artifact"
+- 作成したアーティファクト
+- 使用中のスキーマ
+- 進捗（N/M 完了）
+- 解放されたアーティファクト
+- 促し: "続けますか？次の指示をください。"
 
-**Artifact Creation Guidelines**
-
-The artifact types and their purpose depend on the schema. Use the \`instruction\` field from the instructions output to understand what to create.
-
-Common artifact patterns:
-
-**spec-driven schema** (proposal → specs → design → tasks):
-- **proposal.md**: Ask user about the change if not clear. Fill in Why, What Changes, Capabilities, Impact.
-  - The Capabilities section is critical - each capability listed will need a spec file.
-- **specs/*.md**: Create one spec per capability listed in the proposal.
-- **design.md**: Document technical decisions, architecture, and implementation approach.
-- **tasks.md**: Break down implementation into checkboxed tasks.
-
-**tdd schema** (spec → tests → implementation → docs):
-- **spec.md**: Feature specification defining what to build.
-- **tests/*.test.ts**: Write tests BEFORE implementation (TDD red phase).
-- **src/*.ts**: Implement to make tests pass (TDD green phase).
-- **docs/*.md**: Document the implemented feature.
-
-For other schemas, follow the \`instruction\` field from the CLI output.
-
-**Guardrails**
-- Create ONE artifact per invocation
-- Always read dependency artifacts before creating a new one
-- Never skip artifacts or create out of order
-- If context is unclear, ask the user before creating
-- Verify the artifact file exists after writing before marking progress
-- Use the schema's artifact sequence, don't assume specific artifact names`
+**ガードレール**
+- 1 回の実行で 1 アーティファクトのみ作成
+- 依存アーティファクトを先に読む
+- 順序は崩さない
+- 不明点があれば作成前に確認する``
   };
 }
 
 /**
- * Template for /opsx:apply slash command
+ * /opsx:apply スラッシュコマンドのテンプレート
  */
 export function getOpsxApplyCommandTemplate(): CommandTemplate {
   return {
@@ -1267,159 +1059,142 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
     description: 'OpenSpec 変更のタスクを実装（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
-    content: `Implement tasks from an OpenSpec change.
+    content: `OpenSpec 変更のタスクを実装する。
 
-**Input**: Optionally specify \`--change <name>\` after \`/opsx:apply\`. If omitted, MUST prompt for available changes.
+**入力**: `/opsx:apply` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
-**Steps**
+**手順**
 
-1. **If no change name provided, prompt for selection**
+1. **change 名が無い場合は選択させる**
 
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Show changes that are implementation-ready (have tasks artifact).
-   Include the schema used for each change if available.
-   Mark changes with incomplete tasks as "(In Progress)".
+   tasks がある変更だけ表示する。
+   可能なら schema を併記する。
+   未完了タスクがあるものは "(進行中)" を付ける。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
-
-2. **Check status to understand the schema**
-   \`\`\`bash
+2. **ステータス確認**
+   ```bash
    openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven", "tdd")
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
+   ```
 
-3. **Get apply instructions**
-
-   \`\`\`bash
+3. **適用指示を取得する**
+   ```bash
    openspec instructions apply --change "<name>" --json
-   \`\`\`
+   ```
+   ここから contextFiles / 進捗 / タスク一覧 / 状態を取得する。
 
-   This returns:
-   - Context file paths (varies by schema)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
+   **状態の扱い:**
+   - `blocked`: 不足アーティファクトがあるため `/opsx:continue` を案内
+   - `all_done`: 完了報告しアーカイブを案内
+   - それ以外: 実装へ進む
 
-   **Handle states:**
-   - If \`state: "blocked"\` (missing artifacts): show message, suggest using \`/opsx:continue\`
-   - If \`state: "all_done"\`: congratulate, suggest archive
-   - Otherwise: proceed to implementation
+4. **文脈ファイルを読む**
 
-4. **Read context files**
+   `contextFiles` に含まれるファイルを読む。
+   - **spec-driven**: proposal/specs/design/tasks
+   - **tdd**: spec/tests/implementation/docs
+   - その他: CLI 出力に従う
 
-   Read the files listed in \`contextFiles\` from the apply instructions output.
-   The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
-   - **tdd**: spec, tests, implementation, docs
-   - Other schemas: follow the contextFiles from CLI output
+5. **現在の進捗を示す**
 
-5. **Show current progress**
+   - 使用中のスキーマ
+   - 進捗（N/M 完了）
+   - 残タスク概要
+   - CLI からの動的指示
 
-   Display:
-   - Schema being used
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Dynamic instruction from CLI
+6. **タスクを実装する（完了またはブロックまで）**
 
-6. **Implement tasks (loop until done or blocked)**
+   - 対象タスクを明示
+   - 必要なコード変更を行う
+   - 変更は最小限に保つ
+   - 完了したら `- [ ]` → `- [x]` に更新
+   - 次のタスクへ進む
 
-   For each pending task:
-   - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in the tasks file: \`- [ ]\` → \`- [x]\`
-   - Continue to next task
+   **一時停止条件:**
+   - タスクが不明 → 確認する
+   - 設計問題が出た → アーティファクト更新を提案
+   - エラー/ブロッカー → 報告して指示待ち
+   - ユーザーが中断
 
-   **Pause if:**
-   - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
-   - Error or blocker encountered → report and wait for guidance
-   - User interrupts
+7. **完了または一時停止時に状態を表示する**
 
-7. **On completion or pause, show status**
+   - 今回完了したタスク
+   - 全体進捗（N/M 完了）
+   - 全完了ならアーカイブを案内
+   - 一時停止なら理由を伝える
 
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
-   - If paused: explain why and wait for guidance
+**実装中の出力**
 
-**Output During Implementation**
+```
+## 実装中: <change-name>（スキーマ: <schema-name>）
 
-\`\`\`
-## Implementing: <change-name> (schema: <schema-name>)
+タスク 3/7 を実装中: <タスクの説明>
+[...実装中...]
+✓ タスク完了
 
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 4/7 を実装中: <タスクの説明>
+[...実装中...]
+✓ タスク完了
+```
 
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
-\`\`\`
+**完了時の出力**
 
-**Output On Completion**
+```
+## 実装完了
 
-\`\`\`
-## Implementation Complete
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 7/7 タスク完了 ✓
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
-
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
+### 今回完了した内容
+- [x] タスク 1
+- [x] タスク 2
 ...
+```
 
-All tasks complete! Ready to archive this change.
-\`\`\`
+**一時停止時の出力（問題あり）**
 
-**Output On Pause (Issue Encountered)**
+```
+## 実装一時停止
 
-\`\`\`
-## Implementation Paused
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 4/7 タスク完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
+### 発生した問題
+<問題の説明>
 
-### Issue Encountered
-<description of the issue>
+**選択肢:**
+1. <選択肢 1>
+2. <選択肢 2>
+3. 別の方法
 
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
+どう進めますか？
+```
 
-What would you like to do?
-\`\`\`
+**ガードレール**
+- 完了またはブロックまでタスクを進める
+- 開始前に必ず contextFiles を読む
+- タスクが曖昧なら一時停止して確認する
+- 実装で問題が出たらアーティファクト更新を提案する
+- 変更は最小限でタスクに限定する
+- タスク完了後にチェックを即時更新する
+- エラー/ブロッカー/不明点では推測しない
+- CLI 出力の contextFiles を使い、勝手にファイル名を決めない
 
-**Guardrails**
-- Keep going through tasks until done or blocked
-- Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
-- Use contextFiles from CLI output, don't assume specific file names
+**柔軟なワークフロー連携**
 
-**Fluid Workflow Integration**
+このスキルは "変更に対するアクション" モデルに対応する:
 
-This skill supports the "actions on a change" model:
-
-- **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly`
+- **いつでも実行可能**: アーティファクト完了前でも（tasks があれば）実行可能
+- **アーティファクト更新を許容**: 実装中に課題が見えたら更新を提案する``
   };
 }
 
 
 /**
- * Template for /opsx:ff slash command
+ * /opsx:ff スラッシュコマンドのテンプレート
  */
 export function getOpsxFfCommandTemplate(): CommandTemplate {
   return {
@@ -1427,227 +1202,58 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
     description: '変更を作成し、実装に必要なアーティファクトを一括生成',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
-    content: `Fast-forward through artifact creation - generate everything needed to start implementation.
+    content: `変更を作成し、実装に必要なアーティファクトを一括生成する。
 
-**Input**: The argument after \`/opsx:ff\` is the change name (kebab-case), OR a description of what the user wants to build.
+**入力**: `/opsx:ff` の後の引数は change 名（kebab-case）または作りたい内容の説明。
 
-**Steps**
+**手順**
 
-1. **If no input provided, ask what they want to build**
+1. **入力が無い場合は作りたい内容を確認する**
 
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
+   **AskUserQuestion tool**（自由入力）で次を聞く:
+   > "どんな変更を進めたいですか？作りたいもの・直したいものを教えてください。"
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → \`add-user-auth\`).
+   説明から kebab-case 名を作る。
 
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+2. **スキーマを決める**
 
-2. **Create the change directory**
-   \`\`\`bash
+   明示が無い限りデフォルト（`--schema` を省略）。
+
+3. **変更を作成する**
+   ```bash
    openspec new change "<name>"
-   \`\`\`
-   This creates a scaffolded change at \`openspec/changes/<name>/\`.
+   ```
 
-3. **Get the artifact build order**
-   \`\`\`bash
-   openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to get:
-   - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
-   - \`artifacts\`: list of all artifacts with their status and dependencies
+4. **アーティファクトを順に生成する**
 
-4. **Create artifacts in sequence until apply-ready**
+   `openspec status --change "<name>" --json` を見て `ready` を順に進める。
 
-   Use the **TodoWrite tool** to track progress through the artifacts.
+   各アーティファクトごとに:
+   ```bash
+   openspec instructions <artifact-id> --change "<name>" --json
+   ```
+   指示に従ってファイルを生成する。
 
-   Loop through artifacts in dependency order (artifacts with no pending dependencies first):
-
-   a. **For each artifact that is \`ready\` (dependencies satisfied)**:
-      - Get instructions:
-        \`\`\`bash
-        openspec instructions <artifact-id> --change "<name>" --json
-        \`\`\`
-      - The instructions JSON includes:
-        - \`template\`: The template content to use
-        - \`instruction\`: Schema-specific guidance for this artifact type
-        - \`outputPath\`: Where to write the artifact
-        - \`dependencies\`: Completed artifacts to read for context
-      - Read any completed dependency files for context
-      - Create the artifact file following the schema's \`instruction\`
-      - Show brief progress: "✓ Created <artifact-id>"
-
-   b. **Continue until all \`applyRequires\` artifacts are complete**
-      - After creating each artifact, re-run \`openspec status --change "<name>" --json\`
-      - Check if every artifact ID in \`applyRequires\` has \`status: "done"\` in the artifacts array
-      - Stop when all \`applyRequires\` artifacts are done
-
-   c. **If an artifact requires user input** (unclear context):
-      - Use **AskUserQuestion tool** to clarify
-      - Then continue with creation
-
-5. **Show final status**
-   \`\`\`bash
+5. **完了状態を表示する**
+   ```bash
    openspec status --change "<name>"
-   \`\`\`
+   ```
 
-**Output**
+**出力**
 
-After completing all artifacts, summarize:
-- Change name and location
-- List of artifacts created with brief descriptions
-- What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run \`/opsx:apply\` to start implementing."
+- 作成したアーティファクト一覧
+- 現在の進捗（N/M 完了）
+- 実装に進めることを案内
 
-**Artifact Creation Guidelines**
-
-- Follow the \`instruction\` field from \`openspec instructions\` for each artifact type
-- The schema defines what each artifact should contain - follow it
-- Read dependency artifacts for context before creating new ones
-- Use the \`template\` as a starting point, filling in based on context
-
-**Guardrails**
-- Create ALL artifacts needed for implementation (as defined by schema's \`apply.requires\`)
-- Always read dependency artifacts before creating a new one
-- If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
-- If a change with that name already exists, ask if user wants to continue it or create a new one
-- Verify each artifact file exists after writing before proceeding to next`
+**ガードレール**
+- 依存順序を守る
+- 不明点があれば作成前に確認する
+- 1 つずつ作成し、完了を確認して次へ進む``
   };
 }
 
 /**
- * Template for openspec-archive-change skill
- * For archiving completed changes in the experimental workflow
- */
-export function getArchiveChangeSkillTemplate(): SkillTemplate {
-  return {
-    name: 'openspec-archive-change',
-    description: '実験的ワークフローで完了した変更をアーカイブします。実装完了後に変更を確定してアーカイブしたいときに使います。',
-    instructions: `Archive a completed change in the experimental workflow.
-
-**Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
-
-**Steps**
-
-1. **If no change name provided, prompt for selection**
-
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
-
-   Show only active changes (not already archived).
-   Include the schema used for each change if available.
-
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
-
-2. **Check artifact completion status**
-
-   Run \`openspec status --change "<name>" --json\` to check artifact completion.
-
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used
-   - \`artifacts\`: List of artifacts with their status (\`done\` or other)
-
-   **If any artifacts are not \`done\`:**
-   - Display warning listing incomplete artifacts
-   - Use **AskUserQuestion tool** to confirm user wants to proceed
-   - Proceed if user confirms
-
-3. **Check task completion status**
-
-   Read the tasks file (typically \`tasks.md\`) to check for incomplete tasks.
-
-   Count tasks marked with \`- [ ]\` (incomplete) vs \`- [x]\` (complete).
-
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Use **AskUserQuestion tool** to confirm user wants to proceed
-   - Proceed if user confirms
-
-   **If no tasks file exists:** Proceed without task-related warning.
-
-4. **Check if delta specs need syncing**
-
-   Check if \`specs/\` directory exists in the change with spec files.
-
-   **If delta specs exist, perform a quick sync check:**
-
-   a. **For each delta spec** at \`openspec/changes/<name>/specs/<capability>/spec.md\`:
-      - Extract requirement names (lines matching \`### Requirement: <name>\`)
-      - Note which sections exist (ADDED, MODIFIED, REMOVED)
-
-   b. **Check corresponding main spec** at \`openspec/specs/<capability>/spec.md\`:
-      - If main spec doesn't exist → needs sync
-      - If main spec exists, check if ADDED requirement names appear in it
-      - If any ADDED requirements are missing from main spec → needs sync
-
-   c. **Report findings:**
-
-      **If sync needed:**
-      \`\`\`
-      ⚠️ Delta specs may not be synced:
-      - specs/auth/spec.md → Main spec missing requirement "Token Refresh"
-      - specs/api/spec.md → Main spec doesn't exist yet
-
-      Would you like to sync now before archiving?
-      \`\`\`
-      - Use **AskUserQuestion tool** with options: "Sync now", "Archive without syncing"
-      - If user chooses sync, execute /opsx:sync logic (use the openspec-sync-specs skill)
-
-      **If already synced (all requirements found):**
-      - Proceed without prompting (specs appear to be in sync)
-
-   **If no delta specs exist:** Proceed without sync-related checks.
-
-5. **Perform the archive**
-
-   Create the archive directory if it doesn't exist:
-   \`\`\`bash
-   mkdir -p openspec/changes/archive
-   \`\`\`
-
-   Generate target name using current date: \`YYYY-MM-DD-<change-name>\`
-
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move the change directory to archive
-
-   \`\`\`bash
-   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
-   \`\`\`
-
-6. **Display summary**
-
-   Show archive completion summary including:
-   - Change name
-   - Schema that was used
-   - Archive location
-   - Whether specs were synced (if applicable)
-   - Note about any warnings (incomplete artifacts/tasks)
-
-**Output On Success**
-
-\`\`\`
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs (or "No delta specs" or "⚠️ Not synced")
-
-All artifacts complete. All tasks complete.
-\`\`\`
-
-**Guardrails**
-- Always prompt for change selection if not provided
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- If sync is requested, use openspec-sync-specs approach (agent-driven)
-- Quick sync check: look for requirement names in delta specs, verify they exist in main specs`
-  };
-}
-
-/**
- * Template for /opsx:sync slash command
+ * /opsx:sync スラッシュコマンドのテンプレート
  */
 export function getOpsxSyncCommandTemplate(): CommandTemplate {
   return {
@@ -1655,138 +1261,224 @@ export function getOpsxSyncCommandTemplate(): CommandTemplate {
     description: '変更の仕様差分をメイン仕様に同期',
     category: 'Workflow',
     tags: ['workflow', 'specs', 'experimental'],
-    content: `Sync delta specs from a change to main specs.
+    content: `変更の差分仕様をメイン仕様に同期する。
 
-This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
+**入力**: `/opsx:sync` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
-**Input**: Optionally specify \`--change <name>\` after \`/opsx:sync\`. If omitted, MUST prompt for available changes.
+**手順**
 
-**Steps**
+1. **change 名が無い場合は選択させる**
 
-1. **If no change name provided, prompt for selection**
+   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+2. **差分仕様の存在を確認する**
 
-   Show changes that have delta specs (under \`specs/\` directory).
+   `openspec/changes/<name>/specs/` を探索し、`spec.md` があるか確認する。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+3. **差分仕様をメイン仕様へ反映する**
 
-2. **Find delta specs**
+   - `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を読み取る
+   - メイン仕様に追加/更新/削除/名称変更を適用する
+   - 差分に書かれていない既存内容は維持する
 
-   Look for delta spec files in \`openspec/changes/<name>/specs/*/spec.md\`.
+4. **結果をまとめる**
 
-   Each delta spec file contains sections like:
-   - \`## ADDED Requirements\` - New requirements to add
-   - \`## MODIFIED Requirements\` - Changes to existing requirements
-   - \`## REMOVED Requirements\` - Requirements to remove
-   - \`## RENAMED Requirements\` - Requirements to rename (FROM:/TO: format)
+**成功時の出力**
 
-   If no delta specs found, inform user and stop.
+```
+## 仕様同期完了: <change-name>
 
-3. **For each delta spec, apply changes to main specs**
-
-   For each capability with a delta spec at \`openspec/changes/<name>/specs/<capability>/spec.md\`:
-
-   a. **Read the delta spec** to understand the intended changes
-
-   b. **Read the main spec** at \`openspec/specs/<capability>/spec.md\` (may not exist yet)
-
-   c. **Apply changes intelligently**:
-
-      **ADDED Requirements:**
-      - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
-
-      **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
-        - Adding new scenarios (don't need to copy existing ones)
-        - Modifying existing scenarios
-        - Changing the requirement description
-      - Preserve scenarios/content not mentioned in the delta
-
-      **REMOVED Requirements:**
-      - Remove the entire requirement block from main spec
-
-      **RENAMED Requirements:**
-      - Find the FROM requirement, rename to TO
-
-   d. **Create new main spec** if capability doesn't exist yet:
-      - Create \`openspec/specs/<capability>/spec.md\`
-      - Add Purpose section (can be brief, mark as TBD)
-      - Add Requirements section with the ADDED requirements
-
-4. **Show summary**
-
-   After applying all changes, summarize:
-   - Which capabilities were updated
-   - What changes were made (requirements added/modified/removed/renamed)
-
-**Delta Spec Format Reference**
-
-\`\`\`markdown
-## ADDED Requirements
-
-### Requirement: New Feature
-The system SHALL do something new.
-
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
-
-## MODIFIED Requirements
-
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
-
-## REMOVED Requirements
-
-### Requirement: Deprecated Feature
-
-## RENAMED Requirements
-
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
-\`\`\`
-
-**Key Principle: Intelligent Merging**
-
-Unlike programmatic merging, you can apply **partial updates**:
-- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
-- The delta represents *intent*, not a wholesale replacement
-- Use your judgment to merge changes sensibly
-
-**Output On Success**
-
-\`\`\`
-## Specs Synced: <change-name>
-
-Updated main specs:
+メイン仕様を更新しました:
 
 **<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
+- 追加: "新機能"
+- 更新: "既存機能"（シナリオ 1 件追加）
 
 **<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
+- 新しい spec ファイルを作成
+- 追加: "別の機能"
 
-Main specs are now updated. The change remains active - archive when implementation is complete.
-\`\`\`
+メイン仕様を更新しました。変更はアクティブのままなので、実装完了後にアーカイブしてください。
+```
 
-**Guardrails**
-- Read both delta and main specs before making changes
-- Preserve existing content not mentioned in delta
-- If something is unclear, ask for clarification
-- Show what you're changing as you go
-- The operation should be idempotent - running twice should give same result`
+**ガードレール**
+- 差分とメイン仕様を両方読む
+- 差分に書かれていない既存内容を維持する
+- 不明点があれば確認する
+- 変更内容を明示する
+- 冪等性を保つ``
   };
 }
 
 /**
- * Template for /opsx:archive slash command
+ * openspec-verify-change スキルのテンプレート
+ * アーカイブ前に実装が変更アーティファクトと一致するか検証するため
+ */
+export function getVerifyChangeSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-verify-change',
+    description: '変更の実装がアーティファクト（specs/tasks/design）と整合しているか検証する。アーカイブ前の完了性・正確性・整合性チェックに使う。',
+    instructions: `実装が変更アーティファクト（specs, tasks, design）に一致しているか検証します。
+
+**入力**: change 名は任意。未指定の場合は利用可能な変更を必ず確認させる。
+
+**手順**
+
+1. **change 名が無い場合は選択させる**
+
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選択させる。
+
+   tasks が存在する変更のみ表示する。
+   可能なら各変更の schema を併記する。
+   未完了タスクがあるものは "(進行中)" を付ける。
+
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
+
+2. **ステータス確認でスキーマを把握する**
+   \`\`\`bash
+   openspec status --change "<name>" --json
+   \`\`\`
+   JSON をパースして以下を把握する:
+   - \`schemaName\`: 使用中のワークフロー（例: "spec-driven", "tdd"）
+   - この変更で存在するアーティファクト
+
+3. **変更ディレクトリとアーティファクトを取得する**
+
+   \`\`\`bash
+   openspec instructions apply --change "<name>" --json
+   \`\`\`
+
+   変更ディレクトリと contextFiles が返る。利用可能なアーティファクトをすべて読む。
+
+4. **検証レポートの構造を初期化する**
+
+   3 つの観点で構成する:
+   - **完了性**: タスクと仕様のカバレッジ
+   - **正確性**: 要件実装とシナリオの網羅性
+   - **整合性**: 設計遵守とパターン整合
+
+   各観点は CRITICAL / WARNING / SUGGESTION に分類する。
+
+5. **完了性の検証**
+
+   **タスク完了**:
+   - contextFiles に tasks.md があれば読む
+   - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
+   - 完了数/総数を出す
+   - 未完了がある場合:
+     - 各タスクを CRITICAL として追加
+     - 推奨: "タスクを完了: <description>" または "実装済みなら完了に変更"
+
+   **仕様カバレッジ**:
+   - \`openspec/changes/<name>/specs/\` に差分がある場合:
+     - "### Requirement:" を抽出
+     - 各要件について:
+       - コードベース内の関連キーワードを検索
+       - 実装がありそうか評価
+     - 未実装らしい場合:
+       - CRITICAL: "要件が見つからない: <requirement name>"
+       - 推奨: "要件 X を実装: <description>"
+
+6. **正確性の検証**
+
+   **要件の実装マッピング**:
+   - 各要件について:
+     - 実装の根拠を検索
+     - 見つかればファイルパスと行番号を記録
+     - 要件意図に合致するか判断
+     - 逸脱が疑われる場合:
+       - WARNING: "仕様と差異の可能性: <details>"
+       - 推奨: "要件 X と <file>:<lines> を突き合わせる"
+
+   **シナリオの網羅**:
+   - "#### Scenario:" を抽出
+   - 条件がコードで処理されているか、テストがあるかを確認
+   - 未対応が疑われる場合:
+     - WARNING: "未カバーのシナリオ: <scenario name>"
+     - 推奨: "シナリオに対応する実装/テストを追加: <description>"
+
+7. **整合性の検証**
+
+   **設計遵守**:
+   - design.md があれば:
+     - "Decision:", "Approach:", "Architecture:" などから決定事項を抽出
+     - 実装が従っているか確認
+     - 反している場合:
+       - WARNING: "設計の決定が守られていない: <decision>"
+       - 推奨: "実装を直すか design.md を実態に合わせて更新"
+   - design.md が無い場合はスキップし、"照合対象の design.md がない" と記録
+
+   **コードパターン整合**:
+   - 新規コードがプロジェクトのパターンと一致しているか確認
+   - ファイル命名、ディレクトリ構成、コーディングスタイルを確認
+   - 目立つ逸脱があれば:
+     - SUGGESTION: "パターン逸脱: <details>"
+     - 推奨: "既存パターンに合わせる: <example>"
+
+8. **検証レポートを生成する**
+
+   **サマリー評価表**:
+   \`\`\`
+   ## 検証レポート: <change-name>
+
+   ### サマリー
+   | 観点 | 状態 |
+   |--------------|------------------|
+   | 完了性 | X/Y タスク、N 要件 |
+   | 正確性 | M/N 要件をカバー |
+   | 整合性 | 遵守/問題あり |
+   \`\`\`
+
+   **優先度別の課題**:
+
+   1. **CRITICAL**（アーカイブ前に必須）:
+      - 未完了タスク
+      - 未実装の要件
+      - 具体的かつ実行可能な推奨を添える
+
+   2. **WARNING**（修正推奨）:
+      - 仕様/設計の乖離
+      - シナリオ未カバー
+      - 具体的な推奨を添える
+
+   3. **SUGGESTION**（改善提案）:
+      - パターン不一致
+      - 軽微な改善
+      - 具体的な推奨を添える
+
+   **最終評価**:
+   - CRITICAL がある: "重大な問題が X 件あります。アーカイブ前に修正してください。"
+   - WARNING のみ: "重大な問題はありません。WARNING が Y 件あります。検討のうえアーカイブ可能です。"
+   - 全てクリア: "すべてのチェックに合格しました。アーカイブ可能です。"
+
+**検証の指針**
+
+- **完了性**: チェックリスト（チェックボックス、要件一覧）など客観的項目に集中
+- **正確性**: キーワード検索やファイルパスなど合理的推定でよい（完全な確証は求めない）
+- **整合性**: 明確な不整合のみ指摘し、細かなスタイルに執着しない
+- **誤検出**: 迷う場合は SUGGESTION > WARNING > CRITICAL の順で控えめに
+- **実行可能性**: すべての指摘に具体的な推奨を付ける（可能ならファイル/行を添える）
+
+**段階的な対応**
+
+- tasks.md のみ: タスク完了のみ検証し、spec/design はスキップ
+- tasks + specs: 完了性と正確性のみ検証し、design はスキップ
+- フルアーティファクト: 3 観点すべて検証
+- 省略したチェックは理由とともに必ず記載する
+
+**出力形式**
+
+Markdown で明確に書く:
+- サマリーのテーブル
+- CRITICAL/WARNING/SUGGESTION のグルーピング
+- `file.ts:123` 形式の参照
+- 具体的で実行可能な推奨
+- "再確認することを検討" のような曖昧表現は避ける`
+  };
+}
+
+/**
+ * /opsx:archive スラッシュコマンドのテンプレート
  */
 export function getOpsxArchiveCommandTemplate(): CommandTemplate {
   return {
@@ -1794,173 +1486,338 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
     description: '実験的ワークフローで完了した変更をアーカイブ',
     category: 'Workflow',
     tags: ['workflow', 'archive', 'experimental'],
-    content: `Archive a completed change in the experimental workflow.
+    content: `実験的ワークフローで完了した変更をアーカイブする。
 
-**Input**: Optionally specify \`--change <name>\` after \`/opsx:archive\`. If omitted, MUST prompt for available changes.
+**入力**: `/opsx:archive` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
-**Steps**
+**手順**
 
-1. **If no change name provided, prompt for selection**
+1. **change 名が無い場合は選択させる**
 
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
-   Show only active changes (not already archived).
-   Include the schema used for each change if available.
+   アクティブな変更のみ表示する（アーカイブ済みは除外）。
+   可能なら各変更の schema を併記する。
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
-2. **Check artifact completion status**
+2. **アーティファクト完了状況を確認する**
 
-   Run \`openspec status --change "<name>" --json\` to check artifact completion.
+   `openspec status --change "<name>" --json` を実行する。
 
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used
-   - \`artifacts\`: List of artifacts with their status (\`done\` or other)
+   JSON から以下を把握する:
+   - `schemaName`: 使用中のワークフロー
+   - `artifacts`: アーティファクトの状態
 
-   **If any artifacts are not \`done\`:**
-   - Display warning listing incomplete artifacts
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
+   **未完了がある場合**:
+   - 警告を出す
+   - **AskUserQuestion tool** で続行確認する
+   - 同意があれば続行する
 
-3. **Check task completion status**
+3. **タスク完了状況を確認する**
 
-   Read the tasks file (typically \`tasks.md\`) to check for incomplete tasks.
+   tasks.md（通常）を読み、未完了タスクがあるか確認する。
 
-   Count tasks marked with \`- [ ]\` (incomplete) vs \`- [x]\` (complete).
+   `- [ ]`（未完了）と `- [x]`（完了）を集計する。
 
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
+   **未完了がある場合**:
+   - 警告と件数を表示する
+   - **AskUserQuestion tool** で続行確認する
+   - 同意があれば続行する
 
-   **If no tasks file exists:** Proceed without task-related warning.
+   **tasks が無い場合**: タスク警告は省略する。
 
-4. **Check if delta specs need syncing**
+4. **差分仕様の同期が必要か確認する**
 
-   Check if \`specs/\` directory exists in the change with spec files.
+   変更内に `specs/` があるか確認する。
 
-   **If delta specs exist, perform a quick sync check:**
+   **差分仕様がある場合は簡易同期チェックを行う:**
 
-   a. **For each delta spec** at \`openspec/changes/<name>/specs/<capability>/spec.md\`:
-      - Extract requirement names (lines matching \`### Requirement: <name>\`)
-      - Note which sections exist (ADDED, MODIFIED, REMOVED)
+   a. **各差分仕様**（`openspec/changes/<name>/specs/<capability>/spec.md`）:
+      - 要件名（`### Requirement: <name>`）を抽出
+      - ADDED/MODIFIED/REMOVED の存在を確認
 
-   b. **Check corresponding main spec** at \`openspec/specs/<capability>/spec.md\`:
-      - If main spec doesn't exist → needs sync
-      - If main spec exists, check if ADDED requirement names appear in it
-      - If any ADDED requirements are missing from main spec → needs sync
+   b. **対応するメイン仕様**（`openspec/specs/<capability>/spec.md`）:
+      - 無ければ同期が必要
+      - ADDED の要件名が存在するか確認
 
-   c. **Report findings:**
+   c. **結果の提示:**
 
-      **If sync needed:**
-      \`\`\`
-      ⚠️ Delta specs may not be synced:
-      - specs/auth/spec.md → Main spec missing requirement "Token Refresh"
-      - specs/api/spec.md → Main spec doesn't exist yet
+      **同期が必要な場合:**
+      ```
+      ⚠️ 差分仕様が同期されていない可能性があります:
+      - specs/auth/spec.md → メイン仕様に "トークン更新" が無い
+      - specs/api/spec.md → メイン仕様が存在しない
 
-      Would you like to sync now before archiving?
-      \`\`\`
-      - Use **AskUserQuestion tool** with options: "Sync now", "Archive without syncing"
-      - If user chooses sync, execute \`/opsx:sync\` logic
+      アーカイブ前に同期しますか？
+      ```
+      - 選択肢: "今すぐ同期" / "同期せずにアーカイブ"
+      - 同期を選んだ場合は /opsx:sync を実行する
 
-      **If already synced (all requirements found):**
-      - Proceed without prompting (specs appear to be in sync)
+      **同期済みの場合:**
+      - そのまま進める
 
-   **If no delta specs exist:** Proceed without sync-related checks.
+   **差分仕様が無い場合**: 同期チェックは省略する。
 
-5. **Perform the archive**
+5. **アーカイブを実行する**
 
-   Create the archive directory if it doesn't exist:
-   \`\`\`bash
+   `openspec/changes/archive` が無ければ作成する:
+   ```bash
    mkdir -p openspec/changes/archive
+   ```
+
+   日付付きのターゲット名を生成: `YYYY-MM-DD-<change-name>`
+
+   **ターゲットが既に存在する場合**:
+   - エラーで停止し、リネーム/別日付を提案する
+
+   **存在しない場合**:
+   ```bash
+   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
+   ```
+
+6. **サマリーを表示する**
+
+   - 変更名
+   - 使用スキーマ
+   - アーカイブ先
+   - 仕様同期の有無
+   - 警告があればその内容
+
+**成功時の出力**
+
+```
+## アーカイブ完了
+
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** ✓ メイン仕様へ同期済み（「差分仕様なし」または「⚠️ 未同期」）
+
+すべてのアーティファクトとタスクが完了しています。
+```
+
+**成功時の出力（差分仕様なし）**
+
+```
+## アーカイブ完了
+
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** 差分仕様なし
+
+すべてのアーティファクトとタスクが完了しています。
+```
+
+**成功時の出力（警告あり）**
+
+```
+## アーカイブ完了（警告あり）
+
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** ⚠️ 未同期
+
+**警告:**
+- 未完了アーティファクトが 2 件ある状態でアーカイブ
+- 未完了タスクが 3 件ある状態でアーカイブ
+- 差分仕様は同期していません（ユーザーがスキップを選択）
+
+意図しない場合はアーカイブ内容を確認してください。
+```
+
+**失敗時の出力（既存アーカイブ）**
+
+```
+## アーカイブ失敗
+
+**変更:** <change-name>
+**ターゲット:** openspec/changes/archive/YYYY-MM-DD-<name>/
+
+アーカイブ先ディレクトリが既に存在します。
+
+**選択肢:**
+1. 既存アーカイブの名称を変更
+2. 重複であれば既存アーカイブを削除
+3. 別の日付でアーカイブする
+```
+
+**ガードレール**
+- change 名が無ければ必ず選択させる
+- 完了チェックは `openspec status --json` を使う
+- 警告でブロックしない。通知と確認のみ
+- .openspec.yaml はディレクトリと一緒に移動する
+- 差分仕様の要件名がメイン仕様にあるか簡易チェックする
+- 同期が必要なら /opsx:sync を使う``
+  };
+}
+
+/**
+ * /opsx:verify スラッシュコマンドのテンプレート
+ */
+export function getOpsxVerifyCommandTemplate(): CommandTemplate {
+  return {
+    name: 'OPSX: Verify',
+    description: 'アーカイブ前に実装とアーティファクトの整合を検証',
+    category: 'Workflow',
+    tags: ['workflow', 'verify', 'experimental'],
+    content: `実装が変更アーティファクト（specs, tasks, design）に一致しているか検証します。
+
+**入力**: \`/opsx:verify\` の後に \`--change <name>\` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
+
+**手順**
+
+1. **change 名が無い場合は選択させる**
+
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選択させる。
+
+   tasks が存在する変更のみ表示する。
+   可能なら各変更の schema を併記する。
+   未完了タスクがあるものは "(進行中)" を付ける。
+
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
+
+2. **ステータス確認でスキーマを把握する**
+   \`\`\`bash
+   openspec status --change "<name>" --json
    \`\`\`
+   JSON をパースして以下を把握する:
+   - \`schemaName\`: 使用中のワークフロー（例: "spec-driven", "tdd"）
+   - この変更で存在するアーティファクト
 
-   Generate target name using current date: \`YYYY-MM-DD-<change-name>\`
-
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move the change directory to archive
+3. **変更ディレクトリとアーティファクトを取得する**
 
    \`\`\`bash
-   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
+   openspec instructions apply --change "<name>" --json
    \`\`\`
 
-6. **Display summary**
+   変更ディレクトリと contextFiles が返る。利用可能なアーティファクトをすべて読む。
 
-   Show archive completion summary including:
-   - Change name
-   - Schema that was used
-   - Archive location
-   - Spec sync status (synced / not synced / no delta specs)
-   - Note about any warnings (incomplete artifacts/tasks)
+4. **検証レポートの構造を初期化する**
 
-**Output On Success**
+   3 つの観点で構成する:
+   - **完了性**: タスクと仕様のカバレッジ
+   - **正確性**: 要件実装とシナリオの網羅性
+   - **整合性**: 設計遵守とパターン整合
 
-\`\`\`
-## Archive Complete
+   各観点は CRITICAL / WARNING / SUGGESTION に分類する。
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs
+5. **完了性の検証**
 
-All artifacts complete. All tasks complete.
-\`\`\`
+   **タスク完了**:
+   - contextFiles に tasks.md があれば読む
+   - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
+   - 完了数/総数を出す
+   - 未完了がある場合:
+     - 各タスクを CRITICAL として追加
+     - 推奨: "タスクを完了: <description>" または "実装済みなら完了に変更"
 
-**Output On Success (No Delta Specs)**
+   **仕様カバレッジ**:
+   - \`openspec/changes/<name>/specs/\` に差分がある場合:
+     - "### Requirement:" を抽出
+     - 各要件について:
+       - コードベース内の関連キーワードを検索
+       - 実装がありそうか評価
+     - 未実装らしい場合:
+       - CRITICAL: "要件が見つからない: <requirement name>"
+       - 推奨: "要件 X を実装: <description>"
 
-\`\`\`
-## Archive Complete
+6. **正確性の検証**
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** No delta specs
+   **要件の実装マッピング**:
+   - 各要件について:
+     - 実装の根拠を検索
+     - 見つかればファイルパスと行番号を記録
+     - 要件意図に合致するか判断
+     - 逸脱が疑われる場合:
+       - WARNING: "仕様と差異の可能性: <details>"
+       - 推奨: "要件 X と <file>:<lines> を突き合わせる"
 
-All artifacts complete. All tasks complete.
-\`\`\`
+   **シナリオの網羅**:
+   - "#### Scenario:" を抽出
+   - 条件がコードで処理されているか、テストがあるかを確認
+   - 未対応が疑われる場合:
+     - WARNING: "未カバーのシナリオ: <scenario name>"
+     - 推奨: "シナリオに対応する実装/テストを追加: <description>"
 
-**Output On Success With Warnings**
+7. **整合性の検証**
 
-\`\`\`
-## Archive Complete (with warnings)
+   **設計遵守**:
+   - design.md があれば:
+     - "Decision:", "Approach:", "Architecture:" などから決定事項を抽出
+     - 実装が従っているか確認
+     - 反している場合:
+       - WARNING: "設計の決定が守られていない: <decision>"
+       - 推奨: "実装を直すか design.md を実態に合わせて更新"
+   - design.md が無い場合はスキップし、"照合対象の design.md がない" と記録
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ⚠️ Not synced
+   **コードパターン整合**:
+   - 新規コードがプロジェクトのパターンと一致しているか確認
+   - ファイル命名、ディレクトリ構成、コーディングスタイルを確認
+   - 目立つ逸脱があれば:
+     - SUGGESTION: "パターン逸脱: <details>"
+     - 推奨: "既存パターンに合わせる: <example>"
 
-**Warnings:**
-- Archived with 2 incomplete artifacts
-- Archived with 3 incomplete tasks
-- Delta specs were not synced (user chose to skip)
+8. **検証レポートを生成する**
 
-Review the archive if this was not intentional.
-\`\`\`
+   **サマリー評価表**:
+   \`\`\`
+   ## 検証レポート: <change-name>
 
-**Output On Error (Archive Exists)**
+   ### サマリー
+   | 観点 | 状態 |
+   |--------------|------------------|
+   | 完了性 | X/Y タスク、N 要件 |
+   | 正確性 | M/N 要件をカバー |
+   | 整合性 | 遵守/問題あり |
+   \`\`\`
 
-\`\`\`
-## Archive Failed
+   **優先度別の課題**:
 
-**Change:** <change-name>
-**Target:** openspec/changes/archive/YYYY-MM-DD-<name>/
+   1. **CRITICAL**（アーカイブ前に必須）:
+      - 未完了タスク
+      - 未実装の要件
+      - 具体的かつ実行可能な推奨を添える
 
-Target archive directory already exists.
+   2. **WARNING**（修正推奨）:
+      - 仕様/設計の乖離
+      - シナリオ未カバー
+      - 具体的な推奨を添える
 
-**Options:**
-1. Rename the existing archive
-2. Delete the existing archive if it's a duplicate
-3. Wait until a different date to archive
-\`\`\`
+   3. **SUGGESTION**（改善提案）:
+      - パターン不一致
+      - 軽微な改善
+      - 具体的な推奨を添える
 
-**Guardrails**
-- Always prompt for change selection if not provided
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Quick sync check: look for requirement names in delta specs, verify they exist in main specs
-- Show clear summary of what happened
-- If sync is requested, use /opsx:sync approach (agent-driven)`
+   **最終評価**:
+   - CRITICAL がある: "重大な問題が X 件あります。アーカイブ前に修正してください。"
+   - WARNING のみ: "重大な問題はありません。WARNING が Y 件あります。検討のうえアーカイブ可能です。"
+   - 全てクリア: "すべてのチェックに合格しました。アーカイブ可能です。"
+
+**検証の指針**
+
+- **完了性**: チェックリスト（チェックボックス、要件一覧）など客観的項目に集中
+- **正確性**: キーワード検索やファイルパスなど合理的推定でよい（完全な確証は求めない）
+- **整合性**: 明確な不整合のみ指摘し、細かなスタイルに執着しない
+- **誤検出**: 迷う場合は SUGGESTION > WARNING > CRITICAL の順で控えめに
+- **実行可能性**: すべての指摘に具体的な推奨を付ける（可能ならファイル/行を添える）
+
+**段階的な対応**
+
+- tasks.md のみ: タスク完了のみ検証し、spec/design はスキップ
+- tasks + specs: 完了性と正確性のみ検証し、design はスキップ
+- フルアーティファクト: 3 観点すべて検証
+- 省略したチェックは理由とともに必ず記載する
+
+**出力形式**
+
+Markdown で明確に書く:
+- サマリーのテーブル
+- CRITICAL/WARNING/SUGGESTION のグルーピング
+- `file.ts:123` 形式の参照
+- 具体的で実行可能な推奨
+- "再確認することを検討" のような曖昧表現は避ける`
   };
 }

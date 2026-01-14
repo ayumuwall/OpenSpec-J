@@ -1,0 +1,1957 @@
+diff --git a/.changeset/README.md b/.changeset/README.md
+index e74974b..2511cca 100644
+--- a/.changeset/README.md
++++ b/.changeset/README.md
+@@ -1,6 +1,95 @@
+-This directory is managed by Changesets.
++# Changesets
+ 
+-- Add a changeset locally with `pnpm changeset`.
+-- The CI "Release (prepare)" workflow opens/updates a Version Packages PR.
+-- Publishing happens from a GitHub Release via the "Publish to npm" workflow.
++This directory is managed by [Changesets](https://github.com/changesets/changesets).
+ 
++## Quick Start
++
++```bash
++pnpm changeset
++```
++
++Follow the prompts to select version bump type and describe your changes.
++
++## Workflow
++
++1. **Add a changeset** — Run `pnpm changeset` locally before or after your PR
++2. **Version PR** — CI opens/updates a "Version Packages" PR when changesets merge to main
++3. **Release** — Merging the Version PR triggers npm publish and GitHub Release
++
++> **Note:** Contributors only need to run `pnpm changeset`. Versioning (`changeset version`) and publishing happen automatically in CI.
++
++## Template
++
++Use this structure for your changeset content:
++
++```markdown
++---
++"@fission-ai/openspec": patch
++---
++
++### New Features
++
++- **Feature name** — What users can now do
++
++### Bug Fixes
++
++- Fixed issue where X happened when Y
++
++### Breaking Changes
++
++- `oldMethod()` has been removed, use `newMethod()` instead
++
++### Deprecations
++
++- `legacyOption` is deprecated and will be removed in v2.0
++
++### Other
++
++- Internal refactoring of X for better performance
++```
++
++Include only the sections relevant to your change.
++
++## Version Bump Guide
++
++| Type | When to use | Example |
++|------|-------------|---------|
++| `patch` | Bug fixes, small improvements | Fixed crash when config missing |
++| `minor` | New features, non-breaking additions | Added `--verbose` flag |
++| `major` | Breaking changes, removed features | Renamed `init` to `setup` |
++
++## When to Create a Changeset
++
++**Create one for:**
++- New features or commands
++- Bug fixes that affect users
++- Breaking changes or deprecations
++- Performance improvements users would notice
++
++**Skip for:**
++- Documentation-only changes
++- Test additions/fixes
++- Internal refactoring with no user impact
++- CI/tooling changes
++
++## Writing Good Descriptions
++
++**Do:** Write for users, not developers
++```markdown
++- **Shell completions** — Tab completion now available for Bash, Fish, and PowerShell
++```
++
++**Don't:** Write implementation details
++```markdown
++- Added ShellCompletionGenerator class with Bash/Fish/PowerShell subclasses
++```
++
++**Do:** Explain the impact
++```markdown
++- Fixed config loading to respect `XDG_CONFIG_HOME` on Linux
++```
++
++**Don't:** Just reference the fix
++```markdown
++- Fixed #123
++```
+diff --git a/.changeset/config.json b/.changeset/config.json
+index 3992450..50cbb51 100644
+--- a/.changeset/config.json
++++ b/.changeset/config.json
+@@ -1,6 +1,9 @@
+ {
+   "$schema": "https://unpkg.com/@changesets/config/schema.json",
+-  "changelog": "@changesets/cli/changelog",
++  "changelog": [
++    "@changesets/changelog-github",
++    { "repo": "Fission-AI/OpenSpec" }
++  ],
+   "commit": false,
+   "fixed": [],
+   "linked": [],
+diff --git a/.github/workflows/polish-release-notes.yml b/.github/workflows/polish-release-notes.yml
+new file mode 100644
+index 0000000..8f988ee
+--- /dev/null
++++ b/.github/workflows/polish-release-notes.yml
+@@ -0,0 +1,143 @@
++name: Polish Release Notes
++
++# Manual trigger after a release is published
++# The Claude Code action doesn't support 'release' event triggers directly
++on:
++  workflow_dispatch:
++    inputs:
++      tag_name:
++        description: 'Release tag to polish (e.g., v0.18.0)'
++        required: true
++        type: string
++
++permissions:
++  contents: write
++
++jobs:
++  polish:
++    # Only run on the main repo, not forks
++    if: github.repository == 'Fission-AI/OpenSpec'
++    runs-on: ubuntu-latest
++
++    steps:
++      - uses: actions/checkout@v4
++
++      - name: Get current release body
++        id: get-release
++        env:
++          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++        run: |
++          gh release view "${{ inputs.tag_name }}" --json body -q '.body' > current-notes.md
++          echo "Fetched release notes for ${{ inputs.tag_name }}"
++
++      - name: Transform release notes with Claude
++        uses: anthropics/claude-code-action@v1
++        id: claude
++        with:
++          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
++          github_token: ${{ secrets.GITHUB_TOKEN }}
++          claude_args: "--allowedTools Write,Read"
++          prompt: |
++            Transform the changelog in `current-notes.md` into release notes for OpenSpec ${{ inputs.tag_name }}.
++
++            ## Voice
++
++            OpenSpec is a developer tool. Write like you're talking to a peer:
++            - Direct and practical, not marketing copy
++            - Focus on what changed and why it matters
++            - Skip the hype, keep it real
++
++            ## Output
++
++            Create two files:
++
++            ### 1. `release-title.txt`
++
++            A short title in this format:
++            ```
++            ${{ inputs.tag_name }} - [1-4 words describing the release]
++            ```
++
++            Examples:
++            - `v0.18.0 - OPSX Experimental Workflow`
++            - `v0.16.0 - Antigravity, iFlow Support`
++            - `v0.15.0 - Gemini CLI, RooCode`
++
++            Rules for title:
++            - Lead with the most notable addition
++            - 1-4 words after the dash, no fluff
++            - If multiple features, comma-separate the top 2
++            - For bugfix-only releases, use something like `v0.17.2 - Pre-commit Hook Fix`
++
++            ### 2. `polished-notes.md`
++
++            ```markdown
++            ## What's New in ${{ inputs.tag_name }}
++
++            [One sentence: what's the theme of this release?]
++
++            ### New
++
++            - **Feature name** - What it does and why you'd use it
++
++            ### Improved
++
++            - **Area** - What got better
++
++            ### Fixed
++
++            - What was broken, now works
++            ```
++
++            Omit empty sections.
++
++            ## Rules
++
++            1. Write for developers using OpenSpec with AI coding assistants
++            2. Remove commit hashes (like `eb152eb:`), PR numbers, and changesets wrappers (`### Minor Changes`)
++            3. Lead with what users can do, not implementation details
++            4. One to two sentences per item, max
++            5. Use **bold** for feature/area names
++            6. Skip internal changes (CI, refactors, tests) unless they affect users
++            7. If the input is already well-formatted, just clean up structure and remove noise
++
++            ## Example
++
++            Before:
++            ```
++            ### Minor Changes
++            - 8dfd824: Add OPSX experimental workflow commands and enhanced artifact system
++              **New Commands:**
++              - `/opsx:ff` - Fast-forward through artifact creation
++            ```
++
++            After (polished-notes.md):
++            ```
++            ### New
++
++            - **Fast-forward mode** - Generate all planning artifacts at once with `/opsx:ff`. Useful when you already know what you're building.
++            ```
++
++            After (release-title.txt):
++            ```
++            v0.18.0 - OPSX Experimental Workflow
++            ```
++
++            Write both files. No other output.
++
++      - name: Update release
++        env:
++          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++        run: |
++          TAG="${{ inputs.tag_name }}"
++
++          if [ -f "polished-notes.md" ] && [ -f "release-title.txt" ]; then
++            TITLE=$(cat release-title.txt)
++            gh release edit "$TAG" --title "$TITLE" --notes-file polished-notes.md
++            echo "Updated: $TITLE"
++          elif [ -f "polished-notes.md" ]; then
++            gh release edit "$TAG" --notes-file polished-notes.md
++            echo "Updated notes (title unchanged)"
++          else
++            echo "No changes generated, keeping original"
++          fi
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d64754e..ed7a27e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,19 @@
+ # @fission-ai/openspec
+ 
++## 0.20.0
++
++### Minor Changes
++
++- [#502](https://github.com/Fission-AI/OpenSpec/pull/502) [`9db74aa`](https://github.com/Fission-AI/OpenSpec/commit/9db74aa5ac6547efadaed795217cfa17444f2004) Thanks [@TabishB](https://github.com/TabishB)! - ### New Features
++
++  - **`/opsx:verify` command** — Validate that change implementations match their specifications
++
++  ### Bug Fixes
++
++  - Fixed vitest process storms by capping worker parallelism
++  - Fixed agent workflows to use non-interactive mode for validation commands
++  - Fixed PowerShell completions generator to remove trailing commas
++
+ ## 0.19.0
+ 
+ ### Minor Changes
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+new file mode 100644
+index 0000000..d27e1ef
+--- /dev/null
++++ b/MAINTAINERS.md
+@@ -0,0 +1,17 @@
++# Maintainers
++
++People who maintain and guide OpenSpec.
++
++## Core Maintainers
++
++| Name | GitHub | Role |
++|------|--------|------|
++| Tabish Bidiwale | [@TabishB](https://github.com/TabishB) | Lead maintainer |
++
++## Advisors
++
++Advisors help shape technical direction and provide guidance to the project.
++
++| Name | GitHub | Focus |
++|------|--------|-------|
++| Hari Krishnan | [@harikrishnan83](https://github.com/harikrishnan83) | Technical direction |
+diff --git a/README.md b/README.md
+index 631a073..b7deed5 100644
+--- a/README.md
++++ b/README.md
+@@ -428,6 +428,13 @@ We collect only command names and version to understand usage patterns. No argum
+ - Develop CLI locally: `pnpm run dev` or `pnpm run dev:cli`
+ - Conventional commits (one-line): `type(scope): subject`
+ 
++<details>
++<summary><strong>Maintainers & Advisors</strong></summary>
++
++See [MAINTAINERS.md](MAINTAINERS.md) for the list of core maintainers and advisors who help guide the project.
++
++</details>
++
+ ## License
+ 
+ MIT
+diff --git a/openspec/AGENTS.md b/openspec/AGENTS.md
+index 355969d..6c1703e 100644
+--- a/openspec/AGENTS.md
++++ b/openspec/AGENTS.md
+@@ -9,7 +9,7 @@ Instructions for AI coding assistants using OpenSpec for spec-driven development
+ - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
+ - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
+ - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
+-- Validate: `openspec validate [change-id] --strict` and fix issues
++- Validate: `openspec validate [change-id] --strict --no-interactive` and fix issues
+ - Request approval: Do not start implementation until proposal is approved
+ 
+ ## Three-Stage Workflow
+@@ -44,7 +44,7 @@ Skip proposal for:
+ 1. Review `openspec/project.md`, `openspec list`, and `openspec list --specs` to understand current context.
+ 2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `openspec/changes/<id>/`.
+ 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
+-4. Run `openspec validate <id> --strict` and resolve any issues before sharing the proposal.
++4. Run `openspec validate <id> --strict --no-interactive` and resolve any issues before sharing the proposal.
+ 
+ ### Stage 2: Implementing Changes
+ Track these steps as TODOs and complete them one by one.
+@@ -61,7 +61,7 @@ After deployment, create separate PR to:
+ - Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
+ - Update `specs/` if capabilities changed
+ - Use `openspec archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
+-- Run `openspec validate --strict` to confirm the archived change passes checks
++- Run `openspec validate --strict --no-interactive` to confirm the archived change passes checks
+ 
+ ## Before Any Task
+ 
+@@ -108,7 +108,7 @@ openspec validate              # Bulk validation mode
+ 
+ # Debugging
+ openspec show [change] --json --deltas-only
+-openspec validate [change] --strict
++openspec validate [change] --strict --no-interactive
+ ```
+ 
+ ### Command Flags
+@@ -160,6 +160,8 @@ New request?
+ 
+ 2. **Write proposal.md:**
+ ```markdown
++# Change: [Brief description of change]
++
+ ## Why
+ [1-2 sentences on problem/opportunity]
+ 
+@@ -304,7 +306,7 @@ Example for RENAMED:
+ 
+ ```bash
+ # Always use strict mode for comprehensive checks
+-openspec validate [change] --strict
++openspec validate [change] --strict --no-interactive
+ 
+ # Debug delta parsing
+ openspec show [change] --json | jq '.deltas'
+@@ -341,7 +343,7 @@ Users MUST provide a second factor during login.
+ EOF
+ 
+ # 4) Validate
+-openspec validate $CHANGE --strict
++openspec validate $CHANGE --strict --no-interactive
+ ```
+ 
+ ## Multi-Capability Example
+@@ -447,7 +449,7 @@ Only add complexity with:
+ ```bash
+ openspec list              # What's in progress?
+ openspec show [item]       # View details
+-openspec validate --strict # Is it correct?
++openspec validate --strict --no-interactive  # Is it correct?
+ openspec archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
+ ```
+ 
+diff --git a/openspec/changes/add-feedback-command/proposal.md b/openspec/changes/add-feedback-command/proposal.md
+new file mode 100644
+index 0000000..cacd29c
+--- /dev/null
++++ b/openspec/changes/add-feedback-command/proposal.md
+@@ -0,0 +1,20 @@
++## Why
++
++Users and agents need a simple way to submit feedback about OpenSpec directly from the CLI. Currently there's no mechanism to collect user feedback, feature requests, or bug reports in a way that enables follow-up conversation.
++
++## What Changes
++
++- Add `openspec feedback <message>` CLI command
++- Add GitHub Device OAuth flow for user authentication
++- Create GitHub Issues in the openspec repository for each feedback submission
++- Add `/feedback` skill for agent-assisted feedback with context enrichment and anonymization
++
++## Impact
++
++- Affected specs: New `cli-feedback` capability
++- Affected code:
++  - `src/cli/index.ts` - Register feedback command
++  - `src/commands/feedback.ts` - Command implementation
++  - `src/auth/github.ts` - GitHub OAuth device flow
++  - `src/core/templates/skill-templates.ts` - Feedback skill template
++  - `src/core/completions/command-registry.ts` - Shell completions
+diff --git a/openspec/changes/add-feedback-command/specs/cli-feedback/spec.md b/openspec/changes/add-feedback-command/specs/cli-feedback/spec.md
+new file mode 100644
+index 0000000..e57998e
+--- /dev/null
++++ b/openspec/changes/add-feedback-command/specs/cli-feedback/spec.md
+@@ -0,0 +1,187 @@
++## ADDED Requirements
++
++### Requirement: Feedback command
++
++The system SHALL provide an `openspec feedback` command that creates a GitHub Issue in the openspec repository with the user's feedback.
++
++#### Scenario: Simple feedback submission
++
++- **WHEN** user executes `openspec feedback "Great tool!"`
++- **THEN** the system creates a GitHub Issue with title "Feedback: Great tool!"
++- **AND** the issue has the `feedback` label
++- **AND** the system displays the created issue URL
++
++#### Scenario: Rich feedback with body
++
++- **WHEN** user executes `openspec feedback "Title here" --body "Detailed description..."`
++- **THEN** the system creates a GitHub Issue with the specified title
++- **AND** the issue body contains the detailed description
++- **AND** the issue body includes metadata (OpenSpec version, platform)
++
++#### Scenario: Multiline message
++
++- **WHEN** user provides a multiline message (first line as title, rest as body)
++- **THEN** the system uses the first line as the issue title
++- **AND** the remaining lines become the issue body
++
++### Requirement: GitHub authentication
++
++The system SHALL authenticate users via GitHub Device OAuth flow before submitting feedback.
++
++#### Scenario: First-time authentication
++
++- **WHEN** user runs `openspec feedback` for the first time
++- **AND** no GitHub token is stored
++- **THEN** the system initiates GitHub Device OAuth flow
++- **AND** displays a URL and code for the user to authorize
++- **AND** polls for authorization completion
++- **AND** stores the token in global config on success
++
++#### Scenario: Cached authentication
++
++- **WHEN** user runs `openspec feedback`
++- **AND** a valid GitHub token is stored
++- **THEN** the system uses the cached token without re-authentication
++
++#### Scenario: Token refresh
++
++- **WHEN** the stored GitHub token is expired or invalid
++- **THEN** the system initiates a new Device OAuth flow
++- **AND** updates the stored token on success
++
++#### Scenario: Authentication cancellation
++
++- **WHEN** user cancels the OAuth flow (Ctrl+C)
++- **THEN** the system exits gracefully without storing any token
++- **AND** displays a message indicating feedback was not submitted
++
++### Requirement: GitHub token storage
++
++The system SHALL securely store GitHub authentication tokens in the global config directory.
++
++#### Scenario: Token persistence
++
++- **WHEN** GitHub authentication completes successfully
++- **THEN** the system stores the access token in `~/.config/openspec/config.json`
++- **AND** the token persists across CLI sessions
++
++#### Scenario: Token isolation
++
++- **WHEN** storing the GitHub token
++- **THEN** the token is stored separately from telemetry configuration
++- **AND** does not affect or depend on telemetry settings
++
++### Requirement: Feedback always works
++
++The system SHALL allow feedback submission regardless of telemetry settings.
++
++#### Scenario: Feedback with telemetry disabled
++
++- **WHEN** user has disabled telemetry via `OPENSPEC_TELEMETRY=0`
++- **AND** user runs `openspec feedback "message"`
++- **THEN** the feedback is still submitted to GitHub
++- **AND** telemetry events are not sent
++
++#### Scenario: Feedback in CI environment
++
++- **WHEN** `CI=true` is set in the environment
++- **AND** user runs `openspec feedback "message"`
++- **THEN** the feedback submission proceeds normally
++
++### Requirement: Issue metadata
++
++The system SHALL include relevant metadata in the GitHub Issue body.
++
++#### Scenario: Standard metadata
++
++- **WHEN** creating a GitHub Issue for feedback
++- **THEN** the issue body includes:
++  - OpenSpec CLI version
++  - Platform (darwin, linux, win32)
++  - Submission timestamp
++  - Separator line indicating "Submitted via OpenSpec CLI"
++
++#### Scenario: No sensitive metadata
++
++- **WHEN** creating a GitHub Issue for feedback
++- **THEN** the issue body does NOT include:
++  - File paths from user's system
++  - Project names or directory names
++  - Environment variables
++  - IP addresses
++
++### Requirement: Error handling
++
++The system SHALL handle feedback submission errors gracefully.
++
++#### Scenario: Network failure
++
++- **WHEN** GitHub API is unreachable
++- **THEN** the system displays a clear error message
++- **AND** suggests checking network connectivity
++- **AND** exits with non-zero code
++
++#### Scenario: GitHub API error
++
++- **WHEN** GitHub API returns an error (rate limit, server error)
++- **THEN** the system displays the error message from GitHub
++- **AND** exits with non-zero code
++
++#### Scenario: Invalid token
++
++- **WHEN** the stored token is revoked or invalid
++- **THEN** the system clears the stored token
++- **AND** initiates a new OAuth flow
++
++### Requirement: Feedback skill for agents
++
++The system SHALL provide a `/feedback` skill that guides agents through collecting and submitting user feedback.
++
++#### Scenario: Agent-initiated feedback
++
++- **WHEN** user invokes `/feedback <message>` in an agent conversation
++- **THEN** the agent gathers context from the conversation
++- **AND** drafts a feedback issue with enriched content
++- **AND** anonymizes sensitive information
++- **AND** presents the draft to the user for approval
++- **AND** submits via `openspec feedback` on user confirmation
++
++#### Scenario: Context enrichment
++
++- **WHEN** agent drafts feedback
++- **THEN** the agent includes relevant context such as:
++  - What task was being performed
++  - What worked well or poorly
++  - Specific friction points or praise
++
++#### Scenario: Anonymization
++
++- **WHEN** agent drafts feedback
++- **THEN** the agent removes or replaces:
++  - File paths with `<path>` or generic descriptions
++  - API keys, tokens, secrets with `<redacted>`
++  - Company/organization names with `<company>`
++  - Personal names with `<user>`
++  - Specific URLs with `<url>` unless public/relevant
++
++#### Scenario: User confirmation required
++
++- **WHEN** agent has drafted feedback
++- **THEN** the agent MUST show the complete draft to the user
++- **AND** ask for explicit approval before submitting
++- **AND** allow the user to request modifications
++- **AND** only submit after user confirms
++
++### Requirement: Shell completions
++
++The system SHALL provide shell completions for the feedback command.
++
++#### Scenario: Command completion
++
++- **WHEN** user types `openspec fee<TAB>`
++- **THEN** the shell completes to `openspec feedback`
++
++#### Scenario: Flag completion
++
++- **WHEN** user types `openspec feedback "msg" --<TAB>`
++- **THEN** the shell suggests available flags (`--body`)
+diff --git a/openspec/changes/add-feedback-command/tasks.md b/openspec/changes/add-feedback-command/tasks.md
+new file mode 100644
+index 0000000..0740652
+--- /dev/null
++++ b/openspec/changes/add-feedback-command/tasks.md
+@@ -0,0 +1,32 @@
++## 1. GitHub Authentication
++
++- [ ] 1.1 Create `src/auth/github.ts` module with Device OAuth flow
++- [ ] 1.2 Implement token storage in global config (`~/.config/openspec/`)
++- [ ] 1.3 Add `getGitHubAuth()` function that returns cached token or initiates auth
++- [ ] 1.4 Add `clearGitHubAuth()` function for logout capability
++
++## 2. Feedback Command
++
++- [ ] 2.1 Create `src/commands/feedback.ts` with command implementation
++- [ ] 2.2 Register `feedback <message>` command in CLI
++- [ ] 2.3 Implement `--body` flag for rich content (title + body)
++- [ ] 2.4 Create GitHub Issue via API with `feedback` label
++- [ ] 2.5 Display created issue URL on success
++
++## 3. Shell Completions
++
++- [ ] 3.1 Add `feedback` command to command registry
++- [ ] 3.2 Regenerate completion scripts for all shells
++
++## 4. Feedback Skill
++
++- [ ] 4.1 Create feedback skill template in `skill-templates.ts`
++- [ ] 4.2 Document context gathering workflow
++- [ ] 4.3 Document anonymization rules
++- [ ] 4.4 Document user confirmation flow
++
++## 5. Testing
++
++- [ ] 5.1 Add unit tests for GitHub auth module
++- [ ] 5.2 Add unit tests for feedback command
++- [ ] 5.3 Add integration test for full feedback flow (mocked GitHub API)
+diff --git a/openspec/changes/add-verify-skill/design.md b/openspec/changes/add-verify-skill/design.md
+new file mode 100644
+index 0000000..523438e
+--- /dev/null
++++ b/openspec/changes/add-verify-skill/design.md
+@@ -0,0 +1,96 @@
++# Design: Add /opsx:verify Skill
++
++## Architecture Decision: Dynamic Generation via Setup Command
++
++### Context
++
++All existing opsx experimental skills (explore, new, continue, apply, ff, sync, archive) are dynamically generated when users run `openspec artifact-experimental-setup`. They are not manually created files checked into the repository.
++
++### Decision
++
++**Integrate verify into the existing artifact-experimental-setup system rather than creating static skill files.**
++
++### Rationale
++
++1. **Consistency**: All 7 existing opsx skills follow this pattern. Adding verify as the 8th skill should follow the same architecture.
++
++2. **Maintainability**: Template functions in `skill-templates.ts` are the single source of truth. Changes to skill definitions automatically propagate to all users when they re-run setup.
++
++3. **Distribution**: Users get the verify skill automatically when running `openspec artifact-experimental-setup`, just like all other opsx skills. No special installation steps needed.
++
++4. **Versioning**: Skills are generated from the installed npm package version, ensuring consistency between CLI version and skill behavior.
++
++### Implementation Approach
++
++#### 1. Template Functions
++
++Add two template functions to `src/core/templates/skill-templates.ts`:
++
++```typescript
++export function getVerifyChangeSkillTemplate(): SkillTemplate
++export function getOpsxVerifyCommandTemplate(): CommandTemplate
++```
++
++These return the skill definition (for Agent Skills) and slash command definition (for explicit invocation).
++
++#### 2. Setup Integration
++
++Update `artifactExperimentalSetupCommand()` in `src/commands/artifact-workflow.ts`:
++
++- Import both template functions
++- Add verify to the `skills` array (position 8)
++- Add verify to the `commands` array (position 8)
++- Update help text to list `/opsx:verify`
++
++#### 3. Generated Artifacts
++
++When users run `openspec artifact-experimental-setup`, the command creates:
++
++- `.claude/skills/openspec-verify-change/SKILL.md` - Agent Skills format
++- `.claude/commands/opsx/verify.md` - Slash command format
++
++Both are generated from the template functions, with YAML frontmatter automatically added.
++
++### Alternatives Considered
++
++**Alternative 1: Static skill files in repository**
++
++Create `.claude/skills/openspec-verify-change/SKILL.md` as a static file in the OpenSpec repository.
++
++**Rejected because:**
++- Inconsistent with all other opsx skills
++- Requires users to manually copy/update files
++- Versioning becomes complicated (repo version vs installed package version)
++- Breaks the established pattern
++
++**Alternative 2: Separate verify setup command**
++
++Add `openspec setup-verify` as a separate command.
++
++**Rejected because:**
++- Fragments the setup experience
++- Users would need to run multiple commands
++- Doesn't scale if we add more skills in the future
++- Goes against the "setup once, get everything" philosophy
++
++### Trade-offs
++
++**Advantages:**
++- Consistent with existing architecture
++- Zero additional setup burden for users
++- Easy to update and maintain
++- Automatic version compatibility
++
++**Disadvantages:**
++- Slightly more complex initial implementation (template functions + integration)
++- Requires understanding the setup system (but that's already documented)
++
++### Verification
++
++The implementation correctly follows this design if:
++
++1. Both template functions exist in `skill-templates.ts`
++2. Verify appears in both skills and commands arrays in `artifact-workflow.ts`
++3. Help text mentions `/opsx:verify`
++4. Running `openspec artifact-experimental-setup` generates both skill and command files
++5. Build succeeds with no TypeScript errors
+diff --git a/openspec/changes/add-verify-skill/proposal.md b/openspec/changes/add-verify-skill/proposal.md
+new file mode 100644
+index 0000000..00f4919
+--- /dev/null
++++ b/openspec/changes/add-verify-skill/proposal.md
+@@ -0,0 +1,48 @@
++# Change: Add /opsx:verify Skill
++
++## Why
++
++Users need a way to validate that their implementation actually matches what was requested before archiving a change. Currently, there's no systematic way to check:
++- Whether all tasks are truly complete
++- Whether the implementation covers all spec requirements and scenarios
++- Whether the implementation follows the design decisions
++- Whether the code is coherent and makes sense
++
++A user requested: "Can we get a :verify that will ensure that the implementation matches what was requested?"
++
++## What Changes
++
++- Add `getVerifyChangeSkillTemplate()` function to `skill-templates.ts`
++- Add `getOpsxVerifyCommandTemplate()` function to `skill-templates.ts`
++- Integrate verify skill into `artifactExperimentalSetupCommand` in `artifact-workflow.ts`
++- Add verify to the skills and commands arrays in the setup command
++- Update help text to include `/opsx:verify` in the list of available commands
++- Create `opsx-verify-skill` capability spec
++
++## Verification Dimensions
++
++The skill verifies across three dimensions:
++
++1. **Completeness** - Are all tasks done? Are all specs addressed?
++2. **Correctness** - Does the implementation match specs? Are scenarios covered?
++3. **Coherence** - Does the implementation make sense? Does it follow design.md?
++
++## Output Format
++
++Produces a prioritized report with:
++- Summary scorecard (tasks, specs, design adherence)
++- Critical issues first (must fix before archive)
++- Warnings second (should fix)
++- Suggestions third (nice to have)
++- Actionable fix recommendations for each issue
++
++## Impact
++
++- Affected specs: New `opsx-verify-skill` spec
++- Affected code:
++  - `src/core/templates/skill-templates.ts` - Added 2 new template functions
++  - `src/commands/artifact-workflow.ts` - Integrated verify into experimental setup
++- Generated artifacts: When users run `openspec artifact-experimental-setup`:
++  - Creates `.claude/skills/openspec-verify-change/SKILL.md`
++  - Creates `.claude/commands/opsx/verify.md`
++- Related skills: Works alongside `/opsx:apply` and before `/opsx:archive`
+diff --git a/openspec/changes/add-verify-skill/specs/opsx-verify-skill/spec.md b/openspec/changes/add-verify-skill/specs/opsx-verify-skill/spec.md
+new file mode 100644
+index 0000000..361fa4c
+--- /dev/null
++++ b/openspec/changes/add-verify-skill/specs/opsx-verify-skill/spec.md
+@@ -0,0 +1,190 @@
++# opsx-verify-skill Specification
++
++## Purpose
++Defines the agent skill for verifying that implementation matches change artifacts (specs, tasks, design).
++
++## ADDED Requirements
++
++### Requirement: Verify Skill Invocation
++The system SHALL provide an `/opsx:verify` skill that validates implementation against change artifacts.
++
++#### Scenario: Verify with change name provided
++- **WHEN** agent executes `/opsx:verify <change-name>`
++- **THEN** the agent verifies implementation for that specific change
++- **AND** produces a verification report
++
++#### Scenario: Verify without change name
++- **WHEN** agent executes `/opsx:verify` without a change name
++- **THEN** the agent prompts user to select from available changes
++- **AND** shows only changes that have implementation tasks
++
++#### Scenario: Change has no tasks
++- **WHEN** selected change has no tasks.md or tasks are empty
++- **THEN** the agent reports "No tasks to verify"
++- **AND** suggests running `/opsx:continue` to create tasks
++
++### Requirement: Completeness Verification
++The agent SHALL verify that all required work has been completed.
++
++#### Scenario: Task completion check
++- **WHEN** verifying completeness
++- **THEN** the agent reads tasks.md
++- **AND** counts tasks marked `- [x]` (complete) vs `- [ ]` (incomplete)
++- **AND** reports completion status with specific incomplete tasks listed
++
++#### Scenario: Spec coverage check
++- **WHEN** verifying completeness
++- **AND** delta specs exist in `openspec/changes/<name>/specs/`
++- **THEN** the agent extracts all requirements from delta specs
++- **AND** searches codebase for implementation of each requirement
++- **AND** reports which requirements appear to have implementation vs which are missing
++
++#### Scenario: All tasks complete
++- **WHEN** all tasks are marked complete
++- **THEN** report "Tasks: N/N complete"
++- **AND** mark completeness dimension as passed
++
++#### Scenario: Incomplete tasks found
++- **WHEN** some tasks are incomplete
++- **THEN** report "Tasks: X/N complete"
++- **AND** list each incomplete task
++- **AND** mark as CRITICAL issue
++- **AND** suggest: "Complete remaining tasks or mark as done if already implemented"
++
++### Requirement: Correctness Verification
++The agent SHALL verify that implementation matches the specifications.
++
++#### Scenario: Requirement implementation mapping
++- **WHEN** verifying correctness
++- **THEN** for each requirement in delta specs:
++  - Search codebase for implementation
++  - Identify relevant files and line numbers
++  - Assess whether implementation satisfies the requirement
++
++#### Scenario: Scenario coverage check
++- **WHEN** verifying correctness
++- **THEN** for each scenario in delta specs:
++  - Check if the scenario's conditions are handled in code
++  - Check if tests exist that cover the scenario
++  - Report coverage status
++
++#### Scenario: Implementation matches spec
++- **WHEN** implementation appears to satisfy a requirement
++- **THEN** report which files/lines implement it
++- **AND** mark requirement as covered
++
++#### Scenario: Implementation diverges from spec
++- **WHEN** implementation exists but doesn't match spec intent
++- **THEN** report the divergence as WARNING
++- **AND** explain what differs
++- **AND** suggest: either update implementation or update spec to match reality
++
++#### Scenario: Missing implementation
++- **WHEN** no implementation found for a requirement
++- **THEN** report as CRITICAL issue
++- **AND** suggest: "Implement requirement X" with guidance on what's needed
++
++### Requirement: Coherence Verification
++The agent SHALL verify that implementation is sensible and follows design decisions.
++
++#### Scenario: Design.md adherence check
++- **WHEN** verifying coherence
++- **AND** design.md exists for the change
++- **THEN** extract key decisions from design.md
++- **AND** verify implementation follows those decisions
++- **AND** report any deviations
++
++#### Scenario: No design.md
++- **WHEN** verifying coherence
++- **AND** no design.md exists
++- **THEN** skip design adherence check
++- **AND** note "No design.md to verify against"
++
++#### Scenario: Design decision followed
++- **WHEN** implementation follows a design decision
++- **THEN** report as confirmed
++- **AND** cite evidence from code
++
++#### Scenario: Design decision violated
++- **WHEN** implementation contradicts a design decision
++- **THEN** report as WARNING
++- **AND** explain the contradiction
++- **AND** suggest: either update implementation or update design.md
++
++#### Scenario: Code pattern consistency
++- **WHEN** verifying coherence
++- **THEN** check if new code follows existing project patterns
++- **AND** flag any significant deviations as suggestions
++
++### Requirement: Verification Report Format
++The agent SHALL produce a structured, prioritized report.
++
++#### Scenario: Report summary
++- **WHEN** verification completes
++- **THEN** display summary scorecard:
++  ```
++  ## Verification Report: <change-name>
++
++  ### Summary
++  | Dimension    | Status   |
++  |--------------|----------|
++  | Completeness | X/Y      |
++  | Correctness  | X/Y      |
++  | Coherence    | Followed |
++  ```
++
++#### Scenario: Issue prioritization
++- **WHEN** issues are found
++- **THEN** group and display in priority order:
++  1. CRITICAL - Must fix before archive (missing implementation, incomplete tasks)
++  2. WARNING - Should fix (divergence from spec/design, missing tests)
++  3. SUGGESTION - Nice to fix (pattern inconsistencies, minor improvements)
++
++#### Scenario: Actionable recommendations
++- **WHEN** reporting an issue
++- **THEN** include specific, actionable fix recommendation
++- **AND** reference relevant files and line numbers where applicable
++- **AND** avoid vague suggestions like "consider reviewing"
++
++#### Scenario: All checks pass
++- **WHEN** no issues found across all dimensions
++- **THEN** display:
++  ```
++  All checks passed. Ready for archive.
++  ```
++
++#### Scenario: Critical issues found
++- **WHEN** CRITICAL issues exist
++- **THEN** display:
++  ```
++  X critical issue(s) found. Fix before archiving.
++  ```
++- **AND** do NOT suggest running archive
++
++#### Scenario: Only warnings/suggestions
++- **WHEN** no CRITICAL issues but warnings exist
++- **THEN** display:
++  ```
++  No critical issues. Y warning(s) to consider.
++  Ready for archive (with noted improvements).
++  ```
++
++### Requirement: Flexible Artifact Handling
++The agent SHALL gracefully handle changes with varying artifact completeness.
++
++#### Scenario: Minimal change (tasks only)
++- **WHEN** change has only tasks.md
++- **THEN** verify task completion only
++- **AND** skip spec and design checks
++- **AND** note which checks were skipped
++
++#### Scenario: Change with specs but no design
++- **WHEN** change has tasks.md and delta specs but no design.md
++- **THEN** verify completeness and correctness
++- **AND** skip design adherence
++- **AND** still check code coherence against project patterns
++
++#### Scenario: Full change (all artifacts)
++- **WHEN** change has proposal, design, specs, and tasks
++- **THEN** perform all verification checks
++- **AND** cross-reference artifacts for consistency
+diff --git a/openspec/changes/add-verify-skill/tasks.md b/openspec/changes/add-verify-skill/tasks.md
+new file mode 100644
+index 0000000..e7b5915
+--- /dev/null
++++ b/openspec/changes/add-verify-skill/tasks.md
+@@ -0,0 +1,15 @@
++# Tasks: Add /opsx:verify Skill
++
++## 1. Skill Template Functions
++- [x] 1.1 Add `getVerifyChangeSkillTemplate()` to skill-templates.ts
++- [x] 1.2 Add `getOpsxVerifyCommandTemplate()` to skill-templates.ts
++
++## 2. Integration with artifact-experimental-setup
++- [x] 2.1 Import verify template functions in artifact-workflow.ts
++- [x] 2.2 Add verify to skills array in artifactExperimentalSetupCommand
++- [x] 2.3 Add verify to commands array in artifactExperimentalSetupCommand
++- [x] 2.4 Add verify to help text output
++
++## 3. Verification (Build & Test)
++- [x] 3.1 Verify TypeScript compilation succeeds
++- [x] 3.2 Verify all 8 skills are now included (was 7, now 8)
+diff --git a/package.json b/package.json
+index 174aff2..2847a48 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@fission-ai/openspec",
+-  "version": "0.19.0",
++  "version": "0.20.0",
+   "description": "AI-native system for spec-driven development",
+   "keywords": [
+     "openspec",
+@@ -54,13 +54,13 @@
+     "check:pack-version": "node scripts/pack-version-check.mjs",
+     "release": "pnpm run release:ci",
+     "release:ci": "pnpm run check:pack-version && pnpm exec changeset publish",
+-    "release:local": "pnpm exec changeset version && pnpm run check:pack-version && pnpm exec changeset publish",
+     "changeset": "changeset"
+   },
+   "engines": {
+     "node": ">=20.19.0"
+   },
+   "devDependencies": {
++    "@changesets/changelog-github": "^0.5.2",
+     "@changesets/cli": "^2.27.7",
+     "@types/node": "^24.2.0",
+     "@vitest/ui": "^3.2.4",
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 870e9d7..92da325 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -36,6 +36,9 @@ importers:
+         specifier: ^4.0.17
+         version: 4.0.17
+     devDependencies:
++      '@changesets/changelog-github':
++        specifier: ^0.5.2
++        version: 0.5.2
+       '@changesets/cli':
+         specifier: ^2.27.7
+         version: 2.29.6(@types/node@24.2.0)
+@@ -73,6 +76,9 @@ packages:
+   '@changesets/changelog-git@0.2.1':
+     resolution: {integrity: sha512-x/xEleCFLH28c3bQeQIyeZf8lFXyDFVn1SgcBiR2Tw/r4IAWlk1fzxCEZ6NxQAjF2Nwtczoen3OA2qR+UawQ8Q==}
+ 
++  '@changesets/changelog-github@0.5.2':
++    resolution: {integrity: sha512-HeGeDl8HaIGj9fQHo/tv5XKQ2SNEi9+9yl1Bss1jttPqeiASRXhfi0A2wv8yFKCp07kR1gpOI5ge6+CWNm1jPw==}
++
+   '@changesets/cli@2.29.6':
+     resolution: {integrity: sha512-6qCcVsIG1KQLhpQ5zE8N0PckIx4+9QlHK3z6/lwKnw7Tir71Bjw8BeOZaxA/4Jt00pcgCnCSWZnyuZf5Il05QQ==}
+     hasBin: true
+@@ -86,6 +92,9 @@ packages:
+   '@changesets/get-dependents-graph@2.1.3':
+     resolution: {integrity: sha512-gphr+v0mv2I3Oxt19VdWRRUxq3sseyUpX9DaHpTUmLj92Y10AGy+XOtV+kbM6L/fDcpx7/ISDFK6T8A/P3lOdQ==}
+ 
++  '@changesets/get-github-info@0.7.0':
++    resolution: {integrity: sha512-+i67Bmhfj9V4KfDeS1+Tz3iF32btKZB2AAx+cYMqDSRFP7r3/ZdGbjCo+c6qkyViN9ygDuBjzageuPGJtKGe5A==}
++
+   '@changesets/get-release-plan@4.0.13':
+     resolution: {integrity: sha512-DWG1pus72FcNeXkM12tx+xtExyH/c9I1z+2aXlObH3i9YA7+WZEVaiHzHl03thpvAgWTRaH64MpfHxozfF7Dvg==}
+ 
+@@ -829,6 +838,9 @@ packages:
+     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
+     engines: {node: '>= 8'}
+ 
++  dataloader@1.4.0:
++    resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
++
+   debug@4.4.1:
+     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
+     engines: {node: '>=6.0'}
+@@ -853,6 +865,10 @@ packages:
+     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
+     engines: {node: '>=8'}
+ 
++  dotenv@8.6.0:
++    resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
++    engines: {node: '>=10'}
++
+   emoji-regex@10.4.0:
+     resolution: {integrity: sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw==}
+ 
+@@ -1198,6 +1214,15 @@ packages:
+   natural-compare@1.4.0:
+     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
+ 
++  node-fetch@2.7.0:
++    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
++    engines: {node: 4.x || >=6.0.0}
++    peerDependencies:
++      encoding: ^0.1.0
++    peerDependenciesMeta:
++      encoding:
++        optional: true
++
+   onetime@7.0.0:
+     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
+     engines: {node: '>=18'}
+@@ -1465,6 +1490,9 @@ packages:
+     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
+     engines: {node: '>=6'}
+ 
++  tr46@0.0.3:
++    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
++
+   ts-api-utils@2.1.0:
+     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
+     engines: {node: '>=18.12'}
+@@ -1574,6 +1602,12 @@ packages:
+       jsdom:
+         optional: true
+ 
++  webidl-conversions@3.0.1:
++    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
++
++  whatwg-url@5.0.0:
++    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
++
+   which@2.0.2:
+     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
+     engines: {node: '>= 8'}
+@@ -1641,6 +1675,14 @@ snapshots:
+     dependencies:
+       '@changesets/types': 6.1.0
+ 
++  '@changesets/changelog-github@0.5.2':
++    dependencies:
++      '@changesets/get-github-info': 0.7.0
++      '@changesets/types': 6.1.0
++      dotenv: 8.6.0
++    transitivePeerDependencies:
++      - encoding
++
+   '@changesets/cli@2.29.6(@types/node@24.2.0)':
+     dependencies:
+       '@changesets/apply-release-plan': 7.0.12
+@@ -1695,6 +1737,13 @@ snapshots:
+       picocolors: 1.1.1
+       semver: 7.7.2
+ 
++  '@changesets/get-github-info@0.7.0':
++    dependencies:
++      dataloader: 1.4.0
++      node-fetch: 2.7.0
++    transitivePeerDependencies:
++      - encoding
++
+   '@changesets/get-release-plan@4.0.13':
+     dependencies:
+       '@changesets/assemble-release-plan': 6.0.9
+@@ -2379,6 +2428,8 @@ snapshots:
+       shebang-command: 2.0.0
+       which: 2.0.2
+ 
++  dataloader@1.4.0: {}
++
+   debug@4.4.1:
+     dependencies:
+       ms: 2.1.3
+@@ -2393,6 +2444,8 @@ snapshots:
+     dependencies:
+       path-type: 4.0.0
+ 
++  dotenv@8.6.0: {}
++
+   emoji-regex@10.4.0: {}
+ 
+   emoji-regex@8.0.0: {}
+@@ -2737,6 +2790,10 @@ snapshots:
+ 
+   natural-compare@1.4.0: {}
+ 
++  node-fetch@2.7.0:
++    dependencies:
++      whatwg-url: 5.0.0
++
+   onetime@7.0.0:
+     dependencies:
+       mimic-function: 5.0.1
+@@ -2985,6 +3042,8 @@ snapshots:
+ 
+   totalist@3.0.1: {}
+ 
++  tr46@0.0.3: {}
++
+   ts-api-utils@2.1.0(typescript@5.9.3):
+     dependencies:
+       typescript: 5.9.3
+@@ -3092,6 +3151,13 @@ snapshots:
+       - tsx
+       - yaml
+ 
++  webidl-conversions@3.0.1: {}
++
++  whatwg-url@5.0.0:
++    dependencies:
++      tr46: 0.0.3
++      webidl-conversions: 3.0.1
++
+   which@2.0.2:
+     dependencies:
+       isexe: 2.0.0
+diff --git a/src/commands/artifact-workflow.ts b/src/commands/artifact-workflow.ts
+index 736073a..4e902d2 100644
+--- a/src/commands/artifact-workflow.ts
++++ b/src/commands/artifact-workflow.ts
+@@ -28,7 +28,7 @@ import {
+   type SchemaInfo,
+ } from '../core/artifact-graph/index.js';
+ import { createChange, validateChangeName } from '../utils/change-utils.js';
+-import { getExploreSkillTemplate, getNewChangeSkillTemplate, getContinueChangeSkillTemplate, getApplyChangeSkillTemplate, getFfChangeSkillTemplate, getSyncSpecsSkillTemplate, getArchiveChangeSkillTemplate, getOpsxExploreCommandTemplate, getOpsxNewCommandTemplate, getOpsxContinueCommandTemplate, getOpsxApplyCommandTemplate, getOpsxFfCommandTemplate, getOpsxSyncCommandTemplate, getOpsxArchiveCommandTemplate } from '../core/templates/skill-templates.js';
++import { getExploreSkillTemplate, getNewChangeSkillTemplate, getContinueChangeSkillTemplate, getApplyChangeSkillTemplate, getFfChangeSkillTemplate, getSyncSpecsSkillTemplate, getArchiveChangeSkillTemplate, getVerifyChangeSkillTemplate, getOpsxExploreCommandTemplate, getOpsxNewCommandTemplate, getOpsxContinueCommandTemplate, getOpsxApplyCommandTemplate, getOpsxFfCommandTemplate, getOpsxSyncCommandTemplate, getOpsxArchiveCommandTemplate, getOpsxVerifyCommandTemplate } from '../core/templates/skill-templates.js';
+ import { FileSystemUtils } from '../utils/file-system.js';
+ 
+ // -----------------------------------------------------------------------------
+@@ -800,6 +800,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
+     const ffChangeSkill = getFfChangeSkillTemplate();
+     const syncSpecsSkill = getSyncSpecsSkillTemplate();
+     const archiveChangeSkill = getArchiveChangeSkillTemplate();
++    const verifyChangeSkill = getVerifyChangeSkillTemplate();
+ 
+     // Get command templates
+     const exploreCommand = getOpsxExploreCommandTemplate();
+@@ -809,6 +810,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
+     const ffCommand = getOpsxFfCommandTemplate();
+     const syncCommand = getOpsxSyncCommandTemplate();
+     const archiveCommand = getOpsxArchiveCommandTemplate();
++    const verifyCommand = getOpsxVerifyCommandTemplate();
+ 
+     // Create skill directories and SKILL.md files
+     const skills = [
+@@ -819,6 +821,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
+       { template: ffChangeSkill, dirName: 'openspec-ff-change' },
+       { template: syncSpecsSkill, dirName: 'openspec-sync-specs' },
+       { template: archiveChangeSkill, dirName: 'openspec-archive-change' },
++      { template: verifyChangeSkill, dirName: 'openspec-verify-change' },
+     ];
+ 
+     const createdSkillFiles: string[] = [];
+@@ -850,6 +853,7 @@ ${template.instructions}
+       { template: ffCommand, fileName: 'ff.md' },
+       { template: syncCommand, fileName: 'sync.md' },
+       { template: archiveCommand, fileName: 'archive.md' },
++      { template: verifyCommand, fileName: 'verify.md' },
+     ];
+ 
+     const createdCommandFiles: string[] = [];
+@@ -908,6 +912,7 @@ ${template.content}
+     console.log('  • /opsx:apply - Implement tasks');
+     console.log('  • /opsx:ff - Fast-forward: create all artifacts at once');
+     console.log('  • /opsx:sync - Sync delta specs to main specs');
++    console.log('  • /opsx:verify - Verify implementation matches artifacts');
+     console.log('  • /opsx:archive - Archive a completed change');
+     console.log();
+     console.log(chalk.yellow('💡 This is an experimental feature.'));
+diff --git a/src/core/completions/generators/powershell-generator.ts b/src/core/completions/generators/powershell-generator.ts
+index 1b04b5a..c4be1f9 100644
+--- a/src/core/completions/generators/powershell-generator.ts
++++ b/src/core/completions/generators/powershell-generator.ts
+@@ -8,6 +8,11 @@ import { POWERSHELL_DYNAMIC_HELPERS } from '../templates/powershell-templates.js
+ export class PowerShellGenerator implements CompletionGenerator {
+   readonly shell = 'powershell' as const;
+ 
++  private stripTrailingCommaFromLastLine(lines: string[]): void {
++    if (lines.length === 0) return;
++    lines[lines.length - 1] = lines[lines.length - 1].replace(/,\s*$/, '');
++  }
++
+   /**
+    * Generate a PowerShell completion script
+    *
+@@ -20,6 +25,7 @@ export class PowerShellGenerator implements CompletionGenerator {
+     for (const cmd of commands) {
+       commandLines.push(`            @{Name="${cmd.name}"; Description="${this.escapeDescription(cmd.description)}"},`);
+     }
++    this.stripTrailingCommaFromLastLine(commandLines);
+     const topLevelCommands = commandLines.join('\n');
+ 
+     // Build command cases using push() for loop clarity
+@@ -88,6 +94,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
+             lines.push(`${indent}        @{Name="${longFlag}"; Description="${this.escapeDescription(flag.description)}"},`);
+           }
+         }
++        this.stripTrailingCommaFromLastLine(lines);
+         lines.push(`${indent}    )`);
+         lines.push(`${indent}    $flags | Where-Object { $_.Name -like "$wordToComplete*" } | ForEach-Object {`);
+         lines.push(`${indent}        [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, "ParameterName", $_.Description)`);
+@@ -103,6 +110,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
+       for (const subcmd of cmd.subcommands) {
+         lines.push(`${indent}        @{Name="${subcmd.name}"; Description="${this.escapeDescription(subcmd.description)}"},`);
+       }
++      this.stripTrailingCommaFromLastLine(lines);
+       lines.push(`${indent}    )`);
+       lines.push(`${indent}    $subcommands | Where-Object { $_.Name -like "$wordToComplete*" } | ForEach-Object {`);
+       lines.push(`${indent}        [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, "ParameterValue", $_.Description)`);
+@@ -148,6 +156,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
+           lines.push(`${indent}        @{Name="${longFlag}"; Description="${this.escapeDescription(flag.description)}"},`);
+         }
+       }
++      this.stripTrailingCommaFromLastLine(lines);
+       lines.push(`${indent}    )`);
+       lines.push(`${indent}    $flags | Where-Object { $_.Name -like "$wordToComplete*" } | ForEach-Object {`);
+       lines.push(`${indent}        [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, "ParameterName", $_.Description)`);
+diff --git a/src/core/templates/agents-template.ts b/src/core/templates/agents-template.ts
+index ad6dbda..2a4ad4c 100644
+--- a/src/core/templates/agents-template.ts
++++ b/src/core/templates/agents-template.ts
+@@ -9,7 +9,7 @@ Instructions for AI coding assistants using OpenSpec for spec-driven development
+ - Pick a unique \`change-id\`: kebab-case, verb-led (\`add-\`, \`update-\`, \`remove-\`, \`refactor-\`)
+ - Scaffold: \`proposal.md\`, \`tasks.md\`, \`design.md\` (only if needed), and delta specs per affected capability
+ - Write deltas: use \`## ADDED|MODIFIED|REMOVED|RENAMED Requirements\`; include at least one \`#### Scenario:\` per requirement
+-- Validate: \`openspec validate [change-id] --strict\` and fix issues
++- Validate: \`openspec validate [change-id] --strict --no-interactive\` and fix issues
+ - Request approval: Do not start implementation until proposal is approved
+ 
+ ## Three-Stage Workflow
+@@ -44,7 +44,7 @@ Skip proposal for:
+ 1. Review \`openspec/project.md\`, \`openspec list\`, and \`openspec list --specs\` to understand current context.
+ 2. Choose a unique verb-led \`change-id\` and scaffold \`proposal.md\`, \`tasks.md\`, optional \`design.md\`, and spec deltas under \`openspec/changes/<id>/\`.
+ 3. Draft spec deltas using \`## ADDED|MODIFIED|REMOVED Requirements\` with at least one \`#### Scenario:\` per requirement.
+-4. Run \`openspec validate <id> --strict\` and resolve any issues before sharing the proposal.
++4. Run \`openspec validate <id> --strict --no-interactive\` and resolve any issues before sharing the proposal.
+ 
+ ### Stage 2: Implementing Changes
+ Track these steps as TODOs and complete them one by one.
+@@ -61,7 +61,7 @@ After deployment, create separate PR to:
+ - Move \`changes/[name]/\` → \`changes/archive/YYYY-MM-DD-[name]/\`
+ - Update \`specs/\` if capabilities changed
+ - Use \`openspec archive <change-id> --skip-specs --yes\` for tooling-only changes (always pass the change ID explicitly)
+-- Run \`openspec validate --strict\` to confirm the archived change passes checks
++- Run \`openspec validate --strict --no-interactive\` to confirm the archived change passes checks
+ 
+ ## Before Any Task
+ 
+@@ -108,7 +108,7 @@ openspec validate              # Bulk validation mode
+ 
+ # Debugging
+ openspec show [change] --json --deltas-only
+-openspec validate [change] --strict
++openspec validate [change] --strict --no-interactive
+ \`\`\`
+ 
+ ### Command Flags
+@@ -306,7 +306,7 @@ Example for RENAMED:
+ 
+ \`\`\`bash
+ # Always use strict mode for comprehensive checks
+-openspec validate [change] --strict
++openspec validate [change] --strict --no-interactive
+ 
+ # Debug delta parsing
+ openspec show [change] --json | jq '.deltas'
+@@ -343,7 +343,7 @@ Users MUST provide a second factor during login.
+ EOF
+ 
+ # 4) Validate
+-openspec validate $CHANGE --strict
++openspec validate $CHANGE --strict --no-interactive
+ \`\`\`
+ 
+ ## Multi-Capability Example
+@@ -449,7 +449,7 @@ Only add complexity with:
+ \`\`\`bash
+ openspec list              # What's in progress?
+ openspec show [item]       # View details
+-openspec validate --strict # Is it correct?
++openspec validate --strict --no-interactive  # Is it correct?
+ openspec archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
+ \`\`\`
+ 
+diff --git a/src/core/templates/skill-templates.ts b/src/core/templates/skill-templates.ts
+index 9c331a5..f5f0b48 100644
+--- a/src/core/templates/skill-templates.ts
++++ b/src/core/templates/skill-templates.ts
+@@ -1785,6 +1785,174 @@ Main specs are now updated. The change remains active - archive when implementat
+   };
+ }
+ 
++/**
++ * Template for openspec-verify-change skill
++ * For verifying implementation matches change artifacts before archiving
++ */
++export function getVerifyChangeSkillTemplate(): SkillTemplate {
++  return {
++    name: 'openspec-verify-change',
++    description: 'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
++    instructions: `Verify that an implementation matches the change artifacts (specs, tasks, design).
++
++**Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
++
++**Steps**
++
++1. **If no change name provided, prompt for selection**
++
++   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
++
++   Show changes that have implementation tasks (tasks artifact exists).
++   Include the schema used for each change if available.
++   Mark changes with incomplete tasks as "(In Progress)".
++
++   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
++
++2. **Check status to understand the schema**
++   \`\`\`bash
++   openspec status --change "<name>" --json
++   \`\`\`
++   Parse the JSON to understand:
++   - \`schemaName\`: The workflow being used (e.g., "spec-driven", "tdd")
++   - Which artifacts exist for this change
++
++3. **Get the change directory and load artifacts**
++
++   \`\`\`bash
++   openspec instructions apply --change "<name>" --json
++   \`\`\`
++
++   This returns the change directory and context files. Read all available artifacts from \`contextFiles\`.
++
++4. **Initialize verification report structure**
++
++   Create a report structure with three dimensions:
++   - **Completeness**: Track tasks and spec coverage
++   - **Correctness**: Track requirement implementation and scenario coverage
++   - **Coherence**: Track design adherence and pattern consistency
++
++   Each dimension can have CRITICAL, WARNING, or SUGGESTION issues.
++
++5. **Verify Completeness**
++
++   **Task Completion**:
++   - If tasks.md exists in contextFiles, read it
++   - Parse checkboxes: \`- [ ]\` (incomplete) vs \`- [x]\` (complete)
++   - Count complete vs total tasks
++   - If incomplete tasks exist:
++     - Add CRITICAL issue for each incomplete task
++     - Recommendation: "Complete task: <description>" or "Mark as done if already implemented"
++
++   **Spec Coverage**:
++   - If delta specs exist in \`openspec/changes/<name>/specs/\`:
++     - Extract all requirements (marked with "### Requirement:")
++     - For each requirement:
++       - Search codebase for keywords related to the requirement
++       - Assess if implementation likely exists
++     - If requirements appear unimplemented:
++       - Add CRITICAL issue: "Requirement not found: <requirement name>"
++       - Recommendation: "Implement requirement X: <description>"
++
++6. **Verify Correctness**
++
++   **Requirement Implementation Mapping**:
++   - For each requirement from delta specs:
++     - Search codebase for implementation evidence
++     - If found, note file paths and line ranges
++     - Assess if implementation matches requirement intent
++     - If divergence detected:
++       - Add WARNING: "Implementation may diverge from spec: <details>"
++       - Recommendation: "Review <file>:<lines> against requirement X"
++
++   **Scenario Coverage**:
++   - For each scenario in delta specs (marked with "#### Scenario:"):
++     - Check if conditions are handled in code
++     - Check if tests exist covering the scenario
++     - If scenario appears uncovered:
++       - Add WARNING: "Scenario not covered: <scenario name>"
++       - Recommendation: "Add test or implementation for scenario: <description>"
++
++7. **Verify Coherence**
++
++   **Design Adherence**:
++   - If design.md exists in contextFiles:
++     - Extract key decisions (look for sections like "Decision:", "Approach:", "Architecture:")
++     - Verify implementation follows those decisions
++     - If contradiction detected:
++       - Add WARNING: "Design decision not followed: <decision>"
++       - Recommendation: "Update implementation or revise design.md to match reality"
++   - If no design.md: Skip design adherence check, note "No design.md to verify against"
++
++   **Code Pattern Consistency**:
++   - Review new code for consistency with project patterns
++   - Check file naming, directory structure, coding style
++   - If significant deviations found:
++     - Add SUGGESTION: "Code pattern deviation: <details>"
++     - Recommendation: "Consider following project pattern: <example>"
++
++8. **Generate Verification Report**
++
++   **Summary Scorecard**:
++   \`\`\`
++   ## Verification Report: <change-name>
++
++   ### Summary
++   | Dimension    | Status           |
++   |--------------|------------------|
++   | Completeness | X/Y tasks, N reqs|
++   | Correctness  | M/N reqs covered |
++   | Coherence    | Followed/Issues  |
++   \`\`\`
++
++   **Issues by Priority**:
++
++   1. **CRITICAL** (Must fix before archive):
++      - Incomplete tasks
++      - Missing requirement implementations
++      - Each with specific, actionable recommendation
++
++   2. **WARNING** (Should fix):
++      - Spec/design divergences
++      - Missing scenario coverage
++      - Each with specific recommendation
++
++   3. **SUGGESTION** (Nice to fix):
++      - Pattern inconsistencies
++      - Minor improvements
++      - Each with specific recommendation
++
++   **Final Assessment**:
++   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving."
++   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)."
++   - If all clear: "All checks passed. Ready for archive."
++
++**Verification Heuristics**
++
++- **Completeness**: Focus on objective checklist items (checkboxes, requirements list)
++- **Correctness**: Use keyword search, file path analysis, reasonable inference - don't require perfect certainty
++- **Coherence**: Look for glaring inconsistencies, don't nitpick style
++- **False Positives**: When uncertain, prefer SUGGESTION over WARNING, WARNING over CRITICAL
++- **Actionability**: Every issue must have a specific recommendation with file/line references where applicable
++
++**Graceful Degradation**
++
++- If only tasks.md exists: verify task completion only, skip spec/design checks
++- If tasks + specs exist: verify completeness and correctness, skip design
++- If full artifacts: verify all three dimensions
++- Always note which checks were skipped and why
++
++**Output Format**
++
++Use clear markdown with:
++- Table for summary scorecard
++- Grouped lists for issues (CRITICAL/WARNING/SUGGESTION)
++- Code references in format: \`file.ts:123\`
++- Specific, actionable recommendations
++- No vague suggestions like "consider reviewing"`
++  };
++}
++
+ /**
+  * Template for /opsx:archive slash command
+  */
+@@ -1964,3 +2132,172 @@ Target archive directory already exists.
+ - If sync is requested, use /opsx:sync approach (agent-driven)`
+   };
+ }
++
++/**
++ * Template for /opsx:verify slash command
++ */
++export function getOpsxVerifyCommandTemplate(): CommandTemplate {
++  return {
++    name: 'OPSX: Verify',
++    description: 'Verify implementation matches change artifacts before archiving',
++    category: 'Workflow',
++    tags: ['workflow', 'verify', 'experimental'],
++    content: `Verify that an implementation matches the change artifacts (specs, tasks, design).
++
++**Input**: Optionally specify \`--change <name>\` after \`/opsx:verify\`. If omitted, MUST prompt for available changes.
++
++**Steps**
++
++1. **If no change name provided, prompt for selection**
++
++   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
++
++   Show changes that have implementation tasks (tasks artifact exists).
++   Include the schema used for each change if available.
++   Mark changes with incomplete tasks as "(In Progress)".
++
++   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
++
++2. **Check status to understand the schema**
++   \`\`\`bash
++   openspec status --change "<name>" --json
++   \`\`\`
++   Parse the JSON to understand:
++   - \`schemaName\`: The workflow being used (e.g., "spec-driven", "tdd")
++   - Which artifacts exist for this change
++
++3. **Get the change directory and load artifacts**
++
++   \`\`\`bash
++   openspec instructions apply --change "<name>" --json
++   \`\`\`
++
++   This returns the change directory and context files. Read all available artifacts from \`contextFiles\`.
++
++4. **Initialize verification report structure**
++
++   Create a report structure with three dimensions:
++   - **Completeness**: Track tasks and spec coverage
++   - **Correctness**: Track requirement implementation and scenario coverage
++   - **Coherence**: Track design adherence and pattern consistency
++
++   Each dimension can have CRITICAL, WARNING, or SUGGESTION issues.
++
++5. **Verify Completeness**
++
++   **Task Completion**:
++   - If tasks.md exists in contextFiles, read it
++   - Parse checkboxes: \`- [ ]\` (incomplete) vs \`- [x]\` (complete)
++   - Count complete vs total tasks
++   - If incomplete tasks exist:
++     - Add CRITICAL issue for each incomplete task
++     - Recommendation: "Complete task: <description>" or "Mark as done if already implemented"
++
++   **Spec Coverage**:
++   - If delta specs exist in \`openspec/changes/<name>/specs/\`:
++     - Extract all requirements (marked with "### Requirement:")
++     - For each requirement:
++       - Search codebase for keywords related to the requirement
++       - Assess if implementation likely exists
++     - If requirements appear unimplemented:
++       - Add CRITICAL issue: "Requirement not found: <requirement name>"
++       - Recommendation: "Implement requirement X: <description>"
++
++6. **Verify Correctness**
++
++   **Requirement Implementation Mapping**:
++   - For each requirement from delta specs:
++     - Search codebase for implementation evidence
++     - If found, note file paths and line ranges
++     - Assess if implementation matches requirement intent
++     - If divergence detected:
++       - Add WARNING: "Implementation may diverge from spec: <details>"
++       - Recommendation: "Review <file>:<lines> against requirement X"
++
++   **Scenario Coverage**:
++   - For each scenario in delta specs (marked with "#### Scenario:"):
++     - Check if conditions are handled in code
++     - Check if tests exist covering the scenario
++     - If scenario appears uncovered:
++       - Add WARNING: "Scenario not covered: <scenario name>"
++       - Recommendation: "Add test or implementation for scenario: <description>"
++
++7. **Verify Coherence**
++
++   **Design Adherence**:
++   - If design.md exists in contextFiles:
++     - Extract key decisions (look for sections like "Decision:", "Approach:", "Architecture:")
++     - Verify implementation follows those decisions
++     - If contradiction detected:
++       - Add WARNING: "Design decision not followed: <decision>"
++       - Recommendation: "Update implementation or revise design.md to match reality"
++   - If no design.md: Skip design adherence check, note "No design.md to verify against"
++
++   **Code Pattern Consistency**:
++   - Review new code for consistency with project patterns
++   - Check file naming, directory structure, coding style
++   - If significant deviations found:
++     - Add SUGGESTION: "Code pattern deviation: <details>"
++     - Recommendation: "Consider following project pattern: <example>"
++
++8. **Generate Verification Report**
++
++   **Summary Scorecard**:
++   \`\`\`
++   ## Verification Report: <change-name>
++
++   ### Summary
++   | Dimension    | Status           |
++   |--------------|------------------|
++   | Completeness | X/Y tasks, N reqs|
++   | Correctness  | M/N reqs covered |
++   | Coherence    | Followed/Issues  |
++   \`\`\`
++
++   **Issues by Priority**:
++
++   1. **CRITICAL** (Must fix before archive):
++      - Incomplete tasks
++      - Missing requirement implementations
++      - Each with specific, actionable recommendation
++
++   2. **WARNING** (Should fix):
++      - Spec/design divergences
++      - Missing scenario coverage
++      - Each with specific recommendation
++
++   3. **SUGGESTION** (Nice to fix):
++      - Pattern inconsistencies
++      - Minor improvements
++      - Each with specific recommendation
++
++   **Final Assessment**:
++   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving."
++   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)."
++   - If all clear: "All checks passed. Ready for archive."
++
++**Verification Heuristics**
++
++- **Completeness**: Focus on objective checklist items (checkboxes, requirements list)
++- **Correctness**: Use keyword search, file path analysis, reasonable inference - don't require perfect certainty
++- **Coherence**: Look for glaring inconsistencies, don't nitpick style
++- **False Positives**: When uncertain, prefer SUGGESTION over WARNING, WARNING over CRITICAL
++- **Actionability**: Every issue must have a specific recommendation with file/line references where applicable
++
++**Graceful Degradation**
++
++- If only tasks.md exists: verify task completion only, skip spec/design checks
++- If tasks + specs exist: verify completeness and correctness, skip design
++- If full artifacts: verify all three dimensions
++- Always note which checks were skipped and why
++
++**Output Format**
++
++Use clear markdown with:
++- Table for summary scorecard
++- Grouped lists for issues (CRITICAL/WARNING/SUGGESTION)
++- Code references in format: \`file.ts:123\`
++- Specific, actionable recommendations
++- No vague suggestions like "consider reviewing"`
++  };
++}
+diff --git a/src/core/templates/slash-command-templates.ts b/src/core/templates/slash-command-templates.ts
+index be21328..980e5bc 100644
+--- a/src/core/templates/slash-command-templates.ts
++++ b/src/core/templates/slash-command-templates.ts
+@@ -15,7 +15,7 @@ const proposalSteps = `**Steps**
+ 4. Capture architectural reasoning in \`design.md\` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
+ 5. Draft spec deltas in \`changes/<id>/specs/<capability>/spec.md\` (one folder per capability) using \`## ADDED|MODIFIED|REMOVED Requirements\` with at least one \`#### Scenario:\` per requirement and cross-reference related capabilities when relevant.
+ 6. Draft \`tasks.md\` as an ordered list of small, verifiable work items that deliver user-visible progress, include validation (tests, tooling), and highlight dependencies or parallelizable work.
+-7. Validate with \`openspec validate <id> --strict\` and resolve every issue before sharing the proposal.`;
++7. Validate with \`openspec validate <id> --strict --no-interactive\` and resolve every issue before sharing the proposal.`;
+ 
+ 
+ const proposalReferences = `**Reference**
+@@ -43,7 +43,7 @@ const archiveSteps = `**Steps**
+ 2. Validate the change ID by running \`openspec list\` (or \`openspec show <id>\`) and stop if the change is missing, already archived, or otherwise not ready to archive.
+ 3. Run \`openspec archive <id> --yes\` so the CLI moves the change and applies spec updates without prompts (use \`--skip-specs\` only for tooling-only work).
+ 4. Review the command output to confirm the target specs were updated and the change landed in \`changes/archive/\`.
+-5. Validate with \`openspec validate --strict\` and inspect with \`openspec show <id>\` if anything looks off.`;
++5. Validate with \`openspec validate --strict --no-interactive\` and inspect with \`openspec show <id>\` if anything looks off.`;
+ 
+ const archiveReferences = `**Reference**
+ - Use \`openspec list\` to confirm change IDs before archiving.
+diff --git a/test/core/completions/generators/powershell-generator.test.ts b/test/core/completions/generators/powershell-generator.test.ts
+index d46aed6..485bc2e 100644
+--- a/test/core/completions/generators/powershell-generator.test.ts
++++ b/test/core/completions/generators/powershell-generator.test.ts
+@@ -1,6 +1,6 @@
+-import {describe, it, expect, beforeEach} from 'vitest';
+-import {PowerShellGenerator} from '../../../../src/core/completions/generators/powershell-generator.js';
+-import {CommandDefinition} from '../../../../src/core/completions/types.js';
++import { describe, it, expect, beforeEach } from 'vitest';
++import { PowerShellGenerator } from '../../../../src/core/completions/generators/powershell-generator.js';
++import { CommandDefinition } from '../../../../src/core/completions/types.js';
+ 
+ describe('PowerShellGenerator', () => {
+ 	let generator: PowerShellGenerator;
+@@ -444,6 +444,34 @@ describe('PowerShellGenerator', () => {
+ 			expect(script).toContain('Get-OpenSpecSpecs');
+ 		});
+ 
++		it('should not emit trailing commas in @() arrays', () => {
++			const commands: CommandDefinition[] = [
++				{
++					name: 'config',
++					description: 'Manage configuration',
++					flags: [
++						{
++							name: 'scope',
++							short: 's',
++							description: 'Configuration scope',
++						},
++					],
++					subcommands: [
++						{
++							name: 'get',
++							description: 'Get a config value',
++							flags: [],
++						},
++					],
++				},
++			];
++
++			const script = generator.generate(commands);
++
++			// PowerShell array literals (@(...)) can't have a trailing comma on the last element.
++			expect(script).not.toMatch(/\},\s*\r?\n\s*\)/);
++		});
++
+ 		it('should handle empty command list', () => {
+ 			const commands: CommandDefinition[] = [];
+ 
+diff --git a/test/core/update.test.ts b/test/core/update.test.ts
+index 83994b8..5df33dc 100644
+--- a/test/core/update.test.ts
++++ b/test/core/update.test.ts
+@@ -133,7 +133,7 @@ Old slash content
+     expect(updated).toContain('name: OpenSpec: Proposal');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old slash content');
+ 
+@@ -317,7 +317,7 @@ Old slash content
+     expect(updated).toContain('# OpenSpec: Proposal');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old slash content');
+ 
+@@ -1007,7 +1007,7 @@ Old slash content
+     expect(updated).toContain('name: OpenSpec: Proposal');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old slash content');
+ 
+@@ -1085,7 +1085,7 @@ Old slash content
+     expect(updated).toContain('name: OpenSpec: Proposal');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old slash content');
+ 
+@@ -1163,7 +1163,7 @@ Old body
+     expect(updated).toContain('argument-hint: old-hint');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old body');
+ 
+@@ -1204,7 +1204,7 @@ Old slash content
+     expect(updated).toContain('name: OpenSpec: Proposal');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old slash content');
+ 
+@@ -1244,7 +1244,7 @@ Old body
+     expect(updated).toContain('# OpenSpec: Proposal');
+     expect(updated).toContain('**Guardrails**');
+     expect(updated).toContain(
+-      'Validate with `openspec validate <id> --strict`'
++      'Validate with `openspec validate <id> --strict --no-interactive`'
+     );
+     expect(updated).not.toContain('Old body');
+ 
+@@ -1431,7 +1431,7 @@ More instructions after.`;
+     expect(updated).toContain('## Custom Intro Title');
+     expect(updated).toContain('Footer stays');
+     expect(updated).not.toContain('Old body');
+-    expect(updated).toContain('Validate with `openspec validate <id> --strict`');
++    expect(updated).toContain('Validate with `openspec validate <id> --strict --no-interactive`');
+   });
+ 
+   it('should handle configurator errors gracefully for CoStrict', async () => {
+@@ -1487,7 +1487,7 @@ More instructions after.`;
+     expect(updated).toContain('## Custom Intro Title');
+     expect(updated).toContain('Footer stays');
+     expect(updated).not.toContain('Old body');
+-    expect(updated).toContain('Validate with `openspec validate <id> --strict`');
++    expect(updated).toContain('Validate with `openspec validate <id> --strict --no-interactive`');
+   });
+ 
+   it('should not create missing Windsurf workflows on update', async () => {
+diff --git a/vitest.config.ts b/vitest.config.ts
+index 88c06dd..bd474d7 100644
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -1,12 +1,33 @@
+ import { defineConfig } from 'vitest/config';
++import os from 'node:os';
++
++function resolveMaxWorkers(): number | undefined {
++  // Allow callers (CI/agents) to override without editing config.
++  const raw = process.env.VITEST_MAX_WORKERS;
++  if (raw) {
++    const parsed = Number(raw);
++    if (Number.isFinite(parsed) && parsed > 0) {
++      return parsed;
++    }
++  }
++
++  // Vitest v3 defaults to `pool: "forks"` and scales worker processes with CPU.
++  // This repo's tests can spawn many Node processes (CLI invocations, temp FS),
++  // so cap parallelism to avoid runaway CPU/memory usage in automation.
++  const cpuCount = typeof os.availableParallelism === 'function'
++    ? os.availableParallelism()
++    : os.cpus().length;
++  return Math.min(4, Math.max(1, cpuCount));
++}
+ 
+ export default defineConfig({
+   test: {
+     globals: true,
+     environment: 'node',
+     globalSetup: './vitest.setup.ts',
+-    // Keep default pool settings; some tests rely on process.chdir,
+-    // which is not supported in worker threads
++    // Tests rely on per-file process isolation (e.g., `process.cwd()` assumptions).
++    pool: 'forks',
++    maxWorkers: resolveMaxWorkers(),
+     include: ['test/**/*.test.ts'],
+     coverage: {
+       reporter: ['text', 'json', 'html'],

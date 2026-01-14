@@ -3,6 +3,23 @@
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 
+## 0.20.0
+
+- **[OpenSpec-J]** v0.20.0 追従のため、README/AGENTS テンプレート/スラッシュコマンドの説明文を更新。
+- **[OpenSpec-J]** PowerShell 補完のヘッダーと表示文言を日本語化。
+
+### マイナー変更
+
+- [#502](https://github.com/Fission-AI/OpenSpec/pull/502) [`9db74aa`](https://github.com/Fission-AI/OpenSpec/commit/9db74aa5ac6547efadaed795217cfa17444f2004) Thanks [@TabishB](https://github.com/TabishB)! - ### 新機能
+
+  - **`/opsx:verify` コマンド** — 変更実装が仕様と一致しているか検証する
+
+  ### 修正
+
+  - vitest のワーカ並列数を制限し、プロセスが暴走する問題を修正
+  - 検証コマンドが非対話モードで実行されるように修正
+  - PowerShell 補完生成で末尾カンマが残る問題を修正
+
 ## 0.19.0
 
 - **[OpenSpec-J]** Bash/Fish/PowerShell 補完の案内・警告・自動設定メッセージを日本語化し、関連テストを更新。

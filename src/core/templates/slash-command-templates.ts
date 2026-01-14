@@ -16,13 +16,13 @@ const proposalGuardrails = [
 
 const proposalSteps = [
   "**Steps**",
-  "1. `openspec/project.md` を確認し、`openspec list` と `openspec list --specs` を実行して現在の文脈を把握し、必要に応じて `rg` や `ls` で関連コード/ドキュメントを調査する。",
+  "1. `openspec/project.md` を確認し、`openspec list` と `openspec list --specs` を実行して現在の文脈と挙動を把握する。必要に応じて `rg` や `ls` で関連コード/ドキュメントを調査する。",
   "2. 動詞始まりで一意な `change-id` を決め、`openspec/changes/<id>/` に `proposal.md`, `tasks.md`, 必要なら `design.md` のひな形を作成する。",
   "3. 変更内容を具体的な機能や要件に割り付け、複数スコープが混ざる場合は関連性や順序が分かるように仕様差分を分割する。",
   "4. 解決策が複数のシステムにまたがる、新しいパターンを導入する、または実装前にトレードオフ整理が必要な場合は `design.md` に判断理由を記録する。",
   "5. `changes/<id>/specs/<capability>/spec.md`（機能ごとに 1 フォルダー）に `## ADDED|MODIFIED|REMOVED Requirements` を使って仕様差分を書き、各要件に最低 1 つの `#### Scenario:` を含め、関連機能を必要に応じて参照する。",
   "6. `tasks.md` には小さく検証可能な作業を順序付きで列挙し、ユーザー価値が見える単位に分割したうえでテストやツールによる検証も含める。",
-  "7. `openspec validate <id> --strict` を実行し、すべての指摘を解消してから提案を共有する。"
+  "7. `openspec validate <id> --strict --no-interactive` を実行し、すべての指摘を解消してから提案を共有する。"
 ].join("\n");
 
 const proposalReferences = [
@@ -50,13 +50,14 @@ const applyReferences = [
 const archiveSteps = [
   "**Steps**",
   "1. アーカイブ対象の change-id を特定する:",
-  "   - プロンプトに既に change-id が含まれている場合（例: スラッシュコマンド引数経由）、前後の空白を除去してその値を使う。",
+  "   - プロンプトに change-id が含まれている場合（例: スラッシュコマンド引数経由）は、前後の空白を除去してその値を使う。",
   "   - 会話内でタイトルや概要だけが示されている場合は `openspec list` を実行して候補を提示し、ユーザーに意図する change-id を確認する。",
-  "   - それでも特定できない場合は追加情報を求め、単一の change-id が確定するまでアーカイブを実行しない。",
+  "   - それでも特定できない場合は会話を再確認し、`openspec list` を実行してユーザーに確認する。単一の change-id が確定するまでアーカイブを実行しない。",
+  "   - どうしても特定できない場合は、アーカイブできない旨を伝えて停止する。",
   "2. `openspec list` や `openspec show <id>` で change-id を検証し、存在しない・既にアーカイブ済み・準備未完了のものは停止する。",
   "3. `openspec archive <id> --yes` を実行し、対話なしで変更を移動して仕様更新を適用する（ツールのみの変更で仕様更新が不要なら `--skip-specs` を付ける）。",
   "4. コマンド出力を確認し、対象の仕様が更新され、変更が `changes/archive/` に移動されたことを確認する。",
-  "5. `openspec validate --strict` を実行し、必要に応じて `openspec show <id>` で状態を確認する。"
+  "5. `openspec validate --strict --no-interactive` を実行し、必要に応じて `openspec show <id>` で状態を確認する。"
 ].join("\n");
 
 const archiveReferences = [

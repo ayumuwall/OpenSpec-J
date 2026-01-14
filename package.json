@@ -1,6 +1,6 @@
 {
   "name": "@ayumuwall/openspec",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "description": "仕様駆動開発のためのAIネイティブシステム",
   "keywords": [
     "openspec",
@@ -27,7 +27,7 @@
     }
   },
   "bin": {
-    "openspec": "bin/openspec.js"
+    "openspec": "./bin/openspec.js"
   },
   "files": [
     "dist",
@@ -54,13 +54,13 @@
     "check:pack-version": "node scripts/pack-version-check.mjs",
     "release": "pnpm run release:ci",
     "release:ci": "pnpm run check:pack-version && pnpm exec changeset publish",
-    "release:local": "pnpm exec changeset version && pnpm run check:pack-version && pnpm exec changeset publish",
     "changeset": "changeset"
   },
   "engines": {
     "node": ">=20.19.0"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.27.7",
     "@types/node": "^24.2.0",
     "@vitest/ui": "^3.2.4",
@@ -79,6 +79,5 @@
     "posthog-node": "^5.20.0",
     "yaml": "^2.8.2",
     "zod": "^4.0.17"
-  },
-  "packageManager": "pnpm@10.25.0+sha512.5e82639027af37cf832061bcc6d639c219634488e0f2baebe785028a793de7b525ffcd3f7ff574f5e9860654e098fe852ba8ac5dd5cefe1767d23a020a92f501"
+  }
 }
