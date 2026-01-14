@@ -284,7 +284,13 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         description: 'シェル補完スクリプトをアンインストール',
         acceptsPositional: true,
         positionalType: 'shell',
-        flags: [],
+        flags: [
+          {
+            name: 'yes',
+            short: 'y',
+            description: '確認プロンプトをスキップ',
+          },
+        ],
       },
     ],
   },

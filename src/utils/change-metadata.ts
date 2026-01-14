@@ -31,7 +31,7 @@ export function validateSchemaName(schemaName: string): string {
   const availableSchemas = listSchemas();
   if (!availableSchemas.includes(schemaName)) {
     throw new Error(
-      `Unknown schema '${schemaName}'. Available: ${availableSchemas.join(', ')}`
+      `スキーマ '${schemaName}' が見つかりません。利用可能: ${availableSchemas.join(', ')}`
     );
   }
   return schemaName;
@@ -57,7 +57,7 @@ export function writeChangeMetadata(
   const parseResult = ChangeMetadataSchema.safeParse(metadata);
   if (!parseResult.success) {
     throw new ChangeMetadataError(
-      `Invalid metadata: ${parseResult.error.message}`,
+      `メタデータが不正です: ${parseResult.error.message}`,
       metaPath
     );
   }
@@ -69,7 +69,7 @@ export function writeChangeMetadata(
   } catch (err) {
     const ioError = err instanceof Error ? err : new Error(String(err));
     throw new ChangeMetadataError(
-      `Failed to write metadata: ${ioError.message}`,
+      `メタデータの書き込みに失敗しました: ${ioError.message}`,
       metaPath,
       ioError
     );
@@ -96,7 +96,7 @@ export function readChangeMetadata(changeDir: string): ChangeMetadata | null {
   } catch (err) {
     const ioError = err instanceof Error ? err : new Error(String(err));
     throw new ChangeMetadataError(
-      `Failed to read metadata: ${ioError.message}`,
+      `メタデータの読み取りに失敗しました: ${ioError.message}`,
       metaPath,
       ioError
     );
@@ -108,7 +108,7 @@ export function readChangeMetadata(changeDir: string): ChangeMetadata | null {
   } catch (err) {
     const parseError = err instanceof Error ? err : new Error(String(err));
     throw new ChangeMetadataError(
-      `Invalid YAML in metadata file: ${parseError.message}`,
+      `メタデータファイルの YAML が不正です: ${parseError.message}`,
       metaPath,
       parseError
     );
@@ -118,7 +118,7 @@ export function readChangeMetadata(changeDir: string): ChangeMetadata | null {
   const parseResult = ChangeMetadataSchema.safeParse(parsed);
   if (!parseResult.success) {
     throw new ChangeMetadataError(
-      `Invalid metadata: ${parseResult.error.message}`,
+      `メタデータが不正です: ${parseResult.error.message}`,
       metaPath
     );
   }
@@ -127,7 +127,7 @@ export function readChangeMetadata(changeDir: string): ChangeMetadata | null {
   const availableSchemas = listSchemas();
   if (!availableSchemas.includes(parseResult.data.schema)) {
     throw new ChangeMetadataError(
-      `Unknown schema '${parseResult.data.schema}'. Available: ${availableSchemas.join(', ')}`,
+      `スキーマ '${parseResult.data.schema}' が見つかりません。利用可能: ${availableSchemas.join(', ')}`,
       metaPath
     );
   }

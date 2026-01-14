@@ -144,20 +144,51 @@ export class CompletionCommand {
           if (result.backupPath) {
             console.log(`  バックアップ作成: ${result.backupPath}`);
           }
-          if (result.zshrcConfigured) {
-            console.log('  ~/.zshrc を自動設定しました');
+          const configWasUpdated = result.zshrcConfigured || result.bashrcConfigured || result.profileConfigured;
+
+          if (configWasUpdated) {
+            const configPaths: Record<string, string> = {
+              zsh: '~/.zshrc',
+              bash: '~/.bashrc',
+              fish: '~/.config/fish/config.fish',
+              powershell: '$PROFILE',
+            };
+            const configPath = configPaths[shell] || '設定ファイル';
+            console.log(`  ${configPath} を自動設定しました`);
           }
         }
 
-        // Print instructions (only shown if .zshrc wasn't auto-configured)
+        // Display warnings if present
+        if (result.warnings && result.warnings.length > 0) {
+          console.log('');
+          for (const warning of result.warnings) {
+            console.log(warning);
+          }
+        }
+
+        // Print instructions (only shown if shell config wasn't auto-configured)
         if (result.instructions && result.instructions.length > 0) {
           console.log('');
           for (const instruction of result.instructions) {
             console.log(instruction);
           }
-        } else if (result.zshrcConfigured) {
-          console.log('');
-          console.log('シェルを再起動するか、exec zsh を実行してください');
+        } else {
+          const configWasUpdated = result.zshrcConfigured || result.bashrcConfigured || result.profileConfigured;
+
+          if (configWasUpdated) {
+            console.log('');
+
+            // Shell-specific reload instructions
+            const reloadCommands: Record<string, string> = {
+              zsh: 'exec zsh',
+              bash: 'exec bash',
+              fish: 'exec fish',
+              powershell: '. $PROFILE',
+            };
+            const reloadCmd = reloadCommands[shell] || `${shell} を再起動`;
+
+            console.log(`シェルを再起動するか、${reloadCmd} を実行してください。`);
+          }
         }
       } else {
         console.error(`✗ ${result.message}`);
@@ -179,8 +210,18 @@ export class CompletionCommand {
     // Prompt for confirmation unless --yes flag is provided
     if (!skipConfirmation) {
       const { confirm } = await import('@inquirer/prompts');
+
+      // Get shell-specific config file path
+      const configPaths: Record<string, string> = {
+        zsh: '~/.zshrc',
+        bash: '~/.bashrc',
+        fish: '~/.config/fish/config.fish',
+        powershell: '$PROFILE',
+      };
+      const configPath = configPaths[shell] || `${shell} の設定ファイル`;
+
       const confirmed = await confirm({
-        message: '~/.zshrc から OpenSpec の設定を削除しますか？',
+        message: `${configPath} から OpenSpec の設定を削除しますか？`,
         default: false,
       });
 

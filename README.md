@@ -26,6 +26,10 @@
   最新情報は <a href="https://x.com/0xTab">@0xTab on X</a> をフォロー · 質問やサポートは <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> へどうぞ。
 </p>
 
+<p align="center">
+  <sub>🧪 <strong>New:</strong> <a href="docs/experimental-workflow.md">Experimental Workflow (OPSX)</a> — schema-driven, hackable, fluid. Iterate on workflows without code changes.</sub>
+</p>
+
 # OpenSpec
 
 このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) 
@@ -104,6 +108,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 | **Cline** | Workflows in `.clinerules/workflows/` directory (`.clinerules/workflows/openspec-*.md`) |
 | **CodeBuddy Code (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.codebuddy/commands/`) — see [docs](https://www.codebuddy.ai/cli) |
 | **Codex** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (global: `~/.codex/prompts`, auto-installed) |
+| **Continue** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.continue/prompts/`) |
 | **CoStrict** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.cospec/openspec/commands/`) — see [docs](https://costrict.ai)|
 | **Crush** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.crush/commands/openspec/`) |
 | **Cursor** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` |
@@ -380,6 +385,53 @@ OpenSpec は機能ごとの変更を 1 フォルダ（`openspec/changes/feature-
    ```
 2. **エージェントの手順を更新**
 - 各プロジェクトで `openspec update` を実行し、AI ガイダンスとスラッシュコマンドを最新化します。
+
+## 実験的機能
+
+<details>
+<summary><strong>🧪 OPSX: 流動的で反復的なワークフロー</strong>（Claude Code のみ）</summary>
+
+**背景:**
+- 標準ワークフローは固定されており、手順の調整やカスタマイズができない
+- AI の出力が悪いときに、プロンプトを自分で改善できない
+- 全員が同じワークフローで、チームのやり方に合わせられない
+
+**違い:**
+- **改造可能** — テンプレートやスキーマを直接編集し、ビルドなしで即テストできる
+- **粒度が細かい** — アーティファクトごとに手順があり、個別にテスト・調整できる
+- **カスタマイズ可能** — 独自のワークフロー、アーティファクト、依存関係を定義できる
+- **流動的** — フェーズのゲートがなく、いつでもどのアーティファクトでも更新できる
+
+```
+You can always go back:
+
+  proposal ──→ specs ──→ design ──→ tasks ──→ implement
+     ▲           ▲          ▲                    │
+     └───────────┴──────────┴────────────────────┘
+```
+
+| コマンド | 役割 |
+|---------|------|
+| `/opsx:new` | 新しい変更を開始 |
+| `/opsx:continue` | 次のアーティファクトを作成 |
+| `/opsx:ff` | 早送り（すべての計画アーティファクトを一括生成） |
+| `/opsx:apply` | タスクを実装し、必要に応じて更新 |
+| `/opsx:archive` | 完了後にアーカイブ |
+
+**セットアップ:** `openspec artifact-experimental-setup`
+
+[詳細ドキュメント →](docs/experimental-workflow.md)
+
+</details>
+
+<details>
+<summary><strong>テレメトリー</strong> – OpenSpec は匿名の利用統計を収集します（オプトアウト: <code>OPENSPEC_TELEMETRY=0</code>）</summary>
+
+利用状況を把握するためにコマンド名とバージョンのみを収集します。引数、パス、内容、PII は収集しません。CI では自動的に無効化されます。
+
+**オプトアウト:** `export OPENSPEC_TELEMETRY=0` または `export DO_NOT_TRACK=1`
+
+</details>
 
 ## コントリビュート
 

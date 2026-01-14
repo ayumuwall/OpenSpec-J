@@ -42,37 +42,37 @@ export function validateChangeName(name: string): ValidationResult {
   const kebabCasePattern = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
   if (!name) {
-    return { valid: false, error: 'Change name cannot be empty' };
+    return { valid: false, error: '変更名は空にできません' };
   }
 
   if (!kebabCasePattern.test(name)) {
     // Provide specific error messages for common mistakes
     if (/[A-Z]/.test(name)) {
-      return { valid: false, error: 'Change name must be lowercase (use kebab-case)' };
+      return { valid: false, error: '変更名は小文字である必要があります（kebab-case）' };
     }
     if (/\s/.test(name)) {
-      return { valid: false, error: 'Change name cannot contain spaces (use hyphens instead)' };
+      return { valid: false, error: '変更名に空白は使えません（ハイフンを使用）' };
     }
     if (/_/.test(name)) {
-      return { valid: false, error: 'Change name cannot contain underscores (use hyphens instead)' };
+      return { valid: false, error: '変更名にアンダースコアは使えません（ハイフンを使用）' };
     }
     if (name.startsWith('-')) {
-      return { valid: false, error: 'Change name cannot start with a hyphen' };
+      return { valid: false, error: '変更名はハイフンで始められません' };
     }
     if (name.endsWith('-')) {
-      return { valid: false, error: 'Change name cannot end with a hyphen' };
+      return { valid: false, error: '変更名はハイフンで終われません' };
     }
     if (/--/.test(name)) {
-      return { valid: false, error: 'Change name cannot contain consecutive hyphens' };
+      return { valid: false, error: '変更名に連続したハイフンは使えません' };
     }
     if (/[^a-z0-9-]/.test(name)) {
-      return { valid: false, error: 'Change name can only contain lowercase letters, numbers, and hyphens' };
+      return { valid: false, error: '変更名は小文字・数字・ハイフンのみ使用できます' };
     }
     if (/^[0-9]/.test(name)) {
-      return { valid: false, error: 'Change name must start with a letter' };
+      return { valid: false, error: '変更名は文字で始める必要があります' };
     }
 
-    return { valid: false, error: 'Change name must follow kebab-case convention (e.g., add-auth, refactor-db)' };
+    return { valid: false, error: '変更名は kebab-case である必要があります（例: add-auth, refactor-db）' };
   }
 
   return { valid: true };
@@ -116,7 +116,7 @@ export async function createChange(
 
   // Check if change already exists
   if (await FileSystemUtils.directoryExists(changeDir)) {
-    throw new Error(`Change '${name}' already exists at ${changeDir}`);
+    throw new Error(`変更 '${name}' は既に存在します: ${changeDir}`);
   }
 
   // Create the directory (including parent directories if needed)

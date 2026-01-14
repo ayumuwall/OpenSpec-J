@@ -144,5 +144,5 @@ apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Read context files, work through pending tasks, mark complete as you go.
-    Pause if you hit blockers or need clarification.
+    コンテキストファイルを読み、未完了タスクを進めながら完了にチェックしてください。
+    詰まったり不明点が出たら一旦止めて確認します。

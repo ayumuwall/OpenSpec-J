@@ -15,13 +15,299 @@ export interface SkillTemplate {
 }
 
 /**
+ * Template for openspec-explore skill
+ * Explore mode - adaptive thinking partner for exploring ideas and problems
+ */
+export function getExploreSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-explore',
+    description: 'アイデア探索・問題調査・要件整理のための思考パートナーとして explore モードに入ります。変更の前後で思考整理したいときに使います。',
+    instructions: `Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
+
+**This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
+
+---
+
+## The Stance
+
+- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
+- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
+- **Adaptive** - Follow interesting threads, pivot when new information emerges
+- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
+- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+
+---
+
+## What You Might Do
+
+Depending on what the user brings, you might:
+
+**Explore the problem space**
+- Ask clarifying questions that emerge from what they said
+- Challenge assumptions
+- Reframe the problem
+- Find analogies
+
+**Investigate the codebase**
+- Map existing architecture relevant to the discussion
+- Find integration points
+- Identify patterns already in use
+- Surface hidden complexity
+
+**Compare options**
+- Brainstorm multiple approaches
+- Build comparison tables
+- Sketch tradeoffs
+- Recommend a path (if asked)
+
+**Visualize**
+\`\`\`
+┌─────────────────────────────────────────┐
+│     Use ASCII diagrams liberally        │
+├─────────────────────────────────────────┤
+│                                         │
+│   ┌────────┐         ┌────────┐        │
+│   │ State  │────────▶│ State  │        │
+│   │   A    │         │   B    │        │
+│   └────────┘         └────────┘        │
+│                                         │
+│   System diagrams, state machines,      │
+│   data flows, architecture sketches,    │
+│   dependency graphs, comparison tables  │
+│                                         │
+└─────────────────────────────────────────┘
+\`\`\`
+
+**Surface risks and unknowns**
+- Identify what could go wrong
+- Find gaps in understanding
+- Suggest spikes or investigations
+
+---
+
+## OpenSpec Awareness
+
+You have full context of the OpenSpec system. Use it naturally, don't force it.
+
+### Check for context
+
+At the start, quickly check what exists:
+\`\`\`bash
+openspec list --json
+\`\`\`
+
+This tells you:
+- If there are active changes
+- Their names, schemas, and status
+- What the user might be working on
+
+### When no change exists
+
+Think freely. When insights crystallize, you might offer:
+
+- "This feels solid enough to start a change. Want me to create one?"
+  → Can transition to \`/opsx:new\` or \`/opsx:ff\`
+- Or keep exploring - no pressure to formalize
+
+### When a change exists
+
+If the user mentions a change or you detect one is relevant:
+
+1. **Read existing artifacts for context**
+   - \`openspec/changes/<name>/proposal.md\`
+   - \`openspec/changes/<name>/design.md\`
+   - \`openspec/changes/<name>/tasks.md\`
+   - etc.
+
+2. **Reference them naturally in conversation**
+   - "Your design mentions using Redis, but we just realized SQLite fits better..."
+   - "The proposal scopes this to premium users, but we're now thinking everyone..."
+
+3. **Offer to capture when decisions are made**
+
+   | Insight Type | Where to Capture |
+   |--------------|------------------|
+   | New requirement discovered | \`specs/<capability>/spec.md\` |
+   | Requirement changed | \`specs/<capability>/spec.md\` |
+   | Design decision made | \`design.md\` |
+   | Scope changed | \`proposal.md\` |
+   | New work identified | \`tasks.md\` |
+   | Assumption invalidated | Relevant artifact |
+
+   Example offers:
+   - "That's a design decision. Capture it in design.md?"
+   - "This is a new requirement. Add it to specs?"
+   - "This changes scope. Update the proposal?"
+
+4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
+
+---
+
+## What You Don't Have To Do
+
+- Follow a script
+- Ask the same questions every time
+- Produce a specific artifact
+- Reach a conclusion
+- Stay on topic if a tangent is valuable
+- Be brief (this is thinking time)
+
+---
+
+## Handling Different Entry Points
+
+**User brings a vague idea:**
+\`\`\`
+User: I'm thinking about adding real-time collaboration
+
+You: Real-time collab is a big space. Let me think about this...
+
+      COLLABORATION SPECTRUM
+      ════════════════════════════════════════════
+
+      Awareness          Coordination         Sync
+          │                   │                 │
+          ▼                   ▼                 ▼
+      ┌────────┐         ┌────────┐        ┌────────┐
+      │Presence│         │Cursors │        │  CRDT  │
+      │  "3    │         │ Multi  │        │Conflict│
+      │online" │         │ select │        │  free  │
+      └────────┘         └────────┘        └────────┘
+          │                   │                 │
+       trivial            moderate           complex
+
+      Where's your head at?
+\`\`\`
+
+**User brings a specific problem:**
+\`\`\`
+User: The auth system is a mess
+
+You: [reads codebase]
+
+     ┌─────────────────────────────────────────────┐
+     │              CURRENT AUTH FLOW              │
+     └─────────────────────────────────────────────┘
+                        │
+          ┌─────────────┼─────────────┐
+          ▼             ▼             ▼
+     ┌─────────┐  ┌─────────┐  ┌─────────┐
+     │ Google  │  │  GitHub │  │  Email  │
+     │  OAuth  │  │  OAuth  │  │  Magic  │
+     └────┬────┘  └────┬────┘  └────┬────┘
+          │             │             │
+          └─────────────┼─────────────┘
+                        ▼
+                  ┌───────────┐
+                  │  Session  │
+                  └─────┬─────┘
+                        │
+                        ▼
+                  ┌───────────┐
+                  │   Perms   │
+                  └───────────┘
+
+     I see three tangles. Which one's burning?
+\`\`\`
+
+**User is stuck mid-implementation:**
+\`\`\`
+User: /opsx:explore add-auth-system
+      The OAuth integration is more complex than expected
+
+You: [reads change artifacts]
+
+     You're on task 4: "Implement OAuth flow"
+
+     Let me trace what's involved...
+
+     [draws diagram, explores options, suggests paths]
+
+     Want to update the design to reflect this?
+     Or add a spike task to investigate?
+\`\`\`
+
+**User wants to compare options:**
+\`\`\`
+User: Should we use Postgres or SQLite?
+
+You: Generic answer is boring. What's the context?
+
+User: A CLI tool that tracks local dev environments
+
+You: That changes everything.
+
+     ┌─────────────────────────────────────────────────┐
+     │         CLI TOOL DATA STORAGE                  │
+     └─────────────────────────────────────────────────┘
+
+     Key constraints:
+     • No daemon running
+     • Must work offline
+     • Single user
+
+                  SQLite          Postgres
+     Deployment   embedded ✓      needs server ✗
+     Offline      yes ✓           no ✗
+     Single file  yes ✓           no ✗
+
+     SQLite. Not even close.
+
+     Unless... is there a sync component?
+\`\`\`
+
+---
+
+## Ending Discovery
+
+There's no required ending. Discovery might:
+
+- **Flow into action**: "Ready to start? /opsx:new or /opsx:ff"
+- **Result in artifact updates**: "Updated design.md with these decisions"
+- **Just provide clarity**: User has what they need, moves on
+- **Continue later**: "We can pick this up anytime"
+
+When it feels like things are crystallizing, you might summarize:
+
+\`\`\`
+## What We Figured Out
+
+**The problem**: [crystallized understanding]
+
+**The approach**: [if one emerged]
+
+**Open questions**: [if any remain]
+
+**Next steps** (if ready):
+- Create a change: /opsx:new <name>
+- Fast-forward to tasks: /opsx:ff <name>
+- Keep exploring: just keep talking
+\`\`\`
+
+But this summary is optional. Sometimes the thinking IS the value.
+
+---
+
+## Guardrails
+
+- **Don't fake understanding** - If something is unclear, dig deeper
+- **Don't rush** - Discovery is thinking time, not task time
+- **Don't force structure** - Let patterns emerge naturally
+- **Don't auto-capture** - Offer to save insights, don't just do it
+- **Do visualize** - A good diagram is worth many paragraphs
+- **Do explore the codebase** - Ground discussions in reality
+- **Do question assumptions** - Including the user's and your own`
+  };
+}
+
+/**
  * Template for openspec-new-change skill
  * Based on /opsx:new command
  */
 export function getNewChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-new-change',
-    description: 'Start a new OpenSpec change using the experimental artifact workflow. Use when the user wants to create a new feature, fix, or modification with a structured step-by-step approach.',
+    description: '実験的アーティファクトワークフローで新しい OpenSpec 変更を開始します。新機能・修正・改修を段階的に進めたいときに使います。',
     instructions: `Start a new change using the experimental artifact-driven approach.
 
 **Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
@@ -37,21 +323,22 @@ export function getNewChangeSkillTemplate(): SkillTemplate {
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-2. **Select a workflow schema**
+2. **Determine the workflow schema**
 
-   Run \`openspec schemas --json\` to get available schemas with descriptions.
+   Use the default schema (omit \`--schema\`) unless the user explicitly requests a different workflow.
 
-   Use the **AskUserQuestion tool** to let the user choose a workflow:
-   - Present each schema with its description
-   - Mark \`spec-driven\` as "(default)" if it's available
-   - Example options: "spec-driven - proposal → specs → design → tasks (default)", "tdd - tests → implementation → docs"
+   **Use a different schema only if the user mentions:**
+   - "tdd" or "test-driven" → use \`--schema tdd\`
+   - A specific schema name → use \`--schema <name>\`
+   - "show workflows" or "what workflows" → run \`openspec schemas --json\` and let them choose
 
-   If user doesn't have a preference, default to \`spec-driven\`.
+   **Otherwise**: Omit \`--schema\` to use the default.
 
 3. **Create the change directory**
    \`\`\`bash
-   openspec new change "<name>" --schema "<selected-schema>"
+   openspec new change "<name>"
    \`\`\`
+   Add \`--schema <name>\` only if the user requested a specific workflow.
    This creates a scaffolded change at \`openspec/changes/<name>/\` with the selected schema.
 
 4. **Show the artifact status**
@@ -74,7 +361,7 @@ export function getNewChangeSkillTemplate(): SkillTemplate {
 
 After completing the steps, summarize:
 - Change name and location
-- Selected schema/workflow and its artifact sequence
+- Schema/workflow being used and its artifact sequence
 - Current status (0/N artifacts complete)
 - The template for the first artifact
 - Prompt: "Ready to create the first artifact? Just describe what this change is about and I'll draft it, or ask me to continue."
@@ -84,7 +371,7 @@ After completing the steps, summarize:
 - Do NOT advance beyond showing the first artifact template
 - If the name is invalid (not kebab-case), ask for a valid name
 - If a change with that name already exists, suggest continuing that change instead
-- Always pass --schema to preserve the user's workflow choice`
+- Pass --schema if using a non-default workflow`
   };
 }
 
@@ -95,7 +382,7 @@ After completing the steps, summarize:
 export function getContinueChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-continue-change',
-    description: 'Continue working on an OpenSpec change by creating the next artifact. Use when the user wants to progress their change, create the next artifact, or continue their workflow.',
+    description: 'OpenSpec 変更を継続し、次のアーティファクトを作成します。変更を進めたいときに使います。',
     instructions: `Continue working on a change by creating the next artifact.
 
 **Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
@@ -209,7 +496,7 @@ For other schemas, follow the \`instruction\` field from the CLI output.
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-apply-change',
-    description: 'Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.',
+    description: 'OpenSpec 変更のタスクを実装します。実装の開始・継続やタスク消化に使います。',
     instructions: `Implement tasks from an OpenSpec change.
 
 **Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
@@ -367,7 +654,7 @@ This skill supports the "actions on a change" model:
 export function getFfChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-ff-change',
-    description: 'Fast-forward through OpenSpec artifact creation. Use when the user wants to quickly create all artifacts needed for implementation without stepping through each one individually.',
+    description: 'OpenSpec のアーティファクト作成を早送りし、実装に必要なものを一括作成します。',
     instructions: `Fast-forward through artifact creation - generate everything needed to start implementation in one go.
 
 **Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
@@ -462,7 +749,7 @@ After completing all artifacts, summarize:
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-sync-specs',
-    description: 'Sync delta specs from a change to main specs. Use when the user wants to update main specs with changes from a delta spec, without archiving the change.',
+    description: '変更の仕様差分をメイン仕様へ同期します。アーカイブせずに仕様を更新したいときに使います。',
     instructions: `Sync delta specs from a change to main specs.
 
 This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
@@ -606,12 +893,188 @@ export interface CommandTemplate {
 }
 
 /**
+ * Template for /opsx:explore slash command
+ * Explore mode - adaptive thinking partner
+ */
+export function getOpsxExploreCommandTemplate(): CommandTemplate {
+  return {
+    name: 'OPSX: Explore',
+    description: 'Explore モードに入り、アイデア整理・問題調査・要件明確化を行います',
+    category: 'Workflow',
+    tags: ['workflow', 'explore', 'experimental', 'thinking'],
+    content: `Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
+
+**This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
+
+**Input**: The argument after \`/opsx:explore\` is whatever the user wants to think about. Could be:
+- A vague idea: "real-time collaboration"
+- A specific problem: "the auth system is getting unwieldy"
+- A change name: "add-dark-mode" (to explore in context of that change)
+- A comparison: "postgres vs sqlite for this"
+- Nothing (just enter explore mode)
+
+---
+
+## The Stance
+
+- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
+- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
+- **Adaptive** - Follow interesting threads, pivot when new information emerges
+- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
+- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+
+---
+
+## What You Might Do
+
+Depending on what the user brings, you might:
+
+**Explore the problem space**
+- Ask clarifying questions that emerge from what they said
+- Challenge assumptions
+- Reframe the problem
+- Find analogies
+
+**Investigate the codebase**
+- Map existing architecture relevant to the discussion
+- Find integration points
+- Identify patterns already in use
+- Surface hidden complexity
+
+**Compare options**
+- Brainstorm multiple approaches
+- Build comparison tables
+- Sketch tradeoffs
+- Recommend a path (if asked)
+
+**Visualize**
+\`\`\`
+┌─────────────────────────────────────────┐
+│     Use ASCII diagrams liberally        │
+├─────────────────────────────────────────┤
+│                                         │
+│   ┌────────┐         ┌────────┐        │
+│   │ State  │────────▶│ State  │        │
+│   │   A    │         │   B    │        │
+│   └────────┘         └────────┘        │
+│                                         │
+│   System diagrams, state machines,      │
+│   data flows, architecture sketches,    │
+│   dependency graphs, comparison tables  │
+│                                         │
+└─────────────────────────────────────────┘
+\`\`\`
+
+**Surface risks and unknowns**
+- Identify what could go wrong
+- Find gaps in understanding
+- Suggest spikes or investigations
+
+---
+
+## OpenSpec Awareness
+
+You have full context of the OpenSpec system. Use it naturally, don't force it.
+
+### Check for context
+
+At the start, quickly check what exists:
+\`\`\`bash
+openspec list --json
+\`\`\`
+
+This tells you:
+- If there are active changes
+- Their names, schemas, and status
+- What the user might be working on
+
+If the user mentioned a specific change name, read its artifacts for context.
+
+### When no change exists
+
+Think freely. When insights crystallize, you might offer:
+
+- "This feels solid enough to start a change. Want me to create one?"
+  → Can transition to \`/opsx:new\` or \`/opsx:ff\`
+- Or keep exploring - no pressure to formalize
+
+### When a change exists
+
+If the user mentions a change or you detect one is relevant:
+
+1. **Read existing artifacts for context**
+   - \`openspec/changes/<name>/proposal.md\`
+   - \`openspec/changes/<name>/design.md\`
+   - \`openspec/changes/<name>/tasks.md\`
+   - etc.
+
+2. **Reference them naturally in conversation**
+   - "Your design mentions using Redis, but we just realized SQLite fits better..."
+   - "The proposal scopes this to premium users, but we're now thinking everyone..."
+
+3. **Offer to capture when decisions are made**
+
+   | Insight Type | Where to Capture |
+   |--------------|------------------|
+   | New requirement discovered | \`specs/<capability>/spec.md\` |
+   | Requirement changed | \`specs/<capability>/spec.md\` |
+   | Design decision made | \`design.md\` |
+   | Scope changed | \`proposal.md\` |
+   | New work identified | \`tasks.md\` |
+   | Assumption invalidated | Relevant artifact |
+
+   Example offers:
+   - "That's a design decision. Capture it in design.md?"
+   - "This is a new requirement. Add it to specs?"
+   - "This changes scope. Update the proposal?"
+
+4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
+
+---
+
+## What You Don't Have To Do
+
+- Follow a script
+- Ask the same questions every time
+- Produce a specific artifact
+- Reach a conclusion
+- Stay on topic if a tangent is valuable
+- Be brief (this is thinking time)
+
+---
+
+## Ending Discovery
+
+There's no required ending. Discovery might:
+
+- **Flow into action**: "Ready to start? \`/opsx:new\` or \`/opsx:ff\`"
+- **Result in artifact updates**: "Updated design.md with these decisions"
+- **Just provide clarity**: User has what they need, moves on
+- **Continue later**: "We can pick this up anytime"
+
+When things crystallize, you might offer a summary - but it's optional. Sometimes the thinking IS the value.
+
+---
+
+## Guardrails
+
+- **Don't fake understanding** - If something is unclear, dig deeper
+- **Don't rush** - Discovery is thinking time, not task time
+- **Don't force structure** - Let patterns emerge naturally
+- **Don't auto-capture** - Offer to save insights, don't just do it
+- **Do visualize** - A good diagram is worth many paragraphs
+- **Do explore the codebase** - Ground discussions in reality
+- **Do question assumptions** - Including the user's and your own`
+  };
+}
+
+/**
  * Template for /opsx:new slash command
  */
 export function getOpsxNewCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: New',
-    description: 'Start a new change using the experimental artifact workflow (OPSX)',
+    description: '実験的アーティファクトワークフロー（OPSX）で新しい変更を開始',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `Start a new change using the experimental artifact-driven approach.
@@ -629,21 +1092,22 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-2. **Select a workflow schema**
+2. **Determine the workflow schema**
 
-   Run \`openspec schemas --json\` to get available schemas with descriptions.
+   Use the default schema (omit \`--schema\`) unless the user explicitly requests a different workflow.
 
-   Use the **AskUserQuestion tool** to let the user choose a workflow:
-   - Present each schema with its description
-   - Mark \`spec-driven\` as "(default)" if it's available
-   - Example options: "spec-driven - proposal → specs → design → tasks (default)", "tdd - tests → implementation → docs"
+   **Use a different schema only if the user mentions:**
+   - "tdd" or "test-driven" → use \`--schema tdd\`
+   - A specific schema name → use \`--schema <name>\`
+   - "show workflows" or "what workflows" → run \`openspec schemas --json\` and let them choose
 
-   If user doesn't have a preference, default to \`spec-driven\`.
+   **Otherwise**: Omit \`--schema\` to use the default.
 
 3. **Create the change directory**
    \`\`\`bash
-   openspec new change "<name>" --schema "<selected-schema>"
+   openspec new change "<name>"
    \`\`\`
+   Add \`--schema <name>\` only if the user requested a specific workflow.
    This creates a scaffolded change at \`openspec/changes/<name>/\` with the selected schema.
 
 4. **Show the artifact status**
@@ -665,7 +1129,7 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
 
 After completing the steps, summarize:
 - Change name and location
-- Selected schema/workflow and its artifact sequence
+- Schema/workflow being used and its artifact sequence
 - Current status (0/N artifacts complete)
 - The template for the first artifact
 - Prompt: "Ready to create the first artifact? Run \`/opsx:continue\` or just describe what this change is about and I'll draft it."
@@ -675,7 +1139,7 @@ After completing the steps, summarize:
 - Do NOT advance beyond showing the first artifact template
 - If the name is invalid (not kebab-case), ask for a valid name
 - If a change with that name already exists, suggest using \`/opsx:continue\` instead
-- Always pass --schema to preserve the user's workflow choice`
+- Pass --schema if using a non-default workflow`
   };
 }
 
@@ -685,7 +1149,7 @@ After completing the steps, summarize:
 export function getOpsxContinueCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Continue',
-    description: 'Continue working on a change - create the next artifact (Experimental)',
+    description: '変更を継続し、次のアーティファクトを作成（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `Continue working on a change by creating the next artifact.
@@ -800,7 +1264,7 @@ For other schemas, follow the \`instruction\` field from the CLI output.
 export function getOpsxApplyCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Apply',
-    description: 'Implement tasks from an OpenSpec change (Experimental)',
+    description: 'OpenSpec 変更のタスクを実装（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `Implement tasks from an OpenSpec change.
@@ -960,7 +1424,7 @@ This skill supports the "actions on a change" model:
 export function getOpsxFfCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Fast Forward',
-    description: 'Create a change and generate all artifacts needed for implementation in one go',
+    description: '変更を作成し、実装に必要なアーティファクトを一括生成',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `Fast-forward through artifact creation - generate everything needed to start implementation.
@@ -1057,7 +1521,7 @@ After completing all artifacts, summarize:
 export function getArchiveChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-archive-change',
-    description: 'Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete.',
+    description: '実験的ワークフローで完了した変更をアーカイブします。実装完了後に変更を確定してアーカイブしたいときに使います。',
     instructions: `Archive a completed change in the experimental workflow.
 
 **Input**: Optionally specify a change name. If omitted, MUST prompt for available changes.
@@ -1188,7 +1652,7 @@ All artifacts complete. All tasks complete.
 export function getOpsxSyncCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Sync',
-    description: 'Sync delta specs from a change to main specs',
+    description: '変更の仕様差分をメイン仕様に同期',
     category: 'Workflow',
     tags: ['workflow', 'specs', 'experimental'],
     content: `Sync delta specs from a change to main specs.
@@ -1327,7 +1791,7 @@ Main specs are now updated. The change remains active - archive when implementat
 export function getOpsxArchiveCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Archive',
-    description: 'Archive a completed change in the experimental workflow',
+    description: '実験的ワークフローで完了した変更をアーカイブ',
     category: 'Workflow',
     tags: ['workflow', 'archive', 'experimental'],
     content: `Archive a completed change in the experimental workflow.

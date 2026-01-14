@@ -1122,7 +1122,7 @@ describe('InitCommand', () => {
       expect(proposalContent).toContain('---');
       expect(proposalContent).toContain('name: OpenSpec: Proposal');
       expect(proposalContent).toContain('description: 新しい OpenSpec の変更のひな形を作成し、厳密に検証します。');
-      expect(proposalContent).toContain('category: OpenSpec');
+      expect(proposalContent).toContain('argument-hint: "[機能の説明または依頼]"');
       expect(proposalContent).toContain('<!-- OPENSPEC:START -->');
       expect(proposalContent).toContain('**Guardrails**');
 
@@ -1131,11 +1131,13 @@ describe('InitCommand', () => {
       expect(applyContent).toContain('name: OpenSpec: Apply');
       expect(applyContent).toContain('description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。');
       expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
+      expect(applyContent).toContain('argument-hint: "[change-id]"');
 
       const archiveContent = await fs.readFile(codeBuddyArchive, 'utf-8');
       expect(archiveContent).toContain('---');
       expect(archiveContent).toContain('name: OpenSpec: Archive');
       expect(archiveContent).toContain('description: 適用済みの OpenSpec 変更をアーカイブし、仕様を更新します。');
+      expect(archiveContent).toContain('argument-hint: "[change-id]"');
       expect(archiveContent).toContain('openspec archive <id> --yes');
     });
 
@@ -1149,6 +1151,61 @@ describe('InitCommand', () => {
         (choice: any) => choice.value === 'codebuddy'
       );
       expect(codeBuddyChoice.configured).toBe(true);
+    });
+
+    it('should create Continue slash command files with templates', async () => {
+      queueSelections('continue', DONE);
+
+      await initCommand.execute(testDir);
+
+      const continueProposal = path.join(
+        testDir,
+        '.continue/prompts/openspec-proposal.prompt'
+      );
+      const continueApply = path.join(
+        testDir,
+        '.continue/prompts/openspec-apply.prompt'
+      );
+      const continueArchive = path.join(
+        testDir,
+        '.continue/prompts/openspec-archive.prompt'
+      );
+
+      expect(await fileExists(continueProposal)).toBe(true);
+      expect(await fileExists(continueApply)).toBe(true);
+      expect(await fileExists(continueArchive)).toBe(true);
+
+      const proposalContent = await fs.readFile(continueProposal, 'utf-8');
+      expect(proposalContent).toContain('---');
+      expect(proposalContent).toContain('name: openspec-proposal');
+      expect(proposalContent).toContain('invokable: true');
+      expect(proposalContent).toContain('<!-- OPENSPEC:START -->');
+
+      const applyContent = await fs.readFile(continueApply, 'utf-8');
+      expect(applyContent).toContain('---');
+      expect(applyContent).toContain('name: openspec-apply');
+      expect(applyContent).toContain('description: 承認済みの OpenSpec 変更を実装し、タスクの整合性を保ちます。');
+      expect(applyContent).toContain('invokable: true');
+      expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
+
+      const archiveContent = await fs.readFile(continueArchive, 'utf-8');
+      expect(archiveContent).toContain('---');
+      expect(archiveContent).toContain('name: openspec-archive');
+      expect(archiveContent).toContain('description: 適用済みの OpenSpec 変更をアーカイブし、仕様を更新します。');
+      expect(archiveContent).toContain('invokable: true');
+      expect(archiveContent).toContain('openspec archive <id> --yes');
+    });
+
+    it('should mark Continue as already configured during extend mode', async () => {
+      queueSelections('continue', DONE, 'continue', DONE);
+      await initCommand.execute(testDir);
+      await initCommand.execute(testDir);
+
+      const secondRunArgs = mockPrompt.mock.calls[1][0];
+      const continueChoice = secondRunArgs.choices.find(
+        (choice: any) => choice.value === 'continue'
+      );
+      expect(continueChoice.configured).toBe(true);
     });
 
     it('should create CODEBUDDY.md when CodeBuddy is selected', async () => {

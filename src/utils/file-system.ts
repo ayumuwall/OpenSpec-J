@@ -87,9 +87,44 @@ export class FileSystemUtils {
       return true;
     } catch (error: any) {
       if (error.code !== 'ENOENT') {
-        console.debug(`Unable to check if file exists at ${filePath}: ${error.message}`);
+        console.debug(`${filePath} の存在確認に失敗しました: ${error.message}`);
       }
       return false;
+    }
+  }
+
+  /**
+   * Finds the first existing parent directory by walking up the directory tree.
+   * @param dirPath Starting directory path
+   * @returns The first existing directory path, or null if root is reached without finding one
+   */
+  private static async findFirstExistingDirectory(dirPath: string): Promise<string | null> {
+    let currentDir = dirPath;
+
+    while (true) {
+      try {
+        const stats = await fs.stat(currentDir);
+        if (stats.isDirectory()) {
+          return currentDir;
+        }
+        // Path component exists but is not a directory (edge case)
+        console.debug(`${currentDir} が存在しますがディレクトリではありません`);
+        return null;
+      } catch (error: any) {
+        if (error.code === 'ENOENT') {
+          // Directory doesn't exist, move up one level
+          const parentDir = path.dirname(currentDir);
+          if (parentDir === currentDir) {
+            // Reached filesystem root without finding existing directory
+            return null;
+          }
+          currentDir = parentDir;
+        } else {
+          // Unexpected error (permissions, I/O error, etc.)
+          console.debug(`${currentDir} の確認中にエラー: ${error.message}`);
+          return null;
+        }
+      }
     }
   }
 
@@ -111,17 +146,25 @@ export class FileSystemUtils {
       }
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        // File doesn't exist; check if we can write to the parent directory
+        // File doesn't exist - find first existing parent directory and check its permissions
         const parentDir = path.dirname(filePath);
+        const existingDir = await this.findFirstExistingDirectory(parentDir);
+
+        if (existingDir === null) {
+          // No existing parent directory found (edge case)
+          return false;
+        }
+
+        // Check if the existing parent directory is writable
         try {
-          await fs.access(parentDir, fsConstants.W_OK);
+          await fs.access(existingDir, fsConstants.W_OK);
           return true;
         } catch {
           return false;
         }
       }
 
-      console.debug(`Unable to determine write permissions for ${filePath}: ${error.message}`);
+      console.debug(`${filePath} の書き込み権限を判定できません: ${error.message}`);
       return false;
     }
   }
@@ -132,7 +175,7 @@ export class FileSystemUtils {
       return stats.isDirectory();
     } catch (error: any) {
       if (error.code !== 'ENOENT') {
-        console.debug(`Unable to check if directory exists at ${dirPath}: ${error.message}`);
+        console.debug(`${dirPath} の存在確認に失敗しました: ${error.message}`);
       }
       return false;
     }

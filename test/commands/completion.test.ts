@@ -78,10 +78,10 @@ describe('CompletionCommand', () => {
     });
 
     it('should show error for unsupported shell', async () => {
-      await command.generate({ shell: 'bash' });
+      await command.generate({ shell: 'tcsh' });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "エラー: シェル 'bash' はまだサポートされていません。現在の対応: zsh"
+        "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
     });
@@ -135,10 +135,10 @@ describe('CompletionCommand', () => {
     });
 
     it('should show error for unsupported shell', async () => {
-      await command.install({ shell: 'fish' });
+      await command.install({ shell: 'tcsh' });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "エラー: シェル 'fish' はまだサポートされていません。現在の対応: zsh"
+        "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
     });
@@ -184,10 +184,10 @@ describe('CompletionCommand', () => {
     });
 
     it('should show error for unsupported shell', async () => {
-      await command.uninstall({ shell: 'powershell', yes: true });
+      await command.uninstall({ shell: 'tcsh', yes: true });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "エラー: シェル 'powershell' はまだサポートされていません。現在の対応: zsh"
+        "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
     });
@@ -246,12 +246,12 @@ describe('CompletionCommand', () => {
 
   describe('shell detection integration', () => {
     it('should show appropriate error when detected shell is unsupported', async () => {
-      vi.mocked(shellDetection.detectShell).mockReturnValue({ shell: undefined, detected: 'bash' });
+      vi.mocked(shellDetection.detectShell).mockReturnValue({ shell: undefined, detected: 'tcsh' });
 
       await command.generate({});
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "エラー: シェル 'bash' はまだサポートされていません。現在の対応: zsh"
+        "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
     });

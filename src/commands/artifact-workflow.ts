@@ -28,7 +28,7 @@ import {
   type SchemaInfo,
 } from '../core/artifact-graph/index.js';
 import { createChange, validateChangeName } from '../utils/change-utils.js';
-import { getNewChangeSkillTemplate, getContinueChangeSkillTemplate, getApplyChangeSkillTemplate, getFfChangeSkillTemplate, getSyncSpecsSkillTemplate, getArchiveChangeSkillTemplate, getOpsxNewCommandTemplate, getOpsxContinueCommandTemplate, getOpsxApplyCommandTemplate, getOpsxFfCommandTemplate, getOpsxSyncCommandTemplate, getOpsxArchiveCommandTemplate } from '../core/templates/skill-templates.js';
+import { getExploreSkillTemplate, getNewChangeSkillTemplate, getContinueChangeSkillTemplate, getApplyChangeSkillTemplate, getFfChangeSkillTemplate, getSyncSpecsSkillTemplate, getArchiveChangeSkillTemplate, getOpsxExploreCommandTemplate, getOpsxNewCommandTemplate, getOpsxContinueCommandTemplate, getOpsxApplyCommandTemplate, getOpsxFfCommandTemplate, getOpsxSyncCommandTemplate, getOpsxArchiveCommandTemplate } from '../core/templates/skill-templates.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 
 // -----------------------------------------------------------------------------
@@ -123,17 +123,17 @@ async function validateChangeExists(
   if (!changeName) {
     const available = await getAvailableChanges();
     if (available.length === 0) {
-      throw new Error('No changes found. Create one with: openspec new change <name>');
+      throw new Error('変更が見つかりません。次で作成してください: openspec new change <name>');
     }
     throw new Error(
-      `Missing required option --change. Available changes:\n  ${available.join('\n  ')}`
+      `必須オプション --change が不足しています。利用可能な変更:\n  ${available.join('\n  ')}`
     );
   }
 
   // Validate change name format to prevent path traversal
   const nameValidation = validateChangeName(changeName);
   if (!nameValidation.valid) {
-    throw new Error(`Invalid change name '${changeName}': ${nameValidation.error}`);
+    throw new Error(`変更名 '${changeName}' は不正です: ${nameValidation.error}`);
   }
 
   // Check directory existence directly
@@ -144,11 +144,11 @@ async function validateChangeExists(
     const available = await getAvailableChanges();
     if (available.length === 0) {
       throw new Error(
-        `Change '${changeName}' not found. No changes exist. Create one with: openspec new change <name>`
+        `変更 '${changeName}' が見つかりません。変更が存在しません。次で作成してください: openspec new change <name>`
       );
     }
     throw new Error(
-      `Change '${changeName}' not found. Available changes:\n  ${available.join('\n  ')}`
+      `変更 '${changeName}' が見つかりません。利用可能な変更:\n  ${available.join('\n  ')}`
     );
   }
 
@@ -163,7 +163,7 @@ function validateSchemaExists(schemaName: string): string {
   if (!schemaDir) {
     const availableSchemas = listSchemas();
     throw new Error(
-      `Schema '${schemaName}' not found. Available schemas:\n  ${availableSchemas.join('\n  ')}`
+      `スキーマ '${schemaName}' が見つかりません。利用可能なスキーマ:\n  ${availableSchemas.join('\n  ')}`
     );
   }
   return schemaName;
@@ -180,7 +180,7 @@ interface StatusOptions {
 }
 
 async function statusCommand(options: StatusOptions): Promise<void> {
-  const spinner = ora('Loading change status...').start();
+  const spinner = ora('変更ステータスを読み込み中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -213,9 +213,9 @@ function printStatusText(status: ChangeStatus): void {
   const doneCount = status.artifacts.filter((a) => a.status === 'done').length;
   const total = status.artifacts.length;
 
-  console.log(`Change: ${status.changeName}`);
-  console.log(`Schema: ${status.schemaName}`);
-  console.log(`Progress: ${doneCount}/${total} artifacts complete`);
+  console.log(`変更: ${status.changeName}`);
+  console.log(`スキーマ: ${status.schemaName}`);
+  console.log(`進捗: ${doneCount}/${total} アーティファクト完了`);
   console.log();
 
   for (const artifact of status.artifacts) {
@@ -224,7 +224,7 @@ function printStatusText(status: ChangeStatus): void {
     let line = `${indicator} ${artifact.id}`;
 
     if (artifact.status === 'blocked' && artifact.missingDeps && artifact.missingDeps.length > 0) {
-      line += color(` (blocked by: ${artifact.missingDeps.join(', ')})`);
+      line += color(`（ブロック元: ${artifact.missingDeps.join(', ')}）`);
     }
 
     console.log(line);
@@ -232,7 +232,7 @@ function printStatusText(status: ChangeStatus): void {
 
   if (status.isComplete) {
     console.log();
-    console.log(chalk.green('All artifacts complete!'));
+    console.log(chalk.green('すべてのアーティファクトが完了しました！'));
   }
 }
 
@@ -250,7 +250,7 @@ async function instructionsCommand(
   artifactId: string | undefined,
   options: InstructionsOptions
 ): Promise<void> {
-  const spinner = ora('Generating instructions...').start();
+  const spinner = ora('指示を生成中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -268,7 +268,7 @@ async function instructionsCommand(
       spinner.stop();
       const validIds = context.graph.getAllArtifacts().map((a) => a.id);
       throw new Error(
-        `Missing required argument <artifact>. Valid artifacts:\n  ${validIds.join('\n  ')}`
+        `必須引数 <artifact> が不足しています。利用可能なアーティファクト:\n  ${validIds.join('\n  ')}`
       );
     }
 
@@ -278,7 +278,7 @@ async function instructionsCommand(
       spinner.stop();
       const validIds = context.graph.getAllArtifacts().map((a) => a.id);
       throw new Error(
-        `Artifact '${artifactId}' not found in schema '${context.schemaName}'. Valid artifacts:\n  ${validIds.join('\n  ')}`
+        `アーティファクト '${artifactId}' がスキーマ '${context.schemaName}' に存在しません。利用可能なアーティファクト:\n  ${validIds.join('\n  ')}`
       );
     }
 
@@ -321,15 +321,15 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
   if (isBlocked) {
     const missing = dependencies.filter((d) => !d.done).map((d) => d.id);
     console.log('<warning>');
-    console.log('This artifact has unmet dependencies. Complete them first or proceed with caution.');
-    console.log(`Missing: ${missing.join(', ')}`);
+    console.log('このアーティファクトには未完了の依存関係があります。先に完了するか、注意して進めてください。');
+    console.log(`不足: ${missing.join(', ')}`);
     console.log('</warning>');
     console.log();
   }
 
   // Task directive
   console.log('<task>');
-  console.log(`Create the ${artifactId} artifact for change "${changeName}".`);
+  console.log(`変更 "${changeName}" の ${artifactId} アーティファクトを作成してください。`);
   console.log(description);
   console.log('</task>');
   console.log();
@@ -337,7 +337,7 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
   // Context (dependencies)
   if (dependencies.length > 0) {
     console.log('<context>');
-    console.log('Read these files for context before creating this artifact:');
+    console.log('このアーティファクトを作成する前に、次のファイルを読んで文脈を把握してください:');
     console.log();
     for (const dep of dependencies) {
       const status = dep.done ? 'done' : 'missing';
@@ -353,7 +353,7 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
 
   // Output location
   console.log('<output>');
-  console.log(`Write to: ${path.join(changeDir, outputPath)}`);
+  console.log(`出力先: ${path.join(changeDir, outputPath)}`);
   console.log('</output>');
   console.log();
 
@@ -373,14 +373,14 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
 
   // Success criteria placeholder
   console.log('<success_criteria>');
-  console.log('<!-- To be defined in schema validation rules -->');
+  console.log('<!-- スキーマの検証ルールで定義予定 -->');
   console.log('</success_criteria>');
   console.log();
 
   // Unlocks
   if (unlocks.length > 0) {
     console.log('<unlocks>');
-    console.log(`Completing this artifact enables: ${unlocks.join(', ')}`);
+    console.log(`このアーティファクトを完了すると次が可能になります: ${unlocks.join(', ')}`);
     console.log('</unlocks>');
     console.log();
   }
@@ -551,27 +551,27 @@ async function generateApplyInstructions(
 
   if (missingArtifacts.length > 0) {
     state = 'blocked';
-    instruction = `Cannot apply this change yet. Missing artifacts: ${missingArtifacts.join(', ')}.\nUse the openspec-continue-change skill to create the missing artifacts first.`;
+    instruction = `まだこの変更を適用できません。不足アーティファクト: ${missingArtifacts.join(', ')}。\n不足分は openspec-continue-change スキルで作成してください。`;
   } else if (tracksFile && !tracksFileExists) {
     // Tracking file configured but doesn't exist yet
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `The ${tracksFilename} file is missing and must be created.\nUse openspec-continue-change to generate the tracking file.`;
+    instruction = `${tracksFilename} が見つからないため作成が必要です。\nopenspec-continue-change で追跡ファイルを生成してください。`;
   } else if (tracksFile && tracksFileExists && total === 0) {
     // Tracking file exists but contains no tasks
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `The ${tracksFilename} file exists but contains no tasks.\nAdd tasks to ${tracksFilename} or regenerate it with openspec-continue-change.`;
+    instruction = `${tracksFilename} は存在しますがタスクがありません。\n${tracksFilename} にタスクを追加するか、openspec-continue-change で再生成してください。`;
   } else if (tracksFile && remaining === 0 && total > 0) {
     state = 'all_done';
-    instruction = 'All tasks are complete! This change is ready to be archived.\nConsider running tests and reviewing the changes before archiving.';
+    instruction = 'すべてのタスクが完了しました！この変更はアーカイブ可能です。\nアーカイブ前にテスト実行と変更内容の確認を推奨します。';
   } else if (!tracksFile) {
     // No tracking file (e.g., TDD schema) - ready to apply
     state = 'ready';
-    instruction = schemaInstruction?.trim() ?? 'All required artifacts complete. Proceed with implementation.';
+    instruction = schemaInstruction?.trim() ?? '必要なアーティファクトが完了しました。実装を進めてください。';
   } else {
     state = 'ready';
-    instruction = schemaInstruction?.trim() ?? 'Read context files, work through pending tasks, mark complete as you go.\nPause if you hit blockers or need clarification.';
+    instruction = schemaInstruction?.trim() ?? 'コンテキストファイルを読み、未完了タスクを進めながら完了にチェックしてください。\n詰まったり不明点が出たら一旦止めて確認します。';
   }
 
   return {
@@ -588,7 +588,7 @@ async function generateApplyInstructions(
 }
 
 async function applyInstructionsCommand(options: ApplyInstructionsOptions): Promise<void> {
-  const spinner = ora('Generating apply instructions...').start();
+  const spinner = ora('適用手順を生成中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -619,23 +619,23 @@ async function applyInstructionsCommand(options: ApplyInstructionsOptions): Prom
 function printApplyInstructionsText(instructions: ApplyInstructions): void {
   const { changeName, schemaName, contextFiles, progress, tasks, state, missingArtifacts, instruction } = instructions;
 
-  console.log(`## Apply: ${changeName}`);
-  console.log(`Schema: ${schemaName}`);
+  console.log(`## 適用: ${changeName}`);
+  console.log(`スキーマ: ${schemaName}`);
   console.log();
 
   // Warning for blocked state
   if (state === 'blocked' && missingArtifacts) {
-    console.log('### ⚠️ Blocked');
+    console.log('### ⚠️ ブロック中');
     console.log();
-    console.log(`Missing artifacts: ${missingArtifacts.join(', ')}`);
-    console.log('Use the openspec-continue-change skill to create these first.');
+    console.log(`不足アーティファクト: ${missingArtifacts.join(', ')}`);
+    console.log('まず openspec-continue-change スキルで作成してください。');
     console.log();
   }
 
   // Context files (dynamically from schema)
   const contextFileEntries = Object.entries(contextFiles);
   if (contextFileEntries.length > 0) {
-    console.log('### Context Files');
+    console.log('### コンテキストファイル');
     for (const [artifactId, filePath] of contextFileEntries) {
       console.log(`- ${artifactId}: ${filePath}`);
     }
@@ -644,18 +644,18 @@ function printApplyInstructionsText(instructions: ApplyInstructions): void {
 
   // Progress (only show if we have tracking)
   if (progress.total > 0 || tasks.length > 0) {
-    console.log('### Progress');
+    console.log('### 進捗');
     if (state === 'all_done') {
-      console.log(`${progress.complete}/${progress.total} complete ✓`);
+      console.log(`${progress.complete}/${progress.total} 完了 ✓`);
     } else {
-      console.log(`${progress.complete}/${progress.total} complete`);
+      console.log(`${progress.complete}/${progress.total} 完了`);
     }
     console.log();
   }
 
   // Tasks
   if (tasks.length > 0) {
-    console.log('### Tasks');
+    console.log('### タスク');
     for (const task of tasks) {
       const checkbox = task.done ? '[x]' : '[ ]';
       console.log(`- ${checkbox} ${task.description}`);
@@ -664,7 +664,7 @@ function printApplyInstructionsText(instructions: ApplyInstructions): void {
   }
 
   // Instruction
-  console.log('### Instruction');
+  console.log('### 指示');
   console.log(instruction);
 }
 
@@ -684,7 +684,7 @@ interface TemplateInfo {
 }
 
 async function templatesCommand(options: TemplatesOptions): Promise<void> {
-  const spinner = ora('Loading templates...').start();
+  const spinner = ora('テンプレートを読み込み中...').start();
 
   try {
     const schemaName = validateSchemaExists(options.schema ?? DEFAULT_SCHEMA);
@@ -714,8 +714,8 @@ async function templatesCommand(options: TemplatesOptions): Promise<void> {
       return;
     }
 
-    console.log(`Schema: ${schemaName}`);
-    console.log(`Source: ${isUserOverride ? 'user override' : 'package built-in'}`);
+    console.log(`スキーマ: ${schemaName}`);
+    console.log(`ソース: ${isUserOverride ? 'ユーザー上書き' : 'パッケージ内蔵'}`);
     console.log();
 
     for (const t of templates) {
@@ -739,7 +739,7 @@ interface NewChangeOptions {
 
 async function newChangeCommand(name: string | undefined, options: NewChangeOptions): Promise<void> {
   if (!name) {
-    throw new Error('Missing required argument <name>');
+    throw new Error('必須引数 <name> が不足しています');
   }
 
   const validation = validateChangeName(name);
@@ -752,8 +752,8 @@ async function newChangeCommand(name: string | undefined, options: NewChangeOpti
     validateSchemaExists(options.schema);
   }
 
-  const schemaDisplay = options.schema ? ` with schema '${options.schema}'` : '';
-  const spinner = ora(`Creating change '${name}'${schemaDisplay}...`).start();
+  const schemaDisplay = options.schema ? `（スキーマ: '${options.schema}'）` : '';
+  const spinner = ora(`変更 '${name}'${schemaDisplay} を作成中...`).start();
 
   try {
     const projectRoot = process.cwd();
@@ -768,9 +768,9 @@ async function newChangeCommand(name: string | undefined, options: NewChangeOpti
     }
 
     const schemaUsed = options.schema ?? DEFAULT_SCHEMA;
-    spinner.succeed(`Created change '${name}' at openspec/changes/${name}/ (schema: ${schemaUsed})`);
+    spinner.succeed(`変更 '${name}' を openspec/changes/${name}/ に作成しました（スキーマ: ${schemaUsed}）`);
   } catch (error) {
-    spinner.fail(`Failed to create change '${name}'`);
+    spinner.fail(`変更 '${name}' の作成に失敗しました`);
     throw error;
   }
 }
@@ -785,7 +785,7 @@ async function newChangeCommand(name: string | undefined, options: NewChangeOpti
  * Creates .claude/commands/opsx/ directory with slash command files.
  */
 async function artifactExperimentalSetupCommand(): Promise<void> {
-  const spinner = ora('Setting up experimental artifact workflow...').start();
+  const spinner = ora('実験的アーティファクトワークフローをセットアップ中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -793,6 +793,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
     const commandsDir = path.join(projectRoot, '.claude', 'commands', 'opsx');
 
     // Get skill templates
+    const exploreSkill = getExploreSkillTemplate();
     const newChangeSkill = getNewChangeSkillTemplate();
     const continueChangeSkill = getContinueChangeSkillTemplate();
     const applyChangeSkill = getApplyChangeSkillTemplate();
@@ -801,6 +802,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
     const archiveChangeSkill = getArchiveChangeSkillTemplate();
 
     // Get command templates
+    const exploreCommand = getOpsxExploreCommandTemplate();
     const newCommand = getOpsxNewCommandTemplate();
     const continueCommand = getOpsxContinueCommandTemplate();
     const applyCommand = getOpsxApplyCommandTemplate();
@@ -810,6 +812,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
 
     // Create skill directories and SKILL.md files
     const skills = [
+      { template: exploreSkill, dirName: 'openspec-explore' },
       { template: newChangeSkill, dirName: 'openspec-new-change' },
       { template: continueChangeSkill, dirName: 'openspec-continue-change' },
       { template: applyChangeSkill, dirName: 'openspec-apply-change' },
@@ -840,6 +843,7 @@ ${template.instructions}
 
     // Create slash command files
     const commands = [
+      { template: exploreCommand, fileName: 'explore.md' },
       { template: newCommand, fileName: 'new.md' },
       { template: continueCommand, fileName: 'continue.md' },
       { template: applyCommand, fileName: 'apply.md' },
@@ -869,47 +873,48 @@ ${template.content}
       createdCommandFiles.push(path.relative(projectRoot, commandFile));
     }
 
-    spinner.succeed('Experimental artifact workflow setup complete!');
+    spinner.succeed('実験的アーティファクトワークフローのセットアップが完了しました！');
 
     // Print success message
     console.log();
-    console.log(chalk.bold('🧪 Experimental Artifact Workflow Setup Complete'));
+    console.log(chalk.bold('🧪 実験的アーティファクトワークフローのセットアップが完了しました'));
     console.log();
-    console.log(chalk.bold('Skills Created:'));
+    console.log(chalk.bold('作成したスキル:'));
     for (const file of createdSkillFiles) {
       console.log(chalk.green('  ✓ ' + file));
     }
     console.log();
-    console.log(chalk.bold('Slash Commands Created:'));
+    console.log(chalk.bold('作成したスラッシュコマンド:'));
     for (const file of createdCommandFiles) {
       console.log(chalk.green('  ✓ ' + file));
     }
     console.log();
-    console.log(chalk.bold('📖 Usage:'));
+    console.log(chalk.bold('📖 使い方:'));
     console.log();
-    console.log('  ' + chalk.cyan('Skills') + ' work automatically in compatible editors:');
-    console.log('  • Claude Code - Auto-detected, ready to use');
-    console.log('  • Cursor - Enable in Settings → Rules → Import Settings');
-    console.log('  • Windsurf - Auto-imports from .claude directory');
+    console.log('  ' + chalk.cyan('スキル') + ' は対応エディタで自動的に有効です:');
+    console.log('  • Claude Code - 自動検出で利用可能');
+    console.log('  • Cursor - Settings → Rules → Import Settings で有効化');
+    console.log('  • Windsurf - .claude ディレクトリから自動インポート');
     console.log();
-    console.log('  Ask Claude naturally:');
-    console.log('  • "I want to start a new OpenSpec change to add <feature>"');
-    console.log('  • "Continue working on this change"');
-    console.log('  • "Implement the tasks for this change"');
+    console.log('  自然な指示例:');
+    console.log('  • "新しい OpenSpec の変更を始めたい: <feature>"');
+    console.log('  • "この変更を続けて進めて"');
+    console.log('  • "この変更のタスクを実装して"');
     console.log();
-    console.log('  ' + chalk.cyan('Slash Commands') + ' for explicit invocation:');
-    console.log('  • /opsx:new - Start a new change');
-    console.log('  • /opsx:continue - Create the next artifact');
-    console.log('  • /opsx:apply - Implement tasks');
-    console.log('  • /opsx:ff - Fast-forward: create all artifacts at once');
-    console.log('  • /opsx:sync - Sync delta specs to main specs');
-    console.log('  • /opsx:archive - Archive a completed change');
+    console.log('  ' + chalk.cyan('スラッシュコマンド') + ' で明示的に呼び出す場合:');
+    console.log('  • /opsx:explore - アイデアを整理し、問題を調査');
+    console.log('  • /opsx:new - 新しい変更を開始');
+    console.log('  • /opsx:continue - 次のアーティファクトを作成');
+    console.log('  • /opsx:apply - タスクを実装');
+    console.log('  • /opsx:ff - 早送り: すべてのアーティファクトを一括作成');
+    console.log('  • /opsx:sync - 仕様差分をメイン仕様へ同期');
+    console.log('  • /opsx:archive - 完了した変更をアーカイブ');
     console.log();
-    console.log(chalk.yellow('💡 This is an experimental feature.'));
-    console.log('   Feedback welcome at: https://github.com/Fission-AI/OpenSpec/issues');
+    console.log(chalk.yellow('💡 この機能は実験的です。'));
+    console.log('   フィードバックはこちら: https://github.com/Fission-AI/OpenSpec/issues');
     console.log();
   } catch (error) {
-    spinner.fail('Failed to setup experimental artifact workflow');
+    spinner.fail('実験的アーティファクトワークフローのセットアップに失敗しました');
     throw error;
   }
 }
@@ -930,14 +935,14 @@ async function schemasCommand(options: SchemasOptions): Promise<void> {
     return;
   }
 
-  console.log('Available schemas:');
+  console.log('利用可能なスキーマ:');
   console.log();
 
   for (const schema of schemas) {
-    const sourceLabel = schema.source === 'user' ? chalk.dim(' (user override)') : '';
+    const sourceLabel = schema.source === 'user' ? chalk.dim('（ユーザー上書き）') : '';
     console.log(`  ${chalk.bold(schema.name)}${sourceLabel}`);
     console.log(`    ${schema.description}`);
-    console.log(`    Artifacts: ${schema.artifacts.join(' → ')}`);
+    console.log(`    アーティファクト: ${schema.artifacts.join(' → ')}`);
     console.log();
   }
 }
@@ -954,16 +959,16 @@ export function registerArtifactWorkflowCommands(program: Command): void {
   // Status command
   program
     .command('status')
-    .description('[Experimental] Display artifact completion status for a change')
-    .option('--change <id>', 'Change name to show status for')
-    .option('--schema <name>', 'Schema override (auto-detected from .openspec.yaml)')
-    .option('--json', 'Output as JSON')
+    .description('[Experimental] 変更のアーティファクト完了状況を表示')
+    .option('--change <id>', 'ステータスを表示する変更名')
+    .option('--schema <name>', 'スキーマを上書き（.openspec.yaml から自動検出）')
+    .option('--json', 'JSON で出力')
     .action(async (options: StatusOptions) => {
       try {
         await statusCommand(options);
       } catch (error) {
         console.log();
-        ora().fail(`Error: ${(error as Error).message}`);
+        ora().fail(`エラー: ${(error as Error).message}`);
         process.exit(1);
       }
     });
@@ -971,10 +976,10 @@ export function registerArtifactWorkflowCommands(program: Command): void {
   // Instructions command
   program
     .command('instructions [artifact]')
-    .description('[Experimental] Output enriched instructions for creating an artifact or applying tasks')
-    .option('--change <id>', 'Change name')
-    .option('--schema <name>', 'Schema override (auto-detected from .openspec.yaml)')
-    .option('--json', 'Output as JSON')
+    .description('[Experimental] アーティファクト作成またはタスク適用の詳細指示を出力')
+    .option('--change <id>', '変更名')
+    .option('--schema <name>', 'スキーマを上書き（.openspec.yaml から自動検出）')
+    .option('--json', 'JSON で出力')
     .action(async (artifactId: string | undefined, options: InstructionsOptions) => {
       try {
         // Special case: "apply" is not an artifact, but a command to get apply instructions
@@ -985,7 +990,7 @@ export function registerArtifactWorkflowCommands(program: Command): void {
         }
       } catch (error) {
         console.log();
-        ora().fail(`Error: ${(error as Error).message}`);
+        ora().fail(`エラー: ${(error as Error).message}`);
         process.exit(1);
       }
     });
@@ -993,15 +998,15 @@ export function registerArtifactWorkflowCommands(program: Command): void {
   // Templates command
   program
     .command('templates')
-    .description('[Experimental] Show resolved template paths for all artifacts in a schema')
-    .option('--schema <name>', `Schema to use (default: ${DEFAULT_SCHEMA})`)
-    .option('--json', 'Output as JSON mapping artifact IDs to template paths')
+    .description('[Experimental] スキーマ内のテンプレート解決パスを表示')
+    .option('--schema <name>', `使用するスキーマ（デフォルト: ${DEFAULT_SCHEMA}）`)
+    .option('--json', 'アーティファクトID→テンプレートパスの JSON を出力')
     .action(async (options: TemplatesOptions) => {
       try {
         await templatesCommand(options);
       } catch (error) {
         console.log();
-        ora().fail(`Error: ${(error as Error).message}`);
+        ora().fail(`エラー: ${(error as Error).message}`);
         process.exit(1);
       }
     });
@@ -1009,32 +1014,32 @@ export function registerArtifactWorkflowCommands(program: Command): void {
   // Schemas command
   program
     .command('schemas')
-    .description('[Experimental] List available workflow schemas with descriptions')
-    .option('--json', 'Output as JSON (for agent use)')
+    .description('[Experimental] 利用可能なワークフロースキーマを説明付きで一覧表示')
+    .option('--json', 'JSON で出力（エージェント用）')
     .action(async (options: SchemasOptions) => {
       try {
         await schemasCommand(options);
       } catch (error) {
         console.log();
-        ora().fail(`Error: ${(error as Error).message}`);
+        ora().fail(`エラー: ${(error as Error).message}`);
         process.exit(1);
       }
     });
 
   // New command group with change subcommand
-  const newCmd = program.command('new').description('[Experimental] Create new items');
+  const newCmd = program.command('new').description('[Experimental] 新規項目を作成');
 
   newCmd
     .command('change <name>')
-    .description('[Experimental] Create a new change directory')
-    .option('--description <text>', 'Description to add to README.md')
-    .option('--schema <name>', `Workflow schema to use (default: ${DEFAULT_SCHEMA})`)
+    .description('[Experimental] 新しい変更ディレクトリを作成')
+    .option('--description <text>', 'README.md に追記する説明')
+    .option('--schema <name>', `使用するワークフロースキーマ（デフォルト: ${DEFAULT_SCHEMA}）`)
     .action(async (name: string, options: NewChangeOptions) => {
       try {
         await newChangeCommand(name, options);
       } catch (error) {
         console.log();
-        ora().fail(`Error: ${(error as Error).message}`);
+        ora().fail(`エラー: ${(error as Error).message}`);
         process.exit(1);
       }
     });
@@ -1042,13 +1047,13 @@ export function registerArtifactWorkflowCommands(program: Command): void {
   // Artifact experimental setup command
   program
     .command('artifact-experimental-setup')
-    .description('[Experimental] Setup Agent Skills for the experimental artifact workflow')
+    .description('[Experimental] 実験的アーティファクトワークフロー向けに Agent Skills をセットアップ')
     .action(async () => {
       try {
         await artifactExperimentalSetupCommand();
       } catch (error) {
         console.log();
-        ora().fail(`Error: ${(error as Error).message}`);
+        ora().fail(`エラー: ${(error as Error).message}`);
         process.exit(1);
       }
     });
