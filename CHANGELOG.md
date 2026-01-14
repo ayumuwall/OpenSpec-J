@@ -6,7 +6,10 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 ## 0.20.0
 
 - **[OpenSpec-J]** v0.20.0 追従のため、README/AGENTS テンプレート/スラッシュコマンドの説明文を更新。
+- **[OpenSpec-J]** `openspec/AGENTS.md` と `openspec/project.md` の日本語テンプレートを更新。
 - **[OpenSpec-J]** PowerShell 補完のヘッダーと表示文言を日本語化。
+- **[OpenSpec-J]** `/opsx:verify` と関連するテンプレートの日本語化を反映。
+- **[OpenSpec-J]** 追加/更新されたテンプレート・CLI 文言の翻訳に合わせてテスト期待値を更新。
 
 ### マイナー変更
 
