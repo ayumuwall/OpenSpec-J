@@ -101,7 +101,7 @@ artifacts:
 
 ユーザー向けにパス解決とファイル操作を担う CLI コマンド（またはコマンド群）を用意します。
 
-### Option A: 単一の `openspec schema` コマンド
+### 案 A: 単一の `openspec schema` コマンド
 
 ```bash
 # 利用可能なスキーマ一覧（内蔵とユーザー上書き）
@@ -126,7 +126,7 @@ openspec schema reset spec-driven
 openspec schema validate spec-driven
 ```
 
-### Option B: 専用の `openspec customize` コマンド
+### 案 B: 専用の `openspec customize` コマンド
 
 ```bash
 # 対話的にスキーマをカスタマイズ
@@ -138,7 +138,7 @@ openspec customize spec-driven
 # ユーザーディレクトリにコピーしパスを表示、必要なら $EDITOR で開く
 ```
 
-### Option C: init 時にスキーマを選択
+### 案 C: init 時にスキーマを選択
 
 ```bash
 # プロジェクト初期化時にスキーマ選択を提示
@@ -152,7 +152,7 @@ openspec init
 
 ### 推奨アプローチ
 
-**Option A** が最も柔軟で、Unix の慣習（離散操作のサブコマンド）にも沿います。優先度順の主なコマンドは次のとおりです。
+**案 A** が最も柔軟で、Unix の慣習（離散操作のサブコマンド）にも沿います。優先度順の主なコマンドは次のとおりです。
 
 1. `openspec schema list` — 使えるスキーマ一覧
 2. `openspec schema which <name>` — 解決先の確認
@@ -199,7 +199,7 @@ Future:  schema.yaml from user OR built-in
 
 ## 関連ドキュメント
 
-- [Schema Workflow Gaps](./schema-workflow-gaps.md) — エンドツーエンドのワークフロー分析と段階的実装プラン
+- [スキーマワークフローのギャップ](./schema-workflow-gaps.md) — エンドツーエンドのワークフロー分析と段階的実装プラン
 
 ## 関連ファイル
 

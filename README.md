@@ -3,7 +3,7 @@
     <picture>
       <source srcset="assets/openspec_pixel_dark.svg" media="(prefers-color-scheme: dark)">
       <source srcset="assets/openspec_pixel_light.svg" media="(prefers-color-scheme: light)">
-      <img src="assets/openspec_pixel_light.svg" alt="OpenSpec logo" height="64">
+      <img src="assets/openspec_pixel_light.svg" alt="OpenSpec ロゴ" height="64">
     </picture>
   </a>
   
@@ -11,15 +11,15 @@
 <p align="center">AI コーディングアシスタントのための仕様駆動開発。</p>
 <p align="center">
   <a href="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml?query=branch%3Aja-docs"><img alt="CI" src="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml/badge.svg?branch=ja-docs" /></a>
-  <a href="https://www.npmjs.com/package/@ayumuwall/openspec"><img alt="npm version" src="https://img.shields.io/npm/v/@ayumuwall/openspec?style=flat-square" /></a>
-  <a href="https://nodejs.org/"><img alt="node version" src="https://img.shields.io/node/v/@ayumuwall/openspec?style=flat-square" /></a>
-  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@ayumuwall/openspec"><img alt="npm バージョン" src="https://img.shields.io/npm/v/@ayumuwall/openspec?style=flat-square" /></a>
+  <a href="https://nodejs.org/"><img alt="Node.js バージョン" src="https://img.shields.io/node/v/@ayumuwall/openspec?style=flat-square" /></a>
+  <a href="./LICENSE"><img alt="ライセンス: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
   <a href="https://conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square" /></a>
   <a href="https://discord.gg/YctCnvvshC"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white&style=flat-square" /></a>
 </p>
 
 <p align="center">
-  <img src="assets/openspec_dashboard.png" alt="OpenSpec dashboard preview" width="90%">
+  <img src="assets/openspec_dashboard.png" alt="OpenSpec ダッシュボードのプレビュー" width="90%">
 </p>
 
 <p align="center">
@@ -54,7 +54,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 - **変更追跡**: 提案・タスク・仕様差分を同居させ、アーカイブ時に承認済みの更新を仕様へ統合。
 - **spec-kit / Kiro との比較**: これらは 0→1 の新機能で強いが、OpenSpec は既存挙動を変える 1→n 改修や複数仕様にまたがる更新でも力を発揮。
 
-詳細は [How OpenSpec Compares](#how-openspec-compares) を参照してください。
+詳細は [OpenSpec の比較](#openspec-の比較) を参照してください。
 
 ## 仕組み
 
@@ -99,17 +99,17 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 
 これらのツールには OpenSpec コマンドが組み込まれています。案内に従って OpenSpec 連携を選択してください。
 
-| Tool | Commands |
+| ツール | コマンド |
 |------|----------|
 | **Amazon Q Developer** | `@openspec-proposal`, `@openspec-apply`, `@openspec-archive` (`.amazonq/prompts/`) |
 | **Antigravity** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.agent/workflows/`) |
 | **Auggie (Augment CLI)** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.augment/commands/`) |
 | **Claude Code** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` |
-| **Cline** | Workflows in `.clinerules/workflows/` directory (`.clinerules/workflows/openspec-*.md`) |
-| **CodeBuddy Code (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.codebuddy/commands/`) — see [docs](https://www.codebuddy.ai/cli) |
-| **Codex** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (global: `~/.codex/prompts`, auto-installed) |
+| **Cline** | `.clinerules/workflows/` ディレクトリのワークフロー (`.clinerules/workflows/openspec-*.md`) |
+| **CodeBuddy Code (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.codebuddy/commands/`) — 詳細は [ドキュメント](https://www.codebuddy.ai/cli) |
+| **Codex** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (グローバル: `~/.codex/prompts`, 自動インストール) |
 | **Continue** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.continue/prompts/`) |
-| **CoStrict** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.cospec/openspec/commands/`) — see [docs](https://costrict.ai)|
+| **CoStrict** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.cospec/openspec/commands/`) — 詳細は [ドキュメント](https://costrict.ai)|
 | **Crush** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.crush/commands/openspec/`) |
 | **Cursor** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` |
 | **Factory Droid** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.factory/commands/`) |
@@ -118,7 +118,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 | **iFlow (iflow-cli)** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.iflow/commands/`) |
 | **Kilo Code** | `/openspec-proposal.md`, `/openspec-apply.md`, `/openspec-archive.md` (`.kilocode/workflows/`) |
 | **OpenCode** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` |
-| **Qoder (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.qoder/commands/openspec/`) — see [docs](https://qoder.com/cli) |
+| **Qoder (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.qoder/commands/openspec/`) — 詳細は [ドキュメント](https://qoder.com/cli) |
 | **Qwen Code** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.qwen/commands/`) |
 | **RooCode** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.roo/commands/`) |
 | **Windsurf** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.windsurf/workflows/`) |
@@ -130,11 +130,11 @@ Kilo Code はチームのワークフローを自動検出します。生成さ�
 <details>
 <summary><strong>AGENTS.md 互換</strong>（クリックで展開）</summary>
 
-これらのツールは `openspec/AGENTS.md` からワークフロー手順を自動で読み込みます。必要に応じて OpenSpec ワークフローを実行するよう指示してください。詳細は [AGENTS.md convention](https://agents.md/) を参照。
+これらのツールは `openspec/AGENTS.md` からワークフロー手順を自動で読み込みます。必要に応じて OpenSpec ワークフローを実行するよう指示してください。詳細は [AGENTS.md 規約](https://agents.md/) を参照。
 
-| Tools |
+| ツール |
 |-------|
-| Amp • Jules • Others |
+| Amp • Jules • その他 |
 
 </details>
 

@@ -364,8 +364,8 @@ defaultSchema: spec-driven
 
 ## 関連ドキュメント
 
-- [Schema Customization](./schema-customization.md) — 手作業の上書き手順と CLI のギャップ
-- [Artifact POC](./artifact_poc.md) — コアとなるアーティファクトグラフ設計
+- [スキーマカスタマイズ](./schema-customization.md) — 手作業の上書き手順と CLI のギャップ
+- [アーティファクト POC](./artifact_poc.md) — コアとなるアーティファクトグラフ設計
 
 ## 関連コード
 
