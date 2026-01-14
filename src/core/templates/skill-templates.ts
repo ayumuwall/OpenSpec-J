@@ -61,7 +61,7 @@ export function getExploreSkillTemplate(): SkillTemplate {
 - 求められたら推奨案を示す
 
 **可視化する**
-```
+\`\`\`
 ┌─────────────────────────────────────────┐
 │     ASCII 図は積極的に使う             │
 ├─────────────────────────────────────────┤
@@ -75,7 +75,7 @@ export function getExploreSkillTemplate(): SkillTemplate {
 │   比較表 など                           │
 │                                         │
 └─────────────────────────────────────────┘
-```
+\`\`\`
 
 **リスクと未知を浮かび上がらせる**
 - 何が壊れうるかを列挙する
@@ -91,9 +91,9 @@ OpenSpec の全体像を理解したうえで、自然に活用する。押し�
 ### 文脈チェック
 
 開始時に存在する変更を確認する:
-```bash
+\`\`\`bash
 openspec list --json
-```
+\`\`\`
 
 これで分かること:
 - 進行中の変更があるか
@@ -105,7 +105,7 @@ openspec list --json
 自由に考える。洞察が固まってきたら提案してよい:
 
 - 「ここまで固まったなら変更を作ってみませんか？」
-  → `/opsx:new` または `/opsx:ff` に誘導できる
+  → \`/opsx:new\` または \`/opsx:ff\` に誘導できる
 - そのまま探索を続けてもよい（形式化の圧はかけない）
 
 ### 変更がある場合
@@ -113,9 +113,9 @@ openspec list --json
 ユーザーが変更に触れている、または関連があると判断したら:
 
 1. **既存アーティファクトを読む**
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/design.md`
-   - `openspec/changes/<name>/tasks.md`
+   - \`openspec/changes/<name>/proposal.md\`
+   - \`openspec/changes/<name>/design.md\`
+   - \`openspec/changes/<name>/tasks.md\`
    - など
 
 2. **会話の中で自然に参照する**
@@ -126,11 +126,11 @@ openspec list --json
 
    | 気づきの種別 | 記録先 |
    |--------------|--------|
-   | 新しい要件 | `specs/<capability>/spec.md` |
-   | 要件の変更 | `specs/<capability>/spec.md` |
-   | 設計判断 | `design.md` |
-   | スコープ変更 | `proposal.md` |
-   | 新規タスク | `tasks.md` |
+   | 新しい要件 | \`specs/<capability>/spec.md\` |
+   | 要件の変更 | \`specs/<capability>/spec.md\` |
+   | 設計判断 | \`design.md\` |
+   | スコープ変更 | \`proposal.md\` |
+   | 新規タスク | \`tasks.md\` |
    | 前提崩壊 | 関連アーティファクト |
 
    例:
@@ -156,7 +156,7 @@ openspec list --json
 ## 入口別の対応
 
 **曖昧なアイデアから始まる場合:**
-```
+\`\`\`
 ユーザー: リアルタイム共同編集を追加したい
 
 あなた: リアルタイム協調は広い領域ですね。整理しながら考えます...
@@ -176,10 +176,10 @@ openspec list --json
        容易            中程度           複雑
 
       いま想定しているのはどの辺りですか？
-```
+\`\`\`
 
 **具体的な問題がある場合:**
-```
+\`\`\`
 ユーザー: 認証がごちゃごちゃしている
 
 あなた: [コードを読む]
@@ -207,10 +207,10 @@ openspec list --json
                   └───────────┘
 
      3 箇所に絡みが見えます。どこが一番困っていますか？
-```
+\`\`\`
 
 **実装途中で詰まっている場合:**
-```
+\`\`\`
 ユーザー: /opsx:explore add-auth-system
       OAuth 連携が想定より複雑だった
 
@@ -219,7 +219,36 @@ openspec list --json
      タスク 4 の "OAuth フローを実装" まで進んでいますね
      ただし "OAuth プロバイダ" の仕様が無いのでブロックされています
      先に仕様を書きましょうか？
-```
+\`\`\`
+
+**選択肢を比較したい場合:**
+\`\`\`
+ユーザー: Postgres と SQLite どちらが良い？
+
+あなた: それだけだと一般論になってしまうので、文脈を教えてください。
+
+ユーザー: ローカルの開発環境を追跡する CLI ツールです
+
+あなた: それなら話が変わりますね。
+
+     ┌─────────────────────────────────────────────────┐
+     │          CLI ツールのデータ保存                 │
+     └─────────────────────────────────────────────────┘
+
+     重要な制約:
+     • 常駐プロセスなし
+     • オフラインで動く必要がある
+     • 単一ユーザー
+
+                  SQLite          Postgres
+     配布形態     組み込み ✓       サーバー必要 ✗
+     オフライン   対応 ✓           非対応 ✗
+     単一ファイル はい ✓           いいえ ✗
+
+     SQLite ですね。迷う余地はほぼありません。
+
+     ただし...同期コンポーネントはありますか？
+\`\`\`
 
 ## 探索の終わり方
 
@@ -232,7 +261,7 @@ openspec list --json
 
 整理できたと感じたら、簡潔にまとめてもよい:
 
-```
+\`\`\`
 ## 分かったこと
 
 **問題**: [理解した問題]
@@ -245,7 +274,7 @@ openspec list --json
 - 変更を作成: /opsx:new <name>
 - タスクまで早送り: /opsx:ff <name>
 - もう少し探索: このまま会話を続ける
-```
+\`\`\`
 
 ただし、このまとめは必須ではない。思考の過程そのものが価値になることもある。
 
@@ -259,7 +288,7 @@ openspec list --json
 - **勝手に記録しない** - 記録は提案し、実行はユーザーに委ねる
 - **可視化する** - 良い図は文章より強い
 - **コードベースを読む** - 現実の実装に結び付ける
-- **前提を疑う** - ユーザーの前提も自分の前提も``
+- **前提を疑う** - ユーザーの前提も自分の前提も`
   };
 }
 
@@ -282,40 +311,40 @@ export function getNewChangeSkillTemplate(): SkillTemplate {
    **AskUserQuestion tool**（自由入力）で次を聞く:
    > "どんな変更を進めたいですか？作りたいもの・直したいものを教えてください。"
 
-   説明から kebab-case の名称を作る（例: "ユーザー認証を追加" → `add-user-auth`）。
+   説明から kebab-case の名称を作る（例: "ユーザー認証を追加" → \`add-user-auth\`）。
 
    **重要**: 何を作るか理解できるまでは進めない。
 
 2. **ワークフロースキーマを決める**
 
-   ユーザーが明示しない限り、デフォルト（`--schema` を省略）を使う。
+   ユーザーが明示しない限り、デフォルト（\`--schema\` を省略）を使う。
 
    **別スキーマにするのは次の場合のみ:**
-   - "tdd" / "test-driven" → `--schema tdd`
-   - 明示的なスキーマ名 → `--schema <name>`
-   - "workflows を見せて" → `openspec schemas --json` で選ばせる
+   - "tdd" / "test-driven" → \`--schema tdd\`
+   - 明示的なスキーマ名 → \`--schema <name>\`
+   - "workflows を見せて" → \`openspec schemas --json\` で選ばせる
 
-   **それ以外**: `--schema` は省略する。
+   **それ以外**: \`--schema\` は省略する。
 
 3. **変更ディレクトリを作成する**
-   ```bash
+   \`\`\`bash
    openspec new change "<name>"
-   ```
-   特定スキーマが指定された場合のみ `--schema <name>` を付ける。
-   選択したスキーマで `openspec/changes/<name>/` にひな形が作成される。
+   \`\`\`
+   特定スキーマが指定された場合のみ \`--schema <name>\` を付ける。
+   選択したスキーマで \`openspec/changes/<name>/\` にひな形が作成される。
 
 4. **アーティファクトの状態を表示する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>"
-   ```
+   \`\`\`
    どのアーティファクトが必要で、どれが ready か（依存関係が満たされているか）を確認する。
 
 5. **最初のアーティファクトの指示を取得する**
-   最初のアーティファクトはスキーマによって変わる（例: spec-driven は `proposal`、tdd は `spec`）。
-   status 出力から `status: "ready"` の最初のアーティファクトを選ぶ。
-   ```bash
+   最初のアーティファクトはスキーマによって変わる（例: spec-driven は \`proposal\`、tdd は \`spec\`）。
+   status 出力から \`status: "ready"\` の最初のアーティファクトを選ぶ。
+   \`\`\`bash
    openspec instructions <first-artifact-id> --change "<name>"
-   ```
+   \`\`\`
    これで最初のアーティファクト用テンプレートと文脈が出力される。
 
 6. **STOP してユーザーの指示を待つ**
@@ -334,7 +363,7 @@ export function getNewChangeSkillTemplate(): SkillTemplate {
 - 最初のアーティファクトテンプレート表示より先に進めない
 - 名前が kebab-case でない場合は修正を求める
 - 同名の変更が既にある場合は継続を提案する
-- 非デフォルトの場合のみ `--schema` を付ける``
+- 非デフォルトの場合のみ \`--schema\` を付ける`
   };
 }
 
@@ -355,32 +384,32 @@ export function getContinueChangeSkillTemplate(): SkillTemplate {
 1. **change 名が無い場合は選択させる**
 
    
-   `openspec list --json` を実行し、更新日時の新しい順で取得する。**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、更新日時の新しい順で取得する。**AskUserQuestion tool** でユーザーに選ばせる。
 
    候補は直近 3〜4 件を提示し、次を表示する:
    - 変更名
-   - スキーマ（`schema` があればそれ、無ければ "spec-driven"）
+   - スキーマ（\`schema\` があればそれ、無ければ "spec-driven"）
    - 状態（例: "0/5 tasks", "complete", "no tasks"）
-   - 最終更新日時（`lastModified`）
+   - 最終更新日時（\`lastModified\`）
 
    最も新しいものには "(推奨)" を付ける。
 
    **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
 2. **現在の状態を確認する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>" --json
-   ```
+   \`\`\`
    JSON から次を把握する:
-   - `schemaName`: 使用中のスキーマ（例: "spec-driven", "tdd"）
-   - `artifacts`: 各アーティファクトの状態（"done" / "ready" / "blocked"）
-   - `isComplete`: 全完了かどうか
+   - \`schemaName\`: 使用中のスキーマ（例: "spec-driven", "tdd"）
+   - \`artifacts\`: 各アーティファクトの状態（"done" / "ready" / "blocked"）
+   - \`isComplete\`: 全完了かどうか
 
 3. **状態に応じて行動する**
 
    ---
 
-   **全アーティファクト完了（`isComplete: true`）の場合**:
+   **全アーティファクト完了（\`isComplete: true\`）の場合**:
    - ねぎらいと完了報告
    - スキーマと最終状態を表示
    - "すべて完了しました。次は実装またはアーカイブに進めます" と案内
@@ -388,12 +417,12 @@ export function getContinueChangeSkillTemplate(): SkillTemplate {
 
    ---
 
-   **作成可能なアーティファクトがある場合**（`status: "ready"`）:
-   - 最初の `ready` を選ぶ
+   **作成可能なアーティファクトがある場合**（\`status: "ready"\`）:
+   - 最初の \`ready\` を選ぶ
    - 指示を取得:
-     ```bash
+     \`\`\`bash
      openspec instructions <artifact-id> --change "<name>" --json
-     ```
+     \`\`\`
    - JSON からテンプレート/依存関係/解放先を取得
    - **アーティファクトを作成する**:
      - 依存済みファイルを読む
@@ -409,9 +438,9 @@ export function getContinueChangeSkillTemplate(): SkillTemplate {
    - ステータスを示し、問題の確認を提案
 
 4. **作成後に進捗を表示する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>"
-   ```
+   \`\`\`
 
 **出力**
 
@@ -424,7 +453,7 @@ export function getContinueChangeSkillTemplate(): SkillTemplate {
 
 **アーティファクト作成ガイドライン**
 
-アーティファクトの種類と目的はスキーマで異なる。`instruction` フィールドを読み、何を作るべきか理解する。
+アーティファクトの種類と目的はスキーマで異なる。\`instruction\` フィールドを読み、何を作るべきか理解する。
 
 一般的なパターン:
 
@@ -441,7 +470,7 @@ export function getContinueChangeSkillTemplate(): SkillTemplate {
 - **src/*.ts**: テストを通す実装（緑）。
 - **docs/*.md**: 実装内容を文書化。
 
-その他のスキーマは CLI の `instruction` に従う。
+その他のスキーマは CLI の \`instruction\` に従う。
 
 **ガードレール**
 - 1 回の実行で 1 アーティファクトのみ作成する
@@ -449,7 +478,7 @@ export function getContinueChangeSkillTemplate(): SkillTemplate {
 - スキップや順序入れ替えはしない
 - 文脈が不明なら作成前に確認する
 - 書き込み後にファイルが存在することを確認してから進捗更新
-- スキーマ順序に従い、独自判断で名前を決めない``
+- スキーマ順序に従い、独自判断で名前を決めない`
   };
 }
 
@@ -469,7 +498,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
    tasks がある変更（実装対象）だけ表示する。
    可能なら各変更の schema を併記する。
@@ -478,22 +507,22 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
 2. **ステータス確認でスキーマを把握する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>" --json
-   ```
+   \`\`\`
    JSON から以下を把握する:
-   - `schemaName`: 使用中のワークフロー
+   - \`schemaName\`: 使用中のワークフロー
    - この変更で存在するアーティファクト
 
 3. **適用指示を取得する**
-   ```bash
+   \`\`\`bash
    openspec instructions apply --change "<name>" --json
-   ```
+   \`\`\`
    ここから change ディレクトリ、contextFiles、タスク一覧、進捗、状態を取得する。
 
 4. **状態に応じて対応する**
 
-   - **blocked**: 不足アーティファクトがある。指示に従い `openspec-continue-change` で作成するよう案内する。
+   - **blocked**: 不足アーティファクトがある。指示に従い \`openspec-continue-change\` で作成するよう案内する。
    - **all_done**: タスクは完了。アーカイブ準備として検証やレビューを促す。
    - **ready**: タスク実装に進む。
 
@@ -518,7 +547,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 - tasks.md に記載された順序を尊重する
 - 依頼内容の範囲外に広げない
 - 必要なら確認質問を入れる
-- 既存のスタイルやパターンを守る``
+- 既存のスタイルやパターンを守る`
   };
 }
 
@@ -538,26 +567,26 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
 2. **ステータスを確認する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>" --json
-   ```
+   \`\`\`
    完了済みと未完了のアーティファクトを把握する。
 
 3. **未完了アーティファクトを順番に作成する**
 
-   - `status: "ready"` の順で進める
-   - 各アーティファクトごとに `openspec instructions <artifact-id> --change "<name>" --json` を取得
+   - \`status: "ready"\` の順で進める
+   - 各アーティファクトごとに \`openspec instructions <artifact-id> --change "<name>" --json\` を取得
    - 依存するアーティファクトを読み、テンプレートを埋めて書き込む
 
 4. **すべて作成するまで繰り返す**
 
 5. **完了ステータスを表示する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>"
-   ```
+   \`\`\`
 
 **出力**
 
@@ -568,7 +597,7 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
 **ガードレール**
 - 依存順序を守る
 - 文脈が不明なら作成前に確認する
-- 1 つずつ作成し、完了を確認して次へ進む``
+- 1 つずつ作成し、完了を確認して次へ進む`
   };
 }
 
@@ -588,16 +617,16 @@ export function getSyncSpecsSkillTemplate(): SkillTemplate {
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
 2. **差分仕様の存在を確認する**
 
-   `openspec/changes/<name>/specs/` を探索し、`spec.md` があるか確認する。
+   \`openspec/changes/<name>/specs/\` を探索し、\`spec.md\` があるか確認する。
    無い場合は同期不要と伝える。
 
 3. **差分仕様を読み、メイン仕様へ反映する**
 
-   - `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を読み取る
+   - \`## ADDED|MODIFIED|REMOVED|RENAMED Requirements\` を読み取る
    - メイン仕様に追加/更新/削除/名称変更を適用する
    - 差分に書かれていない既存内容は維持する
 
@@ -607,7 +636,7 @@ export function getSyncSpecsSkillTemplate(): SkillTemplate {
 
 **成功時の出力**
 
-```
+\`\`\`
 ## 仕様同期完了: <change-name>
 
 メイン仕様を更新しました:
@@ -621,7 +650,7 @@ export function getSyncSpecsSkillTemplate(): SkillTemplate {
 - 追加: "別の機能"
 
 メイン仕様は更新済み。変更はアクティブのままなので、実装完了後にアーカイブしてください。
-```
+\`\`\`
 
 **ガードレール**
 - 差分とメイン仕様を両方読む
@@ -787,7 +816,7 @@ export function getOpsxExploreCommandTemplate(): CommandTemplate {
 
 **これはワークフローではなくスタンス。** 固定手順や必須アウトプットはない。
 
-**入力**: `/opsx:explore` の後の引数は検討したい内容なら何でもよい:
+**入力**: \`/opsx:explore\` の後の引数は検討したい内容なら何でもよい:
 - 曖昧なアイデア: "リアルタイムコラボレーション"
 - 具体的な問題: "認証が複雑になりすぎた"
 - change 名: "add-dark-mode"（変更文脈で探索）
@@ -827,7 +856,7 @@ export function getOpsxExploreCommandTemplate(): CommandTemplate {
 - 求められたら推奨案を示す
 
 **可視化する**
-```
+\`\`\`
 ┌─────────────────────────────────────────┐
 │     ASCII 図は積極的に使う             │
 ├─────────────────────────────────────────┤
@@ -841,7 +870,7 @@ export function getOpsxExploreCommandTemplate(): CommandTemplate {
 │   比較表 など                           │
 │                                         │
 └─────────────────────────────────────────┘
-```
+\`\`\`
 
 **リスクと未知を浮かび上がらせる**
 - 何が壊れうるかを列挙する
@@ -853,9 +882,9 @@ export function getOpsxExploreCommandTemplate(): CommandTemplate {
 ## OpenSpec の文脈
 
 開始時に存在する変更を確認する:
-```bash
+\`\`\`bash
 openspec list --json
-```
+\`\`\`
 
 - 進行中の変更があるか
 - 変更名 / スキーマ / 状態
@@ -867,15 +896,15 @@ openspec list --json
 
 自由に考える。洞察が固まってきたら提案してよい:
 - 「ここまで固まったなら変更を作ってみませんか？」
-  → `/opsx:new` または `/opsx:ff` に誘導
+  → \`/opsx:new\` または \`/opsx:ff\` に誘導
 - そのまま探索を続けてもよい
 
 ### 変更がある場合
 
 1. **既存アーティファクトを読む**
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/design.md`
-   - `openspec/changes/<name>/tasks.md`
+   - \`openspec/changes/<name>/proposal.md\`
+   - \`openspec/changes/<name>/design.md\`
+   - \`openspec/changes/<name>/tasks.md\`
 
 2. **会話の中で自然に参照する**
    - 「設計では Redis を使う前提でしたが、今なら SQLite が合いそうです」
@@ -885,11 +914,11 @@ openspec list --json
 
    | 気づきの種別 | 記録先 |
    |--------------|--------|
-   | 新しい要件 | `specs/<capability>/spec.md` |
-   | 要件の変更 | `specs/<capability>/spec.md` |
-   | 設計判断 | `design.md` |
-   | スコープ変更 | `proposal.md` |
-   | 新規タスク | `tasks.md` |
+   | 新しい要件 | \`specs/<capability>/spec.md\` |
+   | 要件の変更 | \`specs/<capability>/spec.md\` |
+   | 設計判断 | \`design.md\` |
+   | スコープ変更 | \`proposal.md\` |
+   | 新規タスク | \`tasks.md\` |
    | 前提崩壊 | 関連アーティファクト |
 
 4. **最終判断はユーザー** - 促したら引き下がる。勝手に記録しない。
@@ -899,7 +928,7 @@ openspec list --json
 ## 探索の終わり方
 
 必須の終わりはない。探索の結果は次のどれでもよい:
-- **行動に移る**: 「始めますか？ `/opsx:new` または `/opsx:ff`」
+- **行動に移る**: 「始めますか？ \`/opsx:new\` または \`/opsx:ff\`」
 - **アーティファクト更新**: 「design.md に判断を反映しました」
 - **整理で終える**: 十分に見通せたので前進する
 - **後で続ける**: 「いつでも続きをやりましょう」
@@ -916,7 +945,7 @@ openspec list --json
 - **勝手に記録しない** - 記録は提案し、実行はユーザーに委ねる
 - **可視化する** - 良い図は文章より強い
 - **コードベースを読む** - 現実の実装に結び付ける
-- **前提を疑う** - ユーザーの前提も自分の前提も``
+- **前提を疑う** - ユーザーの前提も自分の前提も`
   };
 }
 
@@ -931,7 +960,7 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `実験的アーティファクト駆動の方式で新しい変更を開始する。
 
-**入力**: `/opsx:new` の後の引数は change 名（kebab-case）または作りたい内容の説明。
+**入力**: \`/opsx:new\` の後の引数は change 名（kebab-case）または作りたい内容の説明。
 
 **手順**
 
@@ -940,34 +969,34 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
    **AskUserQuestion tool**（自由入力）で次を聞く:
    > "どんな変更を進めたいですか？作りたいもの・直したいものを教えてください。"
 
-   説明から kebab-case の名称を作る（例: "ユーザー認証を追加" → `add-user-auth`）。
+   説明から kebab-case の名称を作る（例: "ユーザー認証を追加" → \`add-user-auth\`）。
 
    **重要**: 何を作るか理解できるまでは進めない。
 
 2. **ワークフロースキーマを決める**
 
-   ユーザーが明示しない限り、デフォルト（`--schema` を省略）を使う。
+   ユーザーが明示しない限り、デフォルト（\`--schema\` を省略）を使う。
 
    **別スキーマにするのは次の場合のみ:**
-   - "tdd" / "test-driven" → `--schema tdd`
-   - 明示的なスキーマ名 → `--schema <name>`
-   - "workflows を見せて" → `openspec schemas --json` で選ばせる
+   - "tdd" / "test-driven" → \`--schema tdd\`
+   - 明示的なスキーマ名 → \`--schema <name>\`
+   - "workflows を見せて" → \`openspec schemas --json\` で選ばせる
 
 3. **変更ディレクトリを作成する**
-   ```bash
+   \`\`\`bash
    openspec new change "<name>"
-   ```
-   特定スキーマが指定された場合のみ `--schema <name>` を付ける。
+   \`\`\`
+   特定スキーマが指定された場合のみ \`--schema <name>\` を付ける。
 
 4. **アーティファクトの状態を表示する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>"
-   ```
+   \`\`\`
 
 5. **最初のアーティファクトの指示を取得する**
-   ```bash
+   \`\`\`bash
    openspec instructions <first-artifact-id> --change "<name>"
-   ```
+   \`\`\`
 
 6. **STOP してユーザーの指示を待つ**
 
@@ -977,14 +1006,14 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
 - 使用中のスキーマ/ワークフローとアーティファクト順序
 - 現在の進捗（0/N 完了）
 - 最初のアーティファクトのテンプレート
-- 促し: "最初のアーティファクトを作りますか？`/opsx:continue` で進めるか、内容を教えてください。"
+- 促し: "最初のアーティファクトを作りますか？\`/opsx:continue\` で進めるか、内容を教えてください。"
 
 **ガードレール**
 - アーティファクトはまだ作らない
 - 最初のテンプレート提示より先に進めない
 - 名前が kebab-case でなければ修正を求める
-- 同名の変更が既にある場合は `/opsx:continue` を提案する
-- 非デフォルトの場合のみ `--schema` を付ける``
+- 同名の変更が既にある場合は \`/opsx:continue\` を提案する
+- 非デフォルトの場合のみ \`--schema\` を付ける`
   };
 }
 
@@ -999,29 +1028,29 @@ export function getOpsxContinueCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `変更を継続し、次のアーティファクトを作成する。
 
-**入力**: `/opsx:continue` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
+**入力**: \`/opsx:continue\` の後に \`--change <name>\` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
 **手順**
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、更新日時の新しい順で取得する。**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、更新日時の新しい順で取得する。**AskUserQuestion tool** でユーザーに選ばせる。
 
    候補は直近 3〜4 件を提示し、次を表示する:
    - 変更名
-   - スキーマ（`schema` があればそれ、無ければ "spec-driven"）
+   - スキーマ（\`schema\` があればそれ、無ければ "spec-driven"）
    - 状態（例: "0/5 tasks", "complete", "no tasks"）
-   - 最終更新日時（`lastModified`）
+   - 最終更新日時（\`lastModified\`）
 
    最も新しいものには "(推奨)" を付ける。
 
    **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
 
 2. **現在の状態を確認する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>" --json
-   ```
-   JSON から `schemaName` / `artifacts` / `isComplete` を把握する。
+   \`\`\`
+   JSON から \`schemaName\` / \`artifacts\` / \`isComplete\` を把握する。
 
 3. **状態に応じて行動する**
 
@@ -1030,9 +1059,9 @@ export function getOpsxContinueCommandTemplate(): CommandTemplate {
    - **すべて blocked**: 状況を共有し、問題確認を促す
 
 4. **作成後に進捗を表示する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>"
-   ```
+   \`\`\`
 
 **出力**
 
@@ -1046,7 +1075,7 @@ export function getOpsxContinueCommandTemplate(): CommandTemplate {
 - 1 回の実行で 1 アーティファクトのみ作成
 - 依存アーティファクトを先に読む
 - 順序は崩さない
-- 不明点があれば作成前に確認する``
+- 不明点があれば作成前に確認する`
   };
 }
 
@@ -1061,37 +1090,37 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `OpenSpec 変更のタスクを実装する。
 
-**入力**: `/opsx:apply` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
+**入力**: \`/opsx:apply\` の後に \`--change <name>\` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
 **手順**
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
    tasks がある変更だけ表示する。
    可能なら schema を併記する。
    未完了タスクがあるものは "(進行中)" を付ける。
 
 2. **ステータス確認**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>" --json
-   ```
+   \`\`\`
 
 3. **適用指示を取得する**
-   ```bash
+   \`\`\`bash
    openspec instructions apply --change "<name>" --json
-   ```
+   \`\`\`
    ここから contextFiles / 進捗 / タスク一覧 / 状態を取得する。
 
    **状態の扱い:**
-   - `blocked`: 不足アーティファクトがあるため `/opsx:continue` を案内
-   - `all_done`: 完了報告しアーカイブを案内
+   - \`blocked\`: 不足アーティファクトがあるため \`/opsx:continue\` を案内
+   - \`all_done\`: 完了報告しアーカイブを案内
    - それ以外: 実装へ進む
 
 4. **文脈ファイルを読む**
 
-   `contextFiles` に含まれるファイルを読む。
+   \`contextFiles\` に含まれるファイルを読む。
    - **spec-driven**: proposal/specs/design/tasks
    - **tdd**: spec/tests/implementation/docs
    - その他: CLI 出力に従う
@@ -1108,7 +1137,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    - 対象タスクを明示
    - 必要なコード変更を行う
    - 変更は最小限に保つ
-   - 完了したら `- [ ]` → `- [x]` に更新
+   - 完了したら \`- [ ]\` → \`- [x]\` に更新
    - 次のタスクへ進む
 
    **一時停止条件:**
@@ -1126,7 +1155,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 
 **実装中の出力**
 
-```
+\`\`\`
 ## 実装中: <change-name>（スキーマ: <schema-name>）
 
 タスク 3/7 を実装中: <タスクの説明>
@@ -1136,11 +1165,11 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 タスク 4/7 を実装中: <タスクの説明>
 [...実装中...]
 ✓ タスク完了
-```
+\`\`\`
 
 **完了時の出力**
 
-```
+\`\`\`
 ## 実装完了
 
 **変更:** <change-name>
@@ -1151,11 +1180,11 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 - [x] タスク 1
 - [x] タスク 2
 ...
-```
+\`\`\`
 
 **一時停止時の出力（問題あり）**
 
-```
+\`\`\`
 ## 実装一時停止
 
 **変更:** <change-name>
@@ -1171,7 +1200,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 3. 別の方法
 
 どう進めますか？
-```
+\`\`\`
 
 **ガードレール**
 - 完了またはブロックまでタスクを進める
@@ -1188,7 +1217,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 このスキルは "変更に対するアクション" モデルに対応する:
 
 - **いつでも実行可能**: アーティファクト完了前でも（tasks があれば）実行可能
-- **アーティファクト更新を許容**: 実装中に課題が見えたら更新を提案する``
+- **アーティファクト更新を許容**: 実装中に課題が見えたら更新を提案する`
   };
 }
 
@@ -1204,7 +1233,7 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `変更を作成し、実装に必要なアーティファクトを一括生成する。
 
-**入力**: `/opsx:ff` の後の引数は change 名（kebab-case）または作りたい内容の説明。
+**入力**: \`/opsx:ff\` の後の引数は change 名（kebab-case）または作りたい内容の説明。
 
 **手順**
 
@@ -1217,27 +1246,27 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
 
 2. **スキーマを決める**
 
-   明示が無い限りデフォルト（`--schema` を省略）。
+   明示が無い限りデフォルト（\`--schema\` を省略）。
 
 3. **変更を作成する**
-   ```bash
+   \`\`\`bash
    openspec new change "<name>"
-   ```
+   \`\`\`
 
 4. **アーティファクトを順に生成する**
 
-   `openspec status --change "<name>" --json` を見て `ready` を順に進める。
+   \`openspec status --change "<name>" --json\` を見て \`ready\` を順に進める。
 
    各アーティファクトごとに:
-   ```bash
+   \`\`\`bash
    openspec instructions <artifact-id> --change "<name>" --json
-   ```
+   \`\`\`
    指示に従ってファイルを生成する。
 
 5. **完了状態を表示する**
-   ```bash
+   \`\`\`bash
    openspec status --change "<name>"
-   ```
+   \`\`\`
 
 **出力**
 
@@ -1248,7 +1277,7 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
 **ガードレール**
 - 依存順序を守る
 - 不明点があれば作成前に確認する
-- 1 つずつ作成し、完了を確認して次へ進む``
+- 1 つずつ作成し、完了を確認して次へ進む`
   };
 }
 
@@ -1263,21 +1292,21 @@ export function getOpsxSyncCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'specs', 'experimental'],
     content: `変更の差分仕様をメイン仕様に同期する。
 
-**入力**: `/opsx:sync` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
+**入力**: \`/opsx:sync\` の後に \`--change <name>\` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
 **手順**
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
 2. **差分仕様の存在を確認する**
 
-   `openspec/changes/<name>/specs/` を探索し、`spec.md` があるか確認する。
+   \`openspec/changes/<name>/specs/\` を探索し、\`spec.md\` があるか確認する。
 
 3. **差分仕様をメイン仕様へ反映する**
 
-   - `## ADDED|MODIFIED|REMOVED|RENAMED Requirements` を読み取る
+   - \`## ADDED|MODIFIED|REMOVED|RENAMED Requirements\` を読み取る
    - メイン仕様に追加/更新/削除/名称変更を適用する
    - 差分に書かれていない既存内容は維持する
 
@@ -1285,7 +1314,7 @@ export function getOpsxSyncCommandTemplate(): CommandTemplate {
 
 **成功時の出力**
 
-```
+\`\`\`
 ## 仕様同期完了: <change-name>
 
 メイン仕様を更新しました:
@@ -1299,14 +1328,14 @@ export function getOpsxSyncCommandTemplate(): CommandTemplate {
 - 追加: "別の機能"
 
 メイン仕様を更新しました。変更はアクティブのままなので、実装完了後にアーカイブしてください。
-```
+\`\`\`
 
 **ガードレール**
 - 差分とメイン仕様を両方読む
 - 差分に書かれていない既存内容を維持する
 - 不明点があれば確認する
 - 変更内容を明示する
-- 冪等性を保つ``
+- 冪等性を保つ`
   };
 }
 
@@ -1471,7 +1500,7 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
 Markdown で明確に書く:
 - サマリーのテーブル
 - CRITICAL/WARNING/SUGGESTION のグルーピング
-- `file.ts:123` 形式の参照
+- \`file.ts:123\` 形式の参照
 - 具体的で実行可能な推奨
 - "再確認することを検討" のような曖昧表現は避ける`
   };
@@ -1488,13 +1517,13 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'archive', 'experimental'],
     content: `実験的ワークフローで完了した変更をアーカイブする。
 
-**入力**: `/opsx:archive` の後に `--change <name>` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
+**入力**: \`/opsx:archive\` の後に \`--change <name>\` を指定可能。未指定の場合は利用可能な変更を必ず確認する。
 
 **手順**
 
 1. **change 名が無い場合は選択させる**
 
-   `openspec list --json` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選ばせる。
 
    アクティブな変更のみ表示する（アーカイブ済みは除外）。
    可能なら各変更の schema を併記する。
@@ -1503,11 +1532,11 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 2. **アーティファクト完了状況を確認する**
 
-   `openspec status --change "<name>" --json` を実行する。
+   \`openspec status --change "<name>" --json\` を実行する。
 
    JSON から以下を把握する:
-   - `schemaName`: 使用中のワークフロー
-   - `artifacts`: アーティファクトの状態
+   - \`schemaName\`: 使用中のワークフロー
+   - \`artifacts\`: アーティファクトの状態
 
    **未完了がある場合**:
    - 警告を出す
@@ -1518,7 +1547,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
    tasks.md（通常）を読み、未完了タスクがあるか確認する。
 
-   `- [ ]`（未完了）と `- [x]`（完了）を集計する。
+   \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計する。
 
    **未完了がある場合**:
    - 警告と件数を表示する
@@ -1529,28 +1558,28 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 4. **差分仕様の同期が必要か確認する**
 
-   変更内に `specs/` があるか確認する。
+   変更内に \`specs/\` があるか確認する。
 
    **差分仕様がある場合は簡易同期チェックを行う:**
 
-   a. **各差分仕様**（`openspec/changes/<name>/specs/<capability>/spec.md`）:
-      - 要件名（`### Requirement: <name>`）を抽出
+   a. **各差分仕様**（\`openspec/changes/<name>/specs/<capability>/spec.md\`）:
+      - 要件名（\`### Requirement: <name>\`）を抽出
       - ADDED/MODIFIED/REMOVED の存在を確認
 
-   b. **対応するメイン仕様**（`openspec/specs/<capability>/spec.md`）:
+   b. **対応するメイン仕様**（\`openspec/specs/<capability>/spec.md\`）:
       - 無ければ同期が必要
       - ADDED の要件名が存在するか確認
 
    c. **結果の提示:**
 
       **同期が必要な場合:**
-      ```
+      \`\`\`
       ⚠️ 差分仕様が同期されていない可能性があります:
       - specs/auth/spec.md → メイン仕様に "トークン更新" が無い
       - specs/api/spec.md → メイン仕様が存在しない
 
       アーカイブ前に同期しますか？
-      ```
+      \`\`\`
       - 選択肢: "今すぐ同期" / "同期せずにアーカイブ"
       - 同期を選んだ場合は /opsx:sync を実行する
 
@@ -1561,20 +1590,20 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 5. **アーカイブを実行する**
 
-   `openspec/changes/archive` が無ければ作成する:
-   ```bash
+   \`openspec/changes/archive\` が無ければ作成する:
+   \`\`\`bash
    mkdir -p openspec/changes/archive
-   ```
+   \`\`\`
 
-   日付付きのターゲット名を生成: `YYYY-MM-DD-<change-name>`
+   日付付きのターゲット名を生成: \`YYYY-MM-DD-<change-name>\`
 
    **ターゲットが既に存在する場合**:
    - エラーで停止し、リネーム/別日付を提案する
 
    **存在しない場合**:
-   ```bash
+   \`\`\`bash
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
-   ```
+   \`\`\`
 
 6. **サマリーを表示する**
 
@@ -1586,7 +1615,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 **成功時の出力**
 
-```
+\`\`\`
 ## アーカイブ完了
 
 **変更:** <change-name>
@@ -1595,11 +1624,11 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 **仕様:** ✓ メイン仕様へ同期済み（「差分仕様なし」または「⚠️ 未同期」）
 
 すべてのアーティファクトとタスクが完了しています。
-```
+\`\`\`
 
 **成功時の出力（差分仕様なし）**
 
-```
+\`\`\`
 ## アーカイブ完了
 
 **変更:** <change-name>
@@ -1608,11 +1637,11 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 **仕様:** 差分仕様なし
 
 すべてのアーティファクトとタスクが完了しています。
-```
+\`\`\`
 
 **成功時の出力（警告あり）**
 
-```
+\`\`\`
 ## アーカイブ完了（警告あり）
 
 **変更:** <change-name>
@@ -1626,11 +1655,11 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 - 差分仕様は同期していません（ユーザーがスキップを選択）
 
 意図しない場合はアーカイブ内容を確認してください。
-```
+\`\`\`
 
 **失敗時の出力（既存アーカイブ）**
 
-```
+\`\`\`
 ## アーカイブ失敗
 
 **変更:** <change-name>
@@ -1642,15 +1671,15 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 1. 既存アーカイブの名称を変更
 2. 重複であれば既存アーカイブを削除
 3. 別の日付でアーカイブする
-```
+\`\`\`
 
 **ガードレール**
 - change 名が無ければ必ず選択させる
-- 完了チェックは `openspec status --json` を使う
+- 完了チェックは \`openspec status --json\` を使う
 - 警告でブロックしない。通知と確認のみ
 - .openspec.yaml はディレクトリと一緒に移動する
 - 差分仕様の要件名がメイン仕様にあるか簡易チェックする
-- 同期が必要なら /opsx:sync を使う``
+- 同期が必要なら /opsx:sync を使う`
   };
 }
 
@@ -1816,7 +1845,7 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
 Markdown で明確に書く:
 - サマリーのテーブル
 - CRITICAL/WARNING/SUGGESTION のグルーピング
-- `file.ts:123` 形式の参照
+- \`file.ts:123\` 形式の参照
 - 具体的で実行可能な推奨
 - "再確認することを検討" のような曖昧表現は避ける`
   };
