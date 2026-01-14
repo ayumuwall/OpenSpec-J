@@ -455,6 +455,22 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 #### 残タスク（推奨）
 - [ ] `schemas/*` の description/instruction とテンプレートコメントの日本語化。
 
+### 2026-01-15
+
+#### 実施したこと
+- upstream v0.20.0 との差分を取り込み、ローカライズ済みの日本語文言を更新。
+- `upstream-sync-v0.20.0.md` の作業手順に沿って docs/templates/CLI/tests を確認・反映。
+- `diffs/upstream-v0.19.0__upstream-v0.20.0.*` を更新し、不要な旧差分を整理。
+- `README.md`/`CHANGELOG.md`/`MAINTAINERS.md` を v0.20.0 に合わせて更新。
+- `src/core/templates/skill-templates.ts` などのテンプレート/スラッシュコマンド文言の日本語化を完了。
+- `AGENTS.OpenSpec-J.md` と `openspec/AGENTS.md` の翻訳・運用ルール更新を反映。
+
+#### テスト状況
+- `pnpm test` を実行し成功。
+
+#### 残タスク（推奨）
+- なし。
+
 ### 2026-01-08
 
 #### 実施したこと
