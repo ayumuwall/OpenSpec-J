@@ -1,32 +1,20 @@
-# root
+M	.github/workflows/release-prepare.yml
 M	.gitignore
 M	CHANGELOG.md
-M	package.json
-M	pnpm-lock.yaml
-M	vitest.config.ts
-M	vitest.setup.ts
-
-# docs
+M	README.md
 A	docs/artifact_poc.md
 A	docs/experimental-release-plan.md
 A	docs/experimental-workflow.md
 A	docs/schema-customization.md
 A	docs/schema-workflow-gaps.md
-
-# openspec/changes
 D	openspec/changes/add-antigravity-support/specs/cli-init/spec.md
 D	openspec/changes/add-antigravity-support/specs/cli-update/spec.md
 D	openspec/changes/add-scaffold-command/proposal.md
 D	openspec/changes/add-scaffold-command/specs/cli-scaffold/spec.md
 D	openspec/changes/add-scaffold-command/tasks.md
-D	openspec/changes/fix-cline-workflows-implementation/specs/cli-init/spec.md
-D	openspec/changes/make-validation-scope-aware/proposal.md
-D	openspec/changes/make-validation-scope-aware/specs/cli-validate/spec.md
-D	openspec/changes/make-validation-scope-aware/tasks.md
-R100	openspec/changes/add-antigravity-support/proposal.md	openspec/changes/archive/2025-12-30-add-antigravity-support/proposal.md
-R100	openspec/changes/add-antigravity-support/tasks.md	openspec/changes/archive/2025-12-30-add-antigravity-support/tasks.md
-R092	openspec/changes/fix-cline-workflows-implementation/proposal.md	openspec/changes/archive/2025-12-30-fix-cline-workflows-implementation/proposal.md
-R100	openspec/changes/fix-cline-workflows-implementation/tasks.md	openspec/changes/archive/2025-12-30-fix-cline-workflows-implementation/tasks.md
+A	openspec/changes/archive/2025-12-23-extend-shell-completions/proposal.md
+A	openspec/changes/archive/2025-12-23-extend-shell-completions/specs/cli-completion/spec.md
+A	openspec/changes/archive/2025-12-23-extend-shell-completions/tasks.md
 A	openspec/changes/archive/2025-12-24-add-artifact-graph-core/design.md
 A	openspec/changes/archive/2025-12-24-add-artifact-graph-core/proposal.md
 A	openspec/changes/archive/2025-12-24-add-artifact-graph-core/specs/artifact-graph/spec.md
@@ -52,10 +40,14 @@ A	openspec/changes/archive/2025-12-29-unify-change-state-model/proposal.md
 A	openspec/changes/archive/2025-12-29-unify-change-state-model/specs/cli-artifact-workflow/spec.md
 A	openspec/changes/archive/2025-12-29-unify-change-state-model/specs/cli-view/spec.md
 A	openspec/changes/archive/2025-12-29-unify-change-state-model/tasks.md
+R100	openspec/changes/add-antigravity-support/proposal.md	openspec/changes/archive/2025-12-30-add-antigravity-support/proposal.md
 A	openspec/changes/archive/2025-12-30-add-antigravity-support/specs/cli-init/spec.md
 A	openspec/changes/archive/2025-12-30-add-antigravity-support/specs/cli-update/spec.md
+R100	openspec/changes/add-antigravity-support/tasks.md	openspec/changes/archive/2025-12-30-add-antigravity-support/tasks.md
+R092	openspec/changes/fix-cline-workflows-implementation/proposal.md	openspec/changes/archive/2025-12-30-fix-cline-workflows-implementation/proposal.md
 A	openspec/changes/archive/2025-12-30-fix-cline-workflows-implementation/specs/cli-init/spec.md
 A	openspec/changes/archive/2025-12-30-fix-cline-workflows-implementation/specs/cli-update/spec.md
+R100	openspec/changes/fix-cline-workflows-implementation/tasks.md	openspec/changes/archive/2025-12-30-fix-cline-workflows-implementation/tasks.md
 A	openspec/changes/archive/2026-01-06-add-agent-schema-selection/proposal.md
 A	openspec/changes/archive/2026-01-06-add-agent-schema-selection/tasks.md
 A	openspec/changes/archive/2026-01-06-add-per-change-schema-metadata/design.md
@@ -75,39 +67,47 @@ A	openspec/changes/archive/2026-01-06-opsx-archive-command/design.md
 A	openspec/changes/archive/2026-01-06-opsx-archive-command/proposal.md
 A	openspec/changes/archive/2026-01-06-opsx-archive-command/specs/opsx-archive-skill/spec.md
 A	openspec/changes/archive/2026-01-06-opsx-archive-command/tasks.md
-
-# openspec/specs
+A	openspec/changes/archive/2026-01-09-add-posthog-analytics/.openspec.yaml
+A	openspec/changes/archive/2026-01-09-add-posthog-analytics/design.md
+A	openspec/changes/archive/2026-01-09-add-posthog-analytics/proposal.md
+A	openspec/changes/archive/2026-01-09-add-posthog-analytics/specs/global-config/spec.md
+A	openspec/changes/archive/2026-01-09-add-posthog-analytics/specs/telemetry/spec.md
+A	openspec/changes/archive/2026-01-09-add-posthog-analytics/tasks.md
+A	openspec/changes/archive/2026-01-09-fix-codebuddy-frontmatter-fields/proposal.md
+A	openspec/changes/archive/2026-01-09-fix-codebuddy-frontmatter-fields/specs/cli-init/spec.md
+A	openspec/changes/archive/2026-01-09-fix-codebuddy-frontmatter-fields/specs/cli-update/spec.md
+A	openspec/changes/archive/2026-01-09-fix-codebuddy-frontmatter-fields/tasks.md
+D	openspec/changes/fix-cline-workflows-implementation/specs/cli-init/spec.md
+D	openspec/changes/make-validation-scope-aware/proposal.md
+D	openspec/changes/make-validation-scope-aware/specs/cli-validate/spec.md
+D	openspec/changes/make-validation-scope-aware/tasks.md
 A	openspec/specs/artifact-graph/spec.md
 A	openspec/specs/change-creation/spec.md
 A	openspec/specs/cli-artifact-workflow/spec.md
+M	openspec/specs/cli-completion/spec.md
 M	openspec/specs/cli-init/spec.md
 M	openspec/specs/cli-update/spec.md
 M	openspec/specs/cli-view/spec.md
+M	openspec/specs/global-config/spec.md
 A	openspec/specs/instruction-loader/spec.md
 A	openspec/specs/opsx-archive-skill/spec.md
 A	openspec/specs/specs-sync-skill/spec.md
-
-# schemas/spec-driven
+A	openspec/specs/telemetry/spec.md
+M	package.json
+M	pnpm-lock.yaml
 A	schemas/spec-driven/schema.yaml
 A	schemas/spec-driven/templates/design.md
 A	schemas/spec-driven/templates/proposal.md
 A	schemas/spec-driven/templates/spec.md
 A	schemas/spec-driven/templates/tasks.md
-
-# schemas/tdd
 A	schemas/tdd/schema.yaml
 A	schemas/tdd/templates/docs.md
 A	schemas/tdd/templates/implementation.md
 A	schemas/tdd/templates/spec.md
 A	schemas/tdd/templates/test.md
-
-# src/cli
 M	src/cli/index.ts
-
-# src/commands
 A	src/commands/artifact-workflow.ts
-
-# src/core
+M	src/commands/completion.ts
 M	src/core/archive.ts
 A	src/core/artifact-graph/graph.ts
 A	src/core/artifact-graph/index.ts
@@ -116,6 +116,24 @@ A	src/core/artifact-graph/resolver.ts
 A	src/core/artifact-graph/schema.ts
 A	src/core/artifact-graph/state.ts
 A	src/core/artifact-graph/types.ts
+M	src/core/completions/command-registry.ts
+M	src/core/completions/factory.ts
+A	src/core/completions/generators/bash-generator.ts
+A	src/core/completions/generators/fish-generator.ts
+A	src/core/completions/generators/powershell-generator.ts
+M	src/core/completions/generators/zsh-generator.ts
+A	src/core/completions/installers/bash-installer.ts
+A	src/core/completions/installers/fish-installer.ts
+A	src/core/completions/installers/powershell-installer.ts
+M	src/core/completions/installers/zsh-installer.ts
+A	src/core/completions/templates/bash-templates.ts
+A	src/core/completions/templates/fish-templates.ts
+A	src/core/completions/templates/powershell-templates.ts
+A	src/core/completions/templates/zsh-templates.ts
+M	src/core/config.ts
+M	src/core/configurators/slash/codebuddy.ts
+A	src/core/configurators/slash/continue.ts
+M	src/core/configurators/slash/registry.ts
 M	src/core/converters/json-converter.ts
 M	src/core/global-config.ts
 M	src/core/index.ts
@@ -125,15 +143,14 @@ A	src/core/templates/skill-templates.ts
 M	src/core/update.ts
 M	src/core/validation/validator.ts
 M	src/core/view.ts
-
-# src/utils
+A	src/telemetry/config.ts
+A	src/telemetry/index.ts
 A	src/utils/change-metadata.ts
 A	src/utils/change-utils.ts
 M	src/utils/file-system.ts
 M	src/utils/index.ts
-
-# tests
 A	test/commands/artifact-workflow.test.ts
+M	test/commands/completion.test.ts
 M	test/core/archive.test.ts
 A	test/core/artifact-graph/graph.test.ts
 A	test/core/artifact-graph/instruction-loader.test.ts
@@ -141,8 +158,21 @@ A	test/core/artifact-graph/resolver.test.ts
 A	test/core/artifact-graph/schema.test.ts
 A	test/core/artifact-graph/state.test.ts
 A	test/core/artifact-graph/workflow.integration.test.ts
+A	test/core/completions/generators/bash-generator.test.ts
+A	test/core/completions/generators/fish-generator.test.ts
+A	test/core/completions/generators/powershell-generator.test.ts
+A	test/core/completions/installers/bash-installer.test.ts
+A	test/core/completions/installers/fish-installer.test.ts
+A	test/core/completions/installers/powershell-installer.test.ts
+M	test/core/init.test.ts
 M	test/core/list.test.ts
+M	test/core/update.test.ts
 M	test/core/view.test.ts
 M	test/helpers/run-cli.ts
+A	test/telemetry/config.test.ts
+A	test/telemetry/index.test.ts
 A	test/utils/change-metadata.test.ts
 A	test/utils/change-utils.test.ts
+M	test/utils/file-system.test.ts
+M	vitest.config.ts
+M	vitest.setup.ts

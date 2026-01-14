@@ -5,6 +5,10 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 0.19.0
 
+- **[OpenSpec-J]** Bash/Fish/PowerShell 補完の案内・警告・自動設定メッセージを日本語化し、関連テストを更新。
+- **[OpenSpec-J]** Continue/CodeBuddy/`/opsx:explore` など v0.19.0 追加スラッシュコマンド/テンプレートの説明文を日本語化。
+- **[OpenSpec-J]** テレメトリの初回通知・ヘルプ文言と README/CHANGELOG の案内を日本語化。
+
 ### マイナー変更
 
 - eb152eb: ### 新機能
@@ -24,6 +28,10 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
   - OpenSpec の利用状況を把握するための匿名利用統計を任意で追加。デフォルトは **オプトアウト** 方式で、`OPENSPEC_TELEMETRY=0` または `DO_NOT_TRACK=1` で無効化できます。収集対象はコマンド名とバージョンのみで、引数・パス・内容は収集しません。CI 環境では自動的に無効化されます。
 
 ## 0.18.0
+
+- **[OpenSpec-J]** 実験的アーティファクトワークフロー（`/opsx:ff`/`/opsx:sync`/`/opsx:archive` など）の CLI 表示を日本語化し、関連テストを更新。
+- **[OpenSpec-J]** `docs/experimental-workflow.md` を日本語化。
+- **[OpenSpec-J]** spec-driven スキーマの apply 指示を日本語化。
 
 ### マイナー変更
 
