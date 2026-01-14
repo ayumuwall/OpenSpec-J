@@ -441,9 +441,12 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - diffs を `upstream-v0.17.2__upstream-v0.19.0` に更新し、v0.18.0 の差分資料を削除。
 - `README.md` の新着バナーと同期元表記を v0.19.0 に更新。
 - `docs/experimental-workflow.md` の図表内英語を日本語化。
+- `upstream-sync-v0.19.0.md` を追加し、旧 `upstream-sync-v0.18.0.md` を削除。
+- `.nvmrc` を追加。
 
 #### テスト状況
 - `pnpm test` を実行し成功。
+- 追加テスト未実施（マージ作業のみ）。
 
 #### 残タスク（推奨）
 - [ ] `schemas/*` の description/instruction とテンプレートコメントの日本語化。
