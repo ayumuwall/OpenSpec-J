@@ -27,13 +27,13 @@
 </p>
 
 <p align="center">
-  <sub>🧪 <strong>New:</strong> <a href="docs/experimental-workflow.md">Experimental Workflow (OPSX)</a> — schema-driven, hackable, fluid. Iterate on workflows without code changes.</sub>
+  <sub>🧪 <strong>新着:</strong> <a href="docs/experimental-workflow.md">実験的ワークフロー (OPSX)</a> — スキーマ駆動で柔軟に拡張でき、流動的。コード変更なしでワークフローを反復できます。</sub>
 </p>
 
 # OpenSpec
 
 このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) 
-をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v0.17.2 です。**
+をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v0.19.0 です。**
 
 OpenSpec は、仕様駆動開発で人と AI コーディングアシスタントをそろえ、コードを書く前に「何を作るか」を合意できるようにします。**API キーは不要です。**
 
