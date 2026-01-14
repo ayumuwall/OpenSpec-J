@@ -1,6 +1,6 @@
-# OpenSpec v0.18.0 追従手順（OpenSpec-J）
+# OpenSpec v0.19.0 追従手順（OpenSpec-J）
 
-本家（Fission-AI/OpenSpec）の v0.18.0 へ追従するための、最短で安全な作業手順です。
+本家（Fission-AI/OpenSpec）の v0.19.0 へ追従するための、最短で安全な作業手順です。
 OpenSpec-J の運用ルールに合わせ、main は upstream スナップショット、ja-docs はローカライズ版として扱います。
 
 ## 前提
@@ -28,15 +28,15 @@ git remote -v
 git checkout main
 git fetch upstream --tags
 git merge upstream/main
-git tag -a upstream-v0.18.0 -m "upstream v0.18.0"
+git tag -a upstream-v0.19.0 -m "upstream v0.19.0"
 ```
 
 ## 2. 差分の収集と分類（英語版同士の差分）
 
 ```
 mkdir -p diffs
-git diff --name-status upstream-v0.17.2 upstream-v0.18.0 > diffs/upstream-v0.17.2__upstream-v0.18.0.files.txt
-git diff upstream-v0.17.2 upstream-v0.18.0 > diffs/upstream-v0.17.2__upstream-v0.18.0.diff
+git diff --name-status upstream-v0.17.2 upstream-v0.19.0 > diffs/upstream-v0.17.2__upstream-v0.19.0.files.txt
+git diff upstream-v0.17.2 upstream-v0.19.0 > diffs/upstream-v0.17.2__upstream-v0.19.0.diff
 ```
 
 - 変更を docs / templates / CLI / tests に分類
@@ -46,7 +46,7 @@ git diff upstream-v0.17.2 upstream-v0.18.0 > diffs/upstream-v0.17.2__upstream-v0
 
 ```
 git checkout ja-docs
-git checkout -b ja-sync/v0.18.0
+git checkout -b ja-sync/v0.19.0
 git merge main
 ```
 
@@ -89,16 +89,16 @@ node bin/openspec.js validate --strict
 
 ```
 git checkout ja-docs
-git merge ja-sync/v0.18.0
-git tag -a openspec-j-v0.18.0 -m "OpenSpec-J v0.18.0"
+git merge ja-sync/v0.19.0
+git tag -a openspec-j-v0.19.0 -m "OpenSpec-J v0.19.0"
 ```
 
-- `CHANGELOG.md` に v0.18.0 追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
+- `CHANGELOG.md` に v0.19.0 追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
 - `AGENTS.OpenSpec-J.md` のセッションメモに当日の記録を追記（実施内容・テスト状況・残タスク）
 
 ## 8. まとめ確認
 
-- `main` は upstream v0.18.0 に一致
+- `main` は upstream v0.19.0 に一致
 - `ja-docs` はローカライズ差分のみ
 - 主要テスト・CLI 出力を確認済み
 
