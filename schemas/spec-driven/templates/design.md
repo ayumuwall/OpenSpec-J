@@ -1,19 +1,19 @@
 ## Context
 
-<!-- Background and current state -->
+<!-- 背景と現状 -->
 
 ## Goals / Non-Goals
 
 **Goals:**
-<!-- What this design aims to achieve -->
+<!-- この設計で達成したいこと -->
 
 **Non-Goals:**
-<!-- What is explicitly out of scope -->
+<!-- 明確にスコープ外とすること -->
 
 ## Decisions
 
-<!-- Key design decisions and rationale -->
+<!-- 主要な設計判断と理由 -->
 
 ## Risks / Trade-offs
 
-<!-- Known risks and trade-offs -->
+<!-- 既知のリスクとトレードオフ -->

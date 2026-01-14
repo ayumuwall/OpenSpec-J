@@ -1,11 +1,11 @@
-## Feature: <!-- feature name -->
+## Feature: <!-- 機能名 -->
 
-<!-- Feature description -->
+<!-- 機能の説明 -->
 
 ## Requirements
 
-<!-- List of requirements -->
+<!-- 要件の一覧 -->
 
 ## Acceptance Criteria
 
-<!-- List of acceptance criteria -->
+<!-- 受け入れ条件の一覧 -->

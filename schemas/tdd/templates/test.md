@@ -1,11 +1,11 @@
 ## Test Plan
 
-<!-- Describe the testing strategy -->
+<!-- テスト方針 -->
 
 ## Test Cases
 
-### <!-- Test case name -->
+### <!-- テストケース名 -->
 
-- **Given:** <!-- preconditions -->
-- **When:** <!-- action -->
-- **Then:** <!-- expected result -->
+- **Given:** <!-- 前提条件 -->
+- **When:** <!-- 操作 -->
+- **Then:** <!-- 期待結果 -->

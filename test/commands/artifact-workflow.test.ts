@@ -439,7 +439,7 @@ describe('artifact-workflow CLI commands', () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('スキーマ: tdd');
       // TDD schema has no task tracking, so should show schema instruction
-      expect(result.stdout).toContain('Run tests to see failures');
+      expect(result.stdout).toContain('テストを実行して失敗を確認し、最小限の実装で通します。');
     });
 
     it('spec-driven schema uses apply block configuration', async () => {

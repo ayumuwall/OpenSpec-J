@@ -1,11 +1,11 @@
 ## Implementation Notes
 
-<!-- Technical implementation details -->
+<!-- 実装の技術的な詳細 -->
 
 ## API
 
-<!-- Public API documentation -->
+<!-- 公開 API の説明 -->
 
 ## Usage
 
-<!-- Usage examples -->
+<!-- 使用例 -->

@@ -1,8 +1,8 @@
 ## ADDED Requirements
 
-### Requirement: <!-- requirement name -->
-<!-- requirement text -->
+### Requirement: <!-- 要件名 -->
+<!-- 要件の説明 -->
 
-#### Scenario: <!-- scenario name -->
-- **WHEN** <!-- condition -->
-- **THEN** <!-- expected outcome -->
+#### Scenario: <!-- シナリオ名 -->
+- **WHEN** <!-- 条件 -->
+- **THEN** <!-- 期待結果 -->

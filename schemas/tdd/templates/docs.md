@@ -1,15 +1,15 @@
 ## Overview
 
-<!-- Feature overview -->
+<!-- 機能の概要 -->
 
 ## Getting Started
 
-<!-- Quick start guide -->
+<!-- すぐに使うための手順 -->
 
 ## Examples
 
-<!-- Code examples -->
+<!-- コード例 -->
 
 ## Reference
 
-<!-- API reference or additional details -->
+<!-- API リファレンスや追加情報 -->
