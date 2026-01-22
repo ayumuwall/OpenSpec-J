@@ -92,6 +92,7 @@ git tag -a openspec-j-v0.23.0 -m "OpenSpec-J v0.23.0"
 ```
 
 - `CHANGELOG.md` に v0.23.0 追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
+- `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
 - `AGENTS.OpenSpec-J.md` のセッションメモに当日の記録を追記（実施内容・テスト状況・残タスク）
 
 ## 8. まとめ確認
