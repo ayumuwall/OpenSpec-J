@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { Validator } from '../../src/core/validation/validator.js';
+import { VALIDATION_MESSAGES } from '../../src/core/validation/constants.js';
 
 describe('Validator enriched messages', () => {
   const testDir = path.join(process.cwd(), 'test-validation-enriched-tmp');
@@ -47,6 +48,24 @@ There are changes proposed, but no delta specs provided yet.`;
     expect(msg).toContain('必要な見出し: "## Purpose" と "## Requirements"');
   });
 
+  it('adds guidance for English spec section errors', () => {
+    const validator = new Validator();
+    const enriched = (validator as any).enrichTopLevelError(
+      'spec',
+      'Spec must have a Purpose section'
+    );
+    expect(enriched).toContain(VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS);
+  });
+
+  it('adds guidance for English change section errors', () => {
+    const validator = new Validator();
+    const enriched = (validator as any).enrichTopLevelError(
+      'change',
+      'Change must have a Why section'
+    );
+    expect(enriched).toContain(VALIDATION_MESSAGES.GUIDE_MISSING_CHANGE_SECTIONS);
+  });
+
   it('warns with scenario conversion template when missing scenarios', async () => {
     const specContent = `# Test Spec
 
@@ -70,4 +89,3 @@ Text of requirement
     expect(warn?.message).toContain('#### Scenario:');
   });
 });
-

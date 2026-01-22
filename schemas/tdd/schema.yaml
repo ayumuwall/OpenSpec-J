@@ -11,11 +11,12 @@ artifacts:
 
       セクション:
       - **Feature**: 機能の目的やユーザー価値の名前/概要
-      - **Requirements**: 具体的な要件の一覧。規範文は SHALL/MUST を使用。
+      - **Requirements**: 具体的な要件の一覧。規範文は SHALL/MUST を使用し、文末括弧で明示する。SHOULD/MAY は要件本文では使わず、補足的な注意/参考に限る。
       - **Acceptance Criteria**: WHEN/THEN 形式の検証可能な基準
 
       要件フォーマット:
       - 各要件は具体的かつテスト可能にする
+      - SHALL/MUST/SHOULD/MAY は文末括弧で明示し、語尾は次に揃える: SHALL/MUST = 「〜しなければならない。(SHALL/MUST)」, SHOULD = 「〜すべきである。(SHOULD)」, MAY = 「〜してもよい。(MAY)」。文中に SHALL/MUST/SHOULD/MAY を挿入しない。
       - 受け入れ基準は `#### Scenario: <name>` と WHEN/THEN 形式
       - エッジケースやエラーシナリオを明示
       - すべての要件に最低 1 つのシナリオが必要
@@ -29,7 +30,7 @@ artifacts:
       ## Requirements
 
       ### Requirement: パスワード検証
-      システム SHALL 最低限のセキュリティ要件を満たすパスワードを検証する。
+      システムは最低限のセキュリティ要件を満たすパスワードを検証しなければならない。(SHALL)
 
       #### Scenario: 有効なパスワードを受け入れる
       - **WHEN** 8 文字以上で大文字/小文字/数字を含む

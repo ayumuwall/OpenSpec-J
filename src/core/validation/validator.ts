@@ -254,14 +254,14 @@ export class Validator {
       issues.push({
         level: 'ERROR',
         path: specPath,
-        message: `デルタセクション ${this.formatSectionList(sections)} は見つかりましたが、要件が解析されませんでした。各セクションに少なくとも 1 つの "### Requirement:" ブロックを含めてください（REMOVED は箇条書きも可）。`,
+        message: VALIDATION_MESSAGES.DELTA_SECTION_WITHOUT_REQUIREMENTS(this.formatSectionList(sections)),
       });
     }
     for (const path of missingHeaderSpecs) {
       issues.push({
         level: 'ERROR',
         path,
-        message: 'デルタセクションが見つかりません。"## ADDED Requirements" などの見出しを追加するか、デルタ以外のメモは specs/ の外に移動してください。'
+        message: VALIDATION_MESSAGES.DELTA_SECTION_MISSING_HEADER,
       });
     }
 

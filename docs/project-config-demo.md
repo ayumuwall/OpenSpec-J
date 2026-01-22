@@ -171,11 +171,11 @@ cat openspec/config.yaml 2>/dev/null || echo "No config exists"
 cat > openspec/config.yaml << 'EOF'
 schema: spec-driven
 context: |
-  This is a demo project using React and TypeScript.
-  We follow semantic versioning.
+  このデモプロジェクトは React と TypeScript を使用します。
+  セマンティックバージョニングに従います。
 rules:
   proposal:
-    - Include migration steps if breaking change
+    - 破壊的変更がある場合は移行手順を含める
 EOF
 
 # 3. config を表示

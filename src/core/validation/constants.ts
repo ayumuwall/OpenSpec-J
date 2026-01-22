@@ -35,6 +35,10 @@ export const VALIDATION_MESSAGES = {
   REQUIREMENT_TOO_LONG: `要件文が長すぎます（>${MAX_REQUIREMENT_TEXT_LENGTH} 文字）。分割を検討してください。`,
   DELTA_DESCRIPTION_TOO_BRIEF: 'デルタの説明が短すぎます',
   DELTA_MISSING_REQUIREMENTS: 'デルタには要件を含めてください',
+  DELTA_SECTION_WITHOUT_REQUIREMENTS: (sections: string) =>
+    `デルタセクション ${sections} は見つかりましたが、要件が解析されませんでした。各セクションに少なくとも 1 つの "### Requirement:" ブロックを含めてください（REMOVED は箇条書きも可）。`,
+  DELTA_SECTION_MISSING_HEADER:
+    'デルタセクションが見つかりません。"## ADDED Requirements" などの見出しを追加するか、デルタ以外のメモは specs/ の外に移動してください。',
   
   // Guidance snippets (appended to primary messages for remediation)
   GUIDE_NO_DELTAS:

@@ -43,7 +43,8 @@ artifacts:
 
       要件フォーマット:
       - 各要件: `### Requirement: <name>` の後に説明
-      - 規範文は SHALL/MUST を使用（should/may は避ける）
+      - 規範文は SHALL/MUST を使用（SHOULD/MAY は要件本文では使わない。補足的な注意/参考に限る）
+      - SHALL/MUST/SHOULD/MAY は文末括弧で明示し、語尾は次に揃える: SHALL/MUST = 「〜しなければならない。(SHALL/MUST)」, SHOULD = 「〜すべきである。(SHOULD)」, MAY = 「〜してもよい。(MAY)」。文中に SHALL/MUST/SHOULD/MAY を挿入しない。
       - 各シナリオ: `#### Scenario: <name>` と WHEN/THEN 形式
       - **重要**: シナリオは `####` の 4 つハッシュ必須。`###` や箇条書きは黙って無視されます。
       - すべての要件に最低 1 つのシナリオが必要です。
@@ -62,7 +63,7 @@ artifacts:
       ## ADDED Requirements
 
       ### Requirement: データのエクスポート
-      システムはユーザーが CSV でデータをエクスポートできるようにしなければならない。
+      システムはユーザーが CSV でデータをエクスポートできるようにしなければならない。(MUST)
 
       #### Scenario: エクスポート成功
       - **WHEN** ユーザーが「エクスポート」ボタンをクリックする

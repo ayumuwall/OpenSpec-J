@@ -293,6 +293,7 @@ openspec list --json
 - **可視化する** - 良い図は文章より強い
 - **コードベースを読む** - 現実の実装に結び付ける
 - **前提を疑う** - ユーザーの前提も自分の前提も
+`,
   };
 }
 
@@ -860,6 +861,416 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 - 何をしたかが分かる明確なサマリーを出す
 - 同期が求められたら openspec-sync-specs を使う（エージェント主導）
 - 差分仕様がある場合は必ず同期評価を行い、まとめを提示してから選択させる`
+  };
+}
+
+/**
+ * openspec-bulk-archive-change スキルのテンプレート
+ * 複数の完了済み変更をまとめてアーカイブ
+ */
+export function getBulkArchiveChangeSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-bulk-archive-change',
+    description: '複数の完了済み変更をまとめてアーカイブします。並行した変更を一括で確定したいときに使います。',
+    instructions: `複数の完了済み変更を1回の操作でアーカイブします。
+
+このスキルは、コードベースを確認して実装状況を判断し、仕様の競合を賢く解決しながら変更をまとめてアーカイブします。
+
+**入力**: 必須なし（選択を促す）
+
+**手順**
+
+1. **アクティブな変更を取得**
+
+   \`openspec list --json\` を実行してアクティブな変更を取得する。
+
+   アクティブな変更が無ければ、ユーザーに伝えて終了。
+
+2. **変更の選択を促す**
+
+   **AskUserQuestion tool** の複数選択でユーザーに変更を選ばせる:
+   - 各変更にスキーマを併記
+   - "すべての変更" の選択肢も用意
+   - 選択数は任意（1つでもよいが、典型は2件以上）
+
+   **重要**: 自動選択しない。必ずユーザーに選ばせる。
+
+3. **一括検証 - 選択した変更のステータスを収集**
+
+   各変更について次を収集:
+
+   a. **アーティファクト状態** - \`openspec status --change "<name>" --json\`
+      - \`schemaName\` と \`artifacts\` を解析
+      - \`done\` とそれ以外を判別
+
+   b. **タスク完了** - \`openspec/changes/<name>/tasks.md\` を読む
+      - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
+      - tasks が無い場合は "No tasks" と記録
+
+   c. **差分仕様** - \`openspec/changes/<name>/specs/\` を確認
+      - どの機能の spec があるかを一覧化
+      - 各 spec から要件名を抽出（\`### Requirement: <name>\` に一致する行）
+
+4. **仕様競合の検出**
+
+   \`capability -> [changes that touch it]\` の対応表を作る:
+
+   \`\`\`
+   auth -> [change-a, change-b]  <- CONFLICT (2+ changes)
+   api  -> [change-c]            <- OK (only 1 change)
+   \`\`\`
+
+   同じ機能に対して 2 件以上の変更が差分仕様を持つ場合は競合。
+
+5. **競合をエージェント的に解決**
+
+   **各競合**について、コードベースを調査:
+
+   a. **差分仕様を読む** - 各変更が何を追加/変更したいのか把握
+
+   b. **コードベースを検索**:
+      - 各差分仕様の要件が実装されているか確認
+      - 関連ファイル、関数、テストを探す
+
+   c. **解決方針の判断**:
+      - 実装されている変更が1つだけ -> その変更の仕様を同期
+      - 両方実装 -> 作成日の古い順に適用（後の変更が上書き）
+      - どちらも未実装 -> 仕様同期をスキップし、警告
+
+   d. **解決結果を記録**:
+      - どの変更の仕様を適用するか
+      - どの順序で適用するか（両方の場合）
+      - 根拠（コードベースで見つけた内容）
+
+6. **統合ステータス表を表示**
+
+   変更の要約テーブルを表示:
+
+   \`\`\`
+   | Change               | Artifacts | Tasks | Specs   | Conflicts | Status |
+   |---------------------|-----------|-------|---------|-----------|--------|
+   | schema-management   | Done      | 5/5   | 2 delta | None      | Ready  |
+   | project-config      | Done      | 3/3   | 1 delta | None      | Ready  |
+   | add-oauth           | Done      | 4/4   | 1 delta | auth (!)  | Ready* |
+   | add-verify-skill    | 1 left    | 2/5   | None    | None      | Warn   |
+   \`\`\`
+
+   競合がある場合は解決結果も表示:
+   \`\`\`
+   * Conflict resolution:
+     - auth spec: Will apply add-oauth then add-jwt (both implemented, chronological order)
+   \`\`\`
+
+   未完了がある場合は警告を表示:
+   \`\`\`
+   Warnings:
+   - add-verify-skill: 1 incomplete artifact, 3 incomplete tasks
+   \`\`\`
+
+7. **一括操作の確認**
+
+   **AskUserQuestion tool** で1回だけ確認:
+
+   - "N 件の変更をアーカイブしますか？" をステータスに応じて提示
+   - 選択肢の例:
+     - "N 件すべてをアーカイブ"
+     - "準備完了の N 件のみアーカイブ（未完了は除外）"
+     - "キャンセル"
+
+   未完了がある場合は、警告付きでアーカイブされることを明記。
+
+8. **確定した変更を順にアーカイブ**
+
+   競合解決で決まった順序に従って処理:
+
+   a. **仕様を同期**（差分仕様がある場合）:
+      - openspec-sync-specs の手順を使用（エージェントによるインテリジェントマージ）
+      - 競合は決定済みの順序で適用
+      - 同期したかどうかを記録
+
+   b. **変更をアーカイブ**:
+      - 日付付きの名前で archive に移動
+      - \`.openspec.yaml\` を保持
+
+   c. **結果を記録**:
+      - 成功 / スキップ / 失敗
+      - スキップ: ユーザーがアーカイブしない選択をした場合
+
+9. **サマリーを表示**
+
+   最終結果を表示:
+
+   \`\`\`
+   ## Bulk Archive Complete
+
+   Archived 3 changes:
+   - schema-management-cli -> archive/2026-01-19-schema-management-cli/
+   - project-config -> archive/2026-01-19-project-config/
+   - add-oauth -> archive/2026-01-19-add-oauth/
+
+   Skipped 1 change:
+   - add-verify-skill (user chose not to archive incomplete)
+
+   Spec sync summary:
+   - 4 delta specs synced to main specs
+   - 1 conflict resolved (auth: applied both in chronological order)
+   \`\`\`
+
+   失敗がある場合:
+   \`\`\`
+   Failed 1 change:
+   - some-change: Archive directory already exists
+   \`\`\`
+
+**競合解決の例**
+
+例1: 片方のみ実装
+\`\`\`
+Conflict: specs/auth/spec.md touched by [add-oauth, add-jwt]
+
+Checking add-oauth:
+- Delta adds "OAuth Provider Integration" requirement
+- Searching codebase... found src/auth/oauth.ts implementing OAuth flow
+
+Checking add-jwt:
+- Delta adds "JWT Token Handling" requirement
+- Searching codebase... no JWT implementation found
+
+Resolution: Only add-oauth is implemented. Will sync add-oauth specs only.
+\`\`\`
+
+例2: 両方実装
+\`\`\`
+Conflict: specs/api/spec.md touched by [add-rest-api, add-graphql]
+
+Checking add-rest-api (created 2026-01-10):
+- Delta adds "REST Endpoints" requirement
+- Searching codebase... found src/api/rest.ts
+
+Checking add-graphql (created 2026-01-15):
+- Delta adds "GraphQL Schema" requirement
+- Searching codebase... found src/api/graphql.ts
+
+Resolution: Both implemented. Will apply add-rest-api specs first,
+then add-graphql specs (chronological order, newer takes precedence).
+\`\`\`
+
+**成功時の出力**
+
+\`\`\`
+## Bulk Archive Complete
+
+Archived N changes:
+- <change-1> -> archive/YYYY-MM-DD-<change-1>/
+- <change-2> -> archive/YYYY-MM-DD-<change-2>/
+
+Spec sync summary:
+- N delta specs synced to main specs
+- No conflicts (or: M conflicts resolved)
+\`\`\`
+
+**一部成功時の出力**
+
+\`\`\`
+## Bulk Archive Complete (partial)
+
+Archived N changes:
+- <change-1> -> archive/YYYY-MM-DD-<change-1>/
+
+Skipped M changes:
+- <change-2> (user chose not to archive incomplete)
+
+Failed K changes:
+- <change-3>: Archive directory already exists
+\`\`\`
+
+**変更がない場合の出力**
+
+\`\`\`
+## No Changes to Archive
+
+No active changes found. Use \`/opsx:new\` to create a new change.
+\`\`\`
+
+**ガードレール**
+- 変更数は任意（1件でもよいが、典型は2件以上）
+- 選択は必ずユーザーに促し、自動選択しない
+- 仕様の競合は早期に検出し、コードベース確認で解決する
+- 両方実装されている場合は作成日順で仕様を適用する
+- 未実装の場合のみ仕様同期をスキップし、警告する
+- 確認前に変更ごとのステータスを明確に示す
+- バッチ全体は1回の確認で進める
+- 結果をすべて報告する（成功/スキップ/失敗）
+- アーカイブ移動時に \`.openspec.yaml\` を保持する
+- アーカイブ先は現在日付: YYYY-MM-DD-<name>
+- 既存のアーカイブがある場合はその変更を失敗扱いにし、他は続行する`
+  };
+}
+
+/**
+ * openspec-verify-change スキルのテンプレート
+ * アーカイブ前に実装とアーティファクトの整合を検証
+ */
+export function getVerifyChangeSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-verify-change',
+    description: '実装が変更アーティファクトに一致しているか検証します。アーカイブ前の整合確認に使います。',
+    instructions: `実装が変更アーティファクト（specs, tasks, design）に一致しているか検証します。
+
+**入力**: change 名は任意。省略時は会話の文脈から推測できるか確認し、曖昧なら利用可能な変更を必ず確認させる。
+
+**手順**
+
+1. **change 名が無い場合は選択させる**
+
+   \`openspec list --json\` を実行し、**AskUserQuestion tool** でユーザーに選択させる。
+
+   tasks が存在する変更のみ表示する。
+   可能なら各変更の schema を併記する。
+   未完了タスクがあるものは "(進行中)" を付ける。
+
+   **重要**: 推測や自動選択はしない。必ずユーザーに選ばせる。
+
+2. **ステータス確認でスキーマを把握する**
+   \`\`\`bash
+   openspec status --change "<name>" --json
+   \`\`\`
+   JSON をパースして以下を把握する:
+   - \`schemaName\`: 使用中のワークフロー（例: "spec-driven", "tdd"）
+   - この変更で存在するアーティファクト
+
+3. **変更ディレクトリとアーティファクトを取得する**
+
+   \`\`\`bash
+   openspec instructions apply --change "<name>" --json
+   \`\`\`
+
+   変更ディレクトリと contextFiles が返る。利用可能なアーティファクトをすべて読む。
+
+4. **検証レポートの構造を初期化する**
+
+   3 つの観点で構成する:
+   - **完了性**: タスクと仕様のカバレッジ
+   - **正確性**: 要件実装とシナリオの網羅性
+   - **整合性**: 設計遵守とパターン整合
+
+   各観点は CRITICAL / WARNING / SUGGESTION に分類する。
+
+5. **完了性の検証**
+
+   **タスク完了**:
+   - contextFiles に tasks.md があれば読む
+   - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
+   - 完了数/総数を出す
+   - 未完了がある場合:
+     - 各タスクを CRITICAL として追加
+     - 推奨: "タスクを完了: <description>" または "実装済みなら完了に変更"
+
+   **仕様カバレッジ**:
+   - \`openspec/changes/<name>/specs/\` に差分がある場合:
+     - "### Requirement:" を抽出
+     - 各要件について:
+       - コードベース内の関連キーワードを検索
+       - 実装がありそうか評価
+     - 未実装らしい場合:
+       - CRITICAL: "要件が見つからない: <requirement name>"
+       - 推奨: "要件 X を実装: <description>"
+
+6. **正確性の検証**
+
+   **要件の実装対応**:
+   - 各要件について:
+     - コードベースで実装の痕跡を探す
+     - 見つかったらファイルパスと行番号を記録
+     - 要件の意図と実装が一致しているか評価
+     - 乖離がある場合:
+       - WARNING: "実装が仕様と乖離している可能性: <details>"
+       - 推奨: "<file>:<lines> と要件 X を見直す"
+
+   **シナリオのカバレッジ**:
+   - 差分仕様の各シナリオ（"#### Scenario:"）について:
+     - コード側で条件が扱われているか確認
+     - テストが存在するか確認
+     - 未カバーの場合:
+       - WARNING: "シナリオが未カバー: <scenario name>"
+       - 推奨: "シナリオを実装/テスト追加: <description>"
+
+7. **整合性の検証**
+
+   **設計遵守**:
+   - design.md がある場合:
+     - 主要な判断（"Decision:", "Approach:", "Architecture:" など）を抽出
+     - 実装がそれに従っているか確認
+     - 矛盾があれば:
+       - WARNING: "設計判断が守られていない: <decision>"
+       - 推奨: "実装を修正するか design.md を更新"
+   - design.md が無い場合: "検証対象の design.md が無い" と記載し、この項目はスキップ
+
+   **コードパターンの整合**:
+   - 新規コードが既存パターンに沿っているか確認
+   - ファイル命名、ディレクトリ構成、コードスタイルを確認
+   - 重大な乖離があれば:
+     - SUGGESTION: "パターン逸脱: <details>"
+     - 推奨: "プロジェクトのパターンに合わせる: <example>"
+
+8. **検証レポートを作成**
+
+   **サマリー**
+   \`\`\`
+   ## Verification Report: <change-name>
+
+   ### Summary
+   | Dimension    | Status           |
+   |--------------|------------------|
+   | Completeness | X/Y tasks, N reqs|
+   | Correctness  | M/N reqs covered |
+   | Coherence    | Followed/Issues  |
+   \`\`\`
+
+   **優先度別の指摘**:
+
+   1. **CRITICAL**（アーカイブ前に必須）:
+      - 未完了タスク
+      - 未実装の要件
+      - 各項目に具体的な推奨を付ける
+
+   2. **WARNING**（対応推奨）:
+      - 仕様/設計との乖離
+      - シナリオの未カバー
+      - 各項目に具体的な推奨を付ける
+
+   3. **SUGGESTION**（改善提案）:
+      - パターン不整合
+      - 小さな改善
+      - 各項目に具体的な推奨を付ける
+
+   **最終評価**:
+   - CRITICAL があれば: "重大な問題が X 件あります。アーカイブ前に修正してください。"
+   - WARNING のみ: "重大な問題はありません。注意点が Y 件あります。アーカイブ可能です（改善は推奨）。"
+   - 問題なし: "すべてのチェックに合格。アーカイブ可能です。"
+
+**検証のヒューリスティクス**
+
+- **完了性**: チェックリスト（タスク/要件）の客観項目に集中
+- **正確性**: キーワード検索・パス解析・合理的推論で十分（完全一致は求めない）
+- **整合性**: 重大な矛盾に焦点を当て、細かいスタイルには深入りしない
+- **誤検出の扱い**: 不確実なら SUGGESTION、次に WARNING、最後に CRITICAL
+- **行動可能性**: すべての指摘に具体的な推奨を付ける（可能ならファイル/行を示す）
+
+**Graceful Degradation**
+
+- tasks.md のみある場合: タスク完了のみ確認し、仕様/設計はスキップ
+- tasks + specs の場合: 完了性/正確性を確認し、設計はスキップ
+- 全アーティファクトがある場合: 3 観点すべて確認
+- スキップした項目は理由を明記
+
+**出力形式**
+
+- サマリーはテーブルで提示
+- 指摘は CRITICAL/WARNING/SUGGESTION でグルーピング
+- ファイル参照は \`file.ts:123\` 形式
+- 具体的かつ実行可能な推奨を必ず書く
+- "確認してください" のような曖昧な表現は避ける`
   };
 }
 

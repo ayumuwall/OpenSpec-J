@@ -23,6 +23,14 @@
 - 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は常に「タスク」表記、`src/core/view.ts` と `src/core/list.ts` は `件` を用いた固定表記に統一。
 - 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。
 
+### 規範文の語尾を日本語で統一（SHALL/MUST）
+- 目的: 「MUST を文中に挿入した日本語」が不自然になりやすいため、語尾と括弧表記を固定し、出力の揺れを抑える。
+- 方針: 要件本文は SHALL/MUST のみを許可し、SHOULD/MAY は補足的な注意/参考に限定する（検証挙動は変更しない）。
+- 実施内容:
+  - `src/core/templates/agents-template.ts` / `src/core/templates/slash-command-templates.ts` の TL;DR で「語尾 + 文末括弧」表記と「文中に挿入しない」を指示。
+  - `schemas/spec-driven/schema.yaml` / `schemas/tdd/schema.yaml` の要件フォーマットに同ルールを追記。
+  - 配布テンプレートの `openspec/AGENTS.md` に同ルールを反映。
+
 ## チェックリスト（ローカライズ観点）
 - メッセージ判定に `includes` 等の英語ハードコードが無いか確認し、日本語化後も発火するかを両言語で点検。
 - エラー/ガイド文を定数化し、テストで文面の一部を検証できるようにする（英語と日本語の両方がトリガーになるテストがあると安心）。

@@ -178,7 +178,7 @@ openspec/
 ```markdown
 ## ADDED Requirements
 ### Requirement: New Feature
-システムは新しい機能を提供する MUST。
+システムは新しい機能を提供しなければならない。(MUST)
 
 #### Scenario: 成功ケース
 - **WHEN** ユーザーが操作する
@@ -255,7 +255,8 @@ openspec/
 各要件には最低 1 つの Scenario が必須です。
 
 ### Requirement の書き方
-- 規範的な要件には SHALL/MUST を使う（意図的でない限り should/may を避ける）
+- 規範的な要件には SHALL/MUST を使う（SHOULD/MAY は要件本文では使わない。補足的な注意/参考に限る）
+- SHALL/MUST/SHOULD/MAY は文末括弧で明示し、語尾は次に揃える: SHALL/MUST = 「〜しなければならない。(SHALL/MUST)」, SHOULD = 「〜すべきである。(SHOULD)」, MAY = 「〜してもよい。(MAY)」。文中に SHALL/MUST/SHOULD/MAY を挿入しない。
 
 ### Delta Operations
 
@@ -335,7 +336,7 @@ printf "## 1. Implementation\n- [ ] 1.1 ...\n" > openspec/changes/$CHANGE/tasks.
 cat > openspec/changes/$CHANGE/specs/auth/spec.md << 'EOF'
 ## ADDED Requirements
 ### Requirement: 二要素認証
-ユーザーはログイン時に二要素認証を行う MUST。
+ユーザーはログイン時に二要素認証を行わなければならない。(MUST)
 
 #### Scenario: OTP が必要
 - **WHEN** 有効な認証情報が入力されたとき

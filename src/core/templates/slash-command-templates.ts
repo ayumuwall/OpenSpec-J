@@ -4,7 +4,8 @@ const baseGuardrails = [
   "**Guardrails**",
   "- まずはシンプルで最小限の実装を優先し、明確な依頼や根拠がある場合のみ複雑化してください。",
   "- 変更のスコープを依頼された成果にきっちり合わせ、不要に広げないでください。",
-  "- 生成する `proposal.md` / `tasks.md` / `design.md` / 仕様差分は日本語で記述し、見出しやキーワード（Requirement/Scenario, WHEN/THEN）は英語のまま維持してください。規範文は本文を日本語にし、キーワード (SHALL/MUST/SHOULD) だけ英語で残してください。意図的に非規範にする場合のみ should/may を使ってください。",
+  "- 生成する `proposal.md` / `tasks.md` / `design.md` / 仕様差分は日本語で記述し、見出しやキーワード（Requirement/Scenario, WHEN/THEN）は英語のまま維持してください。規範文は本文を日本語にし、キーワード (SHALL/MUST/SHOULD/MAY) だけ英語で残してください。SHOULD/MAY は要件本文では使わず、補足的な注意/参考に限ってください。",
+  "- 規範文の語尾は次に揃える: SHALL/MUST = 「〜しなければならない。(SHALL/MUST)」, SHOULD = 「〜すべきである。(SHOULD)」, MAY = 「〜してもよい。(MAY)」。文中に SHALL/MUST/SHOULD/MAY を挿入しない。",
   "- 追加の OpenSpec 慣習が必要になったら `openspec/AGENTS.md`（`openspec/` ディレクトリ内。見つからなければ `ls openspec` や `openspec update`）を参照してください。"
 ].join("\n");
 
