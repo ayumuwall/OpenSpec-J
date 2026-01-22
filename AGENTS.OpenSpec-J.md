@@ -442,9 +442,15 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - instruction-loader/resolver のエラー文日本語化と関連テスト期待値を更新。
 - bulk-archive/feedback スキル文の日本語化を反映。
 - `docs/project-config-demo.md` と `scripts/README.md` を日本語化。
+- v0.23.0 を前提に、規範文の語尾/括弧ルールをテンプレート・スキーマ・配布AGENTSに追記し、bulk-archive/verify スキル指示を復旧。
+- validator の英語トリガーとデルタ関連ガイドを定数化（`VALIDATION_MESSAGES`）し、日本語・英語双方のテストを追加。
+- `CHANGELOG.md`／`LOCALIZATION-NOTES.md` 等に本作業の要点を記録し、`pnpm test` で全テストを通した。
 
 #### テスト状況
-- 未実施。
+- `pnpm test`
+
+#### 残タスク（推奨）
+- なし。
 
 ### 2026-01-14
 
