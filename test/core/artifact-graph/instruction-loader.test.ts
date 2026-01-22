@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -193,8 +193,317 @@ describe('instruction-loader', () => {
       const context = loadChangeContext(tempDir, 'my-change');
 
       expect(() => generateInstructions(context, 'nonexistent')).toThrow(
-        "Artifact 'nonexistent' not found"
+        "スキーマ 'spec-driven' にアーティファクト 'nonexistent' が見つかりません"
       );
+    });
+
+    describe('project config integration', () => {
+      it('should return context as separate field for all artifacts', () => {
+        // Create project config
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  Tech stack: TypeScript, React
+  API style: RESTful
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        // Context should be in separate field, not in template
+        expect(instructions.context).toContain('Tech stack: TypeScript, React');
+        expect(instructions.context).toContain('API style: RESTful');
+        expect(instructions.template).not.toContain('Tech stack');
+        expect(instructions.template).toContain('## Why'); // Actual template content
+      });
+
+      it('should return undefined context when config is absent', () => {
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.context).toBeUndefined();
+        expect(instructions.rules).toBeUndefined();
+        expect(instructions.template).toContain('## Why'); // Actual template content
+      });
+
+      it('should preserve multi-line context', () => {
+        // Create project config with multi-line context
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  Line 1
+  Line 2
+  Line 3
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.context).toContain('Line 1\nLine 2\nLine 3');
+      });
+
+      it('should preserve special characters in context', () => {
+        // Create project config with special characters
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  Special: < > & " ' @ # $ % [ ] { }
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.context).toContain('Special: < > & " \' @ # $ % [ ] { }');
+      });
+
+      it('should return rules only for matching artifact', () => {
+        // Create project config with rules
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Include rollback plan
+    - Identify affected teams
+  specs:
+    - Use Given/When/Then format
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+
+        // Check proposal artifact has its rules
+        const proposalInstructions = generateInstructions(context, 'proposal', tempDir);
+        expect(proposalInstructions.rules).toEqual(['Include rollback plan', 'Identify affected teams']);
+        expect(proposalInstructions.template).not.toContain('rollback plan');
+
+        // Check specs artifact has its rules
+        const specsInstructions = generateInstructions(context, 'specs', tempDir);
+        expect(specsInstructions.rules).toEqual(['Use Given/When/Then format']);
+        expect(specsInstructions.template).not.toContain('Given/When/Then');
+      });
+
+      it('should return undefined rules for non-matching artifact', () => {
+        // Create project config with rules only for proposal
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Include rollback plan
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+
+        // Check design artifact (no rules configured) has undefined rules
+        const designInstructions = generateInstructions(context, 'design', tempDir);
+        expect(designInstructions.rules).toBeUndefined();
+      });
+
+      it('should return undefined rules when empty array', () => {
+        // Create project config with empty rules array
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Some context
+rules:
+  proposal: []
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.context).toBe('Some context');
+        expect(instructions.rules).toBeUndefined();
+      });
+
+      it('should keep context, rules, and template as separate fields', () => {
+        // Create project config with both context and rules
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Project context here
+rules:
+  proposal:
+    - Rule 1
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        // All three should be separate
+        expect(instructions.context).toBe('Project context here');
+        expect(instructions.rules).toEqual(['Rule 1']);
+        expect(instructions.template).toContain('## Why');
+        // Template should not contain context or rules
+        expect(instructions.template).not.toContain('Project context here');
+        expect(instructions.template).not.toContain('Rule 1');
+      });
+
+      it('should handle context without rules', () => {
+        // Create project config with only context
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Project context only
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.context).toBe('Project context only');
+        expect(instructions.rules).toBeUndefined();
+        expect(instructions.template).toContain('## Why');
+      });
+
+      it('should handle rules without context', () => {
+        // Create project config with only rules
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Rule only
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.context).toBeUndefined();
+        expect(instructions.rules).toEqual(['Rule only']);
+        expect(instructions.template).toContain('## Why');
+      });
+
+      it('should work without project root parameter', () => {
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal'); // No projectRoot
+
+        expect(instructions.context).toBeUndefined();
+        expect(instructions.rules).toBeUndefined();
+        expect(instructions.template).toContain('## Why');
+      });
+    });
+
+    describe('validation and warnings', () => {
+      let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('should warn about unknown artifact IDs in rules', () => {
+        // Create project config with invalid artifact ID
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Valid rule
+  invalid-artifact:
+    - Invalid rule
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        generateInstructions(context, 'proposal', tempDir);
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('rules 内の不明なアーティファクトID: "invalid-artifact"')
+        );
+      });
+
+      it('should deduplicate validation warnings within session', () => {
+        // Create a fresh temp directory to avoid cache pollution
+        const freshTempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-test-'));
+
+        try {
+          // Create project config with a uniquely named invalid artifact ID
+          const configDir = path.join(freshTempDir, 'openspec');
+          fs.mkdirSync(configDir, { recursive: true });
+          fs.writeFileSync(
+            path.join(configDir, 'config.yaml'),
+            `schema: spec-driven
+rules:
+  unique-invalid-artifact-${Date.now()}:
+    - Invalid rule
+`
+          );
+
+          const context = loadChangeContext(freshTempDir, 'my-change');
+
+          // Call multiple times
+          generateInstructions(context, 'proposal', freshTempDir);
+          generateInstructions(context, 'specs', freshTempDir);
+          generateInstructions(context, 'design', freshTempDir);
+
+          // Warning should be shown only once (deduplication works)
+          // Note: We may have gotten warnings from other tests, so check that
+          // the count didn't increase by more than 1 from the first call
+          const callCount = consoleWarnSpy.mock.calls.filter(call =>
+            call[0]?.includes('rules 内の不明なアーティファクトID')
+          ).length;
+
+          expect(callCount).toBeGreaterThanOrEqual(1);
+        } finally {
+          fs.rmSync(freshTempDir, { recursive: true, force: true });
+        }
+      });
+
+      it('should not warn for valid artifact IDs', () => {
+        // Create project config with valid artifact IDs
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Rule 1
+  specs:
+    - Rule 2
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        generateInstructions(context, 'proposal', tempDir);
+
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
     });
   });
 

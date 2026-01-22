@@ -13,8 +13,10 @@ import { ChangeCommand } from '../commands/change.js';
 import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
 import { CompletionCommand } from '../commands/completion.js';
+import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerArtifactWorkflowCommands } from '../commands/artifact-workflow.js';
+import { registerSchemaCommand } from '../commands/schema.js';
 import { emitDeprecationWarning } from '../utils/deprecations.js';
 import { maybeShowTelemetryNotice, trackCommand, shutdown } from '../telemetry/index.js';
 
@@ -265,6 +267,7 @@ program
 
 registerSpecCommand(program);
 registerConfigCommand(program);
+registerSchemaCommand(program);
 
 // Top-level validate command
 program
@@ -312,6 +315,22 @@ program
     } catch (error) {
       console.log();
       ora().fail(`エラー: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Feedback command
+program
+  .command('feedback <message>')
+  .description('OpenSpec へのフィードバックを送信')
+  .option('--body <text>', 'フィードバックの詳細説明')
+  .action(async (message: string, options?: { body?: string }) => {
+    try {
+      const feedbackCommand = new FeedbackCommand();
+      await feedbackCommand.execute(message, options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
       process.exit(1);
     }
   });

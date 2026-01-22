@@ -1,0 +1,612 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+import {
+  readProjectConfig,
+  validateConfigRules,
+  suggestSchemas,
+} from '../../src/core/project-config.js';
+
+describe('project-config', () => {
+  let tempDir: string;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-test-config-'));
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    consoleWarnSpy.mockRestore();
+  });
+
+  describe('readProjectConfig', () => {
+    describe('resilient parsing', () => {
+      it('should parse complete valid config', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  Tech stack: TypeScript, React
+  API style: RESTful
+rules:
+  proposal:
+    - Include rollback plan
+    - Identify affected teams
+  specs:
+    - Use Given/When/Then format
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          context: 'Tech stack: TypeScript, React\nAPI style: RESTful\n',
+          rules: {
+            proposal: ['Include rollback plan', 'Identify affected teams'],
+            specs: ['Use Given/When/Then format'],
+          },
+        });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should parse minimal config with schema only', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: spec-driven\n');
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+        });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should return partial config when schema is invalid', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: ""
+context: Valid context here
+rules:
+  proposal:
+    - Valid rule
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          context: 'Valid context here',
+          rules: {
+            proposal: ['Valid rule'],
+          },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("config の 'schema' フィールドが不正です")
+        );
+      });
+
+      it('should return partial config when context is invalid', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: 123
+rules:
+  proposal:
+    - Valid rule
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          rules: {
+            proposal: ['Valid rule'],
+          },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("config の 'context' フィールドが不正です")
+        );
+      });
+
+      it('should return partial config when rules is not an object', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Valid context
+rules: ["not", "an", "object"]
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          context: 'Valid context',
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("config の 'rules' フィールドが不正です")
+        );
+      });
+
+      it('should handle rules: null without aborting config parsing', () => {
+        // YAML `rules:` with no value parses to null
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Valid context
+rules:
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        // Should still parse schema and context despite null rules
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          context: 'Valid context',
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("config の 'rules' フィールドが不正です")
+        );
+      });
+
+      it('should filter out invalid rules for specific artifact', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Valid rule
+  specs: "not an array"
+  design:
+    - Another valid rule
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          rules: {
+            proposal: ['Valid rule'],
+            design: ['Another valid rule'],
+          },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("'specs' のルールは文字列配列である必要があります")
+        );
+      });
+
+      it('should filter out empty string rules', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Valid rule
+    - ""
+    - Another valid rule
+    - ""
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          rules: {
+            proposal: ['Valid rule', 'Another valid rule'],
+          },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("'proposal' のルールに空文字があるため無視します")
+        );
+      });
+
+      it('should skip artifact if all rules are empty strings', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - ""
+    - ""
+  specs:
+    - Valid rule
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          rules: {
+            specs: ['Valid rule'],
+          },
+        });
+      });
+
+      it('should handle completely invalid YAML gracefully', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: [unclosed');
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toBeNull();
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('openspec/config.yaml の解析に失敗しました'),
+          expect.anything()
+        );
+      });
+
+      it('should warn when config is not a YAML object', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(path.join(configDir, 'config.yaml'), '"just a string"');
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toBeNull();
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('有効な YAML オブジェクトではありません')
+        );
+      });
+
+      it('should handle empty config file', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(path.join(configDir, 'config.yaml'), '');
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toBeNull();
+      });
+    });
+
+    describe('context size limit enforcement', () => {
+      it('should accept context under 50KB limit', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        const smallContext = 'a'.repeat(1000); // 1KB
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven\ncontext: "${smallContext}"\n`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.context).toBe(smallContext);
+        expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('context が大きすぎます')
+        );
+      });
+
+      it('should reject context over 50KB limit', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        const largeContext = 'a'.repeat(51 * 1024); // 51KB
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven\ncontext: "${largeContext}"\n`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({ schema: 'spec-driven' });
+        expect(config?.context).toBeUndefined();
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('context が大きすぎます (51.0KB, 上限: 50KB)')
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('context フィールドを無視します')
+        );
+      });
+
+      it('should handle context exactly at 50KB limit', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        const exactContext = 'a'.repeat(50 * 1024); // Exactly 50KB
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven\ncontext: "${exactContext}"\n`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.context).toBe(exactContext);
+        expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('context が大きすぎます')
+        );
+      });
+
+      it('should handle multi-byte UTF-8 characters in size calculation', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        // Unicode snowman is 3 bytes in UTF-8
+        const contextWithUnicode = '☃'.repeat(18000); // ~54KB in UTF-8 (18000 * 3 bytes)
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  ${contextWithUnicode}
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.context).toBeUndefined();
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('context が大きすぎます')
+        );
+      });
+    });
+
+    describe('.yml/.yaml precedence', () => {
+      it('should prefer .yaml when both exist', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          'schema: spec-driven\ncontext: from yaml\n'
+        );
+        fs.writeFileSync(
+          path.join(configDir, 'config.yml'),
+          'schema: tdd\ncontext: from yml\n'
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.schema).toBe('spec-driven');
+        expect(config?.context).toBe('from yaml');
+      });
+
+      it('should use .yml when .yaml does not exist', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yml'),
+          'schema: tdd\ncontext: from yml\n'
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.schema).toBe('tdd');
+        expect(config?.context).toBe('from yml');
+      });
+
+      it('should return null when neither .yaml nor .yml exist', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toBeNull();
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should return null when openspec directory does not exist', () => {
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toBeNull();
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('multi-line and special characters', () => {
+      it('should preserve multi-line context', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  Line 1: Tech stack
+  Line 2: API conventions
+  Line 3: Testing approach
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.context).toBe(
+          'Line 1: Tech stack\nLine 2: API conventions\nLine 3: Testing approach\n'
+        );
+      });
+
+      it('should preserve special YAML characters in context', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: |
+  Special chars: : @ # $ % & * [ ] { }
+  Quotes: "double" 'single'
+  Symbols: < > | \\ /
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.context).toContain('Special chars: : @ # $ % & * [ ] { }');
+        expect(config?.context).toContain('"double"');
+        expect(config?.context).toContain("'single'");
+        expect(config?.context).toContain('Symbols: < > | \\ /');
+      });
+
+      it('should preserve special characters in rule strings', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - "Use <template> tags in docs"
+    - "Reference @mentions and #channels"
+    - "Follow {variable} naming"
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.rules?.proposal).toEqual([
+          'Use <template> tags in docs',
+          'Reference @mentions and #channels',
+          'Follow {variable} naming',
+        ]);
+      });
+    });
+  });
+
+  describe('validateConfigRules', () => {
+    it('should return no warnings for valid artifact IDs', () => {
+      const rules = {
+        proposal: ['Rule 1'],
+        specs: ['Rule 2'],
+        design: ['Rule 3'],
+      };
+      const validIds = new Set(['proposal', 'specs', 'design', 'tasks']);
+
+      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+
+      expect(warnings).toEqual([]);
+    });
+
+    it('should warn about unknown artifact IDs', () => {
+      const rules = {
+        proposal: ['Rule 1'],
+        testplan: ['Rule 2'], // Invalid
+        documentation: ['Rule 3'], // Invalid
+      };
+      const validIds = new Set(['proposal', 'specs', 'design', 'tasks']);
+
+      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+
+      expect(warnings).toHaveLength(2);
+      expect(warnings[0]).toContain('rules 内の不明なアーティファクトID: "testplan"');
+      expect(warnings[0]).toContain('スキーマ "spec-driven" の有効ID: design, proposal, specs, tasks');
+      expect(warnings[1]).toContain('rules 内の不明なアーティファクトID: "documentation"');
+    });
+
+    it('should return warnings for all unknown artifact IDs', () => {
+      const rules = {
+        invalid1: ['Rule 1'],
+        invalid2: ['Rule 2'],
+        invalid3: ['Rule 3'],
+      };
+      const validIds = new Set(['proposal', 'specs']);
+
+      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+
+      expect(warnings).toHaveLength(3);
+    });
+
+    it('should handle empty rules object', () => {
+      const rules = {};
+      const validIds = new Set(['proposal', 'specs']);
+
+      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+
+      expect(warnings).toEqual([]);
+    });
+  });
+
+  describe('suggestSchemas', () => {
+    const availableSchemas = [
+      { name: 'spec-driven', isBuiltIn: true },
+      { name: 'tdd', isBuiltIn: true },
+      { name: 'custom-workflow', isBuiltIn: false },
+      { name: 'team-process', isBuiltIn: false },
+    ];
+
+    it('should suggest close matches using fuzzy matching', () => {
+      const message = suggestSchemas('spec-drven', availableSchemas); // Missing 'i'
+
+      expect(message).toContain("openspec/config.yaml に指定されたスキーマ 'spec-drven' が見つかりません");
+      expect(message).toContain('次のいずれかではありませんか？');
+      expect(message).toContain('spec-driven (組み込み)');
+    });
+
+    it('should suggest tdd for tdd typo', () => {
+      const message = suggestSchemas('td', availableSchemas);
+
+      expect(message).toContain('次のいずれかではありませんか？');
+      expect(message).toContain('tdd (組み込み)');
+    });
+
+    it('should list all available schemas', () => {
+      const message = suggestSchemas('nonexistent', availableSchemas);
+
+      expect(message).toContain('利用可能なスキーマ:');
+      expect(message).toContain('組み込み: spec-driven, tdd');
+      expect(message).toContain('プロジェクトローカル: custom-workflow, team-process');
+    });
+
+    it('should handle case when no project-local schemas exist', () => {
+      const builtInOnly = [
+        { name: 'spec-driven', isBuiltIn: true },
+        { name: 'tdd', isBuiltIn: true },
+      ];
+      const message = suggestSchemas('invalid', builtInOnly);
+
+      expect(message).toContain('組み込み: spec-driven, tdd');
+      expect(message).toContain('プロジェクトローカル: (見つかりません)');
+    });
+
+    it('should include fix instruction', () => {
+      const message = suggestSchemas('wrong-schema', availableSchemas);
+
+      expect(message).toContain(
+        "対処: openspec/config.yaml を編集し、'schema: wrong-schema' を有効なスキーマ名に変更してください"
+      );
+    });
+
+    it('should limit suggestions to top 3 matches', () => {
+      const manySchemas = [
+        { name: 'test-a', isBuiltIn: true },
+        { name: 'test-b', isBuiltIn: true },
+        { name: 'test-c', isBuiltIn: true },
+        { name: 'test-d', isBuiltIn: true },
+        { name: 'test-e', isBuiltIn: true },
+      ];
+      const message = suggestSchemas('test', manySchemas);
+
+      // Should suggest at most 3
+      const suggestionCount = (message.match(/test-/g) || []).length;
+      expect(suggestionCount).toBeGreaterThanOrEqual(3);
+      expect(suggestionCount).toBeLessThanOrEqual(3 + 5); // 3 in suggestions + 5 in "Available" list
+    });
+
+    it('should not suggest schemas with distance > 3', () => {
+      const message = suggestSchemas('abcdefghijk', availableSchemas);
+
+      // 'abcdefghijk' has large Levenshtein distance from all schemas
+      expect(message).not.toContain('次のいずれかではありませんか？');
+      expect(message).toContain('利用可能なスキーマ:');
+    });
+  });
+});

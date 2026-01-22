@@ -115,7 +115,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 | **iFlow (iflow-cli)** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.iflow/commands/`) |
 | **Kilo Code** | `/openspec-proposal.md`, `/openspec-apply.md`, `/openspec-archive.md` (`.kilocode/workflows/`) |
 | **OpenCode** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` |
-| **Qoder (CLI)** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.qoder/commands/openspec/`) — 詳細は [ドキュメント](https://qoder.com/cli) |
+| **Qoder** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` (`.qoder/commands/openspec/`) — 詳細は [ドキュメント](https://qoder.com) |
 | **Qwen Code** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.qwen/commands/`) |
 | **RooCode** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.roo/commands/`) |
 | **Windsurf** | `/openspec-proposal`, `/openspec-apply`, `/openspec-archive` (`.windsurf/workflows/`) |
@@ -142,8 +142,43 @@ Kilo Code はチームのワークフローを自動検出します。生成さ�
 
 #### ステップ 1: CLI をグローバルインストール
 
+**Option A: Using npm**
+
 ```bash
 npm install -g @ayumuwall/openspec@latest
+```
+
+インストール確認:
+```bash
+openspec --version
+```
+
+**Option B: Nix（NixOS と Nix パッケージマネージャー）**
+
+インストールせずに直接実行:
+```bash
+nix run github:ayumuwall/OpenSpec-J -- init
+```
+
+プロファイルにインストール:
+```bash
+nix profile install github:ayumuwall/OpenSpec-J
+```
+
+`flake.nix` に開発環境として追加:
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    openspec.url = "github:ayumuwall/OpenSpec-J";
+  };
+
+  outputs = { nixpkgs, openspec, ... }: {
+    devShells.x86_64-linux.default = nixpkgs.legacyPackages.x86_64-linux.mkShell {
+      buildInputs = [ openspec.packages.x86_64-linux.default ];
+    };
+  };
+}
 ```
 
 インストール確認:

@@ -435,6 +435,17 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 > **TODO: 新しい作業日は新規エントリとして追加し、過去の記録は残すこと。**
 > **TODO: 同日の記録は 1 件に統合し、新しい日付が先頭になるよう降順で並べる。今後もこのルールを守ること。**
 
+### 2026-01-22
+
+#### 実施したこと
+- feedback/schema の CLI 文言と補完の日本語化、config 警告/コメントの日本語化を反映。
+- instruction-loader/resolver のエラー文日本語化と関連テスト期待値を更新。
+- bulk-archive/feedback スキル文の日本語化を反映。
+- `docs/project-config-demo.md` と `scripts/README.md` を日本語化。
+
+#### テスト状況
+- 未実施。
+
 ### 2026-01-14
 
 #### 実施したこと

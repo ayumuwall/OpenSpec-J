@@ -1,6 +1,6 @@
 # 実験的ワークフロー（OPSX）
 
-> **ステータス:** 実験的です。壊れる可能性があります。フィードバックは [Discord](https://discord.gg/BYjPaKbqMt) へ。
+> **ステータス:** 実験的です。壊れる可能性があります。フィードバックは [Discord](https://discord.gg/YctCnvvshC) へ。
 >
 > **互換性:** 現時点では Claude Code のみ
 
@@ -78,6 +78,98 @@ openspec artifact-experimental-setup
 
 Claude Code が自動検出する `.claude/skills/` にスキルが作成されます。
 
+セットアップ時に **プロジェクト設定**（`openspec/config.yaml`）の作成を促されます。任意ですが推奨です。
+
+## プロジェクト設定
+
+プロジェクト設定では、デフォルトのスキーマと、すべてのアーティファクトに注入するプロジェクト文脈を設定できます。
+
+### 設定の作成
+
+設定は `artifact-experimental-setup` 中に作成されるか、手動で作成できます:
+
+```yaml
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Tech stack: TypeScript, React, Node.js
+  API conventions: RESTful, JSON responses
+  Testing: Vitest for unit tests, Playwright for e2e
+  Style: ESLint with Prettier, strict TypeScript
+
+rules:
+  proposal:
+    - ロールバック計画を含める
+    - 影響するチームを特定する
+  specs:
+    - シナリオは Given/When/Then 形式で書く
+  design:
+    - 複雑なフローにはシーケンス図を含める
+```
+
+### 設定フィールド
+
+| フィールド | 型 | 説明 |
+|-------|------|-------------|
+| `schema` | string | 新規変更のデフォルトスキーマ（例: `spec-driven`, `tdd`） |
+| `context` | string | すべてのアーティファクト指示に注入されるプロジェクト文脈 |
+| `rules` | object | アーティファクト ID ごとのルール |
+
+### 仕組み
+
+**スキーマの優先順位**（高 → 低）:
+1. CLI フラグ（`--schema tdd`）
+2. 変更メタデータ（変更ディレクトリの `.openspec.yaml`）
+3. プロジェクト設定（`openspec/config.yaml`）
+4. デフォルト（`spec-driven`）
+
+**コンテキスト注入:**
+- すべてのアーティファクト指示の先頭に追加される
+- `<context>...</context>` タグで囲まれる
+- プロジェクトの慣習を AI に理解させる
+
+**ルール注入:**
+- 対象アーティファクトにのみ注入される
+- `<rules>...</rules>` タグで囲まれる
+- context の後、template の前に挿入される
+
+### スキーマごとのアーティファクト ID
+
+**spec-driven**（デフォルト）:
+- `proposal` — 変更提案
+- `specs` — 仕様
+- `design` — 技術設計
+- `tasks` — 実装タスク
+
+**tdd**:
+- `spec` — 仕様
+- `tests` — テストファイル
+- `implementation` — 実装コード
+- `docs` — ドキュメント
+
+### 設定の検証
+
+- `rules` 内の未知のアーティファクト ID は警告になる
+- スキーマ名は利用可能なスキーマと照合される
+- context は 50KB の上限がある
+- YAML の不正は行番号付きで報告される
+
+### トラブルシューティング
+
+**"Unknown artifact ID in rules: X"**
+- アーティファクト ID がスキーマと一致するか確認（上の一覧参照）
+- `openspec schemas --json` で各スキーマのアーティファクト ID を確認する
+
+**設定が反映されない:**
+- ファイルが `openspec/config.yaml` にあることを確認（`.yml` ではない）
+- YAML 構文をバリデーターで確認
+- 変更は即時反映（再起動不要）
+
+**コンテキストが大きすぎる:**
+- context の上限は 50KB
+- 要約するか外部ドキュメントへのリンクに置き換える
+
 ## コマンド
 
 | コマンド | 役割 |
@@ -119,7 +211,7 @@ Claude Code が自動検出する `.claude/skills/` にスキルが作成され�
 ```
 /opsx:apply
 ```
-タスクを順に進め、完了したらチェックを付けます。**重要な違い:** 実装中に問題が見つかったら、仕様・設計・タスクを更新して続行できます。フェーズのゲートはありません。
+タスクを順に進め、完了したらチェックを付けます。**重要な違い:** 実装中に問題が見つかったら、仕様・設計・タスクを更新して続行できます。フェーズのゲートはありません。複数の変更を並行している場合は `/opsx:apply <name>` を使い、判断できない場合は選択を促します。
 
 ### 仕上げ
 ```
@@ -472,35 +564,53 @@ git のブランチに例えると:
 
 ### カスタムスキーマ
 
-`~/.local/share/openspec/schemas/` にスキーマを追加すれば独自ワークフローを作れます。
+スキーマ管理コマンドでカスタムワークフローを作成できます:
 
+```bash
+# Create a new schema from scratch (interactive)
+openspec schema init my-workflow
+
+# Or fork an existing schema as a starting point
+openspec schema fork spec-driven my-workflow
+
+# Validate your schema structure
+openspec schema validate my-workflow
+
+# See where a schema resolves from (useful for debugging)
+openspec schema which my-workflow
 ```
-~/.local/share/openspec/schemas/research-first/
+
+スキーマは `openspec/schemas/`（プロジェクト内、バージョン管理）または `~/.local/share/openspec/schemas/`（ユーザーグローバル）に保存されます。
+
+**スキーマ構造:**
+```
+openspec/schemas/research-first/
 ├── schema.yaml
 └── templates/
     ├── research.md
     ├── proposal.md
     └── tasks.md
+```
 
-schema.yaml:
-┌─────────────────────────────────────────────────────────────────┐
-│  name: research-first                                           │
-│  artifacts:                                                     │
-│    - id: research        # proposal の前に追加                  │
-│      generates: research.md                                     │
-│      requires: []                                               │
-│                                                                 │
-│    - id: proposal                                               │
-│      generates: proposal.md                                     │
-│      requires: [research]  # research に依存                    │
-│                                                                 │
-│    - id: tasks                                                  │
-│      generates: tasks.md                                        │
-│      requires: [proposal]                                       │
-└─────────────────────────────────────────────────────────────────┘
+**schema.yaml の例:**
+```yaml
+name: research-first
+artifacts:
+  - id: research        # proposal の前に追加
+    generates: research.md
+    requires: []
 
-依存グラフ:
+  - id: proposal
+    generates: proposal.md
+    requires: [research]  # research に依存
 
+  - id: tasks
+    generates: tasks.md
+    requires: [proposal]
+```
+
+**依存グラフ:**
+```
    research ──► proposal ──► tasks
 ```
 
@@ -522,7 +632,22 @@ schema.yaml:
 - **spec-driven**（デフォルト）: proposal → specs → design → tasks
 - **tdd**: tests → implementation → docs
 
-`openspec schemas` を実行すると利用可能なスキーマが表示されます。
+```bash
+# 利用可能なスキーマを一覧表示
+openspec schemas
+
+# すべてのスキーマと解決元を表示
+openspec schema which --all
+
+# 新しいスキーマを対話的に作成
+openspec schema init my-workflow
+
+# 既存スキーマをフォークしてカスタマイズ
+openspec schema fork spec-driven my-workflow
+
+# スキーマ構造を検証
+openspec schema validate my-workflow
+```
 
 ## ヒント
 
@@ -536,4 +661,4 @@ schema.yaml:
 
 荒削りなのは意図的です。何がうまくいくかを学んでいます。
 
-バグやアイデアがあれば [Discord](https://discord.gg/BYjPaKbqMt) か [GitHub](https://github.com/Fission-AI/openspec/issues) へ。
+バグやアイデアがあれば [Discord](https://discord.gg/YctCnvvshC) か [GitHub](https://github.com/Fission-AI/openspec/issues) へ。

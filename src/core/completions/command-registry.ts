@@ -156,6 +156,18 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     ],
   },
   {
+    name: 'feedback',
+    description: 'OpenSpec へのフィードバックを送信',
+    acceptsPositional: true,
+    flags: [
+      {
+        name: 'body',
+        description: 'フィードバックの詳細説明',
+        takesValue: true,
+      },
+    ],
+  },
+  {
     name: 'change',
     description: 'OpenSpec の変更提案を管理（非推奨）',
     flags: [],
@@ -364,6 +376,82 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'edit',
         description: '$EDITOR で設定を開く',
         flags: [],
+      },
+    ],
+  },
+  {
+    name: 'schema',
+    description: 'ワークフロースキーマを管理',
+    flags: [],
+    subcommands: [
+      {
+        name: 'which',
+        description: 'スキーマの解決元を表示',
+        acceptsPositional: true,
+        positionalType: 'schema-name',
+        flags: [
+          COMMON_FLAGS.json,
+          {
+            name: 'all',
+            description: 'すべてのスキーマと解決元を一覧表示',
+          },
+        ],
+      },
+      {
+        name: 'validate',
+        description: 'スキーマ構造とテンプレートを検証',
+        acceptsPositional: true,
+        positionalType: 'schema-name',
+        flags: [
+          COMMON_FLAGS.json,
+          {
+            name: 'verbose',
+            description: '詳細な検証手順を表示',
+          },
+        ],
+      },
+      {
+        name: 'fork',
+        description: '既存スキーマをプロジェクトにコピーしてカスタマイズ',
+        acceptsPositional: true,
+        positionalType: 'schema-name',
+        flags: [
+          COMMON_FLAGS.json,
+          {
+            name: 'force',
+            description: '既存の出力先を上書き',
+          },
+        ],
+      },
+      {
+        name: 'init',
+        description: 'プロジェクトローカルのスキーマを作成',
+        acceptsPositional: true,
+        flags: [
+          COMMON_FLAGS.json,
+          {
+            name: 'description',
+            description: 'スキーマの説明',
+            takesValue: true,
+          },
+          {
+            name: 'artifacts',
+            description: 'アーティファクトIDをカンマ区切りで指定',
+            takesValue: true,
+          },
+          {
+            name: 'default',
+            description: 'プロジェクトのデフォルトスキーマに設定',
+          },
+          {
+            name: 'no-default',
+            description: 'デフォルト設定の確認を省略',
+          },
+          {
+            name: 'force',
+            description: '既存のスキーマを上書き',
+          },
+        ],
       },
     ],
   },

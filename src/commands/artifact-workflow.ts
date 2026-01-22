@@ -28,8 +28,10 @@ import {
   type SchemaInfo,
 } from '../core/artifact-graph/index.js';
 import { createChange, validateChangeName } from '../utils/change-utils.js';
-import { getExploreSkillTemplate, getNewChangeSkillTemplate, getContinueChangeSkillTemplate, getApplyChangeSkillTemplate, getFfChangeSkillTemplate, getSyncSpecsSkillTemplate, getArchiveChangeSkillTemplate, getVerifyChangeSkillTemplate, getOpsxExploreCommandTemplate, getOpsxNewCommandTemplate, getOpsxContinueCommandTemplate, getOpsxApplyCommandTemplate, getOpsxFfCommandTemplate, getOpsxSyncCommandTemplate, getOpsxArchiveCommandTemplate, getOpsxVerifyCommandTemplate } from '../core/templates/skill-templates.js';
+import { getExploreSkillTemplate, getNewChangeSkillTemplate, getContinueChangeSkillTemplate, getApplyChangeSkillTemplate, getFfChangeSkillTemplate, getSyncSpecsSkillTemplate, getArchiveChangeSkillTemplate, getBulkArchiveChangeSkillTemplate, getVerifyChangeSkillTemplate, getOpsxExploreCommandTemplate, getOpsxNewCommandTemplate, getOpsxContinueCommandTemplate, getOpsxApplyCommandTemplate, getOpsxFfCommandTemplate, getOpsxSyncCommandTemplate, getOpsxArchiveCommandTemplate, getOpsxBulkArchiveCommandTemplate, getOpsxVerifyCommandTemplate } from '../core/templates/skill-templates.js';
 import { FileSystemUtils } from '../utils/file-system.js';
+import { serializeConfig } from '../core/config-prompts.js';
+import { readProjectConfig } from '../core/project-config.js';
 
 // -----------------------------------------------------------------------------
 // Types for Apply Instructions
@@ -157,11 +159,14 @@ async function validateChangeExists(
 
 /**
  * Validates that a schema exists and returns available schemas if not.
+ *
+ * @param schemaName - The schema name to validate
+ * @param projectRoot - Optional project root for project-local schema resolution
  */
-function validateSchemaExists(schemaName: string): string {
-  const schemaDir = getSchemaDir(schemaName);
+function validateSchemaExists(schemaName: string, projectRoot?: string): string {
+  const schemaDir = getSchemaDir(schemaName, projectRoot);
   if (!schemaDir) {
-    const availableSchemas = listSchemas();
+    const availableSchemas = listSchemas(projectRoot);
     throw new Error(
       `スキーマ '${schemaName}' が見つかりません。利用可能なスキーマ:\n  ${availableSchemas.join('\n  ')}`
     );
@@ -188,7 +193,7 @@ async function statusCommand(options: StatusOptions): Promise<void> {
 
     // Validate schema if explicitly provided
     if (options.schema) {
-      validateSchemaExists(options.schema);
+      validateSchemaExists(options.schema, projectRoot);
     }
 
     // loadChangeContext will auto-detect schema from metadata if not provided
@@ -258,7 +263,7 @@ async function instructionsCommand(
 
     // Validate schema if explicitly provided
     if (options.schema) {
-      validateSchemaExists(options.schema);
+      validateSchemaExists(options.schema, projectRoot);
     }
 
     // loadChangeContext will auto-detect schema from metadata if not provided
@@ -282,7 +287,7 @@ async function instructionsCommand(
       );
     }
 
-    const instructions = generateInstructions(context, artifactId);
+    const instructions = generateInstructions(context, artifactId, projectRoot);
     const isBlocked = instructions.dependencies.some((d) => !d.done);
 
     spinner.stop();
@@ -308,6 +313,8 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
     outputPath,
     description,
     instruction,
+    context,
+    rules,
     template,
     dependencies,
     unlocks,
@@ -334,9 +341,29 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
   console.log('</task>');
   console.log();
 
-  // Context (dependencies)
+  // Project context (AI constraint - do not include in output)
+  if (context) {
+    console.log('<project_context>');
+    console.log('<!-- This is background information for you. Do NOT include this in your output. -->');
+    console.log(context);
+    console.log('</project_context>');
+    console.log();
+  }
+
+  // Rules (AI constraint - do not include in output)
+  if (rules && rules.length > 0) {
+    console.log('<rules>');
+    console.log('<!-- These are constraints for you to follow. Do NOT include this in your output. -->');
+    for (const rule of rules) {
+      console.log(`- ${rule}`);
+    }
+    console.log('</rules>');
+    console.log();
+  }
+
+  // Dependencies (files to read for context)
   if (dependencies.length > 0) {
-    console.log('<context>');
+    console.log('<dependencies>');
     console.log('このアーティファクトを作成する前に、次のファイルを読んで文脈を把握してください:');
     console.log();
     for (const dep of dependencies) {
@@ -347,7 +374,7 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
       console.log(`  <description>${dep.description}</description>`);
       console.log('</dependency>');
     }
-    console.log('</context>');
+    console.log('</dependencies>');
     console.log();
   }
 
@@ -367,6 +394,7 @@ function printInstructionsText(instructions: ArtifactInstructions, isBlocked: bo
 
   // Template
   console.log('<template>');
+  console.log('<!-- Use this as the structure for your output file. Fill in the sections. -->');
   console.log(template.trim());
   console.log('</template>');
   console.log();
@@ -596,7 +624,7 @@ async function applyInstructionsCommand(options: ApplyInstructionsOptions): Prom
 
     // Validate schema if explicitly provided
     if (options.schema) {
-      validateSchemaExists(options.schema);
+      validateSchemaExists(options.schema, projectRoot);
     }
 
     // generateApplyInstructions uses loadChangeContext which auto-detects schema
@@ -680,27 +708,40 @@ interface TemplatesOptions {
 interface TemplateInfo {
   artifactId: string;
   templatePath: string;
-  source: 'user' | 'package';
+  source: 'project' | 'user' | 'package';
 }
 
 async function templatesCommand(options: TemplatesOptions): Promise<void> {
   const spinner = ora('テンプレートを読み込み中...').start();
 
   try {
-    const schemaName = validateSchemaExists(options.schema ?? DEFAULT_SCHEMA);
-    const schema = resolveSchema(schemaName);
+    const projectRoot = process.cwd();
+    const schemaName = validateSchemaExists(options.schema ?? DEFAULT_SCHEMA, projectRoot);
+    const schema = resolveSchema(schemaName, projectRoot);
     const graph = ArtifactGraph.fromSchema(schema);
-    const schemaDir = getSchemaDir(schemaName)!;
+    const schemaDir = getSchemaDir(schemaName, projectRoot)!;
 
-    // Determine if this is a user override or package built-in
-    const { getUserSchemasDir } = await import('../core/artifact-graph/resolver.js');
+    // Determine the source (project, user, or package)
+    const {
+      getUserSchemasDir,
+      getProjectSchemasDir,
+    } = await import('../core/artifact-graph/resolver.js');
+    const projectSchemasDir = getProjectSchemasDir(projectRoot);
     const userSchemasDir = getUserSchemasDir();
-    const isUserOverride = schemaDir.startsWith(userSchemasDir);
+
+    let source: 'project' | 'user' | 'package';
+    if (schemaDir.startsWith(projectSchemasDir)) {
+      source = 'project';
+    } else if (schemaDir.startsWith(userSchemasDir)) {
+      source = 'user';
+    } else {
+      source = 'package';
+    }
 
     const templates: TemplateInfo[] = graph.getAllArtifacts().map((artifact) => ({
       artifactId: artifact.id,
       templatePath: path.join(schemaDir, 'templates', artifact.template),
-      source: isUserOverride ? 'user' : 'package',
+      source,
     }));
 
     spinner.stop();
@@ -714,8 +755,10 @@ async function templatesCommand(options: TemplatesOptions): Promise<void> {
       return;
     }
 
+    const sourceLabel =
+      source === 'project' ? 'プロジェクト' : source === 'user' ? 'ユーザー' : 'パッケージ';
     console.log(`スキーマ: ${schemaName}`);
-    console.log(`ソース: ${isUserOverride ? 'ユーザー上書き' : 'パッケージ内蔵'}`);
+    console.log(`ソース: ${sourceLabel}`);
     console.log();
 
     for (const t of templates) {
@@ -747,17 +790,18 @@ async function newChangeCommand(name: string | undefined, options: NewChangeOpti
     throw new Error(validation.error);
   }
 
+  const projectRoot = process.cwd();
+
   // Validate schema if provided
   if (options.schema) {
-    validateSchemaExists(options.schema);
+    validateSchemaExists(options.schema, projectRoot);
   }
 
   const schemaDisplay = options.schema ? `（スキーマ: '${options.schema}'）` : '';
   const spinner = ora(`変更 '${name}'${schemaDisplay} を作成中...`).start();
 
   try {
-    const projectRoot = process.cwd();
-    await createChange(projectRoot, name, { schema: options.schema });
+    const result = await createChange(projectRoot, name, { schema: options.schema });
 
     // If description provided, create README.md with description
     if (options.description) {
@@ -767,8 +811,7 @@ async function newChangeCommand(name: string | undefined, options: NewChangeOpti
       await fs.writeFile(readmePath, `# ${name}\n\n${options.description}\n`, 'utf-8');
     }
 
-    const schemaUsed = options.schema ?? DEFAULT_SCHEMA;
-    spinner.succeed(`変更 '${name}' を openspec/changes/${name}/ に作成しました（スキーマ: ${schemaUsed}）`);
+    spinner.succeed(`変更 '${name}' を openspec/changes/${name}/ に作成しました（スキーマ: ${result.schema}）`);
   } catch (error) {
     spinner.fail(`変更 '${name}' の作成に失敗しました`);
     throw error;
@@ -800,6 +843,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
     const ffChangeSkill = getFfChangeSkillTemplate();
     const syncSpecsSkill = getSyncSpecsSkillTemplate();
     const archiveChangeSkill = getArchiveChangeSkillTemplate();
+    const bulkArchiveChangeSkill = getBulkArchiveChangeSkillTemplate();
     const verifyChangeSkill = getVerifyChangeSkillTemplate();
 
     // Get command templates
@@ -810,6 +854,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
     const ffCommand = getOpsxFfCommandTemplate();
     const syncCommand = getOpsxSyncCommandTemplate();
     const archiveCommand = getOpsxArchiveCommandTemplate();
+    const bulkArchiveCommand = getOpsxBulkArchiveCommandTemplate();
     const verifyCommand = getOpsxVerifyCommandTemplate();
 
     // Create skill directories and SKILL.md files
@@ -821,6 +866,7 @@ async function artifactExperimentalSetupCommand(): Promise<void> {
       { template: ffChangeSkill, dirName: 'openspec-ff-change' },
       { template: syncSpecsSkill, dirName: 'openspec-sync-specs' },
       { template: archiveChangeSkill, dirName: 'openspec-archive-change' },
+      { template: bulkArchiveChangeSkill, dirName: 'openspec-bulk-archive-change' },
       { template: verifyChangeSkill, dirName: 'openspec-verify-change' },
     ];
 
@@ -853,6 +899,7 @@ ${template.instructions}
       { template: ffCommand, fileName: 'ff.md' },
       { template: syncCommand, fileName: 'sync.md' },
       { template: archiveCommand, fileName: 'archive.md' },
+      { template: bulkArchiveCommand, fileName: 'bulk-archive.md' },
       { template: verifyCommand, fileName: 'verify.md' },
     ];
 
@@ -893,6 +940,71 @@ ${template.content}
       console.log(chalk.green('  ✓ ' + file));
     }
     console.log();
+    // プロジェクト設定の案内
+    console.log('━'.repeat(70));
+    console.log();
+    console.log(chalk.bold('📋 プロジェクト設定（任意）'));
+    console.log();
+    console.log('OpenSpec のワークフローに使うプロジェクト既定値を設定します。');
+    console.log();
+
+    // Check if config already exists
+    const configPath = path.join(projectRoot, 'openspec', 'config.yaml');
+    const configYmlPath = path.join(projectRoot, 'openspec', 'config.yml');
+    const configExists = fs.existsSync(configPath) || fs.existsSync(configYmlPath);
+
+    if (configExists) {
+      // Config already exists, skip creation
+      console.log(chalk.blue('ℹ️  openspec/config.yaml は既に存在します。作成をスキップします。'));
+      console.log();
+      console.log('   設定を更新するには、openspec/config.yaml を手動で編集するか、次を実行してください:');
+      console.log('   1. openspec/config.yaml を削除');
+      console.log('   2. openspec artifact-experimental-setup を再実行');
+      console.log();
+    } else if (!process.stdin.isTTY) {
+      // Non-interactive mode (CI, automation, piped input)
+      console.log(chalk.blue('ℹ️  設定プロンプトをスキップしました（非対話モード）'));
+      console.log();
+      console.log('   手動で作成する場合は、openspec/config.yaml に以下を追加してください:');
+      console.log(chalk.dim('   schema: spec-driven'));
+      console.log();
+    } else {
+      // Create config with default schema
+      const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA });
+
+      try {
+        await FileSystemUtils.writeFile(configPath, yamlContent);
+
+        console.log();
+        console.log(chalk.green('✓ openspec/config.yaml を作成しました'));
+        console.log();
+        console.log(`   デフォルトのスキーマ: ${chalk.cyan(DEFAULT_SCHEMA)}`);
+        console.log();
+        console.log(chalk.dim('   プロジェクト文脈やアーティファクト別ルールを追加するにはファイルを編集してください。'));
+        console.log();
+
+        // Git commit suggestion
+        console.log(chalk.bold('チームと共有する場合:'));
+        console.log(chalk.dim('  git add openspec/config.yaml .claude/'));
+        console.log(chalk.dim('  git commit -m "Setup OpenSpec experimental workflow"'));
+        console.log();
+      } catch (writeError) {
+        // Handle file write errors
+        console.error();
+        console.error(chalk.red('✗ openspec/config.yaml の書き込みに失敗しました'));
+        console.error(chalk.dim(`  ${(writeError as Error).message}`));
+        console.error();
+        console.error('代替: 手動で設定を作成してください:');
+        console.error(chalk.dim('  1. openspec/config.yaml を作成'));
+        console.error(chalk.dim('  2. 次の内容を貼り付け'));
+        console.error();
+        console.error(chalk.dim(yamlContent));
+        console.error();
+      }
+    }
+
+    console.log('━'.repeat(70));
+    console.log();
     console.log(chalk.bold('📖 使い方:'));
     console.log();
     console.log('  ' + chalk.cyan('スキル') + ' は対応エディタで自動的に有効です:');
@@ -914,6 +1026,7 @@ ${template.content}
     console.log('  • /opsx:sync - 仕様差分をメイン仕様へ同期');
     console.log('  • /opsx:verify - 実装とアーティファクトの整合を検証');
     console.log('  • /opsx:archive - 完了した変更をアーカイブ');
+    console.log('  • /opsx:bulk-archive - 完了した複数の変更をまとめてアーカイブ');
     console.log();
     console.log(chalk.yellow('💡 この機能は実験的です。'));
     console.log('   フィードバックはこちら: https://github.com/Fission-AI/OpenSpec/issues');
@@ -933,7 +1046,8 @@ interface SchemasOptions {
 }
 
 async function schemasCommand(options: SchemasOptions): Promise<void> {
-  const schemas = listSchemasWithInfo();
+  const projectRoot = process.cwd();
+  const schemas = listSchemasWithInfo(projectRoot);
 
   if (options.json) {
     console.log(JSON.stringify(schemas, null, 2));
@@ -944,7 +1058,12 @@ async function schemasCommand(options: SchemasOptions): Promise<void> {
   console.log();
 
   for (const schema of schemas) {
-    const sourceLabel = schema.source === 'user' ? chalk.dim('（ユーザー上書き）') : '';
+    let sourceLabel = '';
+    if (schema.source === 'project') {
+      sourceLabel = chalk.cyan('（プロジェクト）');
+    } else if (schema.source === 'user') {
+      sourceLabel = chalk.dim('（ユーザー上書き）');
+    }
     console.log(`  ${chalk.bold(schema.name)}${sourceLabel}`);
     console.log(`    ${schema.description}`);
     console.log(`    アーティファクト: ${schema.artifacts.join(' → ')}`);

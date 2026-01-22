@@ -4,7 +4,11 @@ import { getSchemaDir, resolveSchema } from './resolver.js';
 import { ArtifactGraph } from './graph.js';
 import { detectCompleted } from './state.js';
 import { resolveSchemaForChange } from '../../utils/change-metadata.js';
+import { readProjectConfig, validateConfigRules } from '../project-config.js';
 import type { Artifact, CompletedSet } from './types.js';
+
+// Session-level cache for validation warnings (avoid repeating same warnings)
+const shownWarnings = new Set<string>();
 
 /**
  * Error thrown when loading a template fails.
@@ -33,6 +37,8 @@ export interface ChangeContext {
   changeName: string;
   /** Path to the change directory */
   changeDir: string;
+  /** Project root directory */
+  projectRoot: string;
 }
 
 /**
@@ -53,7 +59,11 @@ export interface ArtifactInstructions {
   description: string;
   /** Guidance on how to create this artifact (from schema instruction field) */
   instruction: string | undefined;
-  /** Template content (structure to follow) */
+  /** Project context from config (constraints/background for AI, not to be included in output) */
+  context: string | undefined;
+  /** Artifact-specific rules from config (constraints for AI, not to be included in output) */
+  rules: string[] | undefined;
+  /** Template content (structure to follow - this IS the output format) */
   template: string;
   /** Dependencies with completion status and paths */
   dependencies: DependencyInfo[];
@@ -110,14 +120,19 @@ export interface ChangeStatus {
  *
  * @param schemaName - Schema name (e.g., "spec-driven")
  * @param templatePath - Relative path within the templates directory (e.g., "proposal.md")
+ * @param projectRoot - Optional project root for project-local schema resolution
  * @returns The template content
  * @throws TemplateLoadError if the template cannot be loaded
  */
-export function loadTemplate(schemaName: string, templatePath: string): string {
-  const schemaDir = getSchemaDir(schemaName);
+export function loadTemplate(
+  schemaName: string,
+  templatePath: string,
+  projectRoot?: string
+): string {
+  const schemaDir = getSchemaDir(schemaName, projectRoot);
   if (!schemaDir) {
     throw new TemplateLoadError(
-      `Schema '${schemaName}' not found`,
+      `スキーマ '${schemaName}' が見つかりません`,
       templatePath
     );
   }
@@ -126,7 +141,7 @@ export function loadTemplate(schemaName: string, templatePath: string): string {
 
   if (!fs.existsSync(fullPath)) {
     throw new TemplateLoadError(
-      `Template not found: ${fullPath}`,
+      `テンプレートが見つかりません: ${fullPath}`,
       fullPath
     );
   }
@@ -136,7 +151,7 @@ export function loadTemplate(schemaName: string, templatePath: string): string {
   } catch (err) {
     const ioError = err instanceof Error ? err : new Error(String(err));
     throw new TemplateLoadError(
-      `Failed to read template: ${ioError.message}`,
+      `テンプレートの読み取りに失敗しました: ${ioError.message}`,
       fullPath
     );
   }
@@ -165,7 +180,7 @@ export function loadChangeContext(
   // Resolve schema: explicit > metadata > default
   const resolvedSchemaName = resolveSchemaForChange(changeDir, schemaName);
 
-  const schema = resolveSchema(resolvedSchemaName);
+  const schema = resolveSchema(resolvedSchemaName, projectRoot);
   const graph = ArtifactGraph.fromSchema(schema);
   const completed = detectCompleted(graph, changeDir);
 
@@ -175,29 +190,73 @@ export function loadChangeContext(
     schemaName: resolvedSchemaName,
     changeName,
     changeDir,
+    projectRoot,
   };
 }
 
 /**
  * Generates enriched instructions for creating an artifact.
  *
+ * Instruction injection order:
+ * 1. <context> - Project context from config (if present)
+ * 2. <rules> - Artifact-specific rules from config (if present)
+ * 3. <template> - Schema's template content
+ *
  * @param context - Change context
  * @param artifactId - Artifact ID to generate instructions for
+ * @param projectRoot - Project root directory (for reading config)
  * @returns Enriched artifact instructions
  * @throws Error if artifact not found
  */
 export function generateInstructions(
   context: ChangeContext,
-  artifactId: string
+  artifactId: string,
+  projectRoot?: string
 ): ArtifactInstructions {
   const artifact = context.graph.getArtifact(artifactId);
   if (!artifact) {
-    throw new Error(`Artifact '${artifactId}' not found in schema '${context.schemaName}'`);
+    throw new Error(`スキーマ '${context.schemaName}' にアーティファクト '${artifactId}' が見つかりません`);
   }
 
-  const template = loadTemplate(context.schemaName, artifact.template);
+  const templateContent = loadTemplate(context.schemaName, artifact.template, context.projectRoot);
   const dependencies = getDependencyInfo(artifact, context.graph, context.completed);
   const unlocks = getUnlockedArtifacts(context.graph, artifactId);
+
+  // Use projectRoot from context if not explicitly provided
+  const effectiveProjectRoot = projectRoot ?? context.projectRoot;
+
+  // Try to read project config for context and rules
+  let projectConfig = null;
+  if (effectiveProjectRoot) {
+    try {
+      projectConfig = readProjectConfig(effectiveProjectRoot);
+    } catch {
+      // If config read fails, continue without config
+    }
+  }
+
+  // Validate rules artifact IDs if config has rules (only once per session)
+  if (projectConfig?.rules) {
+    const validArtifactIds = new Set(context.graph.getAllArtifacts().map((a) => a.id));
+    const warnings = validateConfigRules(
+      projectConfig.rules,
+      validArtifactIds,
+      context.schemaName
+    );
+
+    // Show each unique warning only once per session
+    for (const warning of warnings) {
+      if (!shownWarnings.has(warning)) {
+        console.warn(warning);
+        shownWarnings.add(warning);
+      }
+    }
+  }
+
+  // Extract context and rules as separate fields (not prepended to template)
+  const configContext = projectConfig?.context?.trim() || undefined;
+  const rulesForArtifact = projectConfig?.rules?.[artifactId];
+  const configRules = rulesForArtifact && rulesForArtifact.length > 0 ? rulesForArtifact : undefined;
 
   return {
     changeName: context.changeName,
@@ -207,7 +266,9 @@ export function generateInstructions(
     outputPath: artifact.generates,
     description: artifact.description,
     instruction: artifact.instruction,
-    template,
+    context: configContext,
+    rules: configRules,
+    template: templateContent,
     dependencies,
     unlocks,
   };
@@ -255,7 +316,7 @@ function getUnlockedArtifacts(graph: ArtifactGraph, artifactId: string): string[
  */
 export function formatChangeStatus(context: ChangeContext): ChangeStatus {
   // Load schema to get apply phase configuration
-  const schema = resolveSchema(context.schemaName);
+  const schema = resolveSchema(context.schemaName, context.projectRoot);
   const applyRequires = schema.apply?.requires ?? schema.artifacts.map(a => a.id);
 
   const artifacts = context.graph.getAllArtifacts();

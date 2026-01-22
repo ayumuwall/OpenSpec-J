@@ -10,18 +10,18 @@
 
 | コンポーネント | 状態 |
 |-----------|--------|
-| スキーマ解決（XDG） | 2 段階: ユーザー上書き → パッケージ内蔵 |
+| スキーマ解決 | 3 段階: プロジェクト → ユーザー → パッケージ（PR #522） |
 | 内蔵スキーマ | `spec-driven`, `tdd` |
 | アーティファクトワークフローコマンド | `status`, `next`, `instructions`, `templates`（`--schema` フラグあり） |
 | 変更作成 | `openspec new change <name>` — スキーマ紐付けなし |
+| プロジェクト内スキーマ | ✅ `openspec/schemas/` で対応（PR #522） |
+| スキーマ管理 CLI | ✅ `schema which`, `validate`, `fork`, `init`（PR #525） |
 
 ### 不足しているもの
 
 | コンポーネント | 状態 |
 |-----------|--------|
 | 変更へのスキーマ紐付け | 未保存 — 毎回 `--schema` を渡す必要がある |
-| プロジェクト内スキーマ | 非対応 — リポジトリで管理できない |
-| スキーマ管理 CLI | なし — パス発見が手作業 |
 | プロジェクトのデフォルトスキーマ | なし — `spec-driven` に固定 |
 
 ---
@@ -114,13 +114,13 @@ cp -r <package-path>/schemas/spec-driven/* \
 
 ## ギャップ一覧
 
-| ギャップ | 影響 | 回避策 |
-|-----|--------|------------|
-| 変更にスキーマが紐付かない | 誤った結果、文脈喪失 | `--schema` を覚えて渡す |
-| プロジェクト内スキーマがない | 共有不可 | 端末ごとの XDG 手作業 |
-| スキーマ管理 CLI がない | パス探しが手作業 | XDG 知識 + npm パス探索 |
-| プロジェクトのデフォルトがない | 毎回指定が必要 | 常に `--schema` を渡す |
-| init 時のスキーマ選択がない | セットアップ機会を逃す | 手動設定 |
+| ギャップ | 影響 | 状態 |
+|-----|--------|--------|
+| 変更にスキーマが紐付かない | 誤った結果、文脈喪失 | ⏳ 対応予定（Phase 1） |
+| プロジェクト内スキーマがない | リポジトリ共有不可 | ✅ 解決済み（PR #522） |
+| スキーマ管理 CLI がない | パス探しが手作業 | ✅ 解決済み（PR #525） |
+| プロジェクトのデフォルトがない | 毎回指定が必要 | ⏳ 対応予定（Phase 4） |
+| init 時のスキーマ選択がない | セットアップ機会を逃す | ⏳ 対応予定（Phase 4） |
 
 ---
 
@@ -296,13 +296,12 @@ created: 2025-01-15T10:30:00Z
 
 ### フェーズ 2: プロジェクト内スキーマ
 
-**優先度:** 高
+**ステータス:** ✅ 完了（PR #522）
 **解決する課題:** チーム共有、バージョン管理、XDG 知識不要
 
-**スコープ:**
-- 解決順序に `./openspec/schemas/` を追加（最優先）
-- `openspec schema copy <name> [new-name]` がデフォルトでプロジェクト内へ作成
-- `--global` フラグでユーザーレベルの XDG へコピー
+**実装内容:**
+- `./openspec/schemas/` を解決順序の最優先に追加
+- `openspec schema fork <name> [new-name]` がプロジェクト内へ作成
 - チームが `openspec/schemas/` をリポジトリにコミット可能
 
 **解決順序:**
@@ -316,18 +315,20 @@ created: 2025-01-15T10:30:00Z
 
 ### フェーズ 3: スキーマ管理 CLI
 
-**優先度:** 中
+**ステータス:** ✅ 完了（PR #525）
 **解決する課題:** パス探索、ひな形作成、デバッグ
 
-**コマンド:**
+**実装済みコマンド:**
 ```bash
-openspec schema list              # 利用可能なスキーマと出所を表示
-openspec schema which <name>      # 解決パスを表示
-openspec schema copy <name> [to]  # カスタマイズ用にコピー
-openspec schema diff <name>       # 内蔵との差分を比較
-openspec schema reset <name>      # 上書きを削除
-openspec schema validate <name>   # schema.yaml 構造を検証
+openspec schema which [name]          # 解決パスを表示（--all で全スキーマ）
+openspec schema validate [name]       # スキーマ構造とテンプレートを検証
+openspec schema fork <source> [name]  # 既存スキーマをコピーしてカスタマイズ
+openspec schema init <name>           # 新しいプロジェクト内スキーマを作成（対話）
 ```
+
+**Not implemented (may add later):**
+- `schema diff` — Compare override with built-in
+- `schema reset` — Remove override, revert to built-in
 
 ---
 

@@ -3,6 +3,54 @@
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 
+## 0.23.0
+
+### マイナー変更
+
+- [#540](https://github.com/Fission-AI/OpenSpec/pull/540) [`c4cfdc7`](https://github.com/Fission-AI/OpenSpec/commit/c4cfdc7c499daef30d8a218f5f59b8d9e5adb754) Thanks [@TabishB](https://github.com/TabishB)! - ### 新機能
+
+  - **bulk-archive スキル** — `/opsx:bulk-archive` で複数の変更を一括アーカイブ。バッチ検証、仕様衝突検出、統合確認を含む
+
+  ### その他
+
+  - **セットアップ簡略化** — config 作成が対話式ではなく、合理的なデフォルトとコメント付きで生成される
+
+## 0.22.0
+
+### マイナー変更
+
+- [#530](https://github.com/Fission-AI/OpenSpec/pull/530) [`33466b1`](https://github.com/Fission-AI/OpenSpec/commit/33466b1e2a6798bdd6d0e19149173585b0612e6f) Thanks [@TabishB](https://github.com/TabishB)! - プロジェクト設定/プロジェクト内スキーマ/スキーマ管理コマンドを追加
+
+  **新機能**
+
+  - **プロジェクト設定** — `openspec/config.yaml` でプロジェクト単位の挙動を設定（ルール注入、コンテキスト、スキーマ解決設定）
+  - **プロジェクト内スキーマ** — `openspec/schemas/` にカスタムアーティファクトスキーマを定義
+  - **スキーマ管理コマンド** — `openspec schema` コマンド（`list`, `show`, `export`, `validate`）でスキーマの確認と管理（実験的）
+
+  **修正**
+
+  - プロジェクト設定の `rules` が null の場合でも読み込み可能に修正
+
+## 0.21.0
+
+### マイナー変更
+
+- [#516](https://github.com/Fission-AI/OpenSpec/pull/516) [`b5a8847`](https://github.com/Fission-AI/OpenSpec/commit/b5a884748be6156a7bb140b4941cfec4f20a9fc8) Thanks [@TabishB](https://github.com/TabishB)! - フィードバックコマンドと Nix flake サポートを追加
+
+  **新機能**
+
+  - **フィードバックコマンド** — `openspec feedback` で CLI から直接フィードバックを送信し、GitHub Issue を自動作成（メタデータ付与、手動送信へのフォールバック付き）
+  - **Nix flake サポート** — `flake.nix` を追加し、Nix での導入/開発と CI 検証を提供
+
+  **修正**
+
+  - **Explore モードのガードレール** — 実装を明示的に禁止し、思考・探索に集中できるよう改善（アーティファクト作成は許可）
+
+  **その他**
+
+  - `opsx apply` の変更推論を改善 — 会話文脈から変更対象を自動推論し、曖昧なら選択を促す
+  - アーカイブ時の同期判定を改善し、差分仕様の場所案内を明確化
+
 ## 0.20.0
 
 - **[OpenSpec-J]** v0.20.0 追従のため、README/AGENTS テンプレート/スラッシュコマンドの説明文を更新。
@@ -99,15 +147,25 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 0.17.0
 
-- `openspec config` コマンドを追加。
-- XDG Base Directory 仕様に従うグローバル設定ディレクトリを追加。
-- Oh My Zsh 対応のシェル補完（Zsh）を追加。
-- pre-commit フックのハングを回避するため動的 import に切り替え。
-- `XDG_CONFIG_HOME` の尊重を全プラットフォームで徹底。
-- zsh-installer テストの Windows 互換性を改善。
-- `cli-completion` 仕様を実装に合わせて更新。
-- スラッシュコマンドのハードコードされた agent フィールドを削除。
-- README の AI ツール一覧をアルファベット順に整理し、折りたたみ表示に対応。
+### マイナー変更
+
+- 2e71835: ### 新機能
+
+  - `openspec config` コマンドを追加
+  - XDG Base Directory 仕様に従うグローバル設定ディレクトリを追加
+  - Oh My Zsh 対応のシェル補完を追加
+
+  ### 修正
+
+  - pre-commit フックのハングを回避するため動的 import に切り替え
+  - `XDG_CONFIG_HOME` の尊重を全プラットフォームで徹底
+  - zsh-installer テストの Windows 互換性を改善
+  - `cli-completion` 仕様を実装に合わせて更新
+  - スラッシュコマンドのハードコードされた agent フィールドを削除
+
+  ### ドキュメント
+
+  - README の AI ツール一覧をアルファベット順に整理し、折りたたみ表示に対応
 
 ## 0.16.0
 

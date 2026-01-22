@@ -302,16 +302,16 @@ describe('InitCommand', () => {
       expect(await fileExists(claudeArchive)).toBe(true);
 
       const proposalContent = await fs.readFile(claudeProposal, 'utf-8');
-      expect(proposalContent).toContain('name: OpenSpec: Proposal');
+      expect(proposalContent).toContain('name: OpenSpec - Proposal');
       expect(proposalContent).toContain('<!-- OPENSPEC:START -->');
       expect(proposalContent).toContain('**Guardrails**');
 
       const applyContent = await fs.readFile(claudeApply, 'utf-8');
-      expect(applyContent).toContain('name: OpenSpec: Apply');
+      expect(applyContent).toContain('name: OpenSpec - Apply');
       expect(applyContent).toContain('タスクを順番に実行し、変更は依頼された内容に集中させる。');
 
       const archiveContent = await fs.readFile(claudeArchive, 'utf-8');
-      expect(archiveContent).toContain('name: OpenSpec: Archive');
+      expect(archiveContent).toContain('name: OpenSpec - Archive');
       expect(archiveContent).toContain('openspec archive <id>');
       expect(archiveContent).toContain('`--skip-specs` を付ける');
     });
