@@ -536,25 +536,25 @@ openspec/
 # またはユーザー上書き: ~/.local/share/openspec/schemas/spec-driven/schema.yaml
 name: spec-driven
 version: 1
-description: Specification-driven development
+description: 仕様駆動開発
 
 artifacts:
   - id: proposal
     generates: "proposal.md"
-    description: "Create project proposal document"
+    description: "プロジェクト変更提案ドキュメントを作成"
     template: "proposal.md"          # 同梱テンプレートディレクトリから解決
     requires: []
 
   - id: specs
     generates: "specs/*.md"          # グロブパターン
-    description: "Create technical specification documents"
+    description: "技術仕様ドキュメントを作成"
     template: "specs.md"
     requires:
       - proposal
 
   - id: design
     generates: "design.md"
-    description: "Create design document"
+    description: "設計ドキュメントを作成"
     template: "design.md"
     requires:
       - proposal
@@ -562,7 +562,7 @@ artifacts:
 
   - id: tasks
     generates: "tasks.md"
-    description: "Create tasks breakdown document"
+    description: "タスク分解ドキュメントを作成"
     template: "tasks.md"
     requires:
       - design

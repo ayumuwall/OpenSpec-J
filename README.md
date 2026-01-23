@@ -228,7 +228,7 @@ openspec init
 AI に変更提案の作成を依頼します:
 
 ```text
-You: ロールとチームでプロフィール検索フィルターを追加する OpenSpec 変更提案を作って
+ユーザー: ロールとチームでプロフィール検索フィルターを追加する OpenSpec 変更提案を作って
      （スラッシュコマンド対応ツールなら `/openspec:proposal Add profile search filters`）
 
 AI:  プロフィールフィルター用の OpenSpec 変更提案を作成します。
@@ -248,7 +248,7 @@ $ openspec show add-profile-filters         # 提案・タスク・差分を確�
 必要な状態になるまで仕様を調整します:
 
 ```text
-You: ロール・チームフィルターの受け入れ条件を追加してもらえる？
+ユーザー: ロール・チームフィルターの受け入れ条件を追加してもらえる？
 
 AI:  仕様差分にシナリオを追加します。
      *openspec/changes/add-profile-filters/specs/profile/spec.md と tasks.md を編集*
@@ -258,12 +258,12 @@ AI:  仕様差分にシナリオを追加します。
 仕様が固まったら実装を始めます:
 
 ```text
-You: 仕様は良さそう。この変更を実装しよう。
+ユーザー: 仕様は良さそう。この変更を実装しよう。
      （スラッシュコマンド対応ツール: `/openspec:apply add-profile-filters`）
 
 AI:  add-profile-filters のタスクを順に進めます。
      *openspec/changes/add-profile-filters/tasks.md のタスクを実装*
-     *タスク完了をチェック: Task 1.1 ✓, 1.2 ✓, 2.1 ✓...*
+     *タスク完了をチェック: タスク 1.1 ✓, 1.2 ✓, 2.1 ✓...*
 ```
 
 #### 5. 完了した変更をアーカイブする
@@ -272,7 +272,7 @@ AI:  add-profile-filters のタスクを順に進めます。
 ```text
 AI:  すべてのタスクが完了しました。実装の準備ができています。
 
-You: 変更をアーカイブして
+ユーザー: 変更をアーカイブして
      （スラッシュコマンド対応ツール: `/openspec:archive add-profile-filters`）
 
 AI:  add-profile-filters をアーカイブします。
@@ -319,49 +319,49 @@ openspec/
 ### 生成される仕様 (`openspec/specs/auth/spec.md`)
 
 ```markdown
-# Auth Specification
+# 認証仕様
 
 ## Purpose
-Authentication and session management.
+認証とセッション管理。
 
 ## Requirements
-### Requirement: User Authentication
-The system SHALL issue a JWT on successful login.
+### Requirement: ユーザー認証
+システムはログイン成功時に JWT を発行する。
 
-#### Scenario: Valid credentials
-- WHEN a user submits valid credentials
-- THEN a JWT is returned
+#### Scenario: 有効な認証情報
+- WHEN ユーザーが有効な認証情報を送信する
+- THEN JWT が返される
 ```
 
 ### 生成される変更差分 (`openspec/changes/add-2fa/specs/auth/spec.md`)
 
 ```markdown
-# Delta for Auth
+# 認証の差分
 
 ## ADDED Requirements
-### Requirement: Two-Factor Authentication
-The system MUST require a second factor during login.
+### Requirement: 二要素認証
+システムはログイン時に第2要素を必須にする。
 
-#### Scenario: OTP required
-- WHEN a user submits valid credentials
-- THEN an OTP challenge is required
+#### Scenario: OTP が必要
+- WHEN ユーザーが有効な認証情報を送信する
+- THEN OTP チャレンジが必要になる
 ```
 
 ### 生成されるタスク (`openspec/changes/add-2fa/tasks.md`)
 
 ```markdown
-## 1. Database Setup
-- [ ] 1.1 Add OTP secret column to users table
-- [ ] 1.2 Create OTP verification logs table
+## 1. データベース準備
+- [ ] 1.1 users テーブルに OTP 秘密鍵カラムを追加
+- [ ] 1.2 OTP 検証ログテーブルを作成
 
-## 2. Backend Implementation  
-- [ ] 2.1 Add OTP generation endpoint
-- [ ] 2.2 Modify login flow to require OTP
-- [ ] 2.3 Add OTP verification endpoint
+## 2. バックエンド実装  
+- [ ] 2.1 OTP 生成エンドポイントを追加
+- [ ] 2.2 ログインフローを OTP 必須に変更
+- [ ] 2.3 OTP 検証エンドポイントを追加
 
-## 3. Frontend Updates
-- [ ] 3.1 Create OTP input component
-- [ ] 3.2 Update login flow UI
+## 3. フロントエンド更新
+- [ ] 3.1 OTP 入力コンポーネントを作成
+- [ ] 3.2 ログインフロー UI を更新
 ```
 
 **重要:** これらのファイルを手動で作成する必要はありません。AI アシスタントが要件と既存コードベースを参照して自動生成します。

@@ -162,7 +162,7 @@ defaultSchema: spec-driven
 # openspec/changes/add-auth/change.yaml
 schema: tdd
 created: 2025-01-15T10:30:00Z
-description: Add user authentication system
+description: ユーザー認証システムを追加
 ```
 
 変更に特定のスキーマを紐付けます。`openspec new change` が自動的に作成します。
@@ -180,10 +180,10 @@ description: Add user authentication system
 ### コマンドごとのスキーマ選択順序
 
 ```
-1. --schema CLI flag                    # 明示的な上書き
-2. change.yaml in change directory      # 変更ごとの紐付け
-3. openspec/config.yaml defaultSchema   # プロジェクトのデフォルト
-4. "spec-driven"                        # ハードコードされたフォールバック
+1. --schema CLI フラグ                  # 明示的な上書き
+2. 変更ディレクトリ内の change.yaml     # 変更ごとの紐付け
+3. openspec/config.yaml の defaultSchema # プロジェクトのデフォルト
+4. "spec-driven"                         # ハードコードされたフォールバック
 ```
 
 ---
@@ -326,8 +326,8 @@ openspec schema fork <source> [name]  # 既存スキーマをコピーしてカ�
 openspec schema init <name>           # 新しいプロジェクト内スキーマを作成（対話）
 ```
 
-**Not implemented (may add later):**
-- `schema diff` — Compare override with built-in
+**未実装（将来追加の可能性）:**
+- `schema diff` — 上書きと内蔵を比較
 - `schema reset` — Remove override, revert to built-in
 
 ---

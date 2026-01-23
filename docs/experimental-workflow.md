@@ -93,10 +93,10 @@ Claude Code が自動検出する `.claude/skills/` にスキルが作成され�
 schema: spec-driven
 
 context: |
-  Tech stack: TypeScript, React, Node.js
-  API conventions: RESTful, JSON responses
-  Testing: Vitest for unit tests, Playwright for e2e
-  Style: ESLint with Prettier, strict TypeScript
+  技術スタック: TypeScript, React, Node.js
+  API 規約: RESTful, JSON レスポンス
+  テスト: ユニットテストは Vitest、E2E は Playwright
+  スタイル: ESLint + Prettier、strict TypeScript
 
 rules:
   proposal:

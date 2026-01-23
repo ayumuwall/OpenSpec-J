@@ -188,9 +188,9 @@ export function listSchemas(): string[] { ... }
 将来の拡張として、スキーマ全体をコピーせずに個別テンプレートだけを上書きする案があります。これは解決ロジックの変更を伴います。
 
 ```
-Current: schema dir (user) OR schema dir (built-in)
-Future:  schema.yaml from user OR built-in
-         + each template from user OR built-in (independent fallback)
+現在: schema dir（ユーザー）または schema dir（内蔵）
+将来: schema.yaml をユーザーまたは内蔵から取得
+      + 各 template をユーザーまたは内蔵から取得（独立フォールバック）
 ```
 
 複雑さは増えますが「1 つのテンプレートだけ変えたい」というユースケースを満たせます。

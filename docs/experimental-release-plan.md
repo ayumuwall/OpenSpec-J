@@ -295,19 +295,19 @@ openspec artifact-experimental-setup
    └── （依存なし）
 
 3. Agent Skills を追加
-   └── Depends on: AWF を OPSX にリネーム（opsx の内容をテンプレートに使う）
+   └── 依存: AWF を OPSX にリネーム（opsx の内容をテンプレートに使う）
 
 4. opsx:new の内容更新
-   └── Depends on: AWF を OPSX にリネーム
+   └── 依存: AWF を OPSX にリネーム
 
 5. opsx:continue の内容更新
-   └── Depends on: AWF を OPSX にリネーム
+   └── 依存: AWF を OPSX にリネーム
 
 6. E2E テスト
-   └── Depends on: Agent Skills を追加（スキルワークフローをテスト）
+   └── 依存: Agent Skills を追加（スキルワークフローをテスト）
 
 7. ユーザー向けドキュメント
-   └── Depends on: E2E テスト（最終挙動が必要）
+   └── 依存: E2E テスト（最終挙動が必要）
 ```
 
 ---
@@ -498,7 +498,7 @@ E2E テストの課題から、次の 3 つがブロッカーです。
 **問題:** specs の指示が「`specs/<name>/spec.md` に 1 つずつ」と言うが:
 - `<name>` が分からない
 - 機能の特定には調査が必要（既存仕様、コードベース）
-- 提案テンプレートの "Affected specs" が曖昧
+- 提案テンプレートの「影響する仕様」が曖昧
 - 調査内容が明文化されない
 
 **決定:** 提案テンプレートを拡張し、機能抽出を明示的に行う。
@@ -508,8 +508,8 @@ E2E テストの課題から、次の 3 つがブロッカーです。
 ## Why
 ## What Changes
 ## Impact
-- Affected specs: 機能を列挙...  ← 曖昧で飛ばしやすい
-- Affected code: ...
+- 影響する仕様: 機能を列挙...  ← 曖昧で飛ばしやすい
+- 影響するコード: ...
 ```
 
 **新しい提案テンプレート:**
@@ -520,11 +520,11 @@ E2E テストの課題から、次の 3 つがブロッカーです。
 
 ### New Capabilities
 <!-- 追加する機能（specs/<name>/spec.md を作成） -->
-- `<name>`: <brief description of what this capability covers>
+- `<name>`: <この機能が扱う範囲の簡潔な説明>
 
 ### Modified Capabilities
 <!-- 変更する既存機能（既存の仕様を更新） -->
-- `<existing-name>`: <what's changing>
+- `<existing-name>`: <変更内容>
 
 ## Impact
 <!-- 影響するコード、API、依存関係、システム -->
@@ -706,7 +706,7 @@ description: OpenSpec の変更に含まれるタスクを実装する。実装�
 4. **現在の進捗を表示する**
 
    表示内容:
-   - 進捗: "N/M tasks complete"
+   - 進捗: "N/M タスク完了"
    - 残タスクの概要
    - CLI からの動的指示
 
@@ -729,7 +729,7 @@ description: OpenSpec の変更に含まれるタスクを実装する。実装�
 
    表示内容:
    - このセッションで完了したタスク
-   - 全体進捗: "N/M tasks complete"
+   - 全体進捗: "N/M タスク完了"
    - 完了していればアーカイブを提案
    - 一時停止なら理由を説明して指示待ち
 
@@ -755,7 +755,7 @@ description: OpenSpec の変更に含まれるタスクを実装する。実装�
 ```
 ## 実装完了
 
-**Change:** add-user-auth
+**変更:** add-user-auth
 **進捗:** 7/7 タスク完了 ✓
 
 ### このセッションで完了した内容
@@ -774,7 +774,7 @@ description: OpenSpec の変更に含まれるタスクを実装する。実装�
 ```
 ## 実装を一時停止
 
-**Change:** add-user-auth
+**変更:** add-user-auth
 **進捗:** 4/7 タスク完了
 
 ### 発生した問題
@@ -815,14 +815,14 @@ apply スキルは「変更に対するアクション」モデルを支えま�
 
 **流動的ワークフロー例:**
 ```
-User: "add-user-auth を実装して"
+ユーザー: "add-user-auth を実装して"
 → openspec-apply-change: タスク 1, 2, 3, 4 を実行...
 → タスク 5 で一時停止: "設計は RS256 だがライブラリは HS256 のみ対応"
 
-User: "HS256 で進めよう、設計を更新して"
+ユーザー: "HS256 で進めよう、設計を更新して"
 → ユーザーが design.md を編集（または将来的に opsx:update を使用）
 
-User: "実装を続けて"
+ユーザー: "実装を続けて"
 → openspec-apply-change: タスク 5, 6, 7 を実行
 → "すべてのタスクが完了しました。アーカイブできます。"
 ```
@@ -848,7 +848,7 @@ openspec instructions apply --change "<name>" [--json]
 
 **出力（Markdown 形式）:**
 ```markdown
-## Apply: add-user-auth
+## 適用: add-user-auth
 
 ### 文脈ファイル
 - proposal: openspec/changes/add-user-auth/proposal.md
