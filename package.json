@@ -1,6 +1,6 @@
 {
   "name": "@ayumuwall/openspec",
-  "version": "0.23.0",
+  "version": "0.23.0-1",
   "description": "仕様駆動開発のためのAIネイティブシステム",
   "keywords": [
     "openspec",
