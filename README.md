@@ -332,7 +332,7 @@ openspec/
 
 ## Requirements
 ### Requirement: ユーザー認証
-システムはログイン成功時に JWT を発行する。
+システムはログイン成功時に JWT を発行しなければならない。(SHALL)
 
 #### Scenario: 有効な認証情報
 - WHEN ユーザーが有効な認証情報を送信する
@@ -346,7 +346,7 @@ openspec/
 
 ## ADDED Requirements
 ### Requirement: 二要素認証
-システムはログイン時に第2要素を必須にする。
+システムはログイン時に第2要素を必須にしなければならない。(MUST)
 
 #### Scenario: OTP が必要
 - WHEN ユーザーが有効な認証情報を送信する

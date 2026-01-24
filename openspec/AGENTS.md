@@ -178,7 +178,7 @@ openspec/
 ```markdown
 ## ADDED Requirements
 ### Requirement: New Feature
-システムは新しい機能を提供しなければならない。(MUST)
+システムは新しい機能を提供しなければならない。(SHALL)
 
 #### Scenario: 成功ケース
 - **WHEN** ユーザーが操作する
