@@ -446,6 +446,8 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - `assets/openspec_bg.png` を追加。
 - docs を刷新（新規 doc 追加、旧 doc 削除、`docs/opsx.md` へ移行）。
 - `upstream-sync-v1.0.2.md` へ改名・更新。
+- `docs/cli.md` を日本語化。
+- `diffs/upstream-v0.23.0__upstream-v1.0.2.*` を v1.0.2 タグ基準で再生成。
 
 #### テスト状況
 - 未実施

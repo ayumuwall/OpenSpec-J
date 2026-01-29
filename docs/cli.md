@@ -1,188 +1,188 @@
-# CLI Reference
+# CLI リファレンス
 
-The OpenSpec CLI (`openspec`) provides terminal commands for project setup, validation, status inspection, and management. These commands complement the AI slash commands (like `/opsx:new`) documented in [Commands](commands.md).
+OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検証、ステータス確認、管理のためのターミナルコマンドを提供します。これらのコマンドは、[Commands](commands.md) に記載された `/opsx:new` などの AI スラッシュコマンドを補完します。
 
-## Summary
+## 概要
 
-| Category | Commands | Purpose |
-|----------|----------|---------|
-| **Setup** | `init`, `update` | Initialize and update OpenSpec in your project |
-| **Browsing** | `list`, `view`, `show` | Explore changes and specs |
-| **Validation** | `validate` | Check changes and specs for issues |
-| **Lifecycle** | `archive` | Finalize completed changes |
-| **Workflow** | `status`, `instructions`, `templates`, `schemas` | Artifact-driven workflow support |
-| **Schemas** | `schema init`, `schema fork`, `schema validate`, `schema which` | Create and manage custom workflows |
-| **Config** | `config` | View and modify settings |
-| **Utility** | `feedback`, `completion` | Feedback and shell integration |
-
----
-
-## Human vs Agent Commands
-
-Most CLI commands are designed for **human use** in a terminal. Some commands also support **agent/script use** via JSON output.
-
-### Human-Only Commands
-
-These commands are interactive and designed for terminal use:
-
-| Command | Purpose |
-|---------|---------|
-| `openspec init` | Initialize project (interactive prompts) |
-| `openspec view` | Interactive dashboard |
-| `openspec config edit` | Open config in editor |
-| `openspec feedback` | Submit feedback via GitHub |
-| `openspec completion install` | Install shell completions |
-
-### Agent-Compatible Commands
-
-These commands support `--json` output for programmatic use by AI agents and scripts:
-
-| Command | Human Use | Agent Use |
-|---------|-----------|-----------|
-| `openspec list` | Browse changes/specs | `--json` for structured data |
-| `openspec show <item>` | Read content | `--json` for parsing |
-| `openspec validate` | Check for issues | `--all --json` for bulk validation |
-| `openspec status` | See artifact progress | `--json` for structured status |
-| `openspec instructions` | Get next steps | `--json` for agent instructions |
-| `openspec templates` | Find template paths | `--json` for path resolution |
-| `openspec schemas` | List available schemas | `--json` for schema discovery |
+| カテゴリ | コマンド | 目的 |
+|----------|----------|------|
+| **セットアップ** | `init`, `update` | プロジェクトの OpenSpec 初期化・更新 |
+| **閲覧** | `list`, `view`, `show` | 変更と仕様を確認 |
+| **検証** | `validate` | 変更と仕様の問題をチェック |
+| **ライフサイクル** | `archive` | 完了した変更を確定 |
+| **ワークフロー** | `status`, `instructions`, `templates`, `schemas` | アーティファクト主導ワークフローの支援 |
+| **スキーマ** | `schema init`, `schema fork`, `schema validate`, `schema which` | カスタムワークフローの作成と管理 |
+| **設定** | `config` | 設定の閲覧と変更 |
+| **ユーティリティ** | `feedback`, `completion` | フィードバック送信とシェル連携 |
 
 ---
 
-## Global Options
+## 人向けコマンドとエージェント向けコマンド
 
-These options work with all commands:
+多くの CLI コマンドは **人がターミナルで使うこと** を想定しています。一部のコマンドは **AI エージェント/スクリプト向け** に JSON 出力を提供します。
 
-| Option | Description |
+### 人向け専用コマンド
+
+これらは対話的で、ターミナル操作向けです。
+
+| コマンド | 目的 |
+|---------|------|
+| `openspec init` | プロジェクト初期化（対話プロンプト） |
+| `openspec view` | 対話型ダッシュボード |
+| `openspec config edit` | エディタで設定を開く |
+| `openspec feedback` | GitHub へフィードバック送信 |
+| `openspec completion install` | シェル補完のインストール |
+
+### エージェント対応コマンド
+
+これらは `--json` に対応し、AI エージェントやスクリプトから利用できます。
+
+| コマンド | 人向け用途 | エージェント用途 |
+|---------|-----------|------------------|
+| `openspec list` | 変更/仕様の一覧 | `--json` で構造化データ |
+| `openspec show <item>` | 内容の閲覧 | `--json` で解析用データ |
+| `openspec validate` | 問題の検出 | `--all --json` で一括検証 |
+| `openspec status` | 進捗の確認 | `--json` で状態を取得 |
+| `openspec instructions` | 次の手順 | `--json` で指示を取得 |
+| `openspec templates` | テンプレート参照 | `--json` でパス解決 |
+| `openspec schemas` | スキーマ一覧 | `--json` でスキーマ探索 |
+
+---
+
+## グローバルオプション
+
+すべてのコマンドで有効です。
+
+| オプション | 説明 |
 |--------|-------------|
-| `--version`, `-V` | Show version number |
-| `--no-color` | Disable color output |
-| `--help`, `-h` | Display help for command |
+| `--version`, `-V` | バージョンを表示 |
+| `--no-color` | 色付き出力を無効化 |
+| `--help`, `-h` | コマンドのヘルプを表示 |
 
 ---
 
-## Setup Commands
+## セットアップコマンド
 
 ### `openspec init`
 
-Initialize OpenSpec in your project. Creates the folder structure and configures AI tool integrations.
+プロジェクトで OpenSpec を初期化します。フォルダ構造を作成し、AI ツール連携を設定します。
 
 ```
 openspec init [path] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `path` | No | Target directory (default: current directory) |
+| `path` | いいえ | 対象ディレクトリ（デフォルト: 現在のディレクトリ） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--tools <list>` | Configure AI tools non-interactively. Use `all`, `none`, or comma-separated list |
-| `--force` | Auto-cleanup legacy files without prompting |
+| `--tools <list>` | 対話なしで AI ツールを設定。`all`, `none` またはカンマ区切りの一覧 |
+| `--force` | 旧ファイルを確認なしで自動クリーンアップ |
 
-**Supported tools:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `windsurf`
+**対応ツール:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `windsurf`
 
-**Examples:**
+**例:**
 
 ```bash
-# Interactive initialization
+# 対話的に初期化
 openspec init
 
-# Initialize in a specific directory
+# 特定ディレクトリで初期化
 openspec init ./my-project
 
-# Non-interactive: configure for Claude and Cursor
+# 非対話: Claude と Cursor を設定
 openspec init --tools claude,cursor
 
-# Configure for all supported tools
+# すべての対応ツールを設定
 openspec init --tools all
 
-# Skip prompts and auto-cleanup legacy files
+# プロンプトをスキップし、旧ファイルを自動クリーンアップ
 openspec init --force
 ```
 
-**What it creates:**
+**作成されるもの:**
 
 ```
 openspec/
-├── specs/              # Your specifications (source of truth)
-├── changes/            # Proposed changes
-└── config.yaml         # Project configuration
+├── specs/              # 仕様（ソース・オブ・トゥルース）
+├── changes/            # 変更提案
+└── config.yaml         # プロジェクト設定
 
-.claude/skills/         # Claude Code skill files (if claude selected)
-.cursor/rules/          # Cursor rules (if cursor selected)
-... (other tool configs)
+.claude/skills/         # Claude Code のスキルファイル（claude 選択時）
+.cursor/rules/          # Cursor ルール（cursor 選択時）
+...（他ツールの設定）
 ```
 
 ---
 
 ### `openspec update`
 
-Update OpenSpec instruction files after upgrading the CLI. Re-generates AI tool configuration files.
+CLI を更新した後に指示ファイルを更新します。AI ツールの設定ファイルを再生成します。
 
 ```
 openspec update [path] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `path` | No | Target directory (default: current directory) |
+| `path` | いいえ | 対象ディレクトリ（デフォルト: 現在のディレクトリ） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--force` | Force update even when files are up to date |
+| `--force` | ファイルが最新でも強制更新 |
 
-**Example:**
+**例:**
 
 ```bash
-# Update instruction files after npm upgrade
+# npm でアップグレード後に指示ファイルを更新
 npm update @fission-ai/openspec
 openspec update
 ```
 
 ---
 
-## Browsing Commands
+## 閲覧コマンド
 
 ### `openspec list`
 
-List changes or specs in your project.
+プロジェクト内の変更または仕様を一覧表示します。
 
 ```
 openspec list [options]
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--specs` | List specs instead of changes |
-| `--changes` | List changes (default) |
-| `--sort <order>` | Sort by `recent` (default) or `name` |
-| `--json` | Output as JSON |
+| `--specs` | 変更ではなく仕様を一覧表示 |
+| `--changes` | 変更を一覧表示（デフォルト） |
+| `--sort <order>` | `recent`（デフォルト）または `name` で並び替え |
+| `--json` | JSON で出力 |
 
-**Examples:**
+**例:**
 
 ```bash
-# List all active changes
+# 進行中の変更を一覧表示
 openspec list
 
-# List all specs
+# すべての仕様を一覧表示
 openspec list --specs
 
-# JSON output for scripts
+# スクリプト向け JSON 出力
 openspec list --json
 ```
 
-**Output (text):**
+**出力（テキスト）:**
 
 ```
 Active changes:
@@ -194,119 +194,119 @@ Active changes:
 
 ### `openspec view`
 
-Display an interactive dashboard for exploring specs and changes.
+仕様と変更を探索する対話型ダッシュボードを表示します。
 
 ```
 openspec view
 ```
 
-Opens a terminal-based interface for navigating your project's specifications and changes.
+ターミナル上の UI を開き、プロジェクトの仕様や変更をナビゲートします。
 
 ---
 
 ### `openspec show`
 
-Display details of a change or spec.
+変更または仕様の詳細を表示します。
 
 ```
 openspec show [item-name] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `item-name` | No | Name of change or spec (prompts if omitted) |
+| `item-name` | いいえ | 変更名または仕様名（省略時はプロンプト） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--type <type>` | Specify type: `change` or `spec` (auto-detected if unambiguous) |
-| `--json` | Output as JSON |
-| `--no-interactive` | Disable prompts |
+| `--type <type>` | `change` または `spec` を指定（曖昧でなければ自動判別） |
+| `--json` | JSON で出力 |
+| `--no-interactive` | プロンプトを無効化 |
 
-**Change-specific options:**
+**変更向けオプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--deltas-only` | Show only delta specs (JSON mode) |
+| `--deltas-only` | 仕様差分のみを表示（JSON モード） |
 
-**Spec-specific options:**
+**仕様向けオプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--requirements` | Show only requirements, exclude scenarios (JSON mode) |
-| `--no-scenarios` | Exclude scenario content (JSON mode) |
-| `-r, --requirement <id>` | Show specific requirement by 1-based index (JSON mode) |
+| `--requirements` | 要件のみを表示し、シナリオを除外（JSON モード） |
+| `--no-scenarios` | シナリオを除外（JSON モード） |
+| `-r, --requirement <id>` | 1 始まりのインデックスで特定要件を表示（JSON モード） |
 
-**Examples:**
+**例:**
 
 ```bash
-# Interactive selection
+# 対話的に選択
 openspec show
 
-# Show a specific change
+# 特定の変更を表示
 openspec show add-dark-mode
 
-# Show a specific spec
+# 特定の仕様を表示
 openspec show auth --type spec
 
-# JSON output for parsing
+# 解析向け JSON 出力
 openspec show add-dark-mode --json
 ```
 
 ---
 
-## Validation Commands
+## 検証コマンド
 
 ### `openspec validate`
 
-Validate changes and specs for structural issues.
+変更と仕様を検証し、構造上の問題を検出します。
 
 ```
 openspec validate [item-name] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `item-name` | No | Specific item to validate (prompts if omitted) |
+| `item-name` | いいえ | 検証対象（省略時はプロンプト） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--all` | Validate all changes and specs |
-| `--changes` | Validate all changes |
-| `--specs` | Validate all specs |
-| `--type <type>` | Specify type when name is ambiguous: `change` or `spec` |
-| `--strict` | Enable strict validation mode |
-| `--json` | Output as JSON |
-| `--concurrency <n>` | Max parallel validations (default: 6, or `OPENSPEC_CONCURRENCY` env) |
-| `--no-interactive` | Disable prompts |
+| `--all` | すべての変更と仕様を検証 |
+| `--changes` | すべての変更を検証 |
+| `--specs` | すべての仕様を検証 |
+| `--type <type>` | 名称が曖昧な場合に `change` / `spec` を指定 |
+| `--strict` | 厳密検証モードを有効化 |
+| `--json` | JSON で出力 |
+| `--concurrency <n>` | 並列検証の上限（デフォルト: 6、`OPENSPEC_CONCURRENCY` 環境変数でも指定可） |
+| `--no-interactive` | プロンプトを無効化 |
 
-**Examples:**
+**例:**
 
 ```bash
-# Interactive validation
+# 対話的に検証
 openspec validate
 
-# Validate a specific change
+# 特定の変更を検証
 openspec validate add-dark-mode
 
-# Validate all changes
+# すべての変更を検証
 openspec validate --changes
 
-# Validate everything with JSON output (for CI/scripts)
+# CI/スクリプト向けに JSON で一括検証
 openspec validate --all --json
 
-# Strict validation with increased parallelism
+# 厳密検証 + 並列数を増やす
 openspec validate --all --strict --concurrency 12
 ```
 
-**Output (text):**
+**出力（テキスト）:**
 
 ```
 Validating add-dark-mode...
@@ -317,7 +317,7 @@ Validating add-dark-mode...
 1 warning found
 ```
 
-**Output (JSON):**
+**出力（JSON）:**
 
 ```json
 {
@@ -341,89 +341,89 @@ Validating add-dark-mode...
 
 ---
 
-## Lifecycle Commands
+## ライフサイクルコマンド
 
 ### `openspec archive`
 
-Archive a completed change and merge delta specs into main specs.
+完了した変更をアーカイブし、仕様差分を本仕様に統合します。
 
 ```
 openspec archive [change-name] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Change to archive (prompts if omitted) |
+| `change-name` | いいえ | アーカイブ対象の変更（省略時はプロンプト） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `-y, --yes` | Skip confirmation prompts |
-| `--skip-specs` | Skip spec updates (for infrastructure/tooling/doc-only changes) |
-| `--no-validate` | Skip validation (requires confirmation) |
+| `-y, --yes` | 確認プロンプトをスキップ |
+| `--skip-specs` | 仕様更新をスキップ（インフラ/ツール/ドキュメントのみの変更向け） |
+| `--no-validate` | 検証をスキップ（要確認） |
 
-**Examples:**
+**例:**
 
 ```bash
-# Interactive archive
+# 対話的にアーカイブ
 openspec archive
 
-# Archive specific change
+# 特定の変更をアーカイブ
 openspec archive add-dark-mode
 
-# Archive without prompts (CI/scripts)
+# プロンプトを省略（CI/スクリプト向け）
 openspec archive add-dark-mode --yes
 
-# Archive a tooling change that doesn't affect specs
+# 仕様に影響しないツール更新をアーカイブ
 openspec archive update-ci-config --skip-specs
 ```
 
-**What it does:**
+**動作内容:**
 
-1. Validates the change (unless `--no-validate`)
-2. Prompts for confirmation (unless `--yes`)
-3. Merges delta specs into `openspec/specs/`
-4. Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
+1. 変更を検証（`--no-validate` を指定しない限り）
+2. 確認プロンプト（`--yes` を指定しない限り）
+3. 仕様差分を `openspec/specs/` に統合
+4. 変更フォルダを `openspec/changes/archive/YYYY-MM-DD-<name>/` に移動
 
 ---
 
-## Workflow Commands
+## ワークフローコマンド
 
-These commands support the artifact-driven OPSX workflow. They're useful for both humans checking progress and agents determining next steps.
+これらは OPSX のアーティファクト主導ワークフローを支援します。人が進捗を確認するときにも、エージェントが次の手順を判断するときにも有用です。
 
 ### `openspec status`
 
-Display artifact completion status for a change.
+変更に対するアーティファクトの完了状況を表示します。
 
 ```
 openspec status [options]
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--change <id>` | Change name (prompts if omitted) |
-| `--schema <name>` | Schema override (auto-detected from change's config) |
-| `--json` | Output as JSON |
+| `--change <id>` | 変更名（省略時はプロンプト） |
+| `--schema <name>` | スキーマを上書き指定（変更の設定から自動判定） |
+| `--json` | JSON で出力 |
 
-**Examples:**
+**例:**
 
 ```bash
-# Interactive status check
+# 対話的にステータス確認
 openspec status
 
-# Status for specific change
+# 特定変更のステータス
 openspec status --change add-dark-mode
 
-# JSON for agent use
+# エージェント向け JSON
 openspec status --change add-dark-mode --json
 ```
 
-**Output (text):**
+**出力（テキスト）:**
 
 ```
 Change: add-dark-mode
@@ -438,7 +438,7 @@ Artifacts:
 Next: Create design using /opsx:continue
 ```
 
-**Output (JSON):**
+**出力（JSON）:**
 
 ```json
 {
@@ -458,82 +458,82 @@ Next: Create design using /opsx:continue
 
 ### `openspec instructions`
 
-Get enriched instructions for creating an artifact or applying tasks. Used by AI agents to understand what to create next.
+アーティファクト作成やタスク実装のための拡張指示を取得します。AI エージェントが次に作るべきものを理解するために使用します。
 
 ```
 openspec instructions [artifact] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `artifact` | No | Artifact ID: `proposal`, `specs`, `design`, `tasks`, or `apply` |
+| `artifact` | いいえ | アーティファクト ID: `proposal`, `specs`, `design`, `tasks`, `apply` |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--change <id>` | Change name (required in non-interactive mode) |
-| `--schema <name>` | Schema override |
-| `--json` | Output as JSON |
+| `--change <id>` | 変更名（非対話モードでは必須） |
+| `--schema <name>` | スキーマを上書き指定 |
+| `--json` | JSON で出力 |
 
-**Special case:** Use `apply` as the artifact to get task implementation instructions.
+**特記事項:** `apply` を指定すると、タスク実装向けの指示を返します。
 
-**Examples:**
+**例:**
 
 ```bash
-# Get instructions for next artifact
+# 次に作るべきアーティファクトの指示を取得
 openspec instructions --change add-dark-mode
 
-# Get specific artifact instructions
+# 特定アーティファクトの指示を取得
 openspec instructions design --change add-dark-mode
 
-# Get apply/implementation instructions
+# 実装（apply）向けの指示を取得
 openspec instructions apply --change add-dark-mode
 
-# JSON for agent consumption
+# エージェント向け JSON
 openspec instructions design --change add-dark-mode --json
 ```
 
-**Output includes:**
+**出力内容:**
 
-- Template content for the artifact
-- Project context from config
-- Content from dependency artifacts
-- Per-artifact rules from config
+- アーティファクト用テンプレートの内容
+- 設定から読み込んだプロジェクトコンテキスト
+- 依存アーティファクトの内容
+- 設定のアーティファクト別ルール
 
 ---
 
 ### `openspec templates`
 
-Show resolved template paths for all artifacts in a schema.
+スキーマ内のアーティファクトに対するテンプレートパスを表示します。
 
 ```
 openspec templates [options]
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--schema <name>` | Schema to inspect (default: `spec-driven`) |
-| `--json` | Output as JSON |
+| `--schema <name>` | 対象スキーマ（デフォルト: `spec-driven`） |
+| `--json` | JSON で出力 |
 
-**Examples:**
+**例:**
 
 ```bash
-# Show template paths for default schema
+# デフォルトスキーマのテンプレートを表示
 openspec templates
 
-# Show templates for custom schema
+# カスタムスキーマのテンプレートを表示
 openspec templates --schema my-workflow
 
-# JSON for programmatic use
+# プログラム向け JSON
 openspec templates --json
 ```
 
-**Output (text):**
+**出力（テキスト）:**
 
 ```
 Schema: spec-driven
@@ -549,25 +549,25 @@ Templates:
 
 ### `openspec schemas`
 
-List available workflow schemas with their descriptions and artifact flows.
+利用可能なワークフロースキーマと、その説明・フローを一覧表示します。
 
 ```
 openspec schemas [options]
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--json` | Output as JSON |
+| `--json` | JSON で出力 |
 
-**Example:**
+**例:**
 
 ```bash
 openspec schemas
 ```
 
-**Output:**
+**出力:**
 
 ```
 Available schemas:
@@ -583,55 +583,55 @@ Available schemas:
 
 ---
 
-## Schema Commands
+## スキーマコマンド
 
-Commands for creating and managing custom workflow schemas.
+カスタムワークフロースキーマの作成・管理に使用します。
 
 ### `openspec schema init`
 
-Create a new project-local schema.
+プロジェクトローカルのスキーマを新規作成します。
 
 ```
 openspec schema init <name> [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `name` | Yes | Schema name (kebab-case) |
+| `name` | はい | スキーマ名（kebab-case） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--description <text>` | Schema description |
-| `--artifacts <list>` | Comma-separated artifact IDs (default: `proposal,specs,design,tasks`) |
-| `--default` | Set as project default schema |
-| `--no-default` | Don't prompt to set as default |
-| `--force` | Overwrite existing schema |
-| `--json` | Output as JSON |
+| `--description <text>` | スキーマの説明 |
+| `--artifacts <list>` | アーティファクト ID のカンマ区切り（デフォルト: `proposal,specs,design,tasks`） |
+| `--default` | プロジェクトのデフォルトスキーマに設定 |
+| `--no-default` | デフォルト設定のプロンプトを無効化 |
+| `--force` | 既存スキーマを上書き |
+| `--json` | JSON で出力 |
 
-**Examples:**
+**例:**
 
 ```bash
-# Interactive schema creation
+# 対話的にスキーマを作成
 openspec schema init research-first
 
-# Non-interactive with specific artifacts
+# 非対話 + アーティファクト指定
 openspec schema init rapid \
   --description "Rapid iteration workflow" \
   --artifacts "proposal,tasks" \
   --default
 ```
 
-**What it creates:**
+**作成されるもの:**
 
 ```
 openspec/schemas/<name>/
-├── schema.yaml           # Schema definition
+├── schema.yaml           # スキーマ定義
 └── templates/
-    ├── proposal.md       # Template for each artifact
+    ├── proposal.md       # 各アーティファクトのテンプレート
     ├── specs.md
     ├── design.md
     └── tasks.md
@@ -641,30 +641,30 @@ openspec/schemas/<name>/
 
 ### `openspec schema fork`
 
-Copy an existing schema to your project for customization.
+既存スキーマをプロジェクトにコピーしてカスタマイズします。
 
 ```
 openspec schema fork <source> [name] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `source` | Yes | Schema to copy |
-| `name` | No | New schema name (default: `<source>-custom`) |
+| `source` | はい | コピー元スキーマ |
+| `name` | いいえ | 新しいスキーマ名（デフォルト: `<source>-custom`） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--force` | Overwrite existing destination |
-| `--json` | Output as JSON |
+| `--force` | 既存のコピー先を上書き |
+| `--json` | JSON で出力 |
 
-**Example:**
+**例:**
 
 ```bash
-# Fork the built-in spec-driven schema
+# ビルトインの spec-driven をフォーク
 openspec schema fork spec-driven my-workflow
 ```
 
@@ -672,32 +672,32 @@ openspec schema fork spec-driven my-workflow
 
 ### `openspec schema validate`
 
-Validate a schema's structure and templates.
+スキーマ構造とテンプレートを検証します。
 
 ```
 openspec schema validate [name] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `name` | No | Schema to validate (validates all if omitted) |
+| `name` | いいえ | 検証対象スキーマ（省略時は全件） |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--verbose` | Show detailed validation steps |
-| `--json` | Output as JSON |
+| `--verbose` | 詳細な検証ステップを表示 |
+| `--json` | JSON で出力 |
 
-**Example:**
+**例:**
 
 ```bash
-# Validate a specific schema
+# 特定スキーマを検証
 openspec schema validate my-workflow
 
-# Validate all schemas
+# すべてのスキーマを検証
 openspec schema validate
 ```
 
@@ -705,124 +705,124 @@ openspec schema validate
 
 ### `openspec schema which`
 
-Show where a schema resolves from (useful for debugging precedence).
+スキーマがどこから解決されるかを表示します（優先順位のデバッグ用）。
 
 ```
 openspec schema which [name] [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `name` | No | Schema name |
+| `name` | いいえ | スキーマ名 |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--all` | List all schemas with their sources |
-| `--json` | Output as JSON |
+| `--all` | すべてのスキーマとソースを一覧表示 |
+| `--json` | JSON で出力 |
 
-**Example:**
+**例:**
 
 ```bash
-# Check where a schema comes from
+# スキーマの解決元を確認
 openspec schema which spec-driven
 ```
 
-**Output:**
+**出力:**
 
 ```
 spec-driven resolves from: package
   Source: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
 ```
 
-**Schema precedence:**
+**スキーマの優先順位:**
 
-1. Project: `openspec/schemas/<name>/`
-2. User: `~/.local/share/openspec/schemas/<name>/`
-3. Package: Built-in schemas
+1. プロジェクト: `openspec/schemas/<name>/`
+2. ユーザー: `~/.local/share/openspec/schemas/<name>/`
+3. パッケージ: 組み込みスキーマ
 
 ---
 
-## Configuration Commands
+## 設定コマンド
 
 ### `openspec config`
 
-View and modify global OpenSpec configuration.
+グローバルな OpenSpec 設定を閲覧・変更します。
 
 ```
 openspec config <subcommand> [options]
 ```
 
-**Subcommands:**
+**サブコマンド:**
 
-| Subcommand | Description |
+| サブコマンド | 説明 |
 |------------|-------------|
-| `path` | Show config file location |
-| `list` | Show all current settings |
-| `get <key>` | Get a specific value |
-| `set <key> <value>` | Set a value |
-| `unset <key>` | Remove a key |
-| `reset` | Reset to defaults |
-| `edit` | Open in `$EDITOR` |
+| `path` | 設定ファイルの場所を表示 |
+| `list` | 現在の設定一覧を表示 |
+| `get <key>` | 指定キーの値を取得 |
+| `set <key> <value>` | 値を設定 |
+| `unset <key>` | キーを削除 |
+| `reset` | デフォルトに戻す |
+| `edit` | `$EDITOR` で開く |
 
-**Examples:**
+**例:**
 
 ```bash
-# Show config file path
+# 設定ファイルのパスを表示
 openspec config path
 
-# List all settings
+# 設定一覧を表示
 openspec config list
 
-# Get a specific value
+# 特定キーの値を取得
 openspec config get telemetry.enabled
 
-# Set a value
+# 値を設定
 openspec config set telemetry.enabled false
 
-# Set a string value explicitly
+# 文字列として明示的に設定
 openspec config set user.name "My Name" --string
 
-# Remove a custom setting
+# カスタム設定を削除
 openspec config unset user.name
 
-# Reset all configuration
+# すべての設定をリセット
 openspec config reset --all --yes
 
-# Edit config in your editor
+# エディタで設定を開く
 openspec config edit
 ```
 
 ---
 
-## Utility Commands
+## ユーティリティコマンド
 
 ### `openspec feedback`
 
-Submit feedback about OpenSpec. Creates a GitHub issue.
+OpenSpec へのフィードバックを送信します。GitHub Issue を作成します。
 
 ```
 openspec feedback <message> [options]
 ```
 
-**Arguments:**
+**引数:**
 
-| Argument | Required | Description |
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `message` | Yes | Feedback message |
+| `message` | はい | フィードバック内容 |
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--body <text>` | Detailed description |
+| `--body <text>` | 詳細説明 |
 
-**Requirements:** GitHub CLI (`gh`) must be installed and authenticated.
+**要件:** GitHub CLI（`gh`）がインストールされ、認証済みである必要があります。
 
-**Example:**
+**例:**
 
 ```bash
 openspec feedback "Add support for custom artifact types" \
@@ -833,62 +833,62 @@ openspec feedback "Add support for custom artifact types" \
 
 ### `openspec completion`
 
-Manage shell completions for the OpenSpec CLI.
+OpenSpec CLI のシェル補完を管理します。
 
 ```
 openspec completion <subcommand> [shell]
 ```
 
-**Subcommands:**
+**サブコマンド:**
 
-| Subcommand | Description |
+| サブコマンド | 説明 |
 |------------|-------------|
-| `generate [shell]` | Output completion script to stdout |
-| `install [shell]` | Install completion for your shell |
-| `uninstall [shell]` | Remove installed completions |
+| `generate [shell]` | 補完スクリプトを標準出力に出力 |
+| `install [shell]` | シェル補完をインストール |
+| `uninstall [shell]` | インストール済み補完を削除 |
 
-**Supported shells:** `bash`, `zsh`, `fish`, `powershell`
+**対応シェル:** `bash`, `zsh`, `fish`, `powershell`
 
-**Examples:**
+**例:**
 
 ```bash
-# Install completions (auto-detects shell)
+# 補完をインストール（シェルを自動検出）
 openspec completion install
 
-# Install for specific shell
+# 特定シェル向けにインストール
 openspec completion install zsh
 
-# Generate script for manual installation
+# 手動インストール用スクリプトを生成
 openspec completion generate bash > ~/.bash_completion.d/openspec
 
-# Uninstall
+# アンインストール
 openspec completion uninstall
 ```
 
 ---
 
-## Exit Codes
+## 終了コード
 
-| Code | Meaning |
+| コード | 意味 |
 |------|---------|
-| `0` | Success |
-| `1` | Error (validation failure, missing files, etc.) |
+| `0` | 成功 |
+| `1` | エラー（検証失敗、ファイル欠落など） |
 
 ---
 
-## Environment Variables
+## 環境変数
 
-| Variable | Description |
+| 変数 | 説明 |
 |----------|-------------|
-| `OPENSPEC_CONCURRENCY` | Default concurrency for bulk validation (default: 6) |
-| `EDITOR` or `VISUAL` | Editor for `openspec config edit` |
-| `NO_COLOR` | Disable color output when set |
+| `OPENSPEC_CONCURRENCY` | 一括検証のデフォルト並列数（デフォルト: 6） |
+| `EDITOR` または `VISUAL` | `openspec config edit` のエディタ指定 |
+| `NO_COLOR` | 設定時に色付き出力を無効化 |
 
 ---
 
-## Related Documentation
+## 関連ドキュメント
 
-- [Commands](commands.md) - AI slash commands (`/opsx:new`, `/opsx:apply`, etc.)
-- [Workflows](workflows.md) - Common patterns and when to use each command
-- [Customization](customization.md) - Create custom schemas and templates
-- [Getting Started](getting-started.md) - First-time setup guide
+- [Commands](commands.md) - AI スラッシュコマンド（`/opsx:new`, `/opsx:apply` など）
+- [Workflows](workflows.md) - 代表的なフローと使い分け
+- [Customization](customization.md) - カスタムスキーマとテンプレート
+- [Getting Started](getting-started.md) - 初回セットアップガイド

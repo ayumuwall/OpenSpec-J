@@ -1,48 +1,3 @@
-diff --git a/.changeset/nix-flake-improvements.md b/.changeset/nix-flake-improvements.md
-new file mode 100644
-index 0000000..0988492
---- /dev/null
-+++ b/.changeset/nix-flake-improvements.md
-@@ -0,0 +1,13 @@
-+---
-+"@fission-ai/openspec": patch
-+---
-+
-+### Improvements
-+
-+- **Nix flake maintenance** — Version now read dynamically from package.json, reducing manual sync issues
-+- **Nix build optimization** — Source filtering excludes node_modules and artifacts, improving build times
-+- **update-flake.sh script** — Detects when hash is already correct, skipping unnecessary rebuilds
-+
-+### Other
-+
-+- Updated Nix CI actions to latest versions (nix-installer v21, magic-nix-cache v13)
-diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
-index 2b887c7..9d435a4 100644
---- a/.github/workflows/ci.yml
-+++ b/.github/workflows/ci.yml
-@@ -190,10 +190,10 @@ jobs:
-         uses: actions/checkout@v4
- 
-       - name: Install Nix
--        uses: DeterminateSystems/nix-installer-action@v13
-+        uses: DeterminateSystems/nix-installer-action@v21
- 
-       - name: Setup Nix cache
--        uses: DeterminateSystems/magic-nix-cache-action@v8
-+        uses: DeterminateSystems/magic-nix-cache-action@v13
- 
-       - name: Build with Nix
-         run: nix build
-@@ -229,7 +229,7 @@ jobs:
-       - name: Check flake.nix modifications
-         run: |
-           if git diff --quiet flake.nix; then
--            echo "⚠️  Warning: flake.nix was not modified by update script"
-+            echo "ℹ️  flake.nix unchanged (hash already up-to-date)"
-           else
-             echo "✅ flake.nix was updated by script"
-             git diff flake.nix
 diff --git a/.github/workflows/polish-release-notes.yml b/.github/workflows/polish-release-notes.yml
 deleted file mode 100644
 index a58e42b..0000000
@@ -5829,7 +5784,7 @@ index 0000000..7891051
 +See [Getting Started](getting-started.md) for a full walkthrough.
 diff --git a/docs/migration-guide.md b/docs/migration-guide.md
 new file mode 100644
-index 0000000..5281904
+index 0000000..6e5e335
 --- /dev/null
 +++ b/docs/migration-guide.md
 @@ -0,0 +1,575 @@
@@ -6301,7 +6256,7 @@ index 0000000..5281904
 +List all available schemas:
 +
 +```bash
-+openspec schemas
++openspec workflow schemas
 +```
 +
 +### Custom Schemas
@@ -6345,7 +6300,7 @@ index 0000000..5281904
 +Run this to see valid artifact IDs:
 +
 +```bash
-+openspec schemas --json
++openspec workflow schemas --json
 +```
 +
 +### Config not being applied
@@ -8010,61 +7965,19 @@ index 0000000..8aac9df
 +- [Concepts](concepts.md) - Deep dive into specs, artifacts, and schemas
 +- [Customization](customization.md) - Create custom workflows
 diff --git a/flake.nix b/flake.nix
-index cb10878..90ba68a 100644
+index cb10878..5252845 100644
 --- a/flake.nix
 +++ b/flake.nix
-@@ -5,29 +5,53 @@
-     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-   };
- 
--  outputs = { self, nixpkgs }:
-+  outputs =
-+    { self, nixpkgs }:
-     let
--      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-+      supportedSystems = [
-+        "x86_64-linux"
-+        "aarch64-linux"
-+        "x86_64-darwin"
-+        "aarch64-darwin"
-+      ];
- 
-       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
-     in
-     {
--      packages = forAllSystems (system:
-+      packages = forAllSystems (
-+        system:
-         let
-           pkgs = nixpkgs.legacyPackages.${system};
-+          inherit (pkgs) lib;
-         in
+@@ -19,7 +19,7 @@
          {
            default = pkgs.stdenv.mkDerivation (finalAttrs: {
              pname = "openspec";
 -            version = "0.20.0";
-+            version = (builtins.fromJSON (builtins.readFile ./package.json)).version;
++            version = "0.23.0";
  
--            src = ./.;
-+            src = lib.fileset.toSource {
-+              root = ./.;
-+              fileset = lib.fileset.unions [
-+                ./src
-+                ./bin
-+                ./schemas
-+                ./scripts
-+                ./test
-+                ./package.json
-+                ./pnpm-lock.yaml
-+                ./tsconfig.json
-+                ./build.js
-+                ./vitest.config.ts
-+                ./vitest.setup.ts
-+                ./eslint.config.js
-+              ];
-+            };
+             src = ./.;
  
-             pnpmDeps = pkgs.fetchPnpmDeps {
+@@ -27,7 +27,7 @@
                inherit (finalAttrs) pname version src;
                pnpm = pkgs.pnpm_9;
                fetcherVersion = 3;
@@ -8073,35 +7986,6 @@ index cb10878..90ba68a 100644
              };
  
              nativeBuildInputs = with pkgs; [
-@@ -55,7 +79,8 @@
-               mainProgram = "openspec";
-             };
-           });
--        });
-+        }
-+      );
- 
-       apps = forAllSystems (system: {
-         default = {
-@@ -64,7 +89,8 @@
-         };
-       });
- 
--      devShells = forAllSystems (system:
-+      devShells = forAllSystems (
-+        system:
-         let
-           pkgs = nixpkgs.legacyPackages.${system};
-         in
-@@ -82,6 +108,7 @@
-               echo "Run 'pnpm install' to install dependencies"
-             '';
-           };
--        });
-+        }
-+      );
-     };
- }
 diff --git a/openspec/AGENTS.md b/openspec/AGENTS.md
 deleted file mode 100644
 index fb307c7..0000000
@@ -9063,63 +8947,6 @@ index 0000000..7671b32
 +
 +- [x] 4.1 Run `pnpm run build` to ensure TypeScript compiles
 +- [x] 4.2 Test skill generation by running `openspec init` in a test directory and verifying onboard skill/command files are created
-diff --git a/openspec/changes/archive/2026-01-09-add-flake-update-script/specs/flake-update-script/spec.md b/openspec/changes/archive/2026-01-09-add-flake-update-script/specs/flake-update-script/spec.md
-index 476bb4a..891869e 100644
---- a/openspec/changes/archive/2026-01-09-add-flake-update-script/specs/flake-update-script/spec.md
-+++ b/openspec/changes/archive/2026-01-09-add-flake-update-script/specs/flake-update-script/spec.md
-@@ -1,17 +1,18 @@
- ## ADDED Requirements
- 
--### Requirement: Automatic Version Update
--The script SHALL automatically update the version in flake.nix to match package.json.
-+### Requirement: Dynamic Version Support
-+The script SHALL support flake.nix configurations that read version dynamically from package.json.
- 
--#### Scenario: Version extraction from package.json
-+#### Scenario: Version validation
- - **WHEN** script runs
- - **THEN** version is read from package.json using Node.js
--- **AND** version field in flake.nix is updated to match
-+- **AND** script verifies flake.nix uses dynamic version pattern
-+- **AND** warns if hardcoded version is detected
- 
--#### Scenario: Version already up-to-date
--- **WHEN** script runs and flake.nix version already matches package.json
--- **THEN** script reports version is up-to-date
--- **AND** continues to hash update
-+#### Scenario: Version display
-+- **WHEN** script runs
-+- **THEN** script displays current package version
-+- **AND** indicates version is read dynamically by flake.nix
- 
- ### Requirement: Automatic Hash Determination
- The script SHALL automatically determine and update the correct pnpm dependency hash.
-@@ -29,7 +30,8 @@ The script SHALL automatically determine and update the correct pnpm dependency
- 
- #### Scenario: Hash update failure
- - **WHEN** script cannot extract hash from build output
--- **THEN** script exits with error
-+- **THEN** script restores original hash to flake.nix
-+- **AND** exits with error code 1
- - **AND** displays build output for debugging
- 
- ### Requirement: Build Verification
-@@ -55,8 +57,13 @@ The script SHALL provide clear progress information and next steps.
- 
- #### Scenario: Success summary
- - **WHEN** script completes successfully
--- **THEN** summary shows updated version and hash
--- **AND** next steps are displayed (test, commit, etc.)
-+- **THEN** summary shows version and hash changes
-+- **AND** next steps are displayed (test, verify, commit)
-+
-+#### Scenario: No changes needed
-+- **WHEN** hash is already up-to-date
-+- **THEN** script reports no changes needed
-+- **AND** exits with success code 0
- 
- ### Requirement: Script Safety
- The script SHALL fail fast on errors and use safe defaults.
 diff --git a/openspec/changes/merge-init-experimental/.openspec.yaml b/openspec/changes/merge-init-experimental/.openspec.yaml
 new file mode 100644
 index 0000000..7df1534
@@ -10284,21 +10111,6 @@ index 0000000..3732f15
 +- [x] 8.4 Add unit tests for `CommandAdapterRegistry.get()` and missing adapter case
 +- [x] 8.5 Add integration test for `--tool` flag validation
 +- [x] 8.6 Verify cross-platform path handling uses `path.join()` throughout
-diff --git a/openspec/specs/ci-nix-validation/spec.md b/openspec/specs/ci-nix-validation/spec.md
-index b7d9b6e..f9029b4 100644
---- a/openspec/specs/ci-nix-validation/spec.md
-+++ b/openspec/specs/ci-nix-validation/spec.md
-@@ -33,8 +33,8 @@ The CI system SHALL validate that the update-flake.sh script executes successful
- 
- - **WHEN** the CI runs the update script validation
- - **THEN** the script SHALL execute without errors
--- **AND** the script SHALL correctly extract the version from package.json
--- **AND** the script SHALL update flake.nix with the correct version
-+- **AND** the script SHALL correctly read the version from package.json
-+- **AND** the script SHALL validate that flake.nix uses dynamic version from package.json
- 
- #### Scenario: Update script with mock hash
- 
 diff --git a/package.json b/package.json
 index 41369f8..c4bdaa0 100644
 --- a/package.json
@@ -10756,208 +10568,21 @@ index cfa1a11..0000000
 -- **Given:** <!-- preconditions -->
 -- **When:** <!-- action -->
 -- **Then:** <!-- expected result -->
-diff --git a/scripts/README.md b/scripts/README.md
-index 32779c5..dcdc6e7 100644
---- a/scripts/README.md
-+++ b/scripts/README.md
-@@ -4,9 +4,9 @@ Utility scripts for OpenSpec maintenance and development.
- 
- ## update-flake.sh
- 
--Updates `flake.nix` version and dependency hash automatically.
-+Updates `flake.nix` pnpm dependency hash automatically.
- 
--**When to use**: After updating dependencies or releasing a new version.
-+**When to use**: After updating dependencies (`pnpm install`, `pnpm update`).
- 
- **Usage**:
- ```bash
-@@ -14,19 +14,18 @@ Updates `flake.nix` version and dependency hash automatically.
- ```
- 
- **What it does**:
--1. Extracts version from `package.json`
--2. Updates version in `flake.nix`
--3. Automatically determines the correct pnpm dependency hash
--4. Updates the hash in `flake.nix`
--5. Verifies the build succeeds
-+1. Reads version from `package.json` (dynamically used by `flake.nix`)
-+2. Automatically determines the correct pnpm dependency hash
-+3. Updates the hash in `flake.nix`
-+4. Verifies the build succeeds
- 
- **Example workflow**:
- ```bash
--# After version bump and dependency updates
-+# After dependency updates
- pnpm install
- ./scripts/update-flake.sh
- git add flake.nix
--git commit -m "chore: update flake.nix for v0.18.0"
-+git commit -m "chore: update flake.nix dependency hash"
- ```
- 
- ## postinstall.js
 diff --git a/scripts/update-flake.sh b/scripts/update-flake.sh
-index 022c971..a7cb682 100755
+index 022c971..5b075b8 100755
 --- a/scripts/update-flake.sh
 +++ b/scripts/update-flake.sh
-@@ -1,14 +1,22 @@
- #!/usr/bin/env bash
- set -euo pipefail
+@@ -41,8 +41,8 @@ sed "${SED_INPLACE[@]}" "s|hash = \"sha256-[^\"]*\"|hash = \"$PLACEHOLDER\"|" "$
+ echo "    Building to get correct hash (this will fail)..."
+ BUILD_OUTPUT=$(nix build 2>&1 || true)
  
--# Script to update flake.nix version and dependency hash
--# Run this after updating package.json version
-+# Updates pnpm dependency hash in flake.nix after pnpm-lock.yaml changes.
-+# Version is read dynamically from package.json.
-+# Usage: ./scripts/update-flake.sh
- 
- SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
- PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
- FLAKE_FILE="$PROJECT_ROOT/flake.nix"
- PACKAGE_JSON="$PROJECT_ROOT/package.json"
- 
-+# Colors for output
-+RED='\033[0;31m'
-+GREEN='\033[0;32m'
-+YELLOW='\033[1;33m'
-+BLUE='\033[0;34m'
-+NC='\033[0m' # No Color
-+
- # Detect OS and set sed in-place flag
- if [[ "$OSTYPE" == "darwin"* ]]; then
-   # macOS (BSD sed) requires empty string argument for -i
-@@ -18,58 +26,103 @@ else
-   SED_INPLACE=(-i)
- fi
- 
--echo "==> Updating flake.nix..."
-+echo -e "${BLUE}==> Updating flake.nix pnpm dependency hash...${NC}"
-+echo ""
- 
- # Extract version from package.json
- VERSION=$(node -p "require('$PACKAGE_JSON').version")
--echo "    Detected version: $VERSION"
-+echo -e "${BLUE}📦 Detected package version:${NC} $VERSION"
- 
--# Update version in flake.nix
--if ! grep -q "version = \"$VERSION\"" "$FLAKE_FILE"; then
--  echo "    Updating version in flake.nix..."
--  sed "${SED_INPLACE[@]}" "s|version = \"[^\"]*\"|version = \"$VERSION\"|" "$FLAKE_FILE"
--else
--  echo "    Version already up-to-date in flake.nix"
-+# Verify flake.nix uses dynamic version
-+if ! grep -q "(builtins.fromJSON (builtins.readFile ./package.json)).version" "$FLAKE_FILE"; then
-+  echo -e "${YELLOW}⚠️  Warning: flake.nix doesn't use dynamic version from package.json${NC}"
-+  echo -e "   Expected pattern: version = (builtins.fromJSON (builtins.readFile ./package.json)).version;"
-+  echo ""
-+fi
-+
-+# Check if pnpm-lock.yaml exists
-+if [ ! -f "$PROJECT_ROOT/pnpm-lock.yaml" ]; then
-+  echo -e "${RED}❌ Error: pnpm-lock.yaml not found${NC}"
-+  exit 1
- fi
- 
-+echo -e "${BLUE}🔧 Current pnpm-lock.yaml:${NC} $(stat -c%y "$PROJECT_ROOT/pnpm-lock.yaml" 2>/dev/null || stat -f%Sm "$PROJECT_ROOT/pnpm-lock.yaml")"
-+echo ""
-+
-+# Get current hash from flake.nix
-+CURRENT_HASH=$(sed -nE 's/.*hash = "(sha256-[^"]+)".*/\1/p' "$FLAKE_FILE" | head -1)
-+echo -e "${BLUE}📌 Current hash:${NC} $CURRENT_HASH"
-+echo ""
-+
- # Set placeholder hash to trigger error
--echo "    Setting placeholder hash..."
-+echo -e "${YELLOW}⏳ Setting placeholder hash to calculate correct value...${NC}"
- PLACEHOLDER="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
- sed "${SED_INPLACE[@]}" "s|hash = \"sha256-[^\"]*\"|hash = \"$PLACEHOLDER\"|" "$FLAKE_FILE"
- 
- # Try to build and capture the correct hash
--echo "    Building to get correct hash (this will fail)..."
--BUILD_OUTPUT=$(nix build 2>&1 || true)
-+echo -e "${BLUE}🔨 Building to determine correct hash (expected to fail)...${NC}"
-+BUILD_OUTPUT=$(nix build --no-link 2>&1 || true)
- 
- # Extract the correct hash from error output
+-# Extract the correct hash from error output
 -CORRECT_HASH=$(echo "$BUILD_OUTPUT" | grep -oP 'got:\s+\Ksha256-[A-Za-z0-9+/=]+' | head -1)
-+# Try multiple patterns for compatibility with different Nix versions
-+CORRECT_HASH=$(echo "$BUILD_OUTPUT" | sed -nE 's/.*got:[[:space:]]*(sha256-[A-Za-z0-9+/=]+).*/\1/p' | head -1)
-+if [ -z "$CORRECT_HASH" ]; then
-+  CORRECT_HASH=$(echo "$BUILD_OUTPUT" | sed -nE 's/.*got:.*(sha256-[A-Za-z0-9+/=]+).*/\1/p' | head -1)
-+fi
++# Extract the correct hash from error output (portable - works on macOS and Linux)
++CORRECT_HASH=$(echo "$BUILD_OUTPUT" | grep -o 'got:[[:space:]]*sha256-[A-Za-z0-9+/=]*' | head -1 | sed 's/got:[[:space:]]*//')
  
  if [ -z "$CORRECT_HASH" ]; then
--  echo "❌ Error: Could not extract hash from build output"
--  echo "Build output:"
-+  echo -e "${RED}❌ Error: Could not extract hash from build output${NC}"
-+  echo ""
-+  echo -e "${YELLOW}Build output:${NC}"
-   echo "$BUILD_OUTPUT"
-+  echo ""
-+  echo -e "${YELLOW}Restoring original hash...${NC}"
-+  sed "${SED_INPLACE[@]}" "s|hash = \"$PLACEHOLDER\"|hash = \"$CURRENT_HASH\"|" "$FLAKE_FILE"
-   exit 1
- fi
- 
--echo "    Detected hash: $CORRECT_HASH"
-+echo -e "${GREEN}✓ Calculated hash:${NC} $CORRECT_HASH"
-+echo ""
-+
-+# Check if hash changed
-+if [ "$CURRENT_HASH" = "$CORRECT_HASH" ]; then
-+  echo -e "${GREEN}✓ Hash is already up-to-date!${NC}"
-+  sed "${SED_INPLACE[@]}" "s|hash = \"$PLACEHOLDER\"|hash = \"$CORRECT_HASH\"|" "$FLAKE_FILE"
-+  echo ""
-+  echo -e "${BLUE}ℹ️  No changes needed. Your flake is in sync with pnpm-lock.yaml${NC}"
-+  exit 0
-+fi
- 
--# Update flake.nix with correct hash
-+echo -e "${YELLOW}🔄 Updating hash in flake.nix...${NC}"
- sed "${SED_INPLACE[@]}" "s|hash = \"$PLACEHOLDER\"|hash = \"$CORRECT_HASH\"|" "$FLAKE_FILE"
- 
- # Verify the build works
--echo "    Verifying build..."
--if nix build 2>&1 | grep -q "warning: Git tree.*is dirty"; then
--  echo "⚠️  Warning: Git tree is dirty, but build succeeded"
-+echo -e "${BLUE}🔍 Verifying build with new hash...${NC}"
-+BUILD_OUTPUT=$(nix build --no-link 2>&1) && BUILD_SUCCESS=true || BUILD_SUCCESS=false
-+if [ "$BUILD_SUCCESS" = false ]; then
-+  echo -e "${RED}❌ Build verification failed!${NC}"
-+  echo ""
-+  echo "$BUILD_OUTPUT"
-+  exit 1
-+fi
-+if echo "$BUILD_OUTPUT" | grep -q "warning: Git tree.*is dirty"; then
-+  echo -e "${YELLOW}⚠️  Git tree is dirty, but build succeeded${NC}"
- else
--  echo "✅ Build successful"
-+  echo -e "${GREEN}✓ Build verification successful${NC}"
- fi
-+echo ""
- 
-+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-+echo -e "${GREEN}✅ flake.nix updated successfully!${NC}"
-+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-+echo ""
-+echo -e "${BLUE}📋 Summary:${NC}"
-+echo -e "   Version:    $VERSION ${YELLOW}(read dynamically from package.json)${NC}"
-+echo -e "   Old hash:   $CURRENT_HASH"
-+echo -e "   New hash:   $CORRECT_HASH"
- echo ""
--echo "✅ flake.nix updated successfully!"
--echo "   Version: $VERSION"
--echo "   Hash: $CORRECT_HASH"
-+echo -e "${BLUE}📝 Next steps:${NC}"
-+echo -e "   1. Test:   ${GREEN}nix run . -- --version${NC}"
-+echo -e "   2. Verify: ${GREEN}nix flake check${NC}"
-+echo -e "   3. Commit: ${GREEN}git add flake.nix${NC}"
- echo ""
--echo "Next steps:"
--echo "  1. Test: nix run . -- --version"
--echo "  2. Commit: git add flake.nix"
--echo "  3. Include in version bump commit"
+   echo "❌ Error: Could not extract hash from build output"
 diff --git a/src/cli/index.ts b/src/cli/index.ts
 index 4dc22ee..006f21c 100644
 --- a/src/cli/index.ts

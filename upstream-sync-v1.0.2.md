@@ -22,14 +22,16 @@ git remote -v
 - 作業ブランチが clean
 - `upstream` が Fission-AI/OpenSpec を指している
 
-## 1. upstream を main に取り込む（スナップショット更新）
+## 1. upstream を main に取り込む（リリースタグ同期）
 
 ```
 git checkout main
 git fetch upstream --tags
-git merge upstream/main
+git merge v1.0.2
 git tag -a upstream-v1.0.2 -m "upstream v1.0.2"
 ```
+
+- **必ずリリースタグ（例: `v1.0.2`）で取り込む。`upstream/main` は進んでいる可能性があるため使用しない。**
 
 ## 2. 差分の収集と分類（英語版同士の差分）
 

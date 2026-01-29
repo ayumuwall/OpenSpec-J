@@ -1,5 +1,3 @@
-A	.changeset/nix-flake-improvements.md
-M	.github/workflows/ci.yml
 D	.github/workflows/polish-release-notes.yml
 M	.github/workflows/release-prepare.yml
 M	AGENTS.md
@@ -31,7 +29,6 @@ A	openspec/changes/add-opsx-onboard-skill/design.md
 A	openspec/changes/add-opsx-onboard-skill/proposal.md
 A	openspec/changes/add-opsx-onboard-skill/specs/opsx-onboard-skill/spec.md
 A	openspec/changes/add-opsx-onboard-skill/tasks.md
-M	openspec/changes/archive/2026-01-09-add-flake-update-script/specs/flake-update-script/spec.md
 A	openspec/changes/merge-init-experimental/.openspec.yaml
 A	openspec/changes/merge-init-experimental/design.md
 A	openspec/changes/merge-init-experimental/proposal.md
@@ -45,7 +42,6 @@ A	openspec/changes/multi-provider-skill-generation/specs/ai-tool-paths/spec.md
 A	openspec/changes/multi-provider-skill-generation/specs/cli-artifact-workflow/spec.md
 A	openspec/changes/multi-provider-skill-generation/specs/command-generation/spec.md
 A	openspec/changes/multi-provider-skill-generation/tasks.md
-M	openspec/specs/ci-nix-validation/spec.md
 M	package.json
 M	pnpm-lock.yaml
 M	schemas/spec-driven/schema.yaml
@@ -54,7 +50,6 @@ D	schemas/tdd/templates/docs.md
 D	schemas/tdd/templates/implementation.md
 D	schemas/tdd/templates/spec.md
 D	schemas/tdd/templates/test.md
-M	scripts/README.md
 M	scripts/update-flake.sh
 M	src/cli/index.ts
 D	src/commands/artifact-workflow.ts
