@@ -466,7 +466,7 @@ When determining which schema to use, OPSX checks in order:
 List all available schemas:
 
 ```bash
-openspec schemas
+openspec workflow schemas
 ```
 
 ### Custom Schemas
@@ -510,7 +510,7 @@ Check that your `rules:` keys match your schema's artifact IDs:
 Run this to see valid artifact IDs:
 
 ```bash
-openspec schemas --json
+openspec workflow schemas --json
 ```
 
 ### Config not being applied
