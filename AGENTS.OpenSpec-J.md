@@ -448,6 +448,8 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - `upstream-sync-v1.0.2.md` へ改名・更新。
 - `docs/cli.md` を日本語化。
 - `diffs/upstream-v0.23.0__upstream-v1.0.2.*` を v1.0.2 タグ基準で再生成。
+- docs 一式を日本語化（CLI/コマンド/コンセプト/カスタマイズ/インストール/移行/多言語/OPSX/対応ツール/Getting Started/Workflows）。
+- 出力例や会話例のコードブロックは英語維持の注記（`OPENSPEC-J:TODO`）を追加。
 
 #### テスト状況
 - 未実施

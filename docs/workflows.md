@@ -1,12 +1,16 @@
-# Workflows
+# ワークフロー
 
-This guide covers common workflow patterns for OpenSpec and when to use each one. For basic setup, see [Getting Started](getting-started.md). For command reference, see [Commands](commands.md).
+OpenSpec の代表的なワークフローパターンと、使い分けの目安をまとめます。基本的なセットアップは [Getting Started](getting-started.md)、コマンド詳細は [Commands](commands.md) を参照してください。
 
-## Philosophy: Actions, Not Phases
+> [!NOTE]
+> 会話例・出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
+> <!-- OPENSPEC-J:TODO workflows examples -->
 
-Traditional workflows force you through phases: planning, then implementation, then done. But real work doesn't fit neatly into boxes.
+## 哲学: フェーズではなくアクション
 
-OPSX takes a different approach:
+従来のワークフローは「計画 → 実装 → 完了」と段階に固定されがちです。しかし実際の作業はもっと行き来します。
+
+OPSX は次のアプローチを取ります:
 
 ```text
 Traditional (phase-locked):
@@ -21,24 +25,24 @@ OPSX (fluid actions):
   proposal ──► specs ──► design ──► tasks ──► implement
 ```
 
-**Key principles:**
+**重要な原則:**
 
-- **Actions, not phases** - Commands are things you can do, not stages you're stuck in
-- **Dependencies are enablers** - They show what's possible, not what's required next
+- **フェーズではなくアクション** — コマンドは「できること」であり、動けない段階ではない
+- **依存関係は進行可能性を示す** — 次に何ができるかを示すだけで、順番を強制しない
 
-> **Customization:** OPSX workflows are driven by schemas that define artifact sequences. See [Customization](customization.md) for details on creating custom schemas.
+> **カスタマイズ:** OPSX ワークフローはスキーマで定義されます。カスタムスキーマの作り方は [Customization](customization.md) を参照してください。
 
-## Workflow Patterns
+## ワークフローパターン
 
-### Quick Feature
+### クイック機能追加
 
-When you know what you want to build and just need to execute:
+何を作るか決まっていて、すぐ実行したいとき:
 
 ```text
 /opsx:new ──► /opsx:ff ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
 
-**Example conversation:**
+**会話例:**
 
 ```text
 You: /opsx:new add-logout-button
@@ -69,17 +73,17 @@ AI:  ✓ Merged specs
      ✓ Archived change
 ```
 
-**Best for:** Small to medium features, bug fixes, straightforward changes.
+**向いている場面:** 小〜中規模の機能追加、バグ修正、単純な変更。
 
-### Exploratory
+### 探索型
 
-When requirements are unclear or you need to investigate first:
+要件が曖昧、または調査から始めたいとき:
 
 ```text
 /opsx:explore ──► /opsx:new ──► /opsx:continue ──► ... ──► /opsx:apply
 ```
 
-**Example conversation:**
+**会話例:**
 
 ```text
 You: /opsx:explore
@@ -119,11 +123,11 @@ You: /opsx:continue
 AI:  Creating specs...
 ```
 
-**Best for:** Performance optimization, debugging, architectural decisions, unclear requirements.
+**向いている場面:** 性能最適化、デバッグ、アーキテクチャ判断、要件が不明確なとき。
 
-### Parallel Changes
+### 並行変更
 
-Work on multiple changes at once:
+複数の変更を同時に進めるとき:
 
 ```text
 Change A: /opsx:new ──► /opsx:ff ──► /opsx:apply (in progress)
@@ -133,7 +137,7 @@ Change A: /opsx:new ──► /opsx:ff ──► /opsx:apply (in progress)
 Change B: /opsx:new ──► /opsx:ff ──────► /opsx:apply
 ```
 
-**Example conversation:**
+**会話例:**
 
 ```text
 You: I'm working on add-dark-mode but got pulled into a bug fix
@@ -164,9 +168,9 @@ AI:  Resuming add-dark-mode...
      Picking up at task 2.3: Update Header...
 ```
 
-**Best for:** Parallel work streams, urgent interrupts, team collaboration.
+**向いている場面:** 並行作業、緊急対応の割り込み、チーム協業。
 
-When you have multiple completed changes, use `/opsx:bulk-archive`:
+複数の完了済み変更がある場合は `/opsx:bulk-archive` を使います:
 
 ```text
 You: /opsx:bulk-archive
@@ -192,11 +196,11 @@ AI:  ✓ Archived add-dark-mode
      Specs merged in order: add-dark-mode → update-footer
 ```
 
-Bulk archive detects when multiple changes touch the same specs and resolves conflicts by checking what's actually implemented.
+一括アーカイブは、複数の変更が同じ仕様に触れている場合に競合を検出し、実装状況を見て解消します。
 
-### Completing a Change
+### 変更の完了
 
-The recommended completion flow:
+推奨される完了フロー:
 
 ```text
 /opsx:apply ──► /opsx:verify ──► /opsx:archive
@@ -205,9 +209,9 @@ The recommended completion flow:
               implementation     if needed
 ```
 
-#### Verify: Check Your Work
+#### Verify: 作業の確認
 
-`/opsx:verify` validates implementation against your artifacts across three dimensions:
+`/opsx:verify` は、アーティファクトに対する実装の整合性を 3 つの観点で検証します。
 
 ```text
 You: /opsx:verify
@@ -240,19 +244,19 @@ AI:  Verifying add-auth...
      2. Consider refactoring to event-driven as designed, or update design.md
 ```
 
-**What verify checks:**
+**verify が見る観点:**
 
-| Dimension | What it validates |
+| 観点 | 検証内容 |
 |-----------|------------------|
-| Completeness | All tasks done, all requirements implemented, scenarios covered |
-| Correctness | Implementation matches spec intent, edge cases handled |
-| Coherence | Design decisions reflected in code, patterns consistent |
+| Completeness | タスク完了、要件実装、シナリオ網羅 |
+| Correctness | 仕様意図との一致、エッジケース対応 |
+| Coherence | 設計判断の反映、パターン整合性 |
 
-Verify won't block archive, but it surfaces issues you might want to address first.
+verify はアーカイブをブロックしませんが、先に対応した方がよい問題を可視化します。
 
-#### Archive: Finalize the Change
+#### Archive: 変更の確定
 
-`/opsx:archive` completes the change and moves it to the archive:
+`/opsx:archive` は変更を完了し、アーカイブへ移動します。
 
 ```text
 You: /opsx:archive
@@ -276,39 +280,39 @@ AI:  ✓ Synced specs to openspec/specs/auth/spec.md
      Change archived successfully.
 ```
 
-Archive will prompt if specs aren't synced. It won't block on incomplete tasks, but it will warn you.
+アーカイブ時に仕様が同期されていなければ確認が入ります。未完了タスクがあってもブロックはしませんが警告が出ます。
 
-## When to Use What
+## 使い分けの目安
 
 ### `/opsx:ff` vs `/opsx:continue`
 
-| Situation | Use |
+| 状況 | 使うコマンド |
 |-----------|-----|
-| Clear requirements, ready to build | `/opsx:ff` |
-| Exploring, want to review each step | `/opsx:continue` |
-| Want to iterate on proposal before specs | `/opsx:continue` |
-| Time pressure, need to move fast | `/opsx:ff` |
-| Complex change, want control | `/opsx:continue` |
+| 要件が明確で、すぐ作りたい | `/opsx:ff` |
+| 探索しながら進めたい | `/opsx:continue` |
+| proposal を詰めてから specs に進みたい | `/opsx:continue` |
+| 時間がなく早く進めたい | `/opsx:ff` |
+| 複雑な変更でコントロールしたい | `/opsx:continue` |
 
-**Rule of thumb:** If you can describe the full scope upfront, use `/opsx:ff`. If you're figuring it out as you go, use `/opsx:continue`.
+**目安:** 全体像を最初に説明できるなら `/opsx:ff`。進めながら考えるなら `/opsx:continue`。
 
-### When to Update vs Start Fresh
+### 既存変更の更新か、新規変更か
 
-A common question: when is updating an existing change okay, and when should you start a new one?
+よくある疑問: 既存変更を更新すべきか、新しい変更として切り出すべきか。
 
-**Update the existing change when:**
+**既存変更を更新する場合:**
 
-- Same intent, refined execution
-- Scope narrows (MVP first, rest later)
-- Learning-driven corrections (codebase isn't what you expected)
-- Design tweaks based on implementation discoveries
+- 目的は同じで実行だけ洗練した
+- スコープを絞る（MVP 先行）
+- 学習による修正（コード構成が想定と違う等）
+- 実装で設計の微調整が必要
 
-**Start a new change when:**
+**新しい変更を作る場合:**
 
-- Intent fundamentally changed
-- Scope exploded to different work entirely
-- Original change can be marked "done" standalone
-- Patches would confuse more than clarify
+- 目的が根本的に変わった
+- 別の作業と言えるほどスコープが膨張した
+- 元の変更だけで完了できる
+- パッチの積み上げが不明瞭になる
 
 ```text
                      ┌─────────────────────────────────────┐
@@ -330,27 +334,27 @@ A common question: when is updating an existing change okay, and when should you
     UPDATE            NEW  UPDATE       NEW  UPDATE          NEW
 ```
 
-**Example: "Add dark mode"**
+**例: "Add dark mode"**
 
-- "Need to also support custom themes" → New change (scope exploded)
-- "System preference detection is harder than expected" → Update (same intent)
-- "Let's ship toggle first, add preferences later" → Update then archive, then new change
+- "Need to also support custom themes" → 新規変更（スコープ拡大）
+- "System preference detection is harder than expected" → 更新（同じ目的）
+- "Let's ship toggle first, add preferences later" → 更新してアーカイブ → 新規変更
 
-## Best Practices
+## ベストプラクティス
 
-### Keep Changes Focused
+### 変更はフォーカスを絞る
 
-One logical unit of work per change. If you're doing "add feature X and also refactor Y", consider two separate changes.
+1 つの変更は 1 つの目的に絞るのが原則です。「機能 X を追加しつつ Y をリファクタ」するなら分けるのが安全です。
 
-**Why it matters:**
-- Easier to review and understand
-- Cleaner archive history
-- Can ship independently
-- Simpler rollback if needed
+**理由:**
+- レビューしやすい
+- アーカイブ履歴が明瞭
+- 独立してリリースできる
+- ロールバックが簡単
 
-### Use `/opsx:explore` for Unclear Requirements
+### 要件が曖昧なら `/opsx:explore`
 
-Before committing to a change, explore the problem space:
+変更を始める前に問題空間を探索します。
 
 ```text
 You: /opsx:explore
@@ -370,11 +374,11 @@ AI:  Let me investigate your current setup and options...
      Your current stack suggests #1 or #2. What's your scale?
 ```
 
-Exploration clarifies thinking before you create artifacts.
+探索で考えを整理してからアーティファクトを作ると効率的です。
 
-### Verify Before Archiving
+### アーカイブ前に verify
 
-Use `/opsx:verify` to check implementation matches artifacts:
+`/opsx:verify` で実装とアーティファクトの整合性を確認します。
 
 ```text
 You: /opsx:verify
@@ -388,11 +392,11 @@ AI:  Verifying add-dark-mode...
      Ready to archive!
 ```
 
-Catches mismatches before you close out the change.
+アーカイブ前にズレを発見できます。
 
-### Name Changes Clearly
+### 変更名はわかりやすく
 
-Good names make `openspec list` useful:
+`openspec list` を見たときに内容が分かる名前を付けます。
 
 ```text
 Good:                          Avoid:
@@ -402,24 +406,24 @@ optimize-product-query         changes
 implement-2fa                  wip
 ```
 
-## Command Quick Reference
+## コマンド早見表
 
-For full command details and options, see [Commands](commands.md).
+コマンドの詳細は [Commands](commands.md) を参照してください。
 
-| Command | Purpose | When to Use |
+| コマンド | 目的 | 使う場面 |
 |---------|---------|-------------|
-| `/opsx:explore` | Think through ideas | Unclear requirements, investigation |
-| `/opsx:new` | Start a change | Beginning any new work |
-| `/opsx:continue` | Create next artifact | Step-by-step artifact creation |
-| `/opsx:ff` | Create all planning artifacts | Clear scope, ready to build |
-| `/opsx:apply` | Implement tasks | Ready to write code |
-| `/opsx:verify` | Validate implementation | Before archiving, catch mismatches |
-| `/opsx:sync` | Merge delta specs | Optional—archive prompts if needed |
-| `/opsx:archive` | Complete the change | All work finished |
-| `/opsx:bulk-archive` | Archive multiple changes | Parallel work, batch completion |
+| `/opsx:explore` | アイデアの整理 | 要件が不明なとき、調査が必要なとき |
+| `/opsx:new` | 変更開始 | 新しい作業の開始 |
+| `/opsx:continue` | 次のアーティファクト作成 | ステップごとに進めたいとき |
+| `/opsx:ff` | 計画アーティファクト一括生成 | スコープが明確なとき |
+| `/opsx:apply` | タスク実装 | 実装に進むとき |
+| `/opsx:verify` | 実装検証 | アーカイブ前の確認 |
+| `/opsx:sync` | 仕様差分の統合 | 任意（必要なら） |
+| `/opsx:archive` | 変更完了 | 作業完了時 |
+| `/opsx:bulk-archive` | 複数変更の一括アーカイブ | 並行作業の整理 |
 
-## Next Steps
+## 次に読むもの
 
-- [Commands](commands.md) - Full command reference with options
-- [Concepts](concepts.md) - Deep dive into specs, artifacts, and schemas
-- [Customization](customization.md) - Create custom workflows
+- [Commands](commands.md) - コマンド詳細
+- [Concepts](concepts.md) - 仕様・アーティファクト・スキーマの理解
+- [Customization](customization.md) - カスタムワークフロー

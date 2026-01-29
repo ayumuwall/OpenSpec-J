@@ -1,112 +1,116 @@
-# Commands
+# コマンド
 
-This is the reference for OpenSpec's slash commands. These commands are invoked in your AI coding assistant's chat interface (e.g., Claude Code, Cursor, Windsurf).
+OpenSpec のスラッシュコマンドのリファレンスです。これらのコマンドは AI コーディングアシスタント（例: Claude Code, Cursor, Windsurf）のチャット UI から呼び出します。
 
-For workflow patterns and when to use each command, see [Workflows](workflows.md). For CLI commands, see [CLI](cli.md).
+ワークフローの使い分けは [Workflows](workflows.md)、CLI コマンドは [CLI](cli.md) を参照してください。
 
-## Quick Reference
+> [!NOTE]
+> 会話例や出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
+> <!-- OPENSPEC-J:TODO command examples -->
 
-| Command | Purpose |
+## クイックリファレンス
+
+| コマンド | 目的 |
 |---------|---------|
-| `/opsx:explore` | Think through ideas before committing to a change |
-| `/opsx:new` | Start a new change |
-| `/opsx:continue` | Create the next artifact based on dependencies |
-| `/opsx:ff` | Fast-forward: create all planning artifacts at once |
-| `/opsx:apply` | Implement tasks from the change |
-| `/opsx:verify` | Validate implementation matches artifacts |
-| `/opsx:sync` | Merge delta specs into main specs |
-| `/opsx:archive` | Archive a completed change |
-| `/opsx:bulk-archive` | Archive multiple changes at once |
-| `/opsx:onboard` | Guided tutorial through the complete workflow |
+| `/opsx:explore` | 変更を始める前にアイデアを整理する |
+| `/opsx:new` | 新しい変更を開始する |
+| `/opsx:continue` | 依存関係に基づいて次のアーティファクトを作成する |
+| `/opsx:ff` | Fast-forward: 計画アーティファクトを一括生成する |
+| `/opsx:apply` | 変更のタスクを実装する |
+| `/opsx:verify` | 実装がアーティファクトに沿っているか検証する |
+| `/opsx:sync` | 仕様差分を本仕様へ統合する |
+| `/opsx:archive` | 完了した変更をアーカイブする |
+| `/opsx:bulk-archive` | 複数の変更を一括でアーカイブする |
+| `/opsx:onboard` | ワークフロー全体をガイド付きで体験する |
 
 ---
 
-## Command Reference
+## コマンドリファレンス
 
 ### `/opsx:explore`
 
-Think through ideas, investigate problems, and clarify requirements before committing to a change.
+変更を開始する前に、アイデアの整理・課題の調査・要件の明確化を行います。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:explore [topic]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `topic` | No | What you want to explore or investigate |
+| `topic` | いいえ | 探索・調査したいテーマ |
 
-**What it does:**
-- Opens an exploratory conversation with no structure required
-- Investigates the codebase to answer questions
-- Compares options and approaches
-- Creates visual diagrams to clarify thinking
-- Can transition to `/opsx:new` when insights crystallize
+**何をするか:**
+- 形式に縛られない探索的な対話を開始
+- コードベースを調査して疑問に答える
+- 代替案やアプローチを比較
+- 思考整理のための図を作成
+- 洞察が固まったら `/opsx:new` に移行可能
 
-**Example:**
+**例:**
 ```text
-You: /opsx:explore
+あなた: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を探索しましょうか？
 
-You: How should we handle authentication for the mobile app?
+あなた: モバイルアプリの認証はどう実装するべき？
 
-AI:  Let me investigate your current auth setup...
-     [Analyzes codebase]
+AI:  既存の認証構成を調べます...
+     [コードベースを解析]
 
-     I see you're using session-based auth for the web app.
-     For mobile, we have three main options:
+     Web はセッションベース認証ですね。
+     モバイル向けには主に次の 3 案があります:
 
-     1. JWT tokens (stateless, works offline)
-     2. OAuth2 (if you need third-party login)
-     3. Extend current sessions (simpler, but requires connectivity)
+     1. JWT トークン（ステートレスでオフライン向き）
+     2. OAuth2（サードパーティログインが必要な場合）
+     3. 既存セッションの拡張（簡単だが接続が必要）
 
-     Your API already has CORS configured. Which direction interests you?
+     既に API の CORS 設定はあります。どの方向に興味がありますか？
 
-You: Let's go with JWT. Can we start a change for that?
+あなた: JWT にしよう。変更を作って開始できる？
 
-AI:  Ready when you are. Run /opsx:new add-jwt-auth to begin.
+AI:  準備できたら /opsx:new add-jwt-auth を実行してください。
 ```
 
 **Tips:**
-- Use when requirements are unclear or you need to investigate
-- No artifacts are created during exploration
-- Good for comparing multiple approaches before deciding
-- Can read files and search the codebase
+- 要件が曖昧なときや調査が必要なときに使う
+- 探索中はアーティファクトを作成しない
+- 複数案の比較に向いている
+- ファイル読み込みや全文検索も可能
 
 ---
 
 ### `/opsx:new`
 
-Start a new change. Creates the change folder structure and scaffolds it with the selected schema.
+新しい変更を開始します。変更フォルダを作成し、選択したスキーマでひな形を用意します。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:new [change-name] [--schema <schema-name>]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Name for the change folder (prompted if not provided) |
-| `--schema` | No | Workflow schema to use (default: from config or `spec-driven`) |
+| `change-name` | いいえ | 変更フォルダ名（未指定ならプロンプト） |
+| `--schema` | いいえ | 使用するワークフロースキーマ（デフォルト: 設定 or `spec-driven`） |
 
-**What it does:**
-- Creates `openspec/changes/<change-name>/` directory
-- Creates `.openspec.yaml` metadata file in the change folder
-- Shows the first artifact template ready for creation
-- Prompts for change name and schema if not provided
+**何をするか:**
+- `openspec/changes/<change-name>/` を作成
+- 変更フォルダに `.openspec.yaml` を作成
+- 最初に作成できるアーティファクトを表示
+- 変更名やスキーマ未指定ならプロンプト
 
-**What it creates:**
+**作成されるもの:**
 ```
 openspec/changes/<change-name>/
-└── .openspec.yaml    # Change metadata (schema, created date)
+└── .openspec.yaml    # 変更メタデータ（スキーマ、作成日など）
 ```
 
-**Example:**
+**例:**
 ```
-You: /opsx:new add-dark-mode
+あなた: /opsx:new add-dark-mode
 
 AI:  Created openspec/changes/add-dark-mode/
      Schema: spec-driven
@@ -116,36 +120,36 @@ AI:  Created openspec/changes/add-dark-mode/
 ```
 
 **Tips:**
-- Use descriptive names: `add-feature`, `fix-bug`, `refactor-module`
-- Avoid generic names like `update`, `changes`, `wip`
-- Schema can also be set in project config (`openspec/config.yaml`)
+- わかりやすい名前を付ける: `add-feature`, `fix-bug`, `refactor-module`
+- `update`, `changes`, `wip` のような汎用名は避ける
+- スキーマは `openspec/config.yaml` でも指定可能
 
 ---
 
 ### `/opsx:continue`
 
-Create the next artifact in the dependency chain. Creates one artifact at a time for incremental progress.
+依存関係チェーン上で次のアーティファクトを作成します。1 つずつ進めたいときに使います。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:continue [change-name]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Which change to continue (inferred from context if not provided) |
+| `change-name` | いいえ | 続ける変更名（未指定なら文脈から推測） |
 
-**What it does:**
-- Queries the artifact dependency graph
-- Shows which artifacts are ready vs blocked
-- Creates the first ready artifact
-- Reads dependency files for context
-- Shows what becomes available after creation
+**何をするか:**
+- アーティファクトの依存関係グラフを参照
+- どれが ready / blocked かを表示
+- ready の先頭アーティファクトを作成
+- 依存ファイルを読み込んで文脈化
+- 作成後に次の候補を提示
 
-**Example:**
+**例:**
 ```
-You: /opsx:continue
+あなた: /opsx:continue
 
 AI:  Change: add-dark-mode
 
@@ -157,7 +161,7 @@ AI:  Change: add-dark-mode
 
      Creating specs...
 
-     [Reads proposal.md, creates specs based on requirements]
+     [proposal.md を読み、要件に基づき specs を作成]
 
      ✓ Created openspec/changes/add-dark-mode/specs/ui/spec.md
 
@@ -166,36 +170,36 @@ AI:  Change: add-dark-mode
 ```
 
 **Tips:**
-- Use when you want to review each artifact before proceeding
-- Good for complex changes where you want control
-- Multiple artifacts may become ready simultaneously
-- You can edit created artifacts before continuing
+- 各アーティファクトを都度レビューしたいときに便利
+- 複雑な変更でコントロールしたい場合に向く
+- 複数のアーティファクトが同時に ready になることがある
+- 作成後に編集してから続きを作れる
 
 ---
 
 ### `/opsx:ff`
 
-Fast-forward through artifact creation. Creates all planning artifacts at once.
+アーティファクト作成を Fast-forward します。計画アーティファクトを一括生成します。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:ff [change-name]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Which change to fast-forward (inferred from context if not provided) |
+| `change-name` | いいえ | 対象の変更名（未指定なら文脈から推測） |
 
-**What it does:**
-- Creates all artifacts in dependency order
-- Tracks progress via todo list
-- Stops when all `apply-required` artifacts are complete
-- Reads each dependency before creating the next artifact
+**何をするか:**
+- 依存順にすべてのアーティファクトを作成
+- TODO リストで進捗を追跡
+- `apply-required` のアーティファクトが完了したら停止
+- 各アーティファクト作成前に依存を読み込む
 
-**Example:**
+**例:**
 ```
-You: /opsx:ff add-dark-mode
+あなた: /opsx:ff add-dark-mode
 
 AI:  Fast-forwarding add-dark-mode...
 
@@ -209,36 +213,36 @@ AI:  Fast-forwarding add-dark-mode...
 ```
 
 **Tips:**
-- Use when you have a clear picture of what you're building
-- Faster than `/opsx:continue` for straightforward changes
-- You can still edit artifacts afterward
-- Good for small to medium features
+- 何を作るか明確なときに向く
+- `/opsx:continue` より速い
+- 後から編集してもよい
+- 小〜中規模の変更に向く
 
 ---
 
 ### `/opsx:apply`
 
-Implement tasks from the change. Works through the task list, writing code and checking off items.
+変更のタスクを実装します。タスク一覧を見ながらコードを書き進めます。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:apply [change-name]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Which change to implement (inferred from context if not provided) |
+| `change-name` | いいえ | 実装対象の変更名（未指定なら文脈から推測） |
 
-**What it does:**
-- Reads `tasks.md` and identifies incomplete tasks
-- Works through tasks one by one
-- Writes code, creates files, runs tests as needed
-- Marks tasks complete with checkboxes `[x]`
+**何をするか:**
+- `tasks.md` を読み、不完全なタスクを特定
+- タスクを順番に実行
+- コードを書き、必要ならテストを実行
+- チェックボックス `[x]` で完了を記録
 
-**Example:**
+**例:**
 ```
-You: /opsx:apply
+あなた: /opsx:apply
 
 AI:  Implementing add-dark-mode...
 
@@ -260,43 +264,43 @@ AI:  Implementing add-dark-mode...
 ```
 
 **Tips:**
-- Can resume where you left off if interrupted
-- Use for parallel changes by specifying the change name
-- Completion state is tracked in `tasks.md` checkboxes
+- 中断しても再開できる
+- 変更名を指定すれば並行作業にも対応
+- 進捗は `tasks.md` のチェックで管理
 
 ---
 
 ### `/opsx:verify`
 
-Validate that implementation matches your change artifacts. Checks completeness, correctness, and coherence.
+実装がアーティファクトに合っているか検証します。完成度・正確性・整合性をチェックします。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:verify [change-name]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Which change to verify (inferred from context if not provided) |
+| `change-name` | いいえ | 検証対象の変更名（未指定なら文脈から推測） |
 
-**What it does:**
-- Checks three dimensions of implementation quality
-- Searches codebase for implementation evidence
-- Reports issues categorized as CRITICAL, WARNING, or SUGGESTION
-- Does not block archive, but surfaces issues
+**何をするか:**
+- 実装品質を 3 つの観点で確認
+- コードベース内に実装の証拠があるか探索
+- CRITICAL / WARNING / SUGGESTION で指摘を分類
+- アーカイブをブロックしないが、問題を可視化
 
-**Verification dimensions:**
+**検証の観点:**
 
-| Dimension | What it validates |
+| 観点 | 検証内容 |
 |-----------|-------------------|
-| **Completeness** | All tasks done, all requirements implemented, scenarios covered |
-| **Correctness** | Implementation matches spec intent, edge cases handled |
-| **Coherence** | Design decisions reflected in code, patterns consistent |
+| **Completeness** | タスク完了、要件実装、シナリオ網羅 |
+| **Correctness** | 仕様意図との一致、エッジケース対応 |
+| **Coherence** | 設計意図の反映、パターン整合性 |
 
-**Example:**
+**例:**
 ```
-You: /opsx:verify
+あなた: /opsx:verify
 
 AI:  Verifying add-dark-mode...
 
@@ -327,37 +331,37 @@ AI:  Verifying add-dark-mode...
 ```
 
 **Tips:**
-- Run before archiving to catch mismatches early
-- Warnings don't block archive but indicate potential issues
-- Good for reviewing AI's work before committing
-- Can reveal drift between artifacts and implementation
+- アーカイブ前に実行してズレを早期発見する
+- 警告はアーカイブを止めないが、問題のサイン
+- AI 作業のレビューに向く
+- 実装とアーティファクトの乖離を見つけられる
 
 ---
 
 ### `/opsx:sync`
 
-**Optional command.** Merge delta specs from a change into main specs. Archive will prompt to sync if needed, so you typically don't need to run this manually.
+**任意コマンド。** 変更の仕様差分を本仕様へ統合します。通常はアーカイブ時に確認が出るため、手動実行は必須ではありません。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:sync [change-name]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Which change to sync (inferred from context if not provided) |
+| `change-name` | いいえ | 同期対象の変更名（未指定なら文脈から推測） |
 
-**What it does:**
-- Reads delta specs from change folder
-- Parses ADDED/MODIFIED/REMOVED/RENAMED sections
-- Merges changes into main `openspec/specs/` directory
-- Preserves existing content not mentioned in delta
-- Does not archive the change (remains active)
+**何をするか:**
+- 変更フォルダの仕様差分を読み込み
+- ADDED / MODIFIED / REMOVED / RENAMED を解析
+- `openspec/specs/` に統合
+- 差分に含まれない既存内容は保持
+- 変更自体はアーカイブされない（アクティブのまま）
 
-**Example:**
+**例:**
 ```text
-You: /opsx:sync
+あなた: /opsx:sync
 
 AI:  Syncing add-dark-mode delta specs...
 
@@ -374,47 +378,47 @@ AI:  Syncing add-dark-mode delta specs...
      Change remains active. Run /opsx:archive when ready to complete.
 ```
 
-**When to use manually:**
+**手動で使う場面:**
 
-| Scenario | Use sync? |
+| 状況 | sync を使う？ |
 |----------|-----------|
-| Long-running change, want specs in main before archiving | Yes |
-| Multiple parallel changes need the updated base specs | Yes |
-| Want to preview/review the merge separately | Yes |
-| Quick change, going straight to archive | No (archive handles it) |
+| 長期変更で先に本仕様へ反映したい | はい |
+| 複数の並行変更が最新仕様を必要とする | はい |
+| マージ結果を別途レビューしたい | はい |
+| すぐアーカイブする予定 | いいえ（アーカイブが処理する） |
 
 **Tips:**
-- Sync is intelligent, not copy-paste
-- Can add scenarios to existing requirements without duplicating
-- Change stays active after sync (not archived)
-- Most users will never need to call this directly—archive prompts if needed
+- ただのコピーではなく、差分を賢く統合する
+- 既存要件へのシナリオ追加にも対応
+- 同期後も変更はアクティブのまま
+- 多くの場合はアーカイブ時の確認で十分
 
 ---
 
 ### `/opsx:archive`
 
-Archive a completed change. Finalizes the change and moves it to the archive folder.
+完了した変更をアーカイブします。変更を確定し、アーカイブフォルダへ移動します。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:archive [change-name]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-name` | No | Which change to archive (inferred from context if not provided) |
+| `change-name` | いいえ | アーカイブ対象の変更名（未指定なら文脈から推測） |
 
-**What it does:**
-- Checks artifact completion status
-- Checks task completion (warns if incomplete)
-- Offers to sync delta specs if not already synced
-- Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
-- Preserves all artifacts for audit trail
+**何をするか:**
+- アーティファクトの完了状況を確認
+- タスク完了状況を確認（未完了なら警告）
+- 仕様差分が未同期なら同期を提案
+- 変更フォルダを `openspec/changes/archive/YYYY-MM-DD-<name>/` に移動
+- 監査用にアーティファクトを保存
 
-**Example:**
+**例:**
 ```text
-You: /opsx:archive
+あなた: /opsx:archive
 
 AI:  Archiving add-dark-mode...
 
@@ -427,7 +431,7 @@ AI:  Archiving add-dark-mode...
      Delta specs: Not yet synced
      → Sync now? (recommended)
 
-You: Yes
+あなた: Yes
 
 AI:  ✓ Synced specs to openspec/specs/ui/spec.md
      ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
@@ -436,37 +440,37 @@ AI:  ✓ Synced specs to openspec/specs/ui/spec.md
 ```
 
 **Tips:**
-- Archive won't block on incomplete tasks, but will warn
-- Delta specs can be synced during archive or beforehand
-- Archived changes are preserved for history
-- Use `/opsx:verify` first to catch issues
+- 未完了タスクがあってもアーカイブは可能だが警告される
+- 仕様差分の同期はアーカイブ時でも事前でも可
+- アーカイブ済み変更は履歴として保持される
+- `/opsx:verify` を先に使うと安心
 
 ---
 
 ### `/opsx:bulk-archive`
 
-Archive multiple completed changes at once. Handles spec conflicts between changes.
+複数の変更を一括でアーカイブします。仕様の競合も検出します。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:bulk-archive [change-names...]
 ```
 
-**Arguments:**
-| Argument | Required | Description |
+**引数:**
+| 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `change-names` | No | Specific changes to archive (prompts to select if not provided) |
+| `change-names` | いいえ | アーカイブ対象の変更（省略時は選択プロンプト） |
 
-**What it does:**
-- Lists all completed changes
-- Validates each change before archiving
-- Detects spec conflicts across changes
-- Resolves conflicts by checking what's actually implemented
-- Archives in chronological order
+**何をするか:**
+- 完了済み変更を一覧表示
+- 各変更を検証
+- 変更間の仕様競合を検出
+- 実装状態を確認して競合を解消
+- 作成日の古い順にアーカイブ
 
-**Example:**
+**例:**
 ```
-You: /opsx:bulk-archive
+あなた: /opsx:bulk-archive
 
 AI:  Found 3 completed changes:
      - add-dark-mode (8/8 tasks complete)
@@ -483,7 +487,7 @@ AI:  Found 3 completed changes:
 
      Archive all 3 changes?
 
-You: Yes
+あなた: Yes
 
 AI:  ✓ Archived add-dark-mode
      ✓ Archived fix-login-bug
@@ -492,46 +496,46 @@ AI:  ✓ Archived add-dark-mode
 ```
 
 **Tips:**
-- Good for parallel work streams
-- Conflict resolution is agentic (checks codebase)
-- Changes are archived in order of creation
-- Prompts before overwriting spec content
+- 並行作業の整理に向く
+- 競合解消はエージェントが実装状況を確認して行う
+- 変更は作成日の順でアーカイブされる
+- 仕様の上書き前に確認が入る
 
 ---
 
 ### `/opsx:onboard`
 
-Guided onboarding through the complete OpenSpec workflow. An interactive tutorial using your actual codebase.
+OpenSpec のワークフローを一通り体験するガイド付きオンボーディングです。実際のコードベースを使って進めます。
 
-**Syntax:**
+**構文:**
 ```
 /opsx:onboard
 ```
 
-**What it does:**
-- Walks through a complete workflow cycle with narration
-- Scans your codebase for real improvement opportunities
-- Creates an actual change with real artifacts
-- Implements actual work (small, safe changes)
-- Archives the completed change
-- Explains each step as it happens
+**何をするか:**
+- ワークフロー一周をナレーション付きで案内
+- コードベースをスキャンして改善点を探す
+- 実際の変更とアーティファクトを作成
+- 小さく安全な改善を実装
+- 変更をアーカイブ
+- 各ステップを解説
 
-**Phases:**
-1. Welcome and codebase analysis
-2. Finding an improvement opportunity
-3. Creating a change (`/opsx:new`)
-4. Writing the proposal
-5. Creating specs
-6. Writing the design
-7. Creating tasks
-8. Implementing tasks (`/opsx:apply`)
-9. Verifying implementation
-10. Archiving the change
-11. Summary and next steps
+**フェーズ:**
+1. ウェルカムとコードベース解析
+2. 改善ポイントの発見
+3. 変更作成（`/opsx:new`）
+4. proposal 作成
+5. specs 作成
+6. design 作成
+7. tasks 作成
+8. 実装（`/opsx:apply`）
+9. 実装検証
+10. 変更アーカイブ
+11. まとめと次の手順
 
-**Example:**
+**例:**
 ```
-You: /opsx:onboard
+あなた: /opsx:onboard
 
 AI:  Welcome to OpenSpec!
 
@@ -552,101 +556,101 @@ AI:  Welcome to OpenSpec!
 ```
 
 **Tips:**
-- Best for new users learning the workflow
-- Uses real code, not toy examples
-- Creates a real change you can keep or discard
-- Takes 15-30 minutes to complete
+- 初学者がワークフローを学ぶのに最適
+- トイ例ではなく実コードで進める
+- 作った変更は残しても捨ててもよい
+- 所要時間は 15〜30 分程度
 
 ---
 
-## Command Syntax by AI Tool
+## AI ツール別のコマンド記法
 
-Different AI tools use slightly different command syntax. Use the format that matches your tool:
+AI ツールによってコマンド記法が少し異なります。各ツールに合わせた形式を使ってください。
 
-| Tool | Syntax Example |
+| ツール | 記法例 |
 |------|----------------|
 | Claude Code | `/opsx:new`, `/opsx:apply` |
 | Cursor | `/opsx-new`, `/opsx-apply` |
 | Windsurf | `/opsx-new`, `/opsx-apply` |
 | Copilot | `/opsx-new`, `/opsx-apply` |
 
-The functionality is identical regardless of syntax.
+記法が違っても機能は同一です。
 
 ---
 
-## Legacy Commands
+## 旧コマンド
 
-These commands use the older "all-at-once" workflow. They still work but OPSX commands are recommended.
+これらは旧来の「一括生成」ワークフローのコマンドです。現在は OPSX を推奨します。
 
-| Command | What it does |
+| コマンド | 内容 |
 |---------|--------------|
-| `/openspec:proposal` | Create all artifacts at once (proposal, specs, design, tasks) |
-| `/openspec:apply` | Implement the change |
-| `/openspec:archive` | Archive the change |
+| `/openspec:proposal` | proposal/specs/design/tasks を一括生成 |
+| `/openspec:apply` | 変更を実装 |
+| `/openspec:archive` | 変更をアーカイブ |
 
-**When to use legacy commands:**
-- Existing projects using the old workflow
-- Simple changes where you don't need incremental artifact creation
-- Preference for the all-or-nothing approach
+**旧コマンドを使う場面:**
+- 旧ワークフローを使っている既存プロジェクト
+- 一括生成で十分な単純な変更
+- 一度に作る運用が好みの場合
 
-**Migrating to OPSX:**
-Legacy changes can be continued with OPSX commands. The artifact structure is compatible.
+**OPSX への移行:**
+旧来の変更も OPSX コマンドで継続できます。アーティファクト構造は互換です。
 
 ---
 
-## Troubleshooting
+## トラブルシューティング
 
 ### "Change not found"
 
-The command couldn't identify which change to work on.
+変更名が特定できませんでした。
 
-**Solutions:**
-- Specify the change name explicitly: `/opsx:apply add-dark-mode`
-- Check that the change folder exists: `openspec list`
-- Verify you're in the right project directory
+**対処:**
+- 変更名を明示: `/opsx:apply add-dark-mode`
+- 変更フォルダの存在確認: `openspec list`
+- 正しいディレクトリで実行しているか確認
 
 ### "No artifacts ready"
 
-All artifacts are either complete or blocked by missing dependencies.
+すべてのアーティファクトが完了済みか、依存関係でブロックされています。
 
-**Solutions:**
-- Run `openspec status --change <name>` to see what's blocking
-- Check if required artifacts exist
-- Create missing dependency artifacts first
+**対処:**
+- `openspec status --change <name>` でブロック要因を確認
+- 依存アーティファクトの有無を確認
+- 先に依存アーティファクトを作成
 
 ### "Schema not found"
 
-The specified schema doesn't exist.
+指定したスキーマが存在しません。
 
-**Solutions:**
-- List available schemas: `openspec schemas`
-- Check spelling of schema name
-- Create the schema if it's custom: `openspec schema init <name>`
+**対処:**
+- 利用可能なスキーマ一覧: `openspec schemas`
+- スキーマ名の綴りを確認
+- カスタムスキーマなら作成: `openspec schema init <name>`
 
-### Commands not recognized
+### コマンドが認識されない
 
-The AI tool doesn't recognize OpenSpec commands.
+AI ツールが OpenSpec コマンドを認識しません。
 
-**Solutions:**
-- Ensure OpenSpec is initialized: `openspec init`
-- Regenerate skills: `openspec update`
-- Check that `.claude/skills/` directory exists (for Claude Code)
-- Restart your AI tool to pick up new skills
+**対処:**
+- OpenSpec を初期化済みか確認: `openspec init`
+- スキルを再生成: `openspec update`
+- `.claude/skills/` があるか確認（Claude Code の場合）
+- AI ツールを再起動してスキルを再読み込み
 
-### Artifacts not generating properly
+### アーティファクトがうまく生成されない
 
-The AI creates incomplete or incorrect artifacts.
+AI が不完全または不正確なアーティファクトを作成します。
 
-**Solutions:**
-- Add project context in `openspec/config.yaml`
-- Add per-artifact rules for specific guidance
-- Provide more detail in your change description
-- Use `/opsx:continue` instead of `/opsx:ff` for more control
+**対処:**
+- `openspec/config.yaml` にプロジェクトコンテキストを追加
+- アーティファクト別ルールで補足指示を追加
+- 変更説明を具体的にする
+- `/opsx:ff` ではなく `/opsx:continue` を使う
 
 ---
 
-## Next Steps
+## 次に読むもの
 
-- [Workflows](workflows.md) - Common patterns and when to use each command
-- [CLI](cli.md) - Terminal commands for management and validation
-- [Customization](customization.md) - Create custom schemas and workflows
+- [Workflows](workflows.md) - 代表的なフローと使い分け
+- [CLI](cli.md) - 管理と検証のターミナルコマンド
+- [Customization](customization.md) - カスタムスキーマとワークフロー

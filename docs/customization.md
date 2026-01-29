@@ -1,30 +1,30 @@
-# Customization
+# カスタマイズ
 
-OpenSpec provides three levels of customization:
+OpenSpec には 3 つのカスタマイズレベルがあります。
 
-| Level | What it does | Best for |
+| レベル | 内容 | 向いている対象 |
 |-------|--------------|----------|
-| **Project Config** | Set defaults, inject context/rules | Most teams |
-| **Custom Schemas** | Define your own workflow artifacts | Teams with unique processes |
-| **Global Overrides** | Share schemas across all projects | Power users |
+| **Project Config** | デフォルト設定やコンテキスト/ルール注入 | 多くのチーム |
+| **Custom Schemas** | 独自のワークフローアーティファクトを定義 | 独自プロセスを持つチーム |
+| **Global Overrides** | 複数プロジェクトでスキーマを共有 | パワーユーザー |
 
 ---
 
-## Project Configuration
+## プロジェクト設定
 
-The `openspec/config.yaml` file is the easiest way to customize OpenSpec for your team. It lets you:
+`openspec/config.yaml` はチーム向けに最も手軽にカスタマイズする方法です。次ができます:
 
-- **Set a default schema** - Skip `--schema` on every command
-- **Inject project context** - AI sees your tech stack, conventions, etc.
-- **Add per-artifact rules** - Custom rules for specific artifacts
+- **デフォルトスキーマの設定** - `--schema` を毎回付けなくてよい
+- **プロジェクトコンテキストの注入** - 技術スタックや規約を AI に常に見せる
+- **アーティファクト別ルールの追加** - 特定アーティファクト向けのルールを設定
 
-### Quick Setup
+### クイックセットアップ
 
 ```bash
 openspec init
 ```
 
-This walks you through creating a config interactively. Or create one manually:
+対話的に設定を作成します。手動で作る場合は次の通りです。
 
 ```yaml
 # openspec/config.yaml
@@ -45,9 +45,9 @@ rules:
     - Reference existing patterns before inventing new ones
 ```
 
-### How It Works
+### 仕組み
 
-**Default schema:**
+**デフォルトスキーマ:**
 
 ```bash
 # Without config
@@ -57,9 +57,9 @@ openspec new change my-feature --schema spec-driven
 openspec new change my-feature
 ```
 
-**Context and rules injection:**
+**コンテキストとルールの注入:**
 
-When generating any artifact, your context and rules are injected into the AI prompt:
+アーティファクト生成時、コンテキストとルールが AI プロンプトに注入されます。
 
 ```xml
 <context>
@@ -77,23 +77,23 @@ Tech stack: TypeScript, React, Node.js, PostgreSQL
 </template>
 ```
 
-- **Context** appears in ALL artifacts
-- **Rules** ONLY appear for the matching artifact
+- **Context** はすべてのアーティファクトに入ります
+- **Rules** は該当アーティファクトにだけ入ります
 
-### Schema Resolution Order
+### スキーマ解決順
 
-When OpenSpec needs a schema, it checks in this order:
+OpenSpec がスキーマを選ぶ順番:
 
-1. CLI flag: `--schema <name>`
-2. Change metadata (`.openspec.yaml` in the change folder)
-3. Project config (`openspec/config.yaml`)
-4. Default (`spec-driven`)
+1. CLI フラグ: `--schema <name>`
+2. 変更メタデータ（変更フォルダの `.openspec.yaml`）
+3. プロジェクト設定（`openspec/config.yaml`）
+4. デフォルト（`spec-driven`）
 
 ---
 
-## Custom Schemas
+## カスタムスキーマ
 
-When project config isn't enough, create your own schema with a completely custom workflow. Custom schemas live in your project's `openspec/schemas/` directory and are version-controlled with your code.
+プロジェクト設定だけでは足りない場合、独自のスキーマでワークフローを定義できます。カスタムスキーマは `openspec/schemas/` に置かれ、コードと一緒にバージョン管理されます。
 
 ```text
 your-project/
@@ -107,17 +107,17 @@ your-project/
 └── src/
 ```
 
-### Fork an Existing Schema
+### 既存スキーマをフォーク
 
-The fastest way to customize is to fork a built-in schema:
+最速の方法は組み込みスキーマをフォークすることです。
 
 ```bash
 openspec schema fork spec-driven my-workflow
 ```
 
-This copies the entire `spec-driven` schema to `openspec/schemas/my-workflow/` where you can edit it freely.
+`spec-driven` を `openspec/schemas/my-workflow/` にコピーし、自由に編集できます。
 
-**What you get:**
+**生成されるもの:**
 
 ```text
 openspec/schemas/my-workflow/
@@ -129,11 +129,11 @@ openspec/schemas/my-workflow/
     └── tasks.md          # Template for tasks
 ```
 
-Now edit `schema.yaml` to change the workflow, or edit templates to change what AI generates.
+`schema.yaml` を編集してワークフローを変更するか、テンプレートを編集して生成内容を変えます。
 
-### Create a Schema from Scratch
+### ゼロから作る
 
-For a completely fresh workflow:
+完全に新しいワークフローを作成する場合:
 
 ```bash
 # Interactive
@@ -146,9 +146,9 @@ openspec schema init rapid \
   --default
 ```
 
-### Schema Structure
+### スキーマ構造
 
-A schema defines the artifacts in your workflow and how they depend on each other:
+スキーマはアーティファクトと依存関係を定義します。
 
 ```yaml
 # openspec/schemas/my-workflow/schema.yaml
@@ -187,19 +187,19 @@ apply:
   tracks: tasks.md
 ```
 
-**Key fields:**
+**主なフィールド:**
 
-| Field | Purpose |
+| フィールド | 目的 |
 |-------|---------|
-| `id` | Unique identifier, used in commands and rules |
-| `generates` | Output filename (supports globs like `specs/**/*.md`) |
-| `template` | Template file in `templates/` directory |
-| `instruction` | AI instructions for creating this artifact |
-| `requires` | Dependencies - which artifacts must exist first |
+| `id` | 一意な識別子（コマンドやルールで使用） |
+| `generates` | 出力ファイル名（`specs/**/*.md` のような glob も可） |
+| `template` | `templates/` 内のテンプレートファイル |
+| `instruction` | AI に与える指示 |
+| `requires` | 依存関係（先に必要なアーティファクト） |
 
-### Templates
+### テンプレート
 
-Templates are markdown files that guide the AI. They're injected into the prompt when creating that artifact.
+テンプレートは AI を導く Markdown です。アーティファクト生成時にプロンプトへ注入されます。
 
 ```markdown
 <!-- templates/proposal.md -->
@@ -216,28 +216,28 @@ Templates are markdown files that guide the AI. They're injected into the prompt
 <!-- Affected code, APIs, dependencies, systems -->
 ```
 
-Templates can include:
-- Section headers the AI should fill in
-- HTML comments with guidance for the AI
-- Example formats showing expected structure
+テンプレートには次を含められます:
+- AI が埋めるべき見出し
+- ガイドとなる HTML コメント
+- 期待する構造の例
 
-### Validate Your Schema
+### スキーマの検証
 
-Before using a custom schema, validate it:
+カスタムスキーマは使用前に検証します。
 
 ```bash
 openspec schema validate my-workflow
 ```
 
-This checks:
-- `schema.yaml` syntax is correct
-- All referenced templates exist
-- No circular dependencies
-- Artifact IDs are valid
+検証内容:
+- `schema.yaml` の構文が正しいか
+- 参照しているテンプレートが存在するか
+- 循環依存がないか
+- アーティファクト ID が有効か
 
-### Use Your Custom Schema
+### カスタムスキーマの利用
 
-Once created, use your schema with:
+作成したスキーマは次のように使います。
 
 ```bash
 # Specify on command
@@ -247,9 +247,9 @@ openspec new change feature --schema my-workflow
 schema: my-workflow
 ```
 
-### Debug Schema Resolution
+### スキーマ解決のデバッグ
 
-Not sure which schema is being used? Check with:
+どのスキーマが使われているか分からない場合:
 
 ```bash
 # See where a specific schema resolves from
@@ -259,7 +259,7 @@ openspec schema which my-workflow
 openspec schema which --all
 ```
 
-Output shows whether it's from your project, user directory, or the package:
+出力は、プロジェクト/ユーザー/パッケージのどれから解決されたかを示します。
 
 ```text
 Schema: my-workflow
@@ -269,15 +269,15 @@ Path: /path/to/project/openspec/schemas/my-workflow
 
 ---
 
-> **Note:** OpenSpec also supports user-level schemas at `~/.local/share/openspec/schemas/` for sharing across projects, but project-level schemas in `openspec/schemas/` are recommended since they're version-controlled with your code.
+> **Note:** OpenSpec は `~/.local/share/openspec/schemas/` のユーザーレベルスキーマにも対応します。ですが `openspec/schemas/` に置く方がコードと一緒に管理できるため推奨です。
 
 ---
 
-## Examples
+## 例
 
 ### Rapid Iteration Workflow
 
-A minimal workflow for quick iterations:
+高速な反復を目的とした最小ワークフロー:
 
 ```yaml
 # openspec/schemas/rapid/schema.yaml
@@ -306,15 +306,15 @@ apply:
   tracks: tasks.md
 ```
 
-### Adding a Review Artifact
+### レビューアーティファクトの追加
 
-Fork the default and add a review step:
+デフォルトをフォークしてレビュー手順を追加します。
 
 ```bash
 openspec schema fork spec-driven with-review
 ```
 
-Then edit `schema.yaml` to add:
+次のように `schema.yaml` を編集します。
 
 ```yaml
   - id: review
@@ -337,6 +337,6 @@ Then edit `schema.yaml` to add:
 
 ---
 
-## See Also
+## 関連
 
-- [CLI Reference: Schema Commands](cli.md#schema-commands) - Full command documentation
+- [CLI Reference: Schema Commands](cli.md#schema-commands) - スキーマ関連コマンド

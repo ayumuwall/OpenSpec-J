@@ -65,6 +65,7 @@ git merge main
 - コマンド名・フラグ・ファイルパスは翻訳しない
 - README.md の OPENSPEC-J 補足マーカー（`OPENSPEC-J:NOTE`）が維持されているか確認
 - README_OLD.md は同期対象外（本家の更新があっても反映しない）
+- CLI 出力例や会話例は、CLI/プロンプト日本語文言が確定するまで英語のまま維持し、該当ドキュメントに注記（`OPENSPEC-J:TODO`）を追加する
 
 ## 5. 変更点のチェック
 

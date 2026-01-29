@@ -1,10 +1,14 @@
-# Concepts
+# コンセプト
 
-This guide explains the core ideas behind OpenSpec and how they fit together. For practical usage, see [Getting Started](getting-started.md) and [Workflows](workflows.md).
+このガイドでは、OpenSpec の中核概念と、それらがどう組み合わさるかを説明します。実践的な使い方は [Getting Started](getting-started.md) と [Workflows](workflows.md) を参照してください。
 
-## Philosophy
+> [!NOTE]
+> 例示コードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
+> <!-- OPENSPEC-J:TODO concepts examples -->
 
-OpenSpec is built around four principles:
+## 哲学
+
+OpenSpec は次の 4 つの原則に基づいています。
 
 ```
 fluid not rigid       — no phase gates, work on what makes sense
@@ -13,19 +17,19 @@ easy not complex      — lightweight setup, minimal ceremony
 brownfield-first      — works with existing codebases, not just greenfield
 ```
 
-### Why These Principles Matter
+### なぜこの原則が重要か
 
-**Fluid not rigid.** Traditional spec systems lock you into phases: first you plan, then you implement, then you're done. OpenSpec is more flexible — you can create artifacts in any order that makes sense for your work.
+**fluid not rigid.** 従来の仕様システムは「計画→実装→完了」のフェーズに固定されがちです。OpenSpec は柔軟で、作業に合う順番でアーティファクトを作れます。
 
-**Iterative not waterfall.** Requirements change. Understanding deepens. What seemed like a good approach at the start might not hold up after you see the codebase. OpenSpec embraces this reality.
+**iterative not waterfall.** 要件は変わります。理解も深まります。最初は良さそうに見えたアプローチが、コードベースを見たら通用しないこともあります。OpenSpec はそれを前提にします。
 
-**Easy not complex.** Some spec frameworks require extensive setup, rigid formats, or heavyweight processes. OpenSpec stays out of your way. Initialize in seconds, start working immediately, customize only if you need to.
+**easy not complex.** 仕様フレームワークの中には、セットアップが重く、形式が厳格で、運用が硬いものもあります。OpenSpec は邪魔をしません。数秒で初期化し、すぐ作業を始められ、必要なら後からカスタマイズできます。
 
-**Brownfield-first.** Most software work isn't building from scratch — it's modifying existing systems. OpenSpec's delta-based approach makes it easy to specify changes to existing behavior, not just describe new systems.
+**brownfield-first.** 多くの開発はゼロから作るのではなく既存システムの改修です。OpenSpec の差分方式は、既存挙動の変更を簡潔に表現できます。
 
-## The Big Picture
+## 全体像
 
-OpenSpec organizes your work into two main areas:
+OpenSpec は作業を 2 つの主要領域に分けて整理します。
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -43,17 +47,17 @@ OpenSpec organizes your work into two main areas:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Specs** are the source of truth — they describe how your system currently behaves.
+**Specs** はソース・オブ・トゥルース（現在の挙動）を示します。
 
-**Changes** are proposed modifications — they live in separate folders until you're ready to merge them.
+**Changes** は提案中の変更で、統合されるまでは別フォルダに置かれます。
 
-This separation is key. You can work on multiple changes in parallel without conflicts. You can review a change before it affects the main specs. And when you archive a change, its deltas merge cleanly into the source of truth.
+この分離が重要です。複数の変更を並行で進められ、レビューしてから本仕様へ反映できます。アーカイブ時に差分がソース・オブ・トゥルースへ統合されます。
 
-## Specs
+## 仕様（Specs）
 
-Specs describe your system's behavior using structured requirements and scenarios.
+仕様は、構造化された要件とシナリオでシステムの挙動を表します。
 
-### Structure
+### 構成
 
 ```
 openspec/specs/
@@ -67,15 +71,15 @@ openspec/specs/
     └── spec.md           # UI behavior and themes
 ```
 
-Organize specs by domain — logical groupings that make sense for your system. Common patterns:
+仕様はドメイン単位で整理します。よくあるパターン:
 
-- **By feature area**: `auth/`, `payments/`, `search/`
-- **By component**: `api/`, `frontend/`, `workers/`
-- **By bounded context**: `ordering/`, `fulfillment/`, `inventory/`
+- **機能単位**: `auth/`, `payments/`, `search/`
+- **コンポーネント単位**: `api/`, `frontend/`, `workers/`
+- **境界づけられたコンテキスト単位**: `ordering/`, `fulfillment/`, `inventory/`
 
-### Spec Format
+### 仕様フォーマット
 
-A spec contains requirements, and each requirement has scenarios:
+仕様は要件で構成され、各要件にはシナリオがあります。
 
 ```markdown
 # Auth Specification
@@ -110,34 +114,34 @@ The system MUST expire sessions after 30 minutes of inactivity.
 - AND the user must re-authenticate
 ```
 
-**Key elements:**
+**主要要素:**
 
-| Element | Purpose |
+| 要素 | 目的 |
 |---------|---------|
-| `## Purpose` | High-level description of this spec's domain |
-| `### Requirement:` | A specific behavior the system must have |
-| `#### Scenario:` | A concrete example of the requirement in action |
-| SHALL/MUST/SHOULD | RFC 2119 keywords indicating requirement strength |
+| `## Purpose` | 仕様が扱うドメインの概要 |
+| `### Requirement:` | システムが満たすべき具体的挙動 |
+| `#### Scenario:` | 要件が実際に発生する具体例 |
+| SHALL/MUST/SHOULD | RFC 2119 による強さの表現 |
 
-### Why Structure Specs This Way
+### この構造を採用する理由
 
-**Requirements are the "what"** — they state what the system should do without specifying implementation.
+**要件は「何を」** — 実装の詳細ではなく、必要な挙動を定義します。
 
-**Scenarios are the "when"** — they provide concrete examples that can be verified. Good scenarios:
-- Are testable (you could write an automated test for them)
-- Cover both happy path and edge cases
-- Use Given/When/Then or similar structured format
+**シナリオは「いつ」** — 具体例として検証可能にします。良いシナリオは次の特徴があります。
+- テスト可能（自動テストに落とせる）
+- ハッピーパスとエッジケースの両方を含む
+- Given/When/Then などの構造化形式を使う
 
-**RFC 2119 keywords** (SHALL, MUST, SHOULD, MAY) communicate intent:
-- **MUST/SHALL** — absolute requirement
-- **SHOULD** — recommended, but exceptions exist
-- **MAY** — optional
+**RFC 2119 キーワード**（SHALL, MUST, SHOULD, MAY）は意図の強さを表します。
+- **MUST/SHALL** — 絶対要件
+- **SHOULD** — 推奨（例外あり）
+- **MAY** — 任意
 
-## Changes
+## 変更（Changes）
 
-A change is a proposed modification to your system, packaged as a folder with everything needed to understand and implement it.
+変更は、システムへの修正をまとめたフォルダです。理解・実装に必要なものをすべて含みます。
 
-### Change Structure
+### 変更の構造
 
 ```
 openspec/changes/add-dark-mode/
@@ -150,28 +154,25 @@ openspec/changes/add-dark-mode/
         └── spec.md       # What's changing in ui/spec.md
 ```
 
-Each change is self-contained. It has:
-- **Artifacts** — documents that capture intent, design, and tasks
-- **Delta specs** — specifications for what's being added, modified, or removed
-- **Metadata** — optional configuration for this specific change
+各変更は自己完結します。
+- **アーティファクト** — 目的・設計・タスクを記録する文書
+- **仕様差分** — 追加/変更/削除される内容
+- **メタデータ** — 変更固有の設定（任意）
 
-### Why Changes Are Folders
+### 変更をフォルダにする理由
 
-Packaging a change as a folder has several benefits:
+変更をフォルダで管理する利点:
 
-1. **Everything together.** Proposal, design, tasks, and specs live in one place. No hunting through different locations.
+1. **一箇所にまとまる。** proposal/design/tasks/specs が同じ場所で見える。
+2. **並行作業。** `add-dark-mode` と `fix-auth-bug` を同時に進めても衝突しない。
+3. **履歴が明瞭。** アーカイブで `changes/archive/` に移動し、背景を含めて保存される。
+4. **レビューしやすい。** フォルダを開けば内容がまとまっている。
 
-2. **Parallel work.** Multiple changes can exist simultaneously without conflicting. Work on `add-dark-mode` while `fix-auth-bug` is also in progress.
+## アーティファクト
 
-3. **Clean history.** When archived, changes move to `changes/archive/` with their full context preserved. You can look back and understand not just what changed, but why.
+アーティファクトは変更内の文書で、作業の道筋を示します。
 
-4. **Review-friendly.** A change folder is easy to review — open it, read the proposal, check the design, see the spec deltas.
-
-## Artifacts
-
-Artifacts are the documents within a change that guide the work.
-
-### The Artifact Flow
+### アーティファクトの流れ
 
 ```
 proposal ──────► specs ──────► design ──────► tasks ──────► implement
@@ -180,13 +181,13 @@ proposal ──────► specs ──────► design ────�
  + scope        changes       approach      to take
 ```
 
-Artifacts build on each other. Each artifact provides context for the next.
+アーティファクトは順に積み上がります。前の内容が次の文脈になります。
 
-### Artifact Types
+### アーティファクトの種類
 
-#### Proposal (`proposal.md`)
+#### Proposal（`proposal.md`）
 
-The proposal captures **intent**, **scope**, and **approach** at a high level.
+Proposal は **意図**・**スコープ**・**アプローチ** を高レベルで記録します。
 
 ```markdown
 # Proposal: Add Dark Mode
@@ -211,18 +212,18 @@ for state management. Detect system preference on first load,
 allow manual override.
 ```
 
-**When to update the proposal:**
-- Scope changes (narrowing or expanding)
-- Intent clarifies (better understanding of the problem)
-- Approach fundamentally shifts
+**Proposal を更新するタイミング:**
+- スコープが変わった（拡大/縮小）
+- 意図が明確化した（問題理解が深まった）
+- アプローチが根本的に変わった
 
-#### Specs (delta specs in `specs/`)
+#### Specs（`specs/` 内の差分仕様）
 
-Delta specs describe **what's changing** relative to the current specs. See [Delta Specs](#delta-specs) below.
+差分仕様は **現在の仕様に対して何が変わるか** を表します。詳しくは [Delta Specs](#delta-specs) を参照してください。
 
-#### Design (`design.md`)
+#### Design（`design.md`）
 
-The design captures **technical approach** and **architecture decisions**.
+Design は **技術的アプローチ** と **設計判断** を記録します。
 
 ```markdown
 # Design: Add Dark Mode
@@ -262,14 +263,14 @@ CSS Variables (applied to :root)
 - `src/styles/globals.css` (modified)
 ```
 
-**When to update the design:**
-- Implementation reveals the approach won't work
-- Better solution discovered
-- Dependencies or constraints change
+**Design を更新するタイミング:**
+- 実装してみたらアプローチが成り立たない
+- より良い解が見つかった
+- 依存関係や制約が変わった
 
-#### Tasks (`tasks.md`)
+#### Tasks（`tasks.md`）
 
-Tasks are the **implementation checklist** — concrete steps with checkboxes.
+Tasks は **実装チェックリスト** です。具体的な手順をチェックボックスで管理します。
 
 ```markdown
 # Tasks
@@ -291,17 +292,17 @@ Tasks are the **implementation checklist** — concrete steps with checkboxes.
 - [ ] 3.3 Test contrast ratios for accessibility
 ```
 
-**Task best practices:**
-- Group related tasks under headings
-- Use hierarchical numbering (1.1, 1.2, etc.)
-- Keep tasks small enough to complete in one session
-- Check tasks off as you complete them
+**Tasks のベストプラクティス:**
+- まとまりごとに見出しで分ける
+- 階層番号（1.1, 1.2 など）を使う
+- 1 セッションで終わる粒度にする
+- 完了したらチェックを付ける
 
 ## Delta Specs
 
-Delta specs are the key concept that makes OpenSpec work for brownfield development. They describe **what's changing** rather than restating the entire spec.
+差分仕様は、OpenSpec がブラウンフィールド開発で機能するための中核概念です。**何が変わるか** を表し、全文の再掲を避けます。
 
-### The Format
+### 形式
 
 ```markdown
 # Delta for Auth
@@ -340,29 +341,29 @@ The system MUST expire sessions after 15 minutes of inactivity.
 (Deprecated in favor of 2FA. Users should re-authenticate each session.)
 ```
 
-### Delta Sections
+### Delta セクション
 
-| Section | Meaning | What Happens on Archive |
+| セクション | 意味 | アーカイブ時の挙動 |
 |---------|---------|------------------------|
-| `## ADDED Requirements` | New behavior | Appended to main spec |
-| `## MODIFIED Requirements` | Changed behavior | Replaces existing requirement |
-| `## REMOVED Requirements` | Deprecated behavior | Deleted from main spec |
+| `## ADDED Requirements` | 新しい挙動 | 本仕様に追加 |
+| `## MODIFIED Requirements` | 既存挙動の変更 | 既存要件を置換 |
+| `## REMOVED Requirements` | 廃止された挙動 | 本仕様から削除 |
 
-### Why Deltas Instead of Full Specs
+### なぜ全文ではなく差分なのか
 
-**Clarity.** A delta shows exactly what's changing. Reading a full spec, you'd have to diff it mentally against the current version.
+**明確さ。** 差分なら「何が変わるか」が一目で分かります。
 
-**Conflict avoidance.** Two changes can touch the same spec file without conflicting, as long as they modify different requirements.
+**衝突回避。** 2 つの変更が同じ spec ファイルに触れても、別要件を変更する限り競合しにくい。
 
-**Review efficiency.** Reviewers see the change, not the unchanged context. Focus on what matters.
+**レビュー効率。** 変更点だけが表示されるため、本質に集中できる。
 
-**Brownfield fit.** Most work modifies existing behavior. Deltas make modifications first-class, not an afterthought.
+**ブラウンフィールド適性。** 既存挙動の変更が中心なので、差分が第一級の扱いになる。
 
-## Schemas
+## スキーマ
 
-Schemas define the artifact types and their dependencies for a workflow.
+スキーマは、ワークフローに含まれるアーティファクトと依存関係を定義します。
 
-### How Schemas Work
+### スキーマの仕組み
 
 ```yaml
 # openspec/schemas/spec-driven/schema.yaml
@@ -385,7 +386,7 @@ artifacts:
     requires: [specs, design] # Needs both specs and design first
 ```
 
-**Artifacts form a dependency graph:**
+**アーティファクトは依存グラフを形成します:**
 
 ```
                     proposal
@@ -406,23 +407,23 @@ artifacts:
                 specs, design)
 ```
 
-**Dependencies are enablers, not gates.** They show what's possible to create, not what you must create next. You can skip design if you don't need it. You can create specs before or after design — both depend only on proposal.
+**依存関係はゲートではなく進行可能性です。** 何が作れるかを示すだけで、順番を強制しません。設計が不要なら design をスキップできます。specs と design は proposal のみ依存なので、どちらからでも作れます。
 
-### Built-in Schemas
+### 組み込みスキーマ
 
-**spec-driven** (default)
+**spec-driven**（デフォルト）
 
-The standard workflow for spec-driven development:
+仕様駆動開発の標準ワークフロー:
 
 ```
 proposal → specs → design → tasks → implement
 ```
 
-Best for: Most feature work where you want to agree on specs before implementation.
+向いている場面: 実装前に仕様合意が必要な多くの機能開発。
 
-### Custom Schemas
+### カスタムスキーマ
 
-Create custom schemas for your team's workflow:
+チームに合わせて独自スキーマを作れます。
 
 ```bash
 # Create from scratch
@@ -432,7 +433,7 @@ openspec schema init research-first
 openspec schema fork spec-driven research-first
 ```
 
-**Example custom schema:**
+**カスタムスキーマ例:**
 
 ```yaml
 # openspec/schemas/research-first/schema.yaml
@@ -451,13 +452,13 @@ artifacts:
     requires: [proposal]   # Skip specs/design, go straight to tasks
 ```
 
-See [Customization](customization.md) for full details on creating and using custom schemas.
+カスタムスキーマの詳細は [Customization](customization.md) を参照してください。
 
-## Archive
+## アーカイブ
 
-Archiving completes a change by merging its delta specs into the main specs and preserving the change for history.
+アーカイブは、差分仕様を本仕様に統合し、変更を履歴として保存する工程です。
 
-### What Happens When You Archive
+### アーカイブ時に起きること
 
 ```
 Before archive:
@@ -493,23 +494,23 @@ openspec/
                     └── spec.md
 ```
 
-### The Archive Process
+### アーカイブの流れ
 
-1. **Merge deltas.** Each delta spec section (ADDED/MODIFIED/REMOVED) is applied to the corresponding main spec.
+1. **差分を統合。** ADDED/MODIFIED/REMOVED の各セクションを対応する本仕様に適用します。
 
-2. **Move to archive.** The change folder moves to `changes/archive/` with a date prefix for chronological ordering.
+2. **アーカイブへ移動。** 変更フォルダを `changes/archive/` に日付プレフィックス付きで移動します。
 
-3. **Preserve context.** All artifacts remain intact in the archive. You can always look back to understand why a change was made.
+3. **文脈を保存。** すべてのアーティファクトがアーカイブに残るため、後から理由や設計を参照できます。
 
-### Why Archive Matters
+### アーカイブの意義
 
-**Clean state.** Active changes (`changes/`) shows only work in progress. Completed work moves out of the way.
+**クリーンな状態。** `changes/` には進行中のみが残り、完了した変更は移動します。
 
-**Audit trail.** The archive preserves the full context of every change — not just what changed, but the proposal explaining why, the design explaining how, and the tasks showing the work done.
+**監査証跡。** 何が変わったかだけでなく、なぜ・どうやって・どんなタスクだったかまで保存されます。
 
-**Spec evolution.** Specs grow organically as changes are archived. Each archive merges its deltas, building up a comprehensive specification over time.
+**仕様の進化。** 変更のアーカイブごとに仕様が成長し、時間とともに包括的な仕様が蓄積されます。
 
-## How It All Fits Together
+## 全体のつながり
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -550,33 +551,33 @@ openspec/
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**The virtuous cycle:**
+**良循環:**
 
-1. Specs describe current behavior
-2. Changes propose modifications (as deltas)
-3. Implementation makes the changes real
-4. Archive merges deltas into specs
-5. Specs now describe the new behavior
-6. Next change builds on updated specs
+1. 仕様が現在の挙動を記述
+2. 変更が差分として修正案を提示
+3. 実装が変更を現実にする
+4. アーカイブが差分を仕様に統合
+5. 更新後の仕様が新しい挙動を記述
+6. 次の変更は新しい仕様を基点に進む
 
-## Glossary
+## 用語集
 
-| Term | Definition |
+| 用語 | 定義 |
 |------|------------|
-| **Artifact** | A document within a change (proposal, design, tasks, or delta specs) |
-| **Archive** | The process of completing a change and merging its deltas into main specs |
-| **Change** | A proposed modification to the system, packaged as a folder with artifacts |
-| **Delta spec** | A spec that describes changes (ADDED/MODIFIED/REMOVED) relative to current specs |
-| **Domain** | A logical grouping for specs (e.g., `auth/`, `payments/`) |
-| **Requirement** | A specific behavior the system must have |
-| **Scenario** | A concrete example of a requirement, typically in Given/When/Then format |
-| **Schema** | A definition of artifact types and their dependencies |
-| **Spec** | A specification describing system behavior, containing requirements and scenarios |
-| **Source of truth** | The `openspec/specs/` directory, containing the current agreed-upon behavior |
+| **Artifact** | 変更内の文書（proposal/design/tasks/delta specs） |
+| **Archive** | 変更を完了し差分を本仕様に統合する工程 |
+| **Change** | アーティファクト一式を含む変更フォルダ |
+| **Delta spec** | 現行仕様に対する差分仕様（ADDED/MODIFIED/REMOVED） |
+| **Domain** | 仕様を分ける論理単位（例: `auth/`, `payments/`） |
+| **Requirement** | システムが満たすべき具体的挙動 |
+| **Scenario** | 要件の具体例（Given/When/Then 形式など） |
+| **Schema** | アーティファクト種類と依存関係の定義 |
+| **Spec** | 要件とシナリオを含む仕様 |
+| **Source of truth** | 現行の合意済み挙動を表す `openspec/specs/` |
 
-## Next Steps
+## 次に読むもの
 
-- [Getting Started](getting-started.md) - Practical first steps
-- [Workflows](workflows.md) - Common patterns and when to use each
-- [Commands](commands.md) - Full command reference
-- [Customization](customization.md) - Create custom schemas and configure your project
+- [Getting Started](getting-started.md) - 最初の流れ
+- [Workflows](workflows.md) - 代表的なパターン
+- [Commands](commands.md) - コマンド一覧
+- [Customization](customization.md) - カスタムスキーマと設定

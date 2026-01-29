@@ -1,10 +1,10 @@
-# Multi-Language Guide
+# 多言語ガイド
 
-Configure OpenSpec to generate artifacts in languages other than English.
+OpenSpec が生成するアーティファクトを英語以外の言語で出力する方法を説明します。
 
-## Quick Setup
+## クイックセットアップ
 
-Add a language instruction to your `openspec/config.yaml`:
+`openspec/config.yaml` に言語指定を追加します。
 
 ```yaml
 schema: spec-driven
@@ -17,11 +17,11 @@ context: |
   Tech stack: TypeScript, React, Node.js
 ```
 
-That's it. All generated artifacts will now be in Portuguese.
+これで生成されるアーティファクトはポルトガル語になります。
 
-## Language Examples
+## 言語設定例
 
-### Portuguese (Brazil)
+### ポルトガル語（ブラジル）
 
 ```yaml
 context: |
@@ -29,7 +29,7 @@ context: |
   All artifacts must be written in Brazilian Portuguese.
 ```
 
-### Spanish
+### スペイン語
 
 ```yaml
 context: |
@@ -37,7 +37,7 @@ context: |
   Todos los artefactos deben escribirse en español.
 ```
 
-### Chinese (Simplified)
+### 中国語（簡体）
 
 ```yaml
 context: |
@@ -45,7 +45,7 @@ context: |
   所有产出物必须用简体中文撰写。
 ```
 
-### Japanese
+### 日本語
 
 ```yaml
 context: |
@@ -53,7 +53,7 @@ context: |
   すべての成果物は日本語で作成してください。
 ```
 
-### French
+### フランス語
 
 ```yaml
 context: |
@@ -61,7 +61,7 @@ context: |
   Tous les artefacts doivent être rédigés en français.
 ```
 
-### German
+### ドイツ語
 
 ```yaml
 context: |
@@ -71,9 +71,9 @@ context: |
 
 ## Tips
 
-### Handle Technical Terms
+### 技術用語の扱い
 
-Decide how to handle technical terminology:
+技術用語をどう扱うかを明示できます。
 
 ```yaml
 context: |
@@ -83,9 +83,9 @@ context: |
   - Code examples and file paths remain in English
 ```
 
-### Combine with Other Context
+### 他のコンテキストと併用
 
-Language settings work alongside your other project context:
+言語設定は他のプロジェクト文脈と併用できます。
 
 ```yaml
 schema: spec-driven
@@ -98,9 +98,9 @@ context: |
   Database: PostgreSQL with Prisma ORM
 ```
 
-## Verification
+## 検証
 
-To verify your language config is working:
+言語設定が効いているか確認するには:
 
 ```bash
 # Check the instructions - should show your language context
@@ -109,7 +109,7 @@ openspec instructions proposal --change my-change
 # Output will include your language context
 ```
 
-## Related Documentation
+## 関連ドキュメント
 
-- [Customization Guide](./customization.md) - Project configuration options
-- [Workflows Guide](./workflows.md) - Full workflow documentation
+- [Customization Guide](./customization.md) - プロジェクト設定
+- [Workflows Guide](./workflows.md) - ワークフロー全体

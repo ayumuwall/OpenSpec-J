@@ -1,10 +1,14 @@
-# Getting Started
+# はじめに
 
-This guide explains how OpenSpec works after you've installed and initialized it. For installation instructions, see the [main README](../README.md#quick-start).
+このガイドでは、OpenSpec をインストール・初期化した後の使い方を説明します。インストール手順は [README](../README.md#quick-start) を参照してください。
 
-## How It Works
+> [!NOTE]
+> 会話例・出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
+> <!-- OPENSPEC-J:TODO getting-started examples -->
 
-OpenSpec helps you and your AI coding assistant agree on what to build before any code is written. The workflow follows a simple pattern:
+## 仕組み
+
+OpenSpec は、コードを書く前に「何を作るか」を人と AI コーディングアシスタントで合意できるようにします。ワークフローは次の流れです。
 
 ```
 ┌────────────────────┐
@@ -31,9 +35,9 @@ OpenSpec helps you and your AI coding assistant agree on what to build before an
 └────────────────────┘
 ```
 
-## What OpenSpec Creates
+## OpenSpec が作るもの
 
-After running `openspec init`, your project has this structure:
+`openspec init` を実行すると、プロジェクトは次の構造になります。
 
 ```
 openspec/
@@ -51,24 +55,24 @@ openspec/
 └── config.yaml         # Project configuration (optional)
 ```
 
-**Two key directories:**
+**重要な 2 つのディレクトリ:**
 
-- **`specs/`** - The source of truth. These specs describe how your system currently behaves. Organized by domain (e.g., `specs/auth/`, `specs/payments/`).
+- **`specs/`** - ソース・オブ・トゥルース。現在のシステム挙動を示す仕様が入ります。ドメイン単位で整理します（例: `specs/auth/`, `specs/payments/`）。
 
-- **`changes/`** - Proposed modifications. Each change gets its own folder with all related artifacts. When a change is complete, its specs merge into the main `specs/` directory.
+- **`changes/`** - 変更提案。変更ごとに 1 つのフォルダを持ち、すべてのアーティファクトをまとめます。完了した変更は `specs/` に統合されます。
 
-## Understanding Artifacts
+## アーティファクトの理解
 
-Each change folder contains artifacts that guide the work:
+各変更フォルダには、作業を導くアーティファクトが含まれます。
 
-| Artifact | Purpose |
+| アーティファクト | 目的 |
 |----------|---------|
-| `proposal.md` | The "why" and "what" - captures intent, scope, and approach |
-| `specs/` | Delta specs showing ADDED/MODIFIED/REMOVED requirements |
-| `design.md` | The "how" - technical approach and architecture decisions |
-| `tasks.md` | Implementation checklist with checkboxes |
+| `proposal.md` | 「なぜ / 何を」— 目的、スコープ、アプローチを記録 |
+| `specs/` | ADDED/MODIFIED/REMOVED の仕様差分 |
+| `design.md` | 「どうやって」— 技術的アプローチと設計判断 |
+| `tasks.md` | 実装チェックリスト（チェックボックス） |
 
-**Artifacts build on each other:**
+**アーティファクトは連鎖する:**
 
 ```
 proposal ──► specs ──► design ──► tasks ──► implement
@@ -77,15 +81,15 @@ proposal ──► specs ──► design ──► tasks ──► implement
             update as you learn
 ```
 
-You can always go back and refine earlier artifacts as you learn more during implementation.
+実装しながら学んだことに応じて、前のアーティファクトを更新して構いません。
 
-## How Delta Specs Work
+## 仕様差分（Delta Specs）の仕組み
 
-Delta specs are the key concept in OpenSpec. They show what's changing relative to your current specs.
+仕様差分は OpenSpec の核となる考え方です。現在の仕様に対して「何が変わるか」を明示します。
 
-### The Format
+### 形式
 
-Delta specs use sections to indicate the type of change:
+仕様差分はセクションで変更タイプを示します。
 
 ```markdown
 # Delta for Auth
@@ -117,21 +121,21 @@ The system SHALL expire sessions after 30 minutes of inactivity.
 (Deprecated in favor of 2FA)
 ```
 
-### What Happens on Archive
+### アーカイブ時に起きること
 
-When you archive a change:
+変更をアーカイブすると:
 
-1. **ADDED** requirements are appended to the main spec
-2. **MODIFIED** requirements replace the existing version
-3. **REMOVED** requirements are deleted from the main spec
+1. **ADDED** の要件は本仕様に追加
+2. **MODIFIED** の要件は既存版を置換
+3. **REMOVED** の要件は本仕様から削除
 
-The change folder moves to `openspec/changes/archive/` for audit history.
+変更フォルダは監査用に `openspec/changes/archive/` へ移動します。
 
-## Example: Your First Change
+## 例: 最初の変更
 
-Let's walk through adding dark mode to an application.
+例として、アプリにダークモードを追加する流れを見てみましょう。
 
-### 1. Start the Change
+### 1. 変更を開始
 
 ```
 You: /opsx:new add-dark-mode
@@ -140,9 +144,9 @@ AI:  Created openspec/changes/add-dark-mode/
      Ready to create: proposal
 ```
 
-### 2. Create Artifacts
+### 2. アーティファクトを作成
 
-Use `/opsx:ff` (fast-forward) to create all planning artifacts at once:
+`/opsx:ff`（fast-forward）で計画アーティファクトを一括作成します。
 
 ```
 You: /opsx:ff
@@ -155,9 +159,9 @@ AI:  Creating artifacts for add-dark-mode...
      Ready for implementation!
 ```
 
-### 3. What Gets Created
+### 3. 何が作られるか
 
-**proposal.md** - Captures the intent:
+**proposal.md** - 目的を記録:
 
 ```markdown
 # Proposal: Add Dark Mode
@@ -176,7 +180,7 @@ Use CSS custom properties for theming with a React context
 for state management.
 ```
 
-**specs/ui/spec.md** - Delta showing new requirements:
+**specs/ui/spec.md** - 新しい要件の差分:
 
 ```markdown
 # Delta for UI
@@ -198,7 +202,7 @@ The system SHALL allow users to choose between light and dark themes.
 - THEN the system's preferred color scheme is used
 ```
 
-**tasks.md** - Implementation checklist:
+**tasks.md** - 実装チェックリスト:
 
 ```markdown
 # Tasks
@@ -218,7 +222,7 @@ The system SHALL allow users to choose between light and dark themes.
 - [ ] 3.2 Update components to use CSS variables
 ```
 
-### 4. Implement
+### 4. 実装
 
 ```
 You: /opsx:apply
@@ -232,9 +236,9 @@ AI:  Working through tasks...
      All tasks complete!
 ```
 
-During implementation, if you discover the design needs adjustment, just update the artifact and continue.
+実装中に設計の調整が必要になった場合は、アーティファクトを更新して続ければ OK です。
 
-### 5. Archive
+### 5. アーカイブ
 
 ```
 You: /opsx:archive
@@ -245,11 +249,11 @@ AI:  Archiving add-dark-mode...
      Done! Ready for the next feature.
 ```
 
-Your delta specs are now part of the main specs, documenting how your system works.
+これで仕様差分が本仕様に統合され、システムの挙動が記録されます。
 
-## Verifying and Reviewing
+## 検証とレビュー
 
-Use the CLI to check on your changes:
+CLI で変更状況を確認できます。
 
 ```bash
 # List active changes
@@ -265,9 +269,9 @@ openspec validate add-dark-mode
 openspec view
 ```
 
-## Next Steps
+## 次に読むもの
 
-- [Workflows](workflows.md) - Common patterns and when to use each command
-- [Commands](commands.md) - Full reference for all slash commands
-- [Concepts](concepts.md) - Deeper understanding of specs, changes, and schemas
-- [Customization](customization.md) - Make OpenSpec work your way
+- [Workflows](workflows.md) - 代表的なフローと使い分け
+- [Commands](commands.md) - スラッシュコマンドの全リファレンス
+- [Concepts](concepts.md) - 仕様・変更・スキーマの理解
+- [Customization](customization.md) - 自分のワークフローに合わせる

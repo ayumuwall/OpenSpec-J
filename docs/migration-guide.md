@@ -1,45 +1,49 @@
-# Migrating to OPSX
+# OPSX への移行
 
-This guide helps you transition from the legacy OpenSpec workflow to OPSX. The migration is designed to be smooth—your existing work is preserved, and the new system offers more flexibility.
+このガイドは、旧 OpenSpec ワークフローから OPSX へ移行するための手順です。移行はスムーズで、既存の作業は保持されます。新しいシステムではより柔軟に進められます。
 
-## What's Changing?
+> [!NOTE]
+> 会話例・出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
+> <!-- OPENSPEC-J:TODO migration examples -->
 
-OPSX replaces the old phase-locked workflow with a fluid, action-based approach. Here's the key shift:
+## 何が変わるのか
 
-| Aspect | Legacy | OPSX |
+OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクションベースのワークフローへ置き換えます。主な違いは次の通りです。
+
+| 項目 | 旧ワークフロー | OPSX |
 |--------|--------|------|
-| **Commands** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | `/opsx:new`, `/opsx:continue`, `/opsx:apply`, and more |
-| **Workflow** | Create all artifacts at once | Create incrementally or all at once—your choice |
-| **Going back** | Awkward phase gates | Natural—update any artifact anytime |
-| **Customization** | Fixed structure | Schema-driven, fully hackable |
-| **Configuration** | `CLAUDE.md` with markers + `project.md` | Clean config in `openspec/config.yaml` |
+| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | `/opsx:new`, `/opsx:continue`, `/opsx:apply` ほか |
+| **進め方** | すべてのアーティファクトを一括作成 | 段階的にも一括でも選べる |
+| **やり直し** | フェーズゲートがあり戻りづらい | いつでもアーティファクトを更新可能 |
+| **カスタマイズ** | 固定構造 | スキーマ駆動で自由に拡張 |
+| **設定** | `CLAUDE.md` のマーカー + `project.md` | `openspec/config.yaml` に整理 |
 
-**The philosophy change:** Work isn't linear. OPSX stops pretending it is.
+**哲学の転換:** 作業は直線的ではない。OPSX はそれを前提にします。
 
 ---
 
-## Before You Begin
+## 移行前の確認
 
-### Your Existing Work Is Safe
+### 既存の作業は安全
 
-The migration process is designed with preservation in mind:
+移行は「保持」を前提に設計されています。
 
-- **Active changes in `openspec/changes/`** — Completely preserved. You can continue them with OPSX commands.
-- **Archived changes** — Untouched. Your history remains intact.
-- **Main specs in `openspec/specs/`** — Untouched. These are your source of truth.
-- **Your content in CLAUDE.md, AGENTS.md, etc.** — Preserved. Only the OpenSpec marker blocks are removed; everything you wrote stays.
+- **`openspec/changes/` の進行中の変更** — そのまま残ります。OPSX コマンドで継続できます。
+- **アーカイブ済み変更** — 変更なし。履歴は保持されます。
+- **`openspec/specs/` の本仕様** — 変更なし。ソース・オブ・トゥルースです。
+- **`CLAUDE.md` / `AGENTS.md` などの自分の記述** — OpenSpec マーカーだけ除去され、あなたの内容は保持されます。
 
-### What Gets Removed
+### 削除されるもの
 
-Only OpenSpec-managed files that are being replaced:
+置き換え対象の OpenSpec 管理ファイルのみが削除されます。
 
-| What | Why |
+| 対象 | 理由 |
 |------|-----|
-| Legacy slash command directories/files | Replaced by the new skills system |
-| `openspec/AGENTS.md` | Obsolete workflow trigger |
-| OpenSpec markers in `CLAUDE.md`, `AGENTS.md`, etc. | No longer needed |
+| 旧スラッシュコマンドのディレクトリ/ファイル | 新しい skills システムに置換 |
+| `openspec/AGENTS.md` | 旧ワークフロートリガーのため不要 |
+| `CLAUDE.md` / `AGENTS.md` などの OpenSpec マーカー | もはや不要 |
 
-**Legacy command locations by tool** (examples—your tool may vary):
+**ツール別の旧コマンド位置（例）:**
 
 - Claude Code: `.claude/commands/openspec/`
 - Cursor: `.cursor/commands/openspec-*.md`
@@ -47,52 +51,52 @@ Only OpenSpec-managed files that are being replaced:
 - Cline: `.clinerules/workflows/openspec-*.md`
 - Roo: `.roo/commands/openspec-*.md`
 - GitHub Copilot: `.github/prompts/openspec-*.prompt.md`
-- And others (Augment, Continue, Amazon Q, etc.)
+- ほか（Augment, Continue, Amazon Q など）
 
-The migration detects whichever tools you have configured and cleans up their legacy files.
+移行は、設定済みツールを検出して旧ファイルをクリーンアップします。
 
-The removal list may seem long, but these are all files that OpenSpec originally created. Your own content is never deleted.
+リストが長く見えますが、OpenSpec が生成したファイルのみが対象です。あなたの独自ファイルは削除されません。
 
-### What Needs Your Attention
+### 手動対応が必要なもの
 
-One file requires manual migration:
+1 つだけ手動移行が必要です。
 
-**`openspec/project.md`** — This file isn't deleted automatically because it may contain project context you've written. You'll need to:
+**`openspec/project.md`** — 自分で書いたプロジェクト文脈が含まれる可能性があるため、自動削除しません。次を行ってください。
 
-1. Review its contents
-2. Move useful context to `openspec/config.yaml` (see guidance below)
-3. Delete the file when ready
+1. 内容を確認
+2. 必要な文脈を `openspec/config.yaml` に移す（後述）
+3. 準備できたら削除
 
-**Why we made this change:**
+**この変更をした理由:**
 
-The old `project.md` was passive—agents might read it, might not, might forget what they read. We found reliability was inconsistent.
+旧 `project.md` は受動的で、エージェントが読んだり読まなかったり、読み忘れたりすることがありました。信頼性が一定しませんでした。
 
-The new `config.yaml` context is **actively injected into every OpenSpec planning request**. This means your project conventions, tech stack, and rules are always present when the AI is creating artifacts. Higher reliability.
+新しい `config.yaml` の `context` は **毎回の計画リクエストに注入** されるため、常に一貫した文脈が渡ります。信頼性が高い運用です。
 
-**The tradeoff:**
+**トレードオフ:**
 
-Because context is injected into every request, you'll want to be concise. Focus on what really matters:
-- Tech stack and key conventions
-- Non-obvious constraints the AI needs to know
-- Rules that frequently got ignored before
+毎回注入されるため、簡潔さが重要です。
+- 技術スタックや主要な規約
+- 非自明な制約（「ライブラリ X は使えない」など）
+- 以前よく無視されたルール
 
-Don't worry about getting it perfect. We're still learning what works best here, and we'll be improving how context injection works as we experiment.
+完璧にする必要はありません。運用しながら調整できます。
 
 ---
 
-## Running the Migration
+## 移行の実行
 
-Both `openspec init` and `openspec update` detect legacy files and guide you through the same cleanup process. Use whichever fits your situation:
+`openspec init` と `openspec update` はどちらも旧ファイルを検出し、同じクリーンアップを案内します。用途に合わせて選んでください。
 
-### Using `openspec init`
+### `openspec init` を使う
 
-Run this if you want to add new tools or reconfigure which tools are set up:
+新しいツールを追加したい、または設定を作り直したい場合:
 
 ```bash
 openspec init
 ```
 
-The init command detects legacy files and guides you through cleanup:
+init は旧ファイルを検出し、クリーンアップを案内します:
 
 ```
 Upgrading to the new OpenSpec
@@ -125,41 +129,41 @@ Needs your attention
 ? Upgrade and clean up legacy files? (Y/n)
 ```
 
-**What happens when you say yes:**
+**Yes を選んだ場合:**
 
-1. Legacy slash command directories are removed
-2. OpenSpec markers are stripped from `CLAUDE.md`, `AGENTS.md`, etc. (your content stays)
-3. `openspec/AGENTS.md` is deleted
-4. New skills are installed in `.claude/skills/`
-5. `openspec/config.yaml` is created with a default schema
+1. 旧スラッシュコマンドのディレクトリが削除される
+2. `CLAUDE.md` / `AGENTS.md` から OpenSpec マーカーが除去される（内容は保持）
+3. `openspec/AGENTS.md` が削除される
+4. `.claude/skills/` に新しい skills が生成される
+5. `openspec/config.yaml` が作成され、デフォルトスキーマが設定される
 
-### Using `openspec update`
+### `openspec update` を使う
 
-Run this if you just want to migrate and refresh your existing tools to the latest version:
+既存ツールを最新に更新したい場合:
 
 ```bash
 openspec update
 ```
 
-The update command also detects and cleans up legacy artifacts, then refreshes your skills to the latest version.
+update も旧ファイルの検出・クリーンアップを行い、最新の skills を再生成します。
 
-### Non-Interactive / CI Environments
+### 非対話 / CI 環境
 
-For scripted migrations:
+スクリプトで移行する場合:
 
 ```bash
 openspec init --force --tools claude
 ```
 
-The `--force` flag skips prompts and auto-accepts cleanup.
+`--force` はプロンプトを省略し、クリーンアップを自動承認します。
 
 ---
 
-## Migrating project.md to config.yaml
+## project.md から config.yaml へ移行
 
-The old `openspec/project.md` was a freeform markdown file for project context. The new `openspec/config.yaml` is structured and—critically—**injected into every planning request** so your conventions are always present when the AI works.
+旧 `openspec/project.md` は自由記述の Markdown でした。新しい `openspec/config.yaml` は構造化され、**すべての計画リクエストに注入** されます。これにより AI が常に文脈を持った状態でアーティファクトを作ります。
 
-### Before (project.md)
+### Before（project.md）
 
 ```markdown
 # Project Context
@@ -175,7 +179,7 @@ Our API is RESTful and documented in docs/api.md.
 - Use Given/When/Then format for specifications
 ```
 
-### After (config.yaml)
+### After（config.yaml）
 
 ```yaml
 schema: spec-driven
@@ -196,50 +200,49 @@ rules:
     - Include sequence diagrams for complex flows
 ```
 
-### Key Differences
+### 主な違い
 
 | project.md | config.yaml |
 |------------|-------------|
-| Freeform markdown | Structured YAML |
-| One blob of text | Separate context and per-artifact rules |
-| Unclear when it's used | Context appears in ALL artifacts; rules appear in matching artifacts only |
-| No schema selection | Explicit `schema:` field sets default workflow |
+| 自由記述 Markdown | 構造化 YAML |
+| 一つの長文 | context と rules に分離 |
+| 使われるタイミングが曖昧 | context は全アーティファクトに注入、rules は該当アーティファクトのみ |
+| スキーマ指定なし | `schema:` でデフォルトを明示 |
 
-### What to Keep, What to Drop
+### 何を残し、何を捨てるか
 
-When migrating, be selective. Ask yourself: "Does the AI need this for *every* planning request?"
+移行時は「毎回必要か」を基準に選別します。
 
-**Good candidates for `context:`**
-- Tech stack (languages, frameworks, databases)
-- Key architectural patterns (monorepo, microservices, etc.)
-- Non-obvious constraints ("we can't use library X because...")
-- Critical conventions that often get ignored
+**`context:` に入れるもの**
+- 技術スタック（言語/フレームワーク/DB）
+- 主要な設計パターン（モノレポ、マイクロサービス等）
+- 非自明な制約（「ライブラリ X は使えない」など）
+- 何度も無視された重要規約
 
-**Move to `rules:` instead**
-- Artifact-specific formatting ("use Given/When/Then in specs")
-- Review criteria ("proposals must include rollback plans")
-- These only appear for the matching artifact, keeping other requests lighter
+**`rules:` に移すもの**
+- アーティファクト固有の書式ルール（例: specs は Given/When/Then）
+- レビュー基準（例: proposal にロールバック計画を含める）
 
-**Leave out entirely**
-- General best practices the AI already knows
-- Verbose explanations that could be summarized
-- Historical context that doesn't affect current work
+**省くもの**
+- 一般的なベストプラクティス
+- 冗長な説明
+- 現在の作業に影響しない履歴
 
-### Migration Steps
+### 移行手順
 
-1. **Create config.yaml** (if not already created by init):
+1. **config.yaml を作成**（init が作成済みなら不要）:
    ```yaml
    schema: spec-driven
    ```
 
-2. **Add your context** (be concise—this goes into every request):
+2. **context を追加**（毎回注入されるため簡潔に）:
    ```yaml
    context: |
      Your project background goes here.
      Focus on what the AI genuinely needs to know.
    ```
 
-3. **Add per-artifact rules** (optional):
+3. **アーティファクト別ルールを追加**（任意）:
    ```yaml
    rules:
      proposal:
@@ -248,13 +251,13 @@ When migrating, be selective. Ask yourself: "Does the AI need this for *every* p
        - Your spec-writing rules
    ```
 
-4. **Delete project.md** once you've moved everything useful.
+4. **project.md を削除**（必要内容を移したら）
 
-**Don't overthink it.** Start with the essentials and iterate. If you notice the AI missing something important, add it. If context feels bloated, trim it. This is a living document.
+**迷ったら小さく始める。** 重要な要素だけ入れて、足りないと感じたら追加、冗長なら削る運用で十分です。
 
-### Need Help? Use This Prompt
+### 困ったときのプロンプト
 
-If you're unsure how to distill your project.md, ask your AI assistant:
+project.md の取捨選択が難しい場合、AI に次のように依頼できます。
 
 ```
 I'm migrating from OpenSpec's old project.md to the new config.yaml format.
@@ -269,55 +272,55 @@ Please help me create a config.yaml with:
 Leave out anything generic that AI models already know. Be ruthless about brevity.
 ```
 
-The AI will help you identify what's essential vs. what can be trimmed.
+AI が「必須 vs 削減」の判断を手伝います。
 
 ---
 
-## The New Commands
+## 新しいコマンド
 
-After migration, you have 9 OPSX commands instead of 3:
+移行後は 3 つのコマンドではなく 9 つの OPSX コマンドになります。
 
-| Command | Purpose |
+| コマンド | 目的 |
 |---------|---------|
-| `/opsx:explore` | Think through ideas with no structure |
-| `/opsx:new` | Start a new change |
-| `/opsx:continue` | Create the next artifact (one at a time) |
-| `/opsx:ff` | Fast-forward—create all planning artifacts at once |
-| `/opsx:apply` | Implement tasks from tasks.md |
-| `/opsx:verify` | Validate implementation matches specs |
-| `/opsx:sync` | Preview spec merge (optional—archive prompts if needed) |
-| `/opsx:archive` | Finalize and archive the change |
-| `/opsx:bulk-archive` | Archive multiple changes at once |
+| `/opsx:explore` | 形式なしでアイデアを整理 |
+| `/opsx:new` | 新しい変更を開始 |
+| `/opsx:continue` | 次のアーティファクトを作成（1 つずつ） |
+| `/opsx:ff` | 計画アーティファクトを一括生成 |
+| `/opsx:apply` | tasks.md のタスクを実装 |
+| `/opsx:verify` | 実装が仕様に合うか検証 |
+| `/opsx:sync` | 仕様マージのプレビュー（任意） |
+| `/opsx:archive` | 変更を確定・アーカイブ |
+| `/opsx:bulk-archive` | 複数変更を一括アーカイブ |
 
-### Command Mapping from Legacy
+### 旧コマンドとの対応
 
-| Legacy | OPSX Equivalent |
+| 旧コマンド | OPSX での対応 |
 |--------|-----------------|
-| `/openspec:proposal` | `/opsx:new` then `/opsx:ff` |
+| `/openspec:proposal` | `/opsx:new` → `/opsx:ff` |
 | `/openspec:apply` | `/opsx:apply` |
 | `/openspec:archive` | `/opsx:archive` |
 
-### New Capabilities
+### 新しい能力
 
-**Granular artifact creation:**
+**粒度の細かいアーティファクト作成:**
 ```
 /opsx:continue
 ```
-Creates one artifact at a time based on dependencies. Use this when you want to review each step.
+依存関係に基づいて 1 つずつ作成します。各段階をレビューしたいときに有効です。
 
-**Exploration mode:**
+**探索モード:**
 ```
 /opsx:explore
 ```
-Think through ideas with a partner before committing to a change.
+変更を始める前に相談・調査できます。
 
 ---
 
-## Understanding the New Architecture
+## 新アーキテクチャの理解
 
-### From Phase-Locked to Fluid
+### フェーズ固定から流動へ
 
-The legacy workflow forced linear progression:
+旧ワークフローは線形でした:
 
 ```
 ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
@@ -329,7 +332,7 @@ If you're in implementation and realize the design is wrong?
 Too bad. Phase gates don't let you go back easily.
 ```
 
-OPSX uses actions, not phases:
+OPSX はアクションベースです:
 
 ```
          ┌────────────────────────────────────────┐
@@ -342,9 +345,9 @@ OPSX uses actions, not phases:
          └────────────────────────────────────────┘
 ```
 
-### Dependency Graph
+### 依存関係グラフ
 
-Artifacts form a directed graph. Dependencies are enablers, not gates:
+アーティファクトは有向グラフを形成します。依存関係はゲートではなく進行可能性です。
 
 ```
                         proposal
@@ -365,11 +368,11 @@ Artifacts form a directed graph. Dependencies are enablers, not gates:
                      specs, design)
 ```
 
-When you run `/opsx:continue`, it checks what's ready and offers the next artifact. You can also create multiple ready artifacts in any order.
+`/opsx:continue` は ready なアーティファクトを提示します。複数が ready なら任意の順序で作成できます。
 
-### Skills vs Commands
+### Skills と Commands
 
-The legacy system used tool-specific command files:
+旧システムではツール別のコマンドファイルを使っていました:
 
 ```
 .claude/commands/openspec/
@@ -378,7 +381,7 @@ The legacy system used tool-specific command files:
 └── archive.md
 ```
 
-OPSX uses the emerging **skills** standard:
+OPSX は新しい **skills** 標準を使います:
 
 ```
 .claude/skills/
@@ -389,31 +392,31 @@ OPSX uses the emerging **skills** standard:
 └── ...
 ```
 
-Skills are recognized across multiple AI coding tools and provide richer metadata.
+skills は複数の AI ツールで認識され、より豊富なメタデータを提供します。
 
 ---
 
-## Continuing Existing Changes
+## 既存変更の継続
 
-Your in-progress changes work seamlessly with OPSX commands.
+進行中の変更は OPSX コマンドでそのまま続けられます。
 
-**Have an active change from the legacy workflow?**
+**旧ワークフローの変更がある場合:**
 
 ```
 /opsx:apply add-my-feature
 ```
 
-OPSX reads the existing artifacts and continues from where you left off.
+既存アーティファクトを読み込み、続きから進めます。
 
-**Want to add more artifacts to an existing change?**
+**既存変更にアーティファクトを追加したい場合:**
 
 ```
 /opsx:continue add-my-feature
 ```
 
-Shows what's ready to create based on what already exists.
+既存状況に基づき、次に作成できるものを表示します。
 
-**Need to see status?**
+**ステータス確認:**
 
 ```bash
 openspec status --change add-my-feature
@@ -421,9 +424,9 @@ openspec status --change add-my-feature
 
 ---
 
-## The New Config System
+## 新しい設定システム
 
-### config.yaml Structure
+### config.yaml の構造
 
 ```yaml
 # Required: Default schema for new changes
@@ -448,90 +451,90 @@ rules:
     - Break into 2-hour maximum chunks
 ```
 
-### Schema Resolution
+### スキーマ解決順
 
-When determining which schema to use, OPSX checks in order:
+使用するスキーマは次の順で決まります。
 
-1. **CLI flag**: `--schema <name>` (highest priority)
-2. **Change metadata**: `.openspec.yaml` in the change directory
-3. **Project config**: `openspec/config.yaml`
-4. **Default**: `spec-driven`
+1. **CLI フラグ**: `--schema <name>`（最優先）
+2. **変更メタデータ**: 変更フォルダの `.openspec.yaml`
+3. **プロジェクト設定**: `openspec/config.yaml`
+4. **デフォルト**: `spec-driven`
 
-### Available Schemas
+### 利用可能なスキーマ
 
-| Schema | Artifacts | Best For |
+| スキーマ | アーティファクト | 向いている用途 |
 |--------|-----------|----------|
-| `spec-driven` | proposal → specs → design → tasks | Most projects |
+| `spec-driven` | proposal → specs → design → tasks | ほとんどのプロジェクト |
 
-List all available schemas:
+利用可能なスキーマ一覧:
 
 ```bash
 openspec workflow schemas
 ```
 
-### Custom Schemas
+### カスタムスキーマ
 
-Create your own workflow:
+独自スキーマを作成:
 
 ```bash
 openspec schema init my-workflow
 ```
 
-Or fork an existing one:
+既存スキーマをフォーク:
 
 ```bash
 openspec schema fork spec-driven my-workflow
 ```
 
-See [Customization](customization.md) for details.
+詳細は [Customization](customization.md) を参照してください。
 
 ---
 
-## Troubleshooting
+## トラブルシューティング
 
 ### "Legacy files detected in non-interactive mode"
 
-You're running in a CI or non-interactive environment. Use:
+CI など非対話環境で実行しています。次を使ってください。
 
 ```bash
 openspec init --force
 ```
 
-### Commands not appearing after migration
+### 移行後にコマンドが表示されない
 
-Restart your IDE. Skills are detected at startup.
+IDE を再起動してください。skills は起動時に検出されます。
 
 ### "Unknown artifact ID in rules"
 
-Check that your `rules:` keys match your schema's artifact IDs:
+`rules:` のキーがスキーマのアーティファクト ID と一致しているか確認してください。
 
 - **spec-driven**: `proposal`, `specs`, `design`, `tasks`
 
-Run this to see valid artifact IDs:
+有効な ID を確認するには:
 
 ```bash
 openspec workflow schemas --json
 ```
 
-### Config not being applied
+### 設定が反映されない
 
-1. Ensure the file is at `openspec/config.yaml` (not `.yml`)
-2. Validate YAML syntax
-3. Config changes take effect immediately—no restart needed
+1. `openspec/config.yaml` に置いているか（`.yml` ではない）
+2. YAML 構文が正しいか
+3. 設定変更は即時反映される（再起動不要）
 
-### project.md not migrated
+### project.md が移行されていない
 
-The system intentionally preserves `project.md` because it may contain your custom content. Review it manually, move useful parts to `config.yaml`, then delete it.
+`project.md` は内容が残る可能性があるため自動削除されません。手動で確認し、必要な部分を `config.yaml` に移してから削除してください。
 
-### Want to see what would be cleaned up?
+### 何が削除されるか確認したい
 
-Run init and decline the cleanup prompt—you'll see the full detection summary without any changes being made.
+init を実行してクリーンアップを拒否すると、変更を加えずに検出結果を確認できます。
 
 ---
 
-## Quick Reference
+## クイックリファレンス
 
-### Files After Migration
+### 移行後のファイル構成
 
 ```
 project/
@@ -549,14 +552,14 @@ project/
 └── AGENTS.md                     # OpenSpec markers removed, your content preserved
 ```
 
-### What's Gone
+### なくなるもの
 
-- `.claude/commands/openspec/` — replaced by `.claude/skills/`
-- `openspec/AGENTS.md` — obsolete
-- `openspec/project.md` — migrate to `config.yaml`, then delete
-- OpenSpec marker blocks in `CLAUDE.md`, `AGENTS.md`, etc.
+- `.claude/commands/openspec/` — `.claude/skills/` に置換
+- `openspec/AGENTS.md` — 廃止
+- `openspec/project.md` — `config.yaml` に移行して削除
+- `CLAUDE.md` / `AGENTS.md` などの OpenSpec マーカー
 
-### Command Cheatsheet
+### コマンド早見表
 
 ```
 /opsx:new          Start a change
@@ -568,8 +571,8 @@ project/
 
 ---
 
-## Getting Help
+## サポート
 
 - **Discord**: [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC)
 - **GitHub Issues**: [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues)
-- **Documentation**: [docs/opsx.md](opsx.md) for the full OPSX reference
+- **ドキュメント**: [docs/opsx.md](opsx.md) — OPSX の詳細
