@@ -18,6 +18,12 @@
 - 対応: `schemas/spec-driven/schema.yaml` の `apply.instruction` も日本語化し、CLI の表示とテスト期待値を一致させた。
 - フォローアップ: 新しいスキーマ追加時は `apply` セクションの文言もローカライズ対象に含める。
 
+### v1.0.2: 新規オンボーディングスキル追加に伴う構造更新
+- ファイル: `src/core/templates/skill-templates.ts`, `src/core/shared/tool-detection.ts`, `src/core/init.ts`, `src/core/update.ts`
+- 症状: v1.0.2 で `openspec-onboard` スキルと `license/compatibility/metadata` が追加され、テンプレート構造と検出リストが更新されている。文字列置換だけだと新規スキルが検出されず、生成数や一覧が upstream と一致しない。
+- 対応: `SkillTemplate` に optional fields を追加し、オンボーディング用テンプレートを新設。`SKILL_NAMES` に `openspec-onboard` を追加し、生成・更新の件数が upstream と一致するように反映した。
+- フォローアップ: upstream でスキル種別やテンプレートメタデータが増減した場合、検出リストとテンプレート構造を先に合わせてから文言を翻訳する。
+
 ### 単数/複数の表記を日本語で統一する扱い
 - 仕様: 日本語では単数・複数の揺れを避け、カウントは「件」や「タスク」など固定表記に寄せる。
 - 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は常に「タスク」表記、`src/core/view.ts` と `src/core/list.ts` は `件` を用いた固定表記に統一。

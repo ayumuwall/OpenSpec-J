@@ -584,9 +584,9 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('Cleaned up legacy files:');
-      expect(summary).toContain('✓ Removed CLAUDE.md');
-      expect(summary).toContain('✓ Removed CLINE.md');
+      expect(summary).toContain('旧ファイルをクリーンアップしました:');
+      expect(summary).toContain('✓ CLAUDE.md を削除');
+      expect(summary).toContain('✓ CLINE.md を削除');
     });
 
     it('should format deleted directories', () => {
@@ -599,7 +599,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('✓ Removed .claude/commands/openspec/ (replaced by /opsx:*)');
+      expect(summary).toContain('✓ .claude/commands/openspec/ を削除（/opsx:* に置き換え）');
     });
 
     it('should format modified files', () => {
@@ -612,7 +612,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('✓ Removed OpenSpec markers from AGENTS.md');
+      expect(summary).toContain('✓ AGENTS.md から OpenSpec マーカーを削除');
     });
 
     it('should include migration hint for project.md', () => {
@@ -625,7 +625,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('Needs your attention');
+      expect(summary).toContain('要対応');
       expect(summary).toContain('openspec/project.md');
       expect(summary).toContain('config.yaml');
     });
@@ -640,7 +640,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatCleanupSummary(result);
-      expect(summary).toContain('Errors during cleanup:');
+      expect(summary).toContain('クリーンアップ中のエラー:');
       expect(summary).toContain('Failed to delete CLAUDE.md');
     });
 
@@ -672,9 +672,9 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Upgrading to the new OpenSpec');
-      expect(summary).toContain('agent skills');
-      expect(summary).toContain('keeping everything working');
+      expect(summary).toContain('新しい OpenSpec にアップグレードします');
+      expect(summary).toContain('エージェントスキル');
+      expect(summary).toContain('従来と同じ');
     });
 
     it('should format config files as files to update (never remove)', () => {
@@ -690,11 +690,11 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      // Config files should be in "Files to update", not "Files to remove"
-      expect(summary).toContain('Files to update');
+      // Config files should be in "更新するファイル", not "削除するファイル"
+      expect(summary).toContain('更新するファイル');
       expect(summary).toContain('• CLAUDE.md');
       // Should NOT be in removals
-      expect(summary).not.toContain('No user content to preserve');
+      expect(summary).not.toContain('ユーザーコンテンツは含まれません');
     });
 
     it('should format files to be updated', () => {
@@ -710,9 +710,9 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Files to update');
-      expect(summary).toContain('markers will be removed');
-      expect(summary).toContain('your content preserved');
+      expect(summary).toContain('更新するファイル');
+      expect(summary).toContain('OpenSpec マーカー');
+      expect(summary).toContain('保持');
       expect(summary).toContain('• CLINE.md');
     });
 
@@ -729,7 +729,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Files to remove');
+      expect(summary).toContain('削除するファイル');
       expect(summary).toContain('• .claude/commands/openspec/');
     });
 
@@ -746,7 +746,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Files to remove');
+      expect(summary).toContain('削除するファイル');
       expect(summary).toContain('• .cursor/commands/openspec-proposal.md');
     });
 
@@ -763,7 +763,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Files to remove');
+      expect(summary).toContain('削除するファイル');
       expect(summary).toContain('• openspec/AGENTS.md');
     });
 
@@ -780,7 +780,7 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      expect(summary).toContain('Needs your attention');
+      expect(summary).toContain('要対応');
       expect(summary).toContain('• openspec/project.md');
       expect(summary).toContain('won\'t delete this file');
       expect(summary).toContain('config.yaml');
@@ -800,10 +800,10 @@ ${OPENSPEC_MARKERS.end}`);
       };
 
       const summary = formatDetectionSummary(detection);
-      // Config files now in "Files to update", not "Files to remove"
-      expect(summary).toContain('Files to update');
+      // Config files now in "更新するファイル", not "削除するファイル"
+      expect(summary).toContain('更新するファイル');
       expect(summary).toContain('CLAUDE.md');
-      expect(summary).toContain('Needs your attention');
+      expect(summary).toContain('要対応');
       expect(summary).toContain('openspec/project.md');
     });
 
@@ -821,8 +821,8 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatDetectionSummary(detection);
       // Check both sections exist
-      expect(summary).toContain('Files to remove');
-      expect(summary).toContain('Files to update');
+      expect(summary).toContain('削除するファイル');
+      expect(summary).toContain('更新するファイル');
       // Check removals (only slash commands and openspec/AGENTS.md)
       expect(summary).toContain('• .claude/commands/openspec/');
       expect(summary).toContain('• openspec/AGENTS.md');
@@ -851,7 +851,7 @@ ${OPENSPEC_MARKERS.end}`);
   describe('formatProjectMdMigrationHint', () => {
     it('should return migration hint message', () => {
       const hint = formatProjectMdMigrationHint();
-      expect(hint).toContain('Needs your attention');
+      expect(hint).toContain('要対応');
       expect(hint).toContain('openspec/project.md');
       expect(hint).toContain('won\'t delete this file');
       expect(hint).toContain('config.yaml');

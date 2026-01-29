@@ -111,17 +111,17 @@ export async function validateChangeExists(
   if (!changeName) {
     const available = await getAvailableChanges();
     if (available.length === 0) {
-      throw new Error('No changes found. Create one with: openspec new change <name>');
+      throw new Error('変更が見つかりません。作成するには: openspec new change <name>');
     }
     throw new Error(
-      `Missing required option --change. Available changes:\n  ${available.join('\n  ')}`
+      `必須オプション --change が指定されていません。利用可能な変更:\n  ${available.join('\n  ')}`
     );
   }
 
   // Validate change name format to prevent path traversal
   const nameValidation = validateChangeName(changeName);
   if (!nameValidation.valid) {
-    throw new Error(`Invalid change name '${changeName}': ${nameValidation.error}`);
+    throw new Error(`変更名が不正です '${changeName}': ${nameValidation.error}`);
   }
 
   // Check directory existence directly
@@ -132,11 +132,11 @@ export async function validateChangeExists(
     const available = await getAvailableChanges();
     if (available.length === 0) {
       throw new Error(
-        `Change '${changeName}' not found. No changes exist. Create one with: openspec new change <name>`
+        `変更 '${changeName}' が見つかりません。変更が存在しません。作成するには: openspec new change <name>`
       );
     }
     throw new Error(
-      `Change '${changeName}' not found. Available changes:\n  ${available.join('\n  ')}`
+      `変更 '${changeName}' が見つかりません。利用可能な変更:\n  ${available.join('\n  ')}`
     );
   }
 
@@ -154,7 +154,7 @@ export function validateSchemaExists(schemaName: string, projectRoot?: string): 
   if (!schemaDir) {
     const availableSchemas = listSchemas(projectRoot);
     throw new Error(
-      `Schema '${schemaName}' not found. Available schemas:\n  ${availableSchemas.join('\n  ')}`
+      `スキーマ '${schemaName}' が見つかりません。利用可能なスキーマ:\n  ${availableSchemas.join('\n  ')}`
     );
   }
   return schemaName;

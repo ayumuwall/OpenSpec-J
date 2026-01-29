@@ -28,19 +28,19 @@ export async function schemasCommand(options: SchemasOptions): Promise<void> {
     return;
   }
 
-  console.log('Available schemas:');
+  console.log('利用可能なスキーマ:');
   console.log();
 
   for (const schema of schemas) {
     let sourceLabel = '';
     if (schema.source === 'project') {
-      sourceLabel = chalk.cyan(' (project)');
+      sourceLabel = chalk.cyan(' （プロジェクト）');
     } else if (schema.source === 'user') {
-      sourceLabel = chalk.dim(' (user override)');
+      sourceLabel = chalk.dim(' （ユーザー上書き）');
     }
     console.log(`  ${chalk.bold(schema.name)}${sourceLabel}`);
     console.log(`    ${schema.description}`);
-    console.log(`    Artifacts: ${schema.artifacts.join(' → ')}`);
+    console.log(`    アーティファクト: ${schema.artifacts.join(' → ')}`);
     console.log();
   }
 }

@@ -58,7 +58,7 @@ export class UpdateCommand {
 
     // 1. Check openspec directory exists
     if (!await FileSystemUtils.directoryExists(openspecPath)) {
-      throw new Error(`No OpenSpec directory found. Run 'openspec init' first.`);
+      throw new Error("OpenSpec ディレクトリが見つかりません。先に 'openspec init' を実行してください。");
     }
 
     // 2. Detect and handle legacy artifacts + upgrade legacy tools to new skills
@@ -68,8 +68,8 @@ export class UpdateCommand {
     const configuredTools = getConfiguredTools(resolvedProjectPath);
 
     if (configuredTools.length === 0 && newlyConfiguredTools.length === 0) {
-      console.log(chalk.yellow('No configured tools found.'));
-      console.log(chalk.dim('Run "openspec init" to set up tools.'));
+      console.log(chalk.yellow('設定済みのツールが見つかりません。'));
+      console.log(chalk.dim('ツールのセットアップには "openspec init" を実行してください。'));
       return;
     }
 
@@ -88,7 +88,7 @@ export class UpdateCommand {
 
     // 6. Display update plan
     if (this.force) {
-      console.log(`Force updating ${configuredTools.length} tool(s): ${configuredTools.join(', ')}`);
+      console.log(`強制更新: ${configuredTools.length} 件（${configuredTools.join(', ')}）`);
     } else {
       this.displayUpdatePlan(toolsNeedingUpdate, toolsUpToDate);
     }
@@ -107,7 +107,7 @@ export class UpdateCommand {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (!tool?.skillsDir) continue;
 
-      const spinner = ora(`Updating ${tool.name}...`).start();
+      const spinner = ora(`${tool.name} を更新中...`).start();
 
       try {
         const skillsDir = path.join(resolvedProjectPath, tool.skillsDir, 'skills');
@@ -132,10 +132,10 @@ export class UpdateCommand {
           }
         }
 
-        spinner.succeed(`Updated ${tool.name}`);
+        spinner.succeed(`${tool.name} を更新しました`);
         updatedTools.push(tool.name);
       } catch (error) {
-        spinner.fail(`Failed to update ${tool.name}`);
+        spinner.fail(`${tool.name} の更新に失敗しました`);
         failedTools.push({
           name: tool.name,
           error: error instanceof Error ? error.message : String(error)
@@ -146,25 +146,25 @@ export class UpdateCommand {
     // 9. Summary
     console.log();
     if (updatedTools.length > 0) {
-      console.log(chalk.green(`✓ Updated: ${updatedTools.join(', ')} (v${OPENSPEC_VERSION})`));
+      console.log(chalk.green(`✓ 更新: ${updatedTools.join(', ')}（v${OPENSPEC_VERSION}）`));
     }
     if (failedTools.length > 0) {
-      console.log(chalk.red(`✗ Failed: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
+      console.log(chalk.red(`✗ 失敗: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
     }
 
     // 10. Show onboarding message for newly configured tools from legacy upgrade
     if (newlyConfiguredTools.length > 0) {
       console.log();
-      console.log(chalk.bold('Getting started:'));
-      console.log('  /opsx:new       Start a new change');
-      console.log('  /opsx:continue  Create the next artifact');
-      console.log('  /opsx:apply     Implement tasks');
+      console.log(chalk.bold('はじめに:'));
+      console.log('  /opsx:new       新しい変更を開始');
+      console.log('  /opsx:continue  次のアーティファクトを作成');
+      console.log('  /opsx:apply     タスクを実装');
       console.log();
-      console.log(`Learn more: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
+      console.log(`詳細: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
     }
 
     console.log();
-    console.log(chalk.dim('Restart your IDE for changes to take effect.'));
+    console.log(chalk.dim('変更を反映するには IDE を再起動してください。'));
   }
 
   /**
@@ -172,10 +172,10 @@ export class UpdateCommand {
    */
   private displayUpToDateMessage(toolStatuses: ToolVersionStatus[]): void {
     const toolNames = toolStatuses.map((s) => s.toolId);
-    console.log(chalk.green(`✓ All ${toolStatuses.length} tool(s) up to date (v${OPENSPEC_VERSION})`));
-    console.log(chalk.dim(`  Tools: ${toolNames.join(', ')}`));
+    console.log(chalk.green(`✓ すべてのツールが最新です（${toolStatuses.length} 件 / v${OPENSPEC_VERSION}）`));
+    console.log(chalk.dim(`  対象ツール: ${toolNames.join(', ')}`));
     console.log();
-    console.log(chalk.dim('Use --force to refresh skills anyway.'));
+    console.log(chalk.dim('--force を使うとスキルを強制的に再生成できます。'));
   }
 
   /**
@@ -186,15 +186,15 @@ export class UpdateCommand {
     upToDate: ToolVersionStatus[]
   ): void {
     const updates = needingUpdate.map((s) => {
-      const fromVersion = s.generatedByVersion ?? 'unknown';
+      const fromVersion = s.generatedByVersion ?? '不明';
       return `${s.toolId} (${fromVersion} → ${OPENSPEC_VERSION})`;
     });
 
-    console.log(`Updating ${needingUpdate.length} tool(s): ${updates.join(', ')}`);
+    console.log(`更新対象: ${needingUpdate.length} 件（${updates.join(', ')}）`);
 
     if (upToDate.length > 0) {
       const upToDateNames = upToDate.map((s) => s.toolId);
-      console.log(chalk.dim(`Already up to date: ${upToDateNames.join(', ')}`));
+      console.log(chalk.dim(`最新: ${upToDateNames.join(', ')}`));
     }
   }
 
@@ -228,7 +228,7 @@ export class UpdateCommand {
     if (!canPrompt) {
       // Non-interactive mode without --force: warn and continue
       // (Unlike init, update doesn't abort - user may just want to update skills)
-      console.log(chalk.yellow('⚠ Run with --force to auto-cleanup legacy files, or run interactively.'));
+      console.log(chalk.yellow('⚠ --force で旧ファイルを自動クリーンアップするか、対話モードで実行してください。'));
       console.log();
       return [];
     }
@@ -236,7 +236,7 @@ export class UpdateCommand {
     // Interactive mode: prompt for confirmation
     const { confirm } = await import('@inquirer/prompts');
     const shouldCleanup = await confirm({
-      message: 'Upgrade and clean up legacy files?',
+      message: '旧ファイルをアップグレードしてクリーンアップしますか？',
       default: true,
     });
 
@@ -245,7 +245,7 @@ export class UpdateCommand {
       // Then upgrade legacy tools to new skills
       return this.upgradeLegacyTools(projectPath, detection, canPrompt);
     } else {
-      console.log(chalk.dim('Skipping legacy cleanup. Continuing with skill update...'));
+      console.log(chalk.dim('旧ファイルのクリーンアップをスキップし、スキル更新を続行します...'));
       console.log();
       return [];
     }
@@ -255,11 +255,11 @@ export class UpdateCommand {
    * Perform cleanup of legacy artifacts.
    */
   private async performLegacyCleanup(projectPath: string, detection: LegacyDetectionResult): Promise<void> {
-    const spinner = ora('Cleaning up legacy files...').start();
+    const spinner = ora('旧ファイルをクリーンアップ中...').start();
 
     const result = await cleanupLegacyArtifacts(projectPath, detection);
 
-    spinner.succeed('Legacy files cleaned up');
+    spinner.succeed('旧ファイルのクリーンアップが完了しました');
 
     const summary = formatCleanupSummary(result);
     if (summary) {
@@ -306,7 +306,7 @@ export class UpdateCommand {
     }
 
     // Show what tools were detected from legacy artifacts
-    console.log(chalk.bold('Tools detected from legacy artifacts:'));
+    console.log(chalk.bold('旧アーティファクトから検出したツール:'));
     for (const toolId of validUnconfiguredTools) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       console.log(`  • ${tool?.name || toolId}`);
@@ -318,7 +318,7 @@ export class UpdateCommand {
     if (this.force || !canPrompt) {
       // Non-interactive with --force: auto-select detected tools
       selectedTools = validUnconfiguredTools;
-      console.log(`Setting up skills for: ${selectedTools.join(', ')}`);
+      console.log(`スキルをセットアップ: ${selectedTools.join(', ')}`);
     } else {
       // Interactive mode: prompt for tool selection with detected tools pre-selected
       const { searchableMultiSelect } = await import('../prompts/searchable-multi-select.js');
@@ -334,14 +334,14 @@ export class UpdateCommand {
       });
 
       selectedTools = await searchableMultiSelect({
-        message: 'Select tools to set up with the new skill system:',
+        message: '新しいスキルシステムでセットアップするツールを選択してください:',
         pageSize: 15,
         choices: sortedChoices,
         validate: (_selected: string[]) => true, // Allow empty selection (user can skip)
       });
 
       if (selectedTools.length === 0) {
-        console.log(chalk.dim('Skipping tool setup.'));
+        console.log(chalk.dim('ツールのセットアップをスキップします。'));
         console.log();
         return [];
       }
@@ -356,7 +356,7 @@ export class UpdateCommand {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (!tool?.skillsDir) continue;
 
-      const spinner = ora(`Setting up ${tool.name}...`).start();
+      const spinner = ora(`${tool.name} をセットアップ中...`).start();
 
       try {
         const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
@@ -381,10 +381,10 @@ export class UpdateCommand {
           }
         }
 
-        spinner.succeed(`Setup complete for ${tool.name}`);
+        spinner.succeed(`${tool.name} のセットアップが完了しました`);
         newlyConfigured.push(toolId);
       } catch (error) {
-        spinner.fail(`Failed to set up ${tool.name}`);
+        spinner.fail(`${tool.name} のセットアップに失敗しました`);
         console.log(chalk.red(`  ${error instanceof Error ? error.message : String(error)}`));
       }
     }

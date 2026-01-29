@@ -21,6 +21,7 @@ export const SKILL_NAMES = [
   'openspec-archive-change',
   'openspec-bulk-archive-change',
   'openspec-verify-change',
+  'openspec-onboard',
 ] as const;
 
 export type SkillName = (typeof SKILL_NAMES)[number];
@@ -31,9 +32,9 @@ export type SkillName = (typeof SKILL_NAMES)[number];
 export interface ToolSkillStatus {
   /** Whether the tool has any skills configured */
   configured: boolean;
-  /** Whether all 9 skills are configured */
+  /** Whether all 10 skills are configured */
   fullyConfigured: boolean;
-  /** Number of skills currently configured (0-9) */
+  /** Number of skills currently configured (0-10) */
   skillCount: number;
 }
 

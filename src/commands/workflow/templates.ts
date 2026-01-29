@@ -33,7 +33,7 @@ export interface TemplateInfo {
 // -----------------------------------------------------------------------------
 
 export async function templatesCommand(options: TemplatesOptions): Promise<void> {
-  const spinner = ora('Loading templates...').start();
+  const spinner = ora('テンプレートを読み込み中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -83,8 +83,8 @@ export async function templatesCommand(options: TemplatesOptions): Promise<void>
       return;
     }
 
-    console.log(`Schema: ${schemaName}`);
-    console.log(`Source: ${source}`);
+    console.log(`スキーマ: ${schemaName}`);
+    console.log(`ソース: ${source}`);
     console.log();
 
     for (const t of templates) {

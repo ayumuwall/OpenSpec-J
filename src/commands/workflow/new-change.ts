@@ -24,7 +24,7 @@ export interface NewChangeOptions {
 
 export async function newChangeCommand(name: string | undefined, options: NewChangeOptions): Promise<void> {
   if (!name) {
-    throw new Error('Missing required argument <name>');
+    throw new Error('必須引数 <name> が指定されていません');
   }
 
   const validation = validateChangeName(name);
@@ -39,8 +39,8 @@ export async function newChangeCommand(name: string | undefined, options: NewCha
     validateSchemaExists(options.schema, projectRoot);
   }
 
-  const schemaDisplay = options.schema ? ` with schema '${options.schema}'` : '';
-  const spinner = ora(`Creating change '${name}'${schemaDisplay}...`).start();
+  const schemaDisplay = options.schema ? `（スキーマ: '${options.schema}'）` : '';
+  const spinner = ora(`変更 '${name}' を作成中${schemaDisplay}...`).start();
 
   try {
     const result = await createChange(projectRoot, name, { schema: options.schema });
@@ -53,9 +53,9 @@ export async function newChangeCommand(name: string | undefined, options: NewCha
       await fs.writeFile(readmePath, `# ${name}\n\n${options.description}\n`, 'utf-8');
     }
 
-    spinner.succeed(`Created change '${name}' at openspec/changes/${name}/ (schema: ${result.schema})`);
+    spinner.succeed(`変更 '${name}' を openspec/changes/${name}/ に作成しました（スキーマ: ${result.schema}）`);
   } catch (error) {
-    spinner.fail(`Failed to create change '${name}'`);
+    spinner.fail(`変更 '${name}' の作成に失敗しました`);
     throw error;
   }
 }

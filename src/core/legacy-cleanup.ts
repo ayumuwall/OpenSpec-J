@@ -378,7 +378,7 @@ export async function cleanupLegacyArtifacts(
       await FileSystemUtils.writeFile(filePath, newContent);
       result.modifiedFiles.push(fileName);
     } catch (error: any) {
-      result.errors.push(`Failed to modify ${fileName}: ${error.message}`);
+      result.errors.push(`${fileName} の更新に失敗しました: ${error.message}`);
     }
   }
 
@@ -389,7 +389,7 @@ export async function cleanupLegacyArtifacts(
       await fs.rm(fullPath, { recursive: true, force: true });
       result.deletedDirs.push(dirPath);
     } catch (error: any) {
-      result.errors.push(`Failed to delete directory ${dirPath}: ${error.message}`);
+      result.errors.push(`${dirPath} ディレクトリの削除に失敗しました: ${error.message}`);
     }
   }
 
@@ -400,7 +400,7 @@ export async function cleanupLegacyArtifacts(
       await fs.unlink(fullPath);
       result.deletedFiles.push(filePath);
     } catch (error: any) {
-      result.errors.push(`Failed to delete ${filePath}: ${error.message}`);
+      result.errors.push(`${filePath} の削除に失敗しました: ${error.message}`);
     }
   }
 
@@ -412,7 +412,7 @@ export async function cleanupLegacyArtifacts(
         await fs.unlink(agentsPath);
         result.deletedFiles.push('openspec/AGENTS.md');
       } catch (error: any) {
-        result.errors.push(`Failed to delete openspec/AGENTS.md: ${error.message}`);
+        result.errors.push(`openspec/AGENTS.md の削除に失敗しました: ${error.message}`);
       }
     }
   }
@@ -434,18 +434,18 @@ export function formatCleanupSummary(result: CleanupResult): string {
   const lines: string[] = [];
 
   if (result.deletedFiles.length > 0 || result.deletedDirs.length > 0 || result.modifiedFiles.length > 0) {
-    lines.push('Cleaned up legacy files:');
+    lines.push('旧ファイルをクリーンアップしました:');
 
     for (const file of result.deletedFiles) {
-      lines.push(`  ✓ Removed ${file}`);
+      lines.push(`  ✓ ${file} を削除`);
     }
 
     for (const dir of result.deletedDirs) {
-      lines.push(`  ✓ Removed ${dir}/ (replaced by /opsx:*)`);
+      lines.push(`  ✓ ${dir}/ を削除（/opsx:* に置き換え）`);
     }
 
     for (const file of result.modifiedFiles) {
-      lines.push(`  ✓ Removed OpenSpec markers from ${file}`);
+      lines.push(`  ✓ ${file} から OpenSpec マーカーを削除`);
     }
   }
 
@@ -460,7 +460,7 @@ export function formatCleanupSummary(result: CleanupResult): string {
     if (lines.length > 0) {
       lines.push('');
     }
-    lines.push('Errors during cleanup:');
+    lines.push('クリーンアップ中のエラー:');
     for (const error of result.errors) {
       lines.push(`  ⚠ ${error}`);
     }
@@ -484,17 +484,17 @@ function buildRemovalsList(detection: LegacyDetectionResult): Array<{ path: stri
   for (const dir of detection.slashCommandDirs) {
     // Split on both forward and backward slashes for Windows compatibility
     const toolDir = dir.split(/[\/\\]/)[0];
-    removals.push({ path: dir + '/', explanation: `replaced by ${toolDir}/skills/` });
+    removals.push({ path: dir + '/', explanation: `${toolDir}/skills/ に置き換え` });
   }
 
   // Slash command files (these are 100% OpenSpec-managed)
   for (const file of detection.slashCommandFiles) {
-    removals.push({ path: file, explanation: 'replaced by skills/' });
+    removals.push({ path: file, explanation: 'skills/ に置き換え' });
   }
 
   // openspec/AGENTS.md (inside openspec/, it's OpenSpec-managed)
   if (detection.hasOpenspecAgents) {
-    removals.push({ path: 'openspec/AGENTS.md', explanation: 'obsolete workflow file' });
+    removals.push({ path: 'openspec/AGENTS.md', explanation: '旧ワークフローファイル' });
   }
 
   // Note: Config files (CLAUDE.md, AGENTS.md, etc.) are NEVER in the removals list
@@ -515,7 +515,7 @@ function buildUpdatesList(detection: LegacyDetectionResult): Array<{ path: strin
 
   // All config files with markers get updated (markers removed, file preserved)
   for (const file of detection.configFilesToUpdate) {
-    updates.push({ path: file, explanation: 'removing OpenSpec markers' });
+    updates.push({ path: file, explanation: 'OpenSpec マーカーを削除' });
   }
 
   return updates;
@@ -540,17 +540,17 @@ export function formatDetectionSummary(detection: LegacyDetectionResult): string
   }
 
   // Header - welcoming upgrade message
-  lines.push(chalk.bold('Upgrading to the new OpenSpec'));
+  lines.push(chalk.bold('新しい OpenSpec にアップグレードします'));
   lines.push('');
-  lines.push('OpenSpec now uses agent skills, the emerging standard across coding');
-  lines.push('agents. This simplifies your setup while keeping everything working');
-  lines.push('as before.');
+  lines.push('OpenSpec は、コーディングエージェントの新しい標準である');
+  lines.push('エージェントスキルを採用しました。これにより、従来と同じ');
+  lines.push('動作を維持しつつセットアップが簡素化されます。');
   lines.push('');
 
   // Section 1: Files to remove (no user content to preserve)
   if (removals.length > 0) {
-    lines.push(chalk.bold('Files to remove'));
-    lines.push(chalk.dim('No user content to preserve:'));
+    lines.push(chalk.bold('削除するファイル'));
+    lines.push(chalk.dim('ユーザーコンテンツは含まれません:'));
     for (const { path } of removals) {
       lines.push(`  • ${path}`);
     }
@@ -559,8 +559,8 @@ export function formatDetectionSummary(detection: LegacyDetectionResult): string
   // Section 2: Files to update (markers removed, content preserved)
   if (updates.length > 0) {
     if (removals.length > 0) lines.push('');
-    lines.push(chalk.bold('Files to update'));
-    lines.push(chalk.dim('OpenSpec markers will be removed, your content preserved:'));
+    lines.push(chalk.bold('更新するファイル'));
+    lines.push(chalk.dim('OpenSpec マーカーのみ削除し、内容は保持します:'));
     for (const { path } of updates) {
       lines.push(`  • ${path}`);
     }
@@ -626,15 +626,15 @@ export function getToolsFromLegacyArtifacts(detection: LegacyDetectionResult): s
  */
 export function formatProjectMdMigrationHint(): string {
   const lines: string[] = [];
-  lines.push(chalk.yellow.bold('Needs your attention'));
+  lines.push(chalk.yellow.bold('要対応'));
   lines.push('  • openspec/project.md');
-  lines.push(chalk.dim('    We won\'t delete this file. It may contain useful project context.'));
+  lines.push(chalk.dim('    このファイルは削除しません。プロジェクト文脈が含まれている可能性があります。'));
   lines.push('');
-  lines.push(chalk.dim('    The new openspec/config.yaml has a "context:" section for planning'));
-  lines.push(chalk.dim('    context. This is included in every OpenSpec request and works more'));
-  lines.push(chalk.dim('    reliably than the old project.md approach.'));
+  lines.push(chalk.dim('    新しい openspec/config.yaml には、計画用の "context:" セクションが'));
+  lines.push(chalk.dim('    あり、すべての OpenSpec リクエストに含まれます。旧 project.md より'));
+  lines.push(chalk.dim('    も確実に機能します。'));
   lines.push('');
-  lines.push(chalk.dim('    Review project.md, move any useful content to config.yaml\'s context'));
-  lines.push(chalk.dim('    section, then delete the file when ready.'));
+  lines.push(chalk.dim('    project.md を確認し、必要な内容を config.yaml の context セクションに移し、'));
+  lines.push(chalk.dim('    準備ができたらファイルを削除してください。'));
   return lines.join('\n');
 }

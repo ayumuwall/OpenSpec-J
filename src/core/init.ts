@@ -132,7 +132,7 @@ export class InitCommand {
 
     // Check write permissions
     if (!(await FileSystemUtils.ensureWritePermissions(projectPath))) {
-      throw new Error(`Insufficient permissions to write to ${projectPath}`);
+      throw new Error(`${projectPath} への書き込み権限がありません`);
     }
     return extendMode;
   }
@@ -170,21 +170,21 @@ export class InitCommand {
 
     if (!canPrompt) {
       // Non-interactive mode without --force: abort
-      console.log(chalk.red('Legacy files detected in non-interactive mode.'));
-      console.log(chalk.dim('Run interactively to upgrade, or use --force to auto-cleanup.'));
+      console.log(chalk.red('非対話モードで旧ファイルが検出されました。'));
+      console.log(chalk.dim('対話モードでアップグレードするか、--force で自動クリーンアップしてください。'));
       process.exit(1);
     }
 
     // Interactive mode: prompt for confirmation
     const { confirm } = await import('@inquirer/prompts');
     const shouldCleanup = await confirm({
-      message: 'Upgrade and clean up legacy files?',
+      message: '旧ファイルをアップグレードしてクリーンアップしますか？',
       default: true,
     });
 
     if (!shouldCleanup) {
-      console.log(chalk.dim('Initialization cancelled.'));
-      console.log(chalk.dim('Run with --force to skip this prompt, or manually remove legacy files.'));
+      console.log(chalk.dim('初期化を中止しました。'));
+      console.log(chalk.dim('--force でこのプロンプトを省略するか、手動で旧ファイルを削除してください。'));
       process.exit(0);
     }
 
@@ -192,11 +192,11 @@ export class InitCommand {
   }
 
   private async performLegacyCleanup(projectPath: string, detection: LegacyDetectionResult): Promise<void> {
-    const spinner = ora('Cleaning up legacy files...').start();
+    const spinner = ora('旧ファイルをクリーンアップ中...').start();
 
     const result = await cleanupLegacyArtifacts(projectPath, detection);
 
-    spinner.succeed('Legacy files cleaned up');
+    spinner.succeed('旧ファイルのクリーンアップが完了しました');
 
     const summary = formatCleanupSummary(result);
     if (summary) {
@@ -226,7 +226,7 @@ export class InitCommand {
 
     if (!canPrompt || validTools.length === 0) {
       throw new Error(
-        `Missing required option --tools. Valid tools:\n  ${validTools.join('\n  ')}\n\nUse --tools all, --tools none, or --tools claude,cursor,...`
+        `必須オプション --tools が指定されていません。利用可能なツール:\n  ${validTools.join('\n  ')}\n\n--tools all、--tools none、または --tools claude,cursor,... を使用してください。`
       );
     }
 
@@ -255,14 +255,14 @@ export class InitCommand {
       });
 
     const selectedTools = await searchableMultiSelect({
-      message: `Select tools to set up (${validTools.length} available)`,
+      message: `セットアップするツールを選択してください（利用可能: ${validTools.length}）`,
       pageSize: 15,
       choices: sortedChoices,
-      validate: (selected: string[]) => selected.length > 0 || 'Select at least one tool',
+      validate: (selected: string[]) => selected.length > 0 || '少なくとも 1 つ選択してください',
     });
 
     if (selectedTools.length === 0) {
-      throw new Error('At least one tool must be selected');
+      throw new Error('少なくとも 1 つのツールを選択してください');
     }
 
     return selectedTools;
@@ -276,7 +276,7 @@ export class InitCommand {
     const raw = this.toolsArg.trim();
     if (raw.length === 0) {
       throw new Error(
-        'The --tools option requires a value. Use "all", "none", or a comma-separated list of tool IDs.'
+        '--tools には値が必要です。"all" / "none" / ツールIDのカンマ区切りを指定してください。'
       );
     }
 
@@ -300,14 +300,14 @@ export class InitCommand {
 
     if (tokens.length === 0) {
       throw new Error(
-        'The --tools option requires at least one tool ID when not using "all" or "none".'
+        '--tools では "all" / "none" 以外の場合、少なくとも 1 つのツールIDが必要です。'
       );
     }
 
     const normalizedTokens = tokens.map((token) => token.toLowerCase());
 
     if (normalizedTokens.some((token) => token === 'all' || token === 'none')) {
-      throw new Error('Cannot combine reserved values "all" or "none" with specific tool IDs.');
+      throw new Error('予約値 "all" / "none" を特定のツールIDと併用できません。');
     }
 
     const invalidTokens = tokens.filter(
@@ -316,7 +316,7 @@ export class InitCommand {
 
     if (invalidTokens.length > 0) {
       throw new Error(
-        `Invalid tool(s): ${invalidTokens.join(', ')}. Available values: ${availableList}`
+        `無効なツール: ${invalidTokens.join(', ')}。利用可能な値: ${availableList}`
       );
     }
 
@@ -342,14 +342,14 @@ export class InitCommand {
       if (!tool) {
         const validToolIds = getToolsWithSkillsDir();
         throw new Error(
-          `Unknown tool '${toolId}'. Valid tools:\n  ${validToolIds.join('\n  ')}`
+          `未知のツール '${toolId}' です。利用可能なツール:\n  ${validToolIds.join('\n  ')}`
         );
       }
 
       if (!tool.skillsDir) {
         const validToolsWithSkills = getToolsWithSkillsDir();
         throw new Error(
-          `Tool '${toolId}' does not support skill generation.\nTools with skill generation support:\n  ${validToolsWithSkills.join('\n  ')}`
+          `ツール '${toolId}' はスキル生成に対応していません。\nスキル生成対応ツール:\n  ${validToolsWithSkills.join('\n  ')}`
         );
       }
 
@@ -385,7 +385,7 @@ export class InitCommand {
       return;
     }
 
-    const spinner = this.startSpinner('Creating OpenSpec structure...');
+    const spinner = this.startSpinner('OpenSpec 構成を作成中...');
 
     const directories = [
       openspecPath,
@@ -400,7 +400,7 @@ export class InitCommand {
 
     spinner.stopAndPersist({
       symbol: PALETTE.white('▌'),
-      text: PALETTE.white('OpenSpec structure created'),
+      text: PALETTE.white('OpenSpec 構成を作成しました'),
     });
   }
 
@@ -428,7 +428,7 @@ export class InitCommand {
 
     // Process each tool
     for (const tool of tools) {
-      const spinner = ora(`Setting up ${tool.name}...`).start();
+      const spinner = ora(`${tool.name} をセットアップ中...`).start();
 
       try {
         // Use tool-specific skillsDir
@@ -459,7 +459,7 @@ export class InitCommand {
           commandsSkipped.push(tool.value);
         }
 
-        spinner.succeed(`Setup complete for ${tool.name}`);
+        spinner.succeed(`${tool.name} のセットアップが完了しました`);
 
         if (tool.wasConfigured) {
           refreshedTools.push(tool);
@@ -467,7 +467,7 @@ export class InitCommand {
           createdTools.push(tool);
         }
       } catch (error) {
-        spinner.fail(`Failed for ${tool.name}`);
+        spinner.fail(`${tool.name} のセットアップに失敗しました`);
         failedTools.push({ name: tool.name, error: error as Error });
       }
     }
@@ -519,15 +519,15 @@ export class InitCommand {
     configStatus: 'created' | 'exists' | 'skipped'
   ): void {
     console.log();
-    console.log(chalk.bold('OpenSpec Setup Complete'));
+    console.log(chalk.bold('OpenSpec セットアップ完了'));
     console.log();
 
     // Show created vs refreshed tools
     if (results.createdTools.length > 0) {
-      console.log(`Created: ${results.createdTools.map((t) => t.name).join(', ')}`);
+      console.log(`新規作成: ${results.createdTools.map((t) => t.name).join(', ')}`);
     }
     if (results.refreshedTools.length > 0) {
-      console.log(`Refreshed: ${results.refreshedTools.map((t) => t.name).join(', ')}`);
+      console.log(`更新: ${results.refreshedTools.map((t) => t.name).join(', ')}`);
     }
 
     // Show counts
@@ -536,51 +536,51 @@ export class InitCommand {
       const toolDirs = [...new Set(successfulTools.map((t) => t.skillsDir))].join(', ');
       const hasCommands = results.commandsSkipped.length < successfulTools.length;
       if (hasCommands) {
-        console.log(`${getSkillTemplates().length} skills and ${getCommandContents().length} commands in ${toolDirs}/`);
+        console.log(`${getSkillTemplates().length} 個のスキルと ${getCommandContents().length} 個のコマンドを ${toolDirs}/ に生成しました`);
       } else {
-        console.log(`${getSkillTemplates().length} skills in ${toolDirs}/`);
+        console.log(`${getSkillTemplates().length} 個のスキルを ${toolDirs}/ に生成しました`);
       }
     }
 
     // Show failures
     if (results.failedTools.length > 0) {
-      console.log(chalk.red(`Failed: ${results.failedTools.map((f) => `${f.name} (${f.error.message})`).join(', ')}`));
+      console.log(chalk.red(`失敗: ${results.failedTools.map((f) => `${f.name} (${f.error.message})`).join(', ')}`));
     }
 
     // Show skipped commands
     if (results.commandsSkipped.length > 0) {
-      console.log(chalk.dim(`Commands skipped for: ${results.commandsSkipped.join(', ')} (no adapter)`));
+      console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
     }
 
     // Config status
     if (configStatus === 'created') {
-      console.log(`Config: openspec/config.yaml (schema: ${DEFAULT_SCHEMA})`);
+      console.log(`設定: openspec/config.yaml（スキーマ: ${DEFAULT_SCHEMA}）`);
     } else if (configStatus === 'exists') {
       // Show actual filename (config.yaml or config.yml)
       const configYaml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');
       const configYml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yml');
       const configName = fs.existsSync(configYaml) ? 'config.yaml' : fs.existsSync(configYml) ? 'config.yml' : 'config.yaml';
-      console.log(`Config: openspec/${configName} (exists)`);
+      console.log(`設定: openspec/${configName}（既存）`);
     } else {
-      console.log(chalk.dim(`Config: skipped (non-interactive mode)`));
+      console.log(chalk.dim('設定: スキップ（非対話モード）'));
     }
 
     // Getting started
     console.log();
-    console.log(chalk.bold('Getting started:'));
-    console.log('  /opsx:new       Start a new change');
-    console.log('  /opsx:continue  Create the next artifact');
-    console.log('  /opsx:apply     Implement tasks');
+    console.log(chalk.bold('はじめに:'));
+    console.log('  /opsx:new       新しい変更を開始');
+    console.log('  /opsx:continue  次のアーティファクトを作成');
+    console.log('  /opsx:apply     タスクを実装');
 
     // Links
     console.log();
-    console.log(`Learn more: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
-    console.log(`Feedback:   ${chalk.cyan('https://github.com/Fission-AI/OpenSpec/issues')}`);
+    console.log(`詳細: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
+    console.log(`フィードバック: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec/issues')}`);
 
     // Restart instruction if any tools were configured
     if (results.createdTools.length > 0 || results.refreshedTools.length > 0) {
       console.log();
-      console.log(chalk.white('Restart your IDE for slash commands to take effect.'));
+      console.log(chalk.white('スラッシュコマンドを有効にするには IDE を再起動してください。'));
     }
 
     console.log();

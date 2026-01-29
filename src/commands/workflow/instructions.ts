@@ -45,7 +45,7 @@ export async function instructionsCommand(
   artifactId: string | undefined,
   options: InstructionsOptions
 ): Promise<void> {
-  const spinner = ora('Generating instructions...').start();
+  const spinner = ora('指示を生成中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -63,7 +63,7 @@ export async function instructionsCommand(
       spinner.stop();
       const validIds = context.graph.getAllArtifacts().map((a) => a.id);
       throw new Error(
-        `Missing required argument <artifact>. Valid artifacts:\n  ${validIds.join('\n  ')}`
+        `必須引数 <artifact> が指定されていません。有効なアーティファクト:\n  ${validIds.join('\n  ')}`
       );
     }
 
@@ -73,7 +73,7 @@ export async function instructionsCommand(
       spinner.stop();
       const validIds = context.graph.getAllArtifacts().map((a) => a.id);
       throw new Error(
-        `Artifact '${artifactId}' not found in schema '${context.schemaName}'. Valid artifacts:\n  ${validIds.join('\n  ')}`
+        `スキーマ '${context.schemaName}' にアーティファクト '${artifactId}' が見つかりません。有効なアーティファクト:\n  ${validIds.join('\n  ')}`
       );
     }
 
@@ -118,15 +118,15 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   if (isBlocked) {
     const missing = dependencies.filter((d) => !d.done).map((d) => d.id);
     console.log('<warning>');
-    console.log('This artifact has unmet dependencies. Complete them first or proceed with caution.');
-    console.log(`Missing: ${missing.join(', ')}`);
+    console.log('このアーティファクトには未完了の依存関係があります。先に完了するか、注意して進めてください。');
+    console.log(`不足: ${missing.join(', ')}`);
     console.log('</warning>');
     console.log();
   }
 
   // Task directive
   console.log('<task>');
-  console.log(`Create the ${artifactId} artifact for change "${changeName}".`);
+  console.log(`変更 "${changeName}" の ${artifactId} アーティファクトを作成してください。`);
   console.log(description);
   console.log('</task>');
   console.log();
@@ -134,7 +134,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // Project context (AI constraint - do not include in output)
   if (context) {
     console.log('<project_context>');
-    console.log('<!-- This is background information for you. Do NOT include this in your output. -->');
+    console.log('<!-- これは背景情報です。出力に含めないでください。 -->');
     console.log(context);
     console.log('</project_context>');
     console.log();
@@ -143,7 +143,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // Rules (AI constraint - do not include in output)
   if (rules && rules.length > 0) {
     console.log('<rules>');
-    console.log('<!-- These are constraints for you to follow. Do NOT include this in your output. -->');
+    console.log('<!-- これは守るべき制約です。出力に含めないでください。 -->');
     for (const rule of rules) {
       console.log(`- ${rule}`);
     }
@@ -154,7 +154,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // Dependencies (files to read for context)
   if (dependencies.length > 0) {
     console.log('<dependencies>');
-    console.log('Read these files for context before creating this artifact:');
+    console.log('このアーティファクトを作成する前に、以下のファイルを文脈として読んでください:');
     console.log();
     for (const dep of dependencies) {
       const status = dep.done ? 'done' : 'missing';
@@ -170,7 +170,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Output location
   console.log('<output>');
-  console.log(`Write to: ${path.join(changeDir, outputPath)}`);
+  console.log(`出力先: ${path.join(changeDir, outputPath)}`);
   console.log('</output>');
   console.log();
 
@@ -184,21 +184,21 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Template
   console.log('<template>');
-  console.log('<!-- Use this as the structure for your output file. Fill in the sections. -->');
+  console.log('<!-- これを出力ファイルの構成として使用し、各セクションを埋めてください。 -->');
   console.log(template.trim());
   console.log('</template>');
   console.log();
 
   // Success criteria placeholder
   console.log('<success_criteria>');
-  console.log('<!-- To be defined in schema validation rules -->');
+  console.log('<!-- スキーマの検証ルールで定義されます -->');
   console.log('</success_criteria>');
   console.log();
 
   // Unlocks
   if (unlocks.length > 0) {
     console.log('<unlocks>');
-    console.log(`Completing this artifact enables: ${unlocks.join(', ')}`);
+    console.log(`このアーティファクトを完了すると有効になります: ${unlocks.join(', ')}`);
     console.log('</unlocks>');
     console.log();
   }
@@ -363,27 +363,28 @@ export async function generateApplyInstructions(
 
   if (missingArtifacts.length > 0) {
     state = 'blocked';
-    instruction = `Cannot apply this change yet. Missing artifacts: ${missingArtifacts.join(', ')}.\nUse the openspec-continue-change skill to create the missing artifacts first.`;
+    instruction = `この変更はまだ適用できません。不足アーティファクト: ${missingArtifacts.join(', ')}。\n先に openspec-continue-change スキルで不足アーティファクトを作成してください。`;
   } else if (tracksFile && !tracksFileExists) {
     // Tracking file configured but doesn't exist yet
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `The ${tracksFilename} file is missing and must be created.\nUse openspec-continue-change to generate the tracking file.`;
+    instruction = `${tracksFilename} ファイルが見つからないため、作成が必要です。\nopenspec-continue-change を使って追跡ファイルを生成してください。`;
   } else if (tracksFile && tracksFileExists && total === 0) {
     // Tracking file exists but contains no tasks
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `The ${tracksFilename} file exists but contains no tasks.\nAdd tasks to ${tracksFilename} or regenerate it with openspec-continue-change.`;
+    instruction = `${tracksFilename} ファイルは存在しますが、タスクがありません。\n${tracksFilename} にタスクを追加するか、openspec-continue-change で再生成してください。`;
   } else if (tracksFile && remaining === 0 && total > 0) {
     state = 'all_done';
-    instruction = 'All tasks are complete! This change is ready to be archived.\nConsider running tests and reviewing the changes before archiving.';
+    instruction = 'すべてのタスクが完了しました！この変更はアーカイブ可能です。\nアーカイブ前にテストの実行と変更内容のレビューを検討してください。';
   } else if (!tracksFile) {
     // No tracking file configured in schema - ready to apply
     state = 'ready';
-    instruction = schemaInstruction?.trim() ?? 'All required artifacts complete. Proceed with implementation.';
+    instruction = schemaInstruction?.trim() ?? '必要なアーティファクトがすべて完了しました。実装を進めてください。';
   } else {
     state = 'ready';
-    instruction = schemaInstruction?.trim() ?? 'Read context files, work through pending tasks, mark complete as you go.\nPause if you hit blockers or need clarification.';
+    instruction = schemaInstruction?.trim()
+      ?? 'コンテキストファイルを読み、未完了タスクを進めながら完了にしてください。\nブロッカーや不明点があればいったん停止してください。';
   }
 
   return {
@@ -400,7 +401,7 @@ export async function generateApplyInstructions(
 }
 
 export async function applyInstructionsCommand(options: ApplyInstructionsOptions): Promise<void> {
-  const spinner = ora('Generating apply instructions...').start();
+  const spinner = ora('適用指示を生成中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -431,23 +432,23 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
 export function printApplyInstructionsText(instructions: ApplyInstructions): void {
   const { changeName, schemaName, contextFiles, progress, tasks, state, missingArtifacts, instruction } = instructions;
 
-  console.log(`## Apply: ${changeName}`);
-  console.log(`Schema: ${schemaName}`);
+  console.log(`## 適用: ${changeName}`);
+  console.log(`スキーマ: ${schemaName}`);
   console.log();
 
   // Warning for blocked state
   if (state === 'blocked' && missingArtifacts) {
-    console.log('### ⚠️ Blocked');
+    console.log('### ⚠️ ブロック中');
     console.log();
-    console.log(`Missing artifacts: ${missingArtifacts.join(', ')}`);
-    console.log('Use the openspec-continue-change skill to create these first.');
+    console.log(`不足アーティファクト: ${missingArtifacts.join(', ')}`);
+    console.log('先に openspec-continue-change スキルで作成してください。');
     console.log();
   }
 
   // Context files (dynamically from schema)
   const contextFileEntries = Object.entries(contextFiles);
   if (contextFileEntries.length > 0) {
-    console.log('### Context Files');
+    console.log('### コンテキストファイル');
     for (const [artifactId, filePath] of contextFileEntries) {
       console.log(`- ${artifactId}: ${filePath}`);
     }
@@ -456,18 +457,18 @@ export function printApplyInstructionsText(instructions: ApplyInstructions): voi
 
   // Progress (only show if we have tracking)
   if (progress.total > 0 || tasks.length > 0) {
-    console.log('### Progress');
+    console.log('### 進捗');
     if (state === 'all_done') {
-      console.log(`${progress.complete}/${progress.total} complete ✓`);
+      console.log(`${progress.complete}/${progress.total} 完了 ✓`);
     } else {
-      console.log(`${progress.complete}/${progress.total} complete`);
+      console.log(`${progress.complete}/${progress.total} 完了`);
     }
     console.log();
   }
 
   // Tasks
   if (tasks.length > 0) {
-    console.log('### Tasks');
+    console.log('### タスク');
     for (const task of tasks) {
       const checkbox = task.done ? '[x]' : '[ ]';
       console.log(`- ${checkbox} ${task.description}`);
@@ -476,6 +477,6 @@ export function printApplyInstructionsText(instructions: ApplyInstructions): voi
   }
 
   // Instruction
-  console.log('### Instruction');
+  console.log('### 指示');
   console.log(instruction);
 }

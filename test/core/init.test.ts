@@ -45,7 +45,7 @@ describe('InitCommand', () => {
       expect(content).toContain('schema: spec-driven');
     });
 
-    it('should create 9 Agent Skills for Claude Code', async () => {
+    it('should create 10 Agent Skills for Claude Code', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
@@ -60,6 +60,7 @@ describe('InitCommand', () => {
         'openspec-archive-change',
         'openspec-bulk-archive-change',
         'openspec-verify-change',
+        'openspec-onboard',
       ];
 
       for (const skillName of skillNames) {
@@ -73,7 +74,7 @@ describe('InitCommand', () => {
       }
     });
 
-    it('should create 9 slash commands for Claude Code', async () => {
+    it('should create 10 slash commands for Claude Code', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
@@ -86,6 +87,7 @@ describe('InitCommand', () => {
         'opsx/ff.md',
         'opsx/sync.md',
         'opsx/archive.md',
+        'opsx/onboard.md',
         'opsx/bulk-archive.md',
         'opsx/verify.md',
       ];
@@ -348,13 +350,13 @@ describe('InitCommand', () => {
       );
 
       const initCommand = new InitCommand({ tools: 'claude', force: true });
-      await expect(initCommand.execute(readOnlyDir)).rejects.toThrow(/Insufficient permissions/);
+      await expect(initCommand.execute(readOnlyDir)).rejects.toThrow(/書き込み権限がありません/);
     });
 
     it('should throw error in non-interactive mode without --tools flag', async () => {
       const initCommand = new InitCommand({ interactive: false });
 
-      await expect(initCommand.execute(testDir)).rejects.toThrow(/Missing required option --tools/);
+      await expect(initCommand.execute(testDir)).rejects.toThrow(/必須オプション --tools/);
     });
   });
 

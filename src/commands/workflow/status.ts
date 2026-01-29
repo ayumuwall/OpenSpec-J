@@ -33,7 +33,7 @@ export interface StatusOptions {
 // -----------------------------------------------------------------------------
 
 export async function statusCommand(options: StatusOptions): Promise<void> {
-  const spinner = ora('Loading change status...').start();
+  const spinner = ora('変更の状況を読み込み中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -66,9 +66,9 @@ export function printStatusText(status: ChangeStatus): void {
   const doneCount = status.artifacts.filter((a) => a.status === 'done').length;
   const total = status.artifacts.length;
 
-  console.log(`Change: ${status.changeName}`);
-  console.log(`Schema: ${status.schemaName}`);
-  console.log(`Progress: ${doneCount}/${total} artifacts complete`);
+  console.log(`変更: ${status.changeName}`);
+  console.log(`スキーマ: ${status.schemaName}`);
+  console.log(`進捗: ${doneCount}/${total} アーティファクト完了`);
   console.log();
 
   for (const artifact of status.artifacts) {
@@ -77,7 +77,7 @@ export function printStatusText(status: ChangeStatus): void {
     let line = `${indicator} ${artifact.id}`;
 
     if (artifact.status === 'blocked' && artifact.missingDeps && artifact.missingDeps.length > 0) {
-      line += color(` (blocked by: ${artifact.missingDeps.join(', ')})`);
+      line += color(` （ブロック要因: ${artifact.missingDeps.join(', ')}）`);
     }
 
     console.log(line);
@@ -85,6 +85,6 @@ export function printStatusText(status: ChangeStatus): void {
 
   if (status.isComplete) {
     console.log();
-    console.log(chalk.green('All artifacts complete!'));
+    console.log(chalk.green('すべてのアーティファクトが完了しました！'));
   }
 }

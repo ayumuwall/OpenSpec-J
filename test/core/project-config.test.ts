@@ -545,24 +545,24 @@ rules:
     it('should suggest close matches using fuzzy matching', () => {
       const message = suggestSchemas('spec-drven', availableSchemas); // Missing 'i'
 
-      expect(message).toContain("Schema 'spec-drven' not found");
-      expect(message).toContain('Did you mean one of these?');
-      expect(message).toContain('spec-driven (built-in)');
+      expect(message).toContain("スキーマ 'spec-drven' が見つかりません");
+      expect(message).toContain('次のいずれかではありませんか？');
+      expect(message).toContain('spec-driven (組み込み)');
     });
 
     it('should suggest custom-workflow for workflow typo', () => {
       const message = suggestSchemas('custom-workflo', availableSchemas);
 
-      expect(message).toContain('Did you mean one of these?');
+      expect(message).toContain('次のいずれかではありませんか？');
       expect(message).toContain('custom-workflow');
     });
 
     it('should list all available schemas', () => {
       const message = suggestSchemas('nonexistent', availableSchemas);
 
-      expect(message).toContain('Available schemas:');
-      expect(message).toContain('Built-in: spec-driven');
-      expect(message).toContain('Project-local: custom-workflow, team-process');
+      expect(message).toContain('利用可能なスキーマ:');
+      expect(message).toContain('組み込み: spec-driven');
+      expect(message).toContain('プロジェクトローカル: custom-workflow, team-process');
     });
 
     it('should handle case when no project-local schemas exist', () => {
@@ -571,15 +571,15 @@ rules:
       ];
       const message = suggestSchemas('invalid', builtInOnly);
 
-      expect(message).toContain('Built-in: spec-driven');
-      expect(message).toContain('Project-local: (none found)');
+      expect(message).toContain('組み込み: spec-driven');
+      expect(message).toContain('プロジェクトローカル: (見つかりません)');
     });
 
     it('should include fix instruction', () => {
       const message = suggestSchemas('wrong-schema', availableSchemas);
 
       expect(message).toContain(
-        "Fix: Edit openspec/config.yaml and change 'schema: wrong-schema' to a valid schema name"
+        "対処: openspec/config.yaml を編集し、'schema: wrong-schema' を有効なスキーマ名に変更してください"
       );
     });
 
@@ -603,8 +603,8 @@ rules:
       const message = suggestSchemas('abcdefghijk', availableSchemas);
 
       // 'abcdefghijk' has large Levenshtein distance from all schemas
-      expect(message).not.toContain('Did you mean');
-      expect(message).toContain('Available schemas:');
+      expect(message).not.toContain('次のいずれかではありませんか？');
+      expect(message).toContain('利用可能なスキーマ:');
     });
   });
 });
