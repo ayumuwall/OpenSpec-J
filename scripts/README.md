@@ -1,38 +1,37 @@
-# OpenSpec スクリプト
+# OpenSpec Scripts
 
-OpenSpec の保守・開発用ユーティリティスクリプトです。
+Utility scripts for OpenSpec maintenance and development.
 
 ## update-flake.sh
 
-`flake.nix` のバージョンと依存ハッシュを自動更新します。
+Updates `flake.nix` pnpm dependency hash automatically.
 
-**使うタイミング**: 依存更新や新バージョンのリリース後。
+**When to use**: After updating dependencies (`pnpm install`, `pnpm update`).
 
-**使い方**:
+**Usage**:
 ```bash
 ./scripts/update-flake.sh
 ```
 
-**やること**:
-1. `package.json` からバージョンを取得
-2. `flake.nix` のバージョンを更新
-3. 正しい pnpm 依存ハッシュを自動計算
-4. `flake.nix` のハッシュを更新
-5. ビルド成功を検証
+**What it does**:
+1. Reads version from `package.json` (dynamically used by `flake.nix`)
+2. Automatically determines the correct pnpm dependency hash
+3. Updates the hash in `flake.nix`
+4. Verifies the build succeeds
 
-**ワークフロー例**:
+**Example workflow**:
 ```bash
-# バージョン更新と依存更新の後
+# After dependency updates
 pnpm install
 ./scripts/update-flake.sh
 git add flake.nix
-git commit -m "chore: update flake.nix for v0.18.0"
+git commit -m "chore: update flake.nix dependency hash"
 ```
 
 ## postinstall.js
 
-パッケージインストール後に実行されるポストインストールスクリプトです。
+Post-installation script that runs after package installation.
 
 ## pack-version-check.mjs
 
-公開前にパッケージバージョンの整合性を検証します。
+Validates package version consistency before publishing.

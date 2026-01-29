@@ -90,7 +90,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'schema' フィールドが不正です")
+          expect.stringContaining("Invalid 'schema' field")
         );
       });
 
@@ -116,7 +116,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'context' フィールドが不正です")
+          expect.stringContaining("Invalid 'context' field")
         );
       });
 
@@ -138,7 +138,7 @@ rules: ["not", "an", "object"]
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'rules' フィールドが不正です")
+          expect.stringContaining("Invalid 'rules' field")
         );
       });
 
@@ -162,7 +162,7 @@ rules:
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'rules' フィールドが不正です")
+          expect.stringContaining("Invalid 'rules' field")
         );
       });
 
@@ -191,7 +191,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("'specs' のルールは文字列配列である必要があります")
+          expect.stringContaining("Rules for 'specs' must be an array of strings")
         );
       });
 
@@ -219,7 +219,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("'proposal' のルールに空文字があるため無視します")
+          expect.stringContaining("Some rules for 'proposal' are empty strings")
         );
       });
 
@@ -257,7 +257,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('openspec/config.yaml の解析に失敗しました'),
+          expect.stringContaining('Failed to parse openspec/config.yaml'),
           expect.anything()
         );
       });
@@ -271,7 +271,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('有効な YAML オブジェクトではありません')
+          expect.stringContaining('not a valid YAML object')
         );
       });
 
@@ -300,7 +300,7 @@ rules:
 
         expect(config?.context).toBe(smallContext);
         expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます')
+          expect.stringContaining('Context too large')
         );
       });
 
@@ -318,10 +318,10 @@ rules:
         expect(config).toEqual({ schema: 'spec-driven' });
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます (51.0KB, 上限: 50KB)')
+          expect.stringContaining('Context too large (51.0KB, limit: 50KB)')
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('context フィールドを無視します')
+          expect.stringContaining('Ignoring context field')
         );
       });
 
@@ -338,7 +338,7 @@ rules:
 
         expect(config?.context).toBe(exactContext);
         expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます')
+          expect.stringContaining('Context too large')
         );
       });
 
@@ -359,7 +359,7 @@ context: |
 
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます')
+          expect.stringContaining('Context too large')
         );
       });
     });
@@ -374,7 +374,7 @@ context: |
         );
         fs.writeFileSync(
           path.join(configDir, 'config.yml'),
-          'schema: tdd\ncontext: from yml\n'
+          'schema: custom-schema\ncontext: from yml\n'
         );
 
         const config = readProjectConfig(tempDir);
@@ -388,12 +388,12 @@ context: |
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yml'),
-          'schema: tdd\ncontext: from yml\n'
+          'schema: custom-schema\ncontext: from yml\n'
         );
 
         const config = readProjectConfig(tempDir);
 
-        expect(config?.schema).toBe('tdd');
+        expect(config?.schema).toBe('custom-schema');
         expect(config?.context).toBe('from yml');
       });
 
@@ -507,9 +507,9 @@ rules:
       const warnings = validateConfigRules(rules, validIds, 'spec-driven');
 
       expect(warnings).toHaveLength(2);
-      expect(warnings[0]).toContain('rules 内の不明なアーティファクトID: "testplan"');
-      expect(warnings[0]).toContain('スキーマ "spec-driven" の有効ID: design, proposal, specs, tasks');
-      expect(warnings[1]).toContain('rules 内の不明なアーティファクトID: "documentation"');
+      expect(warnings[0]).toContain('Unknown artifact ID in rules: "testplan"');
+      expect(warnings[0]).toContain('Valid IDs for schema "spec-driven": design, proposal, specs, tasks');
+      expect(warnings[1]).toContain('Unknown artifact ID in rules: "documentation"');
     });
 
     it('should return warnings for all unknown artifact IDs', () => {
@@ -538,7 +538,6 @@ rules:
   describe('suggestSchemas', () => {
     const availableSchemas = [
       { name: 'spec-driven', isBuiltIn: true },
-      { name: 'tdd', isBuiltIn: true },
       { name: 'custom-workflow', isBuiltIn: false },
       { name: 'team-process', isBuiltIn: false },
     ];
@@ -546,42 +545,41 @@ rules:
     it('should suggest close matches using fuzzy matching', () => {
       const message = suggestSchemas('spec-drven', availableSchemas); // Missing 'i'
 
-      expect(message).toContain("openspec/config.yaml に指定されたスキーマ 'spec-drven' が見つかりません");
-      expect(message).toContain('次のいずれかではありませんか？');
-      expect(message).toContain('spec-driven (組み込み)');
+      expect(message).toContain("Schema 'spec-drven' not found");
+      expect(message).toContain('Did you mean one of these?');
+      expect(message).toContain('spec-driven (built-in)');
     });
 
-    it('should suggest tdd for tdd typo', () => {
-      const message = suggestSchemas('td', availableSchemas);
+    it('should suggest custom-workflow for workflow typo', () => {
+      const message = suggestSchemas('custom-workflo', availableSchemas);
 
-      expect(message).toContain('次のいずれかではありませんか？');
-      expect(message).toContain('tdd (組み込み)');
+      expect(message).toContain('Did you mean one of these?');
+      expect(message).toContain('custom-workflow');
     });
 
     it('should list all available schemas', () => {
       const message = suggestSchemas('nonexistent', availableSchemas);
 
-      expect(message).toContain('利用可能なスキーマ:');
-      expect(message).toContain('組み込み: spec-driven, tdd');
-      expect(message).toContain('プロジェクトローカル: custom-workflow, team-process');
+      expect(message).toContain('Available schemas:');
+      expect(message).toContain('Built-in: spec-driven');
+      expect(message).toContain('Project-local: custom-workflow, team-process');
     });
 
     it('should handle case when no project-local schemas exist', () => {
       const builtInOnly = [
         { name: 'spec-driven', isBuiltIn: true },
-        { name: 'tdd', isBuiltIn: true },
       ];
       const message = suggestSchemas('invalid', builtInOnly);
 
-      expect(message).toContain('組み込み: spec-driven, tdd');
-      expect(message).toContain('プロジェクトローカル: (見つかりません)');
+      expect(message).toContain('Built-in: spec-driven');
+      expect(message).toContain('Project-local: (none found)');
     });
 
     it('should include fix instruction', () => {
       const message = suggestSchemas('wrong-schema', availableSchemas);
 
       expect(message).toContain(
-        "対処: openspec/config.yaml を編集し、'schema: wrong-schema' を有効なスキーマ名に変更してください"
+        "Fix: Edit openspec/config.yaml and change 'schema: wrong-schema' to a valid schema name"
       );
     });
 
@@ -605,8 +603,8 @@ rules:
       const message = suggestSchemas('abcdefghijk', availableSchemas);
 
       // 'abcdefghijk' has large Levenshtein distance from all schemas
-      expect(message).not.toContain('次のいずれかではありませんか？');
-      expect(message).toContain('利用可能なスキーマ:');
+      expect(message).not.toContain('Did you mean');
+      expect(message).toContain('Available schemas:');
     });
   });
 });

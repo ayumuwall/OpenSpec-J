@@ -5,29 +5,53 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs =
+    { self, nixpkgs }:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
 
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
     in
     {
-      packages = forAllSystems (system:
+      packages = forAllSystems (
+        system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          inherit (pkgs) lib;
         in
         {
           default = pkgs.stdenv.mkDerivation (finalAttrs: {
             pname = "openspec";
-            version = "0.20.0";
+            version = (builtins.fromJSON (builtins.readFile ./package.json)).version;
 
-            src = ./.;
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset = lib.fileset.unions [
+                ./src
+                ./bin
+                ./schemas
+                ./scripts
+                ./test
+                ./package.json
+                ./pnpm-lock.yaml
+                ./tsconfig.json
+                ./build.js
+                ./vitest.config.ts
+                ./vitest.setup.ts
+                ./eslint.config.js
+              ];
+            };
 
             pnpmDeps = pkgs.fetchPnpmDeps {
               inherit (finalAttrs) pname version src;
               pnpm = pkgs.pnpm_9;
               fetcherVersion = 3;
-              hash = "sha256-m/7IdY1ou9ljjYAcx3W8AyEJvIZfCBWIWxproQ/INPA=";
+              hash = "sha256-9s2kdvd7svK4hofnD66HkDc86WTQeayfF5y7L2dmjNg=";
             };
 
             nativeBuildInputs = with pkgs; [
@@ -55,7 +79,8 @@
               mainProgram = "openspec";
             };
           });
-        });
+        }
+      );
 
       apps = forAllSystems (system: {
         default = {
@@ -64,7 +89,8 @@
         };
       });
 
-      devShells = forAllSystems (system:
+      devShells = forAllSystems (
+        system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
         in
@@ -82,6 +108,7 @@
               echo "Run 'pnpm install' to install dependencies"
             '';
           };
-        });
+        }
+      );
     };
 }

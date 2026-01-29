@@ -1,7 +1,7 @@
 {
-  "name": "@ayumuwall/openspec",
-  "version": "0.23.0-1",
-  "description": "仕様駆動開発のためのAIネイティブシステム",
+  "name": "@fission-ai/openspec",
+  "version": "1.0.2",
+  "description": "AI-native system for spec-driven development",
   "keywords": [
     "openspec",
     "specs",
@@ -9,10 +9,10 @@
     "ai",
     "development"
   ],
-  "homepage": "https://github.com/ayumuwall/OpenSpec-J",
+  "homepage": "https://github.com/Fission-AI/OpenSpec",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ayumuwall/OpenSpec-J.git"
+    "url": "https://github.com/Fission-AI/OpenSpec"
   },
   "license": "MIT",
   "author": "OpenSpec Contributors",
