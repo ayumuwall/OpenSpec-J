@@ -641,4 +641,4 @@ openspec schema validate my-workflow
 
 OPSX は実験的です。改善のための意見を歓迎します。
 
-バグや提案は [Discord](https://discord.gg/YctCnvvshC) か [GitHub](https://github.com/Fission-AI/openspec/issues) へ。
+バグや提案は [Discord](https://discord.gg/YctCnvvshC) か [GitHub](https://github.com/ayumuwall/OpenSpec-J/issues) へ。

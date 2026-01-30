@@ -574,5 +574,5 @@ project/
 ## サポート
 
 - **Discord**: [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC)
-- **GitHub Issues**: [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues)
+- **GitHub Issues**: [github.com/ayumuwall/OpenSpec-J/issues](https://github.com/ayumuwall/OpenSpec-J/issues)
 - **ドキュメント**: [docs/opsx.md](opsx.md) — OPSX の詳細

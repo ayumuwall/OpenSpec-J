@@ -144,7 +144,7 @@ openspec update [path] [options]
 
 ```bash
 # npm でアップグレード後に指示ファイルを更新
-npm update @fission-ai/openspec
+npm update @ayumuwall/openspec
 openspec update
 ```
 
@@ -735,7 +735,7 @@ openspec schema which spec-driven
 
 ```
 spec-driven の解決元: package
-  ソース: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
+  ソース: /usr/local/lib/node_modules/@ayumuwall/openspec/schemas/spec-driven
 ```
 
 **スキーマの優先順位:**

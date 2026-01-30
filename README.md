@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/Fission-AI/OpenSpec">
+  <a href="https://github.com/ayumuwall/OpenSpec-J">
     <picture>
       <source srcset="assets/openspec_bg.png">
       <img src="assets/openspec_bg.png" alt="OpenSpec ロゴ">
@@ -108,11 +108,16 @@ openspec init
 ```
 
 AI へ次のように伝えてください: `/opsx:new <作りたいもの>`
-
 > [!NOTE]
 > 対応ツールが不明ですか？ [全リストはこちら](docs/supported-tools.md) — 20+ ツールに対応しています。
 >
 > pnpm, yarn, bun, nix でも利用できます。[インストール方法はこちら](docs/installation.md)。
+
+<!-- OPENSPEC-J:NOTE -->
+> [!NOTE]
+> **Codex を使っている場合**  
+> `openspec init` が生成する `.codex/prompts/opsx-*.md` はプロジェクト内に作成されます。  
+> Codex でスラッシュコマンドを使うには、これらのファイルを `~/.codex/prompts/` にコピー（またはシンボリックリンク）してください。
 
 ## ドキュメント
 

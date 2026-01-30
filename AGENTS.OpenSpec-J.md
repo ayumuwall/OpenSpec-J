@@ -145,7 +145,7 @@ OpenSpec-J の目的は、次の 3 点です。
 
 AI コーディングアシスタントとして、以下は **変更してはいけません**。
 
-- パッケージ名・bin 名（OpenSpec-J で既に設定されているもの）
+- パッケージ名は@ayumuwall/openspecとする。github関係のリンクはayumuwall/OpenSpec-Jを向くようにする。
 - CLI のサブコマンド名・フラグ名・引数のシグネチャ  
   - 例：`openspec init`, `openspec list`, `openspec validate --strict --json`
 - `openspec/` ディレクトリ構造
@@ -444,9 +444,13 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - test/の翻訳
 - docs/内コードブロックの翻訳
 - 規範文ルール追加
+- パッケージ名を @ayumuwall/openspec に統一し、GitHub/Docs/CLI/フィードバック先を ayumuwall/OpenSpec-J に更新
+- README の GitHub/Downloads バッジを整理し、Codex 向け注記を OPENSPEC-J:NOTE で追加
+- AGENTS.OpenSpec-J.md のパッケージ名・リンク方針を更新
 
 #### テスト状況
-- 未実施
+- `pnpm test` はタイムアウト（PostHog 通信エラーが出る環境）
+- `pnpm vitest run test/core/command-generation/adapters.test.ts` を実行（pass）
 
 ### 2026-01-29
 

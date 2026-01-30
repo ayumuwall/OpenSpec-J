@@ -49,7 +49,7 @@
 
             meta = with pkgs.lib; {
               description = "仕様駆動開発のための AI ネイティブな仕組み";
-              homepage = "https://github.com/Fission-AI/OpenSpec";
+              homepage = "https://github.com/ayumuwall/OpenSpec-J";
               license = licenses.mit;
               maintainers = [ ];
               mainProgram = "openspec";

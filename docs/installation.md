@@ -9,25 +9,25 @@
 ### npm
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+npm install -g @ayumuwall/openspec@latest
 ```
 
 ### pnpm
 
 ```bash
-pnpm add -g @fission-ai/openspec@latest
+pnpm add -g @ayumuwall/openspec@latest
 ```
 
 ### yarn
 
 ```bash
-yarn global add @fission-ai/openspec@latest
+yarn global add @ayumuwall/openspec@latest
 ```
 
 ### bun
 
 ```bash
-bun add -g @fission-ai/openspec@latest
+bun add -g @ayumuwall/openspec@latest
 ```
 
 ## Nix
@@ -35,13 +35,13 @@ bun add -g @fission-ai/openspec@latest
 インストールせずに直接実行:
 
 ```bash
-nix run github:Fission-AI/OpenSpec -- init
+nix run github:ayumuwall/OpenSpec-J -- init
 ```
 
 プロファイルにインストール:
 
 ```bash
-nix profile install github:Fission-AI/OpenSpec
+nix profile install github:ayumuwall/OpenSpec-J
 ```
 
 `flake.nix` に開発環境として追加:
@@ -50,7 +50,7 @@ nix profile install github:Fission-AI/OpenSpec
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    openspec.url = "github:Fission-AI/OpenSpec";
+    openspec.url = "github:ayumuwall/OpenSpec-J";
   };
 
   outputs = { nixpkgs, openspec, ... }: {
