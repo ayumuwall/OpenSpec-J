@@ -1,17 +1,17 @@
 /**
- * RooCode Command Adapter
+ * RooCode コマンドアダプター
  *
- * Formats commands for RooCode following its workflow specification.
- * RooCode uses markdown headers instead of YAML frontmatter.
+ * コマンドをツール仕様に合わせて整形する。
+ * RooCode は YAML フロントマターではなく Markdown 見出しを使う。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * RooCode adapter for command generation.
- * File path: .roo/commands/opsx-<id>.md
- * Format: Markdown header with description
+ * RooCode のコマンド生成アダプター。
+ * ファイルパス: .roo/commands/opsx-<id>.md
+ * 形式: 説明付き Markdown 見出し
  */
 export const roocodeAdapter: ToolCommandAdapter = {
   toolId: 'roocode',

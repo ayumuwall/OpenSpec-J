@@ -1,17 +1,17 @@
 /**
- * Cline Command Adapter
+ * Cline コマンドアダプター
  *
- * Formats commands for Cline following its workflow specification.
- * Cline uses markdown headers instead of YAML frontmatter.
+ * コマンドをツール仕様に合わせて整形する。
+ * Cline は YAML フロントマターではなく Markdown 見出しを使う。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Cline adapter for command generation.
- * File path: .clinerules/workflows/opsx-<id>.md
- * Format: Markdown header with description
+ * Cline のコマンド生成アダプター。
+ * ファイルパス: .clinerules/workflows/opsx-<id>.md
+ * 形式: 説明付き Markdown 見出し
  */
 export const clineAdapter: ToolCommandAdapter = {
   toolId: 'cline',

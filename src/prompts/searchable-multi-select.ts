@@ -17,8 +17,8 @@ interface Config {
 }
 
 /**
- * Create the searchable multi-select prompt.
- * Uses dynamic import to prevent pre-commit hook hangs (see #367).
+ * 検索可能な複数選択プロンプトを作成する。
+ * pre-commit フックのハングを避けるため動的 import を使う（#367）。
  */
 async function createSearchableMultiSelect(): Promise<
   (config: Config) => Promise<string[]>
@@ -48,7 +48,7 @@ async function createSearchableMultiSelect(): Promise<
 
     const prefix = usePrefix({ status });
 
-    // Filter choices by search
+    // 検索語で選択肢を絞り込む
     const filteredChoices = useMemo(() => {
       if (!searchText.trim()) return choices;
       const term = searchText.toLowerCase();
@@ -68,12 +68,12 @@ async function createSearchableMultiSelect(): Promise<
     useKeypress((key) => {
       if (status === 'done') return;
 
-      // Tab to confirm
+      // Tab で確定
       if (key.name === 'tab') {
         if (validate) {
           const result = validate(selectedValues);
           if (result !== true) {
-            setError(typeof result === 'string' ? result : 'Invalid');
+            setError(typeof result === 'string' ? result : '無効です');
             return;
           }
         }
@@ -82,7 +82,7 @@ async function createSearchableMultiSelect(): Promise<
         return;
       }
 
-      // Enter to add item
+      // Enter で追加
       if (isEnterKey(key)) {
         const choice = filteredChoices[cursor];
         if (choice && !selectedSet.has(choice.value)) {
@@ -93,7 +93,7 @@ async function createSearchableMultiSelect(): Promise<
         return;
       }
 
-      // Backspace to remove or delete search char
+      // Backspace で削除または検索文字の削除
       if (isBackspaceKey(key)) {
         if (searchText === '' && selectedValues.length > 0) {
           setSelectedValues(selectedValues.slice(0, -1));
@@ -104,7 +104,7 @@ async function createSearchableMultiSelect(): Promise<
         return;
       }
 
-      // Navigation
+      // 移動
       if (isUpKey(key)) {
         setCursor(Math.max(0, cursor - 1));
         return;
@@ -114,47 +114,47 @@ async function createSearchableMultiSelect(): Promise<
         return;
       }
 
-      // Character input - handle printable characters
+      // 文字入力（表示可能文字）
       if (key.name && key.name.length === 1 && !key.ctrl) {
         setSearchText(searchText + key.name);
         setCursor(0);
       }
     });
 
-    // Render done state
+    // 確定状態の表示
     if (status === 'done') {
       const names = selectedValues
         .map((v) => choiceMap.get(v)?.name ?? v)
         .join(', ');
-      return `${prefix} ${chalk.bold(message)} ${chalk.cyan(names || '(none)')}`;
+      return `${prefix} ${chalk.bold(message)} ${chalk.cyan(names || '(なし)')}`;
     }
 
-    // Render active state
+    // 操作中の表示
     const lines: string[] = [];
     lines.push(`${prefix} ${chalk.bold(message)}`);
 
-    // Selected chips
+    // 選択済みチップ
     const chips =
       selectedValues.length > 0
         ? selectedValues
             .map((v) => chalk.bgCyan.black(` ${choiceMap.get(v)?.name} `))
             .join(' ')
-        : chalk.dim('(none selected)');
-    lines.push(`  Selected: ${chips}`);
+        : chalk.dim('(未選択)');
+    lines.push(`  選択中: ${chips}`);
 
-    // Search box
+    // 検索ボックス
     lines.push(
-      `  Search: ${chalk.yellow('[')}${searchText || chalk.dim('type to filter')}${chalk.yellow(']')}`
+      `  検索: ${chalk.yellow('[')}${searchText || chalk.dim('入力して絞り込み')}${chalk.yellow(']')}`
     );
 
-    // Instructions
+    // 操作説明
     lines.push(
-      `  ${chalk.cyan('↑↓')} navigate • ${chalk.cyan('Enter')} add • ${chalk.cyan('Backspace')} remove • ${chalk.cyan('Tab')} confirm`
+      `  ${chalk.cyan('↑↓')} 移動 • ${chalk.cyan('Enter')} 追加 • ${chalk.cyan('Backspace')} 削除 • ${chalk.cyan('Tab')} 確定`
     );
 
-    // List
+    // リスト
     if (filteredChoices.length === 0) {
-      lines.push(chalk.yellow('  No matches'));
+      lines.push(chalk.yellow('  一致なし'));
     } else {
       // Calculate pagination
       const startIndex = Math.max(
@@ -174,12 +174,12 @@ async function createSearchableMultiSelect(): Promise<
         const name = isActive ? chalk.cyan(item.name) : item.name;
         const isRefresh = selected && item.configured;
         const suffix = selected
-          ? chalk.dim(isRefresh ? ' (refresh)' : ' (selected)')
+          ? chalk.dim(isRefresh ? ' (更新)' : ' (選択済み)')
           : '';
         lines.push(`  ${arrow} ${icon} ${name}${suffix}`);
       }
 
-      // Show pagination indicator if needed
+      // 必要ならページネーションを表示
       if (filteredChoices.length > pageSize) {
         const currentPage = Math.floor(cursor / pageSize) + 1;
         const totalPages = Math.ceil(filteredChoices.length / pageSize);
@@ -193,14 +193,14 @@ async function createSearchableMultiSelect(): Promise<
 }
 
 /**
- * A searchable multi-select prompt with visible search box,
- * selected items display, and intuitive keyboard navigation.
+ * 検索ボックス付きの複数選択プロンプト。
+ * 選択中の表示と直感的なキーボード操作を備える。
  *
- * - Type to filter choices
- * - ↑↓ to navigate
- * - Enter to add highlighted item
- * - Backspace to remove last selected item (or delete search char)
- * - Tab to confirm selections
+ * - 入力して絞り込み
+ * - ↑↓ で移動
+ * - Enter でハイライト項目を追加
+ * - Backspace で最後の選択を削除（または検索文字を削除）
+ * - Tab で確定
  */
 export async function searchableMultiSelect(config: Config): Promise<string[]> {
   const prompt = await createSearchableMultiSelect();

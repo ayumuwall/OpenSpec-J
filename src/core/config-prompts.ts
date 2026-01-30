@@ -19,9 +19,15 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('# 技術スタック、慣習、スタイルガイド、ドメイン知識などを追加します。');
   lines.push('# 例:');
   lines.push('#   context: |');
+  lines.push('#     言語：日本語');
   lines.push('#     技術スタック: TypeScript, React, Node.js');
   lines.push('#     Conventional Commits を使用');
   lines.push('#     ドメイン: EC プラットフォーム');
+  lines.push('#');
+  lines.push('#     規範語ルール:');
+  lines.push('#     - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）');
+  lines.push('#     - 語尾は「〜しなければならない。(SHALL)」の形式に揃える');
+  lines.push('#     - 文中に SHALL/MUST を挿入しない');
   lines.push('');
 
   // Rules section with comments

@@ -1,9 +1,9 @@
 /**
- * Command Generation Module
+ * コマンド生成モジュール
  *
- * Generic command generation system with tool-specific adapters.
+ * ツール固有アダプターを使った汎用コマンド生成システム。
  *
- * Usage:
+ * 使い方:
  * ```typescript
  * import { generateCommands, CommandAdapterRegistry, type CommandContent } from './command-generation/index.js';
  *
@@ -11,23 +11,23 @@
  * const adapter = CommandAdapterRegistry.get('cursor');
  * if (adapter) {
  *   const commands = generateCommands(contents, adapter);
- *   // Write commands to disk
+ *   // コマンドをディスクに書き込む
  * }
  * ```
  */
 
-// Types
+// 型
 export type {
   CommandContent,
   ToolCommandAdapter,
   GeneratedCommand,
 } from './types.js';
 
-// Registry
+// レジストリ
 export { CommandAdapterRegistry } from './registry.js';
 
-// Generator functions
+// 生成関数
 export { generateCommand, generateCommands } from './generator.js';
 
-// Adapters (for direct access if needed)
+// アダプター（直接参照が必要な場合）
 export { claudeAdapter, cursorAdapter, windsurfAdapter } from './adapters/index.js';

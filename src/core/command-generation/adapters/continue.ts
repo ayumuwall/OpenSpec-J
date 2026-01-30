@@ -1,16 +1,16 @@
 /**
- * Continue Command Adapter
+ * Continue コマンドアダプター
  *
- * Formats commands for Continue following its .prompt specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Continue adapter for command generation.
- * File path: .continue/prompts/opsx-<id>.prompt
- * Frontmatter: name, description, invokable
+ * Continue のコマンド生成アダプター。
+ * ファイルパス: .continue/prompts/opsx-<id>.prompt
+ * フロントマター: name, description, invokable
  */
 export const continueAdapter: ToolCommandAdapter = {
   toolId: 'continue',

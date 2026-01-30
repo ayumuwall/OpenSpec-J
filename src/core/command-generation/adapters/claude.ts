@@ -1,7 +1,7 @@
 /**
- * Claude Code Command Adapter
+ * Claude Code コマンドアダプター
  *
- * Formats commands for Claude Code following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
@@ -31,9 +31,9 @@ function formatTagsArray(tags: string[]): string {
 }
 
 /**
- * Claude Code adapter for command generation.
- * File path: .claude/commands/opsx/<id>.md
- * Frontmatter: name, description, category, tags
+ * Claude Code のコマンド生成アダプター。
+ * ファイルパス: .claude/commands/opsx/<id>.md
+ * フロントマター: name, description, category, tags
  */
 export const claudeAdapter: ToolCommandAdapter = {
   toolId: 'claude',

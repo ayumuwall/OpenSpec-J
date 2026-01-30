@@ -100,13 +100,13 @@ Old instructions content
 
       // Check console output
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('更新対象: 1 件')
+        expect.stringContaining('更新対象: 1 件（claude')
       );
 
       consoleSpy.mockRestore();
     });
 
-    it('should update all 10 skill files when tool is configured', async () => {
+    it('should update all 9 skill files when tool is configured', async () => {
       // Set up a configured tool with all skill directories
       const skillsDir = path.join(testDir, '.claude', 'skills');
       const skillNames = [
@@ -119,7 +119,6 @@ Old instructions content
         'openspec-archive-change',
         'openspec-bulk-archive-change',
         'openspec-verify-change',
-        'openspec-onboard',
       ];
 
       // Create at least one skill to mark tool as configured
@@ -175,7 +174,7 @@ Old instructions content
       expect(content).toContain('tags:');
     });
 
-    it('should update all 10 opsx commands when tool is configured', async () => {
+    it('should update all 9 opsx commands when tool is configured', async () => {
       // Set up a configured tool
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), {
@@ -196,7 +195,6 @@ Old instructions content
         'ff',
         'sync',
         'archive',
-        'onboard',
         'bulk-archive',
         'verify',
       ];
@@ -438,7 +436,7 @@ Old instructions content
 
       // Should detect and update Claude
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('更新対象: 1 件')
+        expect.stringContaining('更新対象: 1 件（claude')
       );
 
       consoleSpy.mockRestore();
@@ -515,7 +513,7 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // The success output uses "✓ Updated: <name>"
+      // The success output uses "✓ 更新: <name>"
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('更新: Claude Code')
       );
@@ -539,7 +537,7 @@ Old instructions content
       await updateCommand.execute(testDir);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('IDE を再起動')
+        expect.stringContaining('IDE を再起動してください')
       );
 
       consoleSpy.mockRestore();
@@ -547,7 +545,7 @@ Old instructions content
   });
 
   describe('smart update detection', () => {
-    it('should show "最新" message when skills have current version', async () => {
+    it('should show "up to date" message when skills have current version', async () => {
       // Set up a configured tool with current version
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), {
@@ -575,7 +573,7 @@ Content here
       await updateCommand.execute(testDir);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('最新')
+        expect.stringContaining('最新です')
       );
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('--force')
@@ -609,7 +607,7 @@ Legacy content without generatedBy
 
       // Should show "unknown → version" in the update message
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('unknown')
+        expect.stringContaining('不明')
       );
 
       consoleSpy.mockRestore();
@@ -669,7 +667,7 @@ Old version content
   });
 
   describe('--force flag', () => {
-    it('should update when force is true even if 最新', async () => {
+    it('should update when force is true even if up to date', async () => {
       // Set up a configured tool with current version
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), {
@@ -793,7 +791,7 @@ metadata:
       // Should show version in success message
       const { version } = await import('../../package.json');
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(`(v${version})`)
+        expect.stringContaining(`（v${version}）`)
       );
 
       consoleSpy.mockRestore();
@@ -812,7 +810,7 @@ metadata:
 `
       );
 
-      // Set up Cursor with current version (最新)
+      // Set up Cursor with current version (up to date)
       const { version } = await import('../../package.json');
       const cursorSkillDir = path.join(testDir, '.cursor', 'skills', 'openspec-explore');
       await fs.mkdir(cursorSkillDir, { recursive: true });
@@ -834,7 +832,7 @@ metadata:
         expect.stringContaining('更新対象: 1 件')
       );
 
-      // Should mention Cursor is already 最新
+      // Should mention Cursor is already up to date
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('最新: cursor')
       );
@@ -872,12 +870,12 @@ ${OPENSPEC_MARKERS.end}
 
       // Should show v1 upgrade message
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Upgrading to the new OpenSpec')
+        expect.stringContaining('新しい OpenSpec にアップグレードします')
       );
 
       // Should show marker removal message (config files are never deleted, only have markers removed)
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Removed OpenSpec markers from CLAUDE.md')
+        expect.stringContaining('CLAUDE.md から OpenSpec マーカーを削除')
       );
 
       // Config file should still exist (never deleted)
@@ -919,12 +917,12 @@ ${OPENSPEC_MARKERS.end}
 
       // Should show v1 upgrade message
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Upgrading to the new OpenSpec')
+        expect.stringContaining('新しい OpenSpec にアップグレードします')
       );
 
       // Should show warning about --force
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('--force')
+        expect.stringContaining('--force で旧ファイルを自動クリーンアップするか')
       );
 
       // Should continue with update
@@ -968,7 +966,7 @@ ${OPENSPEC_MARKERS.end}
 
       // Should show cleanup message for directory
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Removed .claude/commands/openspec/')
+        expect.stringContaining('.claude/commands/openspec/ を削除')
       );
 
       // Legacy directory should be deleted
@@ -1003,7 +1001,7 @@ ${OPENSPEC_MARKERS.end}
 
       // Should show cleanup message
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Removed openspec/AGENTS.md')
+        expect.stringContaining('openspec/AGENTS.md を削除')
       );
 
       // Legacy file should be deleted
@@ -1035,7 +1033,7 @@ ${OPENSPEC_MARKERS.end}
         call.map(arg => String(arg)).join(' ')
       );
       const hasLegacyMessage = calls.some(call =>
-        call.includes('Upgrading to the new OpenSpec')
+        call.includes('新しい OpenSpec にアップグレードします')
       );
       expect(hasLegacyMessage).toBe(false);
 
@@ -1076,7 +1074,7 @@ More user content after markers.
 
       // Should show marker removal message
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Removed OpenSpec markers from CLAUDE.md')
+        expect.stringContaining('CLAUDE.md から OpenSpec マーカーを削除')
       );
 
       // File should still exist
@@ -1206,7 +1204,7 @@ More user content after markers.
 
       // Legacy cleanup should happen
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Removed .claude/commands/openspec/')
+        expect.stringContaining('.claude/commands/openspec/ を削除')
       );
 
       // Should NOT show "旧アーティファクトから検出したツール" because claude is already configured
@@ -1296,7 +1294,7 @@ More user content after markers.
       consoleSpy.mockRestore();
     });
 
-    it('should create all 10 skills when upgrading legacy tools', async () => {
+    it('should create all 9 skills when upgrading legacy tools', async () => {
       // Create legacy command directory
       await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
       await fs.writeFile(
@@ -1308,7 +1306,7 @@ More user content after markers.
       const forceUpdateCommand = new UpdateCommand({ force: true });
       await forceUpdateCommand.execute(testDir);
 
-      // Verify all 10 skill directories were created
+      // Verify all 9 skill directories were created
       const skillNames = [
         'openspec-explore',
         'openspec-new-change',
@@ -1319,7 +1317,6 @@ More user content after markers.
         'openspec-archive-change',
         'openspec-bulk-archive-change',
         'openspec-verify-change',
-        'openspec-onboard',
       ];
 
       const skillsDir = path.join(testDir, '.claude', 'skills');

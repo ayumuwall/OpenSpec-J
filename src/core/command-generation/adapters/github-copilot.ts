@@ -1,16 +1,16 @@
 /**
- * GitHub Copilot Command Adapter
+ * GitHub Copilot コマンドアダプター
  *
- * Formats commands for GitHub Copilot following its .prompt.md specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * GitHub Copilot adapter for command generation.
- * File path: .github/prompts/opsx-<id>.prompt.md
- * Frontmatter: description
+ * GitHub Copilot のコマンド生成アダプター。
+ * ファイルパス: .github/prompts/opsx-<id>.prompt.md
+ * フロントマター: description
  */
 export const githubCopilotAdapter: ToolCommandAdapter = {
   toolId: 'github-copilot',

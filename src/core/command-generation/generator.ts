@@ -1,16 +1,16 @@
 /**
- * Command Generator
+ * コマンド生成
  *
- * Functions for generating command files using tool adapters.
+ * ツールアダプターを使ってコマンドファイルを生成する関数。
  */
 
 import type { CommandContent, ToolCommandAdapter, GeneratedCommand } from './types.js';
 
 /**
- * Generate a single command file using the provided adapter.
- * @param content - The tool-agnostic command content
- * @param adapter - The tool-specific adapter
- * @returns Generated command with path and file content
+ * 指定されたアダプターで 1 つのコマンドファイルを生成する。
+ * @param content - ツール非依存のコマンド内容
+ * @param adapter - ツール固有のアダプター
+ * @returns パスと内容を含む生成結果
  */
 export function generateCommand(
   content: CommandContent,
@@ -23,10 +23,10 @@ export function generateCommand(
 }
 
 /**
- * Generate multiple command files using the provided adapter.
- * @param contents - Array of tool-agnostic command contents
- * @param adapter - The tool-specific adapter
- * @returns Array of generated commands with paths and file contents
+ * 指定されたアダプターで複数のコマンドファイルを生成する。
+ * @param contents - ツール非依存のコマンド内容配列
+ * @param adapter - ツール固有のアダプター
+ * @returns パスと内容を含む生成結果の配列
  */
 export function generateCommands(
   contents: CommandContent[],

@@ -1,7 +1,7 @@
 /**
- * Skill Generation Utilities
+ * スキル生成ユーティリティ
  *
- * Shared utilities for generating skill and command files.
+ * スキル/コマンドファイル生成の共通ユーティリティ。
  */
 
 import {
@@ -30,7 +30,7 @@ import {
 import type { CommandContent } from '../command-generation/index.js';
 
 /**
- * Skill template with directory name mapping.
+ * スキルテンプレートとディレクトリ名の対応。
  */
 export interface SkillTemplateEntry {
   template: SkillTemplate;
@@ -38,7 +38,7 @@ export interface SkillTemplateEntry {
 }
 
 /**
- * Command template with ID mapping.
+ * コマンドテンプレートと ID の対応。
  */
 export interface CommandTemplateEntry {
   template: ReturnType<typeof getOpsxExploreCommandTemplate>;
@@ -46,7 +46,7 @@ export interface CommandTemplateEntry {
 }
 
 /**
- * Gets all skill templates with their directory names.
+ * すべてのスキルテンプレートとディレクトリ名を取得する。
  */
 export function getSkillTemplates(): SkillTemplateEntry[] {
   return [
@@ -64,7 +64,7 @@ export function getSkillTemplates(): SkillTemplateEntry[] {
 }
 
 /**
- * Gets all command templates with their IDs.
+ * すべてのコマンドテンプレートと ID を取得する。
  */
 export function getCommandTemplates(): CommandTemplateEntry[] {
   return [
@@ -82,7 +82,7 @@ export function getCommandTemplates(): CommandTemplateEntry[] {
 }
 
 /**
- * Converts command templates to CommandContent array.
+ * コマンドテンプレートを CommandContent 配列に変換する。
  */
 export function getCommandContents(): CommandContent[] {
   const commandTemplates = getCommandTemplates();
@@ -97,10 +97,10 @@ export function getCommandContents(): CommandContent[] {
 }
 
 /**
- * Generates skill file content with YAML frontmatter.
+ * YAML フロントマター付きのスキルファイル内容を生成する。
  *
- * @param template - The skill template
- * @param generatedByVersion - The OpenSpec version to embed in the file
+ * @param template - スキルテンプレート
+ * @param generatedByVersion - ファイルに埋め込む OpenSpec バージョン
  */
 export function generateSkillContent(
   template: SkillTemplate,
@@ -110,7 +110,7 @@ export function generateSkillContent(
 name: ${template.name}
 description: ${template.description}
 license: ${template.license || 'MIT'}
-compatibility: ${template.compatibility || 'Requires openspec CLI.'}
+compatibility: ${template.compatibility || 'OpenSpec CLI が必要です。'}
 metadata:
   author: ${template.metadata?.author || 'openspec'}
   version: "${template.metadata?.version || '1.0'}"

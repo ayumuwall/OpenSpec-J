@@ -1,57 +1,57 @@
 /**
- * Command Generation Types
+ * コマンド生成の型
  *
- * Tool-agnostic interfaces for command generation.
- * These types separate "what to generate" from "how to format it".
+ * ツール非依存のコマンド生成インターフェース。
+ * 「何を生成するか」と「どう整形するか」を分離する。
  */
 
 /**
- * Tool-agnostic command data.
- * Represents the content of a command without any tool-specific formatting.
+ * ツール非依存のコマンドデータ。
+ * ツール固有の整形なしでコマンド内容を表す。
  */
 export interface CommandContent {
-  /** Command identifier (e.g., 'explore', 'apply', 'new') */
+  /** コマンド識別子（例: 'explore', 'apply', 'new'） */
   id: string;
-  /** Human-readable name (e.g., 'OpenSpec Explore') */
+  /** 人間向けの表示名（例: 'OpenSpec Explore'） */
   name: string;
-  /** Brief description of command purpose */
+  /** コマンドの概要説明 */
   description: string;
-  /** Grouping category (e.g., 'Workflow') */
+  /** 分類カテゴリ（例: 'Workflow'） */
   category: string;
-  /** Array of tag strings */
+  /** タグ文字列の配列 */
   tags: string[];
-  /** The command instruction content (body text) */
+  /** コマンドの指示内容（本文） */
   body: string;
 }
 
 /**
- * Per-tool formatting strategy.
- * Each AI tool implements this interface to handle its specific file path
- * and frontmatter format requirements.
+ * ツールごとの整形戦略。
+ * 各 AI ツールが、このインターフェースでファイルパスと
+ * フロントマター形式の要件を処理する。
  */
 export interface ToolCommandAdapter {
-  /** Tool identifier matching AIToolOption.value (e.g., 'claude', 'cursor') */
+  /** AIToolOption.value と一致するツール識別子（例: 'claude', 'cursor'） */
   toolId: string;
   /**
-   * Returns the relative file path for a command.
-   * @param commandId - The command identifier (e.g., 'explore')
-   * @returns Relative path from project root (e.g., '.claude/commands/opsx/explore.md')
+   * コマンドの相対ファイルパスを返す。
+   * @param commandId - コマンド識別子（例: 'explore'）
+   * @returns プロジェクトルートからの相対パス（例: '.claude/commands/opsx/explore.md'）
    */
   getFilePath(commandId: string): string;
   /**
-   * Formats the complete file content including frontmatter.
-   * @param content - The tool-agnostic command content
-   * @returns Complete file content ready to write
+   * フロントマターを含むファイル全体を整形する。
+   * @param content - ツール非依存のコマンド内容
+   * @returns 書き込み可能な完全なファイル内容
    */
   formatFile(content: CommandContent): string;
 }
 
 /**
- * Result of generating a command file.
+ * コマンドファイル生成結果。
  */
 export interface GeneratedCommand {
-  /** Relative file path from project root */
+  /** プロジェクトルートからの相対パス */
   path: string;
-  /** Complete file content (frontmatter + body) */
+  /** 完全なファイル内容（フロントマター + 本文） */
   fileContent: string;
 }

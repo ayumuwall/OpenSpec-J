@@ -14,7 +14,7 @@ export interface AIToolOption {
   value: string;
   available: boolean;
   successLabel?: string;
-  skillsDir?: string; // e.g., '.claude' - /skills suffix per Agent Skills spec
+  skillsDir?: string; // 例: '.claude' - Agent Skills 仕様の /skills サフィックスを付与する
 }
 
 export const AI_TOOLS: AIToolOption[] = [
@@ -39,5 +39,5 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Qwen Code', value: 'qwen', available: true, successLabel: 'Qwen Code', skillsDir: '.qwen' },
   { name: 'RooCode', value: 'roocode', available: true, successLabel: 'RooCode', skillsDir: '.roo' },
   { name: 'Windsurf', value: 'windsurf', available: true, successLabel: 'Windsurf', skillsDir: '.windsurf' },
-  { name: 'AGENTS.md (works with Amp, VS Code, …)', value: 'agents', available: false, successLabel: 'your AGENTS.md-compatible assistant' }
+  { name: 'AGENTS.md（Amp / VS Code などに対応）', value: 'agents', available: false, successLabel: 'AGENTS.md 互換のアシスタント' }
 ];

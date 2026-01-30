@@ -1,16 +1,16 @@
 /**
- * CodeBuddy Command Adapter
+ * CodeBuddy コマンドアダプター
  *
- * Formats commands for CodeBuddy following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * CodeBuddy adapter for command generation.
- * File path: .codebuddy/commands/opsx/<id>.md
- * Frontmatter: name, description, argument-hint
+ * CodeBuddy のコマンド生成アダプター。
+ * ファイルパス: .codebuddy/commands/opsx/<id>.md
+ * フロントマター: name, description, argument-hint
  */
 export const codebuddyAdapter: ToolCommandAdapter = {
   toolId: 'codebuddy',
@@ -23,7 +23,7 @@ export const codebuddyAdapter: ToolCommandAdapter = {
     return `---
 name: ${content.name}
 description: "${content.description}"
-argument-hint: "[command arguments]"
+argument-hint: "[コマンド引数]"
 ---
 
 ${content.body}

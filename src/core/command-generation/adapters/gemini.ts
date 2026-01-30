@@ -1,16 +1,16 @@
 /**
- * Gemini CLI Command Adapter
+ * Gemini CLI コマンドアダプター
  *
- * Formats commands for Gemini CLI following its TOML specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Gemini adapter for command generation.
- * File path: .gemini/commands/opsx/<id>.toml
- * Format: TOML with description and prompt fields
+ * Gemini のコマンド生成アダプター。
+ * ファイルパス: .gemini/commands/opsx/<id>.toml
+ * 形式: TOML with description and prompt fields
  */
 export const geminiAdapter: ToolCommandAdapter = {
   toolId: 'gemini',

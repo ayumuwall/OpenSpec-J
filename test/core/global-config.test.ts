@@ -151,7 +151,7 @@ describe('global-config', () => {
       getGlobalConfig();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('JSON が無効')
+        expect.stringContaining('JSON が無効なため、デフォルト設定を使用します')
       );
     });
 

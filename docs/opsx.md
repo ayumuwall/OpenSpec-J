@@ -2,10 +2,6 @@
 
 > **互換性:** 現時点では Claude Code のみ対応（フィードバックは [Discord](https://discord.gg/YctCnvvshC) へ）。
 
-> [!NOTE]
-> 会話例・出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
-> <!-- OPENSPEC-J:TODO opsx examples -->
-
 ## これは何？
 
 OPSX は OpenSpec 変更のための **流動的で反復的なワークフロー** です。固定フェーズではなく、いつでも実行できるアクションを提供します。
@@ -27,14 +23,14 @@ OPSX は OpenSpec 変更のための **流動的で反復的なワークフロ�
 4. **高速に反復** — テンプレートを変えたら即検証
 
 ```
-Standard workflow:                    OPSX:
+標準ワークフロー:                     OPSX:
 ┌────────────────────────┐           ┌────────────────────────┐
-│  Hardcoded in package  │           │  schema.yaml           │◄── You edit this
-│  (can't change)        │           │  templates/*.md        │◄── Or this
+│  パッケージ固定        │           │  schema.yaml           │◄── ここを編集
+│  (変更不可)            │           │  templates/*.md        │◄── またはここ
 │        ↓               │           │        ↓               │
-│  Wait for new release  │           │  Instant effect        │
+│  リリース待ち          │           │  即座に反映            │
 │        ↓               │           │        ↓               │
-│  Hope it's better      │           │  Test it yourself      │
+│  改善を願う            │           │  自分で検証            │
 └────────────────────────┘           └────────────────────────┘
 ```
 
@@ -85,19 +81,19 @@ openspec experimental
 schema: spec-driven
 
 context: |
-  Tech stack: TypeScript, React, Node.js
-  API conventions: RESTful, JSON responses
-  Testing: Vitest for unit tests, Playwright for e2e
-  Style: ESLint with Prettier, strict TypeScript
+  技術スタック: TypeScript, React, Node.js
+  API 規約: RESTful, JSON レスポンス
+  テスト: ユニットは Vitest、E2E は Playwright
+  スタイル: ESLint + Prettier、strict TypeScript
 
 rules:
   proposal:
-    - Include rollback plan
-    - Identify affected teams
+    - ロールバック計画を含める
+    - 影響を受けるチームを明記
   specs:
-    - Use Given/When/Then format for scenarios
+    - シナリオは Given/When/Then 形式を使う
   design:
-    - Include sequence diagrams for complex flows
+    - 複雑なフローにはシーケンス図を含める
 ```
 
 ### 設定フィールド
@@ -253,22 +249,21 @@ proposal は 3 つを定義します。
 
 ```
                         ┌─────────────────────────────────────┐
-                        │     Is this the same work?          │
+                        │       同じ作業か？                   │
                         └──────────────┬──────────────────────┘
                                        │
                     ┌──────────────────┼──────────────────┐
                     │                  │                  │
                     ▼                  ▼                  ▼
-             Same intent?      >50% overlap?      Can original
-             Same problem?     Same scope?        be "done" without
-                    │                  │          these changes?
+             同じ意図？         50%以上重なる？    元の変更だけで
+             同じ問題？         同じスコープ？     「完了」にできる？
                     │                  │                  │
           ┌────────┴────────┐  ┌──────┴──────┐   ┌───────┴───────┐
           │                 │  │             │   │               │
          YES               NO YES           NO  NO              YES
           │                 │  │             │   │               │
           ▼                 ▼  ▼             ▼   ▼               ▼
-       UPDATE            NEW  UPDATE       NEW  UPDATE          NEW
+       更新              新規  更新         新規  更新           新規
 ```
 
 | テスト | 更新 | 新規変更 |
@@ -309,42 +304,42 @@ git に例えるなら:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         STANDARD WORKFLOW                                    │
-│                    (Phase-Locked, All-or-Nothing)                           │
+│                       標準ワークフロー                                        │
+│                    (フェーズ固定, 一括生成)                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐             │
-│   │   PLANNING   │ ───► │ IMPLEMENTING │ ───► │   ARCHIVING  │             │
-│   │    PHASE     │      │    PHASE     │      │    PHASE     │             │
+│   │   計画       │ ───► │   実装       │ ───► │  アーカイブ  │             │
+│   │   フェーズ   │      │   フェーズ   │      │   フェーズ   │             │
 │   └──────────────┘      └──────────────┘      └──────────────┘             │
 │         │                     │                     │                       │
 │         ▼                     ▼                     ▼                       │
 │   /openspec:proposal   /openspec:apply      /openspec:archive              │
 │                                                                             │
-│   • Creates ALL artifacts at once                                          │
-│   • Can't go back to update specs during implementation                    │
-│   • Phase gates enforce linear progression                                  │
+│   • 全アーティファクトを一括生成                                             │
+│   • 実装中に仕様を更新しづらい                                               │
+│   • フェーズゲートが線形進行を強制                                           │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            OPSX WORKFLOW                                     │
-│                      (Fluid Actions, Iterative)                             │
+│                          OPSX ワークフロー                                    │
+│                      (流動アクション, 反復可能)                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │              ┌────────────────────────────────────────────┐                 │
-│              │           ACTIONS (not phases)             │                 │
+│              │        アクション (フェーズではない)        │                 │
 │              │                                            │                 │
 │              │   new ◄──► continue ◄──► apply ◄──► archive │                 │
 │              │    │          │           │           │    │                 │
 │              │    └──────────┴───────────┴───────────┘    │                 │
-│              │              any order                     │                 │
+│              │              任意の順序                     │                 │
 │              └────────────────────────────────────────────┘                 │
 │                                                                             │
-│   • Create artifacts one at a time OR fast-forward                         │
-│   • Update specs/design/tasks during implementation                        │
-│   • Dependencies enable progress, phases don't exist                       │
+│   • 1 つずつ作成 or 一括生成を選べる                                         │
+│   • 実装中でも specs/design/tasks を更新可能                                 │
+│   • 依存関係は進行可能性を示し、フェーズは存在しない                          │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -355,19 +350,19 @@ git に例えるなら:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                      STANDARD WORKFLOW COMPONENTS                            │
+│                    標準ワークフローのコンポーネント                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   Hardcoded Templates (TypeScript strings)                                  │
+│   ハードコードされたテンプレート (TypeScript 文字列)                          │
 │                    │                                                        │
 │                    ▼                                                        │
-│   Configurators (18+ classes, one per editor)                               │
+│   Configurator (18+ クラス、エディタごとに 1 つ)                              │
 │                    │                                                        │
 │                    ▼                                                        │
-│   Generated Command Files (.claude/commands/openspec/*.md)                  │
+│   生成されたコマンドファイル (.claude/commands/openspec/*.md)                 │
 │                                                                             │
-│   • Fixed structure, no artifact awareness                                  │
-│   • Change requires code modification + rebuild                             │
+│   • 固定構造、アーティファクト認識なし                                        │
+│   • 変更にはコード修正 + 再ビルドが必要                                       │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -376,35 +371,35 @@ git に例えるなら:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         OPSX COMPONENTS                                      │
+│                         OPSX コンポーネント                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   Schema Definitions (YAML)                                                 │
+│   スキーマ定義 (YAML)                                                        │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │  name: spec-driven                                                  │   │
 │   │  artifacts:                                                         │   │
 │   │    - id: proposal                                                   │   │
 │   │      generates: proposal.md                                         │   │
-│   │      requires: []              ◄── Dependencies                     │   │
+│   │      requires: []              ◄── 依存関係                          │   │
 │   │    - id: specs                                                      │   │
-│   │      generates: specs/**/*.md  ◄── Glob patterns                    │   │
-│   │      requires: [proposal]      ◄── Enables after proposal           │   │
+│   │      generates: specs/**/*.md  ◄── Glob パターン                     │   │
+│   │      requires: [proposal]      ◄── proposal 完了後に有効化           │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                    │                                                        │
 │                    ▼                                                        │
-│   Artifact Graph Engine                                                     │
+│   アーティファクトグラフエンジン                                              │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │  • Topological sort (dependency ordering)                           │   │
-│   │  • State detection (filesystem existence)                           │   │
-│   │  • Rich instruction generation (templates + context)                │   │
+│   │  • トポロジカルソート（依存関係順序付け）                             │   │
+│   │  • 状態検出（ファイルシステム存在確認）                               │   │
+│   │  • リッチな指示生成（テンプレート + コンテキスト）                    │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                    │                                                        │
 │                    ▼                                                        │
-│   Skill Files (.claude/skills/openspec-*/SKILL.md)                          │
+│   スキルファイル (.claude/skills/openspec-*/SKILL.md)                        │
 │                                                                             │
-│   • Cross-editor compatible (Claude Code, Cursor, Windsurf)                 │
-│   • Skills query CLI for structured data                                    │
-│   • Fully customizable via schema files                                     │
+│   • クロスエディタ互換（Claude Code, Cursor, Windsurf）                      │
+│   • スキルが CLI に構造化データを問い合わせ                                   │
+│   • スキーマファイルで完全にカスタマイズ可能                                  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -444,8 +439,8 @@ git に例えるなら:
 ```
    BLOCKED ────────────────► READY ────────────────► DONE
       │                        │                       │
-   Missing                  All deps               File exists
-   dependencies             are DONE               on filesystem
+   依存関係が              すべての依存が         ファイルが
+   不足                    DONE                   存在
 ```
 
 ### 情報フロー
@@ -453,57 +448,57 @@ git に例えるなら:
 **標準ワークフロー** — 静的な指示のみ:
 
 ```
-  User: "/openspec:proposal"
+  ユーザー: "/openspec:proposal"
            │
            ▼
   ┌─────────────────────────────────────────┐
-  │  Static instructions:                   │
-  │  • Create proposal.md                   │
-  │  • Create tasks.md                      │
-  │  • Create design.md                     │
-  │  • Create specs/<capability>/spec.md    │
+  │  静的指示:                               │
+  │  • proposal.md を作成                    │
+  │  • tasks.md を作成                       │
+  │  • design.md を作成                      │
+  │  • specs/<capability>/spec.md を作成     │
   │                                         │
-  │  No awareness of what exists or         │
-  │  dependencies between artifacts         │
+  │  既存ファイルや依存関係を                 │
+  │  認識しない                              │
   └─────────────────────────────────────────┘
            │
            ▼
-  Agent creates ALL artifacts in one go
+  エージェントが全アーティファクトを一括作成
 ```
 
 **OPSX** — 状態を問い合わせて指示を生成:
 
 ```
-  User: "/opsx:continue"
+  ユーザー: "/opsx:continue"
            │
            ▼
   ┌──────────────────────────────────────────────────────────────────────────┐
-  │  Step 1: Query current state                                             │
+  │  ステップ 1: 現在の状態を問い合わせ                                        │
   │  ┌────────────────────────────────────────────────────────────────────┐  │
   │  │  $ openspec status --change "add-auth" --json                      │  │
   │  │                                                                    │  │
   │  │  {                                                                 │  │
   │  │    "artifacts": [                                                  │  │
   │  │      {"id": "proposal", "status": "done"},                         │  │
-  │  │      {"id": "specs", "status": "ready"},      ◄── First ready      │  │
+  │  │      {"id": "specs", "status": "ready"},      ◄── 最初の ready     │  │
   │  │      {"id": "design", "status": "ready"},                          │  │
   │  │      {"id": "tasks", "status": "blocked", "missingDeps": ["specs"]}│  │
   │  │    ]                                                               │  │
   │  │  }                                                                 │  │
   │  └────────────────────────────────────────────────────────────────────┘  │
   │                                                                          │
-  │  Step 2: Get rich instructions for ready artifact                        │
+  │  ステップ 2: ready アーティファクトの指示を取得                            │
   │  ┌────────────────────────────────────────────────────────────────────┐  │
   │  │  $ openspec instructions specs --change "add-auth" --json          │  │
   │  │                                                                    │  │
   │  │  {                                                                 │  │
-  │  │    "template": "# Specification\n\n## ADDED Requirements...",      │  │
+  │  │    "template": "# 仕様\n\n## ADDED Requirements...",               │  │
   │  │    "dependencies": [{"id": "proposal", "path": "...", "done": true}│  │
   │  │    "unlocks": ["tasks"]                                            │  │
   │  │  }                                                                 │  │
   │  └────────────────────────────────────────────────────────────────────┘  │
   │                                                                          │
-  │  Step 3: Read dependencies → Create ONE artifact → Show what's unlocked  │
+  │  ステップ 3: 依存を読む → 1 つ作成 → 解除されるものを表示                   │
   └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -516,16 +511,16 @@ git に例えるなら:
   │/proposal│ ──► │ /apply  │ ──► │/archive │
   └─────────┘     └─────────┘     └─────────┘
        │               │
-       │               ├── "Wait, the design is wrong"
+       │               ├── 「あ、設計が間違ってた」
        │               │
-       │               ├── Options:
-       │               │   • Edit files manually (breaks context)
-       │               │   • Abandon and start over
-       │               │   • Push through and fix later
+       │               ├── 選択肢:
+       │               │   • 手動でファイル編集（文脈が途切れる）
+       │               │   • 捨ててやり直す
+       │               │   • 無理やり進めて後で修正
        │               │
-       │               └── No official "go back" mechanism
+       │               └── 公式の「戻る」手段がない
        │
-       └── Creates ALL artifacts at once
+       └── 全アーティファクトを一括作成
 ```
 
 **OPSX** — 自然に反復できる:
@@ -533,19 +528,19 @@ git に例えるなら:
 ```
   /opsx:new ───► /opsx:continue ───► /opsx:apply ───► /opsx:archive
       │                │                  │
-      │                │                  ├── "The design is wrong"
+      │                │                  ├── 「設計が間違ってた」
       │                │                  │
       │                │                  ▼
-      │                │            Just edit design.md
-      │                │            and continue!
+      │                │            design.md を編集して
+      │                │            続けるだけ！
       │                │                  │
       │                │                  ▼
-      │                │         /opsx:apply picks up
-      │                │         where you left off
+      │                │         /opsx:apply が中断箇所から
+      │                │         再開する
       │                │
-      │                └── Creates ONE artifact, shows what's unlocked
+      │                └── 1 つ作成し、解除されるものを表示
       │
-      └── Scaffolds change, waits for direction
+      └── 変更をひな形化し、指示を待つ
 ```
 
 ### カスタムスキーマ
@@ -553,16 +548,16 @@ git に例えるなら:
 スキーマ管理コマンドで独自ワークフローを作成できます。
 
 ```bash
-# Create a new schema from scratch (interactive)
+# ゼロから新規スキーマを作成（対話式）
 openspec schema init my-workflow
 
-# Or fork an existing schema as a starting point
+# 既存スキーマをフォークして開始
 openspec schema fork spec-driven my-workflow
 
-# Validate your schema structure
+# スキーマ構造を検証
 openspec schema validate my-workflow
 
-# See where a schema resolves from (useful for debugging)
+# スキーマの解決元を確認（デバッグ用）
 openspec schema which my-workflow
 ```
 
@@ -582,13 +577,13 @@ openspec/schemas/research-first/
 ```yaml
 name: research-first
 artifacts:
-  - id: research        # Added before proposal
+  - id: research        # proposal の前に追加
     generates: research.md
     requires: []
 
   - id: proposal
     generates: proposal.md
-    requires: [research]  # Now depends on research
+    requires: [research]  # research に依存
 
   - id: tasks
     generates: tasks.md
@@ -618,19 +613,19 @@ artifacts:
 - **spec-driven**（デフォルト）: proposal → specs → design → tasks
 
 ```bash
-# List available schemas
+# 利用可能なスキーマを一覧
 openspec schemas
 
-# See all schemas with their resolution sources
+# 全スキーマと解決元を確認
 openspec schema which --all
 
-# Create a new schema interactively
+# 新規スキーマを対話式で作成
 openspec schema init my-workflow
 
-# Fork an existing schema for customization
+# 既存スキーマをフォークしてカスタマイズ
 openspec schema fork spec-driven my-workflow
 
-# Validate schema structure before use
+# 使用前にスキーマ構造を検証
 openspec schema validate my-workflow
 ```
 

@@ -1,16 +1,16 @@
 /**
- * CoStrict Command Adapter
+ * CoStrict コマンドアダプター
  *
- * Formats commands for CoStrict following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * CoStrict adapter for command generation.
- * File path: .cospec/openspec/commands/opsx-<id>.md
- * Frontmatter: description, argument-hint
+ * CoStrict のコマンド生成アダプター。
+ * ファイルパス: .cospec/openspec/commands/opsx-<id>.md
+ * フロントマター: description, argument-hint
  */
 export const costrictAdapter: ToolCommandAdapter = {
   toolId: 'costrict',
@@ -22,7 +22,7 @@ export const costrictAdapter: ToolCommandAdapter = {
   formatFile(content: CommandContent): string {
     return `---
 description: "${content.description}"
-argument-hint: command arguments
+argument-hint: コマンド引数
 ---
 
 ${content.body}

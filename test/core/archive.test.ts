@@ -88,9 +88,9 @@ describe('ArchiveCommand', () => {
       // Execute archive with --yes flag
       await archiveCommand.execute(changeName, { yes: true });
       
-      // Verify warning was logged (Japanese message)
+      // Verify warning was logged
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('未完了タスクが 2 件あります')
+        expect.stringContaining('未完了タスクが 2 件')
       );
     });
 
@@ -157,7 +157,7 @@ The system SHALL support logo and backgroundColor fields for gift cards.
       
       // Verify warning was logged about REMOVED requirements being ignored
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('警告: gift-card - 新規仕様のため REMOVED の要件 2 件を無視しました')
+        expect.stringContaining('gift-card - 新規仕様のため REMOVED の要件 2 件を無視しました')
       );
       
       // Verify spec was created with only ADDED requirements
@@ -202,9 +202,7 @@ Modified content.`;
       
       // Verify error message mentions MODIFIED not allowed for new specs
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '対象仕様が存在しません。新規仕様では ADDED のみ許可されます。MODIFIED と RENAMED は既存仕様が必要です。'
-        )
+        expect.stringContaining('new-capability の delta の検証に失敗しました')
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
       
@@ -242,9 +240,7 @@ New feature description.
       
       // Verify error message mentions RENAMED not allowed for new specs
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '対象仕様が存在しません。新規仕様では ADDED のみ許可されます。MODIFIED と RENAMED は既存仕様が必要です。'
-        )
+        expect.stringContaining('another-capability の delta の検証に失敗しました')
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
       
@@ -309,7 +305,7 @@ New feature description.
       
       // Should complete without spec updates
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('Specs to update')
+        expect.stringContaining('更新する仕様')
       );
       
       // Verify change was archived
@@ -331,7 +327,7 @@ New feature description.
       // Execute archive with --skip-specs flag and noValidate to skip validation
       await archiveCommand.execute(changeName, { yes: true, skipSpecs: true, noValidate: true });
       
-      // Verify skip message was logged (Japanese message)
+      // Verify skip message was logged
       expect(console.log).toHaveBeenCalledWith(
         '仕様更新をスキップします (--skip-specs 指定)。'
       );
@@ -602,7 +598,7 @@ new body`;
       expect(unchanged).toBe(mainContent);
       // Assert error message format and abort notice
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('delta の検証に失敗')
+        expect.stringContaining('delta の検証に失敗しました')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('中止しました。ファイルは変更されませんでした。')

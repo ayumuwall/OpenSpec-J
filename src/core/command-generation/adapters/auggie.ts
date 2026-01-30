@@ -1,16 +1,16 @@
 /**
- * Auggie (Augment CLI) Command Adapter
+ * Auggie (Augment CLI) コマンドアダプター
  *
- * Formats commands for Auggie following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Auggie adapter for command generation.
- * File path: .augment/commands/opsx-<id>.md
- * Frontmatter: description, argument-hint
+ * Auggie のコマンド生成アダプター。
+ * ファイルパス: .augment/commands/opsx-<id>.md
+ * フロントマター: description, argument-hint
  */
 export const auggieAdapter: ToolCommandAdapter = {
   toolId: 'auggie',
@@ -22,7 +22,7 @@ export const auggieAdapter: ToolCommandAdapter = {
   formatFile(content: CommandContent): string {
     return `---
 description: ${content.description}
-argument-hint: command arguments
+argument-hint: コマンド引数
 ---
 
 ${content.body}

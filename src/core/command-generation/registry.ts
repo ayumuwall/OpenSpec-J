@@ -1,8 +1,8 @@
 /**
- * Command Adapter Registry
+ * コマンドアダプターレジストリ
  *
- * Centralized registry for tool command adapters.
- * Similar pattern to existing SlashCommandRegistry in the codebase.
+ * ツールのコマンドアダプターを集約するレジストリ。
+ * 既存の SlashCommandRegistry と同じパターン。
  */
 
 import type { ToolCommandAdapter } from './types.js';
@@ -29,12 +29,12 @@ import { roocodeAdapter } from './adapters/roocode.js';
 import { windsurfAdapter } from './adapters/windsurf.js';
 
 /**
- * Registry for looking up tool command adapters.
+ * ツールのコマンドアダプターを参照するレジストリ。
  */
 export class CommandAdapterRegistry {
   private static adapters: Map<string, ToolCommandAdapter> = new Map();
 
-  // Static initializer - register built-in adapters
+  // 静的初期化: 組み込みアダプターを登録
   static {
     CommandAdapterRegistry.register(amazonQAdapter);
     CommandAdapterRegistry.register(antigravityAdapter);
@@ -60,34 +60,34 @@ export class CommandAdapterRegistry {
   }
 
   /**
-   * Register a tool command adapter.
-   * @param adapter - The adapter to register
+   * ツールのコマンドアダプターを登録する。
+   * @param adapter - 登録するアダプター
    */
   static register(adapter: ToolCommandAdapter): void {
     CommandAdapterRegistry.adapters.set(adapter.toolId, adapter);
   }
 
   /**
-   * Get an adapter by tool ID.
-   * @param toolId - The tool identifier (e.g., 'claude', 'cursor')
-   * @returns The adapter or undefined if not registered
+   * ツール ID でアダプターを取得する。
+   * @param toolId - ツール識別子（例: 'claude', 'cursor'）
+   * @returns 登録済みのアダプター、未登録なら undefined
    */
   static get(toolId: string): ToolCommandAdapter | undefined {
     return CommandAdapterRegistry.adapters.get(toolId);
   }
 
   /**
-   * Get all registered adapters.
-   * @returns Array of all registered adapters
+   * 登録済みアダプターを取得する。
+   * @returns 登録済みアダプター配列
    */
   static getAll(): ToolCommandAdapter[] {
     return Array.from(CommandAdapterRegistry.adapters.values());
   }
 
   /**
-   * Check if an adapter is registered for a tool.
-   * @param toolId - The tool identifier
-   * @returns True if an adapter exists
+   * 指定ツールにアダプターが登録されているか確認する。
+   * @param toolId - ツール識別子
+   * @returns アダプターが存在すれば true
    */
   static has(toolId: string): boolean {
     return CommandAdapterRegistry.adapters.has(toolId);

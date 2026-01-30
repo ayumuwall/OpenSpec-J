@@ -90,7 +90,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'schema' field")
+          expect.stringContaining("config の 'schema' フィールドが不正です（空でない文字列が必要）")
         );
       });
 
@@ -116,7 +116,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'context' field")
+          expect.stringContaining("config の 'context' フィールドが不正です（文字列が必要）")
         );
       });
 
@@ -138,7 +138,7 @@ rules: ["not", "an", "object"]
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'rules' field")
+          expect.stringContaining("config の 'rules' フィールドが不正です（オブジェクトが必要）")
         );
       });
 
@@ -162,7 +162,7 @@ rules:
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'rules' field")
+          expect.stringContaining("config の 'rules' フィールドが不正です（オブジェクトが必要）")
         );
       });
 
@@ -191,7 +191,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Rules for 'specs' must be an array of strings")
+          expect.stringContaining("'specs' のルールは文字列配列である必要があります。このアーティファクトのルールは無視します")
         );
       });
 
@@ -219,7 +219,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Some rules for 'proposal' are empty strings")
+          expect.stringContaining("'proposal' のルールに空文字があるため無視します")
         );
       });
 
@@ -257,7 +257,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to parse openspec/config.yaml'),
+          expect.stringContaining('openspec/config.yaml の解析に失敗しました'),
           expect.anything()
         );
       });
@@ -271,7 +271,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('not a valid YAML object')
+          expect.stringContaining('openspec/config.yaml は有効な YAML オブジェクトではありません')
         );
       });
 
@@ -318,10 +318,10 @@ rules:
         expect(config).toEqual({ schema: 'spec-driven' });
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Context too large (51.0KB, limit: 50KB)')
+          expect.stringContaining('context が大きすぎます (51.0KB, 上限: 50KB)')
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Ignoring context field')
+          expect.stringContaining('context フィールドを無視します')
         );
       });
 
@@ -359,7 +359,7 @@ context: |
 
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Context too large')
+          expect.stringContaining('context が大きすぎます')
         );
       });
     });
@@ -507,9 +507,9 @@ rules:
       const warnings = validateConfigRules(rules, validIds, 'spec-driven');
 
       expect(warnings).toHaveLength(2);
-      expect(warnings[0]).toContain('Unknown artifact ID in rules: "testplan"');
-      expect(warnings[0]).toContain('Valid IDs for schema "spec-driven": design, proposal, specs, tasks');
-      expect(warnings[1]).toContain('Unknown artifact ID in rules: "documentation"');
+      expect(warnings[0]).toContain('rules 内の不明なアーティファクトID: "testplan"');
+      expect(warnings[0]).toContain('スキーマ "spec-driven" の有効ID: design, proposal, specs, tasks');
+      expect(warnings[1]).toContain('rules 内の不明なアーティファクトID: "documentation"');
     });
 
     it('should return warnings for all unknown artifact IDs', () => {

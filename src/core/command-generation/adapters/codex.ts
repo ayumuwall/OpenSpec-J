@@ -1,16 +1,16 @@
 /**
- * Codex Command Adapter
+ * Codex コマンドアダプター
  *
- * Formats commands for Codex following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Codex adapter for command generation.
- * File path: .codex/prompts/opsx-<id>.md
- * Frontmatter: description, argument-hint
+ * Codex のコマンド生成アダプター。
+ * ファイルパス: .codex/prompts/opsx-<id>.md
+ * フロントマター: description, argument-hint
  */
 export const codexAdapter: ToolCommandAdapter = {
   toolId: 'codex',
@@ -22,7 +22,7 @@ export const codexAdapter: ToolCommandAdapter = {
   formatFile(content: CommandContent): string {
     return `---
 description: ${content.description}
-argument-hint: command arguments
+argument-hint: コマンド引数
 ---
 
 ${content.body}

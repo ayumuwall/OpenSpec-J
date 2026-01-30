@@ -193,7 +193,7 @@ describe('instruction-loader', () => {
       const context = loadChangeContext(tempDir, 'my-change');
 
       expect(() => generateInstructions(context, 'nonexistent')).toThrow(
-        "スキーマ 'spec-driven' にアーティファクト 'nonexistent' が見つかりません"
+        "アーティファクト 'nonexistent' が見つかりません"
       );
     });
 

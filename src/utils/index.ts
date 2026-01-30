@@ -1,8 +1,8 @@
-// Shared utilities
+// 共通ユーティリティ
 export { validateChangeName, createChange } from './change-utils.js';
 export type { ValidationResult, CreateChangeOptions } from './change-utils.js';
 
-// Change metadata utilities
+// 変更メタデータのユーティリティ
 export {
   readChangeMetadata,
   writeChangeMetadata,
@@ -11,5 +11,5 @@ export {
   ChangeMetadataError,
 } from './change-metadata.js';
 
-// File system utilities
+// ファイルシステムのユーティリティ
 export { FileSystemUtils, removeMarkerBlock } from './file-system.js';

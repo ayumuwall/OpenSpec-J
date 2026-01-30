@@ -13,7 +13,7 @@ context: |
   Language: Portuguese (pt-BR)
   All artifacts must be written in Brazilian Portuguese.
 
-  # Your other project context below...
+  # 以下にプロジェクトの文脈を追加...
   Tech stack: TypeScript, React, Node.js
 ```
 
@@ -51,6 +51,11 @@ context: |
 context: |
   言語：日本語
   すべての成果物は日本語で作成してください。
+
+  規範語ルール:
+  - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）
+  - 語尾は「〜しなければならない。(SHALL)」の形式に揃える
+  - 文中に SHALL/MUST を挿入しない
 ```
 
 ### フランス語
@@ -77,10 +82,10 @@ context: |
 
 ```yaml
 context: |
-  Language: Japanese
-  Write in Japanese, but:
-  - Keep technical terms like "API", "REST", "GraphQL" in English
-  - Code examples and file paths remain in English
+  言語：日本語
+  日本語で記述するが:
+  - "API", "REST", "GraphQL" などの技術用語は英語のまま
+  - コード例やファイルパスは英語のまま
 ```
 
 ### 他のコンテキストと併用
@@ -103,10 +108,10 @@ context: |
 言語設定が効いているか確認するには:
 
 ```bash
-# Check the instructions - should show your language context
+# 指示を確認 - 言語コンテキストが表示されるはず
 openspec instructions proposal --change my-change
 
-# Output will include your language context
+# 出力に言語コンテキストが含まれる
 ```
 
 ## 関連ドキュメント

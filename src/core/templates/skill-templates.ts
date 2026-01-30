@@ -828,33 +828,39 @@ export function getSyncSpecsSkillTemplate(): SkillTemplate {
    - 更新した capability
    - 変更内容（追加/更新/削除/名称変更）
 
+**規範語ルール**
+
+- 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）
+- 語尾は「〜しなければならない。(SHALL)」の形式に揃える
+- 文中に SHALL/MUST を挿入しない
+
 **差分仕様フォーマットの参考**
 
 \`\`\`markdown
 ## ADDED Requirements
 
-### Requirement: New Feature
-The system SHALL do something new.
+### Requirement: 新機能
+システムは新しい機能を提供しなければならない。(SHALL)
 
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
+#### Scenario: 基本ケース
+- **WHEN** ユーザーが X を実行する
+- **THEN** システムは Y を返す
 
 ## MODIFIED Requirements
 
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
+### Requirement: 既存機能
+#### Scenario: 追加シナリオ
+- **WHEN** ユーザーが A を実行する
+- **THEN** システムは B を返す
 
 ## REMOVED Requirements
 
-### Requirement: Deprecated Feature
+### Requirement: 廃止機能
 
 ## RENAMED Requirements
 
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
+- FROM: \`### Requirement: 旧名称\`
+- TO: \`### Requirement: 新名称\`
 \`\`\`
 
 **重要原則: 賢いマージ**
@@ -2612,33 +2618,39 @@ export function getOpsxSyncCommandTemplate(): CommandTemplate {
    - 更新した capability
    - 変更内容（追加/更新/削除/名称変更）
 
+**規範語ルール**
+
+- 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）
+- 語尾は「〜しなければならない。(SHALL)」の形式に揃える
+- 文中に SHALL/MUST を挿入しない
+
 **差分仕様フォーマットの参考**
 
 \`\`\`markdown
 ## ADDED Requirements
 
-### Requirement: New Feature
-The system SHALL do something new.
+### Requirement: 新機能
+システムは新しい機能を提供しなければならない。(SHALL)
 
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
+#### Scenario: 基本ケース
+- **WHEN** ユーザーが X を実行する
+- **THEN** システムは Y を返す
 
 ## MODIFIED Requirements
 
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
+### Requirement: 既存機能
+#### Scenario: 追加シナリオ
+- **WHEN** ユーザーが A を実行する
+- **THEN** システムは B を返す
 
 ## REMOVED Requirements
 
-### Requirement: Deprecated Feature
+### Requirement: 廃止機能
 
 ## RENAMED Requirements
 
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
+- FROM: \`### Requirement: 旧名称\`
+- TO: \`### Requirement: 新名称\`
 \`\`\`
 
 **重要原則: 賢いマージ**

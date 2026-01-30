@@ -1,7 +1,7 @@
 {
   "name": "@fission-ai/openspec",
   "version": "1.0.2",
-  "description": "AI-native system for spec-driven development",
+  "description": "仕様駆動開発のための AI ネイティブな仕組み",
   "keywords": [
     "openspec",
     "specs",

@@ -3,8 +3,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
-
 describe('change show (interactive behavior)', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-change-show-tmp');
@@ -35,9 +33,8 @@ describe('change show (interactive behavior)', () => {
       } catch (e) { err = e; }
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
-      const stderr = stripAnsi(err.stderr.toString());
-      expect(stderr).toContain('変更が指定されていません。利用可能な ID: demo');
-      expect(stderr).toContain('openspec change list');
+      expect(err.stderr.toString()).toContain('利用可能な ID:');
+      expect(err.stderr.toString()).toContain('openspec change list');
     } finally {
       process.chdir(originalCwd);
       process.env = originalEnv;

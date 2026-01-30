@@ -1,16 +1,16 @@
 /**
- * Amazon Q Developer Command Adapter
+ * Amazon Q Developer コマンドアダプター
  *
- * Formats commands for Amazon Q Developer following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Amazon Q adapter for command generation.
- * File path: .amazonq/prompts/opsx-<id>.md
- * Frontmatter: description
+ * Amazon Q のコマンド生成アダプター。
+ * ファイルパス: .amazonq/prompts/opsx-<id>.md
+ * フロントマター: description
  */
 export const amazonQAdapter: ToolCommandAdapter = {
   toolId: 'amazon-q',

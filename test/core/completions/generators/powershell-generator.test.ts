@@ -31,7 +31,7 @@ describe('PowerShellGenerator', () => {
 
 			const script = generator.generate(commands);
 
-			expect(script).toContain('# OpenSpec CLI 用 PowerShell 補完スクリプト');
+      expect(script).toContain('# OpenSpec CLI 用 PowerShell 補完スクリプト');
 			expect(script).toContain('$openspecCompleter = {');
 			expect(script).toContain('Register-ArgumentCompleter');
 		});
@@ -477,7 +477,7 @@ describe('PowerShellGenerator', () => {
 
 			const script = generator.generate(commands);
 
-			expect(script).toContain('# OpenSpec CLI 用 PowerShell 補完スクリプト');
+    expect(script).toContain('# OpenSpec CLI 用 PowerShell 補完スクリプト');
 			expect(script).toContain('$openspecCompleter = {');
 			expect(script).toContain('Register-ArgumentCompleter');
 		});

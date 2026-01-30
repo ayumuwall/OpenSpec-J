@@ -31,18 +31,18 @@ openspec init
 schema: spec-driven
 
 context: |
-  Tech stack: TypeScript, React, Node.js, PostgreSQL
-  API style: RESTful, documented in docs/api.md
-  Testing: Jest + React Testing Library
-  We value backwards compatibility for all public APIs
+  技術スタック: TypeScript, React, Node.js, PostgreSQL
+  API スタイル: RESTful、docs/api.md に文書化
+  テスト: Jest + React Testing Library
+  公開 API はすべて後方互換性を重視
 
 rules:
   proposal:
-    - Include rollback plan
-    - Identify affected teams
+    - ロールバック計画を含める
+    - 影響を受けるチームを明記
   specs:
-    - Use Given/When/Then format
-    - Reference existing patterns before inventing new ones
+    - Given/When/Then 形式を使う
+    - 新しいパターンを作る前に既存を参照
 ```
 
 ### 仕組み
@@ -50,10 +50,10 @@ rules:
 **デフォルトスキーマ:**
 
 ```bash
-# Without config
+# 設定なしの場合
 openspec new change my-feature --schema spec-driven
 
-# With config - schema is automatic
+# 設定ありの場合 - スキーマは自動
 openspec new change my-feature
 ```
 
@@ -63,17 +63,17 @@ openspec new change my-feature
 
 ```xml
 <context>
-Tech stack: TypeScript, React, Node.js, PostgreSQL
+技術スタック: TypeScript, React, Node.js, PostgreSQL
 ...
 </context>
 
 <rules>
-- Include rollback plan
-- Identify affected teams
+- ロールバック計画を含める
+- 影響を受けるチームを明記
 </rules>
 
 <template>
-[Schema's built-in template]
+[スキーマの組み込みテンプレート]
 </template>
 ```
 
@@ -98,12 +98,12 @@ OpenSpec がスキーマを選ぶ順番:
 ```text
 your-project/
 ├── openspec/
-│   ├── config.yaml        # Project config
-│   ├── schemas/           # Custom schemas live here
+│   ├── config.yaml        # プロジェクト設定
+│   ├── schemas/           # カスタムスキーマの置き場所
 │   │   └── my-workflow/
 │   │       ├── schema.yaml
 │   │       └── templates/
-│   └── changes/           # Your changes
+│   └── changes/           # 変更
 └── src/
 ```
 
@@ -121,12 +121,12 @@ openspec schema fork spec-driven my-workflow
 
 ```text
 openspec/schemas/my-workflow/
-├── schema.yaml           # Workflow definition
+├── schema.yaml           # ワークフロー定義
 └── templates/
-    ├── proposal.md       # Template for proposal artifact
-    ├── spec.md           # Template for specs
-    ├── design.md         # Template for design
-    └── tasks.md          # Template for tasks
+    ├── proposal.md       # proposal のテンプレート
+    ├── spec.md           # specs のテンプレート
+    ├── design.md         # design のテンプレート
+    └── tasks.md          # tasks のテンプレート
 ```
 
 `schema.yaml` を編集してワークフローを変更するか、テンプレートを編集して生成内容を変えます。
@@ -136,12 +136,12 @@ openspec/schemas/my-workflow/
 完全に新しいワークフローを作成する場合:
 
 ```bash
-# Interactive
+# 対話式
 openspec schema init research-first
 
-# Non-interactive
+# 非対話
 openspec schema init rapid \
-  --description "Rapid iteration workflow" \
+  --description "高速反復ワークフロー" \
   --artifacts "proposal,tasks" \
   --default
 ```
@@ -154,30 +154,30 @@ openspec schema init rapid \
 # openspec/schemas/my-workflow/schema.yaml
 name: my-workflow
 version: 1
-description: My team's custom workflow
+description: チームのカスタムワークフロー
 
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: Initial proposal document
+    description: 変更提案書
     template: proposal.md
     instruction: |
-      Create a proposal that explains WHY this change is needed.
-      Focus on the problem, not the solution.
+      この変更が「なぜ」必要かを説明する提案を作成する。
+      解決策ではなく問題に焦点を当てる。
     requires: []
 
   - id: design
     generates: design.md
-    description: Technical design
+    description: 技術設計
     template: design.md
     instruction: |
-      Create a design document explaining HOW to implement.
+      「どのように」実装するかを説明する設計書を作成する。
     requires:
-      - proposal    # Can't create design until proposal exists
+      - proposal    # proposal が存在するまで design は作れない
 
   - id: tasks
     generates: tasks.md
-    description: Implementation checklist
+    description: 実装チェックリスト
     template: tasks.md
     requires:
       - design
@@ -203,17 +203,17 @@ apply:
 
 ```markdown
 <!-- templates/proposal.md -->
-## Why
+## なぜ
 
-<!-- Explain the motivation for this change. What problem does this solve? -->
+<!-- この変更の動機を説明する。どんな問題を解決するか？ -->
 
-## What Changes
+## 何が変わるか
 
-<!-- Describe what will change. Be specific about new capabilities or modifications. -->
+<!-- 変更内容を具体的に記述する。新機能や修正点を明確に。 -->
 
-## Impact
+## 影響範囲
 
-<!-- Affected code, APIs, dependencies, systems -->
+<!-- 影響を受けるコード、API、依存関係、システム -->
 ```
 
 テンプレートには次を含められます:
@@ -240,10 +240,10 @@ openspec schema validate my-workflow
 作成したスキーマは次のように使います。
 
 ```bash
-# Specify on command
+# コマンドで指定
 openspec new change feature --schema my-workflow
 
-# Or set as default in config.yaml
+# または config.yaml でデフォルト設定
 schema: my-workflow
 ```
 
@@ -252,10 +252,10 @@ schema: my-workflow
 どのスキーマが使われているか分からない場合:
 
 ```bash
-# See where a specific schema resolves from
+# 特定スキーマの解決元を確認
 openspec schema which my-workflow
 
-# List all available schemas
+# 利用可能なスキーマを一覧
 openspec schema which --all
 ```
 
@@ -283,21 +283,21 @@ Path: /path/to/project/openspec/schemas/my-workflow
 # openspec/schemas/rapid/schema.yaml
 name: rapid
 version: 1
-description: Fast iteration with minimal overhead
+description: 最小限のオーバーヘッドで高速反復
 
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: Quick proposal
+    description: 簡易提案
     template: proposal.md
     instruction: |
-      Create a brief proposal for this change.
-      Focus on what and why, skip detailed specs.
+      この変更の簡潔な提案を作成する。
+      何を・なぜに集中し、詳細な仕様は省略。
     requires: []
 
   - id: tasks
     generates: tasks.md
-    description: Implementation checklist
+    description: 実装チェックリスト
     template: tasks.md
     requires: [proposal]
 
@@ -319,20 +319,20 @@ openspec schema fork spec-driven with-review
 ```yaml
   - id: review
     generates: review.md
-    description: Pre-implementation review checklist
+    description: 実装前レビューチェックリスト
     template: review.md
     instruction: |
-      Create a review checklist based on the design.
-      Include security, performance, and testing considerations.
+      設計に基づくレビューチェックリストを作成する。
+      セキュリティ、性能、テストの観点を含める。
     requires:
       - design
 
   - id: tasks
-    # ... existing tasks config ...
+    # ... 既存の tasks 設定 ...
     requires:
       - specs
       - design
-      - review    # Now tasks require review too
+      - review    # tasks が review も必要に
 ```
 
 ---

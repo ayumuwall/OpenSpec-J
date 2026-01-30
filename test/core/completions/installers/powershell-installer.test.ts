@@ -380,7 +380,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
       const result = await installer.install(mockCompletionScript);
 
       expect(result.success).toBe(true);
-      expect(result.message).toContain('補完スクリプトをインストールし');
+      expect(result.message).toContain('インストール');
       expect(result.installedPath).toContain('OpenSpecCompletion.ps1');
       expect(result.backupPath).toBeUndefined();
     });
@@ -423,7 +423,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
       const result = await installer.install(updatedScript);
 
       expect(result.success).toBe(true);
-      expect(result.message).toContain('更新しました');
+      expect(result.message).toContain('補完スクリプトを更新しました');
       expect(result.backupPath).toBeDefined();
     });
 

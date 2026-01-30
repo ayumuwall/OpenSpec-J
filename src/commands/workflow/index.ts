@@ -1,7 +1,7 @@
 /**
- * Workflow CLI Commands
+ * ワークフロー CLI コマンド
  *
- * Commands for the artifact-driven workflow: status, instructions, templates, schemas, new change.
+ * アーティファクト駆動ワークフロー向けのコマンド: status / instructions / templates / schemas / new change。
  */
 
 export { statusCommand } from './status.js';

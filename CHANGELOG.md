@@ -13,106 +13,106 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 1.0.2
 
-### Patch Changes
+### パッチ変更
 
-- [#596](https://github.com/Fission-AI/OpenSpec/pull/596) [`e91568d`](https://github.com/Fission-AI/OpenSpec/commit/e91568deb948073f3e9d9bb2d2ab5bf8080d6cf4) Thanks [@TabishB](https://github.com/TabishB)! - ### Bug Fixes
+- [#596](https://github.com/Fission-AI/OpenSpec/pull/596) [`e91568d`](https://github.com/Fission-AI/OpenSpec/commit/e91568deb948073f3e9d9bb2d2ab5bf8080d6cf4) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
 
-  - Clarified spec naming convention — Specs should be named after capabilities (`specs/<capability>/spec.md`), not changes
-  - Fixed task checkbox format guidance — Tasks now clearly require `- [ ]` checkbox format for apply phase tracking
+  - 仕様命名規則を明確化 — Specs は変更名ではなく capability 名（`specs/<capability>/spec.md`）で命名する
+  - タスクのチェックボックス形式の案内を修正 — apply フェーズの追跡には `- [ ]` 形式が必須であることを明確化
 
 ## 1.0.1
 
-### Patch Changes
+### パッチ変更
 
-- [#587](https://github.com/Fission-AI/OpenSpec/pull/587) [`943e0d4`](https://github.com/Fission-AI/OpenSpec/commit/943e0d41026d034de66b9442d1276c01b293eb2b) Thanks [@TabishB](https://github.com/TabishB)! - ### Bug Fixes
+- [#587](https://github.com/Fission-AI/OpenSpec/pull/587) [`943e0d4`](https://github.com/Fission-AI/OpenSpec/commit/943e0d41026d034de66b9442d1276c01b293eb2b) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
 
-  - Fixed incorrect archive path in onboarding documentation — the template now shows the correct path `openspec/changes/archive/YYYY-MM-DD-<name>/` instead of the incorrect `openspec/archive/YYYY-MM-DD--<name>/`
+  - オンボーディングドキュメントのアーカイブパス誤りを修正 — テンプレートを正しい `openspec/changes/archive/YYYY-MM-DD-<name>/` に変更（誤: `openspec/archive/YYYY-MM-DD--<name>/`）
 
 ## 1.0.0
 
-### Major Changes
+### 重大な変更
 
-- [#578](https://github.com/Fission-AI/OpenSpec/pull/578) [`0cc9d90`](https://github.com/Fission-AI/OpenSpec/commit/0cc9d9025af367faa1688a7b2606a2549053cd3f) Thanks [@TabishB](https://github.com/TabishB)! - ## OpenSpec 1.0 — The OPSX Release
+- [#578](https://github.com/Fission-AI/OpenSpec/pull/578) [`0cc9d90`](https://github.com/Fission-AI/OpenSpec/commit/0cc9d9025af367faa1688a7b2606a2549053cd3f) [@TabishB](https://github.com/TabishB) ありがとう！ - ## OpenSpec 1.0 — OPSX リリース
 
-  The workflow has been rebuilt from the ground up. OPSX replaces the old phase-locked `/openspec:*` commands with an action-based system where AI understands what artifacts exist, what's ready to create, and what each action unlocks.
+  ワークフローをゼロから再構築しました。OPSX は旧来のフェーズ固定 `/openspec:*` コマンドを、AI がアーティファクトの存在や作成可能状態、各アクションで何が解放されるかを理解するアクションベースの仕組みに置き換えました。
 
-  ### Breaking Changes
+  ### 破壊的変更
 
-  - **Old commands removed** — `/openspec:proposal`, `/openspec:apply`, and `/openspec:archive` no longer exist
-  - **Config files removed** — Tool-specific instruction files (`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, `project.md`) are no longer generated
-  - **Migration** — Run `openspec init` to upgrade. Legacy artifacts are detected and cleaned up with confirmation.
+  - **旧コマンドの削除** — `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` は廃止
+  - **設定ファイルの削除** — ツール固有の指示ファイル（`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, `project.md`）は生成されなくなった
+  - **移行** — `openspec init` を実行して移行。旧アーティファクトは検出され、確認のうえでクリーンアップされる
 
-  ### From Static Prompts to Dynamic Instructions
+  ### 静的プロンプトから動的指示へ
 
-  **Before:** AI received the same static instructions every time, regardless of project state.
+  **Before:** プロジェクト状態に関係なく、AI は毎回同じ静的指示を受け取っていた。
 
-  **Now:** Instructions are dynamically assembled from three layers:
+  **Now:** 指示は 3 層から動的に組み立てられる。
 
-  1. **Context** — Project background from `config.yaml` (tech stack, conventions)
-  2. **Rules** — Artifact-specific constraints (e.g., "propose spike tasks for unknowns")
-  3. **Template** — The actual structure for the output file
+  1. **Context** — `config.yaml` からのプロジェクト背景（技術スタック、規約）
+  2. **Rules** — アーティファクト固有の制約（例:「未知にはスパイクタスクを提案する」）
+  3. **Template** — 出力ファイルの実際の構造
 
-  AI queries the CLI for real-time state: which artifacts exist, what's ready to create, what dependencies are satisfied, and what each action unlocks.
+  AI は CLI にリアルタイム状態を問い合わせ、存在するアーティファクト、作成可能なもの、満たされた依存関係、各アクションが解放する内容を把握する。
 
-  ### From Phase-Locked to Action-Based
+  ### フェーズ固定からアクションベースへ
 
-  **Before:** Linear workflow — proposal → apply → archive. Couldn't easily go back or iterate.
+  **Before:** proposal → apply → archive の直線ワークフローで、戻ったり反復したりが難しかった。
 
-  **Now:** Flexible actions on a change. Edit any artifact anytime. The artifact graph tracks state automatically.
+  **Now:** 変更に対して柔軟にアクションできる。どのアーティファクトもいつでも編集可能で、状態はアーティファクトグラフが自動追跡する。
 
-  | Command              | What it does                                         |
+  | コマンド             | 内容                                                 |
   | -------------------- | ---------------------------------------------------- |
-  | `/opsx:explore`      | Think through ideas before committing to a change    |
-  | `/opsx:new`          | Start a new change                                   |
-  | `/opsx:continue`     | Create one artifact at a time (step-through)         |
-  | `/opsx:ff`           | Create all planning artifacts at once (fast-forward) |
-  | `/opsx:apply`        | Implement tasks                                      |
-  | `/opsx:verify`       | Validate implementation matches artifacts            |
-  | `/opsx:sync`         | Sync delta specs to main specs                       |
-  | `/opsx:archive`      | Archive completed change                             |
-  | `/opsx:bulk-archive` | Archive multiple changes with conflict detection     |
-  | `/opsx:onboard`      | Guided 15-minute walkthrough of complete workflow    |
+  | `/opsx:explore`      | 変更に着手する前にアイデアを検討する                 |
+  | `/opsx:new`          | 新しい変更を開始する                                 |
+  | `/opsx:continue`     | 1 つずつアーティファクトを作成する（ステップ実行）    |
+  | `/opsx:ff`           | 計画系アーティファクトをまとめて作成する（高速化）    |
+  | `/opsx:apply`        | タスクを実装する                                     |
+  | `/opsx:verify`       | 実装がアーティファクトと一致するか検証する           |
+  | `/opsx:sync`         | 差分仕様をメイン仕様へ同期する                       |
+  | `/opsx:archive`      | 完了した変更をアーカイブする                         |
+  | `/opsx:bulk-archive` | 複数の変更を競合検出付きで一括アーカイブする         |
+  | `/opsx:onboard`      | 15 分で完走するワークフローのガイド付き体験           |
 
-  ### From Text Merging to Semantic Spec Syncing
+  ### 文字列マージから意味的な仕様同期へ
 
-  **Before:** Spec updates required manual merging or wholesale file replacement.
+  **Before:** 仕様更新は手動マージかファイル丸ごとの置き換えが必要だった。
 
-  **Now:** Delta specs use semantic markers that AI understands:
+  **Now:** 差分仕様は AI が理解できる意味的マーカーを使う。
 
-  - `## ADDED Requirements` — New requirements to add
-  - `## MODIFIED Requirements` — Partial updates (add scenario without copying existing ones)
-  - `## REMOVED Requirements` — Delete with reason and migration notes
-  - `## RENAMED Requirements` — Rename preserving content
+  - `## ADDED Requirements` — 追加する要件
+  - `## MODIFIED Requirements` — 既存要件の部分更新（既存内容を残したままシナリオ追加など）
+  - `## REMOVED Requirements` — 理由と移行メモ付きで削除
+  - `## RENAMED Requirements` — 内容を保持したまま名称変更
 
-  Archive parses these at the requirement level, not brittle header matching.
+  アーカイブ時は要件単位で解析し、脆い見出し一致に依存しない。
 
-  ### From Scattered Files to Agent Skills
+  ### 散在ファイルから Agent Skills へ
 
-  **Before:** 8+ config files at project root + slash commands scattered across 21 tool-specific locations with different formats.
+  **Before:** プロジェクトルートに 8+ の設定ファイルがあり、スラッシュコマンドは 21 のツール固有場所に異なる形式で散在していた。
 
-  **Now:** Single `.claude/skills/` directory with YAML-fronted markdown files. Auto-detected by Claude Code, Cursor, Windsurf. Cross-editor compatible.
+  **Now:** `.claude/skills/` に YAML フロント付き Markdown を集約。Claude Code / Cursor / Windsurf が自動検出し、エディタ横断で互換。
 
-  ### New Features
+  ### 新機能
 
-  - **Onboarding skill** — `/opsx:onboard` walks new users through their first complete change with codebase-aware task suggestions and step-by-step narration (11 phases, ~15 minutes)
+  - **オンボーディングスキル** — `/opsx:onboard` がコードベースを踏まえたタスク提案と手順解説で初回の変更完走を案内（11 フェーズ、約 15 分）
 
-  - **21 AI tools supported** — Claude Code, Cursor, Windsurf, Continue, Gemini CLI, GitHub Copilot, Amazon Q, Cline, RooCode, Kilo Code, Auggie, CodeBuddy, Qoder, Qwen, CoStrict, Crush, Factory, OpenCode, Antigravity, iFlow, and Codex
+  - **21 の AI ツールに対応** — Claude Code, Cursor, Windsurf, Continue, Gemini CLI, GitHub Copilot, Amazon Q, Cline, RooCode, Kilo Code, Auggie, CodeBuddy, Qoder, Qwen, CoStrict, Crush, Factory, OpenCode, Antigravity, iFlow, Codex
 
-  - **Interactive setup** — `openspec init` shows animated welcome screen and searchable multi-select for choosing tools. Pre-selects already-configured tools for easy refresh.
+  - **対話式セットアップ** — `openspec init` でアニメーション付きウェルカム画面と検索可能な複数選択を表示。既存設定済みツールは事前選択され、再生成が容易。
 
-  - **Customizable schemas** — Define custom artifact workflows in `openspec/schemas/` without touching package code. Teams can share workflows via version control.
+  - **カスタマイズ可能なスキーマ** — `openspec/schemas/` に独自ワークフローを定義でき、パッケージコードに触れずに運用可能。チームでバージョン管理共有できる。
 
-  ### Bug Fixes
+  ### バグ修正
 
-  - Fixed Claude Code YAML parsing failure when command names contained colons
-  - Fixed task file parsing to handle trailing whitespace on checkbox lines
-  - Fixed JSON instruction output to separate context/rules from template — AI was copying constraint blocks into artifact files
+  - コマンド名にコロンが含まれる場合の Claude Code YAML パース失敗を修正
+  - タスクファイル解析でチェックボックス行の末尾空白を許容するよう修正
+  - JSON 指示出力で context/rules と template を分離するよう修正 — AI が制約ブロックをアーティファクトに写してしまう問題を解消
 
-  ### Documentation
+  ### ドキュメント
 
-  - New getting-started guide, CLI reference, concepts documentation
-  - Removed misleading "edit mid-flight and continue" claims that weren't implemented
-  - Added migration guide for upgrading from pre-OPSX versions
+  - Getting Started ガイド、CLI リファレンス、コンセプト解説を追加
+  - 未実装だった「途中で編集して続行できる」といった誤解を招く記述を削除
+  - OPSX 以前のバージョンからの移行ガイドを追加
 
 ## 0.23.0
 

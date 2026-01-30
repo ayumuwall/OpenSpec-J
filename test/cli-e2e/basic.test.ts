@@ -48,7 +48,7 @@ describe('openspec CLI e2e basics', () => {
       .join(', ');
     const normalizedOutput = result.stdout.replace(/\s+/g, ' ').trim();
     expect(normalizedOutput).toContain(
-      `Use "all", "none", or a comma-separated list of: ${expectedTools}`
+      `対話なしで AI ツールを設定します。"all" / "none" またはカンマ区切りで指定してください: ${expectedTools}`
     );
   });
 
@@ -75,7 +75,7 @@ describe('openspec CLI e2e basics', () => {
     const projectDir = await prepareFixture('tmp-init');
     const result = await runCLI(['validate', 'does-not-exist'], { cwd: projectDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain("Unknown item 'does-not-exist'");
+    expect(result.stderr).toContain("項目 'does-not-exist' が見つかりません");
   });
 
   describe('init command non-interactive options', () => {
@@ -90,7 +90,7 @@ describe('openspec CLI e2e basics', () => {
         env: { CODEX_HOME: codexHome },
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('OpenSpec セットアップ完了');
+      expect(result.stdout).toContain('OpenSpec 構成を作成しました');
 
       // Check that skills were created for multiple tools
       const claudeSkillPath = path.join(emptyProjectDir, '.claude/skills/openspec-explore/SKILL.md');
@@ -106,7 +106,7 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'claude'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('OpenSpec セットアップ完了');
+      expect(result.stdout).toContain('OpenSpec 構成を作成しました');
       expect(result.stdout).toContain('Claude Code');
 
       // New init creates skills, not CLAUDE.md
@@ -123,7 +123,7 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'none'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('OpenSpec セットアップ完了');
+      expect(result.stdout).toContain('OpenSpec 構成を作成しました');
 
       // With --tools none, no tool skills should be created
       const claudeSkillPath = path.join(emptyProjectDir, '.claude/skills/openspec-explore/SKILL.md');
@@ -138,10 +138,10 @@ describe('openspec CLI e2e basics', () => {
       const emptyProjectDir = path.join(projectDir, '..', 'empty-project');
       await fs.mkdir(emptyProjectDir, { recursive: true });
 
-      const result = await runCLI(['init', '--tools', 'invalid-tool'], { cwd: emptyProjectDir });
-      expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain('Invalid tool(s): invalid-tool');
-      expect(result.stderr).toContain('Available values:');
+    const result = await runCLI(['init', '--tools', 'invalid-tool'], { cwd: emptyProjectDir });
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('無効なツール: invalid-tool');
+    expect(result.stderr).toContain('利用可能な値:');
     });
 
     it('returns error when combining reserved keywords with explicit ids', async () => {
@@ -149,9 +149,9 @@ describe('openspec CLI e2e basics', () => {
       const emptyProjectDir = path.join(projectDir, '..', 'empty-project');
       await fs.mkdir(emptyProjectDir, { recursive: true });
 
-      const result = await runCLI(['init', '--tools', 'all,claude'], { cwd: emptyProjectDir });
-      expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain('Cannot combine reserved values "all" or "none" with specific tool IDs');
-    });
+    const result = await runCLI(['init', '--tools', 'all,claude'], { cwd: emptyProjectDir });
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('予約値 "all" / "none" を特定のツールIDと併用できません');
+  });
   });
 });

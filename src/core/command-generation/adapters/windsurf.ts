@@ -1,7 +1,7 @@
 /**
- * Windsurf Command Adapter
+ * Windsurf コマンドアダプター
  *
- * Formats commands for Windsurf following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  * Windsurf uses a similar format to Claude but may have different conventions.
  */
 
@@ -32,9 +32,9 @@ function formatTagsArray(tags: string[]): string {
 }
 
 /**
- * Windsurf adapter for command generation.
- * File path: .windsurf/commands/opsx/<id>.md
- * Frontmatter: name, description, category, tags
+ * Windsurf のコマンド生成アダプター。
+ * ファイルパス: .windsurf/commands/opsx/<id>.md
+ * フロントマター: name, description, category, tags
  */
 export const windsurfAdapter: ToolCommandAdapter = {
   toolId: 'windsurf',

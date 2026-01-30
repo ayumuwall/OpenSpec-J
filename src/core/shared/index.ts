@@ -1,7 +1,7 @@
 /**
- * Shared Utilities
+ * 共通ユーティリティ
  *
- * Common code shared between init and update commands.
+ * init と update で共有する共通コード。
  */
 
 export {

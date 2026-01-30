@@ -1,16 +1,16 @@
 /**
- * iFlow Command Adapter
+ * iFlow コマンドアダプター
  *
- * Formats commands for iFlow following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * iFlow adapter for command generation.
- * File path: .iflow/commands/opsx-<id>.md
- * Frontmatter: name, id, category, description
+ * iFlow のコマンド生成アダプター。
+ * ファイルパス: .iflow/commands/opsx-<id>.md
+ * フロントマター: name, id, category, description
  */
 export const iflowAdapter: ToolCommandAdapter = {
   toolId: 'iflow',

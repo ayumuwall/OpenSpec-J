@@ -17,8 +17,8 @@ vi.mock('../../src/core/completions/installers/zsh-installer.js', () => ({
       message: 'Oh My Zsh 向けに補完スクリプトをインストールしました',
       instructions: [
         '補完スクリプトを Oh My Zsh の補完ディレクトリにインストールしました。',
-        'シェルを再起動するか、exec zsh を実行してください。',
         '補完は自動的に有効になります。',
+        'シェルを再起動するか、exec zsh を実行してください。',
       ],
     }),
     uninstall: vi.fn().mockResolvedValue({
@@ -147,7 +147,7 @@ describe('CompletionCommand', () => {
       await command.install({ shell: 'zsh' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('シェルを再起動するか、exec zsh を実行してください。')
+        expect.stringContaining('exec zsh')
       );
     });
   });

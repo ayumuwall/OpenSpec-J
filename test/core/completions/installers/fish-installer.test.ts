@@ -91,7 +91,7 @@ complete -c openspec -a 'init' -d 'Initialize OpenSpec'
       expect(result.installedPath).toBe(path.join(testHomeDir, '.config', 'fish', 'completions', 'openspec.fish'));
       expect(result.backupPath).toBeUndefined();
       expect(result.instructions).toHaveLength(2);
-      expect(result.instructions![0]).toContain('Fish は ~/.config/fish/completions/ から補完を自動で読み込みます。');
+      expect(result.instructions![0]).toContain('Fish は ~/.config/fish/completions/ から補完を自動で読み込みます');
       expect(result.instructions![1]).toContain('補完はすぐに利用できます');
     });
 
@@ -121,7 +121,7 @@ complete -c openspec -a 'init' -d 'Initialize OpenSpec'
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('補完スクリプトは既にインストール済みです（最新）');
-      expect(result.instructions![0]).toContain('既にインストール済み');
+      expect(result.instructions![0]).toContain('既にインストール済みです（最新）');
       expect(result.backupPath).toBeUndefined();
     });
 
@@ -142,7 +142,7 @@ complete -c openspec -a 'validate' -d 'Validate specs'
       const result = await installer.install(updatedScript);
 
       expect(result.success).toBe(true);
-      expect(result.message).toContain('更新しました');
+      expect(result.message).toContain('補完スクリプトを更新しました');
       expect(result.backupPath).toBeDefined();
       expect(result.backupPath).toMatch(/\.backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/);
     });
@@ -216,7 +216,7 @@ complete -c openspec -a 'validate' -d 'Validate specs'
       expect(result.instructions).toBeDefined();
       expect(result.instructions).toHaveLength(2);
       expect(result.instructions![0]).toContain('~/.config/fish/completions/');
-      expect(result.instructions![1]).toContain('シェル再起動は不要');
+      expect(result.instructions![1]).toContain('シェル再起動は不要です');
     });
 
     it('should handle empty completion script', async () => {

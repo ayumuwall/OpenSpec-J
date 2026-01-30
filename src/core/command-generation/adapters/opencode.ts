@@ -1,16 +1,16 @@
 /**
- * OpenCode Command Adapter
+ * OpenCode コマンドアダプター
  *
- * Formats commands for OpenCode following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * OpenCode adapter for command generation.
- * File path: .opencode/command/opsx-<id>.md
- * Frontmatter: description
+ * OpenCode のコマンド生成アダプター。
+ * ファイルパス: .opencode/command/opsx-<id>.md
+ * フロントマター: description
  */
 export const opencodeAdapter: ToolCommandAdapter = {
   toolId: 'opencode',

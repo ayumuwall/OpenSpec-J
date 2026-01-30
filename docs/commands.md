@@ -4,10 +4,6 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 
 ワークフローの使い分けは [Workflows](workflows.md)、CLI コマンドは [CLI](cli.md) を参照してください。
 
-> [!NOTE]
-> 会話例や出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
-> <!-- OPENSPEC-J:TODO command examples -->
-
 ## クイックリファレンス
 
 | コマンド | 目的 |
@@ -68,9 +64,9 @@ AI:  既存の認証構成を調べます...
 
      既に API の CORS 設定はあります。どの方向に興味がありますか？
 
-あなた: JWT にしよう。変更を作って開始できる？
+あなた: JWT にしよう。変更を開始できる？
 
-AI:  準備できたら /opsx:new add-jwt-auth を実行してください。
+AI:  /opsx:new add-jwt-auth を実行して変更を開始してください。
 ```
 
 **Tips:**
@@ -112,11 +108,11 @@ openspec/changes/<change-name>/
 ```
 あなた: /opsx:new add-dark-mode
 
-AI:  Created openspec/changes/add-dark-mode/
-     Schema: spec-driven
+AI:  openspec/changes/add-dark-mode/ を作成しました
+     スキーマ: spec-driven
 
-     Ready to create: proposal
-     Use /opsx:continue to create it, or /opsx:ff to create all artifacts.
+     作成準備完了: proposal
+     /opsx:continue で 1 つずつ作成、または /opsx:ff で一括作成できます。
 ```
 
 **Tips:**
@@ -151,22 +147,22 @@ AI:  Created openspec/changes/add-dark-mode/
 ```
 あなた: /opsx:continue
 
-AI:  Change: add-dark-mode
+AI:  変更: add-dark-mode
 
-     Artifact status:
-     ✓ proposal    (done)
-     ◆ specs       (ready)
-     ◆ design      (ready)
-     ○ tasks       (blocked - needs: specs)
+     アーティファクト状況:
+     ✓ proposal    (完了)
+     ◆ specs       (準備完了)
+     ◆ design      (準備完了)
+     ○ tasks       (ブロック中 - 必要: specs)
 
-     Creating specs...
+     specs を作成中...
 
      [proposal.md を読み、要件に基づき specs を作成]
 
-     ✓ Created openspec/changes/add-dark-mode/specs/ui/spec.md
+     ✓ openspec/changes/add-dark-mode/specs/ui/spec.md を作成しました
 
-     Now available: tasks
-     Run /opsx:continue to create the next artifact.
+     次に作成可能: tasks
+     /opsx:continue で次のアーティファクトを作成できます。
 ```
 
 **Tips:**
@@ -201,15 +197,15 @@ AI:  Change: add-dark-mode
 ```
 あなた: /opsx:ff add-dark-mode
 
-AI:  Fast-forwarding add-dark-mode...
+AI:  add-dark-mode を Fast-forward 中...
 
-     ✓ Creating proposal.md
-     ✓ Creating specs/ui/spec.md
-     ✓ Creating design.md
-     ✓ Creating tasks.md
+     ✓ proposal.md を作成中
+     ✓ specs/ui/spec.md を作成中
+     ✓ design.md を作成中
+     ✓ tasks.md を作成中
 
-     All planning artifacts complete!
-     Ready for implementation. Run /opsx:apply to begin.
+     計画アーティファクトがすべて完了しました！
+     実装の準備ができました。/opsx:apply で開始できます。
 ```
 
 **Tips:**
@@ -244,22 +240,22 @@ AI:  Fast-forwarding add-dark-mode...
 ```
 あなた: /opsx:apply
 
-AI:  Implementing add-dark-mode...
+AI:  add-dark-mode を実装中...
 
-     Reading tasks.md:
-     - [ ] 1.1 Create ThemeContext
-     - [ ] 1.2 Add CSS custom properties
-     - [ ] 1.3 Implement localStorage persistence
+     tasks.md を読み込み:
+     - [ ] 1.1 ThemeContext を作成
+     - [ ] 1.2 CSS カスタムプロパティを追加
+     - [ ] 1.3 localStorage 永続化を実装
 
-     Working on 1.1: Create ThemeContext...
-     [Creates src/context/ThemeContext.tsx]
+     1.1 に着手: ThemeContext を作成中...
+     [src/context/ThemeContext.tsx を作成]
 
-     ✓ 1.1 Complete
+     ✓ 1.1 完了
 
-     Working on 1.2: Add CSS custom properties...
-     [Updates src/styles/globals.css]
+     1.2 に着手: CSS カスタムプロパティを追加中...
+     [src/styles/globals.css を更新]
 
-     ✓ 1.2 Complete
+     ✓ 1.2 完了
      ...
 ```
 
@@ -302,32 +298,32 @@ AI:  Implementing add-dark-mode...
 ```
 あなた: /opsx:verify
 
-AI:  Verifying add-dark-mode...
+AI:  add-dark-mode を検証中...
 
-     COMPLETENESS
-     ✓ All 8 tasks in tasks.md are checked
-     ✓ All requirements in specs have corresponding code
-     ⚠ Scenario "System preference detection" has no test coverage
+     完全性
+     ✓ tasks.md の 8 タスクすべてにチェック済み
+     ✓ specs のすべての要件に対応コードあり
+     ⚠ シナリオ「システム設定検出」のテストカバレッジなし
 
-     CORRECTNESS
-     ✓ Implementation matches spec intent
-     ✓ Edge cases from scenarios are handled
-     ✓ Error states match spec definitions
+     正確性
+     ✓ 実装が仕様の意図に一致
+     ✓ シナリオのエッジケースを処理済み
+     ✓ エラー状態が仕様定義と一致
 
-     COHERENCE
-     ✓ Design decisions reflected in code structure
-     ✓ Naming conventions consistent with design.md
-     ⚠ Design mentions "CSS variables" but implementation uses Tailwind classes
+     整合性
+     ✓ 設計判断がコード構造に反映
+     ✓ 命名規則が design.md と一貫
+     ⚠ 設計には「CSS 変数」とあるが、実装は Tailwind クラスを使用
 
-     SUMMARY
+     まとめ
      ─────────────────────────────
-     Critical issues: 0
-     Warnings: 2
-     Ready to archive: Yes (with warnings)
+     重大な問題: 0
+     警告: 2
+     アーカイブ準備: 完了（警告あり）
 
-     Recommendations:
-     1. Add test for system preference detection
-     2. Update design.md to reflect Tailwind usage, or refactor to use CSS variables
+     推奨対応:
+     1. システム設定検出のテストを追加
+     2. design.md を Tailwind 使用に更新、または CSS 変数にリファクタ
 ```
 
 **Tips:**
@@ -363,19 +359,19 @@ AI:  Verifying add-dark-mode...
 ```text
 あなた: /opsx:sync
 
-AI:  Syncing add-dark-mode delta specs...
+AI:  add-dark-mode の仕様差分を同期中...
 
-     Reading: openspec/changes/add-dark-mode/specs/ui/spec.md
-     Target:  openspec/specs/ui/spec.md
+     読み込み: openspec/changes/add-dark-mode/specs/ui/spec.md
+     対象:     openspec/specs/ui/spec.md
 
-     Changes to apply:
-     ✓ ADDED: Theme Selection requirement (2 scenarios)
-     ✓ ADDED: Accessibility requirement (1 scenario)
+     適用する変更:
+     ✓ ADDED: テーマ選択の要件（2 シナリオ）
+     ✓ ADDED: アクセシビリティの要件（1 シナリオ）
 
-     Merging...
-     ✓ openspec/specs/ui/spec.md updated
+     マージ中...
+     ✓ openspec/specs/ui/spec.md を更新しました
 
-     Change remains active. Run /opsx:archive when ready to complete.
+     変更はアクティブのままです。完了したら /opsx:archive を実行してください。
 ```
 
 **手動で使う場面:**
@@ -420,23 +416,23 @@ AI:  Syncing add-dark-mode delta specs...
 ```text
 あなた: /opsx:archive
 
-AI:  Archiving add-dark-mode...
+AI:  add-dark-mode をアーカイブ中...
 
-     Artifact status:
-     ✓ proposal.md exists
-     ✓ specs/ exists
-     ✓ design.md exists
-     ✓ tasks.md exists (8/8 tasks complete)
+     アーティファクト状況:
+     ✓ proposal.md 存在
+     ✓ specs/ 存在
+     ✓ design.md 存在
+     ✓ tasks.md 存在（8/8 タスク完了）
 
-     Delta specs: Not yet synced
-     → Sync now? (recommended)
+     仕様差分: 未同期
+     → 今すぐ同期しますか？（推奨）
 
-あなた: Yes
+あなた: はい
 
-AI:  ✓ Synced specs to openspec/specs/ui/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
+AI:  ✓ 仕様を openspec/specs/ui/spec.md に同期しました
+     ✓ openspec/changes/archive/2025-01-24-add-dark-mode/ に移動しました
 
-     Change archived successfully.
+     変更のアーカイブが完了しました。
 ```
 
 **Tips:**
@@ -472,27 +468,27 @@ AI:  ✓ Synced specs to openspec/specs/ui/spec.md
 ```
 あなた: /opsx:bulk-archive
 
-AI:  Found 3 completed changes:
-     - add-dark-mode (8/8 tasks complete)
-     - fix-login-bug (3/3 tasks complete)
-     - update-footer (2/2 tasks complete)
+AI:  完了済み変更を 3 件発見:
+     - add-dark-mode (8/8 タスク完了)
+     - fix-login-bug (3/3 タスク完了)
+     - update-footer (2/2 タスク完了)
 
-     Checking for spec conflicts...
-     ⚠ add-dark-mode and update-footer both touch specs/ui/
+     仕様の競合を確認中...
+     ⚠ add-dark-mode と update-footer が両方 specs/ui/ に触れています
 
-     Inspecting codebase to resolve...
-     Both changes are implemented. Will merge in chronological order:
-     1. add-dark-mode (created Jan 20)
-     2. update-footer (created Jan 22)
+     コードベースを確認して解消中...
+     両方の変更は実装済み。作成日順にマージします:
+     1. add-dark-mode (1 月 20 日作成)
+     2. update-footer (1 月 22 日作成)
 
-     Archive all 3 changes?
+     3 件すべてをアーカイブしますか？
 
-あなた: Yes
+あなた: はい
 
-AI:  ✓ Archived add-dark-mode
-     ✓ Archived fix-login-bug
-     ✓ Archived update-footer
-     Specs merged: add-dark-mode → update-footer
+AI:  ✓ add-dark-mode をアーカイブしました
+     ✓ fix-login-bug をアーカイブしました
+     ✓ update-footer をアーカイブしました
+     仕様マージ順: add-dark-mode → update-footer
 ```
 
 **Tips:**
@@ -537,22 +533,21 @@ OpenSpec のワークフローを一通り体験するガイド付きオンボ�
 ```
 あなた: /opsx:onboard
 
-AI:  Welcome to OpenSpec!
+AI:  OpenSpec へようこそ！
 
-     I'll walk you through the complete workflow using your actual codebase.
-     We'll find something small to improve, create a proper change for it,
-     implement it, and archive it.
+     実際のコードベースを使ってワークフロー全体を案内します。
+     小さな改善点を見つけ、変更を作成し、実装してアーカイブします。
 
-     Let me scan your codebase for opportunities...
+     コードベースをスキャンして改善点を探します...
 
-     [Analyzes codebase]
+     [コードベースを解析]
 
-     I found a few things we could work on:
-     1. Add input validation to the contact form
-     2. Improve error messages in the auth flow
-     3. Add loading states to async buttons
+     いくつか改善できそうな点が見つかりました:
+     1. お問い合わせフォームに入力バリデーションを追加
+     2. 認証フローのエラーメッセージを改善
+     3. 非同期ボタンにローディング状態を追加
 
-     Which interests you? (or suggest something else)
+     どれに興味がありますか？（別の提案も歓迎です）
 ```
 
 **Tips:**

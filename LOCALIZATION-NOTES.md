@@ -31,11 +31,20 @@
 
 ### 規範文の語尾を日本語で統一（SHALL/MUST）
 - 目的: 「MUST を文中に挿入した日本語」が不自然になりやすいため、語尾と括弧表記を固定し、出力の揺れを抑える。
-- 方針: 要件本文は SHALL/MUST のみを許可し、SHOULD/MAY は補足的な注意/参考に限定する（検証挙動は変更しない）。
-- 実施内容:
-  - `src/core/templates/agents-template.ts` / `src/core/templates/slash-command-templates.ts` の TL;DR で「語尾 + 文末括弧」表記と「文中に挿入しない」を指示。
-  - `schemas/spec-driven/schema.yaml` / `schemas/tdd/schema.yaml` の要件フォーマットに同ルールを追記。
-  - 配布テンプレートの `openspec/AGENTS.md` に同ルールを反映。
+- 方針: 要件本文は SHALL/MUST のみを使用し、SHOULD/MAY は避ける。
+- ルール:
+  - 語尾は「〜しなければならない。(SHALL)」の形式に揃える
+  - 文中に SHALL/MUST を挿入しない
+- 実施内容（v1.0.2 以降）:
+  - `src/core/templates/skill-templates.ts` の差分仕様フォーマット説明に規範語ルールを追記し、例文を日本語化。
+  - `schemas/spec-driven/schema.yaml` の書式ルールに同ルールを追記。
+  - `src/core/validation/constants.ts` のエラーガイド例文を日本語化。
+  - `src/core/config-prompts.ts` の config.yaml テンプレートに言語設定・規範語ルールの例示を追加。
+- 廃止されたファイル（v1.0.2）:
+  - `src/core/templates/agents-template.ts` → 削除済み（skill-templates.ts に統合）
+  - `src/core/templates/slash-command-templates.ts` → 削除済み（skill-templates.ts に統合）
+  - `schemas/tdd/schema.yaml` → 削除済み
+  - `openspec/AGENTS.md` → 廃止（スキルベースのワークフローに移行）
 
 ## チェックリスト（ローカライズ観点）
 - メッセージ判定に `includes` 等の英語ハードコードが無いか確認し、日本語化後も発火するかを両言語で点検。

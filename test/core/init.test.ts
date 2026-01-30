@@ -45,7 +45,7 @@ describe('InitCommand', () => {
       expect(content).toContain('schema: spec-driven');
     });
 
-    it('should create 10 Agent Skills for Claude Code', async () => {
+    it('should create 9 Agent Skills for Claude Code', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
@@ -60,7 +60,6 @@ describe('InitCommand', () => {
         'openspec-archive-change',
         'openspec-bulk-archive-change',
         'openspec-verify-change',
-        'openspec-onboard',
       ];
 
       for (const skillName of skillNames) {
@@ -74,7 +73,7 @@ describe('InitCommand', () => {
       }
     });
 
-    it('should create 10 slash commands for Claude Code', async () => {
+    it('should create 9 slash commands for Claude Code', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
@@ -87,7 +86,6 @@ describe('InitCommand', () => {
         'opsx/ff.md',
         'opsx/sync.md',
         'opsx/archive.md',
-        'opsx/onboard.md',
         'opsx/bulk-archive.md',
         'opsx/verify.md',
       ];
@@ -160,7 +158,7 @@ describe('InitCommand', () => {
     it('should throw error for invalid tool names', async () => {
       const initCommand = new InitCommand({ tools: 'invalid-tool', force: true });
 
-      await expect(initCommand.execute(testDir)).rejects.toThrow(/Invalid tool\(s\): invalid-tool/);
+      await expect(initCommand.execute(testDir)).rejects.toThrow(/無効なツール: invalid-tool/);
     });
 
     it('should handle comma-separated tool names with spaces', async () => {
@@ -179,7 +177,7 @@ describe('InitCommand', () => {
       const initCommand = new InitCommand({ tools: 'all,claude', force: true });
 
       await expect(initCommand.execute(testDir)).rejects.toThrow(
-        /Cannot combine reserved values "all" or "none" with specific tool IDs/
+        /予約値 "all" \/ "none" を特定のツールIDと併用できません/
       );
     });
 
@@ -268,8 +266,8 @@ describe('InitCommand', () => {
       const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
       const content = await fs.readFile(skillFile, 'utf-8');
 
-      expect(content).toContain('Enter explore mode');
-      expect(content).toContain('thinking partner');
+      expect(content).toContain('explore モードに入る');
+      expect(content).toContain('思考パートナー');
     });
 
     it('should include new-change skill instructions', async () => {

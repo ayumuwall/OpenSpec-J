@@ -1,5 +1,5 @@
 {
-  description = "OpenSpec - AI-native system for spec-driven development";
+  description = "OpenSpec - 仕様駆動開発のための AI ネイティブな仕組み";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -48,7 +48,7 @@
             dontNpmPrune = true;
 
             meta = with pkgs.lib; {
-              description = "AI-native system for spec-driven development";
+              description = "仕様駆動開発のための AI ネイティブな仕組み";
               homepage = "https://github.com/Fission-AI/OpenSpec";
               license = licenses.mit;
               maintainers = [ ];
@@ -76,10 +76,10 @@
             ];
 
             shellHook = ''
-              echo "OpenSpec development environment"
-              echo "Node version: $(node --version)"
-              echo "pnpm version: $(pnpm --version)"
-              echo "Run 'pnpm install' to install dependencies"
+              echo "OpenSpec 開発環境"
+              echo "Node バージョン: $(node --version)"
+              echo "pnpm バージョン: $(pnpm --version)"
+              echo "依存関係のインストールは 'pnpm install' を実行してください"
             '';
           };
         });

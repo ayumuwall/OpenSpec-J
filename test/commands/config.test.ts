@@ -87,7 +87,9 @@ describe('config command integration', () => {
     const config = getGlobalConfig();
     // Should return defaults
     expect(config.featureFlags).toEqual({});
-    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('JSON が無効'));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('JSON が無効なため、デフォルト設定を使用します')
+    );
   });
 });
 

@@ -14,12 +14,13 @@
   <a href="https://discord.gg/YctCnvvshC"><img alt="Discord" src="https://img.shields.io/discord/1411657095639601154?style=flat-square&logo=discord&logoColor=white&label=Discord&suffix=%20online" /></a>
 </p>
 
-<!-- OPENSPEC-J:NOTE-START repo-context -->
-このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.0.2 です。**
-<!-- OPENSPEC-J:NOTE-END repo-context -->
+> [!NOTE]
+> このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.0.2 です。**<BR>
+> v1.0.0より、本家版に[Multi-Language](docs/multi-language.md): 多言語サポートが追加され、生成物の言語を変更できるようになりました。**生成物のみ日本語にできれば良い場合、本家版[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)をお使いください。**
 
+<br>
 <details>
-<summary><strong>最も愛される仕様フレームワーク。</strong></summary>
+<summary><strong>最も愛される spec フレームワーク。</strong></summary>
 
 [![Stars](https://img.shields.io/github/stars/Fission-AI/OpenSpec?style=flat-square&label=Stars)](https://github.com/Fission-AI/OpenSpec/stargazers)
 [![Downloads](https://img.shields.io/npm/dm/@fission-ai/openspec?style=flat-square&label=Downloads/mo)](https://www.npmjs.com/package/@fission-ai/openspec)

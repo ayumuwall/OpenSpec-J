@@ -1,11 +1,11 @@
 /**
- * Template exports for OpenSpec.
+ * OpenSpec のテンプレート再エクスポート。
  *
- * The old config file templates (AGENTS.md, project.md, claude-template, etc.)
- * have been removed. The skill-based workflow uses skill-templates.ts directly.
+ * 旧設定ファイルテンプレート（AGENTS.md, project.md, claude-template など）は削除済み。
+ * スキルベースのワークフローでは skill-templates.ts を直接使用する。
  */
 
-// Re-export skill templates for convenience
+// 利便性のためスキルテンプレートを再エクスポート
 export {
   getExploreSkillTemplate,
   getNewChangeSkillTemplate,

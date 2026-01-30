@@ -1,16 +1,16 @@
 /**
- * Qwen Code Command Adapter
+ * Qwen Code コマンドアダプター
  *
- * Formats commands for Qwen Code following its TOML specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Qwen adapter for command generation.
- * File path: .qwen/commands/opsx-<id>.toml
- * Format: TOML with description and prompt fields
+ * Qwen のコマンド生成アダプター。
+ * ファイルパス: .qwen/commands/opsx-<id>.toml
+ * 形式: TOML with description and prompt fields
  */
 export const qwenAdapter: ToolCommandAdapter = {
   toolId: 'qwen',

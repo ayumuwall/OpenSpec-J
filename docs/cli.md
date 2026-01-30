@@ -2,10 +2,6 @@
 
 OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検証、ステータス確認、管理のためのターミナルコマンドを提供します。これらのコマンドは、[Commands](commands.md) に記載された `/opsx:new` などの AI スラッシュコマンドを補完します。
 
-> [!NOTE]
-> 出力例のコードブロックは、CLI の日本語メッセージが確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
-> <!-- OPENSPEC-J:TODO CLI output examples -->
-
 ## 概要
 
 | カテゴリ | コマンド | 目的 |
@@ -119,7 +115,7 @@ openspec/
 
 .claude/skills/         # Claude Code のスキルファイル（claude 選択時）
 .cursor/rules/          # Cursor ルール（cursor 選択時）
-...（他ツールの設定）
+...                     # 他ツールの設定
 ```
 
 ---
@@ -189,9 +185,9 @@ openspec list --json
 **出力（テキスト）:**
 
 ```
-Active changes:
-  add-dark-mode     UI theme switching support
-  fix-login-bug     Session timeout handling
+アクティブな変更:
+  add-dark-mode     UI テーマ切り替え機能
+  fix-login-bug     セッションタイムアウト処理
 ```
 
 ---
@@ -313,12 +309,12 @@ openspec validate --all --strict --concurrency 12
 **出力（テキスト）:**
 
 ```
-Validating add-dark-mode...
-  ✓ proposal.md valid
-  ✓ specs/ui/spec.md valid
-  ⚠ design.md: missing "Technical Approach" section
+add-dark-mode を検証中...
+  ✓ proposal.md 有効
+  ✓ specs/ui/spec.md 有効
+  ⚠ design.md: "Technical Approach" セクションがありません
 
-1 warning found
+警告 1 件
 ```
 
 **出力（JSON）:**
@@ -430,16 +426,16 @@ openspec status --change add-dark-mode --json
 **出力（テキスト）:**
 
 ```
-Change: add-dark-mode
-Schema: spec-driven
+変更: add-dark-mode
+スキーマ: spec-driven
 
-Artifacts:
-  ✓ proposal     proposal.md exists
-  ✓ specs        specs/ exists
-  ◆ design       ready (requires: specs)
-  ○ tasks        blocked (requires: design)
+アーティファクト:
+  ✓ proposal     proposal.md 存在
+  ✓ specs        specs/ 存在
+  ◆ design       準備完了 (必要: specs)
+  ○ tasks        ブロック中 (必要: design)
 
-Next: Create design using /opsx:continue
+次: /opsx:continue で design を作成
 ```
 
 **出力（JSON）:**
@@ -540,9 +536,9 @@ openspec templates --json
 **出力（テキスト）:**
 
 ```
-Schema: spec-driven
+スキーマ: spec-driven
 
-Templates:
+テンプレート:
   proposal  → ~/.openspec/schemas/spec-driven/templates/proposal.md
   specs     → ~/.openspec/schemas/spec-driven/templates/specs.md
   design    → ~/.openspec/schemas/spec-driven/templates/design.md
@@ -574,15 +570,15 @@ openspec schemas
 **出力:**
 
 ```
-Available schemas:
+利用可能なスキーマ:
 
   spec-driven (package)
-    The default spec-driven development workflow
-    Flow: proposal → specs → design → tasks
+    デフォルトの仕様駆動開発ワークフロー
+    フロー: proposal → specs → design → tasks
 
   my-custom (project)
-    Custom workflow for this project
-    Flow: research → proposal → tasks
+    このプロジェクト用のカスタムワークフロー
+    フロー: research → proposal → tasks
 ```
 
 ---
@@ -635,8 +631,8 @@ openspec schema init rapid \
 openspec/schemas/<name>/
 ├── schema.yaml           # スキーマ定義
 └── templates/
-    ├── proposal.md       # 各アーティファクトのテンプレート
-    ├── specs.md
+    ├── proposal.md       # 各アーティファクトの
+    ├── specs.md          # テンプレート
     ├── design.md
     └── tasks.md
 ```
@@ -738,8 +734,8 @@ openspec schema which spec-driven
 **出力:**
 
 ```
-spec-driven resolves from: package
-  Source: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
+spec-driven の解決元: package
+  ソース: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
 ```
 
 **スキーマの優先順位:**
@@ -788,7 +784,7 @@ openspec config get telemetry.enabled
 openspec config set telemetry.enabled false
 
 # 文字列として明示的に設定
-openspec config set user.name "My Name" --string
+openspec config set user.name "自分の名前" --string
 
 # カスタム設定を削除
 openspec config unset user.name
@@ -862,7 +858,7 @@ openspec completion install
 # 特定シェル向けにインストール
 openspec completion install zsh
 
-# 手動インストール用スクリプトを生成
+# 手動インストール用にスクリプトを生成
 openspec completion generate bash > ~/.bash_completion.d/openspec
 
 # アンインストール

@@ -81,13 +81,13 @@ describe('validateChangeName', () => {
     it('should reject name with leading hyphen', () => {
       const result = validateChangeName('-add-auth');
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('ハイフンで始め');
+      expect(result.error).toContain('始められません');
     });
 
     it('should reject name with trailing hyphen', () => {
       const result = validateChangeName('add-auth-');
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('ハイフンで終わ');
+      expect(result.error).toContain('終われません');
     });
   });
 
@@ -150,7 +150,7 @@ describe('createChange', () => {
   describe('schema validation', () => {
     it('should throw error for unknown schema', async () => {
       await expect(createChange(testDir, 'add-auth', { schema: 'unknown-schema' })).rejects.toThrow(
-        /スキーマ .*が見つかりません/
+        /スキーマ 'unknown-schema' が見つかりません/
       );
     });
   });

@@ -1,40 +1,40 @@
 /**
- * Animated welcome screen for the experimental artifact workflow setup.
- * Shows side-by-side layout with animated ASCII art on left and welcome text on right.
+ * 実験的なアーティファクトワークフロー設定のウェルカム画面。
+ * 左にアニメーション ASCII アート、右にウェルカム文を並べて表示する。
  */
 
 import chalk from 'chalk';
 import { WELCOME_ANIMATION } from './ascii-patterns.js';
 
-// Minimum terminal width for side-by-side layout
+// 横並びレイアウトの最小ターミナル幅
 const MIN_WIDTH = 60;
 
-// Width of the ASCII art column (with padding)
+// ASCII アート列の幅（パディング込み）
 const ART_COLUMN_WIDTH = 24;
 
 /**
- * Welcome text content (right column)
+ * ウェルカム文（右カラム）
  */
 function getWelcomeText(): string[] {
   return [
-    chalk.white.bold('Welcome to OpenSpec'),
-    chalk.dim('A lightweight spec-driven framework'),
+    chalk.white.bold('OpenSpec へようこそ'),
+    chalk.dim('軽量な仕様駆動フレームワーク'),
     '',
-    chalk.white('This setup will configure:'),
-    chalk.dim('  • Agent Skills for AI tools'),
-    chalk.dim('  • /opsx:* slash commands'),
+    chalk.white('このセットアップで次を構成します:'),
+    chalk.dim('  • AI ツール向けの Agent Skills'),
+    chalk.dim('  • /opsx:* スラッシュコマンド'),
     '',
-    chalk.white('Quick start after setup:'),
-    `  ${chalk.yellow('/opsx:new')}      ${chalk.dim('Create a change')}`,
-    `  ${chalk.yellow('/opsx:continue')} ${chalk.dim('Next artifact')}`,
-    `  ${chalk.yellow('/opsx:apply')}    ${chalk.dim('Implement tasks')}`,
+    chalk.white('セットアップ後のクイックスタート:'),
+    `  ${chalk.yellow('/opsx:new')}      ${chalk.dim('変更を作成')}`,
+    `  ${chalk.yellow('/opsx:continue')} ${chalk.dim('次のアーティファクト')}`,
+    `  ${chalk.yellow('/opsx:apply')}    ${chalk.dim('タスクを実装')}`,
     '',
-    chalk.cyan('Press Enter to select tools...'),
+    chalk.cyan('Enter でツールを選択...'),
   ];
 }
 
 /**
- * Renders a single frame with side-by-side layout
+ * 横並びレイアウトで 1 フレームを描画する
  */
 function renderFrame(artLines: string[], textLines: string[]): string {
   const maxLines = Math.max(artLines.length, textLines.length);
@@ -44,13 +44,13 @@ function renderFrame(artLines: string[], textLines: string[]): string {
     const artLine = artLines[i] || '';
     const textLine = textLines[i] || '';
 
-    // Pad the art column to fixed width
+    // アート列を固定幅にパディング
     const paddedArt = artLine.padEnd(ART_COLUMN_WIDTH);
 
-    // Color the ASCII art with cyan for visual appeal
+    // 見やすさのためシアンで着色
     const coloredArt = chalk.cyan(paddedArt);
 
-    // Clear line before writing to prevent residual characters
+    // 残り文字を防ぐため描画前に行をクリア
     lines.push(`\x1b[2K${coloredArt}${textLine}`);
   }
 
@@ -58,16 +58,16 @@ function renderFrame(artLines: string[], textLines: string[]): string {
 }
 
 /**
- * Checks if the terminal supports animation
+ * ターミナルがアニメーションに対応しているか確認する
  */
 function canAnimate(): boolean {
-  // Must be TTY
+  // TTY 必須
   if (!process.stdout.isTTY) return false;
 
-  // Respect NO_COLOR
+  // NO_COLOR を尊重
   if (process.env.NO_COLOR) return false;
 
-  // Check terminal width
+  // ターミナル幅を確認
   const columns = process.stdout.columns || 80;
   if (columns < MIN_WIDTH) return false;
 
@@ -75,13 +75,13 @@ function canAnimate(): boolean {
 }
 
 /**
- * Wait for Enter key press
+ * Enter キーを待つ
  */
 function waitForEnter(): Promise<void> {
   return new Promise((resolve) => {
     const { stdin } = process;
 
-    // Handle non-TTY gracefully
+    // 非 TTY はそのまま通す
     if (!stdin.isTTY) {
       resolve();
       return;
@@ -94,13 +94,13 @@ function waitForEnter(): Promise<void> {
     const onData = (data: Buffer): void => {
       const char = data.toString();
 
-      // Enter key or Ctrl+C
+      // Enter または Ctrl+C
       if (char === '\r' || char === '\n' || char === '\u0003') {
         stdin.removeListener('data', onData);
         stdin.setRawMode(wasRaw);
         stdin.pause();
 
-        // Handle Ctrl+C
+        // Ctrl+C を処理
         if (char === '\u0003') {
           process.stdout.write('\n');
           process.exit(0);
@@ -115,14 +115,14 @@ function waitForEnter(): Promise<void> {
 }
 
 /**
- * Shows the animated welcome screen.
- * Returns when user presses Enter.
+ * アニメーション付きウェルカム画面を表示する。
+ * Enter で終了する。
  */
 export async function showWelcomeScreen(): Promise<void> {
   const textLines = getWelcomeText();
 
   if (!canAnimate()) {
-    // Fallback: show static welcome
+    // フォールバック: 静的なウェルカム表示
     const frame = WELCOME_ANIMATION.frames[3]; // Peak frame
     process.stdout.write('\n' + renderFrame(frame, textLines) + '\n\n');
     return;
@@ -132,46 +132,46 @@ export async function showWelcomeScreen(): Promise<void> {
   let running = true;
   let isFirstRender = true;
 
-  // Content height for cursor movement between frames
+  // フレーム間移動のための内容高さ
   const numContentLines = Math.max(WELCOME_ANIMATION.frames[0].length, textLines.length);
   const frameHeight = numContentLines + 1; // internal newlines (11) + trailing newlines (2) = 13
 
-  // Total height including initial newline (for cleanup)
+  // 初期改行込みの合計高さ（消去用）
   const totalHeight = frameHeight + 1; // 14
 
-  // Initial render
+  // 初回描画
   process.stdout.write('\n');
 
-  // Animation loop
+  // アニメーションループ
   const interval = setInterval(() => {
     if (!running) return;
 
     const frame = WELCOME_ANIMATION.frames[frameIndex];
 
-    // Move cursor up to overwrite previous frame (always after first render)
+    // 前フレームを上書きするためカーソルを上へ移動（初回以外）
     if (!isFirstRender) {
       process.stdout.write(`\x1b[${frameHeight}A`);
     }
     isFirstRender = false;
 
-    // Render current frame
+    // 現在フレームを描画
     process.stdout.write(renderFrame(frame, textLines) + '\n\n');
 
-    // Advance to next frame
+    // 次フレームへ
     frameIndex = (frameIndex + 1) % WELCOME_ANIMATION.frames.length;
   }, WELCOME_ANIMATION.interval);
 
-  // Wait for Enter
+  // Enter を待つ
   await waitForEnter();
 
-  // Stop animation
+  // アニメーション停止
   running = false;
   clearInterval(interval);
 
-  // Clear the welcome screen and move on
+  // ウェルカム画面を消して進む
   process.stdout.write(`\x1b[${totalHeight}A`);
   for (let i = 0; i < totalHeight; i++) {
-    process.stdout.write('\x1b[2K\n'); // Clear line
+    process.stdout.write('\x1b[2K\n'); // 行をクリア
   }
-  process.stdout.write(`\x1b[${totalHeight}A`); // Move back up
+  process.stdout.write(`\x1b[${totalHeight}A`); // 上に戻す
 }

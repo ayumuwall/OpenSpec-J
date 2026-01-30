@@ -427,7 +427,7 @@ The system will log all events.
 
       expect(report.valid).toBe(false);
       expect(report.summary.errors).toBeGreaterThan(0);
-      expect(report.issues.some(i => i.message.includes('SHALL または MUST'))).toBe(true);
+      expect(report.issues.some(i => i.message.includes('SHALL または MUST が必要です'))).toBe(true);
     });
 
     it('should handle requirements without metadata fields', async () => {

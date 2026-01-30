@@ -1,7 +1,7 @@
 /**
- * Command Adapters Index
+ * コマンドアダプター一覧
  *
- * Re-exports all tool command adapters.
+ * すべてのツール用コマンドアダプターを再エクスポートする。
  */
 
 export { amazonQAdapter } from './amazon-q.js';

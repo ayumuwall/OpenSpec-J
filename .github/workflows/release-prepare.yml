@@ -1,4 +1,4 @@
-name: Release (prepare)
+name: リリース（準備）
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write # Required for npm OIDC trusted publishing
+  id-token: write # npm OIDC の信頼付き公開に必要
 
 concurrency:
   group: release-${{ github.ref }}
@@ -18,10 +18,10 @@ jobs:
     if: github.repository == 'Fission-AI/OpenSpec'
     runs-on: ubuntu-latest
     steps:
-      # Generate GitHub App token first - used for checkout and changesets
-      # This allows git operations to trigger CI workflows on the version PR
-      # (GITHUB_TOKEN cannot trigger workflows by design)
-      - name: Generate GitHub App Token
+      # 先に GitHub App トークンを生成（checkout と changesets で利用）
+      # これによりバージョン PR から CI ワークフローを起動できる
+      # （GITHUB_TOKEN は仕様上ワークフローを起動できない）
+      - name: GitHub App トークンを生成
         id: app-token
         uses: actions/create-github-app-token@v2
         with:
@@ -38,22 +38,22 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24' # Node 24 includes npm 11.5.1+ required for OIDC
+          node-version: '24' # Node 24 は OIDC に必要な npm 11.5.1+ を含む
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
 
-      # Opens/updates the Version Packages PR; publishes when the Version PR merges
-      - name: Create/Update Version PR
+      # Version Packages PR を作成/更新（マージ時に公開）
+      - name: バージョン PR を作成/更新
         id: changesets
         uses: changesets/action@v1
         with:
           title: 'chore(release): version packages'
           createGithubReleases: true
-          # Use CI-specific release script: relies on version PR having been merged
-          # so package.json already contains the bumped version.
+          # CI 専用リリーススクリプトを使用（version PR がマージ済みであることが前提）
+          # package.json には既に更新済みバージョンが入っている想定。
           publish: pnpm run release:ci
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          # npm authentication handled via OIDC trusted publishing (no token needed)
+          # npm 認証は OIDC の信頼付き公開で処理（トークン不要）

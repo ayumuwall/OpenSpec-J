@@ -1,16 +1,16 @@
 /**
- * Crush Command Adapter
+ * Crush コマンドアダプター
  *
- * Formats commands for Crush following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Crush adapter for command generation.
- * File path: .crush/commands/opsx/<id>.md
- * Frontmatter: name, description, category, tags
+ * Crush のコマンド生成アダプター。
+ * ファイルパス: .crush/commands/opsx/<id>.md
+ * フロントマター: name, description, category, tags
  */
 export const crushAdapter: ToolCommandAdapter = {
   toolId: 'crush',

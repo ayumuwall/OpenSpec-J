@@ -3,8 +3,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const stripAnsi = (input: string): string => input.replace(/\u001b\[[0-9;]*m/g, '');
-
 describe('validate command enriched human output', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-validate-enriched-tmp');
@@ -39,12 +37,12 @@ describe('validate command enriched human output', () => {
         stderr = e?.stderr?.toString?.() ?? '';
       }
       expect(code).not.toBe(0);
-      const normalized = stripAnsi(stderr);
-      expect(normalized).toContain('変更 "c-next-steps" に問題があります');
-      expect(normalized).toContain('次のステップ:');
-      expect(normalized).toContain('openspec change show');
+      expect(stderr).toContain('に問題があります');
+      expect(stderr).toContain('次のステップ:');
+      expect(stderr).toContain('openspec change show');
     } finally {
       process.chdir(originalCwd);
     }
   });
 });
+

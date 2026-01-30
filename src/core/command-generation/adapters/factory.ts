@@ -1,16 +1,16 @@
 /**
- * Factory Droid Command Adapter
+ * Factory Droid コマンドアダプター
  *
- * Formats commands for Factory Droid following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Factory adapter for command generation.
- * File path: .factory/commands/opsx-<id>.md
- * Frontmatter: description, argument-hint
+ * Factory のコマンド生成アダプター。
+ * ファイルパス: .factory/commands/opsx-<id>.md
+ * フロントマター: description, argument-hint
  */
 export const factoryAdapter: ToolCommandAdapter = {
   toolId: 'factory',
@@ -22,7 +22,7 @@ export const factoryAdapter: ToolCommandAdapter = {
   formatFile(content: CommandContent): string {
     return `---
 description: ${content.description}
-argument-hint: command arguments
+argument-hint: コマンド引数
 ---
 
 ${content.body}

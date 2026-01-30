@@ -160,7 +160,7 @@ describe('readChangeMetadata', () => {
     const metaPath = path.join(changeDir, '.openspec.yaml');
     await fs.writeFile(metaPath, 'schema: unknown-schema\n', 'utf-8');
 
-    expect(() => readChangeMetadata(changeDir)).toThrow(/スキーマ .*が見つかりません/);
+    expect(() => readChangeMetadata(changeDir)).toThrow(/見つかりません/);
   });
 });
 

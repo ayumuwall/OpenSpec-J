@@ -117,7 +117,7 @@ describe('BashInstaller', () => {
 
       expect(content).toContain('# OPENSPEC:START');
       expect(content).toContain('# OPENSPEC:END');
-      expect(content).toContain('OpenSpec シェル補完の設定');
+      expect(content).toContain('# OpenSpec シェル補完の設定');
     });
 
     it('should include instructions when auto-config is disabled', async () => {
@@ -226,7 +226,7 @@ describe('BashInstaller', () => {
       const result = await installer.uninstall();
 
       expect(result.success).toBe(true);
-      expect(result.message).toContain('削除しました');
+      expect(result.message).toContain('補完スクリプトを削除しました');
 
       // Verify file is gone
       const targetPath = await installer.getInstallationPath();

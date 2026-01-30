@@ -1,146 +1,146 @@
 name: spec-driven
 version: 1
-description: Default OpenSpec workflow - proposal → specs → design → tasks
+description: OpenSpec の既定ワークフロー - proposal → specs → design → tasks
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: Initial proposal document outlining the change
+    description: 変更の概要を示す初期提案ドキュメント
     template: proposal.md
     instruction: |
-      Create the proposal document that establishes WHY this change is needed.
+      この変更がなぜ必要か（WHY）を明確にする提案ドキュメントを作成する。
 
-      Sections:
-      - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
-      - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
-      - **Capabilities**: Identify which specs will be created or modified:
-        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
-        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
-      - **Impact**: Affected code, APIs, dependencies, or systems.
+      セクション:
+      - **Why**: 問題や機会を 1〜2 文で説明する。何を解決するのか？なぜ今か？
+      - **What Changes**: 変更点の箇条書き。新しい機能/修正/削除を具体的に書く。破壊的変更は **BREAKING** を付ける。
+      - **Capabilities**: 作成・更新する仕様を特定する:
+        - **New Capabilities**: 追加する機能を列挙。各項目は新しい `specs/<name>/spec.md` になる。kebab-case を使う（例: `user-auth`, `data-export`）。
+        - **Modified Capabilities**: 既存機能の REQUIREMENTS が変わるものを列挙。仕様レベルの振る舞いが変わる場合のみ対象（実装詳細のみの変更は除外）。各項目は差分仕様ファイルが必要。既存の仕様名は `openspec/specs/` を確認。要件変更が無い場合は空でよい。
+      - **Impact**: 影響を受けるコード、API、依存関係、システム。
 
-      IMPORTANT: The Capabilities section is critical. It creates the contract between
-      proposal and specs phases. Research existing specs before filling this in.
-      Each capability listed here will need a corresponding spec file.
+      重要: Capabilities セクションは必須。proposal と specs の間の契約になる。
+      記入前に既存の仕様を調査すること。
+      ここに書いた各 capability には対応する spec ファイルが必要になる。
 
-      Keep it concise (1-2 pages). Focus on the "why" not the "how" -
-      implementation details belong in design.md.
+      簡潔に（1〜2 ページ）。「なぜ（why）」に集中し、「どう実装するか」は design.md に書く。
 
-      This is the foundation - specs, design, and tasks all build on this.
+      これは土台であり、specs / design / tasks はすべてこれに基づく。
     requires: []
 
   - id: specs
     generates: "specs/**/*.md"
-    description: Detailed specifications for the change
+    description: 変更の詳細仕様
     template: spec.md
     instruction: |
-      Create specification files that define WHAT the system should do.
+      システムが何をするか（WHAT）を定義する仕様ファイルを作成する。
 
-      Create one spec file per capability listed in the proposal's Capabilities section.
-      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
-      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。
+      - New capabilities: proposal にある kebab-case 名を正確に使う（specs/<capability>/spec.md）。
+      - Modified capabilities: 既存の spec フォルダ名（openspec/specs/<capability>/）を使い、差分 spec を specs/<capability>/spec.md に作成する。
 
-      Delta operations (use ## headers):
-      - **ADDED Requirements**: New capabilities
-      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
-      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
-      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+      差分操作（## 見出しを使用）:
+      - **ADDED Requirements**: 新しい機能
+      - **MODIFIED Requirements**: 振る舞い変更 - MUST で全文更新する
+      - **REMOVED Requirements**: 廃止機能 - **Reason** と **Migration** を必ず記載
+      - **RENAMED Requirements**: 名称変更のみ - FROM:/TO: 形式
 
-      Format requirements:
-      - Each requirement: `### Requirement: <name>` followed by description
-      - Use SHALL/MUST for normative requirements (avoid should/may)
-      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
-      - Every requirement MUST have at least one scenario.
+      書式ルール:
+      - 各要件: `### Requirement: <name>` の後に本文を書く
+      - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）
+      - 語尾は「〜しなければならない。(SHALL)」の形式に揃える。文中に SHALL/MUST を挿入しない。
+      - 各シナリオ: `#### Scenario: <name>` を WHEN/THEN 形式で書く
+      - **CRITICAL**: シナリオは必ず 4 つのハッシュ（`####`）を使う。3 つや箇条書きにすると静かに失敗する。
+      - すべての要件は少なくとも 1 つのシナリオを持つ。
 
-      MODIFIED requirements workflow:
-      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
-      2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
-      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
-      4. Ensure header text matches exactly (whitespace-insensitive)
+      MODIFIED 要件の手順:
+      1. openspec/specs/<capability>/spec.md で既存要件を探す
+      2. `### Requirement:` から全シナリオまでを丸ごとコピー
+      3. `## MODIFIED Requirements` 配下に貼り付け、振る舞い変更を反映
+      4. 見出しテキストが完全一致していることを確認（空白差は無視）
 
-      Common pitfall: Using MODIFIED with partial content loses detail at archive time.
-      If adding new concerns without changing existing behavior, use ADDED instead.
+      よくある落とし穴: MODIFIED で部分的に書くとアーカイブ時に詳細が失われる。
+      既存の振る舞いを変えずに追加するなら ADDED を使う。
 
-      Example:
+      例:
       ```
       ## ADDED Requirements
 
-      ### Requirement: User can export data
-      The system SHALL allow users to export their data in CSV format.
+      ### Requirement: ユーザーはデータをエクスポートできる
+      システムはユーザーが CSV 形式でデータをエクスポートできるようにしなければならない。(SHALL)
 
-      #### Scenario: Successful export
-      - **WHEN** user clicks "Export" button
-      - **THEN** system downloads a CSV file with all user data
+      #### Scenario: エクスポート成功
+      - **WHEN** ユーザーが「エクスポート」ボタンをクリックする
+      - **THEN** システムは全ユーザーデータを含む CSV ファイルをダウンロードする
 
       ## REMOVED Requirements
 
-      ### Requirement: Legacy export
-      **Reason**: Replaced by new export system
-      **Migration**: Use new export endpoint at /api/v2/export
+      ### Requirement: 旧エクスポート
+      **Reason**: 新しいエクスポートシステムに置き換え
+      **Migration**: /api/v2/export の新しいエクスポートエンドポイントを使用
       ```
 
-      Specs should be testable - each scenario is a potential test case.
+      仕様はテスト可能にすること。各シナリオは潜在的なテストケースになる。
     requires:
       - proposal
 
   - id: design
     generates: design.md
-    description: Technical design document with implementation details
+    description: 実装詳細を含む技術設計ドキュメント
     template: design.md
     instruction: |
-      Create the design document that explains HOW to implement the change.
+      変更をどう実装するか（HOW）を説明する設計ドキュメントを作成する。
 
-      When to include design.md (create only if any apply):
-      - Cross-cutting change (multiple services/modules) or new architectural pattern
-      - New external dependency or significant data model changes
-      - Security, performance, or migration complexity
-      - Ambiguity that benefits from technical decisions before coding
+      design.md を作成する条件（該当する場合のみ作成）:
+      - 横断的変更（複数サービス/モジュール）または新しいアーキテクチャパターン
+      - 新しい外部依存、または大きなデータモデル変更
+      - セキュリティ、パフォーマンス、移行の複雑さ
+      - 実装前に技術判断が必要な曖昧さ
 
-      Sections:
-      - **Context**: Background, current state, constraints, stakeholders
-      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
-      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered for each decision.
-      - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
-      - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
-      - **Open Questions**: Outstanding decisions or unknowns to resolve
+      セクション:
+      - **Context**: 背景、現状、制約、関係者
+      - **Goals / Non-Goals**: この設計で達成することと明示的に除外すること
+      - **Decisions**: 主要な技術判断と理由（なぜ X ではなく Y か）。各判断に代替案の検討も含める。
+      - **Risks / Trade-offs**: 既知の制約や失敗しうる点。形式: [Risk] → Mitigation
+      - **Migration Plan**: デプロイ手順、ロールバック戦略（該当する場合）
+      - **Open Questions**: 未決事項や解くべき疑問
 
-      Focus on architecture and approach, not line-by-line implementation.
-      Reference the proposal for motivation and specs for requirements.
+      行ごとの実装詳細ではなく、アーキテクチャと方針に集中する。
+      動機は proposal、要件は specs を参照する。
 
-      Good design docs explain the "why" behind technical decisions.
+      良い設計ドキュメントは技術判断の「なぜ」を説明する。
     requires:
       - proposal
 
   - id: tasks
     generates: tasks.md
-    description: Implementation checklist with trackable tasks
+    description: 進捗追跡できる実装チェックリスト
     template: tasks.md
     instruction: |
-      Create the task list that breaks down the implementation work.
+      実装作業を分解したタスクリストを作成する。
 
-      **IMPORTANT: Follow the template below exactly.** The apply phase parses
-      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+      **IMPORTANT: 下記テンプレートに厳密に従う。** apply フェーズは
+      チェックボックス形式を解析して進捗を追跡する。`- [ ]` を使わないタスクは追跡されない。
 
-      Guidelines:
-      - Group related tasks under ## numbered headings
-      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
-      - Tasks should be small enough to complete in one session
-      - Order tasks by dependency (what must be done first?)
+      ガイドライン:
+      - 関連タスクを ## 番号付き見出し配下にまとめる
+      - 各タスクは必ずチェックボックス: `- [ ] X.Y タスク内容`
+      - 1 セッションで終わる大きさにする
+      - 依存順に並べる（最初にやるべきものから）
 
-      Example:
+      例:
       ```
-      ## 1. Setup
+      ## 1. セットアップ
 
-      - [ ] 1.1 Create new module structure
-      - [ ] 1.2 Add dependencies to package.json
+      - [ ] 1.1 新しいモジュール構成を作成
+      - [ ] 1.2 package.json に依存関係を追加
 
-      ## 2. Core Implementation
+      ## 2. コア実装
 
-      - [ ] 2.1 Implement data export function
-      - [ ] 2.2 Add CSV formatting utilities
+      - [ ] 2.1 データエクスポート関数を実装
+      - [ ] 2.2 CSV 変換ユーティリティを追加
       ```
 
-      Reference specs for what needs to be built, design for how to build it.
-      Each task should be verifiable - you know when it's done.
+      何を作るかは specs、どう作るかは design を参照する。
+      各タスクは検証可能であること（完了がわかること）。
     requires:
       - specs
       - design
@@ -149,5 +149,5 @@ apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Read context files, work through pending tasks, mark complete as you go.
-    Pause if you hit blockers or need clarification.
+    コンテキストファイルを読み、未完了タスクを進め、進捗に合わせて完了マークする。
+    ブロッカーや不明点があれば一旦止めて確認する。

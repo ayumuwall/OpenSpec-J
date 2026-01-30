@@ -1,7 +1,7 @@
 /**
- * Kilo Code Command Adapter
+ * Kilo Code コマンドアダプター
  *
- * Formats commands for Kilo Code following its workflow specification.
+ * コマンドをツール仕様に合わせて整形する。
  * Kilo Code workflows don't use frontmatter.
  */
 
@@ -9,9 +9,9 @@ import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Kilo Code adapter for command generation.
- * File path: .kilocode/workflows/opsx-<id>.md
- * Format: Plain markdown without frontmatter
+ * Kilo Code のコマンド生成アダプター。
+ * ファイルパス: .kilocode/workflows/opsx-<id>.md
+ * 形式: Plain markdown without frontmatter
  */
 export const kilocodeAdapter: ToolCommandAdapter = {
   toolId: 'kilocode',

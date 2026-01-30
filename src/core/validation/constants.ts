@@ -44,7 +44,7 @@ export const VALIDATION_MESSAGES = {
   GUIDE_NO_DELTAS:
     'デルタが見つかりません。変更には specs/ ディレクトリ（例: specs/http-server/spec.md）とデルタヘッダー（## ADDED/MODIFIED/REMOVED/RENAMED Requirements）を使う .md ファイルを用意し、各要件に少なくとも 1 つの "#### Scenario:" ブロックを含めてください。ヒント: `openspec change show <change-id> --json --deltas-only` で解析結果を確認できます。',
   GUIDE_MISSING_SPEC_SECTIONS:
-    '必須セクションが不足しています。必要な見出し: "## Purpose" と "## Requirements"。例:\n## Purpose\n[簡潔な目的]\n\n## Requirements\n### Requirement: 明確な要件文\nUsers SHALL ...\n\n#### Scenario: シナリオ名\n- **WHEN** ...\n- **THEN** ...',
+    '必須セクションが不足しています。必要な見出し: "## Purpose" と "## Requirements"。例:\n## Purpose\n[簡潔な目的]\n\n## Requirements\n### Requirement: 明確な要件文\nシステムは〜しなければならない。(SHALL)\n\n#### Scenario: シナリオ名\n- **WHEN** ...\n- **THEN** ...',
   GUIDE_MISSING_CHANGE_SECTIONS:
     '必須セクションが不足しています。必要な見出し: "## Why" と "## What Changes"。デルタは specs/ 配下でデルタ用ヘッダーを使って記載してください。',
   GUIDE_SCENARIO_FORMAT:

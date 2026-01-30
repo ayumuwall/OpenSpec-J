@@ -2,10 +2,6 @@
 
 OpenSpec は 20 以上の AI コーディングアシスタントに対応しています。`openspec init` を実行すると、使用ツールの選択を促され、適切な連携設定を行います。
 
-> [!NOTE]
-> 出力例・コマンド例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
-> <!-- OPENSPEC-J:TODO supported-tools examples -->
-
 ## 仕組み
 
 選択した各ツールに対して、OpenSpec は次をインストールします。
@@ -44,13 +40,13 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 CI/CD やスクリプトでセットアップする場合は `--tools` フラグを使います。
 
 ```bash
-# Configure specific tools
+# 特定のツールを設定
 openspec init --tools claude,cursor
 
-# Configure all supported tools
+# 全ツールを設定
 openspec init --tools all
 
-# Skip tool configuration
+# ツール設定をスキップ
 openspec init --tools none
 ```
 

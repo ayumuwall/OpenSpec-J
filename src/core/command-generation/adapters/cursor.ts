@@ -1,7 +1,7 @@
 /**
- * Cursor Command Adapter
+ * Cursor コマンドアダプター
  *
- * Formats commands for Cursor following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  * Cursor uses a different frontmatter format and file naming convention.
  */
 
@@ -24,9 +24,9 @@ function escapeYamlValue(value: string): string {
 }
 
 /**
- * Cursor adapter for command generation.
- * File path: .cursor/commands/opsx-<id>.md
- * Frontmatter: name (as /opsx-<id>), id, category, description
+ * Cursor のコマンド生成アダプター。
+ * ファイルパス: .cursor/commands/opsx-<id>.md
+ * フロントマター: name (as /opsx-<id>), id, category, description
  */
 export const cursorAdapter: ToolCommandAdapter = {
   toolId: 'cursor',

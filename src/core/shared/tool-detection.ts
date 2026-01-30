@@ -1,7 +1,7 @@
 /**
- * Tool Detection Utilities
+ * ツール検出ユーティリティ
  *
- * Shared utilities for detecting tool configurations and version status.
+ * ツール構成とバージョン状態を検出する共通ユーティリティ。
  */
 
 import path from 'path';
@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import { AI_TOOLS } from '../config.js';
 
 /**
- * Names of skill directories created by openspec init.
+ * openspec init で作成されるスキルディレクトリ名。
  */
 export const SKILL_NAMES = [
   'openspec-explore',
@@ -27,42 +27,42 @@ export const SKILL_NAMES = [
 export type SkillName = (typeof SKILL_NAMES)[number];
 
 /**
- * Status of skill configuration for a tool.
+ * ツールのスキル設定状態。
  */
 export interface ToolSkillStatus {
-  /** Whether the tool has any skills configured */
+  /** スキルが設定済みか */
   configured: boolean;
-  /** Whether all 10 skills are configured */
+  /** 10 個すべてのスキルが設定済みか */
   fullyConfigured: boolean;
-  /** Number of skills currently configured (0-10) */
+  /** 設定済みスキル数（0-10） */
   skillCount: number;
 }
 
 /**
- * Version information for a tool's skills.
+ * ツールのスキルに関するバージョン情報。
  */
 export interface ToolVersionStatus {
-  /** The tool ID */
+  /** ツール ID */
   toolId: string;
-  /** The tool's display name */
+  /** ツール表示名 */
   toolName: string;
-  /** Whether the tool has any skills configured */
+  /** スキルが設定済みか */
   configured: boolean;
-  /** The generatedBy version found in the skill files, or null if not found */
+  /** スキルファイル内の generatedBy バージョン（未検出なら null） */
   generatedByVersion: string | null;
-  /** Whether the tool needs updating (version mismatch or missing) */
+  /** 更新が必要か（バージョン不一致または未検出） */
   needsUpdate: boolean;
 }
 
 /**
- * Gets the list of tools with skillsDir configured.
+ * skillsDir が設定されたツール一覧を取得する。
  */
 export function getToolsWithSkillsDir(): string[] {
   return AI_TOOLS.filter((t) => t.skillsDir).map((t) => t.value);
 }
 
 /**
- * Checks which skill files exist for a tool.
+ * ツールに存在するスキルファイルを確認する。
  */
 export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSkillStatus {
   const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -88,7 +88,7 @@ export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSki
 }
 
 /**
- * Gets the skill status for all tools with skillsDir configured.
+ * skillsDir がある全ツールのスキル状態を取得する。
  */
 export function getToolStates(projectRoot: string): Map<string, ToolSkillStatus> {
   const states = new Map<string, ToolSkillStatus>();
@@ -102,8 +102,8 @@ export function getToolStates(projectRoot: string): Map<string, ToolSkillStatus>
 }
 
 /**
- * Extracts the generatedBy version from a skill file's YAML frontmatter.
- * Returns null if the field is not found or the file doesn't exist.
+ * スキルファイルの YAML フロントマターから generatedBy を抽出する。
+ * フィールドが無い、またはファイルが無い場合は null を返す。
  */
 export function extractGeneratedByVersion(skillFilePath: string): string | null {
   try {
@@ -113,8 +113,8 @@ export function extractGeneratedByVersion(skillFilePath: string): string | null 
 
     const content = fs.readFileSync(skillFilePath, 'utf-8');
 
-    // Look for generatedBy in the YAML frontmatter
-    // The file format is:
+    // YAML フロントマター内の generatedBy を探す
+    // ファイル形式:
     // ---
     // ...
     // metadata:
@@ -135,7 +135,7 @@ export function extractGeneratedByVersion(skillFilePath: string): string | null 
 }
 
 /**
- * Gets version status for a tool by reading the first available skill file.
+ * 最初に見つかったスキルファイルからツールのバージョン状態を取得する。
  */
 export function getToolVersionStatus(
   projectRoot: string,
@@ -156,7 +156,7 @@ export function getToolVersionStatus(
   const skillsDir = path.join(projectRoot, tool.skillsDir, 'skills');
   let generatedByVersion: string | null = null;
 
-  // Find the first skill file that exists and read its version
+  // 存在する最初のスキルファイルからバージョンを読み取る
   for (const skillName of SKILL_NAMES) {
     const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
     if (fs.existsSync(skillFile)) {
@@ -178,7 +178,7 @@ export function getToolVersionStatus(
 }
 
 /**
- * Gets all configured tools in the project.
+ * プロジェクト内で設定済みのツールを取得する。
  */
 export function getConfiguredTools(projectRoot: string): string[] {
   return AI_TOOLS
@@ -187,7 +187,7 @@ export function getConfiguredTools(projectRoot: string): string[] {
 }
 
 /**
- * Gets version status for all configured tools.
+ * 設定済みツールのバージョン状態を取得する。
  */
 export function getAllToolVersionStatus(
   projectRoot: string,

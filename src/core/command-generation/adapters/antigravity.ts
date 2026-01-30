@@ -1,16 +1,16 @@
 /**
- * Antigravity Command Adapter
+ * Antigravity コマンドアダプター
  *
- * Formats commands for Antigravity following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Antigravity adapter for command generation.
- * File path: .agent/workflows/opsx-<id>.md
- * Frontmatter: description
+ * Antigravity のコマンド生成アダプター。
+ * ファイルパス: .agent/workflows/opsx-<id>.md
+ * フロントマター: description
  */
 export const antigravityAdapter: ToolCommandAdapter = {
   toolId: 'antigravity',
