@@ -2232,7 +2232,7 @@ export function getOpsxContinueCommandTemplate(): CommandTemplate {
    **全アーティファクト完了（\`isComplete: true\`）の場合**:
    - ねぎらいと完了報告
    - 使用スキーマを含めて最終状態を表示
-   - "すべて完了しました。実装またはアーカイブに進めます" と案内
+   - 「すべてのアーティファクトが作成されました。\`/opsx:apply\` で実装を進めるか、\`/opsx:archive\` でアーカイブできます。」と案内
    - STOP
 
    ---
@@ -2411,7 +2411,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 - [x] Task 2
 ...
 
-すべてのタスクが完了しました。アーカイブの準備ができています。
+すべてのタスクが完了しました。\`/opsx:archive\` でアーカイブできます。
 \`\`\`
 
 **一時停止時の出力例（問題発生）**

@@ -3,6 +3,32 @@
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 
+## 1.1.0
+
+- **[OpenSpec-J]** v1.1.0 追従のため、OPSX ドキュメント/ツール一覧/テンプレート/コマンド生成の文言を日本語化し、Codex/Windsurf の新パス仕様に合わせて説明を更新
+- **[OpenSpec-J]** README の同期元バージョンを更新
+
+### マイナー変更
+
+- [#625](https://github.com/Fission-AI/OpenSpec/pull/625) [`53081fb`](https://github.com/Fission-AI/OpenSpec/commit/53081fb2a26ec66d2950ae0474b9a56cbc5b5a76) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
+
+  - **Codex のグローバルパス対応** — Codex アダプターがグローバルパスを正しく解決し、プロジェクト外から実行した際のワークフローファイル生成の不具合を修正 (#622)
+  - **クロスデバイス/制限パスでのアーカイブ** — rename が EPERM/EXDEV の場合に copy+remove にフォールバックし、ネットワーク/外部ドライブでの失敗を修正 (#605)
+  - **ワークフロー完了メッセージのスラッシュコマンド案内** — 次のステップのヒントを表示 (#603)
+  - **Windsurf ワークフローファイルパス** — `commands` ではなく `workflows` を使うよう修正 (#610)
+
+### パッチ変更
+
+- [#550](https://github.com/Fission-AI/OpenSpec/pull/550) [`86d2e04`](https://github.com/Fission-AI/OpenSpec/commit/86d2e04cae76a999dbd1b4571f52fa720036be0c) [@jerome-benoit](https://github.com/jerome-benoit) ありがとう！ - ### 改善
+
+  - **Nix flake メンテナンス** — package.json から動的にバージョンを読み取り、同期作業を軽減
+  - **Nix ビルド最適化** — node_modules とアーティファクトを除外し、ビルド時間を短縮
+  - **update-flake.sh スクリプト** — ハッシュが既に正しい場合は再ビルドをスキップ
+
+  ### その他
+
+  - Nix CI アクションを最新版へ更新（nix-installer v21、magic-nix-cache v13）
+
 ## 1.0.2
 
 - **[OpenSpec-J]** v1.0.2 の OPSX 体験を日本語で追えるようにするため、ドキュメント・CLI メッセージとテンプレートを日本語化（会話例・コードブロック含む）

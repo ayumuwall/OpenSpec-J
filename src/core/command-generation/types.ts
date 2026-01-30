@@ -33,9 +33,10 @@ export interface ToolCommandAdapter {
   /** AIToolOption.value と一致するツール識別子（例: 'claude', 'cursor'） */
   toolId: string;
   /**
-   * コマンドの相対ファイルパスを返す。
+   * コマンドのファイルパスを返す。
    * @param commandId - コマンド識別子（例: 'explore'）
-   * @returns プロジェクトルートからの相対パス（例: '.claude/commands/opsx/explore.md'）
+   * @returns プロジェクトルートからのパス（例: '.claude/commands/opsx/explore.md'）。
+   *          グローバルなプロンプトを使うツール（例: Codex）は絶対パスになる。
    */
   getFilePath(commandId: string): string;
   /**
@@ -50,7 +51,7 @@ export interface ToolCommandAdapter {
  * コマンドファイル生成結果。
  */
 export interface GeneratedCommand {
-  /** プロジェクトルートからの相対パス */
+  /** プロジェクトルートからのパス（グローバルなツールは絶対パス） */
   path: string;
   /** 完全なファイル内容（フロントマター + 本文） */
   fileContent: string;

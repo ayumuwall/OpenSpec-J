@@ -19,7 +19,7 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 | Claude Code | `.claude/skills/` | `.claude/commands/opsx/` |
 | Cline | `.cline/skills/` | `.clinerules/workflows/` |
 | CodeBuddy | `.codebuddy/skills/` | `.codebuddy/commands/opsx/` |
-| Codex | `.codex/skills/` | `.codex/prompts/` |
+| Codex | `.codex/skills/` | `~/.codex/prompts/`* |
 | Continue | `.continue/skills/` | `.continue/prompts/` |
 | CoStrict | `.cospec/skills/` | `.cospec/openspec/commands/` |
 | Crush | `.crush/skills/` | `.crush/commands/opsx/` |
@@ -33,7 +33,10 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 | Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
 | Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
 | RooCode | `.roo/skills/` | `.roo/commands/` |
-| Windsurf | `.windsurf/skills/` | `.windsurf/commands/opsx/` |
+| Trae | `.trae/skills/` | `.trae/skills/`（`/openspec-*` 経由） |
+| Windsurf | `.windsurf/skills/` | `.windsurf/workflows/` |
+
+\* Codex のコマンドはプロジェクト内ではなく、グローバルなホームディレクトリ（`~/.codex/prompts/` または `$CODEX_HOME/prompts/`）にインストールされます。
 
 ## 非対話セットアップ
 
@@ -50,7 +53,7 @@ openspec init --tools all
 openspec init --tools none
 ```
 
-**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `windsurf`
+**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
 ## インストールされるもの
 

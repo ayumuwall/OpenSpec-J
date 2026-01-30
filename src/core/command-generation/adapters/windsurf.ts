@@ -33,14 +33,14 @@ function formatTagsArray(tags: string[]): string {
 
 /**
  * Windsurf のコマンド生成アダプター。
- * ファイルパス: .windsurf/commands/opsx/<id>.md
+ * ファイルパス: .windsurf/workflows/opsx-<id>.md
  * フロントマター: name, description, category, tags
  */
 export const windsurfAdapter: ToolCommandAdapter = {
   toolId: 'windsurf',
 
   getFilePath(commandId: string): string {
-    return path.join('.windsurf', 'commands', 'opsx', `${commandId}.md`);
+    return path.join('.windsurf', 'workflows', `opsx-${commandId}.md`);
   },
 
   formatFile(content: CommandContent): string {

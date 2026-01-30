@@ -38,6 +38,7 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Qoder', value: 'qoder', available: true, successLabel: 'Qoder', skillsDir: '.qoder' },
   { name: 'Qwen Code', value: 'qwen', available: true, successLabel: 'Qwen Code', skillsDir: '.qwen' },
   { name: 'RooCode', value: 'roocode', available: true, successLabel: 'RooCode', skillsDir: '.roo' },
+  { name: 'Trae', value: 'trae', available: true, successLabel: 'Trae', skillsDir: '.trae' },
   { name: 'Windsurf', value: 'windsurf', available: true, successLabel: 'Windsurf', skillsDir: '.windsurf' },
   { name: 'AGENTS.md（Amp / VS Code などに対応）', value: 'agents', available: false, successLabel: 'AGENTS.md 互換のアシスタント' }
 ];

@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.0.2 です。**<BR>
+> このリポジトリは、[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をベースにした日本語ローカライズ版（OpenSpec-J）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.1.0 です。**<BR>
 > v1.0.0より、本家版に[Multi-Language](docs/multi-language.md): 多言語サポートが追加され、生成物の言語を変更できるようになりました。**生成物のみ日本語にできれば良い場合、本家版[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)をお使いください。**
 
 <br>
