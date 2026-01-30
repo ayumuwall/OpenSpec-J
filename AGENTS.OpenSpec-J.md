@@ -1,4 +1,4 @@
-# OpenSpec-J upstream 追従ガイド（統合版）
+# OpenSpec-J upstream 追従ガイド
 
 このファイルは、OpenSpec-J の upstream 追従作業に必要な
 **方針（翻訳ポリシー）と手順（実作業フロー）を記述**したものです。
@@ -209,6 +209,7 @@ git merge main
 ### 2.5 検証
 
 ```
+pnpm build
 pnpm test
 node bin/openspec.js --help
 node bin/openspec.js init /tmp/openspec-j-init
@@ -219,21 +220,38 @@ node bin/openspec.js validate --strict
 - テンプレート生成が日本語で崩れていないか確認
 - `openspec init` で OPSX スキル生成が行われることを確認
 
-### 2.6 仕上げ（記録とタグ）
-
-```
-git checkout ja-docs
-git tag -a openspec-j-vX.Y.Z -m "OpenSpec-J vX.Y.Z"
-```
+### 2.6 仕上げ（記録）
 
 - `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
 - `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
 
 ---
 
-## 3. コミット運用
+## 3. リリース手順（タグと公開）
 
-### 3.1 コミットメッセージ
+### 3.1 リリースタグ付与と GitHub Release 作成
+
+```
+git checkout ja-docs
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin vX.Y.Z
+
+# GitHub Release 作成（CHANGELOG から該当セクションを抜粋して貼る）
+gh release create vX.Y.Z --title "vX.Y.Z" --notes "<CHANGELOG.md の該当セクション>"
+```
+
+### 3.2 npm 公開
+
+```
+pnpm build
+npm publish --access public
+```
+
+---
+
+## 4. コミット運用
+
+### 4.1 コミットメッセージ
 
 - 形式: `<type>(<scope>): <title>`（scope 任意）
 - type: `feat` | `fix` | `docs` | `refactor` | `perf` | `test` | `build` | `ci` | `chore` | `style` | `revert`
@@ -264,3 +282,5 @@ git tag -a openspec-j-vX.Y.Z -m "OpenSpec-J vX.Y.Z"
 - PR: <link>
 - 参考: <link>
 ```
+
+---
