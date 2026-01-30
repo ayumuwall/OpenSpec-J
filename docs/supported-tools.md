@@ -19,7 +19,7 @@ For each tool you select, OpenSpec installs:
 | Claude Code | `.claude/skills/` | `.claude/commands/opsx/` |
 | Cline | `.cline/skills/` | `.clinerules/workflows/` |
 | CodeBuddy | `.codebuddy/skills/` | `.codebuddy/commands/opsx/` |
-| Codex | `.codex/skills/` | `.codex/prompts/` |
+| Codex | `.codex/skills/` | `~/.codex/prompts/`* |
 | Continue | `.continue/skills/` | `.continue/prompts/` |
 | CoStrict | `.cospec/skills/` | `.cospec/openspec/commands/` |
 | Crush | `.crush/skills/` | `.crush/commands/opsx/` |
@@ -33,7 +33,10 @@ For each tool you select, OpenSpec installs:
 | Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
 | Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
 | RooCode | `.roo/skills/` | `.roo/commands/` |
-| Windsurf | `.windsurf/skills/` | `.windsurf/commands/opsx/` |
+| Trae | `.trae/skills/` | `.trae/skills/` (via `/openspec-*`) |
+| Windsurf | `.windsurf/skills/` | `.windsurf/workflows/` |
+
+\* Codex commands are installed to the global home directory (`~/.codex/prompts/` or `$CODEX_HOME/prompts/`), not the project directory.
 
 ## Non-Interactive Setup
 
@@ -50,7 +53,7 @@ openspec init --tools all
 openspec init --tools none
 ```
 
-**Available tool IDs:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `windsurf`
+**Available tool IDs:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
 ## What Gets Installed
 
