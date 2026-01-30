@@ -2,10 +2,6 @@
 
 このガイドは、旧 OpenSpec ワークフローから OPSX へ移行するための手順です。移行はスムーズで、既存の作業は保持されます。新しいシステムではより柔軟に進められます。
 
-> [!NOTE]
-> 会話例・出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
-> <!-- OPENSPEC-J:TODO migration examples -->
-
 ## 何が変わるのか
 
 OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクションベースのワークフローへ置き換えます。主な違いは次の通りです。
@@ -99,34 +95,35 @@ openspec init
 init は旧ファイルを検出し、クリーンアップを案内します:
 
 ```
-Upgrading to the new OpenSpec
+OpenSpec を新バージョンへアップグレードしています
 
-OpenSpec now uses agent skills, the emerging standard across coding
-agents. This simplifies your setup while keeping everything working
-as before.
+OpenSpec は現在、コーディングエージェント間で広がりつつある
+agent skills を使用します。従来どおり動作させつつ
+セットアップが簡素化されます。
 
-Files to remove
-No user content to preserve:
+削除するファイル
+ユーザー内容を保持する必要はありません:
   • .claude/commands/openspec/
   • openspec/AGENTS.md
 
-Files to update
-OpenSpec markers will be removed, your content preserved:
+更新するファイル
+OpenSpec マーカーを除去し、内容は保持します:
   • CLAUDE.md
   • AGENTS.md
 
-Needs your attention
+要確認
   • openspec/project.md
-    We won't delete this file. It may contain useful project context.
+    このファイルは削除しません。有用なプロジェクト文脈が
+    含まれている可能性があります。
 
-    The new openspec/config.yaml has a "context:" section for planning
-    context. This is included in every OpenSpec request and works more
-    reliably than the old project.md approach.
+    新しい openspec/config.yaml には計画用の「context:」があり、
+    これはすべての OpenSpec リクエストに含まれます。
+    旧 project.md の方式より安定して機能します。
 
-    Review project.md, move any useful content to config.yaml's context
-    section, then delete the file when ready.
+    project.md を確認し、有用な内容を config.yaml の context
+    セクションに移し、準備できたら削除してください。
 
-? Upgrade and clean up legacy files? (Y/n)
+? 旧ファイルをアップグレードしてクリーンアップしますか? (Y/n)
 ```
 
 **Yes を選んだ場合:**
@@ -166,17 +163,17 @@ openspec init --force --tools claude
 ### Before（project.md）
 
 ```markdown
-# Project Context
+# プロジェクト文脈
 
-This is a TypeScript monorepo using React and Node.js.
-We use Jest for testing and follow strict ESLint rules.
-Our API is RESTful and documented in docs/api.md.
+これは React と Node.js を使う TypeScript モノレポです。
+テストは Jest を使い、厳格な ESLint ルールに従います。
+API は REST で、docs/api.md に記載しています。
 
-## Conventions
+## 規約
 
-- All public APIs must maintain backwards compatibility
-- New features should include tests
-- Use Given/When/Then format for specifications
+- すべての公開 API は後方互換を維持する
+- 新機能にはテストを含める
+- 仕様は Given/When/Then 形式を使う
 ```
 
 ### After（config.yaml）
@@ -185,19 +182,19 @@ Our API is RESTful and documented in docs/api.md.
 schema: spec-driven
 
 context: |
-  Tech stack: TypeScript, React, Node.js
-  Testing: Jest with React Testing Library
-  API: RESTful, documented in docs/api.md
-  We maintain backwards compatibility for all public APIs
+  技術スタック: TypeScript, React, Node.js
+  テスト: React Testing Library と Jest
+  API: REST、docs/api.md に記載
+  公開 API はすべて後方互換を維持する
 
 rules:
   proposal:
-    - Include rollback plan for risky changes
+    - リスクの高い変更にはロールバック計画を含める
   specs:
-    - Use Given/When/Then format for scenarios
-    - Reference existing patterns before inventing new ones
+    - シナリオは Given/When/Then 形式を使う
+    - 既存パターンを参照してから新規に発明する
   design:
-    - Include sequence diagrams for complex flows
+    - 複雑なフローにはシーケンス図を含める
 ```
 
 ### 主な違い
@@ -238,17 +235,17 @@ rules:
 2. **context を追加**（毎回注入されるため簡潔に）:
    ```yaml
    context: |
-     Your project background goes here.
-     Focus on what the AI genuinely needs to know.
+     プロジェクトの背景をここに記述します。
+     AI が本当に必要とする情報に絞ってください。
    ```
 
 3. **アーティファクト別ルールを追加**（任意）:
    ```yaml
    rules:
      proposal:
-       - Your proposal-specific guidance
+       - proposal 向けのガイダンスを書く
      specs:
-       - Your spec-writing rules
+       - 仕様作成のルールを書く
    ```
 
 4. **project.md を削除**（必要内容を移したら）
@@ -260,16 +257,16 @@ rules:
 project.md の取捨選択が難しい場合、AI に次のように依頼できます。
 
 ```
-I'm migrating from OpenSpec's old project.md to the new config.yaml format.
+OpenSpec の古い project.md から、新しい config.yaml 形式へ移行中です。
 
-Here's my current project.md:
-[paste your project.md content]
+現在の project.md:
+[project.md の内容を貼り付け]
 
-Please help me create a config.yaml with:
-1. A concise `context:` section (this gets injected into every planning request, so keep it tight—focus on tech stack, key constraints, and conventions that often get ignored)
-2. `rules:` for specific artifacts if any content is artifact-specific (e.g., "use Given/When/Then" belongs in specs rules, not global context)
+次の条件を満たす config.yaml を作成してください:
+1. 簡潔な `context:` セクション（全計画リクエストに注入されるので短く。技術スタック、主要制約、よく無視される規約に集中）
+2. アーティファクト固有の内容があれば `rules:` に分離（例: "Given/When/Then を使う" は specs の rules に入れる）
 
-Leave out anything generic that AI models already know. Be ruthless about brevity.
+AI が既に知っている一般論は除外してください。簡潔さを最優先してください。
 ```
 
 AI が「必須 vs 削減」の判断を手伝います。
@@ -324,24 +321,24 @@ AI が「必須 vs 削減」の判断を手伝います。
 
 ```
 ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│   PLANNING   │ ───► │ IMPLEMENTING │ ───► │   ARCHIVING  │
-│    PHASE     │      │    PHASE     │      │    PHASE     │
+│    計画      │ ───► │    実装      │ ───► │  アーカイブ  │
+│   フェーズ   │      │   フェーズ   │      │   フェーズ   │
 └──────────────┘      └──────────────┘      └──────────────┘
 
-If you're in implementation and realize the design is wrong?
-Too bad. Phase gates don't let you go back easily.
+実装中に設計が間違っていると気づいたら？
+残念ながらフェーズゲートが戻るのを許しません。
 ```
 
 OPSX はアクションベースです:
 
 ```
          ┌────────────────────────────────────────┐
-         │           ACTIONS (not phases)         │
+         │        アクション（フェーズではない）   │
          │                                        │
          │     new ◄──► continue ◄──► apply ◄──► archive │
          │      │          │           │           │   │
          │      └──────────┴───────────┴───────────┘   │
-         │              any order                     │
+         │              順不同                        │
          └────────────────────────────────────────┘
 ```
 
@@ -351,20 +348,20 @@ OPSX はアクションベースです:
 
 ```
                         proposal
-                       (root node)
+                       (ルートノード)
                             │
               ┌─────────────┴─────────────┐
               │                           │
               ▼                           ▼
            specs                       design
-        (requires:                  (requires:
+        (依存:                       (依存:
          proposal)                   proposal)
               │                           │
               └─────────────┬─────────────┘
                             │
                             ▼
                          tasks
-                     (requires:
+                     (依存:
                      specs, design)
 ```
 
@@ -429,26 +426,26 @@ openspec status --change add-my-feature
 ### config.yaml の構造
 
 ```yaml
-# Required: Default schema for new changes
+# 必須: 新規変更のデフォルトスキーマ
 schema: spec-driven
 
-# Optional: Project context (max 50KB)
-# Injected into ALL artifact instructions
+# 任意: プロジェクト文脈（最大 50KB）
+# すべてのアーティファクト指示に注入される
 context: |
-  Your project background, tech stack,
-  conventions, and constraints.
+  プロジェクトの背景、技術スタック、
+  規約や制約を記載します。
 
-# Optional: Per-artifact rules
-# Only injected into matching artifacts
+# 任意: アーティファクト別ルール
+# 該当アーティファクトにのみ注入される
 rules:
   proposal:
-    - Include rollback plan
+    - ロールバック計画を含める
   specs:
-    - Use Given/When/Then format
+    - Given/When/Then 形式を使う
   design:
-    - Document fallback strategies
+    - フォールバック戦略を記述する
   tasks:
-    - Break into 2-hour maximum chunks
+    - 2 時間以内の粒度に分割する
 ```
 
 ### スキーマ解決順
@@ -539,17 +536,17 @@ init を実行してクリーンアップを拒否すると、変更を加えず
 ```
 project/
 ├── openspec/
-│   ├── specs/                    # Unchanged
-│   ├── changes/                  # Unchanged
-│   │   └── archive/              # Unchanged
-│   └── config.yaml               # NEW: Project configuration
+│   ├── specs/                    # 変更なし
+│   ├── changes/                  # 変更なし
+│   │   └── archive/              # 変更なし
+│   └── config.yaml               # 新規: プロジェクト設定
 ├── .claude/
-│   └── skills/                   # NEW: OPSX skills
+│   └── skills/                   # 新規: OPSX skills
 │       ├── openspec-explore/
 │       ├── openspec-new-change/
 │       └── ...
-├── CLAUDE.md                     # OpenSpec markers removed, your content preserved
-└── AGENTS.md                     # OpenSpec markers removed, your content preserved
+├── CLAUDE.md                     # OpenSpec マーカーを削除、内容は保持
+└── AGENTS.md                     # OpenSpec マーカーを削除、内容は保持
 ```
 
 ### なくなるもの
@@ -562,11 +559,11 @@ project/
 ### コマンド早見表
 
 ```
-/opsx:new          Start a change
-/opsx:continue     Create next artifact
-/opsx:ff           Create all planning artifacts
-/opsx:apply        Implement tasks
-/opsx:archive      Finish and archive
+/opsx:new          変更を開始
+/opsx:continue     次のアーティファクトを作成
+/opsx:ff           計画アーティファクトを一括生成
+/opsx:apply        タスクを実装
+/opsx:archive      完了してアーカイブ
 ```
 
 ---

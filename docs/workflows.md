@@ -2,10 +2,6 @@
 
 OpenSpec の代表的なワークフローパターンと、使い分けの目安をまとめます。基本的なセットアップは [Getting Started](getting-started.md)、コマンド詳細は [Commands](commands.md) を参照してください。
 
-> [!NOTE]
-> 会話例・出力例のコードブロックは、CLI/プロンプトの日本語文言が確定するまで英語のまま維持します。日本語化が完了した時点で一括更新してください。
-> <!-- OPENSPEC-J:TODO workflows examples -->
-
 ## 哲学: フェーズではなくアクション
 
 従来のワークフローは「計画 → 実装 → 完了」と段階に固定されがちです。しかし実際の作業はもっと行き来します。
@@ -13,14 +9,14 @@ OpenSpec の代表的なワークフローパターンと、使い分けの目�
 OPSX は次のアプローチを取ります:
 
 ```text
-Traditional (phase-locked):
+従来（フェーズ固定）:
 
-  PLANNING ────────► IMPLEMENTING ────────► DONE
+  計画 ────────► 実装 ────────► 完了
       │                    │
-      │   "Can't go back"  │
+      │   "戻れない"        │
       └────────────────────┘
 
-OPSX (fluid actions):
+OPSX（柔軟なアクション）:
 
   proposal ──► specs ──► design ──► tasks ──► implement
 ```
@@ -45,32 +41,32 @@ OPSX (fluid actions):
 **会話例:**
 
 ```text
-You: /opsx:new add-logout-button
+あなた: /opsx:new add-logout-button
 
-AI:  Created openspec/changes/add-logout-button/
-     Ready to create: proposal
+AI:  openspec/changes/add-logout-button/ を作成しました
+     次に作成できます: proposal
 
-You: /opsx:ff
+あなた: /opsx:ff
 
-AI:  Creating all planning artifacts...
+AI:  計画アーティファクトをすべて作成中...
      ✓ proposal.md
      ✓ specs/
      ✓ design.md
      ✓ tasks.md
-     Ready for implementation!
+     実装の準備ができました！
 
-You: /opsx:apply
+あなた: /opsx:apply
 
-AI:  Working through tasks...
-     ✓ Added logout button to header
-     ✓ Implemented session clearing
-     ✓ Added confirmation dialog
-     All tasks complete!
+AI:  タスクを進めています...
+     ✓ ヘッダーにログアウトボタンを追加
+     ✓ セッションのクリアを実装
+     ✓ 確認ダイアログを追加
+     すべてのタスクが完了しました！
 
-You: /opsx:archive
+あなた: /opsx:archive
 
-AI:  ✓ Merged specs
-     ✓ Archived change
+AI:  ✓ 仕様をマージしました
+     ✓ 変更をアーカイブしました
 ```
 
 **向いている場面:** 小〜中規模の機能追加、バグ修正、単純な変更。
@@ -86,41 +82,41 @@ AI:  ✓ Merged specs
 **会話例:**
 
 ```text
-You: /opsx:explore
+あなた: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を探索したいですか？
 
-You: I want to improve page load performance but I'm not sure
-     where the bottlenecks are.
+あなた: ページの読み込み性能を改善したいのですが、
+     どこがボトルネックか分かりません。
 
-AI:  Let me help investigate...
-     [Analyzes bundle sizes, identifies slow queries, reviews
-     component render patterns]
+AI:  一緒に調査しましょう...
+     [バンドルサイズを分析し、遅いクエリを特定し、
+     コンポーネントのレンダリングパターンを確認]
 
-     I found three main bottlenecks:
-     1. Large unoptimized images
-     2. Synchronous data fetching in ProductList
-     3. Re-renders from context changes
+     主なボトルネックは 3 つありました:
+     1. 大きく最適化されていない画像
+     2. ProductList の同期的なデータ取得
+     3. コンテキスト変更による再レンダリング
 
-     Which would you like to address first?
+     どれから対応しますか？
 
-You: Let's tackle the data fetching issue.
+あなた: データ取得の問題から着手しましょう。
 
-You: /opsx:new optimize-product-list-fetching
+あなた: /opsx:new optimize-product-list-fetching
 
-AI:  Created change. Ready to create: proposal
+AI:  変更を作成しました。次に作成できます: proposal
 
-You: /opsx:continue
+あなた: /opsx:continue
 
-AI:  Creating proposal based on our exploration...
-     [Writes proposal incorporating investigation insights]
+AI:  探索結果を基に proposal を作成中...
+     [調査の知見を取り込んだ proposal を作成]
 
-     Ready to create: specs, design
-     Which would you like next?
+     次に作成できます: specs, design
+     どれを先に作成しますか？
 
-You: /opsx:continue
+あなた: /opsx:continue
 
-AI:  Creating specs...
+AI:  specs を作成中...
 ```
 
 **向いている場面:** 性能最適化、デバッグ、アーキテクチャ判断、要件が不明確なとき。
@@ -140,32 +136,32 @@ Change B: /opsx:new ──► /opsx:ff ──────► /opsx:apply
 **会話例:**
 
 ```text
-You: I'm working on add-dark-mode but got pulled into a bug fix
+あなた: add-dark-mode を進めていたのですが、バグ修正に呼ばれました
 
-You: /opsx:new fix-login-redirect
+あなた: /opsx:new fix-login-redirect
 
-AI:  Created openspec/changes/fix-login-redirect/
+AI:  openspec/changes/fix-login-redirect/ を作成しました
 
-You: /opsx:ff
+あなた: /opsx:ff
 
-AI:  ✓ Created planning artifacts
+AI:  ✓ 計画アーティファクトを作成しました
 
-You: /opsx:apply
+あなた: /opsx:apply
 
-AI:  Working on fix-login-redirect...
-     [Implements the fix]
-     All tasks complete!
+AI:  fix-login-redirect を実装中...
+     [修正を実装]
+     すべてのタスクが完了しました！
 
-You: /opsx:archive
+あなた: /opsx:archive
 
-AI:  ✓ Archived fix-login-redirect
+AI:  ✓ fix-login-redirect をアーカイブしました
 
-You: Let's get back to dark mode
+あなた: ダークモードに戻ります
 
-You: /opsx:apply add-dark-mode
+あなた: /opsx:apply add-dark-mode
 
-AI:  Resuming add-dark-mode...
-     Picking up at task 2.3: Update Header...
+AI:  add-dark-mode を再開します...
+     タスク 2.3 から再開: Update Header...
 ```
 
 **向いている場面:** 並行作業、緊急対応の割り込み、チーム協業。
@@ -173,27 +169,27 @@ AI:  Resuming add-dark-mode...
 複数の完了済み変更がある場合は `/opsx:bulk-archive` を使います:
 
 ```text
-You: /opsx:bulk-archive
+あなた: /opsx:bulk-archive
 
-AI:  Found 3 completed changes:
-     - add-dark-mode (all tasks done)
-     - fix-login-redirect (all tasks done)
-     - update-footer (all tasks done)
+AI:  完了済みの変更が 3 件見つかりました:
+     - add-dark-mode (全タスク完了)
+     - fix-login-redirect (全タスク完了)
+     - update-footer (全タスク完了)
 
-     Checking for spec conflicts...
-     ⚠ add-dark-mode and update-footer both touch specs/ui/
+     仕様の競合を確認中...
+     ⚠ add-dark-mode と update-footer がどちらも specs/ui/ を更新しています
 
-     Inspecting codebase to resolve...
-     Both changes are implemented. Will apply in chronological order.
+     コードベースを確認して解消中...
+     両方の変更は実装済みです。時系列順に適用します。
 
-     Archive all 3 changes?
+     3 件すべてをアーカイブしますか？
 
-You: Yes
+あなた: はい
 
-AI:  ✓ Archived add-dark-mode
-     ✓ Archived fix-login-redirect
-     ✓ Archived update-footer
-     Specs merged in order: add-dark-mode → update-footer
+AI:  ✓ add-dark-mode をアーカイブしました
+     ✓ fix-login-redirect をアーカイブしました
+     ✓ update-footer をアーカイブしました
+     仕様は次の順序でマージされました: add-dark-mode → update-footer
 ```
 
 一括アーカイブは、複数の変更が同じ仕様に触れている場合に競合を検出し、実装状況を見て解消します。
@@ -205,8 +201,8 @@ AI:  ✓ Archived add-dark-mode
 ```text
 /opsx:apply ──► /opsx:verify ──► /opsx:archive
                     │                 │
-              validates          prompts to sync
-              implementation     if needed
+              実装を検証          必要なら同期を促す
+              整合性チェック      同期の確認
 ```
 
 #### Verify: 作業の確認
@@ -214,34 +210,34 @@ AI:  ✓ Archived add-dark-mode
 `/opsx:verify` は、アーティファクトに対する実装の整合性を 3 つの観点で検証します。
 
 ```text
-You: /opsx:verify
+あなた: /opsx:verify
 
-AI:  Verifying add-auth...
+AI:  add-auth を検証中...
 
-     COMPLETENESS
-     ✓ All 12 tasks in tasks.md are checked
-     ✓ All requirements in specs have corresponding code
-     ⚠ Scenario "Session timeout after inactivity" not tested
+     完了度
+     ✓ tasks.md の 12 件のタスクがすべてチェック済み
+     ✓ specs の全要件に対応するコードがある
+     ⚠ シナリオ「無操作によるセッションタイムアウト」が未テスト
 
-     CORRECTNESS
-     ✓ Implementation matches spec intent
-     ✓ Edge cases from scenarios are handled
-     ✓ Error states match spec definitions
+     正確性
+     ✓ 実装が仕様の意図と一致
+     ✓ シナリオ由来のエッジケースに対応
+     ✓ エラー状態が仕様定義と一致
 
-     COHERENCE
-     ✓ Design decisions reflected in code structure
-     ✓ Naming conventions consistent with design.md
-     ⚠ Design mentions "event-driven" but implementation uses polling
+     整合性
+     ✓ 設計判断がコード構造に反映
+     ✓ 命名規約が design.md と一致
+     ⚠ 設計では "event-driven" とあるが実装は polling
 
-     SUMMARY
+     概要
      ─────────────────────────────
-     Critical issues: 0
-     Warnings: 2
-     Ready to archive: Yes (with warnings)
+     重大問題: 0
+     警告: 2
+     アーカイブ可能: はい（警告あり）
 
-     Recommendations:
-     1. Add test for session timeout scenario
-     2. Consider refactoring to event-driven as designed, or update design.md
+     推奨事項:
+     1. セッションタイムアウトのシナリオにテストを追加
+     2. 設計どおり event-driven にリファクタするか、design.md を更新
 ```
 
 **verify が見る観点:**
@@ -259,25 +255,25 @@ verify はアーカイブをブロックしませんが、先に対応した方�
 `/opsx:archive` は変更を完了し、アーカイブへ移動します。
 
 ```text
-You: /opsx:archive
+あなた: /opsx:archive
 
-AI:  Archiving add-auth...
+AI:  add-auth をアーカイブ中...
 
-     Artifact status:
-     ✓ proposal.md exists
-     ✓ specs/ exists
-     ✓ design.md exists
-     ✓ tasks.md exists (12/12 tasks complete)
+     アーティファクトの状態:
+     ✓ proposal.md が存在
+     ✓ specs/ が存在
+     ✓ design.md が存在
+     ✓ tasks.md が存在（12/12 タスク完了）
 
-     Delta specs: Not yet synced to main
-     → Would you like to sync now?
+     差分仕様: まだ main に同期されていません
+     → 今同期しますか？
 
-You: Yes
+あなた: はい
 
-AI:  ✓ Synced specs to openspec/specs/auth/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-auth/
+AI:  ✓ 仕様を openspec/specs/auth/spec.md に同期しました
+     ✓ openspec/changes/archive/2025-01-24-add-auth/ に移動しました
 
-     Change archived successfully.
+     変更をアーカイブしました。
 ```
 
 アーカイブ時に仕様が同期されていなければ確認が入ります。未完了タスクがあってもブロックはしませんが警告が出ます。
@@ -316,22 +312,21 @@ AI:  ✓ Synced specs to openspec/specs/auth/spec.md
 
 ```text
                      ┌─────────────────────────────────────┐
-                     │     Is this the same work?          │
+                     │            同じ作業か？             │
                      └──────────────┬──────────────────────┘
                                     │
                  ┌──────────────────┼──────────────────┐
                  │                  │                  │
                  ▼                  ▼                  ▼
-          Same intent?      >50% overlap?      Can original
-          Same problem?     Same scope?        be "done" without
-                 │                  │          these changes?
+          目的は同じ？       重複が 50% 以上？     これらの変更なしで
+          課題は同じ？       スコープは同じ？       元の作業は「完了」できる？
                  │                  │                  │
        ┌────────┴────────┐  ┌──────┴──────┐   ┌───────┴───────┐
        │                 │  │             │   │               │
-      YES               NO YES           NO  NO              YES
+      はい              いいえ はい       いいえ いいえ        はい
        │                 │  │             │   │               │
        ▼                 ▼  ▼             ▼   ▼               ▼
-    UPDATE            NEW  UPDATE       NEW  UPDATE          NEW
+      更新              新規 更新        新規 更新           新規
 ```
 
 **例: "Add dark mode"**
@@ -357,21 +352,21 @@ AI:  ✓ Synced specs to openspec/specs/auth/spec.md
 変更を始める前に問題空間を探索します。
 
 ```text
-You: /opsx:explore
+あなた: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を探索したいですか？
 
-You: How should we handle rate limiting for our API?
+あなた: API のレート制限はどう扱うべきですか？
 
-AI:  Let me investigate your current setup and options...
-     [Researches codebase, considers patterns]
+AI:  現在の構成と選択肢を調べます...
+     [コードベースを調査し、パターンを検討]
 
-     I see three approaches we could take:
-     1. Middleware-based (simple, per-endpoint)
-     2. Redis-backed (scalable, shared state)
-     3. Token bucket per user (fair, complex)
+     取り得るアプローチは 3 つあります:
+     1. ミドルウェア方式（シンプル、エンドポイント単位）
+     2. Redis 方式（スケーラブル、共有状態）
+     3. ユーザー単位のトークンバケット（公平、複雑）
 
-     Your current stack suggests #1 or #2. What's your scale?
+     現在のスタックなら 1 か 2 が有力です。規模はどの程度ですか？
 ```
 
 探索で考えを整理してからアーティファクトを作ると効率的です。
@@ -381,15 +376,15 @@ AI:  Let me investigate your current setup and options...
 `/opsx:verify` で実装とアーティファクトの整合性を確認します。
 
 ```text
-You: /opsx:verify
+あなた: /opsx:verify
 
-AI:  Verifying add-dark-mode...
+AI:  add-dark-mode を検証中...
 
-     ✓ All tasks in tasks.md are checked
-     ✓ Requirements in specs have corresponding code
-     ✓ Design decisions are reflected in implementation
+     ✓ tasks.md の全タスクがチェック済み
+     ✓ specs の要件に対応するコードがある
+     ✓ 設計判断が実装に反映されている
 
-     Ready to archive!
+     アーカイブ可能です！
 ```
 
 アーカイブ前にズレを発見できます。
@@ -399,7 +394,7 @@ AI:  Verifying add-dark-mode...
 `openspec list` を見たときに内容が分かる名前を付けます。
 
 ```text
-Good:                          Avoid:
+良い例:                         避けたい例:
 add-dark-mode                  feature-1
 fix-login-redirect             update
 optimize-product-query         changes

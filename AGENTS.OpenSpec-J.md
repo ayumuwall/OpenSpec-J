@@ -444,13 +444,9 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - test/の翻訳
 - docs/内コードブロックの翻訳
 - 規範文ルール追加
-- パッケージ名を @ayumuwall/openspec に統一し、GitHub/Docs/CLI/フィードバック先を ayumuwall/OpenSpec-J に更新
-- README の GitHub/Downloads バッジを整理し、Codex 向け注記を OPENSPEC-J:NOTE で追加
-- AGENTS.OpenSpec-J.md のパッケージ名・リンク方針を更新
 
 #### テスト状況
-- `pnpm test` はタイムアウト（PostHog 通信エラーが出る環境）
-- `pnpm vitest run test/core/command-generation/adapters.test.ts` を実行（pass）
+- 全テストをパス　(59ファイル / 1190 パス)
 
 ### 2026-01-29
 
@@ -466,38 +462,6 @@ git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作
 - docs 一式を日本語化（CLI/コマンド/コンセプト/カスタマイズ/インストール/移行/多言語/OPSX/対応ツール/Getting Started/Workflows）。
 - 出力例や会話例のコードブロックは英語維持の注記（`OPENSPEC-J:TODO`）を追加。
 - `LOCALIZATION-NOTES.md` に v1.0.2 のオンボーディングスキル追加に伴う構造更新メモを追記。
-
-#### テスト状況
-- 未実施
-
-### 2026-01-23
-
-#### 実施したこと
-- README と docs のコードブロック内に残る英文の翻訳を調整。
-- README の対話例ラベルを日本語化。
-- docs のスキーマ/リリース計画/カスタマイズ例の英文を日本語化。
-- README/docs のコードブロック内英文チェックを運用ルールに追記。
-- README の OpenSpec-J 補足マーカー追加とソース・オブ・トゥルース注記を復元。
-- `upstream-sync-v0.23.0.md` のチェック項目を追加。
-- CHANGELOG に v0.23.0-1 の [OpenSpec-J] 項目を追記。
-- ダッシュボード画像を差し替え。
-- 本体バージョン表記を `0.23.0-1` に更新。
-
-#### テスト状況
-- `pnpm test` を実行（52ファイル / 1022 パス）
-
-### 2026-01-22
-
-#### 実施したこと
-- feedback/schema の CLI 文言と補完の日本語化、config 警告/コメントの日本語化を反映。
-- instruction-loader/resolver のエラー文日本語化と関連テスト期待値を更新。
-- bulk-archive/feedback スキル文の日本語化を反映。
-- `docs/project-config-demo.md` と `scripts/README.md` を日本語化。
-- v0.23.0 を前提に、規範文の語尾/括弧ルールをテンプレート・スキーマ・配布AGENTSに追記し、bulk-archive/verify スキル指示を復旧。
-- validator の英語トリガーとデルタ関連ガイドを定数化（`VALIDATION_MESSAGES`）し、日本語・英語双方のテストを追加。
-- AGENTS テンプレートの英語ラベルを日本語化（影響する仕様/コード、理由/移行方法、決定/検討した代替案）。
-- `README.md` の同期元バージョン表記を v0.23.0 に更新。
-- `upstream-sync-v0.23.0.md` に README 同期元更新の作業指示を追加。
 
 #### テスト状況
 - 全テストをパス　(52ファイル / 1022 パス)
