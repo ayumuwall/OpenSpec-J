@@ -1,95 +1,268 @@
-# OpenSpec-J Coding Agent Instructions  
-（Fission-AI/OpenSpec 日本語フォーク用 メタ仕様）
+# OpenSpec-J upstream 追従ガイド（統合版）
 
-このファイルは、Fission-AI/OpenSpec をフォークして作成された  
-**OpenSpec-J** リポジトリの開発・保守のための、AI コーディングアシスタント向けガイドです。
+このファイルは、OpenSpec-J の upstream 追従作業に必要な
+**方針（翻訳ポリシー）と手順（実作業フロー）を記述**したものです。
+**追従作業開始時はこのファイルだけを読めば十分**な状態を目指しています。
 
-重要な前提：
-
-- **upstream 由来のファイル構成は変更しません。**
-  - ルート: `AGENTS.md`（元の OpenSpec のまま）
-  - `openspec/AGENTS.md` / `openspec/project.md` は **ユーザー配布テンプレートとして日本語化を行う**
-- この `AGENTS.OpenSpec-J.md` は **追加のメタ仕様** です。
-  - Codex / GPT による自動探索では読まれないため、
-  - **開発セッションの最初に人間の開発者が「まずこのファイルを読んで」と指示すること** を前提にしています。
-
-あなた（コーディングエージェント）は：
-
-1. ルート `AGENTS.md` は **upstream OpenSpec の仕組み・構成の参照情報** として読む。
-   - ローカライズ作業の **手順指示としては扱わない**。
-   - `openspec/AGENTS.md` と `openspec/project.md` は **ユーザー配布テンプレート**として翻訳・更新対象に含める。
-2. この `AGENTS.OpenSpec-J.md` を **OpenSpec-J 独自の方針・翻訳ルール・運用ルール** として上乗せして従う。
-3. 参照情報（upstream 文書）と本ファイルの指示が食い違う場合は、  
-   - 仕様・挙動の互換性判断 → upstream を参照  
-   - ローカライズ作業の手順・運用 → 本ファイルを優先  
-   とし、必要なら人間の開発者に確認する。
-
-4. **すべてのチャット／回答は日本語で行うこと。**  
-   - 明示的に他言語を指定された場合のみ切り替える。  
-   - 要約・テスト結果報告・提案なども基本的に日本語で記述する。
+※ `skills/` は自動認識されないため、作業開始前に有効化の確認が必要です。
 
 ---
 
-## 0. このファイルの扱い方（エージェント向けメタ指示）
+## 0. 基本方針（必ず守る）
 
-### 読み込み順と優先度
+### 0.1 ゴール
 
-開発セッションを開始するとき、人間の開発者はあなたに対しておおよそ以下のように指示します：
+1. **OpenSpec の仕様・挙動は upstream と同一に保つ**
+2. **日本語話者にとっての体験を向上**
+3. **upstream 追従がしやすい構成を維持**
 
-> 1. ルートの `AGENTS.md` を読み込んでください。  
-> 2. `openspec/AGENTS.md` を読み込んでください。  
-> 3. `AGENTS.OpenSpec-J.md` を読み込んでください。
+### 0.2 変更してはいけないもの
 
-この指示を受け取ったら、あなたは次のように振る舞ってください。
+- パッケージ名は `@ayumuwall/openspec`
+- GitHub リンクは `ayumuwall/OpenSpec-J`
+- CLI のサブコマンド名・フラグ名・引数シグネチャ
+  - 例: `openspec init`, `openspec list`, `openspec validate --strict --json`
+- ディレクトリ構造
+- CLI の JSON 出力形式・機械可読なインターフェース
 
-1. **読み取り専用として扱うファイル**
-   - `AGENTS.md`（ルート）
-   - デフォルトでは **このファイルは編集してはいけません**。
-   - 人間の開発者から明示的に「中身を編集して」と言われた場合にだけ変更します。
+**上記に関する仕様は upstream を真とする。**
 
-2. **必要に応じて編集してよいファイル**
-   - `AGENTS.OpenSpec-J.md`（このファイル）
-   - `openspec/AGENTS.md`（ユーザー配布テンプレート）
-   - `openspec/project.md`（ユーザー配布テンプレート）
-   - ただし、本ファイルを編集するときは必ず以下のフローに従ってください：
-     1. 現在の内容を簡潔に要約する
-     2. 変更案をテキストで提案する（どのセクションのどこをどう変えるか）
-     3. 人間の開発者の明確な承認を得る
-     4. その後、差分に沿って編集のコードを生成する
+### 0.3 翻訳対象の原則
 
-3. **指示が矛盾した場合の扱い**
-   - upstream の AGENTS (`AGENTS.md` / `openspec/AGENTS.md`) と  
-     この `AGENTS.OpenSpec-J.md` の指示が矛盾する場合：
-     - OpenSpec の機能・仕様・挙動 → upstream 側を優先
-     - 翻訳 / 日本語体験 / ローカライズ戦略 → 本ファイルを優先
-   - チャットで与えられた一時的な指示が上記と矛盾する場合：
-     - その場で人間の開発者に確認する（勝手にどちらかを無視しない）
+- `/openspec/` 配下は **すべて翻訳対象外**。
+- `/test/` など配布物に含まれないファイルは原則翻訳対象外（日本語版テスト検証に必要な場合のみ変更）。
+- 変更してよいのは **人間が読むテキスト** のみ。
+  - README / docs / コメント
+  - CLI の description / help / エラーメッセージ / プロンプト
+  - 生成テンプレート内の説明文・ラベル・ガイド文
 
-### ローカライズ作業の運用（OpenSpec 手順は使わない）
+### 0.4 OPSX の位置づけ（v1.0.0〜）
 
-- 本リポジトリのローカライズ作業では OpenSpec の変更提案フローや `openspec` 手順は使わない。
-- `AGENTS.md` は **指示ではなく参照情報** として扱う。
-- `openspec/AGENTS.md` と `openspec/project.md` は **ユーザー配布テンプレート**として翻訳・更新対象に含める。
-- `test/` など配布物に含まれないファイルは原則翻訳対象外。日本語版テスト検証に必要な場合のみ翻訳・調整する。
-- 実際の作業指示は本ファイルと人間の開発者の指示に従う。
+- OPSX ワークフローがデフォルト。
+- `openspec init` が OPSX スキル生成まで担う。
+- `openspec experimental` は互換エイリアス（非推奨）。
 
-### コミットメッセージ運用（強制）
+### 0.5 チャット/コミュニケーション
 
-**原則**: Title/Desc 構造を必須とし、本文は日本語、先頭タグは英語 Conventional Commits を使う。
+- すべて日本語で記述する。
 
-1) Title（件名）
+### 0.6 スキル有効化（必須）
+
+- リポジトリ内の `skills/` は **Codex が自動認識しない**。
+- 作業開始前に、**ユーザーに「スキルを有効化済みか」を必ず確認**する。
+- 未有効化の場合は、`skills/` を `~/.codex/skills/` 配下へ **手動コピー** または **シンボリックリンク**してもらう。
+- **未有効化のままだとセッションメモが作成されない**ことを必ず伝える。
+
+例:
+```
+mkdir -p ~/.codex/skills
+ln -s <repo>/skills/* ~/.codex/skills/
+```
+
+手動コピー例:
+```
+mkdir -p ~/.codex/skills
+cp -R <repo>/skills/* ~/.codex/skills/
+```
+※ 既存スキルがある場合は上書きに注意する。
+
+---
+
+## 1. 翻訳ポリシー
+
+### 1.1 レイヤー別方針
+
+1. **レイヤー1：docs（ドキュメント）**
+   - 対象: `README.md` / `docs/` / `CHANGELOG.md`
+   - `README_OLD.md` は更新しない（残す）。
+2. **レイヤー2：schemas / OPSX スキル / コマンド生成**
+   - schemas: `schemas/**`（テンプレート文言の翻訳対象）
+   - OPSX スキル: `src/core/templates/skill-templates.ts`（スラッシュコマンド文言のみ）
+   - コマンド生成: `src/core/command-generation/**`（ユーザー向け文言のみ）
+3. **レイヤー3：CLI / init・オンボーディング / artifact engine**
+   - CLI: `src/cli/**`, `src/commands/**`
+   - init・オンボーディング: `src/core/init.ts`, `src/core/shared/**`, `src/ui/**`, `src/prompts/**`（ユーザー向け文言のみ）
+   - artifact engine: `src/core/artifact-graph/**`（ユーザー向け文言のみ）
+
+### 1.2 テンプレート翻訳のルール
+
+- 見出しやキーワード（パーサ依存）は変更しない。
+  - 例: `## ADDED Requirements`
+- 見出しは英語のまま、本文だけ日本語化する。
+- Scenario フォーマットは維持。
+
+### 1.3 CLI メッセージ翻訳のルール
+
+- コマンド名・フラグは翻訳しない。
+- エラーコードや識別子は変更しない。
+
+### 1.4 用語集（優先訳）
+
+- Spec-driven development → 仕様駆動開発
+- spec → 仕様
+- change → 変更
+- change proposal → 変更提案
+- spec delta → 仕様差分
+- source-of-truth spec → ソース・オブ・トゥルース仕様 / 単一の真実の仕様
+- capability → 機能
+- tasks → タスク
+- archive (動詞) → アーカイブする
+- apply (動詞) → 適用する
+- scaffold (動詞) → ひな形を作成する（テンプレートを生成する）
+- validate → 検証する
+- workflow → ワークフロー
+- requirements → 要件
+- scenario → シナリオ
+- strict validation → 厳密検証
+- user journey → ユーザー体験の流れ
+
+---
+
+## 2. upstream 追従フロー（作業手順）
+
+### 2.0 事前確認
+
+```
+node -v
+git status -sb
+git remote -v
+```
+
+- Node.js 要件（例: `>= 20.19.0`）を満たす
+- 作業ブランチが clean
+- `upstream` が Fission-AI/OpenSpec を指している
+
+### 2.1 upstream を main に取り込む（タグ同期）
+
+```
+git checkout main
+git fetch upstream --tags
+git merge vX.Y.Z
+git tag -a upstream-vX.Y.Z -m "upstream vX.Y.Z"
+```
+
+- **必ずリリースタグで取り込む。** `upstream/main` は使わない。
+
+### 2.2 差分の収集と分類
+
+```
+mkdir -p diffs
+git diff --name-status upstream-vA.B.C upstream-vX.Y.Z > diffs/upstream-vA.B.C__upstream-vX.Y.Z.files.txt
+git diff upstream-vA.B.C upstream-vX.Y.Z > diffs/upstream-vA.B.C__upstream-vX.Y.Z.diff
+```
+
+- 前バージョンの作業用に生成した `diffs/` 配下のファイルは削除してから新規作成する
+- `diffs/upstream-vA.B.C__upstream-vX.Y.Z.files.txt` のリストを分類し、`diffs/upstream-vA.B.C__upstream-vX.Y.Z.scope.md` にまとめる（以下の様式）。
+  - 各項目の先頭は `- [ ]`（進捗管理用）
+  - 末尾に **翻訳対象外** セクションを作る（チェックボックスは付けない）
+
+```
+# Scope (upstream-vA.B.C → upstream-vX.Y.Z)
+
+※ 進捗管理用。各項目の `- [ ]` を更新して利用する。
+
+## docs
+
+- [ ] M README.md
+- [ ] A docs/...
+
+## schemas
+
+- [ ] M schemas/...
+
+## OPSX スキル
+
+- [ ] M src/core/templates/skill-templates.ts
+
+## artifact engine
+
+- [ ] M src/core/artifact-graph/...
+
+## コマンド生成
+
+- [ ] A src/core/command-generation/...
+
+## init・オンボーディング
+
+- [ ] M src/core/init.ts
+
+## CLI
+
+- [ ] M src/cli/index.ts
+
+## その他
+
+- [ ] M package.json
+
+## 翻訳対象外
+
+A openspec/changes/...
+M test/...
+```
+
+### 2.3 ja-docs に切り替え
+
+```
+git checkout ja-docs
+git merge main
+```
+
+### 2.4 ローカライズ反映（差分を最小に）
+
+優先順:
+1. `README.md` などドキュメント
+2. schemas/テンプレート（`schemas/**`）
+3. OPSX スキルテンプレート（`src/core/templates/skill-templates.ts`）
+4. アーティファクトエンジン・初期化フローのユーザー向け文言
+5. CLI メッセージ
+6. その他
+7. テスト期待値
+
+実施ポイント:
+- `scope.md` のチェックボックスを進捗の唯一の記録として更新する
+  - すべて完了したら次工程へ進む
+- 変更箇所のみ翻訳し、未変更箇所は現行を維持
+- コマンド名・フラグ・ファイルパスは翻訳しない
+- `OPENSPEC-J:NOTE` を維持
+- README_OLD.md は同期対象外
+- 翻訳対象外（/openspec/, /test/ など）は編集しない
+- 翻訳が一通り終わったら `LOCALIZATION-NOTES.md` を確認し、**文字列置換では解消できないロジック変更**の有無を点検
+
+### 2.5 検証
+
+```
+pnpm test
+node bin/openspec.js --help
+node bin/openspec.js init /tmp/openspec-j-init
+node bin/openspec.js validate --strict
+```
+
+- 主要コマンドのヘルプ文言を目視確認
+- テンプレート生成が日本語で崩れていないか確認
+- `openspec init` で OPSX スキル生成が行われることを確認
+
+### 2.6 仕上げ（記録とタグ）
+
+```
+git checkout ja-docs
+git tag -a openspec-j-vX.Y.Z -m "OpenSpec-J vX.Y.Z"
+```
+
+- `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
+- `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
+
+---
+
+## 3. コミット運用
+
+### 3.1 コミットメッセージ
 
 - 形式: `<type>(<scope>): <title>`（scope 任意）
-- type は Conventional Commits: `feat` | `fix` | `docs` | `refactor` | `perf` | `test` | `build` | `ci` | `chore` | `style` | `revert`
-- 1 行・50 文字以内、末尾句読点なし、命令形/現在形で「何をするか」を簡潔に。
-- 破壊的変更は `type!:` とし、Desc に `BREAKING CHANGE:` セクションを入れる。
-- 例: `fix: 空の変更/仕様でスピナーが止まらない問題を回避` / `feat: openspec view の概要出力を日本語化`
+- type: `feat` | `fix` | `docs` | `refactor` | `perf` | `test` | `build` | `ci` | `chore` | `style` | `revert`
+- 50 文字以内、命令形/現在形、末尾句読点なし
+- 本文は日本語、先頭タグのみ英語
 
-2) Desc（本文 / Body）
-
-- Title の後ろに空行 1 行を入れて本文を開始。
-- 各行は目安 72 文字で改行。Markdown の箇条書き可。
-- 原則テンプレート（必要に応じて省略可、ただし「何を/なぜ/どう検証/影響」は入れる）:
+本文テンプレート:
 ```
 主な変更:
 - ～
@@ -105,363 +278,11 @@
 
 互換性:
 - 破壊的変更なし
-# 破壊的変更がある場合は下行を使用
 # BREAKING CHANGE:
 # - ～
 
 関連:
 - Issue: #123
-- PR: <link があれば>
-- 参考: <設計/議論へのリンク等>
+- PR: <link>
+- 参考: <link>
 ```
-
-- 英文のみのコミットは禁止。本文は日本語で、先頭タグだけ英語（Conventional Commits）。
-
----
-
-### CHANGELOG タグ運用
-
-- `[OpenSpec-J]` は **本ローカライズ作業で生まれた変更** を示すタグとして使用する。
-- upstream 由来の変更点はタグを付けず、本文の箇条書きで記述する。
-
----
-
-## 1. プロジェクトのゴールと範囲
-
-### ゴール
-
-OpenSpec-J の目的は、次の 3 点です。
-
-1. **OpenSpec の仕様・挙動そのものは upstream と同じに保つ**  
-   - コマンド名・フラグ・ファイル構造・JSON スキーマなどは変更しない。
-2. **日本語話者にとっての開発体験を向上させる**
-   - ドキュメント（README / docs）が日本語で読める。
-   - `openspec init` などで生成されるテンプレートの文章が日本語で理解しやすい。
-   - CLI のヘルプやエラー文が日本語で表示される（英語併記も可）。
-3. **upstream のアップデートに追従しやすい構成に保つ**
-   - 差分を最小にし、追従時に何を更新すればよいかが明確であること。
-
-### 守るべき制約（絶対に壊してはいけないもの）
-
-AI コーディングアシスタントとして、以下は **変更してはいけません**。
-
-- パッケージ名は@ayumuwall/openspecとする。github関係のリンクはayumuwall/OpenSpec-Jを向くようにする。
-- CLI のサブコマンド名・フラグ名・引数のシグネチャ  
-  - 例：`openspec init`, `openspec list`, `openspec validate --strict --json`
-- `openspec/` ディレクトリ構造
-  - `openspec/project.md`
-  - `openspec/AGENTS.md`（ユーザーのプロジェクトに生成されるもの）
-  - `openspec/specs/`
-  - `openspec/changes/`
-- CLI の JSON 出力形式・機械可読なインターフェース
-- 上記に関する仕様は **upstream の AGENTS.md / openspec/AGENTS.md を真とする**
-
-変更してよいのは、原則として **人間が読むテキスト** です。
-
-- README / docs / コメント
-- CLI の description / help / エラーメッセージ / プロンプト
-- 生成テンプレート内の説明文・ラベル・ガイド文
-
----
-
-## 2. レイヤー別のローカライズ方針
-
-OpenSpec-J でのローカライズは、次の 3 レイヤーに分けて考えます。
-
-1. **レイヤー1：ドキュメント（GitHub / 開発者向け）**
-2. **レイヤー2：生成テンプレート（ユーザーのプロジェクトに入る）**
-3. **レイヤー3：CLI メッセージ（実行時の UX）**
-
-### /openspec 配下の扱い（翻訳対象外）
-
-- `/openspec` 配下のドキュメントや仕様は、上流が OpenSpec を使って開発している名残のため、**ローカライズ対象外**とする。
-- ただし、**`openspec/AGENTS.md` と `openspec/project.md` はユーザー配布テンプレートのため翻訳対象とする。**
-- それ以外は英語のまま維持し、差分同期時も翻訳は行わない。
-
-### 2.1 レイヤー1：ドキュメント
-
-対象：
-
-- `README.md`（日本語版、OpenSpec-J で追加・維持する）
-- `docs/` 配下のガイド（あれば）
-
-方針：
-
-1. `README.md` は upstream をベースに維持しつつ、OpenSpec-J 独自の説明を最小限追記する。
-2. `README.md` を **日本語のエントリーポイント** として用意する。
-   - 冒頭で「OpenSpec-J は Fission-AI/OpenSpec の日本語フォーク」であること。
-   - 対応している upstream バージョン（例：`OpenSpec v0.x.y 時点`）を明記。
-3. 英語→日本語への翻訳は直訳ではなく、
-   - 「OpenSpec を初めて触る日本語開発者」に自然な文章を優先する。
-   - 用語は後述の「用語集」を優先する。
-
-エージェントは：
-
-- upstream の README 更新を検知したら、その差分を README.md に反映するタスクを提案する。
-- 翻訳編集時、コマンド名・ファイルパスは変更しない。
-- README.md / docs のコードブロック内に残る英文の翻訳を確認する（コマンド/パス/必須キーワードは維持）。
-- 既存文の修正が入った場合は、過去の日本語訳を参照し、語調と表現をそろえる。
-
----
-
-### 2.2 レイヤー2：生成テンプレート
-
-対象（典型例）：
-
-- ユーザープロジェクトに生成される `openspec/project.md`
-- ユーザープロジェクトに生成される `openspec/AGENTS.md`
-- 変更作成時の `proposal.md` / `tasks.md` / `spec.md` などの Markdown テンプレート
-
-方針：
-
-1. テンプレートのソース位置を特定する（`src/templates/` 等）。
-2. 「構造とパーサに必要な要素」は維持しつつ、日本語化する。
-
-   - 見出し構造例：
-     - `## Why`
-     - `## What Changes`
-     - `## Impact`
-   - これらの見出しは、可能な限り **英語のまま維持** する。
-   - 代わりに、その下の本文・説明・箇条書きを日本語で書く。
-   - Scenario フォーマットも同様：
-     - `#### Scenario: ...`
-     - `- **WHEN** ...`
-     - `- **THEN** ...`
-
-3. OpenSpec のパーサが依存している見出しやキーワード  
-   （例：`## ADDED Requirements` など）は **絶対に変更しない**。
-
-4. ユーザープロジェクト側 `openspec/AGENTS.md` については：
-   - 上部に日本語の説明・ガイドラインを追加し、
-   - 必要に応じて英語原文も残す（二言語併記でもよい）。
-
-5. テンプレート変更後は必ず、以下を実行する：
-   - `openspec init` 相当（テスト or CLI）でテンプレ生成を試す。
-   - 生成物を `openspec validate --strict` で検証する。
-   - 日本語文が崩れていないか目視確認する。
-
----
-
-### 2.3 レイヤー3：CLI メッセージ
-
-対象：
-
-- `openspec` コマンドのヘルプ・description 文
-- エラー文・警告文・対話プロンプト
-- `init`, `list`, `validate`, `archive` など主要コマンド出力
-
-方針：
-
-1. **コマンド名やフラグは翻訳しない。**
-   - 例：`openspec validate --strict --json` はそのまま。
-   - 日本語メッセージ側で説明を補う。
-
-   2. ヘルプテキストは次のいずれかの形にする：
-      - 英語 + 日本語（括弧書きなどで併記）
-      - あるいは日本語メイン + 簡潔な英語補足
-
-      例：
-
-   ```text
-   Validate OpenSpec changes and specs (OpenSpec の変更と仕様を検証します)
-   ```
-
-3. エラーメッセージは、日本語で原因と対処がわかるように書く。
-
-   * 必要に応じて `[original: ...]` で英語原文を短く添えてもよい。
-   * エラーコードや識別子（`ERR_***` など）は変更しない。
-
-4. 対話プロンプト（`init` ウィザードなど）では：
-
-   * ステップ説明を日本語で明確にする。
-   * 選択肢のラベルは、日本語 + 固有名は英語のまま。
-
-5. CLI メッセージ変更後は、少なくとも以下を確認する：
-
-   * `openspec --help`
-   * 主要サブコマンドの `--help`
-   * 代表的な成功ケース・エラーケースでメッセージを目視確認。
-
----
-
-## 3. 翻訳ポリシーと用語集
-
-### トーン・スタイル
-
-* 想定読者：
-
-  * 普段から英語の技術文書を読むが、日本語のほうが理解が早い開発者。
-* 文体：
-
-  * ドキュメント：です・ます調。
-  * CLI メッセージ：やや簡潔な常体でもよいが、ぶっきらぼうにしない。
-* 優先順：
-
-  1. 正確さ（upstream と意味が同じであること）
-  2. 簡潔さ（冗長にしない）
-  3. 日本語として自然であること
-
-### 用語集（優先して使う訳語）
-
-次の訳語を優先する。既存の日本語がこのポリシーと違っていたら、可能な範囲で合わせてよい。
-
-* Spec-driven development → **仕様駆動開発**
-* spec → 仕様
-* change → 変更
-* change proposal → 変更提案
-* spec delta → 仕様差分
-* source-of-truth spec → ソース・オブ・トゥルース仕様 / 単一の真実の仕様
-* capability → 機能
-* tasks → タスク
-* archive (動詞) → アーカイブする
-* apply (動詞) → 適用する
-* scaffold (動詞) → ひな形を作成する（テンプレートを生成する）
-* validate → 検証する
-* workflow → ワークフロー
-* requirements → 要件
-* scenario → シナリオ
-* strict validation → 厳密検証
-* user journey → ユーザー体験の流れ
-
----
-
-## 4. upstream 同期とブランチ運用
-
-### upstream との関係
-
-* `upstream` リモートは Fission-AI/OpenSpec を指している前提。
-* 新しいバージョンが出たときの基本フロー：
-
-```bash
-git checkout main
-git fetch upstream
-git merge upstream/main   # もしくは git rebase upstream/main
-
-git checkout -b ja-sync/v0.x.y   # 必要に応じて同期用ブランチを作る
-```
-
-### 同期作業の手順（エージェントの行動指針）
-
-1. upstream の差分を確認する。
-
-   * README / docs
-   * CLI コマンド・ヘルプ
-   * テンプレート
-2. 差分を要約し、人間の開発者に報告する（どこが変わったか）。
-3. 影響範囲に応じて、OpenSpec-J 側で必要な更新タスクを提案する。
-
-   * README.ja.md の更新
-   * テンプレートの翻訳差分
-   * CLI 日本語メッセージの追加・修正
-4. 実際の変更は、小さな単位（「docs だけ」「CLI だけ」など）に分けて実施する。
-
-### ブランチ運用とタグ付け（OpenSpec-J）
-
-- `main` は **upstream のスナップショット**として扱う（ローカライズは入れない）。
-- `ja-docs` は **ローカライズ版**として扱う。
-- タグ運用:
-  - upstream 基準点: `upstream-vX.Y.Z` を `main` に付与する（注釈付きタグ推奨）。
-  - ローカライズ版: `openspec-j-vX.Y.Z` を `ja-docs` に付与する（注釈付きタグ推奨）。
-
-### 差分作成とローカライズ手順
-
-- ローカライズは **英語版同士の差分**を基準に行う。
-- 手順:
-  1. upstream の対象タグ（例: `v0.16.0` と `v0.17.2`）を取得し、`main` を同期する。
-  2. `upstream-v0.16.0` / `upstream-v0.17.2` を付与する。
-  3. 差分ファイルを作成し、変更箇所のみローカライズする。
-     - 例: `diffs/upstream-v0.16.0__upstream-v0.17.2.diff`
-     - 例: `diffs/upstream-v0.16.0__upstream-v0.17.2.files.txt`
-  4. 未変更箇所の日本語は維持し、**変更箇所のみ翻訳**して `ja-docs` に反映する。
-  5. ローカライズ完了後に `openspec-j-vX.Y.Z` を付与する（例: `openspec-j-v0.17.2`）。
-
----
-
-## 5. 典型的なタスク例
-
-### 例1：README の日本語版を更新
-
-1. upstream の README の変更箇所を特定し、内容を要約する。
-2. `README.ja.md` の対応箇所を見つけ、意味が揃うように日本語を更新する。
-3. コマンド名・ファイルパス・コード例は変更しない。
-
-### 例2：新コマンドの CLI メッセージを日本語化
-
-1. 新規サブコマンド（例：`openspec foo`）の定義ファイルを特定する。
-2. description / help / error message などの英語文を確認し、意図を理解する。
-3. 上記ポリシーに従って日本語メッセージを追加・修正する。
-4. `openspec foo --help` などを実行する想定でメッセージを確認し、必要に応じて調整する。
-
-### 例3：テンプレートの翻訳
-
-1. `proposal.md` テンプレートのソースを見つける。
-2. セクション構造は維持しつつ、説明文・ガイド文を日本語で書く。
-3. OpenSpec のバリデーションに影響しないことを確認する。
-
----
-
-## 6. 作業開始前・終了時チェックリスト
-
-### 作業開始前
-
-* [ ] Node.js のバージョンが OpenSpec の要件を満たしている（例：`>= 20.19.0`）
-* [ ] `npm install` / `pnpm install` 済みで、テストが実行できる
-* [ ] `git status` が clean か、作業用ブランチを作成済み
-* [ ] `AGENTS.md`（ルート）, `openspec/AGENTS.md`, `AGENTS.OpenSpec-J.md` を読み、矛盾がないか把握した
-
-### 作業終了時
-
-* [ ] 関連テスト（単体・統合）を実行した
-* [ ] 主要 CLI コマンドを試し、日本語メッセージを目視確認した
-* [ ] 変更点を簡潔に要約できる状態になっている（コミットメッセージや PR 説明に使える）
-
----
-
-## 7. まとめ
-
-* `AGENTS.md`（ルート）と `openspec/AGENTS.md` は **upstream OpenSpec のルール**。
-* `AGENTS.OpenSpec-J.md`（このファイル）は **OpenSpec-J のローカライズと運用のためのメタ仕様**。
-* あなたは常に：
-
-  * upstream の仕様・構造を壊さないこと
-  * 日本語ユーザーの体験をよくすること
-    の両方を満たすように振る舞ってください。
-
-不明点や矛盾を見つけた場合は、勝手にどちらかを無視せず、
-「どのルールとどのルールが衝突しているか」を整理した上で、人間の開発者に確認してください。
-
----
-
-## 8. セッションメモ
-
-> **TODO: コミット前に必ず当日のエントリを追記し、実施内容・テスト状況・残タスクを記録すること。**
-> **TODO: 新しい作業日は新規エントリとして追加し、過去の記録は残すこと。**
-> **TODO: 同日の記録は 1 件に統合し、新しい日付が先頭になるよう降順で並べる。今後もこのルールを守ること。**
-
-### 2026-01-30
-
-#### 実施したこと
-- test/の翻訳
-- docs/内コードブロックの翻訳
-- 規範文ルール追加
-
-#### テスト状況
-- 全テストをパス　(59ファイル / 1190 パス)
-
-### 2026-01-29
-
-#### 実施したこと
-- upstream v1.0.2 を `main` に取り込み、差分ファイルを作成。
-- `ja-docs` にマージし、競合は upstream 優先で解消。
-- README を v1.0.2 ベースの日本語版に更新し、旧版を `README_OLD.md` として退避。
-- `assets/openspec_bg.png` を追加。
-- docs を刷新（新規 doc 追加、旧 doc 削除、`docs/opsx.md` へ移行）。
-- `upstream-sync-v1.0.2.md` へ改名・更新。
-- `docs/cli.md` を日本語化。
-- `diffs/upstream-v0.23.0__upstream-v1.0.2.*` を v1.0.2 タグ基準で再生成。
-- docs 一式を日本語化（CLI/コマンド/コンセプト/カスタマイズ/インストール/移行/多言語/OPSX/対応ツール/Getting Started/Workflows）。
-- 出力例や会話例のコードブロックは英語維持の注記（`OPENSPEC-J:TODO`）を追加。
-- `LOCALIZATION-NOTES.md` に v1.0.2 のオンボーディングスキル追加に伴う構造更新メモを追記。
-
-#### テスト状況
-- 全テストをパス　(52ファイル / 1022 パス)

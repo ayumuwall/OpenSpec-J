@@ -12,8 +12,8 @@
 - 対応: 英語メッセージに加え、日本語化済みの定数 (`VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY`, `SPEC_NO_REQUIREMENTS`, `CHANGE_WHAT_EMPTY` など) や「Why セクション」文字列もトリガーに追加し、両言語でガイドを付与できるよう拡張。
 - フォローアップ: upstream でメッセージ文言が増減した場合は、英語/日本語両方のトリガーを見直す。英語/日本語のガイド付与を直接確認するユニットテストを追加すると安全。
 
-### v0.19.0: apply 指示はスキーマ優先で出力される
-- ファイル: `src/commands/artifact-workflow.ts`, `schemas/spec-driven/schema.yaml`
+### apply 指示はスキーマ優先で出力される
+- ファイル: `src/commands/workflow/instructions.ts`, `schemas/spec-driven/schema.yaml`
 - 症状: `schema.apply.instruction` がある場合はスキーマ側の文言が最優先で使われるため、コード側のフォールバック文だけ日本語化しても実際の出力は英語のまま残る。
 - 対応: `schemas/spec-driven/schema.yaml` の `apply.instruction` も日本語化し、CLI の表示とテスト期待値を一致させた。
 - フォローアップ: 新しいスキーマ追加時は `apply` セクションの文言もローカライズ対象に含める。
@@ -23,6 +23,7 @@
 - 症状: v1.0.2 で `openspec-onboard` スキルと `license/compatibility/metadata` が追加され、テンプレート構造と検出リストが更新されている。文字列置換だけだと新規スキルが検出されず、生成数や一覧が upstream と一致しない。
 - 対応: `SkillTemplate` に optional fields を追加し、オンボーディング用テンプレートを新設。`SKILL_NAMES` に `openspec-onboard` を追加し、生成・更新の件数が upstream と一致するように反映した。
 - フォローアップ: upstream でスキル種別やテンプレートメタデータが増減した場合、検出リストとテンプレート構造を先に合わせてから文言を翻訳する。
+- 状況: v1.1.0 でも `tool-detection` 側の見直しは入っておらず、注意点は継続。
 
 ### 単数/複数の表記を日本語で統一する扱い
 - 仕様: 日本語では単数・複数の揺れを避け、カウントは「件」や「タスク」など固定表記に寄せる。
@@ -45,8 +46,3 @@
   - `src/core/templates/slash-command-templates.ts` → 削除済み（skill-templates.ts に統合）
   - `schemas/tdd/schema.yaml` → 削除済み
   - `openspec/AGENTS.md` → 廃止（スキルベースのワークフローに移行）
-
-## チェックリスト（ローカライズ観点）
-- メッセージ判定に `includes` 等の英語ハードコードが無いか確認し、日本語化後も発火するかを両言語で点検。
-- エラー/ガイド文を定数化し、テストで文面の一部を検証できるようにする（英語と日本語の両方がトリガーになるテストがあると安心）。
-- CLI 出力（特にヘルプやサマリー）はロジックと密結合しがちなので、upstream 変更時に日本語側を手動で同期する。
