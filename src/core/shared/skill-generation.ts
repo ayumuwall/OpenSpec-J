@@ -101,11 +101,17 @@ export function getCommandContents(): CommandContent[] {
  *
  * @param template - スキルテンプレート
  * @param generatedByVersion - ファイルに埋め込む OpenSpec バージョン
+ * @param transformInstructions - instructions を変換する任意のコールバック
  */
 export function generateSkillContent(
   template: SkillTemplate,
-  generatedByVersion: string
+  generatedByVersion: string,
+  transformInstructions?: (instructions: string) => string
 ): string {
+  const instructions = transformInstructions
+    ? transformInstructions(template.instructions)
+    : template.instructions;
+
   return `---
 name: ${template.name}
 description: ${template.description}
@@ -117,6 +123,6 @@ metadata:
   generatedBy: "${generatedByVersion}"
 ---
 
-${template.instructions}
+${instructions}
 `;
 }

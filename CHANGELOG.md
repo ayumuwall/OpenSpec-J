@@ -3,6 +3,14 @@
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 
+## 1.1.1
+
+### Patch Changes
+
+- [#627](https://github.com/Fission-AI/OpenSpec/pull/627) [`afb73cf`](https://github.com/Fission-AI/OpenSpec/commit/afb73cf9ec59c6f8b26d0c538c0218c203ba3c56) Thanks [@TabishB](https://github.com/TabishB)! - ### Bug Fixes
+
+  - **OpenCode command references** — Command references in generated files now use the correct `/opsx-` hyphen format instead of `/opsx:` colon format, ensuring commands work properly in OpenCode
+
 ## 1.1.0
 
 - **[OpenSpec-J]** v1.1.0 追従のため、OPSX ドキュメント/ツール一覧/テンプレート/コマンド生成の文言を日本語化し、Codex/Windsurf の新パス仕様に合わせて説明を更新

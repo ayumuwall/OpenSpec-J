@@ -1,0 +1,552 @@
+diff --git a/.gitignore b/.gitignore
+index 743fdf0..abea4d1 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -149,3 +149,7 @@ CLAUDE.md
+ # Pnpm
+ .pnpm-store/
+ result
++
++# OpenCode
++.opencode/
++opencode.json
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1f80bbf..f78ae4a 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,13 @@
+ # @fission-ai/openspec
+ 
++## 1.1.1
++
++### Patch Changes
++
++- [#627](https://github.com/Fission-AI/OpenSpec/pull/627) [`afb73cf`](https://github.com/Fission-AI/OpenSpec/commit/afb73cf9ec59c6f8b26d0c538c0218c203ba3c56) Thanks [@TabishB](https://github.com/TabishB)! - ### Bug Fixes
++
++  - **OpenCode command references** — Command references in generated files now use the correct `/opsx-` hyphen format instead of `/opsx:` colon format, ensuring commands work properly in OpenCode
++
+ ## 1.1.0
+ 
+ ### Minor Changes
+diff --git a/openspec/changes/archive/2026-01-30-opencode-command-references/.openspec.yaml b/openspec/changes/archive/2026-01-30-opencode-command-references/.openspec.yaml
+new file mode 100644
+index 0000000..fc1220a
+--- /dev/null
++++ b/openspec/changes/archive/2026-01-30-opencode-command-references/.openspec.yaml
+@@ -0,0 +1,2 @@
++schema: spec-driven
++created: 2026-01-30
+diff --git a/openspec/changes/archive/2026-01-30-opencode-command-references/README.md b/openspec/changes/archive/2026-01-30-opencode-command-references/README.md
+new file mode 100644
+index 0000000..db379ce
+--- /dev/null
++++ b/openspec/changes/archive/2026-01-30-opencode-command-references/README.md
+@@ -0,0 +1,3 @@
++# opencode-command-references
++
++Transform /opsx: to /opsx- in both commands and skills for OpenCode
+diff --git a/openspec/changes/archive/2026-01-30-opencode-command-references/design.md b/openspec/changes/archive/2026-01-30-opencode-command-references/design.md
+new file mode 100644
+index 0000000..2bd9506
+--- /dev/null
++++ b/openspec/changes/archive/2026-01-30-opencode-command-references/design.md
+@@ -0,0 +1,70 @@
++## Context
++
++OpenCode is one of many supported AI tools. Each tool has:
++- A **command adapter** (in `src/core/command-generation/adapters/`) for generating tool-specific command files
++- **Skills** generated via `generateSkillContent()` in `src/core/shared/skill-generation.ts`
++
++Currently:
++- Commands go through the adapter system which can transform content per-tool
++- Skills use a single shared function with no tool-specific transformation
++
++The templates in `src/core/templates/skill-templates.ts` use Claude's colon-based format (`/opsx:new`) as the canonical format. Tools that use different formats need transformation at generation time.
++
++## Goals / Non-Goals
++
++**Goals:**
++- Transform all `/opsx:` command references to `/opsx-` for OpenCode in both commands and skills
++- Create a shared, reusable transformation utility
++- Keep the transformation opt-in via a callback parameter (not hard-coded tool detection)
++
++**Non-Goals:**
++- Modifying the canonical template format (templates stay with `/opsx:`)
++- Applying transformation to other tools (only OpenCode for now)
++- Creating a full adapter system for skills (overkill for current needs)
++
++## Decisions
++
++### Decision 1: Shared Utility Function
++
++**Choice**: Create `transformToHyphenCommands()` in `src/utils/command-references.ts`
++
++**Rationale**: 
++- Single source of truth for the transformation logic
++- Can be used by both command adapter and skill generation
++- Easy to test in isolation
++- Follows existing utils pattern in the codebase
++
++**Alternatives considered**:
++- Inline the transformation in each location - Duplicates logic, harder to maintain
++
++### Decision 2: Callback Parameter for Skill Generation
++
++**Choice**: Add optional `transformInstructions?: (instructions: string) => string` parameter to `generateSkillContent()`
++
++**Rationale**:
++- Flexible - callers define the transformation, not the generation function
++- No coupling - `generateSkillContent()` doesn't need to know about tool formats
++- Extensible - could support other transformations in the future
++- Follows inversion of control principle
++
++**Alternatives considered**:
++- Add tool ID parameter and switch on it - Creates coupling, harder to extend
++- Create skill adapter system parallel to commands - Over-engineering for current needs
++- Transform in templates directly - Breaks single-source-of-truth principle
++
++### Decision 3: Apply at Generation Sites
++
++**Choice**: Pass transformer in `init.ts` and `update.ts` when `tool.value === 'opencode'`
++
++**Rationale**:
++- These are the only two places that generate skills
++- Simple conditional check, no new abstractions needed
++- Easy to extend to other tools if needed later
++
++## Risks / Trade-offs
++
++| Risk | Mitigation |
++|------|------------|
++| Other `/opsx:` patterns exist that shouldn't be transformed | All occurrences in templates are command invocations - verified by inspection |
++| Future tools may need same transformation | Utility is shared and easy to reuse; can add to other tools' generation |
++| Callback adds complexity to function signature | Optional parameter with sensible default (no transformation) |
+diff --git a/openspec/changes/archive/2026-01-30-opencode-command-references/proposal.md b/openspec/changes/archive/2026-01-30-opencode-command-references/proposal.md
+new file mode 100644
+index 0000000..d2f7742
+--- /dev/null
++++ b/openspec/changes/archive/2026-01-30-opencode-command-references/proposal.md
+@@ -0,0 +1,32 @@
++## Why
++
++OpenCode uses hyphen-based command syntax (`/opsx-new`) but our templates contain colon-based references (`/opsx:new`). This creates inconsistency where generated command files and skill files contain references that don't match the actual command invocation syntax, confusing both the AI and users.
++
++## What Changes
++
++- Create a shared transformation utility (`transformToHyphenCommands`) for converting `/opsx:` to `/opsx-`
++- Update the OpenCode command adapter to transform body text using this utility
++- Add an optional `transformInstructions` callback parameter to `generateSkillContent()`
++- Update `init.ts` and `update.ts` to pass the transformer when generating skills for OpenCode
++
++## Capabilities
++
++### New Capabilities
++
++None - this is a bug fix, not a new capability.
++
++### Modified Capabilities
++
++None - no spec-level behavior changes. This is an implementation fix in the OpenCode adapter and skill generation that doesn't change any external requirements or contracts.
++
++## Impact
++
++- **Code**: 
++  - `src/utils/command-references.ts` (new file)
++  - `src/utils/index.ts` (export)
++  - `src/core/shared/skill-generation.ts` (add callback parameter)
++  - `src/core/command-generation/adapters/opencode.ts` (use transformer)
++  - `src/core/init.ts` (pass transformer for OpenCode)
++  - `src/core/update.ts` (pass transformer for OpenCode)
++- **Users**: OpenCode users will see correct `/opsx-` command references in both generated command files AND skill files
++- **Other tools**: No impact - transformation only applies to OpenCode
+diff --git a/openspec/changes/archive/2026-01-30-opencode-command-references/specs/no-changes.md b/openspec/changes/archive/2026-01-30-opencode-command-references/specs/no-changes.md
+new file mode 100644
+index 0000000..5a671a8
+--- /dev/null
++++ b/openspec/changes/archive/2026-01-30-opencode-command-references/specs/no-changes.md
+@@ -0,0 +1,9 @@
++# No Spec Changes
++
++This is a bug fix that doesn't modify any external requirements or contracts.
++
++The proposal's Capabilities section indicates:
++- **New Capabilities**: None
++- **Modified Capabilities**: None
++
++No spec files are needed for this implementation-only fix.
+diff --git a/openspec/changes/archive/2026-01-30-opencode-command-references/tasks.md b/openspec/changes/archive/2026-01-30-opencode-command-references/tasks.md
+new file mode 100644
+index 0000000..56fa3a2
+--- /dev/null
++++ b/openspec/changes/archive/2026-01-30-opencode-command-references/tasks.md
+@@ -0,0 +1,22 @@
++## 1. Implementation
++
++- [x] 1.1 Create `src/utils/command-references.ts` with `transformToHyphenCommands()` function
++- [x] 1.2 Export `transformToHyphenCommands` from `src/utils/index.ts`
++- [x] 1.3 Update `generateSkillContent()` in `src/core/shared/skill-generation.ts` to accept optional `transformInstructions` callback
++- [x] 1.4 Update OpenCode adapter in `src/core/command-generation/adapters/opencode.ts` to use `transformToHyphenCommands()` for body text
++- [x] 1.5 Update `init.ts` to pass transformer when generating skills for OpenCode
++- [x] 1.6 Update `update.ts` to pass transformer when generating skills for OpenCode
++
++## 2. Testing
++
++- [x] 2.1 Create `test/utils/command-references.test.ts` with unit tests for `transformToHyphenCommands()`
++- [x] 2.2 Add test to `test/core/command-generation/adapters.test.ts` for OpenCode body transformation
++- [x] 2.3 Add test to `test/core/shared/skill-generation.test.ts` for transformer callback
++
++## 3. Verification
++
++- [x] 3.1 Run `npx vitest run test/utils/command-references.test.ts test/core/command-generation/adapters.test.ts test/core/shared/skill-generation.test.ts` to ensure tests pass
++- [x] 3.2 Run `pnpm run build` to ensure no TypeScript errors
++- [x] 3.3 Run `openspec init --tools opencode` in a temp directory and verify:
++  - Command files in `.opencode/command/` contain `/opsx-` references (not `/opsx:`)
++  - Skill files in `.opencode/skills/` contain `/opsx-` references (not `/opsx:`)
+diff --git a/package.json b/package.json
+index e4269f3..a7910c9 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@fission-ai/openspec",
+-  "version": "1.1.0",
++  "version": "1.1.1",
+   "description": "AI-native system for spec-driven development",
+   "keywords": [
+     "openspec",
+diff --git a/src/core/command-generation/adapters/opencode.ts b/src/core/command-generation/adapters/opencode.ts
+index 05f9cab..2b078fc 100644
+--- a/src/core/command-generation/adapters/opencode.ts
++++ b/src/core/command-generation/adapters/opencode.ts
+@@ -6,6 +6,7 @@
+ 
+ import path from 'path';
+ import type { CommandContent, ToolCommandAdapter } from '../types.js';
++import { transformToHyphenCommands } from '../../../utils/command-references.js';
+ 
+ /**
+  * OpenCode adapter for command generation.
+@@ -20,11 +21,14 @@ export const opencodeAdapter: ToolCommandAdapter = {
+   },
+ 
+   formatFile(content: CommandContent): string {
++    // Transform command references from colon to hyphen format for OpenCode
++    const transformedBody = transformToHyphenCommands(content.body);
++
+     return `---
+ description: ${content.description}
+ ---
+ 
+-${content.body}
++${transformedBody}
+ `;
+   },
+ };
+diff --git a/src/core/init.ts b/src/core/init.ts
+index e4df6df..ff314c1 100644
+--- a/src/core/init.ts
++++ b/src/core/init.ts
+@@ -11,6 +11,7 @@ import ora from 'ora';
+ import * as fs from 'fs';
+ import { createRequire } from 'module';
+ import { FileSystemUtils } from '../utils/file-system.js';
++import { transformToHyphenCommands } from '../utils/command-references.js';
+ import {
+   AI_TOOLS,
+   OPENSPEC_DIR_NAME,
+@@ -440,7 +441,9 @@ export class InitCommand {
+           const skillFile = path.join(skillDir, 'SKILL.md');
+ 
+           // Generate SKILL.md content with YAML frontmatter including generatedBy
+-          const skillContent = generateSkillContent(template, OPENSPEC_VERSION);
++          // Use hyphen-based command references for OpenCode
++          const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
++          const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+ 
+           // Write the skill file
+           await FileSystemUtils.writeFile(skillFile, skillContent);
+diff --git a/src/core/shared/skill-generation.ts b/src/core/shared/skill-generation.ts
+index db7c6fe..6d61722 100644
+--- a/src/core/shared/skill-generation.ts
++++ b/src/core/shared/skill-generation.ts
+@@ -101,11 +101,17 @@ export function getCommandContents(): CommandContent[] {
+  *
+  * @param template - The skill template
+  * @param generatedByVersion - The OpenSpec version to embed in the file
++ * @param transformInstructions - Optional callback to transform the instructions content
+  */
+ export function generateSkillContent(
+   template: SkillTemplate,
+-  generatedByVersion: string
++  generatedByVersion: string,
++  transformInstructions?: (instructions: string) => string
+ ): string {
++  const instructions = transformInstructions
++    ? transformInstructions(template.instructions)
++    : template.instructions;
++
+   return `---
+ name: ${template.name}
+ description: ${template.description}
+@@ -117,6 +123,6 @@ metadata:
+   generatedBy: "${generatedByVersion}"
+ ---
+ 
+-${template.instructions}
++${instructions}
+ `;
+ }
+diff --git a/src/core/update.ts b/src/core/update.ts
+index 6538bc0..a9368a2 100644
+--- a/src/core/update.ts
++++ b/src/core/update.ts
+@@ -10,6 +10,7 @@ import chalk from 'chalk';
+ import ora from 'ora';
+ import { createRequire } from 'module';
+ import { FileSystemUtils } from '../utils/file-system.js';
++import { transformToHyphenCommands } from '../utils/command-references.js';
+ import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
+ import {
+   generateCommands,
+@@ -117,7 +118,9 @@ export class UpdateCommand {
+           const skillDir = path.join(skillsDir, dirName);
+           const skillFile = path.join(skillDir, 'SKILL.md');
+ 
+-          const skillContent = generateSkillContent(template, OPENSPEC_VERSION);
++          // Use hyphen-based command references for OpenCode
++          const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
++          const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+           await FileSystemUtils.writeFile(skillFile, skillContent);
+         }
+ 
+@@ -366,7 +369,9 @@ export class UpdateCommand {
+           const skillDir = path.join(skillsDir, dirName);
+           const skillFile = path.join(skillDir, 'SKILL.md');
+ 
+-          const skillContent = generateSkillContent(template, OPENSPEC_VERSION);
++          // Use hyphen-based command references for OpenCode
++          const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
++          const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+           await FileSystemUtils.writeFile(skillFile, skillContent);
+         }
+ 
+diff --git a/src/utils/command-references.ts b/src/utils/command-references.ts
+new file mode 100644
+index 0000000..bfa49b9
+--- /dev/null
++++ b/src/utils/command-references.ts
+@@ -0,0 +1,20 @@
++/**
++ * Command Reference Utilities
++ *
++ * Utilities for transforming command references to tool-specific formats.
++ */
++
++/**
++ * Transforms colon-based command references to hyphen-based format.
++ * Converts `/opsx:` patterns to `/opsx-` for tools that use hyphen syntax.
++ *
++ * @param text - The text containing command references
++ * @returns Text with command references transformed to hyphen format
++ *
++ * @example
++ * transformToHyphenCommands('/opsx:new') // returns '/opsx-new'
++ * transformToHyphenCommands('Use /opsx:apply to implement') // returns 'Use /opsx-apply to implement'
++ */
++export function transformToHyphenCommands(text: string): string {
++  return text.replace(/\/opsx:/g, '/opsx-');
++}
+diff --git a/src/utils/index.ts b/src/utils/index.ts
+index d0cf29e..e77ddf4 100644
+--- a/src/utils/index.ts
++++ b/src/utils/index.ts
+@@ -12,4 +12,7 @@ export {
+ } from './change-metadata.js';
+ 
+ // File system utilities
+-export { FileSystemUtils, removeMarkerBlock } from './file-system.js';
+\ No newline at end of file
++export { FileSystemUtils, removeMarkerBlock } from './file-system.js';
++
++// Command reference utilities
++export { transformToHyphenCommands } from './command-references.js';
+\ No newline at end of file
+diff --git a/test/core/command-generation/adapters.test.ts b/test/core/command-generation/adapters.test.ts
+index 9e5ff57..5341f6a 100644
+--- a/test/core/command-generation/adapters.test.ts
++++ b/test/core/command-generation/adapters.test.ts
+@@ -453,6 +453,33 @@ describe('command-generation/adapters', () => {
+       expect(output).toContain('---\n\n');
+       expect(output).toContain('This is the command body.');
+     });
++
++    it('should transform colon-based command references to hyphen-based', () => {
++      const contentWithCommands: CommandContent = {
++        ...sampleContent,
++        body: 'Use /opsx:new to start, then /opsx:apply to implement.',
++      };
++      const output = opencodeAdapter.formatFile(contentWithCommands);
++      expect(output).toContain('/opsx-new');
++      expect(output).toContain('/opsx-apply');
++      expect(output).not.toContain('/opsx:new');
++      expect(output).not.toContain('/opsx:apply');
++    });
++
++    it('should handle multiple command references in body', () => {
++      const contentWithMultipleCommands: CommandContent = {
++        ...sampleContent,
++        body: `/opsx:explore for ideas
++/opsx:new to create
++/opsx:continue to proceed
++/opsx:apply to implement`,
++      };
++      const output = opencodeAdapter.formatFile(contentWithMultipleCommands);
++      expect(output).toContain('/opsx-explore');
++      expect(output).toContain('/opsx-new');
++      expect(output).toContain('/opsx-continue');
++      expect(output).toContain('/opsx-apply');
++    });
+   });
+ 
+   describe('qoderAdapter', () => {
+diff --git a/test/core/shared/skill-generation.test.ts b/test/core/shared/skill-generation.test.ts
+index df6d2e3..9970eda 100644
+--- a/test/core/shared/skill-generation.test.ts
++++ b/test/core/shared/skill-generation.test.ts
+@@ -177,5 +177,47 @@ describe('skill-generation', () => {
+ 
+       expect(content).toMatch(/---\n\nBody content\n$/);
+     });
++
++    it('should apply transformInstructions callback when provided', () => {
++      const template = {
++        name: 'transform-test',
++        description: 'Test transform callback',
++        instructions: 'Use /opsx:new to start and /opsx:apply to implement.',
++      };
++
++      const transformer = (text: string) => text.replace(/\/opsx:/g, '/opsx-');
++      const content = generateSkillContent(template, '0.23.0', transformer);
++
++      expect(content).toContain('/opsx-new');
++      expect(content).toContain('/opsx-apply');
++      expect(content).not.toContain('/opsx:new');
++      expect(content).not.toContain('/opsx:apply');
++    });
++
++    it('should not transform instructions when callback is undefined', () => {
++      const template = {
++        name: 'no-transform-test',
++        description: 'Test without transform',
++        instructions: 'Use /opsx:new to start.',
++      };
++
++      const content = generateSkillContent(template, '0.23.0', undefined);
++
++      expect(content).toContain('/opsx:new');
++    });
++
++    it('should support custom transformInstructions logic', () => {
++      const template = {
++        name: 'custom-transform',
++        description: 'Test custom transform',
++        instructions: 'Some PLACEHOLDER text here.',
++      };
++
++      const customTransformer = (text: string) => text.replace('PLACEHOLDER', 'REPLACED');
++      const content = generateSkillContent(template, '0.23.0', customTransformer);
++
++      expect(content).toContain('Some REPLACED text here.');
++      expect(content).not.toContain('PLACEHOLDER');
++    });
+   });
+ });
+diff --git a/test/utils/command-references.test.ts b/test/utils/command-references.test.ts
+new file mode 100644
+index 0000000..c7ff2ed
+--- /dev/null
++++ b/test/utils/command-references.test.ts
+@@ -0,0 +1,83 @@
++import { describe, it, expect } from 'vitest';
++import { transformToHyphenCommands } from '../../src/utils/command-references.js';
++
++describe('transformToHyphenCommands', () => {
++  describe('basic transformations', () => {
++    it('should transform single command reference', () => {
++      expect(transformToHyphenCommands('/opsx:new')).toBe('/opsx-new');
++    });
++
++    it('should transform multiple command references', () => {
++      const input = '/opsx:new and /opsx:apply';
++      const expected = '/opsx-new and /opsx-apply';
++      expect(transformToHyphenCommands(input)).toBe(expected);
++    });
++
++    it('should transform command reference in context', () => {
++      const input = 'Use /opsx:apply to implement tasks';
++      const expected = 'Use /opsx-apply to implement tasks';
++      expect(transformToHyphenCommands(input)).toBe(expected);
++    });
++
++    it('should handle backtick-quoted commands', () => {
++      const input = 'Run `/opsx:continue` to proceed';
++      const expected = 'Run `/opsx-continue` to proceed';
++      expect(transformToHyphenCommands(input)).toBe(expected);
++    });
++  });
++
++  describe('edge cases', () => {
++    it('should return unchanged text with no command references', () => {
++      const input = 'This is plain text without commands';
++      expect(transformToHyphenCommands(input)).toBe(input);
++    });
++
++    it('should return empty string unchanged', () => {
++      expect(transformToHyphenCommands('')).toBe('');
++    });
++
++    it('should not transform similar but non-matching patterns', () => {
++      const input = '/ops:new opsx: /other:command';
++      expect(transformToHyphenCommands(input)).toBe(input);
++    });
++
++    it('should handle multiple occurrences on same line', () => {
++      const input = '/opsx:new /opsx:continue /opsx:apply';
++      const expected = '/opsx-new /opsx-continue /opsx-apply';
++      expect(transformToHyphenCommands(input)).toBe(expected);
++    });
++  });
++
++  describe('multiline content', () => {
++    it('should transform references across multiple lines', () => {
++      const input = `Use /opsx:new to start
++Then /opsx:continue to proceed
++Finally /opsx:apply to implement`;
++      const expected = `Use /opsx-new to start
++Then /opsx-continue to proceed
++Finally /opsx-apply to implement`;
++      expect(transformToHyphenCommands(input)).toBe(expected);
++    });
++  });
++
++  describe('all known commands', () => {
++    const commands = [
++      'new',
++      'continue',
++      'apply',
++      'ff',
++      'sync',
++      'archive',
++      'bulk-archive',
++      'verify',
++      'explore',
++      'onboard',
++    ];
++
++    for (const cmd of commands) {
++      it(`should transform /opsx:${cmd}`, () => {
++        expect(transformToHyphenCommands(`/opsx:${cmd}`)).toBe(`/opsx-${cmd}`);
++      });
++    }
++  });
++});

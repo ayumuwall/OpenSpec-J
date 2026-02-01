@@ -1,6 +1,6 @@
 {
   "name": "@ayumuwall/openspec",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "仕様駆動開発のための AI ネイティブな仕組み",
   "keywords": [
     "openspec",
