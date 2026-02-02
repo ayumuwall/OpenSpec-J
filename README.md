@@ -113,12 +113,6 @@ AI へ次のように伝えてください: `/opsx:new <作りたいもの>`
 >
 > pnpm, yarn, bun, nix でも利用できます。[インストール方法はこちら](docs/installation.md)。
 
-<!-- OPENSPEC-J:NOTE -->
-> [!NOTE]
-> **Codex を使っている場合**  
-> `openspec init` が生成する `.codex/prompts/opsx-*.md` はプロジェクト内に作成されます。  
-> Codex でスラッシュコマンドを使うには、これらのファイルを `~/.codex/prompts/` にコピー（またはシンボリックリンク）してください。
-
 ## ドキュメント
 
 → **[Getting Started](docs/getting-started.md)**: 最初のステップ<br>

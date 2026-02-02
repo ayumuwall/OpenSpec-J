@@ -235,6 +235,7 @@ node bin/openspec.js validate --strict
 
 - `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
 - `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
+- コミット前に `$session-memo` を実行して `SESSION_MEMO.md` を更新する（Codex利用時）
 
 ---
 

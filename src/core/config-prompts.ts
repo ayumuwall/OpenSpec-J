@@ -28,6 +28,10 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('#     - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）');
   lines.push('#     - 語尾は「〜しなければならない。(SHALL)」の形式に揃える');
   lines.push('#     - 文中に SHALL/MUST を挿入しない');
+  lines.push('#');
+  lines.push('#     技術用語の扱い:');
+  lines.push('#     - "API", "REST", "GraphQL" などの技術用語は英語のまま');
+  lines.push('#     - 必要なら日本語訳する用語を明示');
   lines.push('');
 
   // Rules section with comments
