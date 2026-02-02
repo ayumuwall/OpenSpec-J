@@ -5,11 +5,15 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 1.1.1
 
-### Patch Changes
+- **[OpenSpec-J]** v1.1.1 追従のため、OpenCode コマンド参照の変換・update/init の日本語コメント/リンクを反映
+- **[OpenSpec-J]** README の同期元バージョンを更新
+- **[OpenSpec-J]** 過去の revert により、本家に含まれる Nix flake の改善（package.json 参照の動的バージョン、fileset ベースの src 範囲、update-flake.sh の運用改善）が未反映だったため修正しました。ご迷惑をおかけし申し訳ありません。
 
-- [#627](https://github.com/Fission-AI/OpenSpec/pull/627) [`afb73cf`](https://github.com/Fission-AI/OpenSpec/commit/afb73cf9ec59c6f8b26d0c538c0218c203ba3c56) Thanks [@TabishB](https://github.com/TabishB)! - ### Bug Fixes
+### パッチ変更
 
-  - **OpenCode command references** — Command references in generated files now use the correct `/opsx-` hyphen format instead of `/opsx:` colon format, ensuring commands work properly in OpenCode
+- [#627](https://github.com/Fission-AI/OpenSpec/pull/627) [`afb73cf`](https://github.com/Fission-AI/OpenSpec/commit/afb73cf9ec59c6f8b26d0c538c0218c203ba3c56) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
+
+  - **OpenCode のコマンド参照** — 生成ファイル内のコマンド参照が `/opsx:` ではなく `/opsx-` のハイフン形式を使うようになり、OpenCode で正しく動作するように修正
 
 ## 1.1.0
 

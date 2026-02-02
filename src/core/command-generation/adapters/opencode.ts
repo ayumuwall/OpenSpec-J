@@ -21,7 +21,7 @@ export const opencodeAdapter: ToolCommandAdapter = {
   },
 
   formatFile(content: CommandContent): string {
-    // Transform command references from colon to hyphen format for OpenCode
+    // OpenCode 向けにコマンド参照をコロン形式からハイフン形式へ変換する
     const transformedBody = transformToHyphenCommands(content.body);
 
     return `---

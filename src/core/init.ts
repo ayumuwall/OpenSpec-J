@@ -1,8 +1,8 @@
 /**
- * Init Command
+ * init コマンド
  *
- * Sets up OpenSpec with Agent Skills and /opsx:* slash commands.
- * This is the unified setup command that replaces both the old init and experimental commands.
+ * OpenSpec を Agent Skills と /opsx:* スラッシュコマンド付きでセットアップする。
+ * 旧 init / experimental を統合したセットアップコマンド。
  */
 
 import path from 'path';
@@ -46,7 +46,7 @@ const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
 
 // -----------------------------------------------------------------------------
-// Constants
+// 定数
 // -----------------------------------------------------------------------------
 
 const DEFAULT_SCHEMA = 'spec-driven';
@@ -57,7 +57,7 @@ const PROGRESS_SPINNER = {
 };
 
 // -----------------------------------------------------------------------------
-// Types
+// 型
 // -----------------------------------------------------------------------------
 
 type InitCommandOptions = {
@@ -67,7 +67,7 @@ type InitCommandOptions = {
 };
 
 // -----------------------------------------------------------------------------
-// Init Command Class
+// init コマンドクラス
 // -----------------------------------------------------------------------------
 
 export class InitCommand {
@@ -86,43 +86,43 @@ export class InitCommand {
     const openspecDir = OPENSPEC_DIR_NAME;
     const openspecPath = path.join(projectPath, openspecDir);
 
-    // Validation happens silently in the background
+    // 検証は裏側で静かに実行する
     const extendMode = await this.validate(projectPath, openspecPath);
 
-    // Check for legacy artifacts and handle cleanup
+    // 旧ファイルを検出してクリーンアップを処理する
     await this.handleLegacyCleanup(projectPath, extendMode);
 
-    // Show animated welcome screen (interactive mode only)
+    // アニメーション付きウェルカム画面（対話モードのみ）
     const canPrompt = this.canPromptInteractively();
     if (canPrompt) {
       const { showWelcomeScreen } = await import('../ui/welcome-screen.js');
       await showWelcomeScreen();
     }
 
-    // Get tool states before processing
+    // 処理前にツール状態を取得
     const toolStates = getToolStates(projectPath);
 
-    // Get tool selection
+    // ツール選択を取得
     const selectedToolIds = await this.getSelectedTools(toolStates, extendMode);
 
-    // Validate selected tools
+    // 選択されたツールを検証
     const validatedTools = this.validateTools(selectedToolIds, toolStates);
 
-    // Create directory structure and config
+    // ディレクトリ構成と設定を作成
     await this.createDirectoryStructure(openspecPath, extendMode);
 
-    // Generate skills and commands for each tool
+    // 各ツールのスキル/コマンドを生成
     const results = await this.generateSkillsAndCommands(projectPath, validatedTools);
 
-    // Create config.yaml if needed
+    // 必要なら config.yaml を作成
     const configStatus = await this.createConfig(openspecPath, extendMode);
 
-    // Display success message
+    // 成功メッセージを表示
     this.displaySuccessMessage(projectPath, validatedTools, results, configStatus);
   }
 
   // ═══════════════════════════════════════════════════════════
-  // VALIDATION & SETUP
+  // 検証とセットアップ
   // ═══════════════════════════════════════════════════════════
 
   private async validate(
@@ -131,7 +131,7 @@ export class InitCommand {
   ): Promise<boolean> {
     const extendMode = await FileSystemUtils.directoryExists(openspecPath);
 
-    // Check write permissions
+    // 書き込み権限を確認
     if (!(await FileSystemUtils.ensureWritePermissions(projectPath))) {
       throw new Error(`${projectPath} への書き込み権限がありません`);
     }
@@ -145,18 +145,18 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // LEGACY CLEANUP
+  // 旧ファイルのクリーンアップ
   // ═══════════════════════════════════════════════════════════
 
   private async handleLegacyCleanup(projectPath: string, extendMode: boolean): Promise<void> {
-    // Detect legacy artifacts
+    // 旧ファイルを検出
     const detection = await detectLegacyArtifacts(projectPath);
 
     if (!detection.hasLegacyArtifacts) {
-      return; // No legacy artifacts found
+      return; // 旧ファイルが見つからない場合は何もしない
     }
 
-    // Show what was detected
+    // 検出内容を表示
     console.log();
     console.log(formatDetectionSummary(detection));
     console.log();
@@ -164,19 +164,19 @@ export class InitCommand {
     const canPrompt = this.canPromptInteractively();
 
     if (this.force) {
-      // --force flag: proceed with cleanup automatically
+      // --force 指定: 自動クリーンアップで続行
       await this.performLegacyCleanup(projectPath, detection);
       return;
     }
 
     if (!canPrompt) {
-      // Non-interactive mode without --force: abort
+      // 非対話モードで --force がない場合は中止
       console.log(chalk.red('非対話モードで旧ファイルが検出されました。'));
       console.log(chalk.dim('対話モードでアップグレードするか、--force で自動クリーンアップしてください。'));
       process.exit(1);
     }
 
-    // Interactive mode: prompt for confirmation
+    // 対話モード: 確認プロンプトを表示
     const { confirm } = await import('@inquirer/prompts');
     const shouldCleanup = await confirm({
       message: '旧ファイルをアップグレードしてクリーンアップしますか？',
@@ -209,14 +209,14 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // TOOL SELECTION
+  // ツール選択
   // ═══════════════════════════════════════════════════════════
 
   private async getSelectedTools(
     toolStates: Map<string, ToolSkillStatus>,
     extendMode: boolean
   ): Promise<string[]> {
-    // Check for --tools flag first
+    // 先に --tools 指定を確認
     const nonInteractiveSelection = this.resolveToolsArg();
     if (nonInteractiveSelection !== null) {
       return nonInteractiveSelection;
@@ -231,10 +231,10 @@ export class InitCommand {
       );
     }
 
-    // Interactive mode: show searchable multi-select
+    // 対話モード: 検索可能な複数選択を表示
     const { searchableMultiSelect } = await import('../prompts/searchable-multi-select.js');
 
-    // Build choices with configured status and sort configured tools first
+    // 設定済みフラグを付けて、設定済みツールを先に並べる
     const sortedChoices = validTools
       .map((toolId) => {
         const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -245,11 +245,11 @@ export class InitCommand {
           name: tool?.name || toolId,
           value: toolId,
           configured,
-          preSelected: configured, // Pre-select configured tools for easy refresh
+          preSelected: configured, // 既に設定済みのツールを先に選択しておく
         };
       })
       .sort((a, b) => {
-        // Configured tools first
+        // 設定済みツールを先頭に
         if (a.configured && !b.configured) return -1;
         if (!a.configured && b.configured) return 1;
         return 0;
@@ -321,7 +321,7 @@ export class InitCommand {
       );
     }
 
-    // Deduplicate while preserving order
+    // 元の順序を保持しつつ重複を除外
     const deduped: string[] = [];
     for (const token of normalizedTokens) {
       if (!deduped.includes(token)) {
@@ -367,12 +367,12 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // DIRECTORY STRUCTURE
+  // ディレクトリ構成
   // ═══════════════════════════════════════════════════════════
 
   private async createDirectoryStructure(openspecPath: string, extendMode: boolean): Promise<void> {
     if (extendMode) {
-      // In extend mode, just ensure directories exist without spinner
+      // extend モードではスピナー無しでディレクトリを確認/作成する
       const directories = [
         openspecPath,
         path.join(openspecPath, 'specs'),
@@ -406,7 +406,7 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // SKILL & COMMAND GENERATION
+  // スキル/コマンド生成
   // ═══════════════════════════════════════════════════════════
 
   private async generateSkillsAndCommands(
@@ -423,33 +423,33 @@ export class InitCommand {
     const failedTools: Array<{ name: string; error: Error }> = [];
     const commandsSkipped: string[] = [];
 
-    // Get skill and command templates once (shared across all tools)
+    // スキル/コマンドのテンプレートを一度だけ取得（全ツール共通）
     const skillTemplates = getSkillTemplates();
     const commandContents = getCommandContents();
 
-    // Process each tool
+    // ツールごとに処理する
     for (const tool of tools) {
       const spinner = ora(`${tool.name} をセットアップ中...`).start();
 
       try {
-        // Use tool-specific skillsDir
+        // ツール固有の skillsDir を使う
         const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
-        // Create skill directories and SKILL.md files
+        // スキルディレクトリと SKILL.md を作成
         for (const { template, dirName } of skillTemplates) {
           const skillDir = path.join(skillsDir, dirName);
           const skillFile = path.join(skillDir, 'SKILL.md');
 
-          // Generate SKILL.md content with YAML frontmatter including generatedBy
-          // Use hyphen-based command references for OpenCode
+          // generatedBy を含む YAML フロントマター付き SKILL.md を生成
+          // OpenCode 用にハイフン形式のコマンド参照を使う
           const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
           const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
-          // Write the skill file
+          // スキルファイルを書き込む
           await FileSystemUtils.writeFile(skillFile, skillContent);
         }
 
-        // Generate commands using the adapter system
+        // アダプターシステムでコマンドを生成
         const adapter = CommandAdapterRegistry.get(tool.value);
         if (adapter) {
           const generatedCommands = generateCommands(commandContents, adapter);
@@ -479,7 +479,7 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // CONFIG FILE
+  // 設定ファイル
   // ═══════════════════════════════════════════════════════════
 
   private async createConfig(openspecPath: string, extendMode: boolean): Promise<'created' | 'exists' | 'skipped'> {
@@ -492,7 +492,7 @@ export class InitCommand {
       return 'exists';
     }
 
-    // In non-interactive mode without --force, skip config creation
+    // 非対話モードで --force がない場合、設定作成をスキップ
     if (!this.canPromptInteractively() && !this.force) {
       return 'skipped';
     }
@@ -507,7 +507,7 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // UI & OUTPUT
+  // UI と出力
   // ═══════════════════════════════════════════════════════════
 
   private displaySuccessMessage(
@@ -525,7 +525,7 @@ export class InitCommand {
     console.log(chalk.bold('OpenSpec セットアップ完了'));
     console.log();
 
-    // Show created vs refreshed tools
+    // 作成/更新したツールを表示
     if (results.createdTools.length > 0) {
       console.log(`新規作成: ${results.createdTools.map((t) => t.name).join(', ')}`);
     }
@@ -533,7 +533,7 @@ export class InitCommand {
       console.log(`更新: ${results.refreshedTools.map((t) => t.name).join(', ')}`);
     }
 
-    // Show counts
+    // 件数を表示
     const successfulTools = [...results.createdTools, ...results.refreshedTools];
     if (successfulTools.length > 0) {
       const toolDirs = [...new Set(successfulTools.map((t) => t.skillsDir))].join(', ');
@@ -545,21 +545,21 @@ export class InitCommand {
       }
     }
 
-    // Show failures
+    // 失敗を表示
     if (results.failedTools.length > 0) {
       console.log(chalk.red(`失敗: ${results.failedTools.map((f) => `${f.name} (${f.error.message})`).join(', ')}`));
     }
 
-    // Show skipped commands
+    // スキップされたコマンドを表示
     if (results.commandsSkipped.length > 0) {
       console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
     }
 
-    // Config status
+    // 設定ファイルの状態
     if (configStatus === 'created') {
       console.log(`設定: openspec/config.yaml（スキーマ: ${DEFAULT_SCHEMA}）`);
     } else if (configStatus === 'exists') {
-      // Show actual filename (config.yaml or config.yml)
+      // 実際のファイル名（config.yaml/config.yml）を表示
       const configYaml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');
       const configYml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yml');
       const configName = fs.existsSync(configYaml) ? 'config.yaml' : fs.existsSync(configYml) ? 'config.yml' : 'config.yaml';
@@ -568,19 +568,19 @@ export class InitCommand {
       console.log(chalk.dim('設定: スキップ（非対話モード）'));
     }
 
-    // Getting started
+    // はじめに
     console.log();
     console.log(chalk.bold('はじめに:'));
     console.log('  /opsx:new       新しい変更を開始');
     console.log('  /opsx:continue  次のアーティファクトを作成');
     console.log('  /opsx:apply     タスクを実装');
 
-    // Links
+    // リンク
     console.log();
-    console.log(`詳細: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec')}`);
-    console.log(`フィードバック: ${chalk.cyan('https://github.com/Fission-AI/OpenSpec/issues')}`);
+    console.log(`詳細: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J')}`);
+    console.log(`フィードバック: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J/issues')}`);
 
-    // Restart instruction if any tools were configured
+    // いずれかのツールを設定した場合は再起動案内を表示
     if (results.createdTools.length > 0 || results.refreshedTools.length > 0) {
       console.log();
       console.log(chalk.white('スラッシュコマンドを有効にするには IDE を再起動してください。'));

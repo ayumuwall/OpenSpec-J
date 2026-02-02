@@ -116,10 +116,21 @@ git remote -v
 git checkout main
 git fetch upstream --tags
 git merge vX.Y.Z
-git tag -a upstream-vX.Y.Z -m "upstream vX.Y.Z"
+git tag -a upstream-vX.Y.Z -m "upstream vX.Y.Z" vX.Y.Z^{}
 ```
 
 - **必ずリリースタグで取り込む。** `upstream/main` は使わない。
+- `vX.Y.Z^{}` を使い、注釈タグでも確実にコミットを指すようにする。
+- **main は本家リリースタグと内容が完全一致している必要がある。**
+  - タグ取り込み直後に必ず確認する:
+    ```
+    git diff --name-status vX.Y.Z..HEAD
+    ```
+  - 差分がある場合はタグ内容で上書きし、内容一致を担保する:
+    ```
+    git restore --source vX.Y.Z -- .
+    git commit -m "chore: sync main to vX.Y.Z"
+    ```
 
 ### 2.2 差分の収集と分類
 
