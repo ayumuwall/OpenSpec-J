@@ -22,7 +22,7 @@
 <details>
 <summary><strong>最も愛される spec フレームワーク。</strong></summary>
 
-[![Stars](https://img.shields.io/github/stars/ayumuwall/OpenSpec-J?style=flat-square&label=Stars)](https://github.com/ayumuwall/OpenSpec-J/stargazers)
+[![Stars](https://img.shields.io/github/stars/Fission-AI/OpenSpec?style=flat-square&label=Stars)](https://github.com/Fission-AI/OpenSpec/stargazers)
 [![Downloads](https://img.shields.io/npm/dm/@fission-ai/openspec?style=flat-square&label=Downloads/mo)](https://www.npmjs.com/package/@fission-ai/openspec)
 [![Contributors](https://img.shields.io/github/contributors/ayumuwall/OpenSpec-J?style=flat-square&label=Contributors)](https://github.com/ayumuwall/OpenSpec-J/graphs/contributors)
 

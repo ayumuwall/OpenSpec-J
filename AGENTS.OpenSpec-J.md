@@ -252,6 +252,8 @@ git push origin vX.Y.Z
 gh release create vX.Y.Z --title "vX.Y.Z" --notes "<CHANGELOG.md の該当セクション>"
 ```
 
+- リリースタグは `vX.Y.Z` 形式を使う（`openspec-j-vX.Y.Z` は使わない）。
+
 ### 3.2 npm 公開
 
 ```
