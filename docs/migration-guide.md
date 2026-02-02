@@ -466,7 +466,7 @@ rules:
 利用可能なスキーマ一覧:
 
 ```bash
-openspec workflow schemas
+openspec schemas
 ```
 
 ### カスタムスキーマ
@@ -510,7 +510,7 @@ IDE を再起動してください。skills は起動時に検出されます。
 有効な ID を確認するには:
 
 ```bash
-openspec workflow schemas --json
+openspec schemas --json
 ```
 
 ### 設定が反映されない
