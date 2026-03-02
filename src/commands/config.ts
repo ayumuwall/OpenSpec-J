@@ -452,7 +452,7 @@ export function registerConfigCommand(program: Command): void {
   // config profile [preset]
   configCmd
     .command('profile [preset]')
-    .description('Configure workflow profile (interactive picker or preset shortcut)')
+    .description('ワークフロープロファイルを設定（対話型ピッカーまたはプリセット指定）')
     .action(async (preset?: string) => {
       // Preset shortcut: `openspec config profile core`
       if (preset === 'core') {
