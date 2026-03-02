@@ -1629,7 +1629,7 @@ content
         call.map(arg => String(arg)).join(' ')
       );
       const hasNewToolMessage = calls.some(call =>
-        call.includes("Detected new tool: Cursor. Run 'openspec init' to add it.")
+        call.includes('新しいツールが検出されました: Cursor') && call.includes("'openspec init' を実行して")
       );
       expect(hasNewToolMessage).toBe(true);
 
@@ -1655,17 +1655,12 @@ content
       );
 
       const consolidatedCalls = calls.filter(call =>
-        call.includes('Detected new tools:')
+        call.includes('新しいツールが検出されました:')
       );
       expect(consolidatedCalls).toHaveLength(1);
       expect(consolidatedCalls[0]).toContain('GitHub Copilot');
       expect(consolidatedCalls[0]).toContain('Windsurf');
-      expect(consolidatedCalls[0]).toContain("Run 'openspec init' to add them.");
-
-      const repeatedSingularCalls = calls.filter(call =>
-        call.includes('Detected new tool:')
-      );
-      expect(repeatedSingularCalls).toHaveLength(0);
+      expect(consolidatedCalls[0]).toContain("'openspec init' を実行して");
 
       consoleSpy.mockRestore();
     });
