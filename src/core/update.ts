@@ -2,12 +2,13 @@
  * update コマンド
  *
  * 設定済みツールの OpenSpec スキルとコマンドを更新する。
- * 既に最新の場合はスキップするスマート更新検知に対応。
+ * プロファイル対応・デリバリー変更・マイグレーション・スマート更新検知に対応。
  */
 
 import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
+import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { transformToHyphenCommands } from '../utils/command-references.js';
@@ -17,8 +18,7 @@ import {
   CommandAdapterRegistry,
 } from './command-generation/index.js';
 import {
-  getConfiguredTools,
-  getAllToolVersionStatus,
+  getToolVersionStatus,
   getSkillTemplates,
   getCommandContents,
   generateSkillContent,
@@ -34,6 +34,19 @@ import {
   type LegacyDetectionResult,
 } from './legacy-cleanup.js';
 import { isInteractive } from '../utils/interactive.js';
+import { getGlobalConfig, type Delivery } from './global-config.js';
+import { getProfileWorkflows, ALL_WORKFLOWS } from './profiles.js';
+import { getAvailableTools } from './available-tools.js';
+import {
+  WORKFLOW_TO_SKILL_DIR,
+  getCommandConfiguredTools,
+  getConfiguredToolsForProfileSync,
+  getToolsNeedingProfileSync,
+} from './profile-sync-drift.js';
+import {
+  scanInstalledWorkflows as scanInstalledWorkflowsShared,
+  migrateIfNeeded as migrateIfNeededShared,
+} from './migration.js';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -44,6 +57,19 @@ const { version: OPENSPEC_VERSION } = require('../../package.json');
 export interface UpdateCommandOptions {
   /** ツールが最新でも強制更新する */
   force?: boolean;
+}
+
+/**
+ * Scans installed workflow artifacts (skills and managed commands) across all configured tools.
+ * Returns the union of detected workflow IDs that match ALL_WORKFLOWS.
+ *
+ * Wrapper around the shared migration module's scanInstalledWorkflows that accepts tool IDs.
+ */
+export function scanInstalledWorkflows(projectPath: string, toolIds: string[]): string[] {
+  const tools = toolIds
+    .map((id) => AI_TOOLS.find((t) => t.value === id))
+    .filter((t): t is NonNullable<typeof t> => t != null);
+  return scanInstalledWorkflowsShared(projectPath, tools);
 }
 
 export class UpdateCommand {
@@ -62,11 +88,31 @@ export class UpdateCommand {
       throw new Error("OpenSpec ディレクトリが見つかりません。先に 'openspec init' を実行してください。");
     }
 
-    // 2. 旧ファイル検出とクリーンアップ + 旧ツールのスキル移行
-    const newlyConfiguredTools = await this.handleLegacyCleanup(resolvedProjectPath);
+    // 2. 必要に応じて旧バージョンからの one-time マイグレーションを実行（レガシーアップグレード前に）。
+    // 検出ツールディレクトリを使用して既存の opsx スキル/コマンドを保持する。
+    const detectedTools = getAvailableTools(resolvedProjectPath);
+    migrateIfNeededShared(resolvedProjectPath, detectedTools);
 
-    // 3. 設定済みツールの取得
-    const configuredTools = getConfiguredTools(resolvedProjectPath);
+    // 3. プロファイル/デリバリーのグローバル設定を読み込む
+    const globalConfig = getGlobalConfig();
+    const profile = globalConfig.profile ?? 'core';
+    const delivery: Delivery = globalConfig.delivery ?? 'both';
+    const profileWorkflows = getProfileWorkflows(profile, globalConfig.workflows);
+    const desiredWorkflows = profileWorkflows.filter((workflow): workflow is (typeof ALL_WORKFLOWS)[number] =>
+      (ALL_WORKFLOWS as readonly string[]).includes(workflow)
+    );
+    const shouldGenerateSkills = delivery !== 'commands';
+    const shouldGenerateCommands = delivery !== 'skills';
+
+    // 4. 旧ファイルを検出・対応 + 有効な設定を使って旧ツールをアップグレード
+    const newlyConfiguredTools = await this.handleLegacyCleanup(
+      resolvedProjectPath,
+      desiredWorkflows,
+      delivery
+    );
+
+    // 5. 設定済みツールを取得
+    const configuredTools = getConfiguredToolsForProfileSync(resolvedProjectPath);
 
     if (configuredTools.length === 0 && newlyConfiguredTools.length === 0) {
       console.log(chalk.yellow('設定済みのツールが見つかりません。'));
@@ -74,35 +120,64 @@ export class UpdateCommand {
       return;
     }
 
-    // 4. 設定済みツールのバージョン状態を確認
-    const toolStatuses = getAllToolVersionStatus(resolvedProjectPath, OPENSPEC_VERSION);
+    // 6. 設定済みツールのバージョン状態を確認
+    const commandConfiguredTools = getCommandConfiguredTools(resolvedProjectPath);
+    const commandConfiguredSet = new Set(commandConfiguredTools);
+    const toolStatuses = configuredTools.map((toolId) => {
+      const status = getToolVersionStatus(resolvedProjectPath, toolId, OPENSPEC_VERSION);
+      if (!status.configured && commandConfiguredSet.has(toolId)) {
+        return { ...status, configured: true };
+      }
+      return status;
+    });
+    const statusByTool = new Map(toolStatuses.map((status) => [status.toolId, status] as const));
 
-    // 5. スマート更新検知
-    const toolsNeedingUpdate = toolStatuses.filter((s) => s.needsUpdate);
-    const toolsUpToDate = toolStatuses.filter((s) => !s.needsUpdate);
+    // 7. スマート更新検知
+    const toolsNeedingVersionUpdate = toolStatuses
+      .filter((s) => s.needsUpdate)
+      .map((s) => s.toolId);
+    const toolsNeedingConfigSync = getToolsNeedingProfileSync(
+      resolvedProjectPath,
+      desiredWorkflows,
+      delivery,
+      configuredTools
+    );
+    const toolsToUpdateSet = new Set<string>([
+      ...toolsNeedingVersionUpdate,
+      ...toolsNeedingConfigSync,
+    ]);
+    const toolsUpToDate = toolStatuses.filter((s) => !toolsToUpdateSet.has(s.toolId));
 
-    if (!this.force && toolsNeedingUpdate.length === 0) {
+    if (!this.force && toolsToUpdateSet.size === 0) {
       // すべてのツールが最新
       this.displayUpToDateMessage(toolStatuses);
+
+      // Still check for new tool directories and extra workflows
+      this.detectNewTools(resolvedProjectPath, configuredTools);
+      this.displayExtraWorkflowsNote(resolvedProjectPath, configuredTools, desiredWorkflows);
       return;
     }
 
-    // 6. 更新計画を表示
+    // 8. 更新計画を表示
     if (this.force) {
       console.log(`強制更新: ${configuredTools.length} 件（${configuredTools.join(', ')}）`);
     } else {
-      this.displayUpdatePlan(toolsNeedingUpdate, toolsUpToDate);
+      this.displayUpdatePlan([...toolsToUpdateSet], statusByTool, toolsUpToDate);
     }
     console.log();
 
-    // 7. テンプレートを準備
-    const skillTemplates = getSkillTemplates();
-    const commandContents = getCommandContents();
+    // 9. デリバリー設定に応じて生成対象を決定
+    const skillTemplates = shouldGenerateSkills ? getSkillTemplates(desiredWorkflows) : [];
+    const commandContents = shouldGenerateCommands ? getCommandContents(desiredWorkflows) : [];
 
-    // 8. ツールを更新（force なら全件、そうでなければ更新対象のみ）
-    const toolsToUpdate = this.force ? configuredTools : toolsNeedingUpdate.map((s) => s.toolId);
+    // 10. ツールを更新（force なら全件、そうでなければ更新対象のみ）
+    const toolsToUpdate = this.force ? configuredTools : [...toolsToUpdateSet];
     const updatedTools: string[] = [];
     const failedTools: Array<{ name: string; error: string }> = [];
+    let removedCommandCount = 0;
+    let removedSkillCount = 0;
+    let removedDeselectedCommandCount = 0;
+    let removedDeselectedSkillCount = 0;
 
     for (const toolId of toolsToUpdate) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -113,26 +188,48 @@ export class UpdateCommand {
       try {
         const skillsDir = path.join(resolvedProjectPath, tool.skillsDir, 'skills');
 
-        // スキルファイルを更新
-        for (const { template, dirName } of skillTemplates) {
-          const skillDir = path.join(skillsDir, dirName);
-          const skillFile = path.join(skillDir, 'SKILL.md');
+        // デリバリーにスキルが含まれる場合はスキルファイルを生成
+        if (shouldGenerateSkills) {
+          for (const { template, dirName } of skillTemplates) {
+            const skillDir = path.join(skillsDir, dirName);
+            const skillFile = path.join(skillDir, 'SKILL.md');
 
-          // OpenCode 用にハイフン形式のコマンド参照を使う
-          const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
-          const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-          await FileSystemUtils.writeFile(skillFile, skillContent);
+            // OpenCode 用にハイフン形式のコマンド参照を使う
+            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            await FileSystemUtils.writeFile(skillFile, skillContent);
+          }
+
+          removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(skillsDir, desiredWorkflows);
         }
 
-        // コマンドを更新
-        const adapter = CommandAdapterRegistry.get(tool.value);
-        if (adapter) {
-          const generatedCommands = generateCommands(commandContents, adapter);
+        // コマンドのみのデリバリーの場合はスキルディレクトリを削除
+        if (!shouldGenerateSkills) {
+          removedSkillCount += await this.removeSkillDirs(skillsDir);
+        }
 
-          for (const cmd of generatedCommands) {
-            const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(resolvedProjectPath, cmd.path);
-            await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
+        // Generate commands if delivery includes commands
+        if (shouldGenerateCommands) {
+          const adapter = CommandAdapterRegistry.get(tool.value);
+          if (adapter) {
+            const generatedCommands = generateCommands(commandContents, adapter);
+
+            for (const cmd of generatedCommands) {
+              const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(resolvedProjectPath, cmd.path);
+              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
+            }
+
+            removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
+              resolvedProjectPath,
+              toolId,
+              desiredWorkflows
+            );
           }
+        }
+
+        // スキルのみのデリバリーの場合はコマンドファイルを削除
+        if (!shouldGenerateCommands) {
+          removedCommandCount += await this.removeCommandFiles(resolvedProjectPath, toolId);
         }
 
         spinner.succeed(`${tool.name} を更新しました`);
@@ -146,7 +243,7 @@ export class UpdateCommand {
       }
     }
 
-    // 9. サマリー
+    // 11. サマリー
     console.log();
     if (updatedTools.length > 0) {
       console.log(chalk.green(`✓ 更新: ${updatedTools.join(', ')}（v${OPENSPEC_VERSION}）`));
@@ -154,8 +251,20 @@ export class UpdateCommand {
     if (failedTools.length > 0) {
       console.log(chalk.red(`✗ 失敗: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
     }
+    if (removedCommandCount > 0) {
+      console.log(chalk.dim(`Removed: ${removedCommandCount} command files (delivery: skills)`));
+    }
+    if (removedSkillCount > 0) {
+      console.log(chalk.dim(`Removed: ${removedSkillCount} skill directories (delivery: commands)`));
+    }
+    if (removedDeselectedCommandCount > 0) {
+      console.log(chalk.dim(`Removed: ${removedDeselectedCommandCount} command files (deselected workflows)`));
+    }
+    if (removedDeselectedSkillCount > 0) {
+      console.log(chalk.dim(`Removed: ${removedDeselectedSkillCount} skill directories (deselected workflows)`));
+    }
 
-    // 10. 旧環境から新規設定されたツール向けのオンボーディング案内
+    // 12. 旧環境から新規設定されたツール向けのオンボーディング案内
     if (newlyConfiguredTools.length > 0) {
       console.log();
       console.log(chalk.bold('はじめに:'));
@@ -164,6 +273,20 @@ export class UpdateCommand {
       console.log('  /opsx:apply     タスクを実装');
       console.log();
       console.log(`詳細: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J')}`);
+    }
+
+    const configuredAndNewTools = [...new Set([...configuredTools, ...newlyConfiguredTools])];
+
+    // 13. Detect new tool directories not currently configured
+    this.detectNewTools(resolvedProjectPath, configuredAndNewTools);
+
+    // 14. Display note about extra workflows not in profile
+    this.displayExtraWorkflowsNote(resolvedProjectPath, configuredAndNewTools, desiredWorkflows);
+
+    // 15. List affected tools
+    if (updatedTools.length > 0) {
+      const toolDisplayNames = updatedTools;
+      console.log(chalk.dim(`Tools: ${toolDisplayNames.join(', ')}`));
     }
 
     console.log();
@@ -185,15 +308,20 @@ export class UpdateCommand {
    * 更新対象ツールを表示する更新計画を表示する。
    */
   private displayUpdatePlan(
-    needingUpdate: ToolVersionStatus[],
+    toolsToUpdate: string[],
+    statusByTool: Map<string, ToolVersionStatus>,
     upToDate: ToolVersionStatus[]
   ): void {
-    const updates = needingUpdate.map((s) => {
-      const fromVersion = s.generatedByVersion ?? '不明';
-      return `${s.toolId} (${fromVersion} → ${OPENSPEC_VERSION})`;
+    const updates = toolsToUpdate.map((toolId) => {
+      const status = statusByTool.get(toolId);
+      if (status?.needsUpdate) {
+        const fromVersion = status.generatedByVersion ?? '不明';
+        return `${status.toolId} (${fromVersion} → ${OPENSPEC_VERSION})`;
+      }
+      return `${toolId} (設定同期)`;
     });
 
-    console.log(`更新対象: ${needingUpdate.length} 件（${updates.join(', ')}）`);
+    console.log(`更新対象: ${toolsToUpdate.length} 件（${updates.join(', ')}）`);
 
     if (upToDate.length > 0) {
       const upToDateNames = upToDate.map((s) => s.toolId);
@@ -201,12 +329,175 @@ export class UpdateCommand {
     }
   }
 
+    /**
+   * 未設定の新しいツールディレクトリを検出してヒントを表示する。
+   */
+  private detectNewTools(projectPath: string, configuredTools: string[]): void {
+    const availableTools = getAvailableTools(projectPath);
+    const configuredSet = new Set(configuredTools);
+
+    const newTools = availableTools.filter((t) => !configuredSet.has(t.value));
+
+    if (newTools.length > 0) {
+      const newToolNames = newTools.map((tool) => tool.name);
+      const isSingleTool = newToolNames.length === 1;
+      const toolNoun = isSingleTool ? 'ツール' : 'ツール';
+      const pronoun = isSingleTool ? 'それ' : 'それら';
+      console.log();
+      console.log(
+        chalk.yellow(
+          `新しい${toolNoun}が検出されました: ${newToolNames.join(', ')}。'openspec init' を実行して${pronoun}を追加してください。`
+        )
+      );
+    }
+  }
+
+  /**
+   * 現在のプロファイルに含まれない追加ワークフローが存在する場合に注記を表示する。
+   */
+  private displayExtraWorkflowsNote(
+    projectPath: string,
+    configuredTools: string[],
+    profileWorkflows: readonly string[]
+  ): void {
+    const installedWorkflows = scanInstalledWorkflows(projectPath, configuredTools);
+    const profileSet = new Set(profileWorkflows);
+    const extraWorkflows = installedWorkflows.filter((w) => !profileSet.has(w));
+
+    if (extraWorkflows.length > 0) {
+      console.log(chalk.dim(`注: ${extraWorkflows.length} 件のワークフローがプロファイル外です（\`openspec config profile\` で管理できます）`));
+    }
+  }
+
+  /**
+   * コマンドのみのデリバリーに変更された場合、スキルディレクトリを削除する。
+   * 削除したディレクトリ数を返す。
+   */
+  private async removeSkillDirs(skillsDir: string): Promise<number> {
+    let removed = 0;
+
+    for (const workflow of ALL_WORKFLOWS) {
+      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+      if (!dirName) continue;
+
+      const skillDir = path.join(skillsDir, dirName);
+      try {
+        if (fs.existsSync(skillDir)) {
+          await fs.promises.rm(skillDir, { recursive: true, force: true });
+          removed++;
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    return removed;
+  }
+
+  /**
+   * アクティブなプロファイルで選択されなくなったワークフローのスキルディレクトリを削除する。
+   * 削除したディレクトリ数を返す。
+   */
+  private async removeUnselectedSkillDirs(
+    skillsDir: string,
+    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][]
+  ): Promise<number> {
+    const desiredSet = new Set(desiredWorkflows);
+    let removed = 0;
+
+    for (const workflow of ALL_WORKFLOWS) {
+      if (desiredSet.has(workflow)) continue;
+      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+      if (!dirName) continue;
+
+      const skillDir = path.join(skillsDir, dirName);
+      try {
+        if (fs.existsSync(skillDir)) {
+          await fs.promises.rm(skillDir, { recursive: true, force: true });
+          removed++;
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    return removed;
+  }
+
+  /**
+   * スキルのみのデリバリーに変更された場合、コマンドファイルを削除する。
+   * 削除したファイル数を返す。
+   */
+  private async removeCommandFiles(
+    projectPath: string,
+    toolId: string,
+  ): Promise<number> {
+    let removed = 0;
+
+    const adapter = CommandAdapterRegistry.get(toolId);
+    if (!adapter) return 0;
+
+    for (const workflow of ALL_WORKFLOWS) {
+      const cmdPath = adapter.getFilePath(workflow);
+      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
+
+      try {
+        if (fs.existsSync(fullPath)) {
+          await fs.promises.unlink(fullPath);
+          removed++;
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    return removed;
+  }
+
+  /**
+   * アクティブなプロファイルで選択されなくなったワークフローのコマンドファイルを削除する。
+   * 削除したファイル数を返す。
+   */
+  private async removeUnselectedCommandFiles(
+    projectPath: string,
+    toolId: string,
+    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][]
+  ): Promise<number> {
+    let removed = 0;
+
+    const adapter = CommandAdapterRegistry.get(toolId);
+    if (!adapter) return 0;
+
+    const desiredSet = new Set(desiredWorkflows);
+
+    for (const workflow of ALL_WORKFLOWS) {
+      if (desiredSet.has(workflow)) continue;
+      const cmdPath = adapter.getFilePath(workflow);
+      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
+
+      try {
+        if (fs.existsSync(fullPath)) {
+          await fs.promises.unlink(fullPath);
+          removed++;
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    return removed;
+  }
+
   /**
    * 旧 OpenSpec ファイルを検出して対応する。
    * init と異なり、非対話モードで旧ファイルが見つかっても警告して続行する。
    * 旧環境からの移行で新規設定されたツール ID を返す。
    */
-  private async handleLegacyCleanup(projectPath: string): Promise<string[]> {
+  private async handleLegacyCleanup(
+    projectPath: string,
+    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][],
+    delivery: Delivery
+  ): Promise<string[]> {
     // 旧ファイルを検出
     const detection = await detectLegacyArtifacts(projectPath);
 
@@ -225,7 +516,7 @@ export class UpdateCommand {
       // --force 指定: 自動クリーンアップで続行
       await this.performLegacyCleanup(projectPath, detection);
       // その後、旧ツールを新スキルへ移行
-      return this.upgradeLegacyTools(projectPath, detection, canPrompt);
+      return this.upgradeLegacyTools(projectPath, detection, canPrompt, desiredWorkflows, delivery);
     }
 
     if (!canPrompt) {
@@ -246,7 +537,7 @@ export class UpdateCommand {
     if (shouldCleanup) {
       await this.performLegacyCleanup(projectPath, detection);
       // その後、旧ツールを新スキルへ移行
-      return this.upgradeLegacyTools(projectPath, detection, canPrompt);
+      return this.upgradeLegacyTools(projectPath, detection, canPrompt, desiredWorkflows, delivery);
     } else {
       console.log(chalk.dim('旧ファイルのクリーンアップをスキップし、スキル更新を続行します...'));
       console.log();
@@ -280,7 +571,9 @@ export class UpdateCommand {
   private async upgradeLegacyTools(
     projectPath: string,
     detection: LegacyDetectionResult,
-    canPrompt: boolean
+    canPrompt: boolean,
+    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][],
+    delivery: Delivery
   ): Promise<string[]> {
     // 旧ファイルが存在したツールを取得
     const legacyTools = getToolsFromLegacyArtifacts(detection);
@@ -290,7 +583,7 @@ export class UpdateCommand {
     }
 
     // 現在設定済みのツールを取得
-    const configuredTools = getConfiguredTools(projectPath);
+    const configuredTools = getConfiguredToolsForProfileSync(projectPath);
     const configuredSet = new Set(configuredTools);
 
     // 既に設定済みのツールを除外
@@ -350,10 +643,12 @@ export class UpdateCommand {
       }
     }
 
-    // 選択されたツール向けにスキルを作成
+    // 選択されたツール向けに有効なプロファイル+デリバリー設定でスキル/コマンドを作成
     const newlyConfigured: string[] = [];
-    const skillTemplates = getSkillTemplates();
-    const commandContents = getCommandContents();
+    const shouldGenerateSkills = delivery !== 'commands';
+    const shouldGenerateCommands = delivery !== 'skills';
+    const skillTemplates = shouldGenerateSkills ? getSkillTemplates(desiredWorkflows) : [];
+    const commandContents = shouldGenerateCommands ? getCommandContents(desiredWorkflows) : [];
 
     for (const toolId of selectedTools) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -364,25 +659,29 @@ export class UpdateCommand {
       try {
         const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
-        // スキルファイルを作成
-        for (const { template, dirName } of skillTemplates) {
-          const skillDir = path.join(skillsDir, dirName);
-          const skillFile = path.join(skillDir, 'SKILL.md');
+        // デリバリーにスキルが含まれる場合はスキルファイルを作成
+        if (shouldGenerateSkills) {
+          for (const { template, dirName } of skillTemplates) {
+            const skillDir = path.join(skillsDir, dirName);
+            const skillFile = path.join(skillDir, 'SKILL.md');
 
-          // OpenCode 用にハイフン形式のコマンド参照を使う
-          const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
-          const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-          await FileSystemUtils.writeFile(skillFile, skillContent);
+            // OpenCode 用にハイフン形式のコマンド参照を使う
+            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            await FileSystemUtils.writeFile(skillFile, skillContent);
+          }
         }
 
-        // コマンドを作成
-        const adapter = CommandAdapterRegistry.get(tool.value);
-        if (adapter) {
-          const generatedCommands = generateCommands(commandContents, adapter);
+        // デリバリーにコマンドが含まれる場合はコマンドを作成
+        if (shouldGenerateCommands) {
+          const adapter = CommandAdapterRegistry.get(tool.value);
+          if (adapter) {
+            const generatedCommands = generateCommands(commandContents, adapter);
 
-          for (const cmd of generatedCommands) {
-            const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
-            await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
+            for (const cmd of generatedCommands) {
+              const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
+              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
+            }
           }
         }
 

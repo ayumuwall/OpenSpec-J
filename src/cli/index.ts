@@ -95,7 +95,8 @@ program
   .description('プロジェクトで OpenSpec を初期化')
   .option('--tools <tools>', toolsOptionDescription)
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
-  .action(async (targetPath = '.', options?: { tools?: string; force?: boolean }) => {
+  .option('--profile <profile>', 'グローバル設定プロファイルを上書き（core またはカスタム）')
+  .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string }) => {
     try {
       // Validate that the path is a valid directory
       const resolvedPath = path.resolve(targetPath);
@@ -120,6 +121,7 @@ program
       const initCommand = new InitCommand({
         tools: options?.tools,
         force: options?.force,
+        profile: options?.profile,
       });
       await initCommand.execute(targetPath);
     } catch (error) {

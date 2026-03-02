@@ -767,6 +767,7 @@ openspec config <subcommand> [options]
 | `unset <key>` | キーを削除 |
 | `reset` | デフォルトに戻す |
 | `edit` | `$EDITOR` で開く |
+| `profile [preset]` | ワークフロープロファイルを対話的またはプリセットで設定 |
 
 **例:**
 
@@ -794,6 +795,37 @@ openspec config reset --all --yes
 
 # エディタで設定を開く
 openspec config edit
+
+# Configure profile with action-based wizard
+openspec config profile
+
+# Fast preset: switch workflows to core (keeps delivery mode)
+openspec config profile core
+```
+
+`openspec config profile` は現在の状態サマリーから始まり、以下を選択できます。
+- デリバリー + ワークフローを変更
+- デリバリーのみ変更
+- ワークフローのみ変更
+- 現在の設定を維持（終了）
+
+現在の設定を維持した場合、変更は書き込まれず更新プロンプトも表示されません。
+設定変更はないがプロジェクトファイルがグローバルプロファイル/デリバリーと同期していない場合、OpenSpec は警告を表示し `openspec update` の実行を提案します。
+`Ctrl+C` を押してもフローをクリーンにキャンセルでき（スタックトレースなし）、コード `130` で終了します。
+ワークフローチェックリストで `[x]` はグローバル設定でワークフローが選択済みであることを意味します。プロジェクトファイルに反映するには `openspec update` を実行してください（プロジェクト内でプロンプトが表示された場合は `Apply changes to this project now?` を選択）。
+
+**対話例:**
+
+```bash
+# デリバリーのみ更新
+openspec config profile
+# 選択: Change delivery only
+# デリバリーを選択: Skills only
+
+# ワークフローのみ更新
+openspec config profile
+# 選択: Change workflows only
+# チェックリストでワークフローを切り替えて確認
 ```
 
 ---

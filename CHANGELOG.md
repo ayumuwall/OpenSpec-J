@@ -3,6 +3,26 @@
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 
+## 1.2.0
+
+### Minor Changes
+
+- [#747](https://github.com/Fission-AI/OpenSpec/pull/747) [`1e94443`](https://github.com/Fission-AI/OpenSpec/commit/1e94443a3551b228eecbc89e95d96d3b9600a192) Thanks [@TabishB](https://github.com/TabishB)! - ### New Features
+
+  - **Profile system** — Choose between `core` (4 essential workflows) and `custom` (pick any subset) profiles to control which skills get installed. Manage profiles with the new `openspec config profile` command
+  - **Propose workflow** — New one-step workflow creates a complete change proposal with design, specs, and tasks from a single request — no need to run `new` then `ff` separately
+  - **AI tool auto-detection** — `openspec init` now scans your project for existing tool directories (`.claude/`, `.cursor/`, etc.) and pre-selects detected tools
+  - **Pi (pi.dev) support** — Pi coding agent is now a supported tool with prompt and skill generation
+  - **Kiro support** — AWS Kiro IDE is now a supported tool with prompt and skill generation
+  - **Sync prunes deselected workflows** — `openspec update` now removes command files and skill directories for workflows you've deselected, keeping your project clean
+  - **Config drift warning** — `openspec config list` warns when global config is out of sync with the current project
+
+  ### Bug Fixes
+
+  - Fixed onboard preflight giving a false "not initialized" error on freshly initialized projects
+  - Fixed archive workflow stopping mid-way when syncing — it now properly resumes after sync completes
+  - Added Windows PowerShell alternatives for onboard shell commands
+
 ## 1.1.1
 
 - **[OpenSpec-J]** v1.1.1 追従のため、OpenCode コマンド参照の変換・update/init の日本語コメント/リンクを反映

@@ -41,6 +41,10 @@ import {
   generateSkillContent,
   type ToolSkillStatus,
 } from './shared/index.js';
+import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
+import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
+import { getAvailableTools } from './available-tools.js';
+import { migrateIfNeeded } from './migration.js';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -56,6 +60,20 @@ const PROGRESS_SPINNER = {
   frames: ['░░░', '▒░░', '▒▒░', '▒▒▒', '▓▒▒', '▓▓▒', '▓▓▓', '▒▓▓', '░▒▓'],
 };
 
+const WORKFLOW_TO_SKILL_DIR: Record<string, string> = {
+  'explore': 'openspec-explore',
+  'new': 'openspec-new-change',
+  'continue': 'openspec-continue-change',
+  'apply': 'openspec-apply-change',
+  'ff': 'openspec-ff-change',
+  'sync': 'openspec-sync-specs',
+  'archive': 'openspec-archive-change',
+  'bulk-archive': 'openspec-bulk-archive-change',
+  'verify': 'openspec-verify-change',
+  'onboard': 'openspec-onboard',
+  'propose': 'openspec-propose',
+};
+
 // -----------------------------------------------------------------------------
 // 型
 // -----------------------------------------------------------------------------
@@ -64,6 +82,7 @@ type InitCommandOptions = {
   tools?: string;
   force?: boolean;
   interactive?: boolean;
+  profile?: string;
 };
 
 // -----------------------------------------------------------------------------
@@ -74,11 +93,13 @@ export class InitCommand {
   private readonly toolsArg?: string;
   private readonly force: boolean;
   private readonly interactiveOption?: boolean;
+  private readonly profileOverride?: string;
 
   constructor(options: InitCommandOptions = {}) {
     this.toolsArg = options.tools;
     this.force = options.force ?? false;
     this.interactiveOption = options.interactive;
+    this.profileOverride = options.profile;
   }
 
   async execute(targetPath: string): Promise<void> {
@@ -92,6 +113,14 @@ export class InitCommand {
     // 旧ファイルを検出してクリーンアップを処理する
     await this.handleLegacyCleanup(projectPath, extendMode);
 
+    // プロジェクトで利用可能なツールを検出する
+    const detectedTools = getAvailableTools(projectPath);
+
+    // 移行確認: 既存プロジェクトをプロファイルシステムに移行する
+    if (extendMode) {
+      migrateIfNeeded(projectPath, detectedTools);
+    }
+
     // アニメーション付きウェルカム画面（対話モードのみ）
     const canPrompt = this.canPromptInteractively();
     if (canPrompt) {
@@ -99,11 +128,15 @@ export class InitCommand {
       await showWelcomeScreen();
     }
 
+    // プロファイルオーバーライドを早期に検証する（ツール設定前に無効な値を弾く）
+    // 解決値はコード生成時に実際に使用される
+    this.resolveProfileOverride();
+
     // 処理前にツール状態を取得
     const toolStates = getToolStates(projectPath);
 
-    // ツール選択を取得
-    const selectedToolIds = await this.getSelectedTools(toolStates, extendMode);
+    // ツール選択を取得（検出ツールを事前選択に利用）
+    const selectedToolIds = await this.getSelectedTools(toolStates, extendMode, detectedTools, projectPath);
 
     // 選択されたツールを検証
     const validatedTools = this.validateTools(selectedToolIds, toolStates);
@@ -142,6 +175,18 @@ export class InitCommand {
     if (this.interactiveOption === false) return false;
     if (this.toolsArg !== undefined) return false;
     return isInteractive({ interactive: this.interactiveOption });
+  }
+
+  private resolveProfileOverride(): Profile | undefined {
+    if (this.profileOverride === undefined) {
+      return undefined;
+    }
+
+    if (this.profileOverride === 'core' || this.profileOverride === 'custom') {
+      return this.profileOverride;
+    }
+
+    throw new Error(`Invalid profile "${this.profileOverride}". Available profiles: core, custom`);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -214,7 +259,9 @@ export class InitCommand {
 
   private async getSelectedTools(
     toolStates: Map<string, ToolSkillStatus>,
-    extendMode: boolean
+    extendMode: boolean,
+    detectedTools: AIToolOption[],
+    projectPath: string
   ): Promise<string[]> {
     // 先に --tools 指定を確認
     const nonInteractiveSelection = this.resolveToolsArg();
@@ -223,37 +270,77 @@ export class InitCommand {
     }
 
     const validTools = getToolsWithSkillsDir();
+    const detectedToolIds = new Set(detectedTools.map((t) => t.value));
+    const configuredToolIds = new Set(
+      [...toolStates.entries()]
+        .filter(([, status]) => status.configured)
+        .map(([toolId]) => toolId)
+    );
+    const shouldPreselectDetected = !extendMode && configuredToolIds.size === 0;
     const canPrompt = this.canPromptInteractively();
 
-    if (!canPrompt || validTools.length === 0) {
+    // Non-interactive mode: use detected tools as fallback (task 7.8)
+    if (!canPrompt) {
+      if (detectedToolIds.size > 0) {
+        return [...detectedToolIds];
+      }
       throw new Error(
-        `必須オプション --tools が指定されていません。利用可能なツール:\n  ${validTools.join('\n  ')}\n\n--tools all、--tools none、または --tools claude,cursor,... を使用してください。`
+        `ツールが検出されず、--tools フラグも指定されていません。利用可能なツール:\n  ${validTools.join('\n  ')}\n\n--tools all、--tools none、または --tools claude,cursor,... を使用してください。`
+      );
+    }
+
+    if (validTools.length === 0) {
+      throw new Error(
+        `スキル生成に利用可能なツールがありません。`
       );
     }
 
     // 対話モード: 検索可能な複数選択を表示
     const { searchableMultiSelect } = await import('../prompts/searchable-multi-select.js');
 
-    // 設定済みフラグを付けて、設定済みツールを先に並べる
+    // 設定済みツールを先に選択しておき、検出ツールは表示するが未選択とする
     const sortedChoices = validTools
       .map((toolId) => {
         const tool = AI_TOOLS.find((t) => t.value === toolId);
         const status = toolStates.get(toolId);
         const configured = status?.configured ?? false;
+        const detected = detectedToolIds.has(toolId);
 
         return {
           name: tool?.name || toolId,
           value: toolId,
           configured,
-          preSelected: configured, // 既に設定済みのツールを先に選択しておく
+          detected: detected && !configured,
+          preSelected: configured || (shouldPreselectDetected && detected && !configured),
         };
       })
       .sort((a, b) => {
-        // 設定済みツールを先頭に
+        // 設定済みツールを先頭に、次に検出済み（未設定）、その他の順に並べる
         if (a.configured && !b.configured) return -1;
         if (!a.configured && b.configured) return 1;
+        if (a.detected && !b.detected) return -1;
+        if (!a.detected && b.detected) return 1;
         return 0;
       });
+
+    const configuredNames = validTools
+      .filter((toolId) => configuredToolIds.has(toolId))
+      .map((toolId) => AI_TOOLS.find((t) => t.value === toolId)?.name || toolId);
+
+    if (configuredNames.length > 0) {
+      console.log(`OpenSpec configured: ${configuredNames.join(', ')} (pre-selected)`);
+    }
+
+    const detectedOnlyNames = detectedTools
+      .filter((tool) => !configuredToolIds.has(tool.value))
+      .map((tool) => tool.name);
+
+    if (detectedOnlyNames.length > 0) {
+      const detectionLabel = shouldPreselectDetected
+        ? 'pre-selected for first-time setup'
+        : 'not pre-selected';
+      console.log(`Detected tool directories: ${detectedOnlyNames.join(', ')} (${detectionLabel})`);
+    }
 
     const selectedTools = await searchableMultiSelect({
       message: `セットアップするツールを選択してください（利用可能: ${validTools.length}）`,
@@ -417,49 +504,73 @@ export class InitCommand {
     refreshedTools: typeof tools;
     failedTools: Array<{ name: string; error: Error }>;
     commandsSkipped: string[];
+    removedCommandCount: number;
+    removedSkillCount: number;
   }> {
     const createdTools: typeof tools = [];
     const refreshedTools: typeof tools = [];
     const failedTools: Array<{ name: string; error: Error }> = [];
     const commandsSkipped: string[] = [];
+    let removedCommandCount = 0;
+    let removedSkillCount = 0;
 
-    // スキル/コマンドのテンプレートを一度だけ取得（全ツール共通）
-    const skillTemplates = getSkillTemplates();
-    const commandContents = getCommandContents();
+    // グローバル設定からプロファイル・デリバリー設定を読み込む（--profile オーバーライドを優先）
+    const globalConfig = getGlobalConfig();
+    const profile: Profile = this.resolveProfileOverride() ?? globalConfig.profile ?? 'core';
+    const delivery: Delivery = globalConfig.delivery ?? 'both';
+    const workflows = getProfileWorkflows(profile, globalConfig.workflows);
+
+    // プロファイルのワークフローでフィルタリングしたスキル/コマンドテンプレートを取得
+    const shouldGenerateSkills = delivery !== 'commands';
+    const shouldGenerateCommands = delivery !== 'skills';
+    const skillTemplates = shouldGenerateSkills ? getSkillTemplates(workflows) : [];
+    const commandContents = shouldGenerateCommands ? getCommandContents(workflows) : [];
 
     // ツールごとに処理する
     for (const tool of tools) {
       const spinner = ora(`${tool.name} をセットアップ中...`).start();
 
       try {
-        // ツール固有の skillsDir を使う
-        const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
+        // デリバリーにスキルが含まれる場合はスキルファイルを生成する
+        if (shouldGenerateSkills) {
+          // ツール固有の skillsDir を使う
+          const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
-        // スキルディレクトリと SKILL.md を作成
-        for (const { template, dirName } of skillTemplates) {
-          const skillDir = path.join(skillsDir, dirName);
-          const skillFile = path.join(skillDir, 'SKILL.md');
+          // スキルディレクトリと SKILL.md を作成
+          for (const { template, dirName } of skillTemplates) {
+            const skillDir = path.join(skillsDir, dirName);
+            const skillFile = path.join(skillDir, 'SKILL.md');
 
-          // generatedBy を含む YAML フロントマター付き SKILL.md を生成
-          // OpenCode 用にハイフン形式のコマンド参照を使う
-          const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
-          const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            // generatedBy を含む YAML フロントマター付き SKILL.md を生成
+            // OpenCode 用にハイフン形式のコマンド参照を使う
+            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
-          // スキルファイルを書き込む
-          await FileSystemUtils.writeFile(skillFile, skillContent);
+            // スキルファイルを書き込む
+            await FileSystemUtils.writeFile(skillFile, skillContent);
+          }
+        }
+        if (!shouldGenerateSkills) {
+          const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
+          removedSkillCount += await this.removeSkillDirs(skillsDir);
         }
 
-        // アダプターシステムでコマンドを生成
-        const adapter = CommandAdapterRegistry.get(tool.value);
-        if (adapter) {
-          const generatedCommands = generateCommands(commandContents, adapter);
+        // デリバリーにコマンドが含まれる場合はコマンドを生成する
+        if (shouldGenerateCommands) {
+          const adapter = CommandAdapterRegistry.get(tool.value);
+          if (adapter) {
+            const generatedCommands = generateCommands(commandContents, adapter);
 
-          for (const cmd of generatedCommands) {
-            const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
-            await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
+            for (const cmd of generatedCommands) {
+              const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
+              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
+            }
+          } else {
+            commandsSkipped.push(tool.value);
           }
-        } else {
-          commandsSkipped.push(tool.value);
+        }
+        if (!shouldGenerateCommands) {
+          removedCommandCount += await this.removeCommandFiles(projectPath, tool.value);
         }
 
         spinner.succeed(`${tool.name} のセットアップが完了しました`);
@@ -475,7 +586,14 @@ export class InitCommand {
       }
     }
 
-    return { createdTools, refreshedTools, failedTools, commandsSkipped };
+    return {
+      createdTools,
+      refreshedTools,
+      failedTools,
+      commandsSkipped,
+      removedCommandCount,
+      removedSkillCount,
+    };
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -518,6 +636,8 @@ export class InitCommand {
       refreshedTools: typeof tools;
       failedTools: Array<{ name: string; error: Error }>;
       commandsSkipped: string[];
+      removedCommandCount: number;
+      removedSkillCount: number;
     },
     configStatus: 'created' | 'exists' | 'skipped'
   ): void {
@@ -533,15 +653,22 @@ export class InitCommand {
       console.log(`更新: ${results.refreshedTools.map((t) => t.name).join(', ')}`);
     }
 
-    // 件数を表示
+    // 件数を表示（プロファイルフィルターを反映）
     const successfulTools = [...results.createdTools, ...results.refreshedTools];
     if (successfulTools.length > 0) {
+      const globalConfig = getGlobalConfig();
+      const profile: Profile = (this.profileOverride as Profile) ?? globalConfig.profile ?? 'core';
+      const delivery: Delivery = globalConfig.delivery ?? 'both';
+      const workflows = getProfileWorkflows(profile, globalConfig.workflows);
       const toolDirs = [...new Set(successfulTools.map((t) => t.skillsDir))].join(', ');
-      const hasCommands = results.commandsSkipped.length < successfulTools.length;
-      if (hasCommands) {
-        console.log(`${getSkillTemplates().length} 個のスキルと ${getCommandContents().length} 個のコマンドを ${toolDirs}/ に生成しました`);
-      } else {
-        console.log(`${getSkillTemplates().length} 個のスキルを ${toolDirs}/ に生成しました`);
+      const skillCount = delivery !== 'commands' ? getSkillTemplates(workflows).length : 0;
+      const commandCount = delivery !== 'skills' ? getCommandContents(workflows).length : 0;
+      if (skillCount > 0 && commandCount > 0) {
+        console.log(`${skillCount} 個のスキルと ${commandCount} 個のコマンドを ${toolDirs}/ に生成しました`);
+      } else if (skillCount > 0) {
+        console.log(`${skillCount} 個のスキルを ${toolDirs}/ に生成しました`);
+      } else if (commandCount > 0) {
+        console.log(`${commandCount} 個のコマンドを ${toolDirs}/ に生成しました`);
       }
     }
 
@@ -553,6 +680,12 @@ export class InitCommand {
     // スキップされたコマンドを表示
     if (results.commandsSkipped.length > 0) {
       console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
+    }
+    if (results.removedCommandCount > 0) {
+      console.log(chalk.dim(`Removed: ${results.removedCommandCount} command files (delivery: skills)`));
+    }
+    if (results.removedSkillCount > 0) {
+      console.log(chalk.dim(`Removed: ${results.removedSkillCount} skill directories (delivery: commands)`));
     }
 
     // 設定ファイルの状態
@@ -568,12 +701,20 @@ export class InitCommand {
       console.log(chalk.dim('設定: スキップ（非対話モード）'));
     }
 
-    // はじめに
+    // はじめに（propose がプロファイルに含まれる場合は propose を優先表示）
+    const globalCfg = getGlobalConfig();
+    const activeProfile: Profile = (this.profileOverride as Profile) ?? globalCfg.profile ?? 'core';
+    const activeWorkflows = [...getProfileWorkflows(activeProfile, globalCfg.workflows)];
     console.log();
-    console.log(chalk.bold('はじめに:'));
-    console.log('  /opsx:new       新しい変更を開始');
-    console.log('  /opsx:continue  次のアーティファクトを作成');
-    console.log('  /opsx:apply     タスクを実装');
+    if (activeWorkflows.includes('propose')) {
+      console.log(chalk.bold('はじめに:'));
+      console.log('  最初の変更を開始: /opsx:propose "あなたのアイデア"');
+    } else if (activeWorkflows.includes('new')) {
+      console.log(chalk.bold('はじめに:'));
+      console.log('  最初の変更を開始: /opsx:new "あなたのアイデア"');
+    } else {
+      console.log("完了。ワークフローを設定するには 'openspec config profile' を実行してください。");
+    }
 
     // リンク
     console.log();
@@ -596,5 +737,48 @@ export class InitCommand {
       color: 'gray',
       spinner: PROGRESS_SPINNER,
     }).start();
+  }
+
+  private async removeSkillDirs(skillsDir: string): Promise<number> {
+    let removed = 0;
+
+    for (const workflow of ALL_WORKFLOWS) {
+      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+      if (!dirName) continue;
+
+      const skillDir = path.join(skillsDir, dirName);
+      try {
+        if (fs.existsSync(skillDir)) {
+          await fs.promises.rm(skillDir, { recursive: true, force: true });
+          removed++;
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    return removed;
+  }
+
+  private async removeCommandFiles(projectPath: string, toolId: string): Promise<number> {
+    let removed = 0;
+    const adapter = CommandAdapterRegistry.get(toolId);
+    if (!adapter) return 0;
+
+    for (const workflow of ALL_WORKFLOWS) {
+      const cmdPath = adapter.getFilePath(workflow);
+      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
+
+      try {
+        if (fs.existsSync(fullPath)) {
+          await fs.promises.unlink(fullPath);
+          removed++;
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    return removed;
   }
 }

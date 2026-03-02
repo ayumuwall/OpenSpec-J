@@ -15,6 +15,7 @@ import {
   getBulkArchiveChangeSkillTemplate,
   getVerifyChangeSkillTemplate,
   getOnboardSkillTemplate,
+  getOpsxProposeSkillTemplate,
   getOpsxExploreCommandTemplate,
   getOpsxNewCommandTemplate,
   getOpsxContinueCommandTemplate,
@@ -25,16 +26,18 @@ import {
   getOpsxBulkArchiveCommandTemplate,
   getOpsxVerifyCommandTemplate,
   getOpsxOnboardCommandTemplate,
+  getOpsxProposeCommandTemplate,
   type SkillTemplate,
 } from '../templates/skill-templates.js';
 import type { CommandContent } from '../command-generation/index.js';
 
 /**
- * スキルテンプレートとディレクトリ名の対応。
+ * スキルテンプレートとディレクトリ名・ワークフロー ID の対応。
  */
 export interface SkillTemplateEntry {
   template: SkillTemplate;
   dirName: string;
+  workflowId: string;
 }
 
 /**
@@ -46,28 +49,38 @@ export interface CommandTemplateEntry {
 }
 
 /**
- * すべてのスキルテンプレートとディレクトリ名を取得する。
+ * スキルテンプレートとディレクトリ名を取得する。ワークフロー ID でフィルタ可能。
+ *
+ * @param workflowFilter - 指定した場合、workflowId がこの配列に含まれるテンプレートのみ返す
  */
-export function getSkillTemplates(): SkillTemplateEntry[] {
-  return [
-    { template: getExploreSkillTemplate(), dirName: 'openspec-explore' },
-    { template: getNewChangeSkillTemplate(), dirName: 'openspec-new-change' },
-    { template: getContinueChangeSkillTemplate(), dirName: 'openspec-continue-change' },
-    { template: getApplyChangeSkillTemplate(), dirName: 'openspec-apply-change' },
-    { template: getFfChangeSkillTemplate(), dirName: 'openspec-ff-change' },
-    { template: getSyncSpecsSkillTemplate(), dirName: 'openspec-sync-specs' },
-    { template: getArchiveChangeSkillTemplate(), dirName: 'openspec-archive-change' },
-    { template: getBulkArchiveChangeSkillTemplate(), dirName: 'openspec-bulk-archive-change' },
-    { template: getVerifyChangeSkillTemplate(), dirName: 'openspec-verify-change' },
-    { template: getOnboardSkillTemplate(), dirName: 'openspec-onboard' },
+export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemplateEntry[] {
+  const all: SkillTemplateEntry[] = [
+    { template: getExploreSkillTemplate(), dirName: 'openspec-explore', workflowId: 'explore' },
+    { template: getNewChangeSkillTemplate(), dirName: 'openspec-new-change', workflowId: 'new' },
+    { template: getContinueChangeSkillTemplate(), dirName: 'openspec-continue-change', workflowId: 'continue' },
+    { template: getApplyChangeSkillTemplate(), dirName: 'openspec-apply-change', workflowId: 'apply' },
+    { template: getFfChangeSkillTemplate(), dirName: 'openspec-ff-change', workflowId: 'ff' },
+    { template: getSyncSpecsSkillTemplate(), dirName: 'openspec-sync-specs', workflowId: 'sync' },
+    { template: getArchiveChangeSkillTemplate(), dirName: 'openspec-archive-change', workflowId: 'archive' },
+    { template: getBulkArchiveChangeSkillTemplate(), dirName: 'openspec-bulk-archive-change', workflowId: 'bulk-archive' },
+    { template: getVerifyChangeSkillTemplate(), dirName: 'openspec-verify-change', workflowId: 'verify' },
+    { template: getOnboardSkillTemplate(), dirName: 'openspec-onboard', workflowId: 'onboard' },
+    { template: getOpsxProposeSkillTemplate(), dirName: 'openspec-propose', workflowId: 'propose' },
   ];
+
+  if (!workflowFilter) return all;
+
+  const filterSet = new Set(workflowFilter);
+  return all.filter(entry => filterSet.has(entry.workflowId));
 }
 
 /**
- * すべてのコマンドテンプレートと ID を取得する。
+ * コマンドテンプレートと ID を取得する。ワークフロー ID でフィルタ可能。
+ *
+ * @param workflowFilter - 指定した場合、id がこの配列に含まれるテンプレートのみ返す
  */
-export function getCommandTemplates(): CommandTemplateEntry[] {
-  return [
+export function getCommandTemplates(workflowFilter?: readonly string[]): CommandTemplateEntry[] {
+  const all: CommandTemplateEntry[] = [
     { template: getOpsxExploreCommandTemplate(), id: 'explore' },
     { template: getOpsxNewCommandTemplate(), id: 'new' },
     { template: getOpsxContinueCommandTemplate(), id: 'continue' },
@@ -78,14 +91,22 @@ export function getCommandTemplates(): CommandTemplateEntry[] {
     { template: getOpsxBulkArchiveCommandTemplate(), id: 'bulk-archive' },
     { template: getOpsxVerifyCommandTemplate(), id: 'verify' },
     { template: getOpsxOnboardCommandTemplate(), id: 'onboard' },
+    { template: getOpsxProposeCommandTemplate(), id: 'propose' },
   ];
+
+  if (!workflowFilter) return all;
+
+  const filterSet = new Set(workflowFilter);
+  return all.filter(entry => filterSet.has(entry.id));
 }
 
 /**
- * コマンドテンプレートを CommandContent 配列に変換する。
+ * コマンドテンプレートを CommandContent 配列に変換する。ワークフロー ID でフィルタ可能。
+ *
+ * @param workflowFilter - 指定した場合、id がこの配列に含まれるコンテンツのみ返す
  */
-export function getCommandContents(): CommandContent[] {
-  const commandTemplates = getCommandTemplates();
+export function getCommandContents(workflowFilter?: readonly string[]): CommandContent[] {
+  const commandTemplates = getCommandTemplates(workflowFilter);
   return commandTemplates.map(({ template, id }) => ({
     id,
     name: template.name,

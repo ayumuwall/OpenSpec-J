@@ -19,17 +19,19 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 | Claude Code | `.claude/skills/` | `.claude/commands/opsx/` |
 | Cline | `.cline/skills/` | `.clinerules/workflows/` |
 | CodeBuddy | `.codebuddy/skills/` | `.codebuddy/commands/opsx/` |
-| Codex | `.codex/skills/` | `~/.codex/prompts/`* |
+| Codex | `.codex/skills/` | `~/.codex/prompts/`\* |
 | Continue | `.continue/skills/` | `.continue/prompts/` |
 | CoStrict | `.cospec/skills/` | `.cospec/openspec/commands/` |
 | Crush | `.crush/skills/` | `.crush/commands/opsx/` |
 | Cursor | `.cursor/skills/` | `.cursor/commands/` |
 | Factory Droid | `.factory/skills/` | `.factory/commands/` |
 | Gemini CLI | `.gemini/skills/` | `.gemini/commands/opsx/` |
-| GitHub Copilot | `.github/skills/` | `.github/prompts/` |
+| GitHub Copilot | `.github/skills/` | `.github/prompts/`\*\* |
 | iFlow | `.iflow/skills/` | `.iflow/commands/` |
 | Kilo Code | `.kilocode/skills/` | `.kilocode/workflows/` |
+| Kiro | `.kiro/skills/` | `.kiro/prompts/` |
 | OpenCode | `.opencode/skills/` | `.opencode/command/` |
+| Pi | `.pi/skills/` | `.pi/prompts/` |
 | Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
 | Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
 | RooCode | `.roo/skills/` | `.roo/commands/` |
@@ -37,6 +39,8 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 | Windsurf | `.windsurf/skills/` | `.windsurf/workflows/` |
 
 \* Codex のコマンドはプロジェクト内ではなく、グローバルなホームディレクトリ（`~/.codex/prompts/` または `$CODEX_HOME/prompts/`）にインストールされます。
+
+\*\* GitHub Copilot の `.github/prompts/*.prompt.md` ファイルは、**IDE 拡張機能のみ**（VS Code, JetBrains, Visual Studio）でカスタムスラッシュコマンドとして認識されます。GitHub Copilot CLI は現在このディレクトリのカスタムプロンプトをサポートしていません — [github/copilot-cli#618](https://github.com/github/copilot-cli/issues/618) を参照してください。Copilot CLI を使用している場合は、`.github/agents/` に[カスタムエージェント](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-custom-agents)を手動でセットアップする必要があります。
 
 ## 非対話セットアップ
 
@@ -53,7 +57,7 @@ openspec init --tools all
 openspec init --tools none
 ```
 
-**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
+**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
 ## インストールされるもの
 

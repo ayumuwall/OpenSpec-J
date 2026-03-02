@@ -22,9 +22,29 @@ export const SKILL_NAMES = [
   'openspec-bulk-archive-change',
   'openspec-verify-change',
   'openspec-onboard',
+  'openspec-propose',
 ] as const;
 
 export type SkillName = (typeof SKILL_NAMES)[number];
+
+/**
+ * openspec init で作成されるコマンドテンプレートの ID。
+ */
+export const COMMAND_IDS = [
+  'explore',
+  'new',
+  'continue',
+  'apply',
+  'ff',
+  'sync',
+  'archive',
+  'bulk-archive',
+  'verify',
+  'onboard',
+  'propose',
+] as const;
+
+export type CommandId = (typeof COMMAND_IDS)[number];
 
 /**
  * ツールのスキル設定状態。
@@ -32,9 +52,9 @@ export type SkillName = (typeof SKILL_NAMES)[number];
 export interface ToolSkillStatus {
   /** スキルが設定済みか */
   configured: boolean;
-  /** 10 個すべてのスキルが設定済みか */
+  /** すべてのスキルが設定済みか */
   fullyConfigured: boolean;
-  /** 設定済みスキル数（0-10） */
+  /** 現在設定済みのスキル数 */
   skillCount: number;
 }
 

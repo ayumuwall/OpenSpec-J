@@ -5,24 +5,5 @@
  * スキルベースのワークフローでは skill-templates.ts を直接使用する。
  */
 
-// 利便性のためスキルテンプレートを再エクスポート
-export {
-  getExploreSkillTemplate,
-  getNewChangeSkillTemplate,
-  getContinueChangeSkillTemplate,
-  getApplyChangeSkillTemplate,
-  getFfChangeSkillTemplate,
-  getSyncSpecsSkillTemplate,
-  getArchiveChangeSkillTemplate,
-  getBulkArchiveChangeSkillTemplate,
-  getVerifyChangeSkillTemplate,
-  getOpsxExploreCommandTemplate,
-  getOpsxNewCommandTemplate,
-  getOpsxContinueCommandTemplate,
-  getOpsxApplyCommandTemplate,
-  getOpsxFfCommandTemplate,
-  getOpsxSyncCommandTemplate,
-  getOpsxArchiveCommandTemplate,
-  getOpsxBulkArchiveCommandTemplate,
-  getOpsxVerifyCommandTemplate,
-} from './skill-templates.js';
+// 互換性ファサード経由でスキルテンプレートと関連型をすべて再エクスポート。
+export * from './skill-templates.js';

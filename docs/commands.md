@@ -567,10 +567,12 @@ AI ツールによってコマンド記法が少し異なります。各ツー�
 | Claude Code | `/opsx:new`, `/opsx:apply` |
 | Cursor | `/opsx-new`, `/opsx-apply` |
 | Windsurf | `/opsx-new`, `/opsx-apply` |
-| Copilot | `/opsx-new`, `/opsx-apply` |
+| Copilot (IDE) | `/opsx-new`, `/opsx-apply` |
 | Trae | `/openspec-new-change`, `/openspec-apply-change` |
 
 記法が違っても機能は同一です。
+
+> **Note:** GitHub Copilot commands (`.github/prompts/*.prompt.md`) are only available in IDE extensions (VS Code, JetBrains, Visual Studio). GitHub Copilot CLI does not currently support custom prompt files — see [Supported Tools](supported-tools.md) for details and workarounds.
 
 ---
 

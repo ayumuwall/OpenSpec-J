@@ -46,7 +46,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 - Windsurf: `.windsurf/workflows/openspec-*.md`
 - Cline: `.clinerules/workflows/openspec-*.md`
 - Roo: `.roo/commands/openspec-*.md`
-- GitHub Copilot: `.github/prompts/openspec-*.prompt.md`
+- GitHub Copilot: `.github/prompts/openspec-*.prompt.md`（IDE 拡張機能のみ。Copilot CLI は非対応）
 - ほか（Augment, Continue, Amazon Q など）
 
 移行は、設定済みツールを検出して旧ファイルをクリーンアップします。
@@ -332,14 +332,14 @@ AI が「必須 vs 削減」の判断を手伝います。
 OPSX はアクションベースです:
 
 ```
-         ┌────────────────────────────────────────┐
-         │        アクション（フェーズではない）   │
-         │                                        │
+         ┌───────────────────────────────────────────────┐
+         │        アクション（フェーズではない）          │
+         │                                               │
          │     new ◄──► continue ◄──► apply ◄──► archive │
-         │      │          │           │           │   │
-         │      └──────────┴───────────┴───────────┘   │
-         │              順不同                        │
-         └────────────────────────────────────────┘
+         │      │          │           │             │   │
+         │      └──────────┴───────────┴─────────────┘   │
+         │                    順不同                     │
+         └───────────────────────────────────────────────┘
 ```
 
 ### 依存関係グラフ
