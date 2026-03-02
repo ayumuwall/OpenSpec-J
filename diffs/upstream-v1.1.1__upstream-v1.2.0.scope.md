@@ -1,67 +1,67 @@
 # Scope (upstream-v1.1.1 → upstream-v1.2.0)
 
-※ 進捗管理用。各項目の `- [ ]` を更新して利用する。
+※ 進捗管理用。各項目の `- [x]` を更新して利用する。
 
 ## docs
 
-- [ ] M CHANGELOG.md
-- [ ] M docs/cli.md
-- [ ] M docs/commands.md
-- [ ] M docs/concepts.md
-- [ ] M docs/migration-guide.md
-- [ ] M docs/supported-tools.md
+- [x] M CHANGELOG.md
+- [x] M docs/cli.md
+- [x] M docs/commands.md
+- [x] M docs/concepts.md
+- [x] M docs/migration-guide.md
+- [x] M docs/supported-tools.md
 
 ## OPSX スキル
 
-- [ ] M src/core/templates/skill-templates.ts
-- [ ] A src/core/templates/workflows/apply-change.ts
-- [ ] A src/core/templates/workflows/archive-change.ts
-- [ ] A src/core/templates/workflows/bulk-archive-change.ts
-- [ ] A src/core/templates/workflows/continue-change.ts
-- [ ] A src/core/templates/workflows/explore.ts
-- [ ] A src/core/templates/workflows/feedback.ts
-- [ ] A src/core/templates/workflows/ff-change.ts
-- [ ] A src/core/templates/workflows/new-change.ts
-- [ ] A src/core/templates/workflows/onboard.ts
-- [ ] A src/core/templates/workflows/propose.ts
-- [ ] A src/core/templates/workflows/sync-specs.ts
-- [ ] A src/core/templates/workflows/verify-change.ts
-- [ ] M src/core/templates/index.ts
-- [ ] A src/core/templates/types.ts
+- [x] M src/core/templates/skill-templates.ts
+- [x] A src/core/templates/workflows/apply-change.ts
+- [x] A src/core/templates/workflows/archive-change.ts
+- [x] A src/core/templates/workflows/bulk-archive-change.ts
+- [x] A src/core/templates/workflows/continue-change.ts
+- [x] A src/core/templates/workflows/explore.ts
+- [x] A src/core/templates/workflows/feedback.ts
+- [x] A src/core/templates/workflows/ff-change.ts
+- [x] A src/core/templates/workflows/new-change.ts
+- [x] A src/core/templates/workflows/onboard.ts
+- [x] A src/core/templates/workflows/propose.ts
+- [x] A src/core/templates/workflows/sync-specs.ts
+- [x] A src/core/templates/workflows/verify-change.ts
+- [x] M src/core/templates/index.ts
+- [x] A src/core/templates/types.ts
 
 ## コマンド生成
 
-- [ ] M src/core/command-generation/adapters/index.ts
-- [ ] A src/core/command-generation/adapters/kiro.ts
-- [ ] A src/core/command-generation/adapters/pi.ts
-- [ ] M src/core/command-generation/registry.ts
+- [x] M src/core/command-generation/adapters/index.ts
+- [x] A src/core/command-generation/adapters/kiro.ts
+- [x] A src/core/command-generation/adapters/pi.ts
+- [x] M src/core/command-generation/registry.ts
 
 ## init・オンボーディング
 
-- [ ] M src/core/init.ts
-- [ ] M src/core/shared/index.ts
-- [ ] M src/core/shared/skill-generation.ts
-- [ ] M src/core/shared/tool-detection.ts
-- [ ] M src/prompts/searchable-multi-select.ts
+- [x] M src/core/init.ts
+- [x] M src/core/shared/index.ts
+- [x] M src/core/shared/skill-generation.ts
+- [x] M src/core/shared/tool-detection.ts
+- [x] M src/prompts/searchable-multi-select.ts
 
 ## CLI
 
-- [ ] M src/cli/index.ts
-- [ ] M src/commands/config.ts
+- [x] M src/cli/index.ts
+- [x] M src/commands/config.ts
 
 ## その他
 
-- [ ] M package.json
-- [ ] M src/core/available-tools.ts
-- [ ] M src/core/completions/command-registry.ts
-- [ ] M src/core/config-schema.ts
-- [ ] M src/core/config.ts
-- [ ] M src/core/global-config.ts
-- [ ] M src/core/legacy-cleanup.ts
-- [ ] A src/core/migration.ts
-- [ ] A src/core/profile-sync-drift.ts
-- [ ] A src/core/profiles.ts
-- [ ] M src/core/update.ts
+- [x] M package.json
+- [x] M src/core/available-tools.ts
+- [x] M src/core/completions/command-registry.ts
+- [x] M src/core/config-schema.ts
+- [x] M src/core/config.ts
+- [x] M src/core/global-config.ts
+- [x] M src/core/legacy-cleanup.ts
+- [x] A src/core/migration.ts
+- [x] A src/core/profile-sync-drift.ts
+- [x] A src/core/profiles.ts
+- [x] M src/core/update.ts
 
 ## 翻訳対象外
 
