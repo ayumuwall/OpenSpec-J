@@ -5,23 +5,26 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 1.2.0
 
-### Minor Changes
+- **[OpenSpec-J]** v1.2.0 追従のため、全スキルテンプレート（propose 含む）・docs・CLI メッセージを日本語化
+- **[OpenSpec-J]** README の同期元バージョンを更新
 
-- [#747](https://github.com/Fission-AI/OpenSpec/pull/747) [`1e94443`](https://github.com/Fission-AI/OpenSpec/commit/1e94443a3551b228eecbc89e95d96d3b9600a192) Thanks [@TabishB](https://github.com/TabishB)! - ### New Features
+### マイナー変更
 
-  - **Profile system** — Choose between `core` (4 essential workflows) and `custom` (pick any subset) profiles to control which skills get installed. Manage profiles with the new `openspec config profile` command
-  - **Propose workflow** — New one-step workflow creates a complete change proposal with design, specs, and tasks from a single request — no need to run `new` then `ff` separately
-  - **AI tool auto-detection** — `openspec init` now scans your project for existing tool directories (`.claude/`, `.cursor/`, etc.) and pre-selects detected tools
-  - **Pi (pi.dev) support** — Pi coding agent is now a supported tool with prompt and skill generation
-  - **Kiro support** — AWS Kiro IDE is now a supported tool with prompt and skill generation
-  - **Sync prunes deselected workflows** — `openspec update` now removes command files and skill directories for workflows you've deselected, keeping your project clean
-  - **Config drift warning** — `openspec config list` warns when global config is out of sync with the current project
+- [#747](https://github.com/Fission-AI/OpenSpec/pull/747) [`1e94443`](https://github.com/Fission-AI/OpenSpec/commit/1e94443a3551b228eecbc89e95d96d3b9600a192) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 新機能
 
-  ### Bug Fixes
+  - **プロファイルシステム** — `core`（4つの基本ワークフロー）または `custom`（任意のサブセットを選択）プロファイルからインストールするスキルを制御。新しい `openspec config profile` コマンドでプロファイルを管理
+  - **Propose ワークフロー** — 一度のリクエストで設計・仕様・タスクを含む完全な変更提案を作成する新しいワンステップワークフロー。`new` + `ff` を別々に実行する必要がなくなりました
+  - **AI ツール自動検出** — `openspec init` がプロジェクト内の既存ツールディレクトリ（`.claude/`、`.cursor/` 等）をスキャンし、検出されたツールを事前選択
+  - **Pi (pi.dev) 対応** — Pi コーディングエージェントがプロンプトとスキル生成に対応したサポート済みツールに追加
+  - **Kiro 対応** — AWS Kiro IDE がプロンプトとスキル生成に対応したサポート済みツールに追加
+  - **同期時に非選択ワークフローを削除** — `openspec update` が非選択ワークフローのコマンドファイルとスキルディレクトリを削除し、プロジェクトをクリーンに保つようになりました
+  - **設定ドリフト警告** — `openspec config list` がグローバル設定と現在のプロジェクトの同期がずれている場合に警告を表示
 
-  - Fixed onboard preflight giving a false "not initialized" error on freshly initialized projects
-  - Fixed archive workflow stopping mid-way when syncing — it now properly resumes after sync completes
-  - Added Windows PowerShell alternatives for onboard shell commands
+  ### バグ修正
+
+  - 新しく初期化したプロジェクトで onboard プリフライトが「初期化されていません」という誤ったエラーを表示する問題を修正
+  - archive ワークフローが同期中に途中で停止する問題を修正（同期完了後に正しく再開するよう改善）
+  - onboard シェルコマンドに Windows PowerShell の代替手順を追加
 
 ## 1.1.1
 
