@@ -7,6 +7,10 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 - **[OpenSpec-J]** v1.2.0 追従のため、全スキルテンプレート（propose 含む）・docs・CLI メッセージを日本語化
 - **[OpenSpec-J]** README の同期元バージョンを更新
+- **[OpenSpec-J]** `skill-templates.ts` が `workflows/` 配下に分割されたため、各ファイルへ日本語訳を移植（propose は新規翻訳）
+- **[OpenSpec-J]** `SKILL_NAMES` / `COMMAND_IDS` に `openspec-propose` を追加（文字列置換ではなくコード変更）
+- **[OpenSpec-J]** `searchable-multi-select` のキーバインド変更（Tab→Enter/Space）に伴いヒント文・テスト期待値を更新
+- **[OpenSpec-J]** `skill-templates-parity` テストのハッシュ検証化に対応し、日本語化後のハッシュ値を再計算・更新
 
 ### マイナー変更
 
