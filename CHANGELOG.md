@@ -2,6 +2,12 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.3.0-1
+
+- **[OpenSpec-J]** v1.3.0 に `config` / `onboard` 周辺の日本語化漏れがありました。ご不便をおかけして申し訳ありません。
+- **[OpenSpec-J]** `openspec config` の一覧表示と `config profile` 対話 UI に残っていた英語文言を日本語化
+- **[OpenSpec-J]** `onboard` テンプレートのコマンド表と終了案内に残っていた英語文言を日本語化
+
 
 ## 1.3.0
 
