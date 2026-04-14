@@ -7,10 +7,10 @@ This guide explains the core ideas behind OpenSpec and how they fit together. Fo
 OpenSpec is built around four principles:
 
 ```
-fluid not rigid       — no phase gates, work on what makes sense
+fluid not rigid         — no phase gates, work on what makes sense
 iterative not waterfall — learn as you build, refine as you go
-easy not complex      — lightweight setup, minimal ceremony
-brownfield-first      — works with existing codebases, not just greenfield
+easy not complex        — lightweight setup, minimal ceremony
+brownfield-first        — works with existing codebases, not just greenfield
 ```
 
 ### Why These Principles Matter
@@ -28,19 +28,19 @@ brownfield-first      — works with existing codebases, not just greenfield
 OpenSpec organizes your work into two main areas:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        openspec/                                 │
-│                                                                  │
-│   ┌─────────────────────┐      ┌──────────────────────────────┐ │
-│   │       specs/        │      │         changes/              │ │
-│   │                     │      │                               │ │
-│   │  Source of truth    │◄─────│  Proposed modifications       │ │
-│   │  How your system    │ merge│  Each change = one folder     │ │
-│   │  currently works    │      │  Contains artifacts + deltas  │ │
-│   │                     │      │                               │ │
-│   └─────────────────────┘      └──────────────────────────────┘ │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                        openspec/                                   │
+│                                                                    │
+│   ┌─────────────────────┐      ┌───────────────────────────────┐   │
+│   │       specs/        │      │         changes/              │   │
+│   │                     │      │                               │   │
+│   │  Source of truth    │◄─────│  Proposed modifications       │   │
+│   │  How your system    │ merge│  Each change = one folder     │   │
+│   │  currently works    │      │  Contains artifacts + deltas  │   │
+│   │                     │      │                               │   │
+│   └─────────────────────┘      └───────────────────────────────┘   │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 **Specs** are the source of truth — they describe how your system currently behaves.
@@ -270,7 +270,7 @@ Delta specs describe **what's changing** relative to the current specs. See [Del
 
 The design captures **technical approach** and **architecture decisions**.
 
-```markdown
+````markdown
 # Design: Add Dark Mode
 
 ## Technical Approach
@@ -306,7 +306,7 @@ CSS Variables (applied to :root)
 - `src/contexts/ThemeContext.tsx` (new)
 - `src/components/ThemeToggle.tsx` (new)
 - `src/styles/globals.css` (modified)
-```
+````
 
 **When to update the design:**
 - Implementation reveals the approach won't work
@@ -558,17 +558,17 @@ openspec/
 ## How It All Fits Together
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────────────────┐
 │                              OPENSPEC FLOW                                   │
 │                                                                              │
 │   ┌────────────────┐                                                         │
-│   │  1. START      │  /opsx:new creates a change folder                      │
+│   │  1. START      │  /opsx:propose (core) or /opsx:new (expanded)           │
 │   │     CHANGE     │                                                         │
 │   └───────┬────────┘                                                         │
 │           │                                                                  │
 │           ▼                                                                  │
 │   ┌────────────────┐                                                         │
-│   │  2. CREATE     │  /opsx:ff or /opsx:continue                             │
+│   │  2. CREATE     │  /opsx:ff or /opsx:continue (expanded workflow)         │
 │   │     ARTIFACTS  │  Creates proposal → specs → design → tasks              │
 │   │                │  (based on schema dependencies)                         │
 │   └───────┬────────┘                                                         │
@@ -587,13 +587,13 @@ openspec/
 │   └───────┬────────┘                                                         │
 │           │                                                                  │
 │           ▼                                                                  │
-│   ┌────────────────┐     ┌──────────────────────────────────────────────┐   │
-│   │  5. ARCHIVE    │────►│  Delta specs merge into main specs           │   │
-│   │     CHANGE     │     │  Change folder moves to archive/             │   │
-│   └────────────────┘     │  Specs are now the updated source of truth   │   │
-│                          └──────────────────────────────────────────────┘   │
+│   ┌────────────────┐     ┌──────────────────────────────────────────────┐    │
+│   │  5. ARCHIVE    │────►│  Delta specs merge into main specs           │    │
+│   │     CHANGE     │     │  Change folder moves to archive/             │    │
+│   └────────────────┘     │  Specs are now the updated source of truth   │    │
+│                          └──────────────────────────────────────────────┘    │
 │                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **The virtuous cycle:**
