@@ -1,0 +1,3162 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 9d435a4..fe2f3a5 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -3,6 +3,8 @@ name: CI
+ on:
+   pull_request:
+     branches: [main]
++  merge_group:
++    branches: [main]
+   push:
+     branches: [main]
+   workflow_dispatch:
+@@ -42,7 +44,7 @@ jobs:
+     name: Test
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+-    if: github.event_name == 'pull_request'
++    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+ 
+     steps:
+       - name: Checkout code
+@@ -81,7 +83,7 @@ jobs:
+     name: Test (${{ matrix.label }})
+     runs-on: ${{ matrix.os }}
+     timeout-minutes: 15
+-    if: github.event_name != 'pull_request'
++    if: github.event_name == 'push'
+     strategy:
+       fail-fast: false
+       matrix:
+@@ -242,7 +244,7 @@ jobs:
+   validate-changesets:
+     name: Validate Changesets
+     runs-on: ubuntu-latest
+-    if: github.event_name == 'pull_request'
++    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
+@@ -275,7 +277,7 @@ jobs:
+     name: All checks passed
+     runs-on: ubuntu-latest
+     needs: [test_pr, lint, nix-flake-validate]
+-    if: always() && github.event_name == 'pull_request'
++    if: always() && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
+     steps:
+       - name: Verify all checks passed
+         run: |
+@@ -301,7 +303,7 @@ jobs:
+     name: All checks passed
+     runs-on: ubuntu-latest
+     needs: [test_matrix, lint, nix-flake-validate]
+-    if: always() && github.event_name != 'pull_request'
++    if: always() && github.event_name == 'push'
+     steps:
+       - name: Verify all checks passed
+         run: |
+diff --git a/.gitignore b/.gitignore
+index abea4d1..3ed2601 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -153,3 +153,9 @@ result
+ # OpenCode
+ .opencode/
+ opencode.json
++
++# Codex
++.codex/
++
++# Bob
++.bob/
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1d7271a..75f1fc0 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,28 @@
+ # @fission-ai/openspec
+ 
++## 1.3.0
++
++### Minor Changes
++
++- [#952](https://github.com/Fission-AI/OpenSpec/pull/952) [`cce787e`](https://github.com/Fission-AI/OpenSpec/commit/cce787ec4083da2b27781f6786f5ce0002909a7b) Thanks [@TabishB](https://github.com/TabishB)! - ### New Features
++
++  - **Junie support** — Added tool and command generation for JetBrains Junie
++  - **Lingma IDE support** — Added configuration support for Lingma IDE
++  - **ForgeCode support** — Added tool support for ForgeCode
++  - **IBM Bob support** — Added support for IBM Bob coding assistant
++
++  ### Bug Fixes
++
++  - **Shell completions opt-in** — Completion install is now opt-in, fixing PowerShell encoding corruption
++  - **Copilot auto-detection** — Prevented false GitHub Copilot detection from a bare `.github/` directory
++  - **pi.dev command generation** — Fixed command reference transforms and template argument passing
++
++### Patch Changes
++
++- [#760](https://github.com/Fission-AI/OpenSpec/pull/760) [`61eb999`](https://github.com/Fission-AI/OpenSpec/commit/61eb999f7c6c0fc98d2e7f3678756fce6a3f4378) Thanks [@fsilvaortiz](https://github.com/fsilvaortiz)! - fix: OpenCode adapter now uses `.opencode/commands/` (plural) to match OpenCode's official directory convention. Fixes #748.
++
++- [#759](https://github.com/Fission-AI/OpenSpec/pull/759) [`afdca0d`](https://github.com/Fission-AI/OpenSpec/commit/afdca0d5dab1aa109cfd8848b2512333ccad60c3) Thanks [@fsilvaortiz](https://github.com/fsilvaortiz)! - fix: `openspec status` now exits gracefully when no changes exist instead of throwing a fatal error. Fixes #714.
++
+ ## 1.2.0
+ 
+ ### Minor Changes
+diff --git a/README.md b/README.md
+index c43d3e9..45c18bd 100644
+--- a/README.md
++++ b/README.md
+@@ -36,7 +36,7 @@ Our philosophy:
+ > [!TIP]
+ > **New workflow now available!** We've rebuilt OpenSpec with a new artifact-guided workflow.
+ >
+-> Run `/opsx:onboard` to get started. → [Learn more here](docs/opsx.md)
++> Run `/opsx:propose "your idea"` to get started. → [Learn more here](docs/opsx.md)
+ 
+ <p align="center">
+   Follow <a href="https://x.com/0xTab">@0xTab on X</a> for updates · Join the <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> for help and questions.
+@@ -46,17 +46,14 @@ Our philosophy:
+ 
+ Using OpenSpec in a team? [Email here](mailto:teams@openspec.dev) for access to our Slack channel.
+ 
+-<!-- TODO: Add GIF demo of /opsx:new → /opsx:archive workflow -->
++<!-- TODO: Add GIF demo of /opsx:propose → /opsx:archive workflow -->
+ 
+ ## See it in action
+ 
+ ```text
+-You: /opsx:new add-dark-mode
++You: /opsx:propose add-dark-mode
+ AI:  Created openspec/changes/add-dark-mode/
+-     Ready to create: proposal
+-
+-You: /opsx:ff   # "fast-forward" - generate all planning docs
+-AI:  ✓ proposal.md — why we're doing this, what's changing
++     ✓ proposal.md — why we're doing this, what's changing
+      ✓ specs/       — requirements and scenarios
+      ✓ design.md    — technical approach
+      ✓ tasks.md     — implementation checklist
+@@ -101,10 +98,12 @@ cd your-project
+ openspec init
+ ```
+ 
+-Now tell your AI: `/opsx:new <what-you-want-to-build>`
++Now tell your AI: `/opsx:propose <what-you-want-to-build>`
++
++If you want the expanded workflow (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`.
+ 
+ > [!NOTE]
+-> Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 20+ tools and growing.
++> Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 25+ tools and growing.
+ >
+ > Also works with pnpm, yarn, bun, and nix. [See installation options](docs/installation.md).
+ 
+diff --git a/docs/cli.md b/docs/cli.md
+index df12fe1..ebbb847 100644
+--- a/docs/cli.md
++++ b/docs/cli.md
+@@ -1,6 +1,6 @@
+ # CLI Reference
+ 
+-The OpenSpec CLI (`openspec`) provides terminal commands for project setup, validation, status inspection, and management. These commands complement the AI slash commands (like `/opsx:new`) documented in [Commands](commands.md).
++The OpenSpec CLI (`openspec`) provides terminal commands for project setup, validation, status inspection, and management. These commands complement the AI slash commands (like `/opsx:propose`) documented in [Commands](commands.md).
+ 
+ ## Summary
+ 
+@@ -67,6 +67,8 @@ These options work with all commands:
+ 
+ Initialize OpenSpec in your project. Creates the folder structure and configures AI tool integrations.
+ 
++Default behavior uses global config defaults: profile `core`, delivery `both`, workflows `propose, explore, apply, archive`.
++
+ ```
+ openspec init [path] [options]
+ ```
+@@ -83,8 +85,11 @@ openspec init [path] [options]
+ |--------|-------------|
+ | `--tools <list>` | Configure AI tools non-interactively. Use `all`, `none`, or comma-separated list |
+ | `--force` | Auto-cleanup legacy files without prompting |
++| `--profile <profile>` | Override global profile for this init run (`core` or `custom`) |
++
++`--profile custom` uses whatever workflows are currently selected in global config (`openspec config profile`).
+ 
+-**Supported tools:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `windsurf`
++**Supported tool IDs (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
+ 
+ **Examples:**
+ 
+@@ -101,6 +106,9 @@ openspec init --tools claude,cursor
+ # Configure for all supported tools
+ openspec init --tools all
+ 
++# Override profile for this run
++openspec init --profile core
++
+ # Skip prompts and auto-cleanup legacy files
+ openspec init --force
+ ```
+@@ -113,8 +121,9 @@ openspec/
+ ├── changes/            # Proposed changes
+ └── config.yaml         # Project configuration
+ 
+-.claude/skills/         # Claude Code skill files (if claude selected)
+-.cursor/rules/          # Cursor rules (if cursor selected)
++.claude/skills/         # Claude Code skills (if claude selected)
++.cursor/skills/         # Cursor skills (if cursor selected)
++.cursor/commands/       # Cursor OPSX commands (if delivery includes commands)
+ ... (other tool configs)
+ ```
+ 
+@@ -122,7 +131,7 @@ openspec/
+ 
+ ### `openspec update`
+ 
+-Update OpenSpec instruction files after upgrading the CLI. Re-generates AI tool configuration files.
++Update OpenSpec instruction files after upgrading the CLI. Re-generates AI tool configuration files using your current global profile, selected workflows, and delivery mode.
+ 
+ ```
+ openspec update [path] [options]
+@@ -428,29 +437,28 @@ openspec status --change add-dark-mode --json
+ ```
+ Change: add-dark-mode
+ Schema: spec-driven
++Progress: 2/4 artifacts complete
+ 
+-Artifacts:
+-  ✓ proposal     proposal.md exists
+-  ✓ specs        specs/ exists
+-  ◆ design       ready (requires: specs)
+-  ○ tasks        blocked (requires: design)
+-
+-Next: Create design using /opsx:continue
++[x] proposal
++[ ] design
++[x] specs
++[-] tasks (blocked by: design)
+ ```
+ 
+ **Output (JSON):**
+ 
+ ```json
+ {
+-  "change": "add-dark-mode",
+-  "schema": "spec-driven",
++  "changeName": "add-dark-mode",
++  "schemaName": "spec-driven",
++  "isComplete": false,
++  "applyRequires": ["tasks"],
+   "artifacts": [
+-    {"id": "proposal", "status": "complete", "path": "proposal.md"},
+-    {"id": "specs", "status": "complete", "path": "specs/"},
+-    {"id": "design", "status": "ready", "requires": ["specs"]},
+-    {"id": "tasks", "status": "blocked", "requires": ["design"]}
+-  ],
+-  "next": "design"
++    {"id": "proposal", "outputPath": "proposal.md", "status": "done"},
++    {"id": "design", "outputPath": "design.md", "status": "ready"},
++    {"id": "specs", "outputPath": "specs/**/*.md", "status": "done"},
++    {"id": "tasks", "outputPath": "tasks.md", "status": "blocked", "missingDeps": ["design"]}
++  ]
+ }
+ ```
+ 
+@@ -920,7 +928,7 @@ openspec completion uninstall
+ 
+ ## Related Documentation
+ 
+-- [Commands](commands.md) - AI slash commands (`/opsx:new`, `/opsx:apply`, etc.)
++- [Commands](commands.md) - AI slash commands (`/opsx:propose`, `/opsx:apply`, etc.)
+ - [Workflows](workflows.md) - Common patterns and when to use each command
+ - [Customization](customization.md) - Create custom schemas and templates
+ - [Getting Started](getting-started.md) - First-time setup guide
+diff --git a/docs/commands.md b/docs/commands.md
+index 9bc59b4..fd4bb7f 100644
+--- a/docs/commands.md
++++ b/docs/commands.md
+@@ -6,23 +6,70 @@ For workflow patterns and when to use each command, see [Workflows](workflows.md
+ 
+ ## Quick Reference
+ 
++### Default Quick Path (`core` profile)
++
+ | Command | Purpose |
+ |---------|---------|
++| `/opsx:propose` | Create a change and generate planning artifacts in one step |
+ | `/opsx:explore` | Think through ideas before committing to a change |
+-| `/opsx:new` | Start a new change |
++| `/opsx:apply` | Implement tasks from the change |
++| `/opsx:archive` | Archive a completed change |
++
++### Expanded Workflow Commands (custom workflow selection)
++
++| Command | Purpose |
++|---------|---------|
++| `/opsx:new` | Start a new change scaffold |
+ | `/opsx:continue` | Create the next artifact based on dependencies |
+ | `/opsx:ff` | Fast-forward: create all planning artifacts at once |
+-| `/opsx:apply` | Implement tasks from the change |
+ | `/opsx:verify` | Validate implementation matches artifacts |
+ | `/opsx:sync` | Merge delta specs into main specs |
+-| `/opsx:archive` | Archive a completed change |
+ | `/opsx:bulk-archive` | Archive multiple changes at once |
+ | `/opsx:onboard` | Guided tutorial through the complete workflow |
+ 
++The default global profile is `core`. To enable expanded workflow commands, run `openspec config profile`, select workflows, then run `openspec update` in your project.
++
+ ---
+ 
+ ## Command Reference
+ 
++### `/opsx:propose`
++
++Create a new change and generate planning artifacts in one step. This is the default start command in the `core` profile.
++
++**Syntax:**
++```text
++/opsx:propose [change-name-or-description]
++```
++
++**Arguments:**
++| Argument | Required | Description |
++|----------|----------|-------------|
++| `change-name-or-description` | No | Kebab-case name or plain-language change description |
++
++**What it does:**
++- Creates `openspec/changes/<change-name>/`
++- Generates artifacts needed before implementation (for `spec-driven`: proposal, specs, design, tasks)
++- Stops when the change is ready for `/opsx:apply`
++
++**Example:**
++```text
++You: /opsx:propose add-dark-mode
++
++AI:  Created openspec/changes/add-dark-mode/
++     ✓ proposal.md
++     ✓ specs/ui/spec.md
++     ✓ design.md
++     ✓ tasks.md
++     Ready for implementation. Run /opsx:apply.
++```
++
++**Tips:**
++- Use this for the fastest end-to-end path
++- If you want step-by-step artifact control, enable expanded workflows and use `/opsx:new` + `/opsx:continue`
++
++---
++
+ ### `/opsx:explore`
+ 
+ Think through ideas, investigate problems, and clarify requirements before committing to a change.
+@@ -42,7 +89,7 @@ Think through ideas, investigate problems, and clarify requirements before commi
+ - Investigates the codebase to answer questions
+ - Compares options and approaches
+ - Creates visual diagrams to clarify thinking
+-- Can transition to `/opsx:new` when insights crystallize
++- Can transition to `/opsx:propose` (default) or `/opsx:new` (expanded workflow) when insights crystallize
+ 
+ **Example:**
+ ```text
+@@ -66,7 +113,7 @@ AI:  Let me investigate your current auth setup...
+ 
+ You: Let's go with JWT. Can we start a change for that?
+ 
+-AI:  Ready when you are. Run /opsx:new add-jwt-auth to begin.
++AI:  Ready when you are. Run /opsx:propose add-jwt-auth to begin.
+ ```
+ 
+ **Tips:**
+@@ -79,7 +126,9 @@ AI:  Ready when you are. Run /opsx:new add-jwt-auth to begin.
+ 
+ ### `/opsx:new`
+ 
+-Start a new change. Creates the change folder structure and scaffolds it with the selected schema.
++Start a new change scaffold. Creates the change folder and waits for you to generate artifacts with `/opsx:continue` or `/opsx:ff`.
++
++This command is part of the expanded workflow set (not included in the default `core` profile).
+ 
+ **Syntax:**
+ ```
+@@ -565,13 +614,13 @@ Different AI tools use slightly different command syntax. Use the format that ma
+ 
+ | Tool | Syntax Example |
+ |------|----------------|
+-| Claude Code | `/opsx:new`, `/opsx:apply` |
+-| Cursor | `/opsx-new`, `/opsx-apply` |
+-| Windsurf | `/opsx-new`, `/opsx-apply` |
+-| Copilot (IDE) | `/opsx-new`, `/opsx-apply` |
+-| Trae | `/openspec-new-change`, `/openspec-apply-change` |
++| Claude Code | `/opsx:propose`, `/opsx:apply` |
++| Cursor | `/opsx-propose`, `/opsx-apply` |
++| Windsurf | `/opsx-propose`, `/opsx-apply` |
++| Copilot (IDE) | `/opsx-propose`, `/opsx-apply` |
++| Trae | Skill-based invocations such as `/openspec-propose`, `/openspec-apply-change` (no generated `opsx-*` command files) |
+ 
+-The functionality is identical regardless of syntax.
++The intent is the same across tools, but how commands are surfaced can differ by integration.
+ 
+ > **Note:** GitHub Copilot commands (`.github/prompts/*.prompt.md`) are only available in IDE extensions (VS Code, JetBrains, Visual Studio). GitHub Copilot CLI does not currently support custom prompt files — see [Supported Tools](supported-tools.md) for details and workarounds.
+ 
+diff --git a/docs/concepts.md b/docs/concepts.md
+index 2784ac3..b929a58 100644
+--- a/docs/concepts.md
++++ b/docs/concepts.md
+@@ -7,10 +7,10 @@ This guide explains the core ideas behind OpenSpec and how they fit together. Fo
+ OpenSpec is built around four principles:
+ 
+ ```
+-fluid not rigid       — no phase gates, work on what makes sense
++fluid not rigid         — no phase gates, work on what makes sense
+ iterative not waterfall — learn as you build, refine as you go
+-easy not complex      — lightweight setup, minimal ceremony
+-brownfield-first      — works with existing codebases, not just greenfield
++easy not complex        — lightweight setup, minimal ceremony
++brownfield-first        — works with existing codebases, not just greenfield
+ ```
+ 
+ ### Why These Principles Matter
+@@ -28,19 +28,19 @@ brownfield-first      — works with existing codebases, not just greenfield
+ OpenSpec organizes your work into two main areas:
+ 
+ ```
+-┌─────────────────────────────────────────────────────────────────┐
+-│                        openspec/                                 │
+-│                                                                  │
+-│   ┌─────────────────────┐      ┌──────────────────────────────┐ │
+-│   │       specs/        │      │         changes/              │ │
+-│   │                     │      │                               │ │
+-│   │  Source of truth    │◄─────│  Proposed modifications       │ │
+-│   │  How your system    │ merge│  Each change = one folder     │ │
+-│   │  currently works    │      │  Contains artifacts + deltas  │ │
+-│   │                     │      │                               │ │
+-│   └─────────────────────┘      └──────────────────────────────┘ │
+-│                                                                  │
+-└─────────────────────────────────────────────────────────────────┘
++┌────────────────────────────────────────────────────────────────────┐
++│                        openspec/                                   │
++│                                                                    │
++│   ┌─────────────────────┐      ┌───────────────────────────────┐   │
++│   │       specs/        │      │         changes/              │   │
++│   │                     │      │                               │   │
++│   │  Source of truth    │◄─────│  Proposed modifications       │   │
++│   │  How your system    │ merge│  Each change = one folder     │   │
++│   │  currently works    │      │  Contains artifacts + deltas  │   │
++│   │                     │      │                               │   │
++│   └─────────────────────┘      └───────────────────────────────┘   │
++│                                                                    │
++└────────────────────────────────────────────────────────────────────┘
+ ```
+ 
+ **Specs** are the source of truth — they describe how your system currently behaves.
+@@ -270,7 +270,7 @@ Delta specs describe **what's changing** relative to the current specs. See [Del
+ 
+ The design captures **technical approach** and **architecture decisions**.
+ 
+-```markdown
++````markdown
+ # Design: Add Dark Mode
+ 
+ ## Technical Approach
+@@ -306,7 +306,7 @@ CSS Variables (applied to :root)
+ - `src/contexts/ThemeContext.tsx` (new)
+ - `src/components/ThemeToggle.tsx` (new)
+ - `src/styles/globals.css` (modified)
+-```
++````
+ 
+ **When to update the design:**
+ - Implementation reveals the approach won't work
+@@ -558,17 +558,17 @@ openspec/
+ ## How It All Fits Together
+ 
+ ```
+-┌─────────────────────────────────────────────────────────────────────────────┐
++┌──────────────────────────────────────────────────────────────────────────────┐
+ │                              OPENSPEC FLOW                                   │
+ │                                                                              │
+ │   ┌────────────────┐                                                         │
+-│   │  1. START      │  /opsx:new creates a change folder                      │
++│   │  1. START      │  /opsx:propose (core) or /opsx:new (expanded)           │
+ │   │     CHANGE     │                                                         │
+ │   └───────┬────────┘                                                         │
+ │           │                                                                  │
+ │           ▼                                                                  │
+ │   ┌────────────────┐                                                         │
+-│   │  2. CREATE     │  /opsx:ff or /opsx:continue                             │
++│   │  2. CREATE     │  /opsx:ff or /opsx:continue (expanded workflow)         │
+ │   │     ARTIFACTS  │  Creates proposal → specs → design → tasks              │
+ │   │                │  (based on schema dependencies)                         │
+ │   └───────┬────────┘                                                         │
+@@ -587,13 +587,13 @@ openspec/
+ │   └───────┬────────┘                                                         │
+ │           │                                                                  │
+ │           ▼                                                                  │
+-│   ┌────────────────┐     ┌──────────────────────────────────────────────┐   │
+-│   │  5. ARCHIVE    │────►│  Delta specs merge into main specs           │   │
+-│   │     CHANGE     │     │  Change folder moves to archive/             │   │
+-│   └────────────────┘     │  Specs are now the updated source of truth   │   │
+-│                          └──────────────────────────────────────────────┘   │
++│   ┌────────────────┐     ┌──────────────────────────────────────────────┐    │
++│   │  5. ARCHIVE    │────►│  Delta specs merge into main specs           │    │
++│   │     CHANGE     │     │  Change folder moves to archive/             │    │
++│   └────────────────┘     │  Specs are now the updated source of truth   │    │
++│                          └──────────────────────────────────────────────┘    │
+ │                                                                              │
+-└─────────────────────────────────────────────────────────────────────────────┘
++└──────────────────────────────────────────────────────────────────────────────┘
+ ```
+ 
+ **The virtuous cycle:**
+diff --git a/docs/getting-started.md b/docs/getting-started.md
+index e391272..6f4b888 100644
+--- a/docs/getting-started.md
++++ b/docs/getting-started.md
+@@ -4,33 +4,22 @@ This guide explains how OpenSpec works after you've installed and initialized it
+ 
+ ## How It Works
+ 
+-OpenSpec helps you and your AI coding assistant agree on what to build before any code is written. The workflow follows a simple pattern:
++OpenSpec helps you and your AI coding assistant agree on what to build before any code is written.
+ 
++**Default quick path (core profile):**
++
++```text
++/opsx:propose ──► /opsx:apply ──► /opsx:archive
+ ```
+-┌────────────────────┐
+-│ Start a Change     │  /opsx:new
+-└────────┬───────────┘
+-         │
+-         ▼
+-┌────────────────────┐
+-│ Create Artifacts   │  /opsx:ff or /opsx:continue
+-│ (proposal, specs,  │
+-│  design, tasks)    │
+-└────────┬───────────┘
+-         │
+-         ▼
+-┌────────────────────┐
+-│ Implement Tasks    │  /opsx:apply
+-│ (AI writes code)   │
+-└────────┬───────────┘
+-         │
+-         ▼
+-┌────────────────────┐
+-│ Archive & Merge    │  /opsx:archive
+-│ Specs              │
+-└────────────────────┘
++
++**Expanded path (custom workflow selection):**
++
++```text
++/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
+ ```
+ 
++The default global profile is `core`, which includes `propose`, `explore`, `apply`, and `archive`. You can enable the expanded workflow commands with `openspec config profile` and then `openspec update`.
++
+ ## What OpenSpec Creates
+ 
+ After running `openspec init`, your project has this structure:
+@@ -131,23 +120,12 @@ The change folder moves to `openspec/changes/archive/` for audit history.
+ 
+ Let's walk through adding dark mode to an application.
+ 
+-### 1. Start the Change
++### 1. Start the Change (Default)
+ 
+-```
+-You: /opsx:new add-dark-mode
++```text
++You: /opsx:propose add-dark-mode
+ 
+ AI:  Created openspec/changes/add-dark-mode/
+-     Ready to create: proposal
+-```
+-
+-### 2. Create Artifacts
+-
+-Use `/opsx:ff` (fast-forward) to create all planning artifacts at once:
+-
+-```
+-You: /opsx:ff
+-
+-AI:  Creating artifacts for add-dark-mode...
+      ✓ proposal.md — why we're doing this, what's changing
+      ✓ specs/       — requirements and scenarios
+      ✓ design.md    — technical approach
+@@ -155,7 +133,9 @@ AI:  Creating artifacts for add-dark-mode...
+      Ready for implementation!
+ ```
+ 
+-### 3. What Gets Created
++If you've enabled the expanded workflow profile, you can also do this as two steps: `/opsx:new` then `/opsx:ff` (or `/opsx:continue` incrementally).
++
++### 2. What Gets Created
+ 
+ **proposal.md** - Captures the intent:
+ 
+@@ -218,7 +198,7 @@ The system SHALL allow users to choose between light and dark themes.
+ - [ ] 3.2 Update components to use CSS variables
+ ```
+ 
+-### 4. Implement
++### 3. Implement
+ 
+ ```
+ You: /opsx:apply
+@@ -234,7 +214,7 @@ AI:  Working through tasks...
+ 
+ During implementation, if you discover the design needs adjustment, just update the artifact and continue.
+ 
+-### 5. Archive
++### 4. Archive
+ 
+ ```
+ You: /opsx:archive
+diff --git a/docs/migration-guide.md b/docs/migration-guide.md
+index 970b6b1..5091ce4 100644
+--- a/docs/migration-guide.md
++++ b/docs/migration-guide.md
+@@ -8,7 +8,7 @@ OPSX replaces the old phase-locked workflow with a fluid, action-based approach.
+ 
+ | Aspect | Legacy | OPSX |
+ |--------|--------|------|
+-| **Commands** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | `/opsx:new`, `/opsx:continue`, `/opsx:apply`, and more |
++| **Commands** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | Default: `/opsx:propose`, `/opsx:apply`, `/opsx:archive` (expanded workflow commands optional) |
+ | **Workflow** | Create all artifacts at once | Create incrementally or all at once—your choice |
+ | **Going back** | Awkward phase gates | Natural—update any artifact anytime |
+ | **Customization** | Fixed structure | Schema-driven, fully hackable |
+@@ -84,6 +84,9 @@ Don't worry about getting it perfect. We're still learning what works best here,
+ 
+ Both `openspec init` and `openspec update` detect legacy files and guide you through the same cleanup process. Use whichever fits your situation:
+ 
++- New installs default to profile `core` (`propose`, `explore`, `apply`, `archive`).
++- Migrated installs preserve your previously installed workflows by writing a `custom` profile when needed.
++
+ ### Using `openspec init`
+ 
+ Run this if you want to add new tools or reconfigure which tools are set up:
+@@ -141,7 +144,7 @@ Run this if you just want to migrate and refresh your existing tools to the late
+ openspec update
+ ```
+ 
+-The update command also detects and cleans up legacy artifacts, then refreshes your skills to the latest version.
++The update command also detects and cleans up legacy artifacts, then refreshes generated skills/commands to match your current profile and delivery settings.
+ 
+ ### Non-Interactive / CI Environments
+ 
+@@ -275,30 +278,43 @@ The AI will help you identify what's essential vs. what can be trimmed.
+ 
+ ## The New Commands
+ 
+-After migration, you have 9 OPSX commands instead of 3:
++Command availability is profile-dependent:
++
++**Default (`core` profile):**
+ 
+ | Command | Purpose |
+ |---------|---------|
++| `/opsx:propose` | Create a change and generate planning artifacts in one step |
+ | `/opsx:explore` | Think through ideas with no structure |
+-| `/opsx:new` | Start a new change |
+-| `/opsx:continue` | Create the next artifact (one at a time) |
+-| `/opsx:ff` | Fast-forward—create all planning artifacts at once |
+ | `/opsx:apply` | Implement tasks from tasks.md |
+-| `/opsx:verify` | Validate implementation matches specs |
+-| `/opsx:sync` | Preview spec merge (optional—archive prompts if needed) |
+ | `/opsx:archive` | Finalize and archive the change |
++
++**Expanded workflow (custom selection):**
++
++| Command | Purpose |
++|---------|---------|
++| `/opsx:new` | Start a new change scaffold |
++| `/opsx:continue` | Create the next artifact (one at a time) |
++| `/opsx:ff` | Fast-forward—create planning artifacts at once |
++| `/opsx:verify` | Validate implementation matches specs |
++| `/opsx:sync` | Preview/spec-merge without archiving |
+ | `/opsx:bulk-archive` | Archive multiple changes at once |
++| `/opsx:onboard` | Guided end-to-end onboarding workflow |
++
++Enable expanded commands with `openspec config profile`, then run `openspec update`.
+ 
+ ### Command Mapping from Legacy
+ 
+ | Legacy | OPSX Equivalent |
+ |--------|-----------------|
+-| `/openspec:proposal` | `/opsx:new` then `/opsx:ff` |
++| `/openspec:proposal` | `/opsx:propose` (default) or `/opsx:new` then `/opsx:ff` (expanded) |
+ | `/openspec:apply` | `/opsx:apply` |
+ | `/openspec:archive` | `/opsx:archive` |
+ 
+ ### New Capabilities
+ 
++These capabilities are part of the expanded workflow command set.
++
+ **Granular artifact creation:**
+ ```
+ /opsx:continue
+@@ -542,9 +558,10 @@ project/
+ │   └── config.yaml               # NEW: Project configuration
+ ├── .claude/
+ │   └── skills/                   # NEW: OPSX skills
++│       ├── openspec-propose/     # default core profile
+ │       ├── openspec-explore/
+-│       ├── openspec-new-change/
+-│       └── ...
++│       ├── openspec-apply-change/
++│       └── ...                   # expanded profile adds new/continue/ff/etc.
+ ├── CLAUDE.md                     # OpenSpec markers removed, your content preserved
+ └── AGENTS.md                     # OpenSpec markers removed, your content preserved
+ ```
+@@ -558,12 +575,15 @@ project/
+ 
+ ### Command Cheatsheet
+ 
+-```
+-/opsx:new          Start a change
+-/opsx:continue     Create next artifact
+-/opsx:ff           Create all planning artifacts
++```text
++/opsx:propose      Start quickly (default core profile)
+ /opsx:apply        Implement tasks
+ /opsx:archive      Finish and archive
++
++# Expanded workflow (if enabled):
++/opsx:new          Scaffold a change
++/opsx:continue     Create next artifact
++/opsx:ff           Create planning artifacts
+ ```
+ 
+ ---
+diff --git a/docs/opsx.md b/docs/opsx.md
+index 4d26005..9607b7d 100644
+--- a/docs/opsx.md
++++ b/docs/opsx.md
+@@ -65,6 +65,8 @@ openspec init
+ 
+ This creates skills in `.claude/skills/` (or equivalent) that AI coding assistants auto-detect.
+ 
++By default, OpenSpec uses the `core` workflow profile (`propose`, `explore`, `apply`, `archive`). If you want the expanded workflow commands (`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`), configure them with `openspec config profile` and apply with `openspec update`.
++
+ During setup, you'll be prompted to create a **project config** (`openspec/config.yaml`). This is optional but recommended.
+ 
+ ## Project Configuration
+@@ -155,13 +157,17 @@ rules:
+ 
+ | Command | What it does |
+ |---------|--------------|
++| `/opsx:propose` | Create a change and generate planning artifacts in one step (default quick path) |
+ | `/opsx:explore` | Think through ideas, investigate problems, clarify requirements |
+-| `/opsx:new` | Start a new change |
+-| `/opsx:continue` | Create the next artifact (based on what's ready) |
+-| `/opsx:ff` | Fast-forward — create all planning artifacts at once |
++| `/opsx:new` | Start a new change scaffold (expanded workflow) |
++| `/opsx:continue` | Create the next artifact (expanded workflow) |
++| `/opsx:ff` | Fast-forward planning artifacts (expanded workflow) |
+ | `/opsx:apply` | Implement tasks, updating artifacts as needed |
+-| `/opsx:sync` | Sync delta specs to main (optional—archive prompts if needed) |
++| `/opsx:verify` | Validate implementation against artifacts (expanded workflow) |
++| `/opsx:sync` | Sync delta specs to main (expanded workflow, optional) |
+ | `/opsx:archive` | Archive when done |
++| `/opsx:bulk-archive` | Archive multiple completed changes (expanded workflow) |
++| `/opsx:onboard` | Guided walkthrough of an end-to-end change (expanded workflow) |
+ 
+ ## Usage
+ 
+@@ -169,13 +175,21 @@ rules:
+ ```
+ /opsx:explore
+ ```
+-Think through ideas, investigate problems, compare options. No structure required - just a thinking partner. When insights crystallize, transition to `/opsx:new` or `/opsx:ff`.
++Think through ideas, investigate problems, compare options. No structure required - just a thinking partner. When insights crystallize, transition to `/opsx:propose` (default) or `/opsx:new`/`/opsx:ff` (expanded).
+ 
+ ### Start a new change
+ ```
+-/opsx:new
++/opsx:propose
++```
++Creates the change and generates planning artifacts needed before implementation.
++
++If you've enabled expanded workflows, you can instead use:
++
++```text
++/opsx:new        # scaffold only
++/opsx:continue   # create one artifact at a time
++/opsx:ff         # create all planning artifacts at once
+ ```
+-You'll be asked what you want to build and which workflow schema to use.
+ 
+ ### Create artifacts
+ ```
+@@ -299,6 +313,7 @@ Think of it like git branches:
+ ## Architecture Deep Dive
+ 
+ This section explains how OPSX works under the hood and how it compares to the legacy workflow.
++Examples in this section use the expanded command set (`new`, `continue`, etc.); default `core` users can map the same flow to `propose → apply → archive`.
+ 
+ ### Philosophy: Phases vs Actions
+ 
+@@ -356,7 +371,7 @@ This section explains how OPSX works under the hood and how it compares to the l
+ │   Hardcoded Templates (TypeScript strings)                                  │
+ │                    │                                                        │
+ │                    ▼                                                        │
+-│   Configurators (18+ classes, one per editor)                               │
++│   Tool-specific configurators/adapters                                      │
+ │                    │                                                        │
+ │                    ▼                                                        │
+ │   Generated Command Files (.claude/commands/openspec/*.md)                  │
+@@ -604,7 +619,7 @@ artifacts:
+ | **State** | Phase-based mental model | Filesystem existence |
+ | **Customization** | Edit source, rebuild | Create schema.yaml |
+ | **Iteration** | Phase-locked | Fluid, edit anything |
+-| **Editor Support** | 18+ configurator classes | Single skills directory |
++| **Editor Support** | Tool-specific configurator/adapters | Single skills directory |
+ 
+ ## Schemas
+ 
+diff --git a/docs/supported-tools.md b/docs/supported-tools.md
+index 6c1a5a4..dc55009 100644
+--- a/docs/supported-tools.md
++++ b/docs/supported-tools.md
+@@ -1,50 +1,61 @@
+ # Supported Tools
+ 
+-OpenSpec works with 20+ AI coding assistants. When you run `openspec init`, you'll be prompted to select which tools you use, and OpenSpec will configure the appropriate integrations.
++OpenSpec works with many AI coding assistants. When you run `openspec init`, OpenSpec configures selected tools using your active profile/workflow selection and delivery mode.
+ 
+ ## How It Works
+ 
+-For each tool you select, OpenSpec installs:
++For each selected tool, OpenSpec can install:
+ 
+-1. **Skills** — Reusable instruction files that power the `/opsx:*` workflow commands
+-2. **Commands** — Tool-specific slash command bindings
++1. **Skills** (if delivery includes skills): `.../skills/openspec-*/SKILL.md`
++2. **Commands** (if delivery includes commands): tool-specific `opsx-*` command files
++
++By default, OpenSpec uses the `core` profile, which includes:
++- `propose`
++- `explore`
++- `apply`
++- `archive`
++
++You can enable expanded workflows (`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`) via `openspec config profile`, then run `openspec update`.
+ 
+ ## Tool Directory Reference
+ 
+-| Tool | Skills Location | Commands Location |
+-|------|-----------------|-------------------|
+-| Amazon Q Developer | `.amazonq/skills/` | `.amazonq/prompts/` |
+-| Antigravity | `.agent/skills/` | `.agent/workflows/` |
+-| Auggie (Augment CLI) | `.augment/skills/` | `.augment/commands/` |
+-| Claude Code | `.claude/skills/` | `.claude/commands/opsx/` |
+-| Cline | `.cline/skills/` | `.clinerules/workflows/` |
+-| CodeBuddy | `.codebuddy/skills/` | `.codebuddy/commands/opsx/` |
+-| Codex | `.codex/skills/` | `~/.codex/prompts/`\* |
+-| Continue | `.continue/skills/` | `.continue/prompts/` |
+-| CoStrict | `.cospec/skills/` | `.cospec/openspec/commands/` |
+-| Crush | `.crush/skills/` | `.crush/commands/opsx/` |
+-| Cursor | `.cursor/skills/` | `.cursor/commands/` |
+-| Factory Droid | `.factory/skills/` | `.factory/commands/` |
+-| Gemini CLI | `.gemini/skills/` | `.gemini/commands/opsx/` |
+-| GitHub Copilot | `.github/skills/` | `.github/prompts/`\*\* |
+-| iFlow | `.iflow/skills/` | `.iflow/commands/` |
+-| Kilo Code | `.kilocode/skills/` | `.kilocode/workflows/` |
+-| Kiro | `.kiro/skills/` | `.kiro/prompts/` |
+-| OpenCode | `.opencode/skills/` | `.opencode/command/` |
+-| Pi | `.pi/skills/` | `.pi/prompts/` |
+-| Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
+-| Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
+-| RooCode | `.roo/skills/` | `.roo/commands/` |
+-| Trae | `.trae/skills/` | `.trae/skills/` (via `/openspec-*`) |
+-| Windsurf | `.windsurf/skills/` | `.windsurf/workflows/` |
+-
+-\* Codex commands are installed to the global home directory (`~/.codex/prompts/` or `$CODEX_HOME/prompts/`), not the project directory.
+-
+-\*\* GitHub Copilot's `.github/prompts/*.prompt.md` files are recognized as custom slash commands in **IDE extensions only** (VS Code, JetBrains, Visual Studio). GitHub Copilot CLI does not currently support custom prompts from this directory — see [github/copilot-cli#618](https://github.com/github/copilot-cli/issues/618). If you use Copilot CLI, you may need to manually set up [custom agents](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-custom-agents) in `.github/agents/` as a workaround.
++| Tool (ID) | Skills path pattern | Command path pattern |
++|-----------|---------------------|----------------------|
++| Amazon Q Developer (`amazon-q`) | `.amazonq/skills/openspec-*/SKILL.md` | `.amazonq/prompts/opsx-<id>.md` |
++| Antigravity (`antigravity`) | `.agent/skills/openspec-*/SKILL.md` | `.agent/workflows/opsx-<id>.md` |
++| Auggie (`auggie`) | `.augment/skills/openspec-*/SKILL.md` | `.augment/commands/opsx-<id>.md` |
++| IBM Bob Shell (`bob`) | `.bob/skills/openspec-*/SKILL.md` | `.bob/commands/opsx-<id>.md` |
++| Claude Code (`claude`) | `.claude/skills/openspec-*/SKILL.md` | `.claude/commands/opsx/<id>.md` |
++| Cline (`cline`) | `.cline/skills/openspec-*/SKILL.md` | `.clinerules/workflows/opsx-<id>.md` |
++| CodeBuddy (`codebuddy`) | `.codebuddy/skills/openspec-*/SKILL.md` | `.codebuddy/commands/opsx/<id>.md` |
++| Codex (`codex`) | `.codex/skills/openspec-*/SKILL.md` | `$CODEX_HOME/prompts/opsx-<id>.md`\* |
++| ForgeCode (`forgecode`) | `.forge/skills/openspec-*/SKILL.md` | Not generated (no command adapter; use skill-based `/openspec-*` invocations) |
++| Continue (`continue`) | `.continue/skills/openspec-*/SKILL.md` | `.continue/prompts/opsx-<id>.prompt` |
++| CoStrict (`costrict`) | `.cospec/skills/openspec-*/SKILL.md` | `.cospec/openspec/commands/opsx-<id>.md` |
++| Crush (`crush`) | `.crush/skills/openspec-*/SKILL.md` | `.crush/commands/opsx/<id>.md` |
++| Cursor (`cursor`) | `.cursor/skills/openspec-*/SKILL.md` | `.cursor/commands/opsx-<id>.md` |
++| Factory Droid (`factory`) | `.factory/skills/openspec-*/SKILL.md` | `.factory/commands/opsx-<id>.md` |
++| Gemini CLI (`gemini`) | `.gemini/skills/openspec-*/SKILL.md` | `.gemini/commands/opsx/<id>.toml` |
++| GitHub Copilot (`github-copilot`) | `.github/skills/openspec-*/SKILL.md` | `.github/prompts/opsx-<id>.prompt.md`\*\* |
++| iFlow (`iflow`) | `.iflow/skills/openspec-*/SKILL.md` | `.iflow/commands/opsx-<id>.md` |
++| Junie (`junie`) | `.junie/skills/openspec-*/SKILL.md` | `.junie/commands/opsx-<id>.md` |
++| Kilo Code (`kilocode`) | `.kilocode/skills/openspec-*/SKILL.md` | `.kilocode/workflows/opsx-<id>.md` |
++| Kiro (`kiro`) | `.kiro/skills/openspec-*/SKILL.md` | `.kiro/prompts/opsx-<id>.prompt.md` |
++| OpenCode (`opencode`) | `.opencode/skills/openspec-*/SKILL.md` | `.opencode/commands/opsx-<id>.md` |
++| Pi (`pi`) | `.pi/skills/openspec-*/SKILL.md` | `.pi/prompts/opsx-<id>.md` |
++| Qoder (`qoder`) | `.qoder/skills/openspec-*/SKILL.md` | `.qoder/commands/opsx/<id>.md` |
++| Qwen Code (`qwen`) | `.qwen/skills/openspec-*/SKILL.md` | `.qwen/commands/opsx-<id>.toml` |
++| RooCode (`roocode`) | `.roo/skills/openspec-*/SKILL.md` | `.roo/commands/opsx-<id>.md` |
++| Trae (`trae`) | `.trae/skills/openspec-*/SKILL.md` | Not generated (no command adapter; use skill-based `/openspec-*` invocations) |
++| Windsurf (`windsurf`) | `.windsurf/skills/openspec-*/SKILL.md` | `.windsurf/workflows/opsx-<id>.md` |
++
++\* Codex commands are installed in the global Codex home (`$CODEX_HOME/prompts/` if set, otherwise `~/.codex/prompts/`), not your project directory.
++
++\*\* GitHub Copilot prompt files are recognized as custom slash commands in IDE extensions (VS Code, JetBrains, Visual Studio). Copilot CLI does not currently consume `.github/prompts/*.prompt.md` directly.
+ 
+ ## Non-Interactive Setup
+ 
+-For CI/CD or scripted setup, use the `--tools` flag:
++For CI/CD or scripted setup, use `--tools` (and optionally `--profile`):
+ 
+ ```bash
+ # Configure specific tools
+@@ -55,34 +66,40 @@ openspec init --tools all
+ 
+ # Skip tool configuration
+ openspec init --tools none
++
++# Override profile for this init run
++openspec init --profile core
+ ```
+ 
+-**Available tool IDs:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
++**Available tool IDs (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `forgecode`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
++
++## Workflow-Dependent Installation
+ 
+-## What Gets Installed
++OpenSpec installs workflow artifacts based on selected workflows:
+ 
+-For each tool, OpenSpec generates 10 skill files that power the OPSX workflow:
++- **Core profile (default):** `propose`, `explore`, `apply`, `archive`
++- **Custom selection:** any subset of all workflow IDs:
++  `propose`, `explore`, `new`, `continue`, `apply`, `ff`, `sync`, `archive`, `bulk-archive`, `verify`, `onboard`
+ 
+-| Skill | Purpose |
+-|-------|---------|
+-| `openspec-explore` | Thinking partner for exploring ideas |
+-| `openspec-new-change` | Start a new change |
+-| `openspec-continue-change` | Create the next artifact |
+-| `openspec-ff-change` | Fast-forward through all planning artifacts |
+-| `openspec-apply-change` | Implement tasks |
+-| `openspec-verify-change` | Verify implementation completeness |
+-| `openspec-sync-specs` | Sync delta specs to main (optional—archive prompts if needed) |
+-| `openspec-archive-change` | Archive a completed change |
+-| `openspec-bulk-archive-change` | Archive multiple changes at once |
+-| `openspec-onboard` | Guided onboarding through a complete workflow cycle |
++In other words, skill/command counts are profile-dependent and delivery-dependent, not fixed.
+ 
+-These skills are invoked via slash commands like `/opsx:new`, `/opsx:apply`, etc. See [Commands](commands.md) for the full list.
++## Generated Skill Names
+ 
+-## Adding a New Tool
++When selected by profile/workflow config, OpenSpec generates these skills:
+ 
+-Want to add support for another AI coding assistant? Check out the [command adapter pattern](../CONTRIBUTING.md) or open an issue on GitHub.
++- `openspec-propose`
++- `openspec-explore`
++- `openspec-new-change`
++- `openspec-continue-change`
++- `openspec-apply-change`
++- `openspec-ff-change`
++- `openspec-sync-specs`
++- `openspec-archive-change`
++- `openspec-bulk-archive-change`
++- `openspec-verify-change`
++- `openspec-onboard`
+ 
+----
++See [Commands](commands.md) for command behavior and [CLI](cli.md) for `init`/`update` options.
+ 
+ ## Related
+ 
+diff --git a/docs/workflows.md b/docs/workflows.md
+index 8aac9df..6cfd7e0 100644
+--- a/docs/workflows.md
++++ b/docs/workflows.md
+@@ -28,7 +28,32 @@ OPSX (fluid actions):
+ 
+ > **Customization:** OPSX workflows are driven by schemas that define artifact sequences. See [Customization](customization.md) for details on creating custom schemas.
+ 
+-## Workflow Patterns
++## Two Modes
++
++### Default Quick Path (`core` profile)
++
++New installs default to `core`, which provides:
++- `/opsx:propose`
++- `/opsx:explore`
++- `/opsx:apply`
++- `/opsx:archive`
++
++Typical flow:
++
++```text
++/opsx:propose ──► /opsx:apply ──► /opsx:archive
++```
++
++### Expanded/Full Workflow (custom selection)
++
++If you want explicit scaffold-and-build commands (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), enable them with:
++
++```bash
++openspec config profile
++openspec update
++```
++
++## Workflow Patterns (Expanded Mode)
+ 
+ ### Quick Feature
+ 
+@@ -408,15 +433,16 @@ For full command details and options, see [Commands](commands.md).
+ 
+ | Command | Purpose | When to Use |
+ |---------|---------|-------------|
++| `/opsx:propose` | Create change + planning artifacts | Fast default path (`core` profile) |
+ | `/opsx:explore` | Think through ideas | Unclear requirements, investigation |
+-| `/opsx:new` | Start a change | Beginning any new work |
+-| `/opsx:continue` | Create next artifact | Step-by-step artifact creation |
+-| `/opsx:ff` | Create all planning artifacts | Clear scope, ready to build |
++| `/opsx:new` | Start a change scaffold | Expanded mode, explicit artifact control |
++| `/opsx:continue` | Create next artifact | Expanded mode, step-by-step artifact creation |
++| `/opsx:ff` | Create all planning artifacts | Expanded mode, clear scope |
+ | `/opsx:apply` | Implement tasks | Ready to write code |
+-| `/opsx:verify` | Validate implementation | Before archiving, catch mismatches |
+-| `/opsx:sync` | Merge delta specs | Optional—archive prompts if needed |
++| `/opsx:verify` | Validate implementation | Expanded mode, before archiving |
++| `/opsx:sync` | Merge delta specs | Expanded mode, optional |
+ | `/opsx:archive` | Complete the change | All work finished |
+-| `/opsx:bulk-archive` | Archive multiple changes | Parallel work, batch completion |
++| `/opsx:bulk-archive` | Archive multiple changes | Expanded mode, parallel work |
+ 
+ ## Next Steps
+ 
+diff --git a/openspec/changes/fix-opencode-commands-directory/.openspec.yaml b/openspec/changes/fix-opencode-commands-directory/.openspec.yaml
+new file mode 100644
+index 0000000..e331c97
+--- /dev/null
++++ b/openspec/changes/fix-opencode-commands-directory/.openspec.yaml
+@@ -0,0 +1,2 @@
++schema: spec-driven
++created: 2026-02-25
+diff --git a/openspec/changes/fix-opencode-commands-directory/design.md b/openspec/changes/fix-opencode-commands-directory/design.md
+new file mode 100644
+index 0000000..9be042c
+--- /dev/null
++++ b/openspec/changes/fix-opencode-commands-directory/design.md
+@@ -0,0 +1,48 @@
++## Context
++
++The OpenCode adapter in `src/core/command-generation/adapters/opencode.ts` currently generates command files at `.opencode/command/opsx-<id>.md` (singular `command`). OpenCode's official documentation uses `.opencode/commands/` (plural), and every other adapter in the codebase follows the plural convention for commands directories. The legacy cleanup module in `src/core/legacy-cleanup.ts` also references the singular form for detecting old artifacts.
++
++## Goals / Non-Goals
++
++**Goals:**
++- Align the OpenCode adapter path with OpenCode's official `.opencode/commands/` convention
++- Add the old singular path `.opencode/command/` to legacy cleanup so existing installations are properly cleaned
++- Update documentation to reflect the corrected path
++- Update test assertions to match the new path
++
++**Non-Goals:**
++- Changing the OpenCode skill path (`.opencode/skills/`) — already correct
++- Modifying any other adapter's directory structure
++- Adding migration prompts or interactive upgrade flows
++
++## Decisions
++
++### 1. Direct path rename in adapter
++
++**Decision:** Change `path.join('.opencode', 'command', ...)` to `path.join('.opencode', 'commands', ...)` in the adapter's `getFilePath` method.
++
++**Rationale:** This is a single-line change that aligns with the established pattern across all other adapters. No abstraction or indirection needed.
++
++**Alternatives considered:**
++- Add a configuration option for the directory name — rejected as over-engineering for a bug fix
++- Keep singular and add plural as alias — rejected as it creates ambiguity about which is canonical
++
++### 2. Legacy cleanup via existing constant map
++
++**Decision:** Update the `LEGACY_SLASH_COMMAND_PATHS` entry for `'opencode'` from `'.opencode/command/openspec-*.md'` to `'.opencode/command/opsx-*.md'` (the old singular path becomes the legacy pattern) and ensure the new path is handled by the current command generation pipeline.
++
++**Rationale:** The existing legacy cleanup infrastructure uses `LEGACY_SLASH_COMMAND_PATHS` as an explicit lookup. The old singular-path pattern already matches the legacy format (`openspec-*` prefix from the old SlashCommandRegistry era). The current command generation uses the `opsx-*` prefix, so we also need to add a legacy pattern for `opsx-*` files in the old singular directory.
++
++**Alternatives considered:**
++- Add a separate migration script — rejected; the existing legacy cleanup mechanism handles this scenario
++
++### 3. Documentation update
++
++**Decision:** Update the `docs/supported-tools.md` table entry for OpenCode from `.opencode/command/opsx-<id>.md` to `.opencode/commands/opsx-<id>.md`.
++
++**Rationale:** Documentation must match the actual generated paths.
++
++## Risks / Trade-offs
++
++- **[Existing installations have files at old path]** → Mitigated by legacy cleanup detecting `.opencode/command/` artifacts. On next `openspec init`, old files are cleaned up and new files written to `.opencode/commands/`.
++- **[Users referencing old path in custom scripts]** → Low risk. The old path was incorrect per OpenCode's specification, so custom references were already misaligned.
+diff --git a/openspec/changes/fix-opencode-commands-directory/proposal.md b/openspec/changes/fix-opencode-commands-directory/proposal.md
+new file mode 100644
+index 0000000..ec41e01
+--- /dev/null
++++ b/openspec/changes/fix-opencode-commands-directory/proposal.md
+@@ -0,0 +1,26 @@
++## Why
++
++The OpenCode adapter uses `.opencode/command/` (singular) for its commands directory, but OpenCode's official documentation specifies `.opencode/commands/` (plural). Every other adapter in the codebase also uses plural directory names (`.claude/commands/`, `.cursor/commands/`, `.factory/commands/`, etc.). This inconsistency was introduced in Oct 2025 without documented rationale. Fixes [#748](https://github.com/Fission-AI/OpenSpec/issues/748).
++
++## What Changes
++
++- OpenCode adapter path changes from `.opencode/command/` to `.opencode/commands/`
++- Legacy cleanup adds `.opencode/command/` (old singular path) for backward compatibility
++- Documentation updated to reflect the new plural path
++
++## Capabilities
++
++### New Capabilities
++
++_None._
++
++### Modified Capabilities
++
++- `command-generation`: OpenCode adapter path changes from singular `command/` to plural `commands/` to match OpenCode's official directory convention
++
++## Impact
++
++- `src/core/command-generation/adapters/opencode.ts` — adapter path
++- `src/core/legacy-cleanup.ts` — legacy cleanup pattern + add old singular path
++- `docs/supported-tools.md` — documentation table
++- `test/core/command-generation/adapters.test.ts` — test assertion
+diff --git a/openspec/changes/fix-opencode-commands-directory/specs/command-generation/spec.md b/openspec/changes/fix-opencode-commands-directory/specs/command-generation/spec.md
+new file mode 100644
+index 0000000..f00cb3c
+--- /dev/null
++++ b/openspec/changes/fix-opencode-commands-directory/specs/command-generation/spec.md
+@@ -0,0 +1,63 @@
++## MODIFIED Requirements
++
++### Requirement: ToolCommandAdapter interface
++
++The system SHALL define a `ToolCommandAdapter` interface for per-tool formatting.
++
++#### Scenario: Adapter interface structure
++
++- **WHEN** implementing a tool adapter
++- **THEN** `ToolCommandAdapter` SHALL require:
++  - `toolId`: string identifier matching `AIToolOption.value`
++  - `getFilePath(commandId: string)`: returns file path for command (relative from project root, or absolute for global-scoped tools like Codex)
++  - `formatFile(content: CommandContent)`: returns complete file content with frontmatter
++
++#### Scenario: Claude adapter formatting
++
++- **WHEN** formatting a command for Claude Code
++- **THEN** the adapter SHALL output YAML frontmatter with `name`, `description`, `category`, `tags` fields
++- **AND** file path SHALL follow pattern `.claude/commands/opsx/<id>.md`
++
++#### Scenario: Cursor adapter formatting
++
++- **WHEN** formatting a command for Cursor
++- **THEN** the adapter SHALL output YAML frontmatter with `name` as `/opsx-<id>`, `id`, `category`, `description` fields
++- **AND** file path SHALL follow pattern `.cursor/commands/opsx-<id>.md`
++
++#### Scenario: Windsurf adapter formatting
++
++- **WHEN** formatting a command for Windsurf
++- **THEN** the adapter SHALL output YAML frontmatter with `name`, `description`, `category`, `tags` fields
++- **AND** file path SHALL follow pattern `.windsurf/workflows/opsx-<id>.md`
++
++#### Scenario: OpenCode adapter formatting
++
++- **WHEN** formatting a command for OpenCode
++- **THEN** the adapter SHALL output YAML frontmatter with `description` field
++- **AND** file path SHALL follow pattern `.opencode/commands/opsx-<id>.md` using `path.join('.opencode', 'commands', ...)` for cross-platform compatibility
++- **AND** the adapter SHALL transform colon-based command references (`/opsx:name`) to hyphen-based (`/opsx-name`) in the body
++
++## ADDED Requirements
++
++### Requirement: Legacy cleanup for renamed OpenCode command directory
++
++The legacy cleanup module SHALL detect and remove old OpenCode command files from the previous singular `.opencode/command/` directory path.
++
++#### Scenario: Detect old singular-path OpenCode command files
++
++- **WHEN** running legacy artifact detection on a project with files matching `.opencode/command/opsx-*.md` or `.opencode/command/openspec-*.md`
++- **THEN** the system SHALL include those files in the legacy slash command files list via `LEGACY_SLASH_COMMAND_PATHS`
++- **AND** `LegacySlashCommandPattern.pattern` SHALL accept `string | string[]` to support multiple glob patterns per tool
++
++#### Scenario: Clean up old OpenCode command files on init
++
++- **WHEN** a user runs `openspec init` in a project with old `.opencode/command/` artifacts
++- **THEN** the system SHALL remove the old files
++- **AND** generate new command files at `.opencode/commands/`
++
++#### Scenario: Auto-cleanup legacy artifacts in non-interactive mode
++
++- **WHEN** a user runs `openspec init` in non-interactive mode (e.g., CI) and legacy artifacts are detected
++- **THEN** the system SHALL auto-cleanup legacy artifacts without requiring `--force`
++- **AND** legacy slash command files (100% OpenSpec-managed) SHALL be removed
++- **AND** config file cleanup SHALL only remove OpenSpec markers (never delete user files)
+diff --git a/openspec/changes/fix-opencode-commands-directory/tasks.md b/openspec/changes/fix-opencode-commands-directory/tasks.md
+new file mode 100644
+index 0000000..bfe0207
+--- /dev/null
++++ b/openspec/changes/fix-opencode-commands-directory/tasks.md
+@@ -0,0 +1,19 @@
++## 1. Adapter Fix
++
++- [x] 1.1 Update `src/core/command-generation/adapters/opencode.ts`: change `path.join('.opencode', 'command', ...)` to `path.join('.opencode', 'commands', ...)` and update the JSDoc comment
++
++## 2. Legacy Cleanup
++
++- [x] 2.1 Update `src/core/legacy-cleanup.ts`: update the `'opencode'` entry in `LEGACY_SLASH_COMMAND_PATHS` to detect both `opsx-*.md` and `openspec-*.md` patterns at `.opencode/command/` for backward compatibility
++
++## 3. Documentation
++
++- [x] 3.1 Update `docs/supported-tools.md`: change OpenCode command path from `.opencode/command/opsx-<id>.md` to `.opencode/commands/opsx-<id>.md`
++
++## 4. Tests
++
++- [x] 4.1 Update `test/core/command-generation/adapters.test.ts`: change the OpenCode file path assertion from `path.join('.opencode', 'command', 'opsx-explore.md')` to `path.join('.opencode', 'commands', 'opsx-explore.md')`
++
++## 5. Changeset
++
++- [x] 5.1 Create a changeset file (`.changeset/fix-opencode-commands-directory.md`) with a patch bump describing the path fix
+diff --git a/openspec/changes/graceful-status-no-changes/.openspec.yaml b/openspec/changes/graceful-status-no-changes/.openspec.yaml
+new file mode 100644
+index 0000000..e331c97
+--- /dev/null
++++ b/openspec/changes/graceful-status-no-changes/.openspec.yaml
+@@ -0,0 +1,2 @@
++schema: spec-driven
++created: 2026-02-25
+diff --git a/openspec/changes/graceful-status-no-changes/design.md b/openspec/changes/graceful-status-no-changes/design.md
+new file mode 100644
+index 0000000..0d4d1b2
+--- /dev/null
++++ b/openspec/changes/graceful-status-no-changes/design.md
+@@ -0,0 +1,38 @@
++## Context
++
++`statusCommand` in `src/commands/workflow/status.ts` calls `validateChangeExists()` from `shared.ts` as its first operation. When no `--change` option is provided and no change directories exist, `validateChangeExists` throws: `No changes found. Create one with: openspec new change <name>`. This error propagates up as a fatal CLI error (non-zero exit code).
++
++This is correct behavior for commands like `apply` and `show` that require a change to operate on. However, `status` is an informational command — it should report the current state, even when that state is "no changes exist."
++
++The error surfaces during onboarding (issue #714) when AI agents call `openspec status` before any change has been created.
++
++## Goals / Non-Goals
++
++**Goals:**
++- Make `openspec status` exit with code 0 and a friendly message when no changes exist
++- Support both text and JSON output modes for the no-changes case
++- Keep all other commands' validation behavior unchanged
++
++**Non-Goals:**
++- Changing the behavior of `validateChangeExists` (keep it strict for all consumers; only extract its internal helper)
++- Changing the onboard template or skill instructions
++- Handling the case where `--change` is provided but the specific change doesn't exist (this should remain an error)
++
++## Decisions
++
++### Extract `getAvailableChanges` and check before validation
++
++**Rationale**: Extract the private `getAvailableChanges` closure from `validateChangeExists` into a public exported function in `shared.ts`. Then, in `statusCommand`, call `getAvailableChanges` *before* `validateChangeExists` to detect the no-changes case early and handle it gracefully. This avoids using try/catch for control flow and eliminates any coupling to error message strings.
++
++**Alternative considered**: Catching the error from `validateChangeExists` by matching `error.message.startsWith('No changes found')`. Rejected because string coupling is fragile — if the error message changes, the catch silently stops working.
++
++**Alternative considered**: Adding a `throwOnEmpty` parameter to `validateChangeExists`. Rejected because it adds complexity to a shared function for a single consumer's needs and mixes UX concerns into a validation utility.
++
++### Keep `validateChangeExists` strict
++
++**Rationale**: `validateChangeExists` remains unchanged in behavior — it still throws for all error cases. The graceful handling lives entirely in `statusCommand`, which is the appropriate layer for UX decisions. Other commands (`apply`, `show`, `instructions`) are unaffected.
++
++## Risks / Trade-offs
++
++- [Risk] Extra filesystem read when no `--change` is provided and changes *do* exist (`getAvailableChanges` is called first, then `validateChangeExists` performs its own read) → Mitigation: `statusCommand` returns early before reaching `validateChangeExists` when no changes exist, so the double-read only occurs when changes are present — minimal overhead.
++- [Risk] Other commands may also benefit from graceful no-changes handling in the future → Mitigation: `getAvailableChanges` is now public and reusable, making it easy to apply the same pattern elsewhere.
+diff --git a/openspec/changes/graceful-status-no-changes/proposal.md b/openspec/changes/graceful-status-no-changes/proposal.md
+new file mode 100644
+index 0000000..dc24d61
+--- /dev/null
++++ b/openspec/changes/graceful-status-no-changes/proposal.md
+@@ -0,0 +1,25 @@
++## Why
++
++When `openspec status` is called without `--change` and no changes exist (e.g., during onboarding on a freshly initialized project), the CLI throws a fatal error: `No changes found. Create one with: openspec new change <name>`. This breaks the onboarding flow because AI agents may call `openspec status` before any change has been created, causing the agent to halt or report failure. Fixes [#714](https://github.com/Fission-AI/OpenSpec/issues/714).
++
++## What Changes
++
++- `openspec status` will exit gracefully (code 0) with a friendly message when no changes exist, instead of throwing a fatal error
++- `openspec status --json` will return a valid JSON object with an empty changes array when no changes exist
++- Other commands (`apply`, `show`, etc.) retain their current strict validation behavior
++
++## Capabilities
++
++### New Capabilities
++
++- `graceful-status-empty`: Graceful handling of `openspec status` when no changes exist, covering both text and JSON output modes
++
++### Modified Capabilities
++
++_None — `validateChangeExists` was internally refactored to delegate to the newly exported `getAvailableChanges`, but its behavior and public contract are unchanged. Other consumers are unaffected._
++
++## Impact
++
++- `src/commands/workflow/shared.ts` — extract `getAvailableChanges` as a public function (validation behavior unchanged)
++- `src/commands/workflow/status.ts` — check for available changes before validation, handle empty case gracefully
++- Tests for the status command need to cover the new graceful behavior
+diff --git a/openspec/changes/graceful-status-no-changes/specs/graceful-status-empty/spec.md b/openspec/changes/graceful-status-no-changes/specs/graceful-status-empty/spec.md
+new file mode 100644
+index 0000000..7c5e390
+--- /dev/null
++++ b/openspec/changes/graceful-status-no-changes/specs/graceful-status-empty/spec.md
+@@ -0,0 +1,27 @@
++## ADDED Requirements
++
++### Requirement: Status command exits gracefully when no changes exist
++The `statusCommand` function SHALL check for available changes via `getAvailableChanges` before calling `validateChangeExists`. When no `--change` option is provided and no change directories exist, it SHALL print a friendly informational message and exit with code 0, instead of reaching `validateChangeExists` and propagating a fatal error.
++
++#### Scenario: No changes exist, text mode
++- **WHEN** user runs `openspec status` without `--change` and no change directories exist under `openspec/changes/`
++- **THEN** the CLI prints `No active changes. Create one with: openspec new change <name>` to stdout and exits with code 0
++
++#### Scenario: No changes exist, JSON mode
++- **WHEN** user runs `openspec status --json` without `--change` and no change directories exist
++- **THEN** the CLI outputs `{"changes":[],"message":"No active changes."}` as valid JSON to stdout and exits with code 0
++
++### Requirement: Existing status validation behavior is preserved
++Other error paths in `validateChangeExists` that apply to the status command SHALL continue to throw errors as before. Commands other than `status` that use `validateChangeExists` SHALL NOT be affected.
++
++#### Scenario: Changes exist but --change not specified
++- **WHEN** user runs `openspec status` without `--change` and one or more change directories exist
++- **THEN** the CLI throws an error listing available changes with the message `Missing required option --change. Available changes: ...`
++
++#### Scenario: Specified change does not exist
++- **WHEN** user runs `openspec status --change non-existent`
++- **THEN** the CLI throws an error with message `Change 'non-existent' not found`
++
++#### Scenario: Other commands unaffected
++- **WHEN** user runs `openspec show` or `openspec instructions` without `--change` and no changes exist
++- **THEN** the CLI throws the original `No changes found` error (no behavior change)
+diff --git a/openspec/changes/graceful-status-no-changes/tasks.md b/openspec/changes/graceful-status-no-changes/tasks.md
+new file mode 100644
+index 0000000..bf00684
+--- /dev/null
++++ b/openspec/changes/graceful-status-no-changes/tasks.md
+@@ -0,0 +1,16 @@
++## 1. Implementation
++
++- [x] 1.1 Extract `getAvailableChanges` in `shared.ts` and use it in `statusCommand` to check for changes before calling `validateChangeExists`
++- [x] 1.2 In text mode: print `No active changes. Create one with: openspec new change <name>` and return (exit 0)
++- [x] 1.3 In JSON mode: output `{"changes":[],"message":"No active changes."}` and return (exit 0)
++
++## 2. Tests
++
++- [x] 2.1 Add test: `openspec status` with no changes exits gracefully with friendly message (text mode)
++- [x] 2.2 Add test: `openspec status --json` with no changes returns valid JSON with empty changes array
++- [x] 2.3 Verify existing behavior: `openspec status` without `--change` when changes exist still throws missing option error
++- [x] 2.4 Verify cross-platform: tests use `path.join()` for any path assertions
++
++## 3. Release
++
++- [x] 3.1 Add changeset describing the fix
+diff --git a/package-lock.json b/package-lock.json
+index e1daf93..03dad20 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "@fission-ai/openspec",
+-  "version": "1.1.1",
++  "version": "1.2.0",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "@fission-ai/openspec",
+-      "version": "1.1.1",
++      "version": "1.2.0",
+       "hasInstallScript": true,
+       "license": "MIT",
+       "dependencies": {
+@@ -1803,6 +1803,7 @@
+       "integrity": "sha512-oH72nZRfDv9lADUBSo104Aq7gPHpQZc4BTx38r9xf9pg5LfP6EzSyH2n7qFmmxRQXh7YlUXODcYsg6PuTDSxGg==",
+       "devOptional": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "undici-types": "~7.16.0"
+       }
+@@ -1852,6 +1853,7 @@
+       "integrity": "sha512-IgSWvLobTDOjnaxAfDTIHaECbkNlAlKv2j5SjpB2v7QHKv1FIfjwMy8FsDbVfDX/KjmCmYICcw7uGaXLhtsLNg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@typescript-eslint/scope-manager": "8.56.0",
+         "@typescript-eslint/types": "8.56.0",
+@@ -2182,6 +2184,7 @@
+       "integrity": "sha512-hGISOaP18plkzbWEcP/QvtRW1xDXF2+96HbEX6byqQhAUbiS5oH6/9JwW+QsQCIYON2bI6QZBF+2PvOmrRZ9wA==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@vitest/utils": "3.2.4",
+         "fflate": "^0.8.2",
+@@ -2219,6 +2222,7 @@
+       "integrity": "sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "bin": {
+         "acorn": "bin/acorn"
+       },
+@@ -2685,6 +2689,7 @@
+       "integrity": "sha512-VmQ+sifHUbI/IcSopBCF/HO3YiHQx/AVd3UVyYL6weuwW+HvON9VYn5l6Zl1WZzPWXPNZrSQpxwkkZ/VuvJZzg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@eslint-community/eslint-utils": "^4.8.0",
+         "@eslint-community/regexpp": "^4.12.1",
+@@ -4448,6 +4453,7 @@
+       "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "engines": {
+         "node": ">=12"
+       },
+@@ -4546,6 +4552,7 @@
+       "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+       "dev": true,
+       "license": "Apache-2.0",
++      "peer": true,
+       "bin": {
+         "tsc": "bin/tsc",
+         "tsserver": "bin/tsserver"
+@@ -4611,6 +4618,7 @@
+       "integrity": "sha512-w+N7Hifpc3gRjZ63vYBXA56dvvRlNWRczTdmCBBa+CotUzAPf5b7YMdMR/8CQoeYE5LX3W4wj6RYTgonm1b9DA==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "esbuild": "^0.27.0",
+         "fdir": "^6.5.0",
+@@ -4727,6 +4735,7 @@
+       "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "engines": {
+         "node": ">=12"
+       },
+@@ -4740,6 +4749,7 @@
+       "integrity": "sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@types/chai": "^5.2.2",
+         "@vitest/expect": "3.2.4",
+@@ -4919,6 +4929,7 @@
+       "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.8.2.tgz",
+       "integrity": "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==",
+       "license": "ISC",
++      "peer": true,
+       "bin": {
+         "yaml": "bin.mjs"
+       },
+diff --git a/package.json b/package.json
+index 4087d8a..4ccf430 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@fission-ai/openspec",
+-  "version": "1.2.0",
++  "version": "1.3.0",
+   "description": "AI-native system for spec-driven development",
+   "keywords": [
+     "openspec",
+diff --git a/scripts/postinstall.js b/scripts/postinstall.js
+index bfe6e12..5e027e9 100644
+--- a/scripts/postinstall.js
++++ b/scripts/postinstall.js
+@@ -1,9 +1,13 @@
+ #!/usr/bin/env node
+ 
+ /**
+- * Postinstall script for auto-installing shell completions
++ * Postinstall script that hints about shell completions
+  *
+- * This script runs automatically after npm install unless:
++ * Completion installation is opt-in: the user must run
++ * `openspec completion install` explicitly. This script only
++ * prints a one-line tip after npm install.
++ *
++ * The tip is suppressed when:
+  * - CI=true environment variable is set
+  * - OPENSPEC_NO_COMPLETIONS=1 environment variable is set
+  * - dist/ directory doesn't exist (dev setup scenario)
+@@ -48,65 +52,6 @@ async function distExists() {
+   }
+ }
+ 
+-/**
+- * Detect the user's shell
+- */
+-async function detectShell() {
+-  try {
+-    const { detectShell } = await import('../dist/utils/shell-detection.js');
+-    const result = detectShell();
+-    return result.shell;
+-  } catch (error) {
+-    // Fail silently if detection module doesn't exist
+-    return undefined;
+-  }
+-}
+-
+-/**
+- * Install completions for the detected shell
+- */
+-async function installCompletions(shell) {
+-  try {
+-    const { CompletionFactory } = await import('../dist/core/completions/factory.js');
+-    const { COMMAND_REGISTRY } = await import('../dist/core/completions/command-registry.js');
+-
+-    // Check if shell is supported
+-    if (!CompletionFactory.isSupported(shell)) {
+-      console.log(`\nTip: Run 'openspec completion install' for shell completions`);
+-      return;
+-    }
+-
+-    // Generate completion script
+-    const generator = CompletionFactory.createGenerator(shell);
+-    const script = generator.generate(COMMAND_REGISTRY);
+-
+-    // Install completion script
+-    const installer = CompletionFactory.createInstaller(shell);
+-    const result = await installer.install(script);
+-
+-    if (result.success) {
+-      // Show success message based on installation type
+-      if (result.isOhMyZsh) {
+-        console.log(`✓ Shell completions installed`);
+-        console.log(`  Restart shell: exec zsh`);
+-      } else if (result.zshrcConfigured) {
+-        console.log(`✓ Shell completions installed and configured`);
+-        console.log(`  Restart shell: exec zsh`);
+-      } else {
+-        console.log(`✓ Shell completions installed to ~/.zsh/completions/`);
+-        console.log(`  Add to ~/.zshrc: fpath=(~/.zsh/completions $fpath)`);
+-        console.log(`  Then: exec zsh`);
+-      }
+-    } else {
+-      // Installation failed, show tip for manual install
+-      console.log(`\nTip: Run 'openspec completion install' for shell completions`);
+-    }
+-  } catch (error) {
+-    // Fail gracefully - show tip for manual install
+-    console.log(`\nTip: Run 'openspec completion install' for shell completions`);
+-  }
+-}
+-
+ /**
+  * Main function
+  */
+@@ -124,19 +69,10 @@ async function main() {
+       return;
+     }
+ 
+-    // Detect shell
+-    const shell = await detectShell();
+-    if (!shell) {
+-      console.log(`\nTip: Run 'openspec completion install' for shell completions`);
+-      return;
+-    }
+-
+-    // Install completions
+-    await installCompletions(shell);
++    // Completions are opt-in — just print a hint
++    console.log(`\nTip: Run 'openspec completion install' for shell completions`);
+   } catch (error) {
+     // Fail gracefully - never break npm install
+-    // Show tip for manual install
+-    console.log(`\nTip: Run 'openspec completion install' for shell completions`);
+   }
+ }
+ 
+diff --git a/scripts/test-postinstall.sh b/scripts/test-postinstall.sh
+index 97b0ab5..a6b637c 100755
+--- a/scripts/test-postinstall.sh
++++ b/scripts/test-postinstall.sh
+@@ -15,7 +15,7 @@ ORIGINAL_CI="${CI:-}"
+ ORIGINAL_OPENSPEC_NO_COMPLETIONS="${OPENSPEC_NO_COMPLETIONS:-}"
+ 
+ # Test 1: Normal install
+-echo "Test 1: Normal install (should attempt to install completions)"
++echo "Test 1: Normal install (should print tip about completions)"
+ echo "--------------------------------------"
+ unset CI
+ unset OPENSPEC_NO_COMPLETIONS
+diff --git a/src/commands/workflow/shared.ts b/src/commands/workflow/shared.ts
+index a2c8bdc..a85fcd5 100644
+--- a/src/commands/workflow/shared.ts
++++ b/src/commands/workflow/shared.ts
+@@ -86,6 +86,23 @@ export function getStatusIndicator(status: 'done' | 'ready' | 'blocked'): string
+   }
+ }
+ 
++/**
++ * Returns the list of available change directory names under openspec/changes/.
++ * Excludes the archive directory and hidden directories.
++ */
++export async function getAvailableChanges(projectRoot: string): Promise<string[]> {
++  const changesPath = path.join(projectRoot, 'openspec', 'changes');
++  try {
++    const entries = await fs.promises.readdir(changesPath, { withFileTypes: true });
++    return entries
++      .filter((e) => e.isDirectory() && e.name !== 'archive' && !e.name.startsWith('.'))
++      .map((e) => e.name);
++  } catch (error: unknown) {
++    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
++    throw error;
++  }
++}
++
+ /**
+  * Validates that a change exists and returns available changes if not.
+  * Checks directory existence directly to support scaffolded changes (without proposal.md).
+@@ -94,22 +111,8 @@ export async function validateChangeExists(
+   changeName: string | undefined,
+   projectRoot: string
+ ): Promise<string> {
+-  const changesPath = path.join(projectRoot, 'openspec', 'changes');
+-
+-  // Get all change directories (not just those with proposal.md)
+-  const getAvailableChanges = async (): Promise<string[]> => {
+-    try {
+-      const entries = await fs.promises.readdir(changesPath, { withFileTypes: true });
+-      return entries
+-        .filter((e) => e.isDirectory() && e.name !== 'archive' && !e.name.startsWith('.'))
+-        .map((e) => e.name);
+-    } catch {
+-      return [];
+-    }
+-  };
+-
+   if (!changeName) {
+-    const available = await getAvailableChanges();
++    const available = await getAvailableChanges(projectRoot);
+     if (available.length === 0) {
+       throw new Error('No changes found. Create one with: openspec new change <name>');
+     }
+@@ -125,11 +128,11 @@ export async function validateChangeExists(
+   }
+ 
+   // Check directory existence directly
+-  const changePath = path.join(changesPath, changeName);
++  const changePath = path.join(projectRoot, 'openspec', 'changes', changeName);
+   const exists = fs.existsSync(changePath) && fs.statSync(changePath).isDirectory();
+ 
+   if (!exists) {
+-    const available = await getAvailableChanges();
++    const available = await getAvailableChanges(projectRoot);
+     if (available.length === 0) {
+       throw new Error(
+         `Change '${changeName}' not found. No changes exist. Create one with: openspec new change <name>`
+diff --git a/src/commands/workflow/status.ts b/src/commands/workflow/status.ts
+index 59e46c2..5335bf5 100644
+--- a/src/commands/workflow/status.ts
++++ b/src/commands/workflow/status.ts
+@@ -14,6 +14,7 @@ import {
+ import {
+   validateChangeExists,
+   validateSchemaExists,
++  getAvailableChanges,
+   getStatusIndicator,
+   getStatusColor,
+ } from './shared.js';
+@@ -37,6 +38,27 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
+ 
+   try {
+     const projectRoot = process.cwd();
++
++    // Handle no-changes case gracefully — status is informational,
++    // so "no changes" is a valid state, not an error.
++    if (!options.change) {
++      const available = await getAvailableChanges(projectRoot);
++      if (available.length === 0) {
++        spinner.stop();
++        if (options.json) {
++          console.log(JSON.stringify({ changes: [], message: 'No active changes.' }, null, 2));
++          return;
++        }
++        console.log('No active changes. Create one with: openspec new change <name>');
++        return;
++      }
++      // Changes exist but --change not provided
++      spinner.stop();
++      throw new Error(
++        `Missing required option --change. Available changes:\n  ${available.join('\n  ')}`
++      );
++    }
++
+     const changeName = await validateChangeExists(options.change, projectRoot);
+ 
+     // Validate schema if explicitly provided
+diff --git a/src/core/available-tools.ts b/src/core/available-tools.ts
+index 6b45b3c..f3dabe9 100644
+--- a/src/core/available-tools.ts
++++ b/src/core/available-tools.ts
+@@ -13,12 +13,26 @@ import { AI_TOOLS, type AIToolOption } from './config.js';
+  * Scans the project path for AI tool configuration directories and returns
+  * the tools that are present.
+  *
+- * Checks for each tool's `skillsDir` (e.g., `.claude/`, `.cursor/`) at the
+- * project root. Only tools with a `skillsDir` property are considered.
++ * For tools with `detectionPaths`, checks those specific paths (files or
++ * directories). Otherwise checks for the tool's `skillsDir` directory at
++ * the project root. Only tools with a `skillsDir` property are considered.
+  */
+ export function getAvailableTools(projectPath: string): AIToolOption[] {
+   return AI_TOOLS.filter((tool) => {
+     if (!tool.skillsDir) return false;
++
++    if (tool.detectionPaths && tool.detectionPaths.length > 0) {
++      // statSync without .isDirectory() — detection paths can be files or directories
++      return tool.detectionPaths.some((p) => {
++        try {
++          fs.statSync(path.join(projectPath, p));
++          return true;
++        } catch {
++          return false;
++        }
++      });
++    }
++
+     const dirPath = path.join(projectPath, tool.skillsDir);
+     try {
+       return fs.statSync(dirPath).isDirectory();
+diff --git a/src/core/command-generation/adapters/bob.ts b/src/core/command-generation/adapters/bob.ts
+new file mode 100644
+index 0000000..53426fc
+--- /dev/null
++++ b/src/core/command-generation/adapters/bob.ts
+@@ -0,0 +1,51 @@
++/**
++ * Bob Shell Command Adapter
++ *
++ * Formats commands for Bob Shell following its markdown specification.
++ * Commands are stored in .bob/commands/ directory.
++ */
++
++import path from 'path';
++import type { CommandContent, ToolCommandAdapter } from '../types.js';
++import { transformToHyphenCommands } from '../../../utils/command-references.js';
++
++/**
++ * Escapes a string value for safe YAML output.
++ * Quotes the string if it contains special YAML characters.
++ */
++function escapeYamlValue(value: string): string {
++  // Check if value needs quoting (contains special YAML characters or starts/ends with whitespace)
++  const needsQuoting = /[:\n\r#{}[\],&*!|>'"%@`]|^\s|\s$/.test(value);
++  if (needsQuoting) {
++    // Use double quotes and escape internal double quotes and backslashes
++    const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
++    return `"${escaped}"`;
++  }
++  return value;
++}
++
++/**
++ * Bob Shell adapter for command generation.
++ * File path: .bob/commands/opsx-<id>.md
++ * Frontmatter: description, argument-hint
++ */
++export const bobAdapter: ToolCommandAdapter = {
++  toolId: 'bob',
++
++  getFilePath(commandId: string): string {
++    return path.join('.bob', 'commands', `opsx-${commandId}.md`);
++  },
++
++  formatFile(content: CommandContent): string {
++    // Transform command references from colon to hyphen format for Bob
++    const transformedBody = transformToHyphenCommands(content.body);
++
++    return `---
++description: ${escapeYamlValue(content.description)}
++argument-hint: command arguments
++---
++
++${transformedBody}
++`;
++  },
++};
+diff --git a/src/core/command-generation/adapters/index.ts b/src/core/command-generation/adapters/index.ts
+index 06f7a7a..00fc75d 100644
+--- a/src/core/command-generation/adapters/index.ts
++++ b/src/core/command-generation/adapters/index.ts
+@@ -7,6 +7,7 @@
+ export { amazonQAdapter } from './amazon-q.js';
+ export { antigravityAdapter } from './antigravity.js';
+ export { auggieAdapter } from './auggie.js';
++export { bobAdapter } from './bob.js';
+ export { claudeAdapter } from './claude.js';
+ export { clineAdapter } from './cline.js';
+ export { codexAdapter } from './codex.js';
+@@ -19,11 +20,13 @@ export { factoryAdapter } from './factory.js';
+ export { geminiAdapter } from './gemini.js';
+ export { githubCopilotAdapter } from './github-copilot.js';
+ export { iflowAdapter } from './iflow.js';
++export { junieAdapter } from './junie.js';
+ export { kilocodeAdapter } from './kilocode.js';
+ export { kiroAdapter } from './kiro.js';
+ export { opencodeAdapter } from './opencode.js';
+ export { piAdapter } from './pi.js';
+ export { qoderAdapter } from './qoder.js';
++export { lingmaAdapter } from './lingma.js';
+ export { qwenAdapter } from './qwen.js';
+ export { roocodeAdapter } from './roocode.js';
+ export { windsurfAdapter } from './windsurf.js';
+diff --git a/src/core/command-generation/adapters/junie.ts b/src/core/command-generation/adapters/junie.ts
+new file mode 100644
+index 0000000..907ca46
+--- /dev/null
++++ b/src/core/command-generation/adapters/junie.ts
+@@ -0,0 +1,30 @@
++/**
++ * Junie Command Adapter
++ *
++ * Formats commands for Junie following its frontmatter specification.
++ */
++
++import path from 'path';
++import type { CommandContent, ToolCommandAdapter } from '../types.js';
++
++/**
++ * Junie adapter for command generation.
++ * File path: .junie/commands/opsx-<id>.md
++ * Frontmatter: description
++ */
++export const junieAdapter: ToolCommandAdapter = {
++  toolId: 'junie',
++
++  getFilePath(commandId: string): string {
++    return path.join('.junie', 'commands', `opsx-${commandId}.md`);
++  },
++
++  formatFile(content: CommandContent): string {
++    return `---
++description: ${content.description}
++---
++
++${content.body}
++`;
++  },
++};
+diff --git a/src/core/command-generation/adapters/lingma.ts b/src/core/command-generation/adapters/lingma.ts
+new file mode 100644
+index 0000000..cf9bcc8
+--- /dev/null
++++ b/src/core/command-generation/adapters/lingma.ts
+@@ -0,0 +1,34 @@
++/**
++ * Lingma Command Adapter
++ *
++ * Formats commands for Lingma following its frontmatter specification.
++ */
++
++import path from 'path';
++import type { CommandContent, ToolCommandAdapter } from '../types.js';
++
++/**
++ * Lingma adapter for command generation.
++ * File path: .lingma/commands/opsx/<id>.md
++ * Frontmatter: name, description, category, tags
++ */
++export const lingmaAdapter: ToolCommandAdapter = {
++  toolId: 'lingma',
++
++  getFilePath(commandId: string): string {
++    return path.join('.lingma', 'commands', 'opsx', `${commandId}.md`);
++  },
++
++  formatFile(content: CommandContent): string {
++    const tagsStr = content.tags.join(', ');
++    return `---
++name: ${content.name}
++description: ${content.description}
++category: ${content.category}
++tags: [${tagsStr}]
++---
++
++${content.body}
++`;
++  },
++};
+diff --git a/src/core/command-generation/adapters/opencode.ts b/src/core/command-generation/adapters/opencode.ts
+index 2b078fc..301664b 100644
+--- a/src/core/command-generation/adapters/opencode.ts
++++ b/src/core/command-generation/adapters/opencode.ts
+@@ -10,14 +10,14 @@ import { transformToHyphenCommands } from '../../../utils/command-references.js'
+ 
+ /**
+  * OpenCode adapter for command generation.
+- * File path: .opencode/command/opsx-<id>.md
++ * File path: .opencode/commands/opsx-<id>.md
+  * Frontmatter: description
+  */
+ export const opencodeAdapter: ToolCommandAdapter = {
+   toolId: 'opencode',
+ 
+   getFilePath(commandId: string): string {
+-    return path.join('.opencode', 'command', `opsx-${commandId}.md`);
++    return path.join('.opencode', 'commands', `opsx-${commandId}.md`);
+   },
+ 
+   formatFile(content: CommandContent): string {
+diff --git a/src/core/command-generation/adapters/pi.ts b/src/core/command-generation/adapters/pi.ts
+index cb8d2b3..fa11d9d 100644
+--- a/src/core/command-generation/adapters/pi.ts
++++ b/src/core/command-generation/adapters/pi.ts
+@@ -7,6 +7,20 @@
+ 
+ import path from 'path';
+ import type { CommandContent, ToolCommandAdapter } from '../types.js';
++import { transformToHyphenCommands } from '../../../utils/command-references.js';
++
++const PI_INPUT_HEADING = /^\*\*Input\*\*:[^\n]*$/m;
++
++function injectPiArgs(body: string): string {
++  if (body.includes('$@') || body.includes('$ARGUMENTS')) {
++    return body;
++  }
++
++  return body.replace(
++    PI_INPUT_HEADING,
++    (heading) => `${heading}\n**Provided arguments**: $@`
++  );
++}
+ 
+ /**
+  * Escapes a string value for safe YAML output.
+@@ -27,6 +41,10 @@ function escapeYamlValue(value: string): string {
+  * Pi adapter for prompt template generation.
+  * File path: .pi/prompts/opsx-<id>.md
+  * Frontmatter: description
++ *
++ * Pi uses the filename (minus .md) as the slash command name, so
++ * opsx-propose.md → /opsx-propose. Command references in the body
++ * are transformed from /opsx: to /opsx- for consistency.
+  */
+ export const piAdapter: ToolCommandAdapter = {
+   toolId: 'pi',
+@@ -36,11 +54,14 @@ export const piAdapter: ToolCommandAdapter = {
+   },
+ 
+   formatFile(content: CommandContent): string {
++    // Transform /opsx: references to /opsx- and inject $@ for template args
++    const transformedBody = transformToHyphenCommands(content.body);
++
+     return `---
+ description: ${escapeYamlValue(content.description)}
+ ---
+ 
+-${content.body}
++${injectPiArgs(transformedBody)}
+ `;
+   },
+ };
+diff --git a/src/core/command-generation/registry.ts b/src/core/command-generation/registry.ts
+index a69a98a..3b726d7 100644
+--- a/src/core/command-generation/registry.ts
++++ b/src/core/command-generation/registry.ts
+@@ -9,6 +9,7 @@ import type { ToolCommandAdapter } from './types.js';
+ import { amazonQAdapter } from './adapters/amazon-q.js';
+ import { antigravityAdapter } from './adapters/antigravity.js';
+ import { auggieAdapter } from './adapters/auggie.js';
++import { bobAdapter } from './adapters/bob.js';
+ import { claudeAdapter } from './adapters/claude.js';
+ import { clineAdapter } from './adapters/cline.js';
+ import { codexAdapter } from './adapters/codex.js';
+@@ -21,11 +22,13 @@ import { factoryAdapter } from './adapters/factory.js';
+ import { geminiAdapter } from './adapters/gemini.js';
+ import { githubCopilotAdapter } from './adapters/github-copilot.js';
+ import { iflowAdapter } from './adapters/iflow.js';
++import { junieAdapter } from './adapters/junie.js';
+ import { kilocodeAdapter } from './adapters/kilocode.js';
+ import { kiroAdapter } from './adapters/kiro.js';
+ import { opencodeAdapter } from './adapters/opencode.js';
+ import { piAdapter } from './adapters/pi.js';
+ import { qoderAdapter } from './adapters/qoder.js';
++import { lingmaAdapter } from './adapters/lingma.js';
+ import { qwenAdapter } from './adapters/qwen.js';
+ import { roocodeAdapter } from './adapters/roocode.js';
+ import { windsurfAdapter } from './adapters/windsurf.js';
+@@ -41,6 +44,7 @@ export class CommandAdapterRegistry {
+     CommandAdapterRegistry.register(amazonQAdapter);
+     CommandAdapterRegistry.register(antigravityAdapter);
+     CommandAdapterRegistry.register(auggieAdapter);
++    CommandAdapterRegistry.register(bobAdapter);
+     CommandAdapterRegistry.register(claudeAdapter);
+     CommandAdapterRegistry.register(clineAdapter);
+     CommandAdapterRegistry.register(codexAdapter);
+@@ -53,11 +57,13 @@ export class CommandAdapterRegistry {
+     CommandAdapterRegistry.register(geminiAdapter);
+     CommandAdapterRegistry.register(githubCopilotAdapter);
+     CommandAdapterRegistry.register(iflowAdapter);
++    CommandAdapterRegistry.register(junieAdapter);
+     CommandAdapterRegistry.register(kilocodeAdapter);
+     CommandAdapterRegistry.register(kiroAdapter);
+     CommandAdapterRegistry.register(opencodeAdapter);
+     CommandAdapterRegistry.register(piAdapter);
+     CommandAdapterRegistry.register(qoderAdapter);
++    CommandAdapterRegistry.register(lingmaAdapter);
+     CommandAdapterRegistry.register(qwenAdapter);
+     CommandAdapterRegistry.register(roocodeAdapter);
+     CommandAdapterRegistry.register(windsurfAdapter);
+diff --git a/src/core/completions/installers/powershell-installer.ts b/src/core/completions/installers/powershell-installer.ts
+index d3504aa..21384fd 100644
+--- a/src/core/completions/installers/powershell-installer.ts
++++ b/src/core/completions/installers/powershell-installer.ts
+@@ -23,6 +23,49 @@ export class PowerShellInstaller {
+     this.homeDir = homeDir;
+   }
+ 
++  /**
++   * Detect the encoding of a file by inspecting its BOM (Byte Order Mark).
++   * Returns the Node.js BufferEncoding and the raw BOM bytes to preserve on write.
++   */
++  private detectEncoding(buffer: Buffer): { encoding: BufferEncoding; bom: Buffer } {
++    // UTF-16 LE BOM: FF FE
++    if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
++      return { encoding: 'utf16le', bom: Buffer.from([0xff, 0xfe]) };
++    }
++    // UTF-16 BE BOM: FE FF — not natively supported by Node
++    if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
++      throw new Error(
++        'File is encoded as UTF-16 BE which is not supported. ' +
++          'Please re-save as UTF-8 or UTF-16 LE, then retry.',
++      );
++    }
++    // UTF-8 BOM: EF BB BF
++    if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
++      return { encoding: 'utf-8', bom: Buffer.from([0xef, 0xbb, 0xbf]) };
++    }
++    // No BOM → default UTF-8
++    return { encoding: 'utf-8', bom: Buffer.alloc(0) };
++  }
++
++  /**
++   * Read a profile file, preserving its encoding metadata for round-trip writes.
++   * Throws if the file uses UTF-16 BE (unsupported by Node).
++   */
++  private async readProfileFile(filePath: string): Promise<{ content: string; encoding: BufferEncoding; bom: Buffer }> {
++    const raw = await fs.readFile(filePath);
++    const { encoding, bom } = this.detectEncoding(raw);
++    const content = raw.subarray(bom.length).toString(encoding);
++    return { content, encoding, bom };
++  }
++
++  /**
++   * Write a profile file, preserving the original BOM and encoding.
++   */
++  private async writeProfileFile(filePath: string, content: string, encoding: BufferEncoding, bom: Buffer): Promise<void> {
++    const body = Buffer.from(content, encoding);
++    await fs.writeFile(filePath, Buffer.concat([bom, body]));
++  }
++
+   /**
+    * Get PowerShell profile path
+    * Prefers $PROFILE environment variable, falls back to platform defaults
+@@ -132,10 +175,22 @@ export class PowerShellInstaller {
+         await fs.mkdir(profileDir, { recursive: true });
+ 
+         let profileContent = '';
++        let fileEncoding: BufferEncoding = 'utf-8';
++        let fileBom: Buffer = Buffer.alloc(0);
+         try {
+-          profileContent = await fs.readFile(profilePath, 'utf-8');
+-        } catch {
+-          // Profile doesn't exist yet, that's fine
++          const file = await this.readProfileFile(profilePath);
++          profileContent = file.content;
++          fileEncoding = file.encoding;
++          fileBom = file.bom;
++        } catch (err: any) {
++          // If the file doesn't exist that's fine — we'll create it as UTF-8.
++          // Any other read error (permissions, unsupported encoding, etc.) → skip this profile.
++          if (err?.code === 'ENOENT') {
++            // keep defaults
++          } else {
++            console.warn(`Warning: Skipping ${profilePath}: ${err?.message ?? String(err)}`);
++            continue;
++          }
+         }
+ 
+         // Check if already configured
+@@ -154,7 +209,7 @@ export class PowerShellInstaller {
+         ].join('\n');
+ 
+         const newContent = profileContent + openspecBlock;
+-        await fs.writeFile(profilePath, newContent, 'utf-8');
++        await this.writeProfileFile(profilePath, newContent, fileEncoding, fileBom);
+         anyConfigured = true;
+       } catch (error) {
+         // Continue to next profile if this one fails
+@@ -177,12 +232,21 @@ export class PowerShellInstaller {
+ 
+     for (const profilePath of profilePaths) {
+       try {
+-        // Read profile content
++        // Read profile content with encoding detection
+         let profileContent: string;
++        let fileEncoding: BufferEncoding = 'utf-8';
++        let fileBom: Buffer = Buffer.alloc(0);
+         try {
+-          profileContent = await fs.readFile(profilePath, 'utf-8');
+-        } catch {
+-          continue; // Profile doesn't exist, nothing to remove
++          const file = await this.readProfileFile(profilePath);
++          profileContent = file.content;
++          fileEncoding = file.encoding;
++          fileBom = file.bom;
++        } catch (err: any) {
++          if (err?.code === 'ENOENT') {
++            continue; // Profile doesn't exist, nothing to remove
++          }
++          console.warn(`Warning: Could not read ${profilePath}: ${err?.message ?? String(err)}`);
++          continue;
+         }
+ 
+         // Remove OPENSPEC:START -> OPENSPEC:END block
+@@ -207,7 +271,7 @@ export class PowerShellInstaller {
+         // Clean up extra newlines
+         const newContent = (beforeBlock.trimEnd() + '\n' + afterBlock.trimStart()).trim() + '\n';
+ 
+-        await fs.writeFile(profilePath, newContent, 'utf-8');
++        await this.writeProfileFile(profilePath, newContent, fileEncoding, fileBom);
+         anyRemoved = true;
+       } catch (error) {
+         console.warn(`Warning: Could not clean ${profilePath}: ${error}`);
+diff --git a/src/core/config.ts b/src/core/config.ts
+index f35f928..4e6bb24 100644
+--- a/src/core/config.ts
++++ b/src/core/config.ts
+@@ -15,15 +15,18 @@ export interface AIToolOption {
+   available: boolean;
+   successLabel?: string;
+   skillsDir?: string; // e.g., '.claude' - /skills suffix per Agent Skills spec
++  detectionPaths?: string[]; // Override skillsDir for auto-detection; any path existing triggers detection
+ }
+ 
+ export const AI_TOOLS: AIToolOption[] = [
+   { name: 'Amazon Q Developer', value: 'amazon-q', available: true, successLabel: 'Amazon Q Developer', skillsDir: '.amazonq' },
+   { name: 'Antigravity', value: 'antigravity', available: true, successLabel: 'Antigravity', skillsDir: '.agent' },
+   { name: 'Auggie (Augment CLI)', value: 'auggie', available: true, successLabel: 'Auggie', skillsDir: '.augment' },
++  { name: 'Bob Shell', value: 'bob', available: true, successLabel: 'Bob Shell', skillsDir: '.bob' },
+   { name: 'Claude Code', value: 'claude', available: true, successLabel: 'Claude Code', skillsDir: '.claude' },
+   { name: 'Cline', value: 'cline', available: true, successLabel: 'Cline', skillsDir: '.cline' },
+   { name: 'Codex', value: 'codex', available: true, successLabel: 'Codex', skillsDir: '.codex' },
++  { name: 'ForgeCode', value: 'forgecode', available: true, successLabel: 'ForgeCode', skillsDir: '.forge' },
+   { name: 'CodeBuddy Code (CLI)', value: 'codebuddy', available: true, successLabel: 'CodeBuddy Code', skillsDir: '.codebuddy' },
+   { name: 'Continue', value: 'continue', available: true, successLabel: 'Continue (VS Code / JetBrains / Cli)', skillsDir: '.continue' },
+   { name: 'CoStrict', value: 'costrict', available: true, successLabel: 'CoStrict', skillsDir: '.cospec' },
+@@ -31,13 +34,15 @@ export const AI_TOOLS: AIToolOption[] = [
+   { name: 'Cursor', value: 'cursor', available: true, successLabel: 'Cursor', skillsDir: '.cursor' },
+   { name: 'Factory Droid', value: 'factory', available: true, successLabel: 'Factory Droid', skillsDir: '.factory' },
+   { name: 'Gemini CLI', value: 'gemini', available: true, successLabel: 'Gemini CLI', skillsDir: '.gemini' },
+-  { name: 'GitHub Copilot', value: 'github-copilot', available: true, successLabel: 'GitHub Copilot', skillsDir: '.github' },
++  { name: 'GitHub Copilot', value: 'github-copilot', available: true, successLabel: 'GitHub Copilot', skillsDir: '.github', detectionPaths: ['.github/copilot-instructions.md', '.github/instructions', '.github/workflows/copilot-setup-steps.yml', '.github/prompts', '.github/agents', '.github/skills', '.github/.mcp.json'] },
+   { name: 'iFlow', value: 'iflow', available: true, successLabel: 'iFlow', skillsDir: '.iflow' },
++  { name: 'Junie', value: 'junie', available: true, successLabel: 'Junie', skillsDir: '.junie' },
+   { name: 'Kilo Code', value: 'kilocode', available: true, successLabel: 'Kilo Code', skillsDir: '.kilocode' },
+   { name: 'Kiro', value: 'kiro', available: true, successLabel: 'Kiro', skillsDir: '.kiro' },
+   { name: 'OpenCode', value: 'opencode', available: true, successLabel: 'OpenCode', skillsDir: '.opencode' },
+   { name: 'Pi', value: 'pi', available: true, successLabel: 'Pi', skillsDir: '.pi' },
+   { name: 'Qoder', value: 'qoder', available: true, successLabel: 'Qoder', skillsDir: '.qoder' },
++  { name: 'Lingma', value: 'lingma', available: true, successLabel: 'Lingma', skillsDir: '.lingma' },
+   { name: 'Qwen Code', value: 'qwen', available: true, successLabel: 'Qwen Code', skillsDir: '.qwen' },
+   { name: 'RooCode', value: 'roocode', available: true, successLabel: 'RooCode', skillsDir: '.roo' },
+   { name: 'Trae', value: 'trae', available: true, successLabel: 'Trae', skillsDir: '.trae' },
+diff --git a/src/core/init.ts b/src/core/init.ts
+index cf72a5b..aa38408 100644
+--- a/src/core/init.ts
++++ b/src/core/init.ts
+@@ -208,19 +208,14 @@ export class InitCommand {
+ 
+     const canPrompt = this.canPromptInteractively();
+ 
+-    if (this.force) {
+-      // --force flag: proceed with cleanup automatically
++    if (this.force || !canPrompt) {
++      // --force flag or non-interactive mode: proceed with cleanup automatically.
++      // Legacy slash commands are 100% OpenSpec-managed, and config file cleanup
++      // only removes markers (never deletes files), so auto-cleanup is safe.
+       await this.performLegacyCleanup(projectPath, detection);
+       return;
+     }
+ 
+-    if (!canPrompt) {
+-      // Non-interactive mode without --force: abort
+-      console.log(chalk.red('Legacy files detected in non-interactive mode.'));
+-      console.log(chalk.dim('Run interactively to upgrade, or use --force to auto-cleanup.'));
+-      process.exit(1);
+-    }
+-
+     // Interactive mode: prompt for confirmation
+     const { confirm } = await import('@inquirer/prompts');
+     const shouldCleanup = await confirm({
+@@ -542,8 +537,8 @@ export class InitCommand {
+             const skillFile = path.join(skillDir, 'SKILL.md');
+ 
+             // Generate SKILL.md content with YAML frontmatter including generatedBy
+-            // Use hyphen-based command references for OpenCode
+-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
++            // Use hyphen-based command references for tools where filename = command name
++            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
+             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+ 
+             // Write the skill file
+diff --git a/src/core/legacy-cleanup.ts b/src/core/legacy-cleanup.ts
+index e443a31..f3cbb56 100644
+--- a/src/core/legacy-cleanup.ts
++++ b/src/core/legacy-cleanup.ts
+@@ -34,6 +34,7 @@ export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPatter
+   'claude': { type: 'directory', path: '.claude/commands/openspec' },
+   'codebuddy': { type: 'directory', path: '.codebuddy/commands/openspec' },
+   'qoder': { type: 'directory', path: '.qoder/commands/openspec' },
++  'lingma': { type: 'directory', path: '.lingma/commands/openspec' },
+   'crush': { type: 'directory', path: '.crush/commands/openspec' },
+   'gemini': { type: 'directory', path: '.gemini/commands/openspec' },
+   'costrict': { type: 'directory', path: '.cospec/openspec/commands' },
+@@ -49,10 +50,11 @@ export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPatter
+   'roocode': { type: 'files', pattern: '.roo/commands/openspec-*.md' },
+   'auggie': { type: 'files', pattern: '.augment/commands/openspec-*.md' },
+   'factory': { type: 'files', pattern: '.factory/commands/openspec-*.md' },
+-  'opencode': { type: 'files', pattern: '.opencode/command/openspec-*.md' },
++  'opencode': { type: 'files', pattern: ['.opencode/command/opsx-*.md', '.opencode/command/openspec-*.md'] },
+   'continue': { type: 'files', pattern: '.continue/prompts/openspec-*.prompt' },
+   'antigravity': { type: 'files', pattern: '.agent/workflows/openspec-*.md' },
+   'iflow': { type: 'files', pattern: '.iflow/commands/openspec-*.md' },
++  'junie': { type: 'files', pattern: ['.junie/commands/opsx-*.md', '.junie/commands/openspec-*.md'] },
+   'qwen': { type: 'files', pattern: '.qwen/commands/openspec-*.toml' },
+   'codex': { type: 'files', pattern: '.codex/prompts/openspec-*.md' },
+ };
+@@ -63,7 +65,7 @@ export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPatter
+ export interface LegacySlashCommandPattern {
+   type: 'directory' | 'files';
+   path?: string; // For directory type
+-  pattern?: string; // For files type (glob pattern)
++  pattern?: string | string[]; // For files type (glob pattern or array of patterns)
+ }
+ 
+ /**
+@@ -192,8 +194,11 @@ export async function detectLegacySlashCommands(
+       }
+     } else if (pattern.type === 'files' && pattern.pattern) {
+       // For file-based patterns, check for individual files
+-      const foundFiles = await findLegacySlashCommandFiles(projectPath, pattern.pattern);
+-      files.push(...foundFiles);
++      const patterns = Array.isArray(pattern.pattern) ? pattern.pattern : [pattern.pattern];
++      for (const p of patterns) {
++        const foundFiles = await findLegacySlashCommandFiles(projectPath, p);
++        files.push(...foundFiles);
++      }
+     }
+   }
+ 
+@@ -604,14 +609,20 @@ export function getToolsFromLegacyArtifacts(detection: LegacyDetectionResult): s
+       if (pattern.type === 'files' && pattern.pattern) {
+         // Convert glob pattern to regex for matching
+         // e.g., '.cursor/commands/openspec-*.md' -> /^\.cursor\/commands\/openspec-.*\.md$/
+-        const regexPattern = pattern.pattern
+-          .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars except *
+-          .replace(/\*/g, '.*'); // Replace * with .*
+-        const regex = new RegExp(`^${regexPattern}$`);
+-        if (regex.test(normalizedFile)) {
+-          tools.add(toolId);
+-          break;
++        const patterns = Array.isArray(pattern.pattern) ? pattern.pattern : [pattern.pattern];
++        let matched = false;
++        for (const p of patterns) {
++          const regexPattern = p
++            .replace(/[.+^${}()|[\]\\]/g, '\\$&') // Escape regex special chars except *
++            .replace(/\*/g, '.*'); // Replace * with .*
++          const regex = new RegExp(`^${regexPattern}$`);
++          if (regex.test(normalizedFile)) {
++            tools.add(toolId);
++            matched = true;
++            break;
++          }
+         }
++        if (matched) break;
+       }
+     }
+   }
+diff --git a/src/core/templates/workflows/bulk-archive-change.ts b/src/core/templates/workflows/bulk-archive-change.ts
+index d57db8a..ed6d144 100644
+--- a/src/core/templates/workflows/bulk-archive-change.ts
++++ b/src/core/templates/workflows/bulk-archive-change.ts
+@@ -85,7 +85,7 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
+    Display a table summarizing all changes:
+ 
+    \`\`\`
+-   | Change               | Artifacts | Tasks | Specs   | Conflicts | Status |
++   | Change              | Artifacts | Tasks | Specs   | Conflicts | Status |
+    |---------------------|-----------|-------|---------|-----------|--------|
+    | schema-management   | Done      | 5/5   | 2 delta | None      | Ready  |
+    | project-config      | Done      | 3/3   | 1 delta | None      | Ready  |
+@@ -332,7 +332,7 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
+    Display a table summarizing all changes:
+ 
+    \`\`\`
+-   | Change               | Artifacts | Tasks | Specs   | Conflicts | Status |
++   | Change              | Artifacts | Tasks | Specs   | Conflicts | Status |
+    |---------------------|-----------|-------|---------|-----------|--------|
+    | schema-management   | Done      | 5/5   | 2 delta | None      | Ready  |
+    | project-config      | Done      | 3/3   | 1 delta | None      | Ready  |
+diff --git a/src/core/templates/workflows/explore.ts b/src/core/templates/workflows/explore.ts
+index 059d2ec..76db8ff 100644
+--- a/src/core/templates/workflows/explore.ts
++++ b/src/core/templates/workflows/explore.ts
+@@ -57,10 +57,10 @@ Depending on what the user brings, you might:
+ │     Use ASCII diagrams liberally        │
+ ├─────────────────────────────────────────┤
+ │                                         │
+-│   ┌────────┐         ┌────────┐        │
+-│   │ State  │────────▶│ State  │        │
+-│   │   A    │         │   B    │        │
+-│   └────────┘         └────────┘        │
++│      ┌────────┐         ┌────────┐      │
++│      │ State  │────────▶│ State  │      │
++│      │   A    │         │   B    │      │
++│      └────────┘         └────────┘      │
+ │                                         │
+ │   System diagrams, state machines,      │
+ │   data flows, architecture sketches,    │
+@@ -115,14 +115,14 @@ If the user mentions a change or you detect one is relevant:
+ 
+ 3. **Offer to capture when decisions are made**
+ 
+-   | Insight Type | Where to Capture |
+-   |--------------|------------------|
+-   | New requirement discovered | \`specs/<capability>/spec.md\` |
+-   | Requirement changed | \`specs/<capability>/spec.md\` |
+-   | Design decision made | \`design.md\` |
+-   | Scope changed | \`proposal.md\` |
+-   | New work identified | \`tasks.md\` |
+-   | Assumption invalidated | Relevant artifact |
++    | Insight Type               | Where to Capture               |
++    |----------------------------|--------------------------------|
++    | New requirement discovered | \`specs/<capability>/spec.md\` |
++    | Requirement changed        | \`specs/<capability>/spec.md\` |
++    | Design decision made       | \`design.md\`                  |
++    | Scope changed              | \`proposal.md\`                |
++    | New work identified        | \`tasks.md\`                   |
++    | Assumption invalidated     | Relevant artifact              |
+ 
+    Example offers:
+    - "That's a design decision. Capture it in design.md?"
+@@ -228,7 +228,7 @@ User: A CLI tool that tracks local dev environments
+ You: That changes everything.
+ 
+      ┌─────────────────────────────────────────────────┐
+-     │         CLI TOOL DATA STORAGE                  │
++     │          CLI TOOL DATA STORAGE                  │
+      └─────────────────────────────────────────────────┘
+ 
+      Key constraints:
+@@ -353,10 +353,10 @@ Depending on what the user brings, you might:
+ │     Use ASCII diagrams liberally        │
+ ├─────────────────────────────────────────┤
+ │                                         │
+-│   ┌────────┐         ┌────────┐        │
+-│   │ State  │────────▶│ State  │        │
+-│   │   A    │         │   B    │        │
+-│   └────────┘         └────────┘        │
++│      ┌────────┐         ┌────────┐      │
++│      │ State  │────────▶│ State  │      │
++│      │   A    │         │   B    │      │
++│      └────────┘         └────────┘      │
+ │                                         │
+ │   System diagrams, state machines,      │
+ │   data flows, architecture sketches,    │
+@@ -413,14 +413,14 @@ If the user mentions a change or you detect one is relevant:
+ 
+ 3. **Offer to capture when decisions are made**
+ 
+-   | Insight Type | Where to Capture |
+-   |--------------|------------------|
+-   | New requirement discovered | \`specs/<capability>/spec.md\` |
+-   | Requirement changed | \`specs/<capability>/spec.md\` |
+-   | Design decision made | \`design.md\` |
+-   | Scope changed | \`proposal.md\` |
+-   | New work identified | \`tasks.md\` |
+-   | Assumption invalidated | Relevant artifact |
++    | Insight Type               | Where to Capture               |
++    |----------------------------|--------------------------------|
++    | New requirement discovered | \`specs/<capability>/spec.md\` |
++    | Requirement changed        | \`specs/<capability>/spec.md\` |
++    | Design decision made       | \`design.md\`                  |
++    | Scope changed              | \`proposal.md\`                |
++    | New work identified        | \`tasks.md\`                   |
++    | Assumption invalidated     | Relevant artifact              |
+ 
+    Example offers:
+    - "That's a design decision. Capture it in design.md?"
+diff --git a/src/core/templates/workflows/onboard.ts b/src/core/templates/workflows/onboard.ts
+index f9280fa..65218e1 100644
+--- a/src/core/templates/workflows/onboard.ts
++++ b/src/core/templates/workflows/onboard.ts
+@@ -477,21 +477,21 @@ This same rhythm works for any size change—a small fix or a major feature.
+ 
+ **Core workflow:**
+ 
+-| Command | What it does |
+-|---------|--------------|
+-| \`/opsx:propose\` | Create a change and generate all artifacts |
+-| \`/opsx:explore\` | Think through problems before/during work |
+-| \`/opsx:apply\` | Implement tasks from a change |
+-| \`/opsx:archive\` | Archive a completed change |
++ | Command           | What it does                               |
++ |-------------------|--------------------------------------------|
++ | \`/opsx:propose\` | Create a change and generate all artifacts |
++ | \`/opsx:explore\` | Think through problems before/during work  |
++ | \`/opsx:apply\`   | Implement tasks from a change              |
++ | \`/opsx:archive\` | Archive a completed change                 |
+ 
+ **Additional commands:**
+ 
+-| Command | What it does |
+-|---------|--------------|
+-| \`/opsx:new\` | Start a new change, step through artifacts one at a time |
+-| \`/opsx:continue\` | Continue working on an existing change |
+-| \`/opsx:ff\` | Fast-forward: create all artifacts at once |
+-| \`/opsx:verify\` | Verify implementation matches artifacts |
++ | Command            | What it does                                             |
++ |--------------------|----------------------------------------------------------|
++ | \`/opsx:new\`      | Start a new change, step through artifacts one at a time |
++ | \`/opsx:continue\` | Continue working on an existing change                   |
++ | \`/opsx:ff\`       | Fast-forward: create all artifacts at once               |
++ | \`/opsx:verify\`   | Verify implementation matches artifacts                  |
+ 
+ ---
+ 
+@@ -529,21 +529,21 @@ If the user says they just want to see the commands or skip the tutorial:
+ 
+ **Core workflow:**
+ 
+-| Command | What it does |
+-|---------|--------------|
+-| \`/opsx:propose <name>\` | Create a change and generate all artifacts |
+-| \`/opsx:explore\` | Think through problems (no code changes) |
+-| \`/opsx:apply <name>\` | Implement tasks |
+-| \`/opsx:archive <name>\` | Archive when done |
++ | Command                  | What it does                               |
++ |--------------------------|--------------------------------------------|
++ | \`/opsx:propose <name>\` | Create a change and generate all artifacts |
++ | \`/opsx:explore\`        | Think through problems (no code changes)   |
++ | \`/opsx:apply <name>\`   | Implement tasks                            |
++ | \`/opsx:archive <name>\` | Archive when done                          |
+ 
+ **Additional commands:**
+ 
+-| Command | What it does |
+-|---------|--------------|
+-| \`/opsx:new <name>\` | Start a new change, step by step |
+-| \`/opsx:continue <name>\` | Continue an existing change |
+-| \`/opsx:ff <name>\` | Fast-forward: all artifacts at once |
+-| \`/opsx:verify <name>\` | Verify implementation |
++ | Command                   | What it does                        |
++ |---------------------------|-------------------------------------|
++ | \`/opsx:new <name>\`      | Start a new change, step by step    |
++ | \`/opsx:continue <name>\` | Continue an existing change         |
++ | \`/opsx:ff <name>\`       | Fast-forward: all artifacts at once |
++ | \`/opsx:verify <name>\`   | Verify implementation               |
+ 
+ Try \`/opsx:propose\` to start your first change.
+ \`\`\`
+diff --git a/src/core/update.ts b/src/core/update.ts
+index 62db8a0..de922a5 100644
+--- a/src/core/update.ts
++++ b/src/core/update.ts
+@@ -195,7 +195,7 @@ export class UpdateCommand {
+             const skillFile = path.join(skillDir, 'SKILL.md');
+ 
+             // Use hyphen-based command references for OpenCode
+-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
++            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
+             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+             await FileSystemUtils.writeFile(skillFile, skillContent);
+           }
+@@ -666,7 +666,7 @@ export class UpdateCommand {
+             const skillFile = path.join(skillDir, 'SKILL.md');
+ 
+             // Use hyphen-based command references for OpenCode
+-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
++            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
+             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+             await FileSystemUtils.writeFile(skillFile, skillContent);
+           }
+diff --git a/test/commands/artifact-workflow.test.ts b/test/commands/artifact-workflow.test.ts
+index 1816299..17ed977 100644
+--- a/test/commands/artifact-workflow.test.ts
++++ b/test/commands/artifact-workflow.test.ts
+@@ -131,6 +131,22 @@ describe('artifact-workflow CLI commands', () => {
+       expect(result.stdout).toContain('All artifacts complete!');
+     });
+ 
++    it('exits gracefully when no changes exist', async () => {
++      const result = await runCLI(['status'], { cwd: tempDir });
++      expect(result.exitCode).toBe(0);
++      expect(result.stdout).toContain('No active changes');
++      expect(result.stdout).toContain('openspec new change');
++    });
++
++    it('exits gracefully with JSON when no changes exist', async () => {
++      const result = await runCLI(['status', '--json'], { cwd: tempDir });
++      expect(result.exitCode).toBe(0);
++
++      const json = JSON.parse(result.stdout);
++      expect(json.changes).toEqual([]);
++      expect(json.message).toBe('No active changes.');
++    });
++
+     it('errors when --change is missing and lists available changes', async () => {
+       await createTestChange('some-change');
+ 
+diff --git a/test/core/available-tools.test.ts b/test/core/available-tools.test.ts
+index fb2912e..83942df 100644
+--- a/test/core/available-tools.test.ts
++++ b/test/core/available-tools.test.ts
+@@ -87,5 +87,66 @@ describe('available-tools', () => {
+       expect(tools).toHaveLength(1);
+       expect(tools[0].value).toBe('claude');
+     });
++
++    it('should not detect GitHub Copilot from bare .github directory', async () => {
++      // .github/ exists in virtually every GitHub repo (for workflows, issue templates, etc.)
++      // A bare .github/ directory should NOT trigger Copilot detection
++      await fs.mkdir(path.join(testDir, '.github'), { recursive: true });
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).not.toContain('github-copilot');
++    });
++
++    it('should detect GitHub Copilot when copilot-instructions.md exists', async () => {
++      await fs.mkdir(path.join(testDir, '.github'), { recursive: true });
++      await fs.writeFile(path.join(testDir, '.github', 'copilot-instructions.md'), '');
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).toContain('github-copilot');
++    });
++
++    it('should detect GitHub Copilot when .github/prompts directory exists', async () => {
++      await fs.mkdir(path.join(testDir, '.github', 'prompts'), { recursive: true });
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).toContain('github-copilot');
++    });
++
++    it('should detect GitHub Copilot when .github/agents directory exists', async () => {
++      await fs.mkdir(path.join(testDir, '.github', 'agents'), { recursive: true });
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).toContain('github-copilot');
++    });
++
++    it('should detect GitHub Copilot when .github/skills directory exists', async () => {
++      await fs.mkdir(path.join(testDir, '.github', 'skills'), { recursive: true });
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).toContain('github-copilot');
++    });
++
++    it('should detect GitHub Copilot when copilot-setup-steps.yml exists', async () => {
++      await fs.mkdir(path.join(testDir, '.github', 'workflows'), { recursive: true });
++      await fs.writeFile(path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml'), '');
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).toContain('github-copilot');
++    });
++
++    it('should still use skillsDir detection for tools without detectionPaths', async () => {
++      // Claude Code has no detectionPaths, so .claude/ directory should still work
++      await fs.mkdir(path.join(testDir, '.claude'), { recursive: true });
++
++      const tools = getAvailableTools(testDir);
++      const toolValues = tools.map((t) => t.value);
++      expect(toolValues).toContain('claude');
++    });
+   });
+ });
+diff --git a/test/core/command-generation/adapters.test.ts b/test/core/command-generation/adapters.test.ts
+index 5e4444d..b91dc02 100644
+--- a/test/core/command-generation/adapters.test.ts
++++ b/test/core/command-generation/adapters.test.ts
+@@ -4,6 +4,7 @@ import path from 'path';
+ import { amazonQAdapter } from '../../../src/core/command-generation/adapters/amazon-q.js';
+ import { antigravityAdapter } from '../../../src/core/command-generation/adapters/antigravity.js';
+ import { auggieAdapter } from '../../../src/core/command-generation/adapters/auggie.js';
++import { bobAdapter } from '../../../src/core/command-generation/adapters/bob.js';
+ import { claudeAdapter } from '../../../src/core/command-generation/adapters/claude.js';
+ import { clineAdapter } from '../../../src/core/command-generation/adapters/cline.js';
+ import { codexAdapter } from '../../../src/core/command-generation/adapters/codex.js';
+@@ -183,6 +184,71 @@ describe('command-generation/adapters', () => {
+     });
+   });
+ 
++
++  describe('bobAdapter', () => {
++    it('should have correct toolId', () => {
++      expect(bobAdapter.toolId).toBe('bob');
++    });
++
++    it('should generate correct file path', () => {
++      const filePath = bobAdapter.getFilePath('explore');
++      expect(filePath).toBe(path.join('.bob', 'commands', 'opsx-explore.md'));
++    });
++
++    it('should generate correct file paths for different commands', () => {
++      expect(bobAdapter.getFilePath('new')).toBe(path.join('.bob', 'commands', 'opsx-new.md'));
++      expect(bobAdapter.getFilePath('bulk-archive')).toBe(path.join('.bob', 'commands', 'opsx-bulk-archive.md'));
++    });
++
++    it('should format file with description and argument-hint frontmatter', () => {
++      const output = bobAdapter.formatFile(sampleContent);
++      expect(output).toContain('---\n');
++      expect(output).toContain('description: Enter explore mode for thinking');
++      expect(output).toContain('argument-hint: command arguments');
++      expect(output).toContain('---\n\n');
++      expect(output).toContain('This is the command body.\n\nWith multiple lines.');
++    });
++
++    it('should transform colon command references to hyphen format', () => {
++      const contentWithRefs: CommandContent = {
++        ...sampleContent,
++        body: 'Run /opsx:apply to implement. Then use /opsx:verify.',
++      };
++      const output = bobAdapter.formatFile(contentWithRefs);
++      expect(output).toContain('/opsx-apply');
++      expect(output).toContain('/opsx-verify');
++      expect(output).not.toContain('/opsx:apply');
++      expect(output).not.toContain('/opsx:verify');
++    });
++
++    it('should escape YAML special characters in description', () => {
++      const contentWithSpecialChars: CommandContent = {
++        ...sampleContent,
++        description: 'Fix: regression in "auth" feature',
++      };
++      const output = bobAdapter.formatFile(contentWithSpecialChars);
++      expect(output).toContain('description: "Fix: regression in \\"auth\\" feature"');
++    });
++
++    it('should escape newlines in description', () => {
++      const contentWithNewline: CommandContent = {
++        ...sampleContent,
++        description: 'Line 1\nLine 2',
++      };
++      const output = bobAdapter.formatFile(contentWithNewline);
++      expect(output).toContain('description: "Line 1\\nLine 2"');
++    });
++
++    it('should handle empty description', () => {
++      const contentEmptyDesc: CommandContent = {
++        ...sampleContent,
++        description: '',
++      };
++      const output = bobAdapter.formatFile(contentEmptyDesc);
++      expect(output).toContain('description: \n');
++    });
++  });
++
+   describe('clineAdapter', () => {
+     it('should have correct toolId', () => {
+       expect(clineAdapter.toolId).toBe('cline');
+@@ -444,7 +510,7 @@ describe('command-generation/adapters', () => {
+ 
+     it('should generate correct file path', () => {
+       const filePath = opencodeAdapter.getFilePath('explore');
+-      expect(filePath).toBe(path.join('.opencode', 'command', 'opsx-explore.md'));
++      expect(filePath).toBe(path.join('.opencode', 'commands', 'opsx-explore.md'));
+     });
+ 
+     it('should format file with description frontmatter', () => {
+@@ -547,6 +613,28 @@ describe('command-generation/adapters', () => {
+       expect(output).toContain('This is the command body.');
+     });
+ 
++    it('should transform command references from colon to hyphen format', () => {
++      const contentWithRefs: CommandContent = {
++        ...sampleContent,
++        body: 'Run /opsx:apply to implement. Then /opsx:archive when done.',
++      };
++
++      const output = piAdapter.formatFile(contentWithRefs);
++      expect(output).toContain('/opsx-apply');
++      expect(output).toContain('/opsx-archive');
++      expect(output).not.toContain('/opsx:apply');
++    });
++
++    it('should inject template arguments into the input section', () => {
++      const contentWithInput: CommandContent = {
++        ...sampleContent,
++        body: '**Input**: The argument after `/opsx:explore` is the topic.\n\n**Steps**\n1. Think.',
++      };
++
++      const output = piAdapter.formatFile(contentWithInput);
++      expect(output).toContain('**Provided arguments**: $@');
++    });
++
+     it('should escape YAML special characters in description', () => {
+       const contentWithSpecialChars: CommandContent = {
+         ...sampleContent,
+@@ -606,7 +694,7 @@ describe('command-generation/adapters', () => {
+     it('All adapters use path.join for paths', () => {
+       // Verify all adapters produce valid paths
+       const adapters = [
+-        amazonQAdapter, antigravityAdapter, auggieAdapter, clineAdapter,
++        amazonQAdapter, antigravityAdapter, auggieAdapter, bobAdapter, clineAdapter,
+         codexAdapter, codebuddyAdapter, continueAdapter, costrictAdapter,
+         crushAdapter, factoryAdapter, geminiAdapter, githubCopilotAdapter,
+         iflowAdapter, kilocodeAdapter, opencodeAdapter, piAdapter, qoderAdapter,
+diff --git a/test/core/command-generation/registry.test.ts b/test/core/command-generation/registry.test.ts
+index 8a86cd3..14165ff 100644
+--- a/test/core/command-generation/registry.test.ts
++++ b/test/core/command-generation/registry.test.ts
+@@ -21,6 +21,12 @@ describe('command-generation/registry', () => {
+       expect(adapter?.toolId).toBe('windsurf');
+     });
+ 
++    it('should return Junie adapter for "junie"', () => {
++      const adapter = CommandAdapterRegistry.get('junie');
++      expect(adapter).toBeDefined();
++      expect(adapter?.toolId).toBe('junie');
++    });
++
+     it('should return undefined for unregistered tool', () => {
+       const adapter = CommandAdapterRegistry.get('unknown-tool');
+       expect(adapter).toBeUndefined();
+@@ -54,6 +60,7 @@ describe('command-generation/registry', () => {
+       expect(CommandAdapterRegistry.has('claude')).toBe(true);
+       expect(CommandAdapterRegistry.has('cursor')).toBe(true);
+       expect(CommandAdapterRegistry.has('windsurf')).toBe(true);
++      expect(CommandAdapterRegistry.has('junie')).toBe(true);
+     });
+ 
+     it('should return false for unregistered tools', () => {
+diff --git a/test/core/completions/installers/powershell-installer.test.ts b/test/core/completions/installers/powershell-installer.test.ts
+index 2796017..0c7d6f7 100644
+--- a/test/core/completions/installers/powershell-installer.test.ts
++++ b/test/core/completions/installers/powershell-installer.test.ts
+@@ -544,6 +544,173 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
+     });
+   });
+ 
++  describe('encoding preservation', () => {
++    const mockScriptPath = '/path/to/OpenSpecCompletion.ps1';
++    const utf16leBom = Buffer.from([0xff, 0xfe]);
++    const utf8Bom = Buffer.from([0xef, 0xbb, 0xbf]);
++
++    /**
++     * Helper: write a file in UTF-16 LE with BOM, the way Windows PowerShell does.
++     */
++    function writeUtf16LeFile(filePath: string, text: string): Promise<void> {
++      const body = Buffer.from(text, 'utf16le');
++      return fs.writeFile(filePath, Buffer.concat([utf16leBom, body]));
++    }
++
++    /**
++     * Helper: write a file in UTF-8 with BOM.
++     */
++    function writeUtf8BomFile(filePath: string, text: string): Promise<void> {
++      const body = Buffer.from(text, 'utf-8');
++      return fs.writeFile(filePath, Buffer.concat([utf8Bom, body]));
++    }
++
++    it('should preserve UTF-16 LE BOM when configuring profile', async () => {
++      delete process.env.OPENSPEC_NO_AUTO_CONFIG;
++      const profilePath = installer.getProfilePath();
++      await fs.mkdir(path.dirname(profilePath), { recursive: true });
++
++      const originalText = '. "C:\\Code\\SystemConfig\\Powershell\\profile.ps1"\r\n';
++      await writeUtf16LeFile(profilePath, originalText);
++
++      const result = await installer.configureProfile(mockScriptPath);
++      expect(result).toBe(true);
++
++      // Read back raw bytes and verify BOM is preserved
++      const raw = await fs.readFile(profilePath);
++      expect(raw[0]).toBe(0xff);
++      expect(raw[1]).toBe(0xfe);
++
++      // Decode and verify content is intact
++      const content = raw.subarray(2).toString('utf16le');
++      expect(content).toContain('. "C:\\Code\\SystemConfig\\Powershell\\profile.ps1"');
++      expect(content).toContain('# OPENSPEC:START');
++      expect(content).toContain(`. "${mockScriptPath}"`);
++      expect(content).toContain('# OPENSPEC:END');
++    });
++
++    it('should preserve UTF-16 LE BOM when removing profile config', async () => {
++      delete process.env.OPENSPEC_NO_AUTO_CONFIG;
++      const profilePath = installer.getProfilePath();
++      await fs.mkdir(path.dirname(profilePath), { recursive: true });
++
++      const textWithBlock = [
++        '. "C:\\Code\\profile.ps1"',
++        '# OPENSPEC:START',
++        '. "/path/to/OpenSpecCompletion.ps1"',
++        '# OPENSPEC:END',
++        '',
++      ].join('\n');
++      await writeUtf16LeFile(profilePath, textWithBlock);
++
++      const result = await installer.removeProfileConfig();
++      expect(result).toBe(true);
++
++      // Verify BOM is preserved
++      const raw = await fs.readFile(profilePath);
++      expect(raw[0]).toBe(0xff);
++      expect(raw[1]).toBe(0xfe);
++
++      // Verify content: original line kept, OpenSpec block removed
++      const content = raw.subarray(2).toString('utf16le');
++      expect(content).toContain('. "C:\\Code\\profile.ps1"');
++      expect(content).not.toContain('# OPENSPEC:START');
++      expect(content).not.toContain('# OPENSPEC:END');
++    });
++
++    it('should preserve UTF-8 BOM when configuring profile', async () => {
++      delete process.env.OPENSPEC_NO_AUTO_CONFIG;
++      const profilePath = installer.getProfilePath();
++      await fs.mkdir(path.dirname(profilePath), { recursive: true });
++
++      await writeUtf8BomFile(profilePath, '# My profile\n');
++
++      const result = await installer.configureProfile(mockScriptPath);
++      expect(result).toBe(true);
++
++      const raw = await fs.readFile(profilePath);
++      expect(raw[0]).toBe(0xef);
++      expect(raw[1]).toBe(0xbb);
++      expect(raw[2]).toBe(0xbf);
++
++      const content = raw.subarray(3).toString('utf-8');
++      expect(content).toContain('# My profile');
++      expect(content).toContain('# OPENSPEC:START');
++    });
++
++    it('should skip UTF-16 BE profile and leave it unchanged', async () => {
++      delete process.env.OPENSPEC_NO_AUTO_CONFIG;
++      process.env.PROFILE = path.join(testHomeDir, 'custom-profile.ps1');
++      const profilePath = installer.getProfilePath();
++      await fs.mkdir(path.dirname(profilePath), { recursive: true });
++
++      // Write a fake UTF-16 BE file (FE FF BOM + some bytes)
++      const utf16beBom = Buffer.from([0xfe, 0xff]);
++      const body = Buffer.from([0x00, 0x23]); // '#' in UTF-16 BE
++      const originalBytes = Buffer.concat([utf16beBom, body]);
++      await fs.writeFile(profilePath, originalBytes);
++
++      const result = await installer.configureProfile(mockScriptPath);
++      expect(result).toBe(false);
++
++      // File should be untouched
++      const raw = await fs.readFile(profilePath);
++      expect(Buffer.compare(raw, originalBytes)).toBe(0);
++    });
++
++    it('should handle plain UTF-8 files without BOM (no regression)', async () => {
++      delete process.env.OPENSPEC_NO_AUTO_CONFIG;
++      const profilePath = installer.getProfilePath();
++      await fs.mkdir(path.dirname(profilePath), { recursive: true });
++
++      await fs.writeFile(profilePath, '# Plain UTF-8\n', 'utf-8');
++
++      const result = await installer.configureProfile(mockScriptPath);
++      expect(result).toBe(true);
++
++      const raw = await fs.readFile(profilePath);
++      // Should NOT have any BOM
++      expect(raw[0]).not.toBe(0xff);
++      expect(raw[0]).not.toBe(0xfe);
++      expect(raw[0]).not.toBe(0xef);
++
++      const content = raw.toString('utf-8');
++      expect(content).toContain('# Plain UTF-8');
++      expect(content).toContain('# OPENSPEC:START');
++    });
++
++    it('should round-trip UTF-16 LE through install → uninstall without corruption', async () => {
++      delete process.env.OPENSPEC_NO_AUTO_CONFIG;
++      const profilePath = installer.getProfilePath();
++      await fs.mkdir(path.dirname(profilePath), { recursive: true });
++
++      const originalText = '. "C:\\Code\\SystemConfig\\Powershell\\profile.ps1"\r\n';
++      await writeUtf16LeFile(profilePath, originalText);
++
++      // Install adds the OpenSpec block
++      const mockScript = '# completion script';
++      await installer.install(mockScript);
++
++      // Verify the profile was modified but encoding preserved
++      let raw = await fs.readFile(profilePath);
++      expect(raw[0]).toBe(0xff);
++      expect(raw[1]).toBe(0xfe);
++      let content = raw.subarray(2).toString('utf16le');
++      expect(content).toContain('# OPENSPEC:START');
++      expect(content).toContain(originalText.trimEnd());
++
++      // Uninstall removes the OpenSpec block
++      await installer.uninstall();
++
++      raw = await fs.readFile(profilePath);
++      expect(raw[0]).toBe(0xff);
++      expect(raw[1]).toBe(0xfe);
++      content = raw.subarray(2).toString('utf16le');
++      expect(content).not.toContain('# OPENSPEC:START');
++      expect(content).toContain('. "C:\\Code\\SystemConfig\\Powershell\\profile.ps1"');
++    });
++  });
++
+   describe('uninstall', () => {
+     const mockCompletionScript = `# PowerShell completion script
+ $openspecCompleter = {}
+diff --git a/test/core/init.test.ts b/test/core/init.test.ts
+index 0f6fb42..c2499e4 100644
+--- a/test/core/init.test.ts
++++ b/test/core/init.test.ts
+@@ -536,6 +536,24 @@ describe('InitCommand - profile and detection features', () => {
+     expect(await fileExists(skillFile)).toBe(true);
+   });
+ 
++  it('should auto-cleanup legacy artifacts in non-interactive mode without --force', async () => {
++    // Create legacy OpenCode command files (singular 'command' path)
++    const legacyDir = path.join(testDir, '.opencode', 'command');
++    await fs.mkdir(legacyDir, { recursive: true });
++    await fs.writeFile(path.join(legacyDir, 'opsx-propose.md'), 'legacy content');
++
++    // Run init in non-interactive mode without --force
++    const initCommand = new InitCommand({ tools: 'opencode' });
++    await initCommand.execute(testDir);
++
++    // Legacy files should be cleaned up automatically
++    expect(await fileExists(path.join(legacyDir, 'opsx-propose.md'))).toBe(false);
++
++    // New commands should be at the correct plural path
++    const newCommandsDir = path.join(testDir, '.opencode', 'commands');
++    expect(await directoryExists(newCommandsDir)).toBe(true);
++  });
++
+   it('should preselect configured tools but not directory-detected tools in extend mode', async () => {
+     // Simulate existing OpenSpec project (extend mode).
+     await fs.mkdir(path.join(testDir, 'openspec'), { recursive: true });
+@@ -547,6 +565,7 @@ describe('InitCommand - profile and detection features', () => {
+ 
+     // Directory detected only (not configured with OpenSpec)
+     await fs.mkdir(path.join(testDir, '.github'), { recursive: true });
++    await fs.writeFile(path.join(testDir, '.github', 'copilot-instructions.md'), '');
+ 
+     searchableMultiSelectMock.mockResolvedValue(['claude']);
+ 
+@@ -569,6 +588,7 @@ describe('InitCommand - profile and detection features', () => {
+   it('should preselect detected tools for first-time interactive setup', async () => {
+     // First-time init: no openspec/ directory and no configured OpenSpec skills.
+     await fs.mkdir(path.join(testDir, '.github'), { recursive: true });
++    await fs.writeFile(path.join(testDir, '.github', 'copilot-instructions.md'), '');
+ 
+     searchableMultiSelectMock.mockResolvedValue(['github-copilot']);
+ 
+diff --git a/test/core/legacy-cleanup.test.ts b/test/core/legacy-cleanup.test.ts
+index a69158a..bfae378 100644
+--- a/test/core/legacy-cleanup.test.ts
++++ b/test/core/legacy-cleanup.test.ts
+@@ -335,6 +335,35 @@ ${OPENSPEC_MARKERS.end}`);
+       const result = await detectLegacySlashCommands(testDir);
+       expect(result.files).toContain('.continue/prompts/openspec-apply.prompt');
+     });
++
++    it('should detect legacy OpenCode opsx-* command files', async () => {
++      const dirPath = path.join(testDir, '.opencode', 'command');
++      await fs.mkdir(dirPath, { recursive: true });
++      await fs.writeFile(path.join(dirPath, 'opsx-propose.md'), 'content');
++
++      const result = await detectLegacySlashCommands(testDir);
++      expect(result.files).toContain('.opencode/command/opsx-propose.md');
++    });
++
++    it('should detect legacy OpenCode openspec-* command files', async () => {
++      const dirPath = path.join(testDir, '.opencode', 'command');
++      await fs.mkdir(dirPath, { recursive: true });
++      await fs.writeFile(path.join(dirPath, 'openspec-new.md'), 'content');
++
++      const result = await detectLegacySlashCommands(testDir);
++      expect(result.files).toContain('.opencode/command/openspec-new.md');
++    });
++
++    it('should detect both opsx-* and openspec-* OpenCode command files', async () => {
++      const dirPath = path.join(testDir, '.opencode', 'command');
++      await fs.mkdir(dirPath, { recursive: true });
++      await fs.writeFile(path.join(dirPath, 'opsx-propose.md'), 'content');
++      await fs.writeFile(path.join(dirPath, 'openspec-new.md'), 'content');
++
++      const result = await detectLegacySlashCommands(testDir);
++      expect(result.files).toContain('.opencode/command/opsx-propose.md');
++      expect(result.files).toContain('.opencode/command/openspec-new.md');
++    });
+   });
+ 
+   describe('detectLegacyStructureFiles', () => {
+@@ -1058,6 +1087,60 @@ ${OPENSPEC_MARKERS.end}`);
+       expect(tools).toHaveLength(1);
+     });
+ 
++    it('should handle opencode opsx-* legacy files', () => {
++      const detection = {
++        configFiles: [],
++        configFilesToUpdate: [],
++        slashCommandDirs: [],
++        slashCommandFiles: ['.opencode/command/opsx-propose.md'],
++        hasOpenspecAgents: false,
++        hasProjectMd: false,
++        hasRootAgentsWithMarkers: false,
++        hasLegacyArtifacts: true,
++      };
++
++      const tools = getToolsFromLegacyArtifacts(detection);
++      expect(tools).toContain('opencode');
++      expect(tools).toHaveLength(1);
++    });
++
++    it('should handle opencode openspec-* legacy files', () => {
++      const detection = {
++        configFiles: [],
++        configFilesToUpdate: [],
++        slashCommandDirs: [],
++        slashCommandFiles: ['.opencode/command/openspec-new.md'],
++        hasOpenspecAgents: false,
++        hasProjectMd: false,
++        hasRootAgentsWithMarkers: false,
++        hasLegacyArtifacts: true,
++      };
++
++      const tools = getToolsFromLegacyArtifacts(detection);
++      expect(tools).toContain('opencode');
++      expect(tools).toHaveLength(1);
++    });
++
++    it('should deduplicate opencode when both opsx-* and openspec-* files exist', () => {
++      const detection = {
++        configFiles: [],
++        configFilesToUpdate: [],
++        slashCommandDirs: [],
++        slashCommandFiles: [
++          '.opencode/command/opsx-propose.md',
++          '.opencode/command/openspec-new.md',
++        ],
++        hasOpenspecAgents: false,
++        hasProjectMd: false,
++        hasRootAgentsWithMarkers: false,
++        hasLegacyArtifacts: true,
++      };
++
++      const tools = getToolsFromLegacyArtifacts(detection);
++      expect(tools).toContain('opencode');
++      expect(tools).toHaveLength(1);
++    });
++
+     it('should not extract tools from config files only', () => {
+       // Config files don't indicate which tools were configured
+       // Only slash command dirs/files tell us which tools to upgrade
+diff --git a/test/core/templates/skill-templates-parity.test.ts b/test/core/templates/skill-templates-parity.test.ts
+index f8fb130..48415fc 100644
+--- a/test/core/templates/skill-templates-parity.test.ts
++++ b/test/core/templates/skill-templates-parity.test.ts
+@@ -30,25 +30,25 @@ import {
+ import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
+ 
+ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
+-  getExploreSkillTemplate: '55a2a1afcba0af88c638e77e4e3870f65ed82c030b4a2056d39812ae13a616be',
++  getExploreSkillTemplate: '3f73b4d7ab189ef6367fccc9d99308bee35c6a89dae4c8044582a01cb01b335b',
+   getNewChangeSkillTemplate: '5989672758eccf54e3bb554ab97f2c129a192b12bbb7688cc1ffcf6bccb1ae9d',
+   getContinueChangeSkillTemplate: 'f2e413f0333dfd6641cc2bd1a189273fdea5c399eecdde98ef528b5216f097b3',
+   getApplyChangeSkillTemplate: '26e52e67693e93fbcdd40dcd3e20949c07ce019183d55a8149d0260c791cd7f4',
+   getFfChangeSkillTemplate: 'a7332fb14c8dc3f9dec71f5d332790b4a8488191e7db4ab6132ccbefecf9ded9',
+   getSyncSpecsSkillTemplate: 'bded184e4c345619148de2c0ad80a5b527d4ffe45c87cc785889b9329e0f465b',
+-  getOnboardSkillTemplate: '819a2d117ad1386187975686839cb0584b41484013d0ca6a6691f7a439a11a4a',
+-  getOpsxExploreCommandTemplate: '91353d9e8633a3a9ce7339e796f1283478fca279153f3807c92f4f8ece246b19',
++  getOnboardSkillTemplate: 'c9e719a02d2ae7f74a0e978f9ad4e767c1921248a9e3724c3321c58a15c38ba9',
++  getOpsxExploreCommandTemplate: 'b421b88c7a532385f7b1404736d7893eb35a05573b4a04a96f72379ac1bbf148',
+   getOpsxNewCommandTemplate: '62eee32d6d81a376e7be845d0891e28e6262ad07482f9bfe6af12a9f0366c364',
+   getOpsxContinueCommandTemplate: '8bbaedcc95287f9e822572608137df4f49ad54cedfb08d3342d0d1c4e9716caa',
+   getOpsxApplyCommandTemplate: 'a9d631a07fcd832b67d263ff3800b98604ab8d378baf1b0d545907ef3affa3b5',
+   getOpsxFfCommandTemplate: 'cdebe872cc8e0fcc25c8864b98ffd66a93484c0657db94bd1285b8113092702a',
+   getArchiveChangeSkillTemplate: '6f8ca383fdb5a4eb9872aca81e07bf0ba7f25e4de8617d7a047ca914ca7f14b9',
+-  getBulkArchiveChangeSkillTemplate: 'b40fc44ea4e420bdc9c803985b10e5c091fc472cdfc69153b962be6be303bddd',
++  getBulkArchiveChangeSkillTemplate: '8049897ce1ddb2ff6c0d4b72e22636f9ecfd083b5f2c2a30cf3bb1cb828a2f93',
+   getOpsxSyncCommandTemplate: '378d035fe7cc30be3e027b66dcc4b8afc78ef1c8369c39479c9b05a582fb5ccf',
+   getVerifyChangeSkillTemplate: '63a213ba3b42af54a1cd56f5072234a03b265c3fe4a1da12cd6fbbef5ee46c4b',
+   getOpsxArchiveCommandTemplate: 'b44cc9748109f61687f9f596604b037bc3ea803abc143b22f09a76aebd98b493',
+-  getOpsxOnboardCommandTemplate: '10052d05a4e2cdade7fdfa549b3444f7a92f55a39bf81ddd6af7e0e9e83a7302',
+-  getOpsxBulkArchiveCommandTemplate: 'eaaba253a950b9e681d8427a5cbc6b50c4e91137fb37fd2360859e08f63a0c14',
++  getOpsxOnboardCommandTemplate: 'fce531f952e939ee85a41848fc21e4cc720b0f3eb62737adc3a51ee6ad2dfc57',
++  getOpsxBulkArchiveCommandTemplate: '0d77c82de43840a28c74f5181cb21e33b9a9d00454adf4bc92bdc9e69817d6f5',
+   getOpsxVerifyCommandTemplate: '9b4d3ca422553b7534764eb3a009da87a051612c5238e9baab294c7b1233e9a2',
+   getOpsxProposeSkillTemplate: 'd67f937d44650e9c61d2158c865309fbab23cb3f50a3d4868a640a97776e3999',
+   getOpsxProposeCommandTemplate: '41ad59b37eafd7a161bab5c6e41997a37368f9c90b194451295ede5cd42e4d46',
+@@ -56,16 +56,16 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
+ };
+ 
+ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
+-  'openspec-explore': '90463d00761417dfbca5cb09361adcf8bbdbbb24000b86dd03647869a4104479',
++  'openspec-explore': '08e1ec9958eb04653707dd3e198c3fd69cf1b3acd3cf95a1022693cca83c60fc',
+   'openspec-new-change': 'c324a7ace1f244aa3f534ac8e3370a2c11190d6d1b85a315f26a211398310f0f',
+   'openspec-continue-change': '463cf0b980ec9c3c24774414ef2a3e48e9faa8577bc8748990f45ab3d5efe960',
+   'openspec-apply-change': 'a0084442b59be9d7e22a0382a279d470501e1ecf74bdd5347e169951c9be191c',
+   'openspec-ff-change': '672c3a5b8df152d959b15bd7ae2be7a75ab7b8eaa2ec1e0daa15c02479b27937',
+   'openspec-sync-specs': 'b8859cf454379a19ca35dbf59eedca67306607f44a355327f9dc851114e50bde',
+   'openspec-archive-change': 'f83c85452bd47de0dee6b8efbcea6a62534f8a175480e9044f3043f887cebf0f',
+-  'openspec-bulk-archive-change': 'a235a539f7729ab7669e45256905808789240ecd02820e044f4d0eef67b0c2ab',
++  'openspec-bulk-archive-change': '10477399bb07c7ba67f78e315bd68fb1901af8866720545baf4c62a6a679493b',
+   'openspec-verify-change': '30d07c6f7051965f624f5964db51844ec17c7dfd05f0da95281fe0ca73616326',
+-  'openspec-onboard': 'dbce376cf895f3fe4f63b4bce66d258c35b7b8884ac746670e5e35fabcefd255',
++  'openspec-onboard': 'c1444e026028210efd699110f7e9079bcb486d85ccf27f743213a81cb1084303',
+   'openspec-propose': '20e36dabefb90e232bad0667292bd5007ec280f8fc4fc995dbc4282bf45a22e7',
+ };
+ 
+diff --git a/test/core/update.test.ts b/test/core/update.test.ts
+index c36ac3d..6eeae84 100644
+--- a/test/core/update.test.ts
++++ b/test/core/update.test.ts
+@@ -250,6 +250,7 @@ Old instructions content
+         expect(exists).toBe(false);
+       }
+     });
++
+   });
+ 
+   describe('multi-tool support', () => {
+@@ -1644,6 +1645,7 @@ content
+ 
+       // Create two unconfigured tool directories
+       await fs.mkdir(path.join(testDir, '.github'), { recursive: true });
++      await fs.writeFile(path.join(testDir, '.github', 'copilot-instructions.md'), '');
+       await fs.mkdir(path.join(testDir, '.windsurf'), { recursive: true });
+ 
+       const consoleSpy = vi.spyOn(console, 'log');

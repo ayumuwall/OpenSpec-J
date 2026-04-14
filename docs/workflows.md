@@ -28,11 +28,42 @@ OPSX（柔軟なアクション）:
 
 > **カスタマイズ:** OPSX ワークフローはスキーマで定義されます。カスタムスキーマの作り方は [Customization](customization.md) を参照してください。
 
+## 2 つの利用モード
+
+### 既定のクイックパス（`core` プロファイル）
+
+新規セットアップでは既定で `core` が使われ、次のコマンドが利用できます。
+- `/opsx:propose`
+- `/opsx:explore`
+- `/opsx:apply`
+- `/opsx:archive`
+
+典型的な流れ:
+
+```text
+/opsx:propose ──► /opsx:apply ──► /opsx:archive
+```
+
+### 拡張フルワークフロー（custom 選択）
+
+`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard` を使いたい場合は、次を実行します。
+
+```bash
+openspec config profile
+openspec update
+```
+
 ## ワークフローパターン
 
 ### クイック機能追加
 
 何を作るか決まっていて、すぐ実行したいとき:
+
+```text
+/opsx:propose ──► /opsx:apply ──► /opsx:archive
+```
+
+拡張モードでは次の流れも選べます。
 
 ```text
 /opsx:new ──► /opsx:ff ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive

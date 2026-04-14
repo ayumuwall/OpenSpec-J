@@ -6,22 +6,69 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 
 ## クイックリファレンス
 
+### 既定のクイックパス（`core` プロファイル）
+
 | コマンド | 目的 |
 |---------|---------|
-| `/opsx:explore` | 変更を始める前にアイデアを整理する |
-| `/opsx:new` | 新しい変更を開始する |
-| `/opsx:continue` | 依存関係に基づいて次のアーティファクトを作成する |
-| `/opsx:ff` | Fast-forward: 計画アーティファクトを一括生成する |
+| `/opsx:propose` | 変更を作成し、計画アーティファクトを一括生成する |
+| `/opsx:explore` | 変更に入る前に考えを整理する |
 | `/opsx:apply` | 変更のタスクを実装する |
+| `/opsx:archive` | 完了した変更をアーカイブする |
+
+### 拡張ワークフローのコマンド（custom ワークフロー選択時）
+
+| コマンド | 目的 |
+|---------|---------|
+| `/opsx:new` | 新しい変更のひな形を作る |
+| `/opsx:continue` | 依存関係に基づいて次のアーティファクトを作る |
+| `/opsx:ff` | Fast-forward: 計画アーティファクトを一括生成する |
 | `/opsx:verify` | 実装がアーティファクトに沿っているか検証する |
 | `/opsx:sync` | 仕様差分を本仕様へ統合する |
-| `/opsx:archive` | 完了した変更をアーカイブする |
 | `/opsx:bulk-archive` | 複数の変更を一括でアーカイブする |
 | `/opsx:onboard` | ワークフロー全体をガイド付きで体験する |
+
+既定のグローバルプロファイルは `core` です。拡張ワークフローを有効にしたい場合は、`openspec config profile` でワークフローを選び、プロジェクトで `openspec update` を実行してください。
 
 ---
 
 ## コマンドリファレンス
+
+### `/opsx:propose`
+
+変更を作成し、計画アーティファクトを 1 ステップで生成します。`core` プロファイルにおける既定の開始コマンドです。
+
+**構文:**
+```text
+/opsx:propose [change-name-or-description]
+```
+
+**引数:**
+| 引数 | 必須 | 説明 |
+|----------|----------|-------------|
+| `change-name-or-description` | いいえ | kebab-case の変更名、または自然言語の変更説明 |
+
+**何をするか:**
+- Creates `openspec/changes/<change-name>/`
+- Generates artifacts needed before implementation (for `spec-driven`: proposal, specs, design, tasks)
+- Stops when the change is ready for `/opsx:apply`
+
+**例:**
+```text
+あなた: /opsx:propose add-dark-mode
+
+AI:  openspec/changes/add-dark-mode/ を作成しました
+     ✓ proposal.md
+     ✓ specs/ui/spec.md
+     ✓ design.md
+     ✓ tasks.md
+     実装の準備ができました。/opsx:apply を実行してください。
+```
+
+**Tips:**
+- 最短で end-to-end に進みたいときに使う
+- アーティファクトを段階的に制御したいなら、拡張ワークフローを有効にして `/opsx:new` + `/opsx:continue` を使う
+
+---
 
 ### `/opsx:explore`
 
@@ -38,11 +85,11 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 | `topic` | いいえ | 探索・調査したいテーマ |
 
 **何をするか:**
-- 形式に縛られない探索的な対話を開始
+- 形式に縛られない探索的な対話を開始する
 - コードベースを調査して疑問に答える
-- 代替案やアプローチを比較
-- 思考整理のための図を作成
-- 洞察が固まったら `/opsx:new` に移行可能
+- 代替案やアプローチを比較する
+- 思考整理のための図を作成する
+- 洞察が固まったら `/opsx:propose`（既定）または `/opsx:new`（拡張）へ移行できる
 
 **例:**
 ```text
@@ -66,7 +113,7 @@ AI:  既存の認証構成を調べます...
 
 あなた: JWT にしよう。変更を開始できる？
 
-AI:  /opsx:new add-jwt-auth を実行して変更を開始してください。
+AI:  準備できています。/opsx:propose add-jwt-auth を実行して変更を始めてください。
 ```
 
 **Tips:**
@@ -79,7 +126,9 @@ AI:  /opsx:new add-jwt-auth を実行して変更を開始してください。
 
 ### `/opsx:new`
 
-新しい変更を開始します。変更フォルダを作成し、選択したスキーマでひな形を用意します。
+新しい変更のひな形を作成します。変更フォルダを作成し、その後 `/opsx:continue` または `/opsx:ff` でアーティファクトを生成します。
+
+このコマンドは拡張ワークフローに含まれ、既定の `core` プロファイルには含まれません。
 
 **構文:**
 ```
@@ -564,15 +613,15 @@ AI ツールによってコマンド記法が少し異なります。各ツー�
 
 | ツール | 記法例 |
 |------|----------------|
-| Claude Code | `/opsx:new`, `/opsx:apply` |
-| Cursor | `/opsx-new`, `/opsx-apply` |
-| Windsurf | `/opsx-new`, `/opsx-apply` |
-| Copilot (IDE) | `/opsx-new`, `/opsx-apply` |
-| Trae | `/openspec-new-change`, `/openspec-apply-change` |
+| Claude Code | `/opsx:propose`, `/opsx:apply` |
+| Cursor | `/opsx-propose`, `/opsx-apply` |
+| Windsurf | `/opsx-propose`, `/opsx-apply` |
+| Copilot (IDE) | `/opsx-propose`, `/opsx-apply` |
+| Trae | `/openspec-propose`, `/openspec-apply-change` などのスキルベース呼び出し（`opsx-*` コマンドファイルは生成されない） |
 
-記法が違っても機能は同一です。
+記法や見え方はツールごとに異なっても、意図するワークフローは同じです。
 
-> **Note:** GitHub Copilot commands (`.github/prompts/*.prompt.md`) are only available in IDE extensions (VS Code, JetBrains, Visual Studio). GitHub Copilot CLI does not currently support custom prompt files — see [Supported Tools](supported-tools.md) for details and workarounds.
+> **Note:** GitHub Copilot のコマンド（`.github/prompts/*.prompt.md`）は IDE 拡張機能（VS Code, JetBrains, Visual Studio）でのみ利用できます。GitHub Copilot CLI は現在カスタム prompt ファイルを直接サポートしていません。詳細と回避策は [Supported Tools](supported-tools.md) を参照してください。
 
 ---
 

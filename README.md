@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.2.0 です。**<BR>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.3.0 です。**<BR>
 > v1.0.0より、本家版に[Multi-Language](docs/multi-language.md): 多言語サポートが追加され、生成物の言語を変更できるようになりました。**生成物のみ日本語にできれば良い場合、本家版[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)をお使いください。**
 
 <br>
@@ -42,7 +42,7 @@
 > [!TIP]
 > **新しいワークフローが利用可能！** 新しいアーティファクト主導のワークフローで OpenSpec を再構築しました。
 >
-> まずは `/opsx:onboard` を実行してください。→ [詳しくはこちら](docs/opsx.md)
+> 最短で始めるなら `/opsx:propose "作りたいもの"` を実行してください。→ [詳しくはこちら](docs/opsx.md)
 
 <p align="center">
   最新情報は <a href="https://x.com/0xTab">@0xTab on X</a> をフォロー · 質問やサポートは <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> へどうぞ。
@@ -52,17 +52,14 @@
 
 チームで OpenSpec を使いますか？ Slack チャンネルの招待は [こちらにメール](mailto:teams@openspec.dev) してください。
 
-<!-- TODO: Add GIF demo of /opsx:new → /opsx:archive workflow -->
+<!-- TODO: Add GIF demo of /opsx:propose → /opsx:archive workflow -->
 
 ## 動作例
 
 ```text
-あなた: /opsx:new add-dark-mode
+あなた: /opsx:propose add-dark-mode
 AI:  openspec/changes/add-dark-mode/ を作成しました
-     次に作成できます: proposal
-
-あなた: /opsx:ff   # "fast-forward" - すべての計画ドキュメントを生成
-AI:  ✓ proposal.md — なぜやるのか、何が変わるのか
+     ✓ proposal.md — なぜやるのか、何が変わるのか
      ✓ specs/       — 要件とシナリオ
      ✓ design.md    — 技術的アプローチ
      ✓ tasks.md     — 実装チェックリスト
@@ -107,9 +104,12 @@ cd your-project
 openspec init
 ```
 
-AI へ次のように伝えてください: `/opsx:new <作りたいもの>`
+AI へ次のように伝えてください: `/opsx:propose <作りたいもの>`
+
+拡張ワークフロー（`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`）を使いたい場合は、`openspec config profile` で選択し、`openspec update` を実行してください。
+
 > [!NOTE]
-> 対応ツールが不明ですか？ [全リストはこちら](docs/supported-tools.md) — 20+ ツールに対応しています。
+> 対応ツールが不明ですか？ [全リストはこちら](docs/supported-tools.md) — 25+ ツールに対応し、今後も拡大予定です。
 >
 > pnpm, yarn, bun, nix でも利用できます。[インストール方法はこちら](docs/installation.md)。
 

@@ -1,13 +1,15 @@
 # 対応ツール
 
-OpenSpec は 20 以上の AI コーディングアシスタントに対応しています。`openspec init` を実行すると、使用ツールの選択を促され、適切な連携設定を行います。
+OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、現在のプロファイル/ワークフロー選択と delivery 設定に基づいて、選択したツール向けの連携設定を行います。
 
 ## 仕組み
 
-選択した各ツールに対して、OpenSpec は次をインストールします。
+選択した各ツールに対して、OpenSpec は次をインストールできます。
 
-1. **Skills** — `/opsx:*` ワークフローを動かす再利用可能な指示ファイル
-2. **Commands** — ツール固有のスラッシュコマンド紐付け
+1. **Skills**（delivery に skills が含まれる場合）— `/opsx:*` ワークフローを動かす再利用可能な指示ファイル
+2. **Commands**（delivery に commands が含まれる場合）— ツール固有のスラッシュコマンド紐付け
+
+既定では `core` プロファイルが使われ、`propose`, `explore`, `apply`, `archive` が含まれます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`）は `openspec config profile` と `openspec update` で有効化できます。
 
 ## ツール別ディレクトリ
 
@@ -16,6 +18,7 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 | Amazon Q Developer | `.amazonq/skills/` | `.amazonq/prompts/` |
 | Antigravity | `.agent/skills/` | `.agent/workflows/` |
 | Auggie (Augment CLI) | `.augment/skills/` | `.augment/commands/` |
+| Bob Shell | `.bob/skills/` | `.bob/commands/` |
 | Claude Code | `.claude/skills/` | `.claude/commands/opsx/` |
 | Cline | `.cline/skills/` | `.clinerules/workflows/` |
 | CodeBuddy | `.codebuddy/skills/` | `.codebuddy/commands/opsx/` |
@@ -25,12 +28,15 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 | Crush | `.crush/skills/` | `.crush/commands/opsx/` |
 | Cursor | `.cursor/skills/` | `.cursor/commands/` |
 | Factory Droid | `.factory/skills/` | `.factory/commands/` |
+| ForgeCode | `.forge/skills/` | 生成なし（スキル呼び出しのみ） |
 | Gemini CLI | `.gemini/skills/` | `.gemini/commands/opsx/` |
 | GitHub Copilot | `.github/skills/` | `.github/prompts/`\*\* |
 | iFlow | `.iflow/skills/` | `.iflow/commands/` |
+| Junie | `.junie/skills/` | `.junie/commands/` |
 | Kilo Code | `.kilocode/skills/` | `.kilocode/workflows/` |
 | Kiro | `.kiro/skills/` | `.kiro/prompts/` |
-| OpenCode | `.opencode/skills/` | `.opencode/command/` |
+| Lingma | `.lingma/skills/` | `.lingma/commands/` |
+| OpenCode | `.opencode/skills/` | `.opencode/commands/` |
 | Pi | `.pi/skills/` | `.pi/prompts/` |
 | Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
 | Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
@@ -44,7 +50,7 @@ OpenSpec は 20 以上の AI コーディングアシスタントに対応して
 
 ## 非対話セットアップ
 
-CI/CD やスクリプトでセットアップする場合は `--tools` フラグを使います。
+CI/CD やスクリプトでセットアップする場合は `--tools` フラグを使います。必要なら `--profile` も指定できます。
 
 ```bash
 # 特定のツールを設定
@@ -55,13 +61,16 @@ openspec init --tools all
 
 # ツール設定をスキップ
 openspec init --tools none
+
+# 今回だけ core プロファイルで初期化
+openspec init --profile core
 ```
 
-**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
+**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `forgecode`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kiro`, `lingma`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
 ## インストールされるもの
 
-各ツール向けに、OPSX ワークフローを動かす 10 個のスキルファイルが生成されます。
+生成されるスキル/コマンド数は固定ではなく、選択したワークフローと delivery に依存します。
 
 | スキル | 目的 |
 |-------|---------|
@@ -75,8 +84,9 @@ openspec init --tools none
 | `openspec-archive-change` | 変更のアーカイブ |
 | `openspec-bulk-archive-change` | 複数変更の一括アーカイブ |
 | `openspec-onboard` | ワークフロー全体のガイド付きオンボード |
+| `openspec-propose` | 変更と計画アーティファクトの一括生成 |
 
-これらのスキルは `/opsx:new`, `/opsx:apply` などのスラッシュコマンドで呼び出されます。詳細は [Commands](commands.md) を参照してください。
+これらのスキルは `/opsx:propose`, `/opsx:new`, `/opsx:apply` などのスラッシュコマンドで呼び出されます。詳細は [Commands](commands.md) を参照してください。
 
 ## 新しいツールを追加する
 

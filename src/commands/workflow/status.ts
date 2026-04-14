@@ -14,6 +14,7 @@ import {
 import {
   validateChangeExists,
   validateSchemaExists,
+  getAvailableChanges,
   getStatusIndicator,
   getStatusColor,
 } from './shared.js';
@@ -37,6 +38,27 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
 
   try {
     const projectRoot = process.cwd();
+
+    // Handle no-changes case gracefully — status is informational,
+    // so "no changes" is a valid state, not an error.
+    if (!options.change) {
+      const available = await getAvailableChanges(projectRoot);
+      if (available.length === 0) {
+        spinner.stop();
+        if (options.json) {
+          console.log(JSON.stringify({ changes: [], message: '進行中の変更はありません。' }, null, 2));
+          return;
+        }
+        console.log('進行中の変更はありません。`openspec new change <name>` で作成してください。');
+        return;
+      }
+      // Changes exist but --change not provided
+      spinner.stop();
+      throw new Error(
+        `必須オプション --change が指定されていません。利用可能な変更:\n  ${available.join('\n  ')}`
+      );
+    }
+
     const changeName = await validateChangeExists(options.change, projectRoot);
 
     // Validate schema if explicitly provided

@@ -3,6 +3,35 @@
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 
+## 1.3.0
+
+- **[OpenSpec-J]** v1.3.0 追従のため、README / CLI / OPSX ドキュメントの既定フローを `/opsx:propose` 中心へ更新
+- **[OpenSpec-J]** Bob / Junie / Lingma / ForgeCode の追加に合わせてツール一覧・初期化ヘルプ・コマンド生成まわりの日本語化を反映
+- **[OpenSpec-J]** `OpenCode` のコマンド出力先変更（`.opencode/command/` → `.opencode/commands/`）を追従し、説明文と生成先を更新
+- **[OpenSpec-J]** `pi` のコマンド参照変換、GitHub Copilot 自動検出改善、補完インストールの opt-in 化に追従
+- **[OpenSpec-J]** `bulk-archive` / `onboard` テンプレート更新に伴い `skill-templates-parity` のハッシュを再計算
+
+### マイナー変更
+
+- [#952](https://github.com/Fission-AI/OpenSpec/pull/952) [`cce787e`](https://github.com/Fission-AI/OpenSpec/commit/cce787ec4083da2b27781f6786f5ce0002909a7b) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 新機能
+
+  - **Junie 対応** — JetBrains Junie 向けのツール/コマンド生成を追加
+  - **Lingma IDE 対応** — Lingma IDE 向け設定を追加
+  - **ForgeCode 対応** — ForgeCode をサポート対象ツールに追加
+  - **IBM Bob 対応** — IBM Bob コーディングアシスタントをサポート対象に追加
+
+  ### バグ修正
+
+  - **シェル補完の opt-in 化** — 補完インストールを明示的実行のみに変更し、PowerShell のエンコード破損を修正
+  - **Copilot 自動検出** — 空の `.github/` ディレクトリだけで GitHub Copilot を誤検出しないよう修正
+  - **pi.dev のコマンド生成** — コマンド参照変換とテンプレート引数の受け渡しを修正
+
+### パッチ変更
+
+- [#760](https://github.com/Fission-AI/OpenSpec/pull/760) [`61eb999`](https://github.com/Fission-AI/OpenSpec/commit/61eb999f7c6c0fc98d2e7f3678756fce6a3f4378) [@fsilvaortiz](https://github.com/fsilvaortiz) ありがとう！ - **OpenCode アダプター** が公式ディレクトリ規約に合わせて `.opencode/commands/`（複数形）を使うよう修正 (#748)
+
+- [#759](https://github.com/Fission-AI/OpenSpec/pull/759) [`afdca0d`](https://github.com/Fission-AI/OpenSpec/commit/afdca0d5dab1aa109cfd8848b2512333ccad60c3) [@fsilvaortiz](https://github.com/fsilvaortiz) ありがとう！ - `openspec status` が変更ゼロ件のとき致命エラーではなく正常に終了するよう修正 (#714)
+
 ## 1.2.0
 
 - **[OpenSpec-J]** v1.2.0 追従のため、全スキルテンプレート（propose 含む）・docs・CLI メッセージを日本語化

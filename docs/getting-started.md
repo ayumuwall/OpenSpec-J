@@ -4,34 +4,21 @@
 
 ## 仕組み
 
-OpenSpec は、コードを書く前に「何を作るか」を人と AI コーディングアシスタントで合意できるようにします。ワークフローは次の流れです。
+OpenSpec は、コードを書く前に「何を作るか」を人と AI コーディングアシスタントで合意できるようにします。
+
+**既定のクイックパス（`core` プロファイル）:**
+
+```text
+/opsx:propose ──► /opsx:apply ──► /opsx:archive
+```
+
+**拡張パス（custom ワークフロー選択時）:**
 
 ```
-┌────────────────────┐
-│ 変更を開始         │  /opsx:new
-└────────┬───────────┘
-         │
-         ▼
-┌────────────────────┐
-│ アーティファクト   │  /opsx:ff or /opsx:continue
-│ を作成             │
-│ (proposal, specs,  │
-│  design, tasks)    │
-└────────┬───────────┘
-         │
-         ▼
-┌────────────────────┐
-│ タスクを実装       │  /opsx:apply
-│ (AI がコードを     │
-│  書く)             │
-└────────┬───────────┘
-         │
-         ▼
-┌────────────────────┐
-│ アーカイブ &       │  /opsx:archive
-│ 仕様をマージ       │
-└────────────────────┘
+/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
+
+既定のグローバルプロファイルは `core` で、`propose`, `explore`, `apply`, `archive` が含まれます。拡張ワークフローを使いたい場合は、`openspec config profile` の後に `openspec update` を実行します。
 
 ## OpenSpec が作るもの
 

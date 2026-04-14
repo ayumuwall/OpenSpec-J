@@ -1,6 +1,6 @@
 # CLI リファレンス
 
-OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検証、ステータス確認、管理のためのターミナルコマンドを提供します。これらのコマンドは、[Commands](commands.md) に記載された `/opsx:new` などの AI スラッシュコマンドを補完します。
+OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検証、ステータス確認、管理のためのターミナルコマンドを提供します。これらのコマンドは、[Commands](commands.md) に記載された `/opsx:propose` などの AI スラッシュコマンドを補完します。
 
 ## 概要
 
@@ -67,6 +67,8 @@ OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検�
 
 プロジェクトで OpenSpec を初期化します。フォルダ構造を作成し、AI ツール連携を設定します。
 
+既定ではグローバル設定の初期値が使われ、`profile=core`、`delivery=both`、`workflows=propose, explore, apply, archive` で動作します。
+
 ```
 openspec init [path] [options]
 ```
@@ -83,8 +85,11 @@ openspec init [path] [options]
 |--------|-------------|
 | `--tools <list>` | 対話なしで AI ツールを設定。`all`, `none` またはカンマ区切りの一覧 |
 | `--force` | 旧ファイルを確認なしで自動クリーンアップ |
+| `--profile <profile>` | 今回の `init` 実行に限ってプロファイルを上書き（`core` または `custom`） |
 
-**対応ツール:** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `opencode`, `qoder`, `qwen`, `roocode`, `windsurf`
+`--profile custom` を指定すると、グローバル設定（`openspec config profile`）で現在選ばれているワークフロー群を使います。
+
+**対応ツール ID (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `forgecode`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
 **例:**
 
@@ -101,6 +106,9 @@ openspec init --tools claude,cursor
 # すべての対応ツールを設定
 openspec init --tools all
 
+# 今回だけ core プロファイルで初期化
+openspec init --profile core
+
 # プロンプトをスキップし、旧ファイルを自動クリーンアップ
 openspec init --force
 ```
@@ -114,7 +122,8 @@ openspec/
 └── config.yaml         # プロジェクト設定
 
 .claude/skills/         # Claude Code のスキルファイル（claude 選択時）
-.cursor/rules/          # Cursor ルール（cursor 選択時）
+.cursor/skills/         # Cursor のスキルファイル（cursor 選択時）
+.cursor/commands/       # Cursor の OPSX コマンド（commands 配信時）
 ...                     # 他ツールの設定
 ```
 
@@ -122,7 +131,7 @@ openspec/
 
 ### `openspec update`
 
-CLI を更新した後に指示ファイルを更新します。AI ツールの設定ファイルを再生成します。
+CLI を更新した後に指示ファイルを更新します。現在のグローバルプロファイル、選択済みワークフロー、delivery 設定に基づいて AI ツールの設定ファイルを再生成します。
 
 ```
 openspec update [path] [options]
@@ -312,7 +321,7 @@ openspec validate --all --strict --concurrency 12
 add-dark-mode を検証中...
   ✓ proposal.md 有効
   ✓ specs/ui/spec.md 有効
-  ⚠ design.md: "Technical Approach" セクションがありません
+  ⚠ design.md: 「Technical Approach」セクションがありません
 
 警告 1 件
 ```
@@ -327,7 +336,7 @@ add-dark-mode を検証中...
       {
         "name": "add-dark-mode",
         "valid": true,
-        "warnings": ["design.md: missing 'Technical Approach' section"]
+        "warnings": ["design.md: 「Technical Approach」セクションがありません"]
       }
     ]
   },
@@ -428,29 +437,28 @@ openspec status --change add-dark-mode --json
 ```
 変更: add-dark-mode
 スキーマ: spec-driven
+進捗: 2/4 アーティファクト完了
 
-アーティファクト:
-  ✓ proposal     proposal.md 存在
-  ✓ specs        specs/ 存在
-  ◆ design       準備完了 (必要: specs)
-  ○ tasks        ブロック中 (必要: design)
-
-次: /opsx:continue で design を作成
+[x] proposal
+[ ] design
+[x] specs
+[-] tasks (blocked by: design)
 ```
 
 **出力（JSON）:**
 
 ```json
 {
-  "change": "add-dark-mode",
-  "schema": "spec-driven",
+  "changeName": "add-dark-mode",
+  "schemaName": "spec-driven",
+  "isComplete": false,
+  "applyRequires": ["tasks"],
   "artifacts": [
-    {"id": "proposal", "status": "complete", "path": "proposal.md"},
-    {"id": "specs", "status": "complete", "path": "specs/"},
-    {"id": "design", "status": "ready", "requires": ["specs"]},
-    {"id": "tasks", "status": "blocked", "requires": ["design"]}
-  ],
-  "next": "design"
+    {"id": "proposal", "outputPath": "proposal.md", "status": "done"},
+    {"id": "design", "outputPath": "design.md", "status": "ready"},
+    {"id": "specs", "outputPath": "specs/**/*.md", "status": "done"},
+    {"id": "tasks", "outputPath": "tasks.md", "status": "blocked", "missingDeps": ["design"]}
+  ]
 }
 ```
 
@@ -796,10 +804,10 @@ openspec config reset --all --yes
 # エディタで設定を開く
 openspec config edit
 
-# Configure profile with action-based wizard
+# ウィザードでプロファイルを設定
 openspec config profile
 
-# Fast preset: switch workflows to core (keeps delivery mode)
+# すばやく core へ切り替え（delivery は維持）
 openspec config profile core
 ```
 
@@ -819,12 +827,12 @@ openspec config profile core
 ```bash
 # デリバリーのみ更新
 openspec config profile
-# 選択: Change delivery only
+# 選択: デリバリーのみ変更
 # デリバリーを選択: Skills only
 
 # ワークフローのみ更新
 openspec config profile
-# 選択: Change workflows only
+# 選択: ワークフローのみ変更
 # チェックリストでワークフローを切り替えて確認
 ```
 
@@ -920,7 +928,7 @@ openspec completion uninstall
 
 ## 関連ドキュメント
 
-- [Commands](commands.md) - AI スラッシュコマンド（`/opsx:new`, `/opsx:apply` など）
+- [Commands](commands.md) - AI スラッシュコマンド（`/opsx:propose`, `/opsx:apply` など）
 - [Workflows](workflows.md) - 代表的なフローと使い分け
 - [Customization](customization.md) - カスタムスキーマとテンプレート
 - [Getting Started](getting-started.md) - 初回セットアップガイド

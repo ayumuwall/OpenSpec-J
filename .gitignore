@@ -154,3 +154,9 @@ result
 # OpenCode
 .opencode/
 opencode.json
+
+# Codex
+.codex/
+
+# Bob
+.bob/

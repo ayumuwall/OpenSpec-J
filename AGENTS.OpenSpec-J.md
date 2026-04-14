@@ -216,6 +216,7 @@ git merge main
 - README_OLD.md は同期対象外
 - 翻訳対象外（/openspec/, /test/ など）は編集しない
 - 翻訳が一通り終わったら `LOCALIZATION-NOTES.md` を確認し、**文字列置換では解消できないロジック変更**の有無を点検
+  - 新しく見つけた「ロジック変更しないと本来意図どおりに動かない例外」があれば `LOCALIZATION-NOTES.md` に追記する
 
 ### 2.5 検証
 

@@ -65,6 +65,8 @@ openspec init
 
 これにより `.claude/skills/`（または各ツールのディレクトリ）にスキルが生成され、AI コーディングアシスタントが自動検出します。
 
+既定では `core` ワークフロープロファイル（`propose`, `explore`, `apply`, `archive`）が使われます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`）を使いたい場合は、`openspec config profile` で設定し、`openspec update` を実行してください。
+
 セットアップ中に **プロジェクト設定**（`openspec/config.yaml`）の作成が促されます。任意ですが推奨です。
 
 ## プロジェクト設定

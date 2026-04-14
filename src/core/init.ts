@@ -208,17 +208,12 @@ export class InitCommand {
 
     const canPrompt = this.canPromptInteractively();
 
-    if (this.force) {
-      // --force 指定: 自動クリーンアップで続行
+    if (this.force || !canPrompt) {
+      // --force 指定または非対話モードでは自動クリーンアップで続行する。
+      // 旧スラッシュコマンドは OpenSpec 管理下で、設定ファイルのクリーンアップも
+      // マーカー除去のみなので、自動実行してよい。
       await this.performLegacyCleanup(projectPath, detection);
       return;
-    }
-
-    if (!canPrompt) {
-      // 非対話モードで --force がない場合は中止
-      console.log(chalk.red('非対話モードで旧ファイルが検出されました。'));
-      console.log(chalk.dim('対話モードでアップグレードするか、--force で自動クリーンアップしてください。'));
-      process.exit(1);
     }
 
     // 対話モード: 確認プロンプトを表示
@@ -541,9 +536,9 @@ export class InitCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // generatedBy を含む YAML フロントマター付き SKILL.md を生成
-            // OpenCode 用にハイフン形式のコマンド参照を使う
-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            // generatedBy を含む YAML フロントマター付き SKILL.md を生成する。
+            // OpenCode / Pi はハイフン形式のコマンド参照を使う。
+            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
             // スキルファイルを書き込む

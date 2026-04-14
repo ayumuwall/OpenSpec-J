@@ -8,7 +8,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 | 項目 | 旧ワークフロー | OPSX |
 |--------|--------|------|
-| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | `/opsx:new`, `/opsx:continue`, `/opsx:apply` ほか |
+| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:apply`, `/opsx:archive`（expanded workflow コマンドは任意） |
 | **進め方** | すべてのアーティファクトを一括作成 | 段階的にも一括でも選べる |
 | **やり直し** | フェーズゲートがあり戻りづらい | いつでもアーティファクトを更新可能 |
 | **カスタマイズ** | 固定構造 | スキーマ駆動で自由に拡張 |
@@ -84,6 +84,9 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 `openspec init` と `openspec update` はどちらも旧ファイルを検出し、同じクリーンアップを案内します。用途に合わせて選んでください。
 
+- 新規インストールでは、既定で `core` プロファイル（`propose`, `explore`, `apply`, `archive`）が設定されます。
+- 既存環境の移行では、必要に応じて `custom` プロファイルを生成し、これまで入っていたワークフロー構成を維持します。
+
 ### `openspec init` を使う
 
 新しいツールを追加したい、または設定を作り直したい場合:
@@ -142,7 +145,7 @@ OpenSpec マーカーを除去し、内容は保持します:
 openspec update
 ```
 
-update も旧ファイルの検出・クリーンアップを行い、最新の skills を再生成します。
+update も旧ファイルの検出・クリーンアップを行い、現在のプロファイルと delivery 設定に合わせて生成済み skills/commands を最新状態へ更新します。
 
 ### 非対話 / CI 環境
 
@@ -275,31 +278,42 @@ AI が「必須 vs 削減」の判断を手伝います。
 
 ## 新しいコマンド
 
-移行後は 3 つのコマンドではなく 9 つの OPSX コマンドになります。
+利用できるコマンドは、選んでいるプロファイルによって変わります。
 
 | コマンド | 目的 |
 |---------|---------|
+| `/opsx:propose` | 変更を作成し、計画用アーティファクトを一度に生成する |
 | `/opsx:explore` | 形式なしでアイデアを整理 |
-| `/opsx:new` | 新しい変更を開始 |
-| `/opsx:continue` | 次のアーティファクトを作成（1 つずつ） |
-| `/opsx:ff` | 計画アーティファクトを一括生成 |
-| `/opsx:apply` | tasks.md のタスクを実装 |
-| `/opsx:verify` | 実装が仕様に合うか検証 |
-| `/opsx:sync` | 仕様マージのプレビュー（任意） |
+| `/opsx:apply` | `tasks.md` のタスクを実装 |
 | `/opsx:archive` | 変更を確定・アーカイブ |
+
+**Expanded workflow（追加選択時）:**
+
+| コマンド | 目的 |
+|---------|---------|
+| `/opsx:new` | 変更のスキャフォールドだけを作る |
+| `/opsx:continue` | 次のアーティファクトを 1 つずつ作る |
+| `/opsx:ff` | 計画アーティファクトを一括生成 |
+| `/opsx:verify` | 実装が仕様に合うか検証 |
+| `/opsx:sync` | アーカイブ前に spec マージ結果を確認する |
 | `/opsx:bulk-archive` | 複数変更を一括アーカイブ |
+| `/opsx:onboard` | エンドツーエンドのオンボーディングを支援する |
+
+expanded コマンドを使いたい場合は `openspec config profile` を実行し、その後 `openspec update` で反映します。
 
 ### 旧コマンドとの対応
 
 | 旧コマンド | OPSX での対応 |
 |--------|-----------------|
-| `/openspec:proposal` | `/opsx:new` → `/opsx:ff` |
+| `/openspec:proposal` | `/opsx:propose`（既定）または `/opsx:new` → `/opsx:ff`（expanded） |
 | `/openspec:apply` | `/opsx:apply` |
 | `/openspec:archive` | `/opsx:archive` |
 
 ### 新しい能力
 
-**粒度の細かいアーティファクト作成:**
+これらは expanded workflow コマンド群に含まれる機能です。
+
+**段階的なアーティファクト作成:**
 ```
 /opsx:continue
 ```
@@ -542,9 +556,10 @@ project/
 │   └── config.yaml               # 新規: プロジェクト設定
 ├── .claude/
 │   └── skills/                   # 新規: OPSX skills
+│       ├── openspec-propose/     # 既定の core プロファイル
 │       ├── openspec-explore/
-│       ├── openspec-new-change/
-│       └── ...
+│       ├── openspec-apply-change/
+│       └── ...                   # expanded profile では new/continue/ff 等も追加
 ├── CLAUDE.md                     # OpenSpec マーカーを削除、内容は保持
 └── AGENTS.md                     # OpenSpec マーカーを削除、内容は保持
 ```
@@ -558,12 +573,15 @@ project/
 
 ### コマンド早見表
 
-```
-/opsx:new          変更を開始
-/opsx:continue     次のアーティファクトを作成
-/opsx:ff           計画アーティファクトを一括生成
+```text
+/opsx:propose      すばやく開始（既定の core プロファイル）
 /opsx:apply        タスクを実装
 /opsx:archive      完了してアーカイブ
+
+# Expanded workflow（有効時）
+/opsx:new          変更の土台を作る
+/opsx:continue     次のアーティファクトを作成
+/opsx:ff           計画アーティファクトを一括生成
 ```
 
 ---

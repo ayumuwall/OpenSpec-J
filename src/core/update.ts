@@ -194,8 +194,8 @@ export class UpdateCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // OpenCode 用にハイフン形式のコマンド参照を使う
-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            // OpenCode / Pi はハイフン形式のコマンド参照を使う。
+            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
@@ -665,8 +665,8 @@ export class UpdateCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // OpenCode 用にハイフン形式のコマンド参照を使う
-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            // OpenCode / Pi はハイフン形式のコマンド参照を使う。
+            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }

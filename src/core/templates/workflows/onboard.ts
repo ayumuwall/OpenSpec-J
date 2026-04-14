@@ -436,40 +436,48 @@ Archived to: \`openspec/changes/archive/YYYY-MM-DD-<name>/\`
 ## フェーズ 11: まとめと次のステップ
 
 \`\`\`
-## Congratulations!
+## 完了です
 
-You just completed a full OpenSpec cycle:
+OpenSpec の一連の流れを 1 周しました。
 
-1. **Explore** - Thought through the problem
-2. **New** - Created a change container
-3. **Proposal** - Captured WHY
-4. **Specs** - Defined WHAT in detail
-5. **Design** - Decided HOW
-6. **Tasks** - Broke it into steps
-7. **Apply** - Implemented the work
-8. **Archive** - Preserved the record
+1. **Explore** - 問題を整理した
+2. **New** - 変更コンテナを作成した
+3. **Proposal** - WHY を整理した
+4. **Specs** - WHAT を具体化した
+5. **Design** - HOW を決めた
+6. **Tasks** - 実装手順に分解した
+7. **Apply** - 実装を進めた
+8. **Archive** - 記録として保存した
 
-This same rhythm works for any size change—a small fix or a major feature.
+このリズムは、小さな修正でも大きな機能追加でも同じように使えます。
 
 ---
 
-## Command Reference
+## コマンド一覧
+
+**Core workflow:**
 
 | Command | What it does |
 |---------|--------------|
+| \`/opsx:propose\` | Create a change and generate all artifacts |
 | \`/opsx:explore\` | Think through problems before/during work |
-| \`/opsx:new\` | Start a new change, step through artifacts |
-| \`/opsx:ff\` | Fast-forward: create all artifacts at once |
-| \`/opsx:continue\` | Continue working on an existing change |
 | \`/opsx:apply\` | Implement tasks from a change |
-| \`/opsx:verify\` | Verify implementation matches artifacts |
 | \`/opsx:archive\` | Archive a completed change |
+
+**Additional commands:**
+
+| Command | What it does |
+|---------|--------------|
+| \`/opsx:new\` | Start a new change, step through artifacts one at a time |
+| \`/opsx:continue\` | Continue working on an existing change |
+| \`/opsx:ff\` | Fast-forward: create all artifacts at once |
+| \`/opsx:verify\` | Verify implementation matches artifacts |
 
 ---
 
-## What's Next?
+## 次の一歩
 
-Try \`/opsx:new\` or \`/opsx:ff\` on something you actually want to build. You've got the rhythm now!
+次は、実際に作りたいものに対して \`/opsx:propose\` を試してください。expanded workflow を使っているなら \`/opsx:new\` や \`/opsx:ff\` でも始められます。
 \`\`\`
 
 ---
@@ -481,13 +489,13 @@ Try \`/opsx:new\` or \`/opsx:ff\` on something you actually want to build. You'v
 If the user says they need to stop, want to pause, or seem disengaged:
 
 \`\`\`
-No problem! Your change is saved at \`openspec/changes/<name>/\`.
+問題ありません。変更は \`openspec/changes/<name>/\` に保存されています。
 
-To pick up where we left off later:
-- \`/opsx:continue <name>\` - Resume artifact creation
-- \`/opsx:apply <name>\` - Jump to implementation (if tasks exist)
+あとで再開するには:
+- \`/opsx:continue <name>\` - アーティファクト作成を再開
+- \`/opsx:apply <name>\` - 実装へ進む（tasks があれば）
 
-The work won't be lost. Come back whenever you're ready.
+作業は失われません。準備ができたら戻ってきてください。
 \`\`\`
 
 Exit gracefully without pressure.
@@ -497,19 +505,27 @@ Exit gracefully without pressure.
 If the user says they just want to see the commands or skip the tutorial:
 
 \`\`\`
-## OpenSpec Quick Reference
+## OpenSpec クイックリファレンス
+
+**Core workflow:**
 
 | Command | What it does |
 |---------|--------------|
+| \`/opsx:propose <name>\` | Create a change and generate all artifacts |
 | \`/opsx:explore\` | Think through problems (no code changes) |
-| \`/opsx:new <name>\` | Start a new change, step by step |
-| \`/opsx:ff <name>\` | Fast-forward: all artifacts at once |
-| \`/opsx:continue <name>\` | Continue an existing change |
 | \`/opsx:apply <name>\` | Implement tasks |
-| \`/opsx:verify <name>\` | Verify implementation |
 | \`/opsx:archive <name>\` | Archive when done |
 
-Try \`/opsx:new\` to start your first change, or \`/opsx:ff\` if you want to move fast.
+**Additional commands:**
+
+| Command | What it does |
+|---------|--------------|
+| \`/opsx:new <name>\` | Start a new change, step by step |
+| \`/opsx:continue <name>\` | Continue an existing change |
+| \`/opsx:ff <name>\` | Fast-forward: all artifacts at once |
+| \`/opsx:verify <name>\` | Verify implementation |
+
+まずは \`/opsx:propose\` を試してください。expanded workflow を使っているなら \`/opsx:new\` や \`/opsx:ff\` でも始められます。
 \`\`\`
 
 静かに終了する。
