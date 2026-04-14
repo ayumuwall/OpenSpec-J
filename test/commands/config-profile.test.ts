@@ -178,19 +178,19 @@ describe('config profile interactive flow', () => {
     await runConfigCommand(['profile']);
 
     const firstCall = select.mock.calls[0][0];
-    expect(firstCall.message).toBe('What do you want to configure?');
+    expect(firstCall.message).toBe('何を設定しますか？');
     expect(firstCall.choices).toEqual(expect.arrayContaining([
       expect.objectContaining({
         value: 'delivery',
-        description: 'Change where workflows are installed',
+        description: 'ワークフローのインストール先を変更',
       }),
       expect.objectContaining({
         value: 'workflows',
-        description: 'Change which workflow actions are available',
+        description: '利用可能なワークフローアクションを変更',
       }),
       expect.objectContaining({
         value: 'keep',
-        name: 'Keep current settings (exit)',
+        name: '現在の設定を維持して終了',
       }),
     ]));
   });
@@ -236,7 +236,7 @@ describe('config profile interactive flow', () => {
     expect(select).toHaveBeenCalledTimes(2);
     const secondCall = select.mock.calls[1][0];
     expect(secondCall.choices).toEqual(expect.arrayContaining([
-      expect.objectContaining({ value: 'commands', name: 'Commands only [current]' }),
+      expect.objectContaining({ value: 'commands', name: 'Commands のみ [現在]' }),
     ]));
   });
 
@@ -251,7 +251,7 @@ describe('config profile interactive flow', () => {
     await runConfigCommand(['profile']);
 
     const checkboxCall = checkbox.mock.calls[0][0];
-    expect(checkboxCall.message).toBe('Select workflows to make available:');
+    expect(checkboxCall.message).toBe('利用可能にするワークフローを選択してください:');
     expect(checkboxCall.choices).toEqual(expect.arrayContaining([
       expect.objectContaining({
         value: 'propose',
@@ -283,7 +283,7 @@ describe('config profile interactive flow', () => {
     const afterContent = fs.readFileSync(configPath, 'utf-8');
     expect(afterContent).toBe(beforeContent);
     expect(confirm).not.toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith('No config changes.');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
   });
 
   it('keep action should warn when project files drift from global config', async () => {
@@ -296,7 +296,7 @@ describe('config profile interactive flow', () => {
 
     await runConfigCommand(['profile']);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('No config changes.');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Global config is not applied to this project.'));
   });
 
@@ -325,7 +325,7 @@ describe('config profile interactive flow', () => {
 
     await runConfigCommand(['profile']);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('No config changes.');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
     expect(confirm).not.toHaveBeenCalled();
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Global config is not applied to this project.'));
   });
@@ -341,7 +341,7 @@ describe('config profile interactive flow', () => {
 
     await runConfigCommand(['profile']);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('No config changes.');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Global config is not applied to this project.'));
   });
 
@@ -360,7 +360,7 @@ describe('config profile interactive flow', () => {
 
     expect(getGlobalConfig().delivery).toBe('skills');
     expect(confirm).toHaveBeenCalledWith({
-      message: 'Apply changes to this project now?',
+      message: 'このプロジェクトに今すぐ変更を適用しますか？',
       default: true,
     });
   });
@@ -391,7 +391,7 @@ describe('config profile interactive flow', () => {
 
     await expect(runConfigCommand(['profile'])).resolves.toBeUndefined();
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('Config profile cancelled.');
+    expect(consoleLogSpy).toHaveBeenCalledWith('config profile をキャンセルしました。');
     expect(process.exitCode).toBe(130);
     expect(checkbox).not.toHaveBeenCalled();
     expect(confirm).not.toHaveBeenCalled();

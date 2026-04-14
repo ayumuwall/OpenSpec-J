@@ -1,15 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
+import { randomUUID } from 'crypto';
 import { runCLI } from '../helpers/run-cli.js';
 
 describe('top-level validate command', () => {
   const projectRoot = process.cwd();
-  const testDir = path.join(projectRoot, 'test-validate-command-tmp');
-  const changesDir = path.join(testDir, 'openspec', 'changes');
-  const specsDir = path.join(testDir, 'openspec', 'specs');
+  let testDir: string;
+  let changesDir: string;
+  let specsDir: string;
 
   beforeEach(async () => {
+    testDir = path.join(os.tmpdir(), `openspec-validate-command-test-${randomUUID()}`);
+    changesDir = path.join(testDir, 'openspec', 'changes');
+    specsDir = path.join(testDir, 'openspec', 'specs');
     await fs.mkdir(changesDir, { recursive: true });
     await fs.mkdir(specsDir, { recursive: true });
 

@@ -17,6 +17,12 @@
 - 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は常に「タスク」表記、`src/core/view.ts` と `src/core/list.ts` は `件` を用いた固定表記に統一。
 - 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。
 
+### CLI 結合テスト: 固定一時ディレクトリは並列実行で衝突する
+- ファイル: `test/commands/validate.test.ts`, `test/commands/spec.test.ts`
+- 症状: リポジトリ直下の固定一時ディレクトリ名を使うと、`pnpm test` の並列実行時に別テストと競合し、`spec not found` などの不安定な失敗が出る。
+- 対応: `os.tmpdir()` と `randomUUID()` を使って毎回ユニークな一時ディレクトリを生成する。
+- 補足: 本体ロジックではなくテスト安定化のための差分。フルテスト前提で upstream 同期時に戻してしまわないよう注意。
+
 ## テスト期待値の更新が必要だった事例
 
 - `v1.2.0` `test/core/templates/skill-templates-parity.test.ts`

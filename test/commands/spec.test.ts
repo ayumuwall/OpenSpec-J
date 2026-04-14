@@ -2,15 +2,19 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import os from 'os';
+import { randomUUID } from 'crypto';
 
 describe('spec command', () => {
   const projectRoot = process.cwd();
-  const testDir = path.join(projectRoot, 'test-spec-command-tmp');
-  const specsDir = path.join(testDir, 'openspec', 'specs');
   const openspecBin = path.join(projectRoot, 'bin', 'openspec.js');
+  let testDir: string;
+  let specsDir: string;
   
   
   beforeEach(async () => {
+    testDir = path.join(os.tmpdir(), `openspec-spec-command-test-${randomUUID()}`);
+    specsDir = path.join(testDir, 'openspec', 'specs');
     await fs.mkdir(specsDir, { recursive: true });
     
     // Create test spec files
