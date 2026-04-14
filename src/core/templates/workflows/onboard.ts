@@ -457,21 +457,21 @@ OpenSpec の一連の流れを 1 周しました。
 
 **Core workflow:**
 
-| Command | What it does |
-|---------|--------------|
-| \`/opsx:propose\` | Create a change and generate all artifacts |
-| \`/opsx:explore\` | Think through problems before/during work |
-| \`/opsx:apply\` | Implement tasks from a change |
-| \`/opsx:archive\` | Archive a completed change |
+| コマンド | 役割 |
+|---------|------|
+| \`/opsx:propose\` | 変更を作成し、必要なアーティファクトをまとめて生成 |
+| \`/opsx:explore\` | 作業前または作業中に問題を整理して考える |
+| \`/opsx:apply\` | change に沿って実装を進める |
+| \`/opsx:archive\` | 完了した change をアーカイブする |
 
-**Additional commands:**
+**追加コマンド:**
 
-| Command | What it does |
-|---------|--------------|
-| \`/opsx:new\` | Start a new change, step through artifacts one at a time |
-| \`/opsx:continue\` | Continue working on an existing change |
-| \`/opsx:ff\` | Fast-forward: create all artifacts at once |
-| \`/opsx:verify\` | Verify implementation matches artifacts |
+| コマンド | 役割 |
+|---------|------|
+| \`/opsx:new\` | 新しい change を作り、アーティファクトを順番に作成する |
+| \`/opsx:continue\` | 既存の change の作業を再開する |
+| \`/opsx:ff\` | 一括生成で全アーティファクトをまとめて作成する |
+| \`/opsx:verify\` | 実装がアーティファクトと一致しているか確認する |
 
 ---
 
@@ -482,11 +482,11 @@ OpenSpec の一連の流れを 1 周しました。
 
 ---
 
-## Graceful Exit Handling
+## 自然な終了の扱い
 
-### User wants to stop mid-way
+### ユーザーが途中で止めたい場合
 
-If the user says they need to stop, want to pause, or seem disengaged:
+ユーザーが止めたい、いったん離れたい、あるいは乗り気でなさそうなら:
 
 \`\`\`
 問題ありません。変更は \`openspec/changes/<name>/\` に保存されています。
@@ -498,32 +498,32 @@ If the user says they need to stop, want to pause, or seem disengaged:
 作業は失われません。準備ができたら戻ってきてください。
 \`\`\`
 
-Exit gracefully without pressure.
+圧をかけず、自然に終了する。
 
-### User just wants command reference
+### ユーザーがコマンド一覧だけ欲しい場合
 
-If the user says they just want to see the commands or skip the tutorial:
+ユーザーがコマンドだけ見たい、またはチュートリアルを省略したいと言ったら:
 
 \`\`\`
 ## OpenSpec クイックリファレンス
 
 **Core workflow:**
 
-| Command | What it does |
-|---------|--------------|
-| \`/opsx:propose <name>\` | Create a change and generate all artifacts |
-| \`/opsx:explore\` | Think through problems (no code changes) |
-| \`/opsx:apply <name>\` | Implement tasks |
-| \`/opsx:archive <name>\` | Archive when done |
+| コマンド | 役割 |
+|---------|------|
+| \`/opsx:propose <name>\` | 変更を作成し、必要なアーティファクトをまとめて生成 |
+| \`/opsx:explore\` | 問題を整理して考える（コード変更なし） |
+| \`/opsx:apply <name>\` | タスクを実装する |
+| \`/opsx:archive <name>\` | 完了時にアーカイブする |
 
-**Additional commands:**
+**追加コマンド:**
 
-| Command | What it does |
-|---------|--------------|
-| \`/opsx:new <name>\` | Start a new change, step by step |
-| \`/opsx:continue <name>\` | Continue an existing change |
-| \`/opsx:ff <name>\` | Fast-forward: all artifacts at once |
-| \`/opsx:verify <name>\` | Verify implementation |
+| コマンド | 役割 |
+|---------|------|
+| \`/opsx:new <name>\` | 新しい change を段階的に開始する |
+| \`/opsx:continue <name>\` | 既存の change を再開する |
+| \`/opsx:ff <name>\` | 一括生成で全アーティファクトを作成する |
+| \`/opsx:verify <name>\` | 実装内容を検証する |
 
 まずは \`/opsx:propose\` を試してください。expanded workflow を使っているなら \`/opsx:new\` や \`/opsx:ff\` でも始められます。
 \`\`\`

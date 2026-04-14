@@ -36,7 +36,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getApplyChangeSkillTemplate: 'fabb3161d4adef9b49804530e4a59bb865a3914d4809f2aca2e5e21f08659da8',
   getFfChangeSkillTemplate: 'd47d406089f4cf0e2118caef5efbb52de058357265164c7a2d76e058bf6137e9',
   getSyncSpecsSkillTemplate: 'ae5cc52cf216e5e92dea3fb406fe4f2d6edae9266c414249e13f73ca848c3e86',
-  getOnboardSkillTemplate: 'ef61e10e496b4d108bd1bf41e77122d42034e7cede6d943c4e05057b49f334ce',
+  getOnboardSkillTemplate: 'fca7d5db2958685996a1dd461a9bc7df9815cd5677ad03bbb83102076aea7a38',
   getOpsxExploreCommandTemplate: '58d7b7c18aad4a08028db2e844b6ecec58ed94d16a80c6e2bd75dc84a6391984',
   getOpsxNewCommandTemplate: 'e2b6c7e617a93e29c2e35e2e64e558ccd1ede6ee378c1617686ab420032927e6',
   getOpsxContinueCommandTemplate: 'f515120211cf172febabadbe2e6e84f1e1a2ffef2086ec771ab8d4c36974ec42',
@@ -47,7 +47,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxSyncCommandTemplate: '97ee415c34253299927c3c71bd3d9d59eb7f4f074d59eaf4412e5ed7ab4c4840',
   getVerifyChangeSkillTemplate: 'f7255c761f4ed4c2d2650c716cca39b57f7a07fb0f537604e2b41aea725361a5',
   getOpsxArchiveCommandTemplate: 'b3f68133afeb173878367e353d9410f7d633b22ad856b7c2acf7c6fc1b8fdcc1',
-  getOpsxOnboardCommandTemplate: '5df39be8c339d876560d01ed9ccec8fd270b362e8aef03d7b909409ffb31fb04',
+  getOpsxOnboardCommandTemplate: '456e5941b098bed8e43c43e439e7881a5fee339b9d9d396b840fd553f72b6af0',
   getOpsxBulkArchiveCommandTemplate: '465d5e57e1d443a570d69d60cca4fba68da4dd0b881c1732f98d6c266656d62a',
   getOpsxVerifyCommandTemplate: '77af562e954061117d60e9a5e3e96f1843e5ceb073fdd6c0de96bb5177811cdc',
   getOpsxProposeSkillTemplate: '7281878bfae4b8545a940575d1b6a831ec9bb8fe913fb1052c39890efecad403',
@@ -65,7 +65,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-archive-change': '96cbe8b0f9461b632015d7590c5d91de2ef487a9893b7cb4de2983747c97ff65',
   'openspec-bulk-archive-change': '63f06c2b3584223b31107f69ccad9730d1148769ebfa1b9a0b2f20eb84c81a8e',
   'openspec-verify-change': '33f4f76d4ea0816d4e9baeea1a23d6af15e670d4aa6e4d080a9c224801159dfa',
-  'openspec-onboard': '3cc1ad7fcbc2ca687fad34465f6e05483ba924bedeff49928e00df7aaa71a4f4',
+  'openspec-onboard': '5d180027956ac8a1cff3042dd979e38d81a899afb587edfdc28c7fdff1c22add',
   'openspec-propose': '15a77a8b2915b7e80af3ed394b095d571f89a6c6bc2a29c2beda3aba849bd543',
 };
 

@@ -252,17 +252,17 @@ export function registerConfigCommand(program: Command): void {
         console.log(formatValueYaml(config));
 
         // Annotate profile settings
-        const profileSource = rawConfig.profile !== undefined ? '(explicit)' : '(default)';
-        const deliverySource = rawConfig.delivery !== undefined ? '(explicit)' : '(default)';
-        console.log(`\nProfile settings:`);
+        const profileSource = rawConfig.profile !== undefined ? '（明示設定）' : '（デフォルト）';
+        const deliverySource = rawConfig.delivery !== undefined ? '（明示設定）' : '（デフォルト）';
+        console.log(`\nプロファイル設定:`);
         console.log(`  profile: ${config.profile} ${profileSource}`);
         console.log(`  delivery: ${config.delivery} ${deliverySource}`);
         if (config.profile === 'core') {
-          console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} (from core profile)`);
+          console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} （core プロファイル由来）`);
         } else if (config.workflows && config.workflows.length > 0) {
-          console.log(`  workflows: ${config.workflows.join(', ')} (explicit)`);
+          console.log(`  workflows: ${config.workflows.join(', ')} （明示設定）`);
         } else {
-          console.log(`  workflows: (none)`);
+          console.log(`  workflows: （なし）`);
         }
       }
     });
@@ -461,19 +461,19 @@ export function registerConfigCommand(program: Command): void {
         config.workflows = [...CORE_WORKFLOWS];
         // Preserve delivery setting
         saveGlobalConfig(config);
-        console.log('Config updated. Run `openspec update` in your projects to apply.');
+        console.log('設定を更新しました。反映するには各プロジェクトで `openspec update` を実行してください。');
         return;
       }
 
       if (preset) {
-        console.error(`Error: Unknown profile preset "${preset}". Available presets: core`);
+        console.error(`エラー: 不明なプロファイルプリセット "${preset}" です。利用可能なプリセット: core`);
         process.exitCode = 1;
         return;
       }
 
       // Non-interactive check
       if (!process.stdout.isTTY) {
-        console.error('Interactive mode required. Use `openspec config profile core` or set config via environment/flags.');
+        console.error('対話モードが必要です。`openspec config profile core` を使うか、環境変数またはフラグで設定してください。');
         process.exitCode = 1;
         return;
       }
@@ -486,41 +486,41 @@ export function registerConfigCommand(program: Command): void {
         const config = getGlobalConfig();
         const currentState = resolveCurrentProfileState(config);
 
-        console.log(chalk.bold('\nCurrent profile settings'));
-        console.log(`  Delivery: ${currentState.delivery}`);
-        console.log(`  Workflows: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
-        console.log(chalk.dim('  Delivery = where workflows are installed (skills, commands, or both)'));
-        console.log(chalk.dim('  Workflows = which actions are available (propose, explore, apply, etc.)'));
+        console.log(chalk.bold('\n現在のプロファイル設定'));
+        console.log(`  配信方法: ${currentState.delivery}`);
+        console.log(`  ワークフロー: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
+        console.log(chalk.dim('  配信方法 = ワークフローのインストール先（skills、commands、または両方）'));
+        console.log(chalk.dim('  ワークフロー = 利用可能なアクション（propose、explore、apply など）'));
         console.log();
 
         const action = await select<ProfileAction>({
-          message: 'What do you want to configure?',
+          message: '何を設定しますか？',
           choices: [
             {
               value: 'both',
-              name: 'Delivery and workflows',
-              description: 'Update install mode and available actions together',
+              name: '配信方法とワークフロー',
+              description: 'インストール方法と利用可能なアクションをまとめて更新',
             },
             {
               value: 'delivery',
-              name: 'Delivery only',
-              description: 'Change where workflows are installed',
+              name: '配信方法のみ',
+              description: 'ワークフローのインストール先を変更',
             },
             {
               value: 'workflows',
-              name: 'Workflows only',
-              description: 'Change which workflow actions are available',
+              name: 'ワークフローのみ',
+              description: '利用可能なワークフローアクションを変更',
             },
             {
               value: 'keep',
-              name: 'Keep current settings (exit)',
-              description: 'Leave configuration unchanged and exit',
+              name: '現在の設定を維持して終了',
+              description: '設定を変更せずに終了',
             },
           ],
         });
 
         if (action === 'keep') {
-          console.log('No config changes.');
+          console.log('設定変更はありません。');
           maybeWarnConfigDrift(process.cwd(), currentState, chalk.yellow);
           return;
         }
@@ -535,28 +535,28 @@ export function registerConfigCommand(program: Command): void {
           const deliveryChoices: { value: Delivery; name: string; description: string }[] = [
             {
               value: 'both' as Delivery,
-              name: 'Both (skills + commands)',
-              description: 'Install workflows as both skills and slash commands',
+              name: '両方（skills + commands）',
+              description: 'ワークフローを skills と slash commands の両方でインストール',
             },
             {
               value: 'skills' as Delivery,
-              name: 'Skills only',
-              description: 'Install workflows only as skills',
+              name: 'Skills のみ',
+              description: 'ワークフローを skills のみでインストール',
             },
             {
               value: 'commands' as Delivery,
-              name: 'Commands only',
-              description: 'Install workflows only as slash commands',
+              name: 'Commands のみ',
+              description: 'ワークフローを slash commands のみでインストール',
             },
           ];
           for (const choice of deliveryChoices) {
             if (choice.value === currentState.delivery) {
-              choice.name += ' [current]';
+              choice.name += ' [現在]';
             }
           }
 
           nextState.delivery = await select<Delivery>({
-            message: 'Delivery mode (how workflows are installed):',
+            message: '配信方法（ワークフローのインストール方法）:',
             choices: deliveryChoices,
             default: currentState.delivery,
           });
@@ -566,7 +566,7 @@ export function registerConfigCommand(program: Command): void {
           const formatWorkflowChoice = (workflow: string) => {
             const metadata = WORKFLOW_PROMPT_META[workflow] ?? {
               name: workflow,
-              description: `Workflow: ${workflow}`,
+              description: `ワークフロー: ${workflow}`,
             };
             return {
               value: workflow,
@@ -578,8 +578,8 @@ export function registerConfigCommand(program: Command): void {
           };
 
           const selectedWorkflows = await checkbox<string>({
-            message: 'Select workflows to make available:',
-            instructions: 'Space to toggle, Enter to confirm',
+            message: '利用可能にするワークフローを選択してください:',
+            instructions: 'Space で切り替え、Enter で確定',
             pageSize: ALL_WORKFLOWS.length,
             theme: {
               icon: {
@@ -595,12 +595,12 @@ export function registerConfigCommand(program: Command): void {
 
         const diff = diffProfileState(currentState, nextState);
         if (!diff.hasChanges) {
-          console.log('No config changes.');
+          console.log('設定変更はありません。');
           maybeWarnConfigDrift(process.cwd(), nextState, chalk.yellow);
           return;
         }
 
-        console.log(chalk.bold('\nConfig changes:'));
+        console.log(chalk.bold('\n設定変更:'));
         for (const line of diff.lines) {
           console.log(`  ${line}`);
         }
@@ -616,26 +616,26 @@ export function registerConfigCommand(program: Command): void {
         const openspecDir = path.join(projectDir, OPENSPEC_DIR_NAME);
         if (fs.existsSync(openspecDir)) {
           const applyNow = await confirm({
-            message: 'Apply changes to this project now?',
+            message: 'このプロジェクトに今すぐ変更を適用しますか？',
             default: true,
           });
 
           if (applyNow) {
             try {
               execSync('npx openspec update', { stdio: 'inherit', cwd: projectDir });
-              console.log('Run `openspec update` in your other projects to apply.');
+              console.log('他のプロジェクトにも反映するには、それぞれで `openspec update` を実行してください。');
             } catch {
-              console.error('`openspec update` failed. Please run it manually to apply the profile changes.');
+              console.error('`openspec update` に失敗しました。プロファイル変更を反映するには手動で実行してください。');
               process.exitCode = 1;
             }
             return;
           }
         }
 
-        console.log('Config updated. Run `openspec update` in your projects to apply.');
+        console.log('設定を更新しました。反映するには各プロジェクトで `openspec update` を実行してください。');
       } catch (error) {
         if (isPromptCancellationError(error)) {
-          console.log('Config profile cancelled.');
+          console.log('config profile をキャンセルしました。');
           process.exitCode = 130;
           return;
         }
