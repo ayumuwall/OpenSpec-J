@@ -42,9 +42,9 @@ function escapeYamlValue(value: string): string {
  * File path: .pi/prompts/opsx-<id>.md
  * Frontmatter: description
  *
- * Pi uses the filename (minus .md) as the slash command name, so
- * opsx-propose.md → /opsx-propose. Command references in the body
- * are transformed from /opsx: to /opsx- for consistency.
+ * Pi はファイル名（.md 除く）をスラッシュコマンド名として使用するため、
+ * opsx-propose.md → /opsx-propose となる。本文中のコマンド参照は
+ * /opsx: 形式から /opsx- 形式に変換する。
  */
 export const piAdapter: ToolCommandAdapter = {
   toolId: 'pi',
@@ -54,7 +54,7 @@ export const piAdapter: ToolCommandAdapter = {
   },
 
   formatFile(content: CommandContent): string {
-    // Transform /opsx: references to /opsx- and inject $@ for template args
+    // /opsx: 参照を /opsx- に変換し、テンプレート引数用 $@ を注入
     const transformedBody = transformToHyphenCommands(content.body);
 
     return `---

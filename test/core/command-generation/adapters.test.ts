@@ -204,7 +204,7 @@ describe('command-generation/adapters', () => {
       const output = bobAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
       expect(output).toContain('description: Enter explore mode for thinking');
-      expect(output).toContain('argument-hint: command arguments');
+      expect(output).toContain('argument-hint: コマンド引数');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.\n\nWith multiple lines.');
     });

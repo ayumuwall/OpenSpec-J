@@ -1,8 +1,8 @@
 /**
- * Bob Shell Command Adapter
+ * Bob Shell コマンドアダプター
  *
- * Formats commands for Bob Shell following its markdown specification.
- * Commands are stored in .bob/commands/ directory.
+ * コマンドをツール仕様に合わせて整形する。
+ * コマンドは .bob/commands/ ディレクトリに保存される。
  */
 
 import path from 'path';
@@ -25,9 +25,9 @@ function escapeYamlValue(value: string): string {
 }
 
 /**
- * Bob Shell adapter for command generation.
- * File path: .bob/commands/opsx-<id>.md
- * Frontmatter: description, argument-hint
+ * Bob Shell コマンド生成アダプター。
+ * ファイルパス: .bob/commands/opsx-<id>.md
+ * フロントマター: description, argument-hint
  */
 export const bobAdapter: ToolCommandAdapter = {
   toolId: 'bob',
@@ -37,12 +37,12 @@ export const bobAdapter: ToolCommandAdapter = {
   },
 
   formatFile(content: CommandContent): string {
-    // Transform command references from colon to hyphen format for Bob
+    // コロン形式のコマンド参照をハイフン形式に変換（Bob 用）
     const transformedBody = transformToHyphenCommands(content.body);
 
     return `---
 description: ${escapeYamlValue(content.description)}
-argument-hint: command arguments
+argument-hint: コマンド引数
 ---
 
 ${transformedBody}

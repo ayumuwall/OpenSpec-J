@@ -24,32 +24,32 @@ export class PowerShellInstaller {
   }
 
   /**
-   * Detect the encoding of a file by inspecting its BOM (Byte Order Mark).
-   * Returns the Node.js BufferEncoding and the raw BOM bytes to preserve on write.
+   * ファイルの BOM（Byte Order Mark）を検査してエンコーディングを検出する。
+   * Node.js の BufferEncoding と書き込み時に保持する生の BOM バイト列を返す。
    */
   private detectEncoding(buffer: Buffer): { encoding: BufferEncoding; bom: Buffer } {
     // UTF-16 LE BOM: FF FE
     if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
       return { encoding: 'utf16le', bom: Buffer.from([0xff, 0xfe]) };
     }
-    // UTF-16 BE BOM: FE FF — not natively supported by Node
+    // UTF-16 BE BOM: FE FF — Node では非サポート
     if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
       throw new Error(
-        'File is encoded as UTF-16 BE which is not supported. ' +
-          'Please re-save as UTF-8 or UTF-16 LE, then retry.',
+        'ファイルが UTF-16 BE でエンコードされています。これはサポートされていません。' +
+          'UTF-8 または UTF-16 LE で保存し直してから再実行してください。',
       );
     }
     // UTF-8 BOM: EF BB BF
     if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
       return { encoding: 'utf-8', bom: Buffer.from([0xef, 0xbb, 0xbf]) };
     }
-    // No BOM → default UTF-8
+    // BOM なし → デフォルト UTF-8
     return { encoding: 'utf-8', bom: Buffer.alloc(0) };
   }
 
   /**
-   * Read a profile file, preserving its encoding metadata for round-trip writes.
-   * Throws if the file uses UTF-16 BE (unsupported by Node).
+   * プロファイルファイルを読み込み、ラウンドトリップ書き込みのためにエンコーディング情報を保持する。
+   * UTF-16 BE（Node 非サポート）の場合はエラーをスローする。
    */
   private async readProfileFile(filePath: string): Promise<{ content: string; encoding: BufferEncoding; bom: Buffer }> {
     const raw = await fs.readFile(filePath);
@@ -59,7 +59,7 @@ export class PowerShellInstaller {
   }
 
   /**
-   * Write a profile file, preserving the original BOM and encoding.
+   * プロファイルファイルを書き込む。元の BOM とエンコーディングを保持する。
    */
   private async writeProfileFile(filePath: string, content: string, encoding: BufferEncoding, bom: Buffer): Promise<void> {
     const body = Buffer.from(content, encoding);
@@ -183,10 +183,10 @@ export class PowerShellInstaller {
           fileEncoding = file.encoding;
           fileBom = file.bom;
         } catch (err: any) {
-          // If the file doesn't exist that's fine — we'll create it as UTF-8.
-          // Any other read error (permissions, unsupported encoding, etc.) → skip this profile.
+          // ファイルが存在しない場合は問題なし — UTF-8 で新規作成する。
+          // その他の読み取りエラー（権限不足・非サポートエンコーディング等）→ このプロファイルをスキップ。
           if (err?.code === 'ENOENT') {
-            // keep defaults
+            // デフォルトのまま維持
           } else {
             console.warn(`Warning: Skipping ${profilePath}: ${err?.message ?? String(err)}`);
             continue;
@@ -232,7 +232,7 @@ export class PowerShellInstaller {
 
     for (const profilePath of profilePaths) {
       try {
-        // Read profile content with encoding detection
+        // エンコーディング検出付きでプロファイルを読み込む
         let profileContent: string;
         let fileEncoding: BufferEncoding = 'utf-8';
         let fileBom: Buffer = Buffer.alloc(0);
@@ -243,7 +243,7 @@ export class PowerShellInstaller {
           fileBom = file.bom;
         } catch (err: any) {
           if (err?.code === 'ENOENT') {
-            continue; // Profile doesn't exist, nothing to remove
+            continue; // プロファイルが存在しないため削除不要
           }
           console.warn(`Warning: Could not read ${profilePath}: ${err?.message ?? String(err)}`);
           continue;

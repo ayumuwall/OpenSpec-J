@@ -87,8 +87,8 @@ export function getStatusIndicator(status: 'done' | 'ready' | 'blocked'): string
 }
 
 /**
- * Returns the list of available change directory names under openspec/changes/.
- * Excludes the archive directory and hidden directories.
+ * openspec/changes/ 配下の利用可能な変更ディレクトリ名の一覧を返す。
+ * archive ディレクトリと隠しディレクトリは除外する。
  */
 export async function getAvailableChanges(projectRoot: string): Promise<string[]> {
   const changesPath = path.join(projectRoot, 'openspec', 'changes');

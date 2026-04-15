@@ -1,16 +1,16 @@
 /**
- * Lingma Command Adapter
+ * Lingma コマンドアダプター
  *
- * Formats commands for Lingma following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Lingma adapter for command generation.
- * File path: .lingma/commands/opsx/<id>.md
- * Frontmatter: name, description, category, tags
+ * Lingma コマンド生成アダプター。
+ * ファイルパス: .lingma/commands/opsx/<id>.md
+ * フロントマター: name, description, category, tags
  */
 export const lingmaAdapter: ToolCommandAdapter = {
   toolId: 'lingma',

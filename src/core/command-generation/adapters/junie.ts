@@ -1,16 +1,16 @@
 /**
- * Junie Command Adapter
+ * Junie コマンドアダプター
  *
- * Formats commands for Junie following its frontmatter specification.
+ * コマンドをツール仕様に合わせて整形する。
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
- * Junie adapter for command generation.
- * File path: .junie/commands/opsx-<id>.md
- * Frontmatter: description
+ * Junie コマンド生成アダプター。
+ * ファイルパス: .junie/commands/opsx-<id>.md
+ * フロントマター: description
  */
 export const junieAdapter: ToolCommandAdapter = {
   toolId: 'junie',

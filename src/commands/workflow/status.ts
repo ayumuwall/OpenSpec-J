@@ -39,8 +39,8 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
   try {
     const projectRoot = process.cwd();
 
-    // Handle no-changes case gracefully — status is informational,
-    // so "no changes" is a valid state, not an error.
+    // 変更なしの場合は正常扱い — status は情報提供コマンドなので
+    // 「変更なし」は有効な状態であり、エラーではない。
     if (!options.change) {
       const available = await getAvailableChanges(projectRoot);
       if (available.length === 0) {
@@ -52,7 +52,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
         console.log('進行中の変更はありません。`openspec new change <name>` で作成してください。');
         return;
       }
-      // Changes exist but --change not provided
+      // 変更は存在するが --change が未指定
       spinner.stop();
       throw new Error(
         `必須オプション --change が指定されていません。利用可能な変更:\n  ${available.join('\n  ')}`
