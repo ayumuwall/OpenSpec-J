@@ -131,6 +131,13 @@ git tag -a upstream-vX.Y.Z -m "upstream vX.Y.Z" vX.Y.Z^{}
     git restore --source vX.Y.Z -- .
     git commit -m "chore: sync main to vX.Y.Z"
     ```
+  - ただし、これは一時的な内容一致確認のための追加コミットに留める。最終的には `main` / `origin/main` ともに本家リリースタグの**実コミットそのもの**を指す状態に戻すこと。
+    - 例:
+      ```
+      git branch -f main vX.Y.Z^{}
+      git push origin -f main
+      ```
+    - `vX.Y.Z` が注釈タグの場合は、必ず `vX.Y.Z^{}` を使って実コミットを指す。
 
 ### 2.2 差分の収集と分類
 

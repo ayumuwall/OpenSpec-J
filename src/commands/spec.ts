@@ -6,7 +6,6 @@ import { Validator } from '../core/validation/validator.js';
 import type { Spec } from '../core/schemas/index.js';
 import { isInteractive } from '../utils/interactive.js';
 import { getSpecIds } from '../utils/item-discovery.js';
-import { emitDeprecationWarning } from '../utils/deprecations.js';
 
 const SPECS_DIR = 'openspec/specs';
 
@@ -116,10 +115,7 @@ export function registerSpecCommand(rootProgram: typeof program) {
 
   // Deprecation notice for noun-based commands
   specCommand.hook('preAction', () => {
-    emitDeprecationWarning(
-      'command:spec',
-      '警告: "openspec spec ..." コマンドは非推奨です。"openspec show" や "openspec validate --specs" など動詞先行のコマンドを使ってください。'
-    );
+    console.error('警告: "openspec spec ..." コマンドは非推奨です。"openspec show" や "openspec validate --specs" など動詞先行のコマンドを使ってください。');
   });
 
   specCommand
