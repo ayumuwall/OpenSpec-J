@@ -218,6 +218,7 @@ git merge main
 - `scope.md` のチェックボックスを進捗の唯一の記録として更新する
   - すべて完了したら次工程へ進む
 - 変更箇所のみ翻訳し、未変更箇所は現行を維持
+- **upstream の書式変更（whitespace / padding / 見出し改名 / 表カラム幅 / ASCII 図の整形など）も追従対象**。翻訳と同時にこれらの整形差分も必ず ja 側へ反映する（本文の内容変更がなく純粋な書式更新だけでも対象）
 - コマンド名・フラグ・ファイルパスは翻訳しない
 - `OPENSPEC-J:NOTE` を維持
 - README_OLD.md は同期対象外
@@ -238,12 +239,32 @@ node bin/openspec.js validate --strict
 - 主要コマンドのヘルプ文言を目視確認
 - テンプレート生成が日本語で崩れていないか確認
 - `openspec init` で OPSX スキル生成が行われることを確認
+- **scope.md の `[x]` 項目について、ファイルごとに `git diff upstream-vA.B.C upstream-vX.Y.Z -- <file>` を走らせ、upstream 側の変更が ja HEAD にも反映されているかを 1 件ずつ目視確認する**。書式のみの変更（padding / 見出し改名など）も必ず取り込む。`git diff v<前 ja 版> HEAD -- <file>` が空なのに upstream 差分が非空なら、ほぼ確実に作業漏れ。
 
 ### 2.6 仕上げ（記録）
 
 - `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
 - `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
 - コミット前に `$session-memo` を実行して `SESSION_MEMO.md` を更新する（Codex利用時）
+
+### 2.7 定期翻訳棚卸し（差分ベース運用の盲点対策）
+
+§2.2 の差分ベース運用は「前バージョンからの差分」しか見ないため、過去バージョンで翻訳漏れした英語文言は以後の追従作業で掘り起こされない。これを補うため、**upstream 追従とは別枠で定期的に棚卸しを実施する**。
+
+- **起点**: **v1.0.0 以降**を対象とする。
+- **対象ファイル**: `src/**/*.ts` のうち、v1.0.0 以降に upstream で一度でも変更されたもの。`test/` と `/openspec/` は対象外。
+- **検出方法**: 各ファイルから以下の呼び出しの文字列リテラルを抽出し、「日本語を含まない & 英単語 3 文字以上が連続する」ものを候補として拾う。
+  - `console.log` / `console.error` / `console.warn`
+  - `throw new Error`
+  - `ora(...)` / `spinner.text = ...` / `spinner.fail(` / `spinner.succeed(` / `spinner.start(` / `spinner.warn(`
+  - `message:`（inquirer プロンプト等）
+  - `chalk.*(` で括られたユーザー向け文字列
+- **除外**: コマンド名・フラグ・識別子・URL・エラーコード・ファイルパス・YAML キー等は翻訳対象外（§0.2 / §1.3）。ホワイトリストは必要に応じて `diffs/l10n-audit-whitelist.txt` に切り出す。
+- **実施タイミング**:
+  - 次回 upstream 追従作業の冒頭（§2.0 の事前確認直後）に 1 回実行し、候補一覧を `diffs/l10n-audit-<YYYY-MM-DD>.md` に保存。
+  - 追従 scope と合わせて翻訳対応、または規模が大きい場合は別コミット / 別 PR に切り出す。
+  - 頻度目安: 追従作業ごと（毎回）、または四半期に 1 回。
+- **記録**: 棚卸しで翻訳した件は `CHANGELOG.md` に `[OpenSpec-J] 翻訳棚卸し: ...` として記載する。
 
 ---
 

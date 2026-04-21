@@ -64,22 +64,22 @@
 
 ## 翻訳対象外
 
-A openspec/changes/fix-opencode-commands-directory/.openspec.yaml
-A openspec/changes/fix-opencode-commands-directory/design.md
-A openspec/changes/fix-opencode-commands-directory/proposal.md
-A openspec/changes/fix-opencode-commands-directory/specs/command-generation/spec.md
-A openspec/changes/fix-opencode-commands-directory/tasks.md
-A openspec/changes/graceful-status-no-changes/.openspec.yaml
-A openspec/changes/graceful-status-no-changes/design.md
-A openspec/changes/graceful-status-no-changes/proposal.md
-A openspec/changes/graceful-status-no-changes/specs/graceful-status-empty/spec.md
-A openspec/changes/graceful-status-no-changes/tasks.md
-M test/commands/artifact-workflow.test.ts
-M test/core/available-tools.test.ts
-M test/core/command-generation/adapters.test.ts
-M test/core/command-generation/registry.test.ts
-M test/core/completions/installers/powershell-installer.test.ts
-M test/core/init.test.ts
-M test/core/legacy-cleanup.test.ts
-M test/core/templates/skill-templates-parity.test.ts
-M test/core/update.test.ts
+- A openspec/changes/fix-opencode-commands-directory/.openspec.yaml
+- A openspec/changes/fix-opencode-commands-directory/design.md
+- A openspec/changes/fix-opencode-commands-directory/proposal.md
+- A openspec/changes/fix-opencode-commands-directory/specs/command-generation/spec.md
+- A openspec/changes/fix-opencode-commands-directory/tasks.md
+- A openspec/changes/graceful-status-no-changes/.openspec.yaml
+- A openspec/changes/graceful-status-no-changes/design.md
+- A openspec/changes/graceful-status-no-changes/proposal.md
+- A openspec/changes/graceful-status-no-changes/specs/graceful-status-empty/spec.md
+- A openspec/changes/graceful-status-no-changes/tasks.md
+- M test/commands/artifact-workflow.test.ts
+- M test/core/available-tools.test.ts
+- M test/core/command-generation/adapters.test.ts
+- M test/core/command-generation/registry.test.ts
+- M test/core/completions/installers/powershell-installer.test.ts
+- M test/core/init.test.ts
+- M test/core/legacy-cleanup.test.ts
+- M test/core/templates/skill-templates-parity.test.ts
+- M test/core/update.test.ts
