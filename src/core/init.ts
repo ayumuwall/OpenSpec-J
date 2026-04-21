@@ -186,7 +186,7 @@ export class InitCommand {
       return this.profileOverride;
     }
 
-    throw new Error(`Invalid profile "${this.profileOverride}". Available profiles: core, custom`);
+    throw new Error(`無効なプロファイル "${this.profileOverride}"。利用可能なプロファイル: core, custom`);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -323,7 +323,7 @@ export class InitCommand {
       .map((toolId) => AI_TOOLS.find((t) => t.value === toolId)?.name || toolId);
 
     if (configuredNames.length > 0) {
-      console.log(`OpenSpec configured: ${configuredNames.join(', ')} (pre-selected)`);
+      console.log(`OpenSpec 設定済み: ${configuredNames.join(', ')}（事前選択）`);
     }
 
     const detectedOnlyNames = detectedTools
@@ -332,9 +332,9 @@ export class InitCommand {
 
     if (detectedOnlyNames.length > 0) {
       const detectionLabel = shouldPreselectDetected
-        ? 'pre-selected for first-time setup'
-        : 'not pre-selected';
-      console.log(`Detected tool directories: ${detectedOnlyNames.join(', ')} (${detectionLabel})`);
+        ? '初回セットアップのため事前選択'
+        : '事前選択なし';
+      console.log(`検出したツールディレクトリ: ${detectedOnlyNames.join(', ')}（${detectionLabel}）`);
     }
 
     const selectedTools = await searchableMultiSelect({
@@ -677,10 +677,10 @@ export class InitCommand {
       console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
     }
     if (results.removedCommandCount > 0) {
-      console.log(chalk.dim(`Removed: ${results.removedCommandCount} command files (delivery: skills)`));
+      console.log(chalk.dim(`削除: ${results.removedCommandCount} 個のコマンドファイル（delivery: skills）`));
     }
     if (results.removedSkillCount > 0) {
-      console.log(chalk.dim(`Removed: ${results.removedSkillCount} skill directories (delivery: commands)`));
+      console.log(chalk.dim(`削除: ${results.removedSkillCount} 個のスキルディレクトリ（delivery: commands）`));
     }
 
     // 設定ファイルの状態

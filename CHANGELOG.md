@@ -2,6 +2,14 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.3.0-2
+
+- **[OpenSpec-J]** v1.3.0 追従で漏れていた upstream 書式変更を反映（`explore.ts` の ASCII 図・表パディング、`onboard.ts` のコマンド表カラム幅、`docs/workflows.md` の「（拡張モード）」見出しと `/opsx:propose` 行追加）
+- **[OpenSpec-J]** v1.2.0 以前から残っていた英語メッセージを日本語化（`init.ts` の `Invalid profile` / `OpenSpec configured` / `Detected tool directories` / `Removed: ...`、`migration.ts` の移行完了ログ、`config.ts` のグローバル設定警告、`powershell-installer.ts` の各種 `Warning:` 文言）
+- **[OpenSpec-J]** `skill-templates-parity` のハッシュを再計算、`config-profile` / `init` テストの期待値を日本語文言に更新
+- **[OpenSpec-J]** `OPENSPEC_TELEMETRY=0 pnpm test` を実施し、`68 files / 1365 tests` の全テスト成功を確認
+
+
 ## 1.3.0-1
 
 - **[OpenSpec-J]** v1.3.0 に `config` / `onboard` 周辺の日本語化漏れがありました。ご不便をおかけして申し訳ありません。

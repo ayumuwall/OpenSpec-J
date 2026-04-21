@@ -520,7 +520,7 @@ describe('InitCommand - profile and detection features', () => {
     });
 
     await expect(initCommand.execute(testDir)).rejects.toThrow(
-      /Invalid profile "invalid-profile"/
+      /無効なプロファイル "invalid-profile"/
     );
   });
 

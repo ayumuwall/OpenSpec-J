@@ -188,7 +188,7 @@ export class PowerShellInstaller {
           if (err?.code === 'ENOENT') {
             // デフォルトのまま維持
           } else {
-            console.warn(`Warning: Skipping ${profilePath}: ${err?.message ?? String(err)}`);
+            console.warn(`警告: ${profilePath} をスキップ: ${err?.message ?? String(err)}`);
             continue;
           }
         }
@@ -213,7 +213,7 @@ export class PowerShellInstaller {
         anyConfigured = true;
       } catch (error) {
         // Continue to next profile if this one fails
-        console.warn(`Warning: Could not configure ${profilePath}: ${error}`);
+        console.warn(`警告: ${profilePath} を設定できませんでした: ${error}`);
       }
     }
 
@@ -245,7 +245,7 @@ export class PowerShellInstaller {
           if (err?.code === 'ENOENT') {
             continue; // プロファイルが存在しないため削除不要
           }
-          console.warn(`Warning: Could not read ${profilePath}: ${err?.message ?? String(err)}`);
+          console.warn(`警告: ${profilePath} を読み込めませんでした: ${err?.message ?? String(err)}`);
           continue;
         }
 
@@ -260,7 +260,7 @@ export class PowerShellInstaller {
 
         const endIndex = profileContent.indexOf(endMarker, startIndex);
         if (endIndex === -1) {
-          console.warn(`Warning: Found start marker but no end marker in ${profilePath}`);
+          console.warn(`警告: ${profilePath} に開始マーカーはありますが終了マーカーが見つかりません`);
           continue;
         }
 
@@ -274,7 +274,7 @@ export class PowerShellInstaller {
         await this.writeProfileFile(profilePath, newContent, fileEncoding, fileBom);
         anyRemoved = true;
       } catch (error) {
-        console.warn(`Warning: Could not clean ${profilePath}: ${error}`);
+        console.warn(`警告: ${profilePath} をクリーンアップできませんでした: ${error}`);
       }
     }
 

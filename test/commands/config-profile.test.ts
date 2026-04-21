@@ -297,7 +297,7 @@ describe('config profile interactive flow', () => {
     await runConfigCommand(['profile']);
 
     expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Global config is not applied to this project.'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('警告: グローバル設定がこのプロジェクトに反映されていません。'));
   });
 
   it('keep action should not warn when project files are already synced', async () => {
@@ -327,7 +327,7 @@ describe('config profile interactive flow', () => {
 
     expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
     expect(confirm).not.toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Global config is not applied to this project.'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('警告: グローバル設定がこのプロジェクトに反映されていません。'));
   });
 
   it('keep action should warn when project has extra workflows beyond global config', async () => {
@@ -342,7 +342,7 @@ describe('config profile interactive flow', () => {
     await runConfigCommand(['profile']);
 
     expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Global config is not applied to this project.'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('警告: グローバル設定がこのプロジェクトに反映されていません。'));
   });
 
   it('changed config should save and ask apply when inside project', async () => {

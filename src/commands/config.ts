@@ -198,7 +198,7 @@ function maybeWarnConfigDrift(
   if (!hasProjectConfigDrift(projectDir, state.workflows, state.delivery)) {
     return;
   }
-  console.log(colorize('Warning: Global config is not applied to this project. Run `openspec update` to sync.'));
+  console.log(colorize('警告: グローバル設定がこのプロジェクトに反映されていません。`openspec update` で同期してください。'));
 }
 
 /**
