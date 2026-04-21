@@ -120,23 +120,12 @@ proposal ──► specs ──► design ──► tasks ──► implement
 
 例として、アプリにダークモードを追加する流れを見てみましょう。
 
-### 1. 変更を開始
+### 1. 変更を開始（既定）
 
-```
-You: /opsx:new add-dark-mode
+```text
+You: /opsx:propose add-dark-mode
 
 AI:  openspec/changes/add-dark-mode/ を作成しました
-     作成準備完了: proposal
-```
-
-### 2. アーティファクトを作成
-
-`/opsx:ff`（fast-forward）で計画アーティファクトを一括作成します。
-
-```
-You: /opsx:ff
-
-AI:  add-dark-mode のアーティファクトを作成中...
      ✓ proposal.md — 目的と変更内容
      ✓ specs/       — 要件とシナリオ
      ✓ design.md    — 技術的アプローチ
@@ -144,7 +133,9 @@ AI:  add-dark-mode のアーティファクトを作成中...
      実装の準備ができました！
 ```
 
-### 3. 何が作られるか
+拡張ワークフロープロファイルを有効にしている場合は、`/opsx:new` の後に `/opsx:ff`（または `/opsx:continue` で段階的に作成）という 2 ステップでも進められます。
+
+### 2. 何が作られるか
 
 **proposal.md** - 目的を記録:
 

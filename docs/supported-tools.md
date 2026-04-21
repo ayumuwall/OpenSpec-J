@@ -41,7 +41,7 @@ OpenSpec は多くの AI コーディングアシスタントに対応してい�
 | Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
 | Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
 | RooCode | `.roo/skills/` | `.roo/commands/` |
-| Trae | `.trae/skills/` | `.trae/skills/`（`/openspec-*` 経由） |
+| Trae | `.trae/skills/` | 生成なし（スキルベースの `/openspec-*` 呼び出しを使用） |
 | Windsurf | `.windsurf/skills/` | `.windsurf/workflows/` |
 
 \* Codex のコマンドはプロジェクト内ではなく、グローバルなホームディレクトリ（`~/.codex/prompts/` または `$CODEX_HOME/prompts/`）にインストールされます。
