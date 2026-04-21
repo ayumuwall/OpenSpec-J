@@ -2,7 +2,7 @@
 
 OpenSpec のスラッシュコマンドのリファレンスです。これらのコマンドは AI コーディングアシスタント（例: Claude Code, Cursor, Windsurf）のチャット UI から呼び出します。
 
-ワークフローの使い分けは [Workflows](workflows.md)、CLI コマンドは [CLI](cli.md) を参照してください。
+ワークフローの使い分けは [ワークフロー](workflows.md)、CLI コマンドは [CLI](cli.md) を参照してください。
 
 ## クイックリファレンス
 
@@ -48,9 +48,9 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 | `change-name-or-description` | いいえ | kebab-case の変更名、または自然言語の変更説明 |
 
 **何をするか:**
-- Creates `openspec/changes/<change-name>/`
-- Generates artifacts needed before implementation (for `spec-driven`: proposal, specs, design, tasks)
-- Stops when the change is ready for `/opsx:apply`
+- `openspec/changes/<change-name>/` を作成します
+- 実装前に必要なアーティファクトを生成します（`spec-driven` では proposal / specs / design / tasks）
+- `/opsx:apply` に進める状態になったら停止します
 
 **例:**
 ```text
@@ -64,8 +64,8 @@ AI:  openspec/changes/add-dark-mode/ を作成しました
      実装の準備ができました。/opsx:apply を実行してください。
 ```
 
-**Tips:**
-- 最短で end-to-end に進みたいときに使う
+**ヒント:**
+- 最短で一通り完了まで進めたいときに使う
 - アーティファクトを段階的に制御したいなら、拡張ワークフローを有効にして `/opsx:new` + `/opsx:continue` を使う
 
 ---
@@ -116,7 +116,7 @@ AI:  既存の認証構成を調べます...
 AI:  準備できています。/opsx:propose add-jwt-auth を実行して変更を始めてください。
 ```
 
-**Tips:**
+**ヒント:**
 - 要件が曖昧なときや調査が必要なときに使う
 - 探索中はアーティファクトを作成しない
 - 複数案の比較に向いている
@@ -164,7 +164,7 @@ AI:  openspec/changes/add-dark-mode/ を作成しました
      /opsx:continue で 1 つずつ作成、または /opsx:ff で一括作成できます。
 ```
 
-**Tips:**
+**ヒント:**
 - わかりやすい名前を付ける: `add-feature`, `fix-bug`, `refactor-module`
 - `update`, `changes`, `wip` のような汎用名は避ける
 - スキーマは `openspec/config.yaml` でも指定可能
@@ -214,10 +214,10 @@ AI:  変更: add-dark-mode
      /opsx:continue で次のアーティファクトを作成できます。
 ```
 
-**Tips:**
+**ヒント:**
 - 各アーティファクトを都度レビューしたいときに便利
 - 複雑な変更でコントロールしたい場合に向く
-- 複数のアーティファクトが同時に ready になることがある
+- 複数のアーティファクトが同時に作成可能になることがある
 - 作成後に編集してから続きを作れる
 
 ---
@@ -257,7 +257,7 @@ AI:  add-dark-mode を Fast-forward 中...
      実装の準備ができました。/opsx:apply で開始できます。
 ```
 
-**Tips:**
+**ヒント:**
 - 何を作るか明確なときに向く
 - `/opsx:continue` より速い
 - 後から編集してもよい
@@ -308,7 +308,7 @@ AI:  add-dark-mode を実装中...
      ...
 ```
 
-**Tips:**
+**ヒント:**
 - 中断しても再開できる
 - 変更名を指定すれば並行作業にも対応
 - 進捗は `tasks.md` のチェックで管理
@@ -375,7 +375,7 @@ AI:  add-dark-mode を検証中...
      2. design.md を Tailwind 使用に更新、または CSS 変数にリファクタ
 ```
 
-**Tips:**
+**ヒント:**
 - アーカイブ前に実行してズレを早期発見する
 - 警告はアーカイブを止めないが、問題のサイン
 - AI 作業のレビューに向く
@@ -432,7 +432,7 @@ AI:  add-dark-mode の仕様差分を同期中...
 | マージ結果を別途レビューしたい | はい |
 | すぐアーカイブする予定 | いいえ（アーカイブが処理する） |
 
-**Tips:**
+**ヒント:**
 - ただのコピーではなく、差分を賢く統合する
 - 既存要件へのシナリオ追加にも対応
 - 同期後も変更はアクティブのまま
@@ -484,7 +484,7 @@ AI:  ✓ 仕様を openspec/specs/ui/spec.md に同期しました
      変更のアーカイブが完了しました。
 ```
 
-**Tips:**
+**ヒント:**
 - 未完了タスクがあってもアーカイブは可能だが警告される
 - 仕様差分の同期はアーカイブ時でも事前でも可
 - アーカイブ済み変更は履歴として保持される
@@ -540,7 +540,7 @@ AI:  ✓ add-dark-mode をアーカイブしました
      仕様マージ順: add-dark-mode → update-footer
 ```
 
-**Tips:**
+**ヒント:**
 - 並行作業の整理に向く
 - 競合解消はエージェントが実装状況を確認して行う
 - 変更は作成日の順でアーカイブされる
@@ -599,7 +599,7 @@ AI:  OpenSpec へようこそ！
      どれに興味がありますか？（別の提案も歓迎です）
 ```
 
-**Tips:**
+**ヒント:**
 - 初学者がワークフローを学ぶのに最適
 - トイ例ではなく実コードで進める
 - 作った変更は残しても捨ててもよい
@@ -621,7 +621,7 @@ AI ツールによってコマンド記法が少し異なります。各ツー�
 
 記法や見え方はツールごとに異なっても、意図するワークフローは同じです。
 
-> **Note:** GitHub Copilot のコマンド（`.github/prompts/*.prompt.md`）は IDE 拡張機能（VS Code, JetBrains, Visual Studio）でのみ利用できます。GitHub Copilot CLI は現在カスタム prompt ファイルを直接サポートしていません。詳細と回避策は [Supported Tools](supported-tools.md) を参照してください。
+> **注:** GitHub Copilot のコマンド（`.github/prompts/*.prompt.md`）は IDE 拡張機能（VS Code, JetBrains, Visual Studio）でのみ利用できます。GitHub Copilot CLI は現在、カスタムプロンプトファイルを直接サポートしていません。詳細と回避策は [対応ツール](supported-tools.md) を参照してください。
 
 ---
 
@@ -698,6 +698,6 @@ AI が不完全または不正確なアーティファクトを作成します�
 
 ## 次に読むもの
 
-- [Workflows](workflows.md) - 代表的なフローと使い分け
+- [ワークフロー](workflows.md) - 代表的なフローと使い分け
 - [CLI](cli.md) - 管理と検証のターミナルコマンド
-- [Customization](customization.md) - カスタムスキーマとワークフロー
+- [カスタマイズ](customization.md) - カスタムスキーマとワークフロー

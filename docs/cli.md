@@ -1,6 +1,6 @@
 # CLI リファレンス
 
-OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検証、ステータス確認、管理のためのターミナルコマンドを提供します。これらのコマンドは、[Commands](commands.md) に記載された `/opsx:propose` などの AI スラッシュコマンドを補完します。
+OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検証、ステータス確認、管理のためのターミナルコマンドを提供します。これらのコマンドは、[コマンド](commands.md) に記載された `/opsx:propose` などの AI スラッシュコマンドを補完します。
 
 ## 概要
 
@@ -131,7 +131,7 @@ openspec/
 
 ### `openspec update`
 
-CLI を更新した後に指示ファイルを更新します。現在のグローバルプロファイル、選択済みワークフロー、delivery 設定に基づいて AI ツールの設定ファイルを再生成します。
+CLI を更新した後に指示ファイルを更新します。現在のグローバルプロファイル、選択済みワークフロー、`delivery` 設定に基づいて AI ツールの設定ファイルを再生成します。
 
 ```
 openspec update [path] [options]
@@ -807,7 +807,7 @@ openspec config edit
 # ウィザードでプロファイルを設定
 openspec config profile
 
-# すばやく core へ切り替え（delivery は維持）
+# すばやく core へ切り替え（`delivery` は維持）
 openspec config profile core
 ```
 
@@ -818,9 +818,9 @@ openspec config profile core
 - 現在の設定を維持（終了）
 
 現在の設定を維持した場合、変更は書き込まれず更新プロンプトも表示されません。
-設定変更はないがプロジェクトファイルがグローバルプロファイル/デリバリーと同期していない場合、OpenSpec は警告を表示し `openspec update` の実行を提案します。
-`Ctrl+C` を押してもフローをクリーンにキャンセルでき（スタックトレースなし）、コード `130` で終了します。
-ワークフローチェックリストで `[x]` はグローバル設定でワークフローが選択済みであることを意味します。プロジェクトファイルに反映するには `openspec update` を実行してください（プロジェクト内でプロンプトが表示された場合は `Apply changes to this project now?` を選択）。
+設定変更はないがプロジェクトファイルがグローバルプロファイルや `delivery` 設定と同期していない場合、OpenSpec は警告を表示し `openspec update` の実行を提案します。
+`Ctrl+C` を押しても処理をきれいにキャンセルでき（スタックトレースなし）、コード `130` で終了します。
+ワークフローチェックリストで `[x]` はグローバル設定でワークフローが選択済みであることを意味します。プロジェクトファイルに反映するには `openspec update` を実行してください。プロジェクト内で確認プロンプトが表示された場合は、変更の適用を選択します。
 
 **対話例:**
 
@@ -828,7 +828,7 @@ openspec config profile core
 # デリバリーのみ更新
 openspec config profile
 # 選択: デリバリーのみ変更
-# デリバリーを選択: Skills only
+# デリバリーを選択: Skills のみ
 
 # ワークフローのみ更新
 openspec config profile
@@ -866,7 +866,7 @@ openspec feedback <message> [options]
 
 ```bash
 openspec feedback "Add support for custom artifact types" \
-  --body "I'd like to define my own artifact types beyond the built-in ones."
+  --body "組み込み以外の独自アーティファクト型を定義できるようにしたいです。"
 ```
 
 ---
@@ -930,7 +930,7 @@ openspec completion uninstall
 
 ## 関連ドキュメント
 
-- [Commands](commands.md) - AI スラッシュコマンド（`/opsx:propose`, `/opsx:apply` など）
-- [Workflows](workflows.md) - 代表的なフローと使い分け
-- [Customization](customization.md) - カスタムスキーマとテンプレート
-- [Getting Started](getting-started.md) - 初回セットアップガイド
+- [コマンド](commands.md) - AI スラッシュコマンド（`/opsx:propose`, `/opsx:apply` など）
+- [ワークフロー](workflows.md) - 代表的なフローと使い分け
+- [カスタマイズ](customization.md) - カスタムスキーマとテンプレート
+- [はじめに](getting-started.md) - 初回セットアップガイド

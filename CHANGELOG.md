@@ -1,11 +1,11 @@
 # @ayumuwall/openspec 変更履歴
 
-OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
+OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
 ## 1.3.1
 
-- **[OpenSpec-J]** v1.3.1 追従のため、artifact path の canonical 解決、glob artifact output の apply 指示、メイン仕様内の隠れた要件検出、`--json` 時の spinner 抑止、telemetry のネットワークエラー抑止に関する変更を取り込み
-- **[OpenSpec-J]** README / CLI リファレンス / workflow テンプレート / parser・validation メッセージの v1.3.1 追加文言を日本語化
+- **[OpenSpec-J]** v1.3.1 追従のため、アーティファクトパスの正規化、glob を使った生成先の解決、メイン仕様内で見落とされる要件の検出、`--json` 指定時の進捗表示抑止、テレメトリ送信失敗時のエラー抑止に関する変更を取り込み
+- **[OpenSpec-J]** README / CLI リファレンス / ワークフローテンプレート / パーサー・検証メッセージの v1.3.1 追加文言を日本語化
 - **[OpenSpec-J]** 翻訳棚卸しとして、`archive` / `bulk-archive` / `onboard` / `verify` ワークフローテンプレートに残っていた英語の出力例を日本語化
 - **[OpenSpec-J]** `skill-templates-parity` のハッシュを再計算し、テンプレート更新後の期待値へ更新
 - **[OpenSpec-J]** `pnpm build` と `pnpm test` を実施し、`69 files / 1402 tests` の全テスト成功を確認
@@ -14,89 +14,89 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 - [#995](https://github.com/Fission-AI/OpenSpec/pull/995) [`d1f3861`](https://github.com/Fission-AI/OpenSpec/commit/d1f3861d9ec694cc924b042b5da01963dcf93137) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
 
-  - **artifact path の canonical 解決** — Workflow artifact path をネイティブの `realpath` で解決するようになり、symlink や大文字小文字を区別しないファイルシステムで apply / archive 時に path mismatch が発生しにくくなりました。
-  - **glob apply instructions** — glob artifact output を持つ apply instructions が正しく解決され、literal artifact output は file path として扱われることが保証されます。
-  - **メイン仕様内の隠れた要件** — fenced code block 内など、メイン仕様内で隠れていた要件を検証時に検出できるようになりました。
-  - **クリーンな `--json` 出力** — `--json` 指定時に spinner の進捗テキストが stderr へ漏れなくなり、stdout と stderr をまとめて扱う AI agent でも JSON を安定して解析できます。
-  - **firewall 環境での silent telemetry** — PostHog のネットワークエラーは 1 秒 timeout、retry / remote config 無効化、例外握りつぶしで処理されるようになり、制限されたネットワークで `PostHogFetchNetworkError` が表面化しなくなりました。Telemetry opt-out は README、installation guide、CLI reference の早い位置に記載されます。
+  - **アーティファクトパスの正規化** — ワークフローで扱うアーティファクトのパスを `realpath` で実体解決するようになりました。シンボリックリンクや、大文字小文字を区別しないファイルシステムでも、apply / archive 時にパス不一致が起きにくくなります。
+  - **glob を使った生成先の解決** — glob パターンを含むアーティファクト生成先を、適用指示の中で実在するファイルパスの一覧として解決できるようになりました。glob を使わない生成先は、ファイルパスとして存在することを確認します。
+  - **メイン仕様内で見落とされる要件の検出** — コードブロック内の例や、`## Requirements` セクション外に置かれた要件など、検証・一覧表示・アーカイブ処理から見えなくなる要件を検出できるようになりました。
+  - **`--json` 出力の安定化** — `--json` 指定時は進捗表示を出さないようになりました。標準出力と標準エラーをまとめて読む AI エージェントでも、JSON を安定して解析できます。
+  - **制限されたネットワーク環境でのテレメトリ抑止** — PostHog への送信が失敗しても CLI の実行を妨げないよう、1 秒でタイムアウトし、再試行とリモート設定取得を無効化しました。`PostHogFetchNetworkError` が利用者に表示されにくくなります。テレメトリのオプトアウト方法は README、インストールガイド、CLI リファレンスの目立つ位置に記載されます。
 
 ## 1.3.0-2
 
-- **[OpenSpec-J]** v1.3.0 追従で漏れていた upstream 書式変更を反映（`explore.ts` の ASCII 図・表パディング、`onboard.ts` のコマンド表カラム幅、`docs/workflows.md` の「（拡張モード）」見出しと `/opsx:propose` 行追加）
-- **[OpenSpec-J]** v1.2.0 以前から残っていた英語メッセージを日本語化（`init.ts` の `Invalid profile` / `OpenSpec configured` / `Detected tool directories` / `Removed: ...`、`migration.ts` の移行完了ログ、`config.ts` のグローバル設定警告、`powershell-installer.ts` の各種 `Warning:` 文言）
-- **[OpenSpec-J]** `skill-templates-parity` のハッシュを再計算、`config-profile` / `init` テストの期待値を日本語文言に更新
+- **[OpenSpec-J]** v1.3.0 追従時に反映漏れがあった本家側の書式変更を取り込み（`explore.ts` の ASCII 図と表の余白調整、`onboard.ts` のコマンド表の列幅調整、`docs/workflows.md` の「（拡張モード）」見出しと `/opsx:propose` 行の追加）
+- **[OpenSpec-J]** v1.2.0 以前から残っていた英語メッセージを日本語化（`init.ts` の `Invalid profile` / `OpenSpec configured` / `Detected tool directories` / `Removed: ...`、`migration.ts` の移行完了ログ、`config.ts` のグローバル設定警告、`powershell-installer.ts` の各種警告文）
+- **[OpenSpec-J]** `skill-templates-parity` のハッシュを再計算し、`config profile` と `init` のテスト期待値を日本語文言に更新
 - **[OpenSpec-J]** `OPENSPEC_TELEMETRY=0 pnpm test` を実施し、`68 files / 1365 tests` の全テスト成功を確認
 
 
 ## 1.3.0-1
 
-- **[OpenSpec-J]** v1.3.0 に `config` / `onboard` 周辺の日本語化漏れがありました。ご不便をおかけして申し訳ありません。
-- **[OpenSpec-J]** `openspec config` の一覧表示と `config profile` 対話 UI に残っていた英語文言を日本語化
-- **[OpenSpec-J]** `onboard` テンプレートのコマンド表と終了案内に残っていた英語文言を日本語化
+- **[OpenSpec-J]** v1.3.0 に `config` / `onboard` 関連の日本語化漏れがありました。ご不便をおかけして申し訳ありません。
+- **[OpenSpec-J]** `openspec config` の一覧表示と `config profile` の対話画面に残っていた英語文言を日本語化
+- **[OpenSpec-J]** `onboard` テンプレートのコマンド表と完了時の案内に残っていた英語文言を日本語化
 - **[OpenSpec-J]** テスト並列実行時の衝突を避けるため、一部テストの一時ディレクトリをユニーク化
 - **[OpenSpec-J]** `OPENSPEC_TELEMETRY=0 pnpm test` を実施し、`68 files / 1365 tests` の全テスト成功を確認
 
 ## 1.3.0
 
-- **[OpenSpec-J]** v1.3.0 追従のため、README / CLI / OPSX ドキュメントの既定フローを `/opsx:propose` 中心へ更新
-- **[OpenSpec-J]** Bob / Junie / Lingma / ForgeCode の追加に合わせてツール一覧・初期化ヘルプ・コマンド生成まわりの日本語化を反映
-- **[OpenSpec-J]** `OpenCode` のコマンド出力先変更（`.opencode/command/` → `.opencode/commands/`）を追従し、説明文と生成先を更新
-- **[OpenSpec-J]** `pi` のコマンド参照変換、GitHub Copilot 自動検出改善、補完インストールの opt-in 化に追従
-- **[OpenSpec-J]** `bulk-archive` / `onboard` テンプレート更新に伴い `skill-templates-parity` のハッシュを再計算
+- **[OpenSpec-J]** v1.3.0 追従のため、README / CLI / OPSX ドキュメントで案内する基本的な進め方を `/opsx:propose` 中心に更新
+- **[OpenSpec-J]** Bob / Junie / Lingma / ForgeCode の追加に合わせて、ツール一覧・初期化ヘルプ・コマンド生成関連の文言を日本語化
+- **[OpenSpec-J]** `OpenCode` のコマンド出力先変更（`.opencode/command/` → `.opencode/commands/`）に追従し、説明文と生成先を更新
+- **[OpenSpec-J]** `pi` 向けのコマンド参照変換、GitHub Copilot の自動検出改善、シェル補完を明示的に実行した場合だけインストールする方式への変更に追従
+- **[OpenSpec-J]** `bulk-archive` / `onboard` テンプレートの更新に合わせて `skill-templates-parity` のハッシュを再計算
 
 ### マイナー変更
 
 - [#952](https://github.com/Fission-AI/OpenSpec/pull/952) [`cce787e`](https://github.com/Fission-AI/OpenSpec/commit/cce787ec4083da2b27781f6786f5ce0002909a7b) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 新機能
 
-  - **Junie 対応** — JetBrains Junie 向けのツール/コマンド生成を追加
-  - **Lingma IDE 対応** — Lingma IDE 向け設定を追加
+  - **Junie 対応** — JetBrains Junie 向けの設定ファイルとコマンド生成を追加
+  - **Lingma IDE 対応** — Lingma IDE 向けの設定を追加
   - **ForgeCode 対応** — ForgeCode をサポート対象ツールに追加
   - **IBM Bob 対応** — IBM Bob コーディングアシスタントをサポート対象に追加
 
   ### バグ修正
 
-  - **シェル補完の opt-in 化** — 補完インストールを明示的実行のみに変更し、PowerShell のエンコード破損を修正
-  - **Copilot 自動検出** — 空の `.github/` ディレクトリだけで GitHub Copilot を誤検出しないよう修正
-  - **pi.dev のコマンド生成** — コマンド参照変換とテンプレート引数の受け渡しを修正
+  - **シェル補完のインストール方式変更** — 補完は明示的に実行した場合だけインストールするよう変更し、PowerShell で文字化けする問題を修正
+  - **GitHub Copilot の自動検出** — 空の `.github/` ディレクトリだけで GitHub Copilot を誤検出しないよう修正
+  - **pi.dev 向けコマンド生成** — コマンド参照の変換とテンプレート引数の受け渡しを修正
 
 ### パッチ変更
 
-- [#760](https://github.com/Fission-AI/OpenSpec/pull/760) [`61eb999`](https://github.com/Fission-AI/OpenSpec/commit/61eb999f7c6c0fc98d2e7f3678756fce6a3f4378) [@fsilvaortiz](https://github.com/fsilvaortiz) ありがとう！ - **OpenCode アダプター** が公式ディレクトリ規約に合わせて `.opencode/commands/`（複数形）を使うよう修正 (#748)
+- [#760](https://github.com/Fission-AI/OpenSpec/pull/760) [`61eb999`](https://github.com/Fission-AI/OpenSpec/commit/61eb999f7c6c0fc98d2e7f3678756fce6a3f4378) [@fsilvaortiz](https://github.com/fsilvaortiz) ありがとう！ - **OpenCode 連携** が公式ディレクトリ規約に合わせて `.opencode/commands/`（複数形）を使うよう修正 (#748)
 
-- [#759](https://github.com/Fission-AI/OpenSpec/pull/759) [`afdca0d`](https://github.com/Fission-AI/OpenSpec/commit/afdca0d5dab1aa109cfd8848b2512333ccad60c3) [@fsilvaortiz](https://github.com/fsilvaortiz) ありがとう！ - `openspec status` が変更ゼロ件のとき致命エラーではなく正常に終了するよう修正 (#714)
+- [#759](https://github.com/Fission-AI/OpenSpec/pull/759) [`afdca0d`](https://github.com/Fission-AI/OpenSpec/commit/afdca0d5dab1aa109cfd8848b2512333ccad60c3) [@fsilvaortiz](https://github.com/fsilvaortiz) ありがとう！ - `openspec status` が変更ゼロ件のとき、エラー終了せず正常に終了するよう修正 (#714)
 
 ## 1.2.0
 
-- **[OpenSpec-J]** v1.2.0 追従のため、全スキルテンプレート（propose 含む）・docs・CLI メッセージを日本語化
+- **[OpenSpec-J]** v1.2.0 追従のため、全スキルテンプレート（`propose` を含む）・ドキュメント・CLI メッセージを日本語化
 - **[OpenSpec-J]** README の同期元バージョンを更新
-- **[OpenSpec-J]** `skill-templates.ts` が `workflows/` 配下に分割されたため、各ファイルへ日本語訳を移植（propose は新規翻訳）
+- **[OpenSpec-J]** `skill-templates.ts` が `workflows/` 配下へ分割されたため、日本語訳を各ファイルへ移植（`propose` は新規翻訳）
 - **[OpenSpec-J]** `SKILL_NAMES` / `COMMAND_IDS` に `openspec-propose` を追加（文字列置換ではなくコード変更）
-- **[OpenSpec-J]** `searchable-multi-select` のキーバインド変更（Tab→Enter/Space）に伴いヒント文・テスト期待値を更新
-- **[OpenSpec-J]** `skill-templates-parity` テストのハッシュ検証化に対応し、日本語化後のハッシュ値を再計算・更新
+- **[OpenSpec-J]** `searchable-multi-select` のキー操作変更（Tab → Enter / Space）に合わせて、ヒント文とテスト期待値を更新
+- **[OpenSpec-J]** `skill-templates-parity` テストでハッシュを検証するようになったため、日本語化後のハッシュ値を再計算して更新
 
 ### マイナー変更
 
 - [#747](https://github.com/Fission-AI/OpenSpec/pull/747) [`1e94443`](https://github.com/Fission-AI/OpenSpec/commit/1e94443a3551b228eecbc89e95d96d3b9600a192) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 新機能
 
-  - **プロファイルシステム** — `core`（4つの基本ワークフロー）または `custom`（任意のサブセットを選択）プロファイルからインストールするスキルを制御。新しい `openspec config profile` コマンドでプロファイルを管理
-  - **Propose ワークフロー** — 一度のリクエストで設計・仕様・タスクを含む完全な変更提案を作成する新しいワンステップワークフロー。`new` + `ff` を別々に実行する必要がなくなりました
-  - **AI ツール自動検出** — `openspec init` がプロジェクト内の既存ツールディレクトリ（`.claude/`、`.cursor/` 等）をスキャンし、検出されたツールを事前選択
-  - **Pi (pi.dev) 対応** — Pi コーディングエージェントがプロンプトとスキル生成に対応したサポート済みツールに追加
-  - **Kiro 対応** — AWS Kiro IDE がプロンプトとスキル生成に対応したサポート済みツールに追加
-  - **同期時に非選択ワークフローを削除** — `openspec update` が非選択ワークフローのコマンドファイルとスキルディレクトリを削除し、プロジェクトをクリーンに保つようになりました
-  - **設定ドリフト警告** — `openspec config list` がグローバル設定と現在のプロジェクトの同期がずれている場合に警告を表示
+  - **プロファイル機能** — `core`（4つの基本ワークフロー）または `custom`（任意の組み合わせを選択）プロファイルで、インストールするスキルを制御できます。新しい `openspec config profile` コマンドでプロファイルを管理します。
+  - **`propose` ワークフロー** — 設計・仕様・タスクを含む変更提案を、1回のリクエストでまとめて作成できるようになりました。`new` と `ff` を別々に実行する必要がなくなります。
+  - **AI ツール自動検出** — `openspec init` がプロジェクト内の既存ツールディレクトリ（`.claude/`、`.cursor/` など）をスキャンし、検出したツールをあらかじめ選択します。
+  - **Pi (pi.dev) 対応** — Pi コーディングエージェントを、プロンプトとスキル生成に対応したサポート対象ツールへ追加
+  - **Kiro 対応** — AWS Kiro IDE を、プロンプトとスキル生成に対応したサポート対象ツールへ追加
+  - **同期時に非選択ワークフローを削除** — `openspec update` が選択されていないワークフローのコマンドファイルとスキルディレクトリを削除し、プロジェクト内に不要な生成物が残りにくくなりました
+  - **設定のずれを警告** — `openspec config list` が、グローバル設定と現在のプロジェクト設定にずれがある場合に警告を表示
 
   ### バグ修正
 
-  - 新しく初期化したプロジェクトで onboard プリフライトが「初期化されていません」という誤ったエラーを表示する問題を修正
-  - archive ワークフローが同期中に途中で停止する問題を修正（同期完了後に正しく再開するよう改善）
-  - onboard シェルコマンドに Windows PowerShell の代替手順を追加
+  - 新しく初期化したプロジェクトで `onboard` の事前確認が「初期化されていません」という誤ったエラーを表示する問題を修正
+  - `archive` ワークフローが同期中に途中で停止する問題を修正（同期完了後に正しく再開するよう改善）
+  - `onboard` のシェルコマンドに Windows PowerShell 向けの代替手順を追加
 
 ## 1.1.1
 
-- **[OpenSpec-J]** v1.1.1 追従のため、OpenCode コマンド参照の変換・update/init の日本語コメント/リンクを反映
+- **[OpenSpec-J]** v1.1.1 追従のため、OpenCode 向けコマンド参照の変換と、`update` / `init` の日本語コメント・リンクを反映
 - **[OpenSpec-J]** README の同期元バージョンを更新
-- **[OpenSpec-J]** 過去の revert により、本家に含まれる Nix flake の改善（package.json 参照の動的バージョン、fileset ベースの src 範囲、update-flake.sh の運用改善）が未反映だったため修正しました。ご迷惑をおかけし申し訳ありません。
+- **[OpenSpec-J]** 過去の取り消しにより、本家に含まれる Nix flake の改善（`package.json` を参照した動的バージョン指定、fileset に基づく `src` 対象範囲、`update-flake.sh` の運用改善）が未反映だったため修正しました。ご迷惑をおかけし申し訳ありません。
 
 ### パッチ変更
 
@@ -106,42 +106,42 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 ## 1.1.0
 
-- **[OpenSpec-J]** v1.1.0 追従のため、OPSX ドキュメント/ツール一覧/テンプレート/コマンド生成の文言を日本語化し、Codex/Windsurf の新パス仕様に合わせて説明を更新
+- **[OpenSpec-J]** v1.1.0 追従のため、OPSX ドキュメント・ツール一覧・テンプレート・コマンド生成の文言を日本語化し、Codex / Windsurf の新しいパス仕様に合わせて説明を更新
 - **[OpenSpec-J]** README の同期元バージョンを更新
 
 ### マイナー変更
 
 - [#625](https://github.com/Fission-AI/OpenSpec/pull/625) [`53081fb`](https://github.com/Fission-AI/OpenSpec/commit/53081fb2a26ec66d2950ae0474b9a56cbc5b5a76) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
 
-  - **Codex のグローバルパス対応** — Codex アダプターがグローバルパスを正しく解決し、プロジェクト外から実行した際のワークフローファイル生成の不具合を修正 (#622)
-  - **クロスデバイス/制限パスでのアーカイブ** — rename が EPERM/EXDEV の場合に copy+remove にフォールバックし、ネットワーク/外部ドライブでの失敗を修正 (#605)
-  - **ワークフロー完了メッセージのスラッシュコマンド案内** — 次のステップのヒントを表示 (#603)
-  - **Windsurf ワークフローファイルパス** — `commands` ではなく `workflows` を使うよう修正 (#610)
+  - **Codex のグローバルパス対応** — Codex 連携がグローバルパスを正しく解決し、プロジェクト外から実行した際にワークフローファイル生成が失敗する問題を修正 (#622)
+  - **別デバイス間または制限付きパスでのアーカイブ** — `rename` が `EPERM` / `EXDEV` で失敗した場合は `copy` + `remove` にフォールバックし、ネットワークドライブや外部ドライブでの失敗を修正 (#605)
+  - **ワークフロー完了メッセージの改善** — 次に実行できるスラッシュコマンドのヒントを表示 (#603)
+  - **Windsurf のワークフローファイルパス** — `commands` ではなく `workflows` を使うよう修正 (#610)
 
 ### パッチ変更
 
 - [#550](https://github.com/Fission-AI/OpenSpec/pull/550) [`86d2e04`](https://github.com/Fission-AI/OpenSpec/commit/86d2e04cae76a999dbd1b4571f52fa720036be0c) [@jerome-benoit](https://github.com/jerome-benoit) ありがとう！ - ### 改善
 
-  - **Nix flake メンテナンス** — package.json から動的にバージョンを読み取り、同期作業を軽減
-  - **Nix ビルド最適化** — node_modules とアーティファクトを除外し、ビルド時間を短縮
-  - **update-flake.sh スクリプト** — ハッシュが既に正しい場合は再ビルドをスキップ
+  - **Nix flake の保守性向上** — `package.json` から動的にバージョンを読み取り、同期作業を軽減
+  - **Nix ビルドの最適化** — `node_modules` とアーティファクトを除外し、ビルド時間を短縮
+  - **`update-flake.sh` の改善** — ハッシュが既に正しい場合は再ビルドをスキップ
 
   ### その他
 
-  - Nix CI アクションを最新版へ更新（nix-installer v21、magic-nix-cache v13）
+  - Nix CI 用アクションを最新版へ更新（nix-installer v21、magic-nix-cache v13）
 
 ## 1.0.2
 
 - **[OpenSpec-J]** v1.0.2 の OPSX 体験を日本語で追えるようにするため、ドキュメント・CLI メッセージとテンプレートを日本語化（会話例・コードブロック含む）
 - **[OpenSpec-J]** README に Codex 利用時の注釈（`openspec init` が生成するプロンプトファイルの扱い）を追記
-- **[OpenSpec-J]** 新規オンボーディングスキル追加に伴う構造更新（**文字列翻訳だけでは新規スキルが検出・生成されず機能差が出るため**、`skill-templates` と `tool-detection` を整合し `openspec-onboard` の生成数を upstream と一致させた）
+- **[OpenSpec-J]** 新規オンボーディングスキルの追加に伴い構造を更新（**文字列翻訳だけでは新規スキルが検出・生成されず機能差が出るため**、`skill-templates` と `tool-detection` を整合し、`openspec-onboard` の生成数を本家と一致させた）
 
 ### パッチ変更
 
 - [#596](https://github.com/Fission-AI/OpenSpec/pull/596) [`e91568d`](https://github.com/Fission-AI/OpenSpec/commit/e91568deb948073f3e9d9bb2d2ab5bf8080d6cf4) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
 
-  - 仕様命名規則を明確化 — Specs は変更名ではなく capability 名（`specs/<capability>/spec.md`）で命名する
-  - タスクのチェックボックス形式の案内を修正 — apply フェーズの追跡には `- [ ]` 形式が必須であることを明確化
+  - 仕様命名規則を明確化 — 仕様は変更名ではなく機能名（`specs/<capability>/spec.md`）で命名する
+  - タスクのチェックボックス形式の案内を修正 — apply フェーズの進捗管理には `- [ ]` 形式が必須であることを明確化
 
 ## 1.0.1
 
@@ -149,7 +149,7 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 - [#587](https://github.com/Fission-AI/OpenSpec/pull/587) [`943e0d4`](https://github.com/Fission-AI/OpenSpec/commit/943e0d41026d034de66b9442d1276c01b293eb2b) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
 
-  - オンボーディングドキュメントのアーカイブパス誤りを修正 — テンプレートを正しい `openspec/changes/archive/YYYY-MM-DD-<name>/` に変更（誤: `openspec/archive/YYYY-MM-DD--<name>/`）
+  - オンボーディングドキュメントのアーカイブパス誤りを修正 — テンプレートを正しい `openspec/changes/archive/YYYY-MM-DD-<name>/` に変更（誤り: `openspec/archive/YYYY-MM-DD--<name>/`）
 
 ## 1.0.0
 
@@ -157,31 +157,31 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
 - [#578](https://github.com/Fission-AI/OpenSpec/pull/578) [`0cc9d90`](https://github.com/Fission-AI/OpenSpec/commit/0cc9d9025af367faa1688a7b2606a2549053cd3f) [@TabishB](https://github.com/TabishB) ありがとう！ - ## OpenSpec 1.0 — OPSX リリース
 
-  ワークフローをゼロから再構築しました。OPSX は旧来のフェーズ固定 `/openspec:*` コマンドを、AI がアーティファクトの存在や作成可能状態、各アクションで何が解放されるかを理解するアクションベースの仕組みに置き換えました。
+  ワークフローをゼロから再構築しました。OPSX では、旧来のフェーズ固定型 `/openspec:*` コマンドを、AI がアーティファクトの有無・作成できる状態かどうか・各アクションで次に何が可能になるかを理解できる、アクション単位の仕組みに置き換えました。
 
   ### 破壊的変更
 
   - **旧コマンドの削除** — `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` は廃止
-  - **設定ファイルの削除** — ツール固有の指示ファイル（`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, `project.md`）は生成されなくなった
-  - **移行** — `openspec init` を実行して移行。旧アーティファクトは検出され、確認のうえでクリーンアップされる
+  - **設定ファイルの削除** — ツール固有の指示ファイル（`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, `project.md`）は生成されなくなりました
+  - **移行** — `openspec init` を実行して移行します。旧アーティファクトは検出され、確認のうえで整理されます
 
   ### 静的プロンプトから動的指示へ
 
-  **Before:** プロジェクト状態に関係なく、AI は毎回同じ静的指示を受け取っていた。
+  **以前:** プロジェクト状態に関係なく、AI は毎回同じ静的指示を受け取っていました。
 
-  **Now:** 指示は 3 層から動的に組み立てられる。
+  **現在:** 指示は 3 層から動的に組み立てられます。
 
-  1. **Context** — `config.yaml` からのプロジェクト背景（技術スタック、規約）
-  2. **Rules** — アーティファクト固有の制約（例:「未知にはスパイクタスクを提案する」）
-  3. **Template** — 出力ファイルの実際の構造
+  1. **コンテキスト** — `config.yaml` から読み取るプロジェクト背景（技術スタック、規約）
+  2. **ルール** — アーティファクト固有の制約（例:「未知の部分には調査タスクを提案する」）
+  3. **テンプレート** — 出力ファイルの実際の構造
 
-  AI は CLI にリアルタイム状態を問い合わせ、存在するアーティファクト、作成可能なもの、満たされた依存関係、各アクションが解放する内容を把握する。
+  AI は CLI に現在の状態を問い合わせ、存在するアーティファクト、作成可能なアーティファクト、満たされた依存関係、各アクションによって次に可能になる作業を把握します。
 
-  ### フェーズ固定からアクションベースへ
+  ### フェーズ固定からアクション単位へ
 
-  **Before:** proposal → apply → archive の直線ワークフローで、戻ったり反復したりが難しかった。
+  **以前:** proposal → apply → archive の直線的なワークフローで、前の工程へ戻ったり反復したりするのが難しい構造でした。
 
-  **Now:** 変更に対して柔軟にアクションできる。どのアーティファクトもいつでも編集可能で、状態はアーティファクトグラフが自動追跡する。
+  **現在:** 変更に対して柔軟にアクションできます。どのアーティファクトもいつでも編集でき、状態はアーティファクトグラフが自動で追跡します。
 
   | コマンド             | 内容                                                 |
   | -------------------- | ---------------------------------------------------- |
@@ -198,22 +198,22 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
   ### 文字列マージから意味的な仕様同期へ
 
-  **Before:** 仕様更新は手動マージかファイル丸ごとの置き換えが必要だった。
+  **以前:** 仕様更新には、手動マージまたはファイル全体の置き換えが必要でした。
 
-  **Now:** 差分仕様は AI が理解できる意味的マーカーを使う。
+  **現在:** 差分仕様は、AI が理解できる意味的なマーカーを使います。
 
   - `## ADDED Requirements` — 追加する要件
   - `## MODIFIED Requirements` — 既存要件の部分更新（既存内容を残したままシナリオ追加など）
   - `## REMOVED Requirements` — 理由と移行メモ付きで削除
   - `## RENAMED Requirements` — 内容を保持したまま名称変更
 
-  アーカイブ時は要件単位で解析し、脆い見出し一致に依存しない。
+  アーカイブ時は要件単位で解析するため、壊れやすい見出し一致に依存しません。
 
-  ### 散在ファイルから Agent Skills へ
+  ### 散在ファイルから Agent Skills 形式へ
 
-  **Before:** プロジェクトルートに 8+ の設定ファイルがあり、スラッシュコマンドは 21 のツール固有場所に異なる形式で散在していた。
+  **以前:** プロジェクトルートに 8 個以上の設定ファイルがあり、スラッシュコマンドも 21 種類のツール固有の場所に異なる形式で散在していました。
 
-  **Now:** `.claude/skills/` に YAML フロント付き Markdown を集約。Claude Code / Cursor / Windsurf が自動検出し、エディタ横断で互換。
+  **現在:** YAML フロントマター付き Markdown を `.claude/skills/` に集約します。Claude Code / Cursor / Windsurf が自動検出でき、エディタをまたいで互換性を保てます。
 
   ### 新機能
 
@@ -221,19 +221,19 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 
   - **21 の AI ツールに対応** — Claude Code, Cursor, Windsurf, Continue, Gemini CLI, GitHub Copilot, Amazon Q, Cline, RooCode, Kilo Code, Auggie, CodeBuddy, Qoder, Qwen, CoStrict, Crush, Factory, OpenCode, Antigravity, iFlow, Codex
 
-  - **対話式セットアップ** — `openspec init` でアニメーション付きウェルカム画面と検索可能な複数選択を表示。既存設定済みツールは事前選択され、再生成が容易。
+  - **対話式セットアップ** — `openspec init` でアニメーション付きウェルカム画面と検索可能な複数選択を表示。既に設定済みのツールはあらかじめ選択されるため、再生成しやすくなります。
 
-  - **カスタマイズ可能なスキーマ** — `openspec/schemas/` に独自ワークフローを定義でき、パッケージコードに触れずに運用可能。チームでバージョン管理共有できる。
+  - **カスタマイズ可能なスキーマ** — `openspec/schemas/` に独自ワークフローを定義でき、パッケージコードに触れずに運用できます。チーム内でバージョン管理しながら共有できます。
 
   ### バグ修正
 
-  - コマンド名にコロンが含まれる場合の Claude Code YAML パース失敗を修正
+  - コマンド名にコロンが含まれる場合の Claude Code の YAML 解析失敗を修正
   - タスクファイル解析でチェックボックス行の末尾空白を許容するよう修正
-  - JSON 指示出力で context/rules と template を分離するよう修正 — AI が制約ブロックをアーティファクトに写してしまう問題を解消
+  - JSON 指示出力でコンテキスト・ルールとテンプレートを分離するよう修正 — AI が制約ブロックをアーティファクトに写してしまう問題を解消
 
   ### ドキュメント
 
-  - Getting Started ガイド、CLI リファレンス、コンセプト解説を追加
+  - はじめに読むガイド、CLI リファレンス、概念解説を追加
   - 未実装だった「途中で編集して続行できる」といった誤解を招く記述を削除
   - OPSX 以前のバージョンからの移行ガイドを追加
 

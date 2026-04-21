@@ -32,19 +32,19 @@ bun add -g @ayumuwall/openspec@latest
 
 ## Nix
 
-インストールせずに直接実行:
+インストールせずに直接実行します:
 
 ```bash
 nix run github:ayumuwall/OpenSpec-J -- init
 ```
 
-プロファイルにインストール:
+プロファイルにインストールします:
 
 ```bash
 nix profile install github:ayumuwall/OpenSpec-J
 ```
 
-`flake.nix` に開発環境として追加:
+`flake.nix` に開発環境として追加します:
 
 ```nix
 {
@@ -76,4 +76,4 @@ cd your-project
 openspec init
 ```
 
-詳細は [Getting Started](getting-started.md) を参照してください。
+詳細は [はじめに](getting-started.md) を参照してください。

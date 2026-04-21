@@ -74,7 +74,7 @@ context: |
   Alle Artefakte müssen auf Deutsch verfasst werden.
 ```
 
-## Tips
+## ヒント
 
 ### 技術用語の扱い
 
@@ -105,10 +105,10 @@ context: |
 
 ## 検証
 
-言語設定が効いているか確認するには:
+言語設定が効いているか確認するには、次のコマンドで生成指示を確認します。
 
 ```bash
-# 指示を確認 - 言語コンテキストが表示されるはず
+# 言語コンテキストが表示されることを確認
 openspec instructions proposal --change my-change
 
 # 出力に言語コンテキストが含まれる
@@ -116,5 +116,5 @@ openspec instructions proposal --change my-change
 
 ## 関連ドキュメント
 
-- [Customization Guide](./customization.md) - プロジェクト設定
-- [Workflows Guide](./workflows.md) - ワークフロー全体
+- [カスタマイズ](./customization.md) - プロジェクト設定
+- [ワークフロー](./workflows.md) - ワークフロー全体

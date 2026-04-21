@@ -1,6 +1,6 @@
 # はじめに
 
-このガイドでは、OpenSpec をインストール・初期化した後の使い方を説明します。インストール手順は [README](../README.md#quick-start) を参照してください。
+このガイドでは、OpenSpec をインストール・初期化した後の使い方を説明します。インストール手順は [README](../README.md#クイックスタート) を参照してください。
 
 ## 仕組み
 
@@ -12,10 +12,10 @@ OpenSpec は、コードを書く前に「何を作るか」を人と AI コー�
 /opsx:propose ──► /opsx:apply ──► /opsx:archive
 ```
 
-**拡張パス（custom ワークフロー選択時）:**
+**拡張パス（`custom` ワークフロー選択時）:**
 
 ```
-/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
+/opsx:new ──► /opsx:ff または /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
 
 既定のグローバルプロファイルは `core` で、`propose`, `explore`, `apply`, `archive` が含まれます。拡張ワークフローを使いたい場合は、`openspec config profile` の後に `openspec update` を実行します。
@@ -60,7 +60,7 @@ openspec/
 **アーティファクトは連鎖する:**
 
 ```
-proposal ──► specs ──► design ──► tasks ──► implement
+proposal ──► specs ──► design ──► tasks ──► 実装
    ▲           ▲          ▲                    │
    └───────────┴──────────┴────────────────────┘
             学びに応じて更新
@@ -68,7 +68,7 @@ proposal ──► specs ──► design ──► tasks ──► implement
 
 実装しながら学んだことに応じて、前のアーティファクトを更新して構いません。
 
-## 仕様差分（Delta Specs）の仕組み
+## 仕様差分の仕組み
 
 仕様差分は OpenSpec の核となる考え方です。現在の仕様に対して「何が変わるか」を明示します。
 
@@ -123,7 +123,7 @@ proposal ──► specs ──► design ──► tasks ──► implement
 ### 1. 変更を開始（既定）
 
 ```text
-You: /opsx:propose add-dark-mode
+あなた: /opsx:propose add-dark-mode
 
 AI:  openspec/changes/add-dark-mode/ を作成しました
      ✓ proposal.md — 目的と変更内容
@@ -246,7 +246,7 @@ openspec view
 
 ## 次に読むもの
 
-- [Workflows](workflows.md) - 代表的なフローと使い分け
-- [Commands](commands.md) - スラッシュコマンドの全リファレンス
-- [Concepts](concepts.md) - 仕様・変更・スキーマの理解
-- [Customization](customization.md) - 自分のワークフローに合わせる
+- [ワークフロー](workflows.md) - 代表的なフローと使い分け
+- [コマンド](commands.md) - スラッシュコマンドの全リファレンス
+- [コンセプト](concepts.md) - 仕様・変更・スキーマの理解
+- [カスタマイズ](customization.md) - 自分のワークフローに合わせる

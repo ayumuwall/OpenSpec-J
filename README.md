@@ -16,11 +16,11 @@
 
 > [!NOTE]
 > このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.3.1 です。**<BR>
-> v1.0.0より、本家版に[Multi-Language](docs/multi-language.md): 多言語サポートが追加され、生成物の言語を変更できるようになりました。**生成物のみ日本語にできれば良い場合、本家版[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)をお使いください。**
+> v1.0.0 以降、本家版にも [Multi-Language](docs/multi-language.md)（多言語サポート）が追加され、生成物の言語を変更できるようになりました。**生成物だけ日本語にできれば十分な場合は、本家版 [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をお使いください。**
 
 <br>
 <details>
-<summary><strong>最も愛される spec フレームワーク。</strong></summary>
+<summary><strong>多くの開発者に使われている仕様フレームワーク。</strong></summary>
 
 [![Stars](https://img.shields.io/github/stars/Fission-AI/OpenSpec?style=flat-square&label=Stars)](https://github.com/Fission-AI/OpenSpec/stargazers)
 [![Downloads](https://img.shields.io/npm/dm/@fission-ai/openspec?style=flat-square&label=Downloads/mo)](https://www.npmjs.com/package/@fission-ai/openspec)
@@ -32,20 +32,20 @@
 私たちの哲学:
 
 ```text
-→ 硬直的ではなく流動的
-→ ウォーターフォールではなく反復的
+→ 硬直的ではなく柔軟
+→ ウォーターフォールではなく反復型
 → 複雑ではなく簡単
 → グリーンフィールドだけでなくブラウンフィールド向け
-→ 個人プロジェクトからエンタープライズまでスケール
+→ 個人プロジェクトからエンタープライズまで対応
 ```
 
 > [!TIP]
-> **新しいワークフローが利用可能！** 新しいアーティファクト主導のワークフローで OpenSpec を再構築しました。
+> **新しいワークフローを利用できます！** OpenSpec をアーティファクト主導のワークフローとして再構築しました。
 >
 > 最短で始めるなら `/opsx:propose "作りたいもの"` を実行してください。→ [詳しくはこちら](docs/opsx.md)
 
 <p align="center">
-  最新情報は <a href="https://x.com/0xTab">@0xTab on X</a> をフォロー · 質問やサポートは <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> へどうぞ。
+  最新情報は X の <a href="https://x.com/0xTab">@0xTab</a> をフォロー · 質問やサポートは <a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> へどうぞ。
 </p>
 
 <!-- TODO: Add GIF demo of /opsx:propose → /opsx:archive workflow -->
@@ -87,7 +87,7 @@ AI:  openspec/changes/archive/2025-01-23-add-dark-mode/ にアーカイブしま
 
 **Node.js 20.19.0 以上が必要です。**
 
-OpenSpec をグローバルインストール:
+OpenSpec をグローバルにインストールします:
 
 ```bash
 npm install -g @ayumuwall/openspec@latest
@@ -105,20 +105,20 @@ AI へ次のように伝えてください: `/opsx:propose <作りたいもの>`
 拡張ワークフロー（`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`）を使いたい場合は、`openspec config profile` で選択し、`openspec update` を実行してください。
 
 > [!NOTE]
-> 対応ツールが不明ですか？ [全リストはこちら](docs/supported-tools.md) — 25+ ツールに対応し、今後も拡大予定です。
+> 利用中のツールが対応しているか確認したい場合は、[対応ツール一覧](docs/supported-tools.md) を参照してください。25 以上のツールに対応しており、今後も拡大予定です。
 >
 > pnpm, yarn, bun, nix でも利用できます。[インストール方法はこちら](docs/installation.md)。
 
 ## ドキュメント
 
-→ **[Getting Started](docs/getting-started.md)**: 最初のステップ<br>
-→ **[Workflows](docs/workflows.md)**: 組み合わせとパターン<br>
-→ **[Commands](docs/commands.md)**: スラッシュコマンドとスキル<br>
-→ **[CLI](docs/cli.md)**: ターミナルリファレンス<br>
-→ **[Supported Tools](docs/supported-tools.md)**: ツール連携とインストールパス<br>
-→ **[Concepts](docs/concepts.md)**: 仕組みの全体像<br>
-→ **[Multi-Language](docs/multi-language.md)**: 多言語サポート<br>
-→ **[Customization](docs/customization.md)**: 自分流にカスタマイズ
+→ **[はじめに](docs/getting-started.md)**: 最初のステップ<br>
+→ **[ワークフロー](docs/workflows.md)**: 組み合わせと進め方<br>
+→ **[コマンド](docs/commands.md)**: スラッシュコマンドとスキル<br>
+→ **[CLI](docs/cli.md)**: ターミナルで使うコマンド<br>
+→ **[対応ツール](docs/supported-tools.md)**: ツール連携とインストール先<br>
+→ **[コンセプト](docs/concepts.md)**: 仕組みの全体像<br>
+→ **[多言語サポート](docs/multi-language.md)**: 生成物の言語設定<br>
+→ **[カスタマイズ](docs/customization.md)**: 自分たちの運用に合わせる
 
 ## なぜ OpenSpec なのか？
 
@@ -126,14 +126,14 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 
 - **作る前に合意** — 人と AI が仕様に合意してからコードを書く
 - **整理された状態を維持** — 変更ごとに proposal/specs/design/tasks をまとめたフォルダを作成
-- **流動的に進める** — 固定フェーズに縛られず、どの成果物もいつでも更新可能
+- **柔軟に進める** — 固定フェーズに縛られず、どの成果物もいつでも更新可能
 - **使っているツールで動く** — 20+ の AI アシスタントにスラッシュコマンドで対応
 
 ### 比較
 
-**vs. [Spec Kit](https://github.com/github/spec-kit)** (GitHub) — 徹底的だが重い。厳密なフェーズゲート、大量の Markdown、Python セットアップが必要です。OpenSpec はより軽量で自由に反復できます。
+**vs. [Spec Kit](https://github.com/github/spec-kit)** (GitHub) — 徹底的ですが重めです。厳密なフェーズ管理、大量の Markdown、Python セットアップが必要です。OpenSpec はより軽量で、自由に反復できます。
 
-**vs. [Kiro](https://kiro.dev)** (AWS) — 強力だが IDE が固定され、Claude モデルに制限されます。OpenSpec は既存のツールで動作します。
+**vs. [Kiro](https://kiro.dev)** (AWS) — 強力ですが IDE が固定され、Claude モデルに制限されます。OpenSpec は既存のツールで動作します。
 
 **vs. 仕様なし** — 仕様がない AI コーディングはプロンプトが曖昧になりがちで、結果が不安定になります。OpenSpec は手間を増やさず再現性を高めます。
 
@@ -157,7 +157,7 @@ openspec update
 
 **モデル選定**: OpenSpec は高い推論性能を持つモデルで最適に動作します。計画と実装の両方で Opus 4.5 と GPT 5.2 を推奨します。
 
-**コンテキスト衛生**: OpenSpec はクリーンなコンテキストで最大効果を発揮します。実装開始前にコンテキストをクリアし、セッション中のコンテキスト管理を徹底してください。
+**コンテキスト管理**: OpenSpec は整理されたコンテキストで最大効果を発揮します。実装開始前にコンテキストをクリアし、セッション中も不要な情報をため込みすぎないようにしてください。
 
 ## コントリビュート
 
@@ -165,7 +165,7 @@ openspec update
 
 **大きな変更** — 新機能、重要なリファクタ、アーキテクチャ変更は、まず OpenSpec の変更提案を提出し、意図と目標を合意してから実装してください。
 
-提案を書く際は、OpenSpec の哲学を意識してください。私たちは多様なコーディングエージェント、モデル、ユースケースの利用者に対応しています。変更は全員にとって使いやすいことが重要です。
+提案を書く際は、OpenSpec の哲学を意識してください。私たちは多様なコーディングエージェント、モデル、利用場面を想定しています。変更は幅広い利用者にとって使いやすいことが重要です。
 
 **AI 生成コードは歓迎** — ただしテストと検証が済んでいることが条件です。AI 生成コードを含む PR には、使用したコーディングエージェントとモデルを明記してください（例: "Generated with Claude Code using claude-opus-4-5-20251101"）。
 
@@ -191,7 +191,7 @@ OpenSpec は匿名の利用統計を収集します。
 </details>
 
 <details>
-<summary><strong>Maintainers & Advisors</strong></summary>
+<summary><strong>メンテナとアドバイザー</strong></summary>
 
 プロジェクトを支えるメンテナとアドバイザー一覧は [MAINTAINERS.md](MAINTAINERS.md) を参照してください。
 

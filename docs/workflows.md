@@ -1,12 +1,12 @@
 # ワークフロー
 
-OpenSpec の代表的なワークフローパターンと、使い分けの目安をまとめます。基本的なセットアップは [Getting Started](getting-started.md)、コマンド詳細は [Commands](commands.md) を参照してください。
+OpenSpec の代表的なワークフローパターンと、使い分けの目安をまとめます。基本的なセットアップは [はじめに](getting-started.md)、コマンド詳細は [コマンド](commands.md) を参照してください。
 
 ## 哲学: フェーズではなくアクション
 
-従来のワークフローは「計画 → 実装 → 完了」と段階に固定されがちです。しかし実際の作業はもっと行き来します。
+従来のワークフローは「計画 → 実装 → 完了」とフェーズに固定されがちです。しかし実際の作業はもっと行き来します。
 
-OPSX は次のアプローチを取ります:
+OPSX は次の考え方で動きます:
 
 ```text
 従来（フェーズ固定）:
@@ -18,15 +18,15 @@ OPSX は次のアプローチを取ります:
 
 OPSX（柔軟なアクション）:
 
-  proposal ──► specs ──► design ──► tasks ──► implement
+  proposal ──► specs ──► design ──► tasks ──► 実装
 ```
 
 **重要な原則:**
 
-- **フェーズではなくアクション** — コマンドは「できること」であり、動けない段階ではない
+- **フェーズではなくアクション** — コマンドは「できること」であり、固定されたフェーズではない
 - **依存関係は進行可能性を示す** — 次に何ができるかを示すだけで、順番を強制しない
 
-> **カスタマイズ:** OPSX ワークフローはスキーマで定義されます。カスタムスキーマの作り方は [Customization](customization.md) を参照してください。
+> **カスタマイズ:** OPSX ワークフローはスキーマで定義されます。カスタムスキーマの作り方は [カスタマイズ](customization.md) を参照してください。
 
 ## 2 つの利用モード
 
@@ -44,7 +44,7 @@ OPSX（柔軟なアクション）:
 /opsx:propose ──► /opsx:apply ──► /opsx:archive
 ```
 
-### 拡張フルワークフロー（custom 選択）
+### 拡張フルワークフロー（`custom` 選択）
 
 `/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard` を使いたい場合は、次を実行します。
 
@@ -157,11 +157,11 @@ AI:  specs を作成中...
 複数の変更を同時に進めるとき:
 
 ```text
-Change A: /opsx:new ──► /opsx:ff ──► /opsx:apply (in progress)
+変更 A: /opsx:new ──► /opsx:ff ──► /opsx:apply（進行中）
                                          │
-                                    context switch
+                                      作業切り替え
                                          │
-Change B: /opsx:new ──► /opsx:ff ──────► /opsx:apply
+変更 B: /opsx:new ──► /opsx:ff ──────► /opsx:apply
 ```
 
 **会話例:**
@@ -236,7 +236,7 @@ AI:  ✓ add-dark-mode をアーカイブしました
               整合性チェック      同期の確認
 ```
 
-#### Verify: 作業の確認
+#### `/opsx:verify`: 作業の確認
 
 `/opsx:verify` は、アーティファクトに対する実装の整合性を 3 つの観点で検証します。
 
@@ -271,17 +271,17 @@ AI:  add-auth を検証中...
      2. 設計どおり event-driven にリファクタするか、design.md を更新
 ```
 
-**verify が見る観点:**
+**`/opsx:verify` が見る観点:**
 
 | 観点 | 検証内容 |
 |-----------|------------------|
-| Completeness | タスク完了、要件実装、シナリオ網羅 |
-| Correctness | 仕様意図との一致、エッジケース対応 |
-| Coherence | 設計判断の反映、パターン整合性 |
+| 完了度 | タスク完了、要件実装、シナリオ網羅 |
+| 正確性 | 仕様意図との一致、エッジケース対応 |
+| 整合性 | 設計判断の反映、パターン整合性 |
 
-verify はアーカイブをブロックしませんが、先に対応した方がよい問題を可視化します。
+`/opsx:verify` はアーカイブをブロックしませんが、先に対応した方がよい問題を可視化します。
 
-#### Archive: 変更の確定
+#### `/opsx:archive`: 変更の確定
 
 `/opsx:archive` は変更を完了し、アーカイブへ移動します。
 
@@ -296,7 +296,7 @@ AI:  add-auth をアーカイブ中...
      ✓ design.md が存在
      ✓ tasks.md が存在（12/12 タスク完了）
 
-     差分仕様: まだ main に同期されていません
+     差分仕様: まだ本仕様に同期されていません
      → 今同期しますか？
 
 あなた: はい
@@ -362,9 +362,9 @@ AI:  ✓ 仕様を openspec/specs/auth/spec.md に同期しました
 
 **例: "Add dark mode"**
 
-- "Need to also support custom themes" → 新規変更（スコープ拡大）
-- "System preference detection is harder than expected" → 更新（同じ目的）
-- "Let's ship toggle first, add preferences later" → 更新してアーカイブ → 新規変更
+- 「カスタムテーマにも対応したい」→ 新規変更（スコープ拡大）
+- 「システム設定の検出が想定より難しい」→ 更新（同じ目的）
+- 「まず切り替えだけ出して、詳細設定は後で追加したい」→ 更新してアーカイブ → 新規変更
 
 ## ベストプラクティス
 
@@ -434,7 +434,7 @@ implement-2fa                  wip
 
 ## コマンド早見表
 
-コマンドの詳細は [Commands](commands.md) を参照してください。
+コマンドの詳細は [コマンド](commands.md) を参照してください。
 
 | コマンド | 目的 | 使う場面 |
 |---------|---------|-------------|
@@ -451,6 +451,6 @@ implement-2fa                  wip
 
 ## 次に読むもの
 
-- [Commands](commands.md) - コマンド詳細
-- [Concepts](concepts.md) - 仕様・アーティファクト・スキーマの理解
-- [Customization](customization.md) - カスタムワークフロー
+- [コマンド](commands.md) - コマンド詳細
+- [コンセプト](concepts.md) - 仕様・アーティファクト・スキーマの理解
+- [カスタマイズ](customization.md) - カスタムワークフロー

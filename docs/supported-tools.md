@@ -1,13 +1,13 @@
 # 対応ツール
 
-OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、現在のプロファイル/ワークフロー選択と delivery 設定に基づいて、選択したツール向けの連携設定を行います。
+OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、現在のプロファイル・ワークフロー選択と `delivery` 設定に基づいて、選択したツール向けの連携設定を行います。
 
 ## 仕組み
 
 選択した各ツールに対して、OpenSpec は次をインストールできます。
 
-1. **Skills**（delivery に skills が含まれる場合）— `/opsx:*` ワークフローを動かす再利用可能な指示ファイル
-2. **Commands**（delivery に commands が含まれる場合）— ツール固有のスラッシュコマンド紐付け
+1. **Skills**（`delivery` に `skills` が含まれる場合）— `/opsx:*` ワークフローを動かす再利用可能な指示ファイル
+2. **Commands**（`delivery` に `commands` が含まれる場合）— ツール固有のスラッシュコマンド紐付け
 
 既定では `core` プロファイルが使われ、`propose`, `explore`, `apply`, `archive` が含まれます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`）は `openspec config profile` と `openspec update` で有効化できます。
 
@@ -70,7 +70,7 @@ openspec init --profile core
 
 ## インストールされるもの
 
-生成されるスキル/コマンド数は固定ではなく、選択したワークフローと delivery に依存します。
+生成されるスキルとコマンドの数は固定ではなく、選択したワークフローと `delivery` 設定に依存します。
 
 | スキル | 目的 |
 |-------|---------|
@@ -86,16 +86,16 @@ openspec init --profile core
 | `openspec-onboard` | ワークフロー全体のガイド付きオンボード |
 | `openspec-propose` | 変更と計画アーティファクトの一括生成 |
 
-これらのスキルは `/opsx:propose`, `/opsx:new`, `/opsx:apply` などのスラッシュコマンドで呼び出されます。詳細は [Commands](commands.md) を参照してください。
+これらのスキルは `/opsx:propose`, `/opsx:new`, `/opsx:apply` などのスラッシュコマンドで呼び出されます。詳細は [コマンド](commands.md) を参照してください。
 
 ## 新しいツールを追加する
 
-別の AI コーディングアシスタントを追加したい場合は、[command adapter pattern](../CONTRIBUTING.md) を参照するか GitHub Issue を作成してください。
+別の AI コーディングアシスタントを追加したい場合は、[コマンドアダプターパターン](../CONTRIBUTING.md) を参照するか、GitHub Issue を作成してください。
 
 ---
 
 ## 関連
 
-- [CLI Reference](cli.md) — ターミナルコマンド
-- [Commands](commands.md) — スラッシュコマンドとスキル
-- [Getting Started](getting-started.md) — 初回セットアップ
+- [CLI リファレンス](cli.md) — ターミナルコマンド
+- [コマンド](commands.md) — スラッシュコマンドとスキル
+- [はじめに](getting-started.md) — 初回セットアップ

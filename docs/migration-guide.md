@@ -4,11 +4,11 @@
 
 ## 何が変わるのか
 
-OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクションベースのワークフローへ置き換えます。主な違いは次の通りです。
+OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクション単位のワークフローへ置き換えます。主な違いは次の通りです。
 
 | 項目 | 旧ワークフロー | OPSX |
 |--------|--------|------|
-| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:apply`, `/opsx:archive`（expanded workflow コマンドは任意） |
+| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:apply`, `/opsx:archive`（拡張ワークフローコマンドは任意） |
 | **進め方** | すべてのアーティファクトを一括作成 | 段階的にも一括でも選べる |
 | **やり直し** | フェーズゲートがあり戻りづらい | いつでもアーティファクトを更新可能 |
 | **カスタマイズ** | 固定構造 | スキーマ駆動で自由に拡張 |
@@ -35,7 +35,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 | 対象 | 理由 |
 |------|-----|
-| 旧スラッシュコマンドのディレクトリ/ファイル | 新しい skills システムに置換 |
+| 旧スラッシュコマンドのディレクトリ/ファイル | 新しい Skills 方式に置換 |
 | `openspec/AGENTS.md` | 旧ワークフロートリガーのため不要 |
 | `CLAUDE.md` / `AGENTS.md` などの OpenSpec マーカー | もはや不要 |
 
@@ -49,7 +49,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 - GitHub Copilot: `.github/prompts/openspec-*.prompt.md`（IDE 拡張機能のみ。Copilot CLI は非対応）
 - ほか（Augment, Continue, Amazon Q など）
 
-移行は、設定済みツールを検出して旧ファイルをクリーンアップします。
+移行処理は、設定済みツールを検出して旧ファイルを整理します。
 
 リストが長く見えますが、OpenSpec が生成したファイルのみが対象です。あなたの独自ファイルは削除されません。
 
@@ -101,7 +101,7 @@ init は旧ファイルを検出し、クリーンアップを案内します:
 OpenSpec を新バージョンへアップグレードしています
 
 OpenSpec は現在、コーディングエージェント間で広がりつつある
-agent skills を使用します。従来どおり動作させつつ
+Agent Skills を使用します。従来どおり動作させつつ
 セットアップが簡素化されます。
 
 削除するファイル
@@ -129,12 +129,12 @@ OpenSpec マーカーを除去し、内容は保持します:
 ? 旧ファイルをアップグレードしてクリーンアップしますか? (Y/n)
 ```
 
-**Yes を選んだ場合:**
+**はいを選んだ場合:**
 
 1. 旧スラッシュコマンドのディレクトリが削除される
 2. `CLAUDE.md` / `AGENTS.md` から OpenSpec マーカーが除去される（内容は保持）
 3. `openspec/AGENTS.md` が削除される
-4. `.claude/skills/` に新しい skills が生成される
+4. `.claude/skills/` に新しい Skills が生成される
 5. `openspec/config.yaml` が作成され、デフォルトスキーマが設定される
 
 ### `openspec update` を使う
@@ -145,7 +145,7 @@ OpenSpec マーカーを除去し、内容は保持します:
 openspec update
 ```
 
-update も旧ファイルの検出・クリーンアップを行い、現在のプロファイルと delivery 設定に合わせて生成済み skills/commands を最新状態へ更新します。
+`update` も旧ファイルの検出・整理を行い、現在のプロファイルと `delivery` 設定に合わせて生成済みの Skills / Commands を最新状態へ更新します。
 
 ### 非対話 / CI 環境
 
@@ -163,7 +163,7 @@ openspec init --force --tools claude
 
 旧 `openspec/project.md` は自由記述の Markdown でした。新しい `openspec/config.yaml` は構造化され、**すべての計画リクエストに注入** されます。これにより AI が常に文脈を持った状態でアーティファクトを作ります。
 
-### Before（project.md）
+### 移行前（project.md）
 
 ```markdown
 # プロジェクト文脈
@@ -179,7 +179,7 @@ API は REST で、docs/api.md に記載しています。
 - 仕様は Given/When/Then 形式を使う
 ```
 
-### After（config.yaml）
+### 移行後（config.yaml）
 
 ```yaml
 schema: spec-driven
@@ -205,8 +205,8 @@ rules:
 | project.md | config.yaml |
 |------------|-------------|
 | 自由記述 Markdown | 構造化 YAML |
-| 一つの長文 | context と rules に分離 |
-| 使われるタイミングが曖昧 | context は全アーティファクトに注入、rules は該当アーティファクトのみ |
+| 一つの長文 | `context` と `rules` に分離 |
+| 使われるタイミングが曖昧 | `context` は全アーティファクトに注入、`rules` は該当アーティファクトのみ |
 | スキーマ指定なし | `schema:` でデフォルトを明示 |
 
 ### 何を残し、何を捨てるか
@@ -287,31 +287,31 @@ AI が「必須 vs 削減」の判断を手伝います。
 | `/opsx:apply` | `tasks.md` のタスクを実装 |
 | `/opsx:archive` | 変更を確定・アーカイブ |
 
-**Expanded workflow（追加選択時）:**
+**拡張ワークフロー（追加選択時）:**
 
 | コマンド | 目的 |
 |---------|---------|
-| `/opsx:new` | 変更のスキャフォールドだけを作る |
+| `/opsx:new` | 変更のひな形だけを作る |
 | `/opsx:continue` | 次のアーティファクトを 1 つずつ作る |
 | `/opsx:ff` | 計画アーティファクトを一括生成 |
 | `/opsx:verify` | 実装が仕様に合うか検証 |
-| `/opsx:sync` | アーカイブ前に spec マージ結果を確認する |
+| `/opsx:sync` | アーカイブ前に仕様マージ結果を確認する |
 | `/opsx:bulk-archive` | 複数変更を一括アーカイブ |
-| `/opsx:onboard` | エンドツーエンドのオンボーディングを支援する |
+| `/opsx:onboard` | 変更の開始から完了までをガイド付きで体験する |
 
-expanded コマンドを使いたい場合は `openspec config profile` を実行し、その後 `openspec update` で反映します。
+拡張コマンドを使いたい場合は `openspec config profile` を実行し、その後 `openspec update` で反映します。
 
 ### 旧コマンドとの対応
 
 | 旧コマンド | OPSX での対応 |
 |--------|-----------------|
-| `/openspec:proposal` | `/opsx:propose`（既定）または `/opsx:new` → `/opsx:ff`（expanded） |
+| `/openspec:proposal` | `/opsx:propose`（既定）または `/opsx:new` → `/opsx:ff`（拡張） |
 | `/openspec:apply` | `/opsx:apply` |
 | `/openspec:archive` | `/opsx:archive` |
 
 ### 新しい能力
 
-これらは expanded workflow コマンド群に含まれる機能です。
+これらは拡張ワークフローコマンド群に含まれる機能です。
 
 **段階的なアーティファクト作成:**
 ```
@@ -329,7 +329,7 @@ expanded コマンドを使いたい場合は `openspec config profile` を実�
 
 ## 新アーキテクチャの理解
 
-### フェーズ固定から流動へ
+### フェーズ固定から柔軟な進行へ
 
 旧ワークフローは線形でした:
 
@@ -343,7 +343,7 @@ expanded コマンドを使いたい場合は `openspec config profile` を実�
 残念ながらフェーズゲートが戻るのを許しません。
 ```
 
-OPSX はアクションベースです:
+OPSX はアクション単位で進めます:
 
 ```
          ┌───────────────────────────────────────────────┐
@@ -379,7 +379,7 @@ OPSX はアクションベースです:
                      specs, design)
 ```
 
-`/opsx:continue` は ready なアーティファクトを提示します。複数が ready なら任意の順序で作成できます。
+`/opsx:continue` は作成可能なアーティファクトを提示します。複数ある場合は任意の順序で作成できます。
 
 ### Skills と Commands
 
@@ -392,7 +392,7 @@ OPSX はアクションベースです:
 └── archive.md
 ```
 
-OPSX は新しい **skills** 標準を使います:
+OPSX は新しい **Skills** 標準を使います:
 
 ```
 .claude/skills/
@@ -403,7 +403,7 @@ OPSX は新しい **skills** 標準を使います:
 └── ...
 ```
 
-skills は複数の AI ツールで認識され、より豊富なメタデータを提供します。
+Skills は複数の AI ツールで認識され、より豊富なメタデータを提供します。
 
 ---
 
@@ -497,7 +497,7 @@ openspec schema init my-workflow
 openspec schema fork spec-driven my-workflow
 ```
 
-詳細は [Customization](customization.md) を参照してください。
+詳細は [カスタマイズ](customization.md) を参照してください。
 
 ---
 
@@ -555,11 +555,11 @@ project/
 │   │   └── archive/              # 変更なし
 │   └── config.yaml               # 新規: プロジェクト設定
 ├── .claude/
-│   └── skills/                   # 新規: OPSX skills
+│   └── skills/                   # 新規: OPSX Skills
 │       ├── openspec-propose/     # 既定の core プロファイル
 │       ├── openspec-explore/
 │       ├── openspec-apply-change/
-│       └── ...                   # expanded profile では new/continue/ff 等も追加
+│       └── ...                   # 拡張プロファイルでは new/continue/ff 等も追加
 ├── CLAUDE.md                     # OpenSpec マーカーを削除、内容は保持
 └── AGENTS.md                     # OpenSpec マーカーを削除、内容は保持
 ```
@@ -578,7 +578,7 @@ project/
 /opsx:apply        タスクを実装
 /opsx:archive      完了してアーカイブ
 
-# Expanded workflow（有効時）
+# 拡張ワークフロー（有効時）
 /opsx:new          変更の土台を作る
 /opsx:continue     次のアーティファクトを作成
 /opsx:ff           計画アーティファクトを一括生成
