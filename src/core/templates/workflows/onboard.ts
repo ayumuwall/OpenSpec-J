@@ -378,32 +378,32 @@ Here are the implementation tasks:
 
 **EXPLAIN:**
 \`\`\`
-## Implementation
+## 実装
 
 各タスクを実装しながらチェックを付けていきます。タスクごとに宣言し、必要なら specs/design に触れます。
 \`\`\`
 
 **DO:** 各タスクで:
 
-1. 「Working on task N: [description]」と宣言
+1. 「タスク N に取り組み中: [description]」と宣言
 2. コードベースに実装
 3. specs/design を自然に参照: 「spec では X とあるので Y を実装」
 4. tasks.md を更新: \`- [ ]\` → \`- [x]\`
-5. 簡単なステータス: 「✓ Task N complete」
+5. 簡単なステータス: 「✓ タスク N 完了」
 
 説明は軽く。コードの一行ごとに講義しない。
 
 すべて完了したら:
 
 \`\`\`
-## Implementation Complete
+## 実装完了
 
-All tasks done:
+すべてのタスクが完了しました:
 - [x] Task 1
 - [x] Task 2
 - [x] ...
 
-The change is implemented! One more step—let's archive it.
+変更の実装が完了しました。最後にアーカイブします。
 \`\`\`
 
 ---
@@ -412,7 +412,7 @@ The change is implemented! One more step—let's archive it.
 
 **EXPLAIN:**
 \`\`\`
-## Archiving
+## アーカイブ中
 
 変更が完了したらアーカイブする。\`openspec/changes/\` から \`openspec/changes/archive/YYYY-MM-DD-<name>/\` に移動される。
 
@@ -426,7 +426,7 @@ openspec archive "<name>"
 
 **SHOW:**
 \`\`\`
-Archived to: \`openspec/changes/archive/YYYY-MM-DD-<name>/\`
+アーカイブ先: \`openspec/changes/archive/YYYY-MM-DD-<name>/\`
 
 変更はプロジェクトの履歴に組み込まれました。コードは実装済み、意思決定記録も保存されています。
 \`\`\`

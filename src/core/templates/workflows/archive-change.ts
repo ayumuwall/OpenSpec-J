@@ -94,10 +94,10 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 \`\`\`
 ## アーカイブ完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ メイン仕様へ同期済み（または "差分仕様なし" / "同期スキップ"）
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** ✓ メイン仕様へ同期済み（または "差分仕様なし" / "同期スキップ"）
 
 すべてのアーティファクトが完了。すべてのタスクが完了。
 \`\`\`
@@ -206,10 +206,10 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 \`\`\`
 ## アーカイブ完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ メイン仕様へ同期済み
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** ✓ メイン仕様へ同期済み
 
 すべてのアーティファクトが完了。すべてのタスクが完了。
 \`\`\`
@@ -219,10 +219,10 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 \`\`\`
 ## アーカイブ完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** 差分仕様なし
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** 差分仕様なし
 
 すべてのアーティファクトが完了。すべてのタスクが完了。
 \`\`\`
@@ -232,12 +232,12 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 \`\`\`
 ## アーカイブ完了（警告あり）
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** 同期スキップ（ユーザー選択）
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**仕様:** 同期スキップ（ユーザー選択）
 
-**Warnings:**
+**警告:**
 - 未完了のアーティファクトが 2 件
 - 未完了タスクが 3 件
 - 仕様同期をスキップ（ユーザー選択）
@@ -250,12 +250,12 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 \`\`\`
 ## アーカイブ失敗
 
-**Change:** <change-name>
-**Target:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**変更:** <change-name>
+**対象:** openspec/changes/archive/YYYY-MM-DD-<name>/
 
 ターゲットのアーカイブディレクトリが既に存在します。
 
-**Options:**
+**選択肢:**
 1. 既存アーカイブをリネームする
 2. 既存アーカイブを削除する（重複の場合）
 3. 別の日付でアーカイブする

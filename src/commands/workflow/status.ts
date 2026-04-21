@@ -34,7 +34,7 @@ export interface StatusOptions {
 // -----------------------------------------------------------------------------
 
 export async function statusCommand(options: StatusOptions): Promise<void> {
-  const spinner = ora('変更の状況を読み込み中...').start();
+  const spinner = options.json ? undefined : ora('変更の状況を読み込み中...').start();
 
   try {
     const projectRoot = process.cwd();
@@ -44,7 +44,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     if (!options.change) {
       const available = await getAvailableChanges(projectRoot);
       if (available.length === 0) {
-        spinner.stop();
+        spinner?.stop();
         if (options.json) {
           console.log(JSON.stringify({ changes: [], message: '進行中の変更はありません。' }, null, 2));
           return;
@@ -53,7 +53,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
         return;
       }
       // 変更は存在するが --change が未指定
-      spinner.stop();
+      spinner?.stop();
       throw new Error(
         `必須オプション --change が指定されていません。利用可能な変更:\n  ${available.join('\n  ')}`
       );
@@ -70,7 +70,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     const context = loadChangeContext(projectRoot, changeName, options.schema);
     const status = formatChangeStatus(context);
 
-    spinner.stop();
+    spinner?.stop();
 
     if (options.json) {
       console.log(JSON.stringify(status, null, 2));
@@ -79,7 +79,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
 
     printStatusText(status);
   } catch (error) {
-    spinner.stop();
+    spinner?.stop();
     throw error;
   }
 }

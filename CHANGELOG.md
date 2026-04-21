@@ -2,6 +2,24 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog を日本語で整理したものです。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.3.1
+
+- **[OpenSpec-J]** v1.3.1 追従のため、artifact path の canonical 解決、glob artifact output の apply 指示、メイン仕様内の隠れた要件検出、`--json` 時の spinner 抑止、telemetry のネットワークエラー抑止に関する変更を取り込み
+- **[OpenSpec-J]** README / CLI リファレンス / workflow テンプレート / parser・validation メッセージの v1.3.1 追加文言を日本語化
+- **[OpenSpec-J]** 翻訳棚卸しとして、`archive` / `bulk-archive` / `onboard` / `verify` ワークフローテンプレートに残っていた英語の出力例を日本語化
+- **[OpenSpec-J]** `skill-templates-parity` のハッシュを再計算し、テンプレート更新後の期待値へ更新
+- **[OpenSpec-J]** `pnpm build` と `pnpm test` を実施し、`69 files / 1402 tests` の全テスト成功を確認
+
+### パッチ変更
+
+- [#995](https://github.com/Fission-AI/OpenSpec/pull/995) [`d1f3861`](https://github.com/Fission-AI/OpenSpec/commit/d1f3861d9ec694cc924b042b5da01963dcf93137) [@TabishB](https://github.com/TabishB) ありがとう！ - ### バグ修正
+
+  - **artifact path の canonical 解決** — Workflow artifact path をネイティブの `realpath` で解決するようになり、symlink や大文字小文字を区別しないファイルシステムで apply / archive 時に path mismatch が発生しにくくなりました。
+  - **glob apply instructions** — glob artifact output を持つ apply instructions が正しく解決され、literal artifact output は file path として扱われることが保証されます。
+  - **メイン仕様内の隠れた要件** — fenced code block 内など、メイン仕様内で隠れていた要件を検証時に検出できるようになりました。
+  - **クリーンな `--json` 出力** — `--json` 指定時に spinner の進捗テキストが stderr へ漏れなくなり、stdout と stderr をまとめて扱う AI agent でも JSON を安定して解析できます。
+  - **firewall 環境での silent telemetry** — PostHog のネットワークエラーは 1 秒 timeout、retry / remote config 無効化、例外握りつぶしで処理されるようになり、制限されたネットワークで `PostHogFetchNetworkError` が表面化しなくなりました。Telemetry opt-out は README、installation guide、CLI reference の早い位置に記載されます。
+
 ## 1.3.0-2
 
 - **[OpenSpec-J]** v1.3.0 追従で漏れていた upstream 書式変更を反映（`explore.ts` の ASCII 図・表パディング、`onboard.ts` のコマンド表カラム幅、`docs/workflows.md` の「（拡張モード）」見出しと `/opsx:propose` 行追加）
@@ -17,7 +35,6 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式 changelog 
 - **[OpenSpec-J]** `onboard` テンプレートのコマンド表と終了案内に残っていた英語文言を日本語化
 - **[OpenSpec-J]** テスト並列実行時の衝突を避けるため、一部テストの一時ディレクトリをユニーク化
 - **[OpenSpec-J]** `OPENSPEC_TELEMETRY=0 pnpm test` を実施し、`68 files / 1365 tests` の全テスト成功を確認
-
 
 ## 1.3.0
 

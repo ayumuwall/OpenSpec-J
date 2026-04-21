@@ -37,7 +37,7 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
    openspec instructions apply --change "<name>" --json
    \`\`\`
 
-   変更ディレクトリと contextFiles が返る。利用可能なアーティファクトをすべて読む。
+   変更ディレクトリと \`contextFiles\`（アーティファクト ID から具体的なファイルパス配列への対応）が返る。利用可能なアーティファクトをすべて読む。
 
 4. **検証レポートの構造を初期化する**
 
@@ -51,7 +51,7 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
 5. **完了性の検証**
 
    **タスク完了**:
-   - contextFiles に tasks.md があれば読む
+   - \`contextFiles.tasks\` があれば、その中のすべてのファイルパスを読む
    - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
    - 完了数/総数を出す
    - 未完了がある場合:
@@ -90,13 +90,13 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
 7. **整合性の検証**
 
    **設計遵守**:
-   - design.md がある場合:
+   - \`contextFiles.design\` がある場合:
      - 主要な判断（"Decision:", "Approach:", "Architecture:" など）を抽出
      - 実装がそれに従っているか確認
      - 矛盾があれば:
        - WARNING: "設計判断が守られていない: <decision>"
        - 推奨: "実装を修正するか design.md を更新"
-   - design.md が無い場合: "検証対象の design.md が無い" と記載し、この項目はスキップ
+   - \`contextFiles.design\` が無い場合: "検証対象の design.md が無い" と記載し、この項目はスキップ
 
    **コードパターンの整合**:
    - 新規コードが既存パターンに沿っているか確認
@@ -109,14 +109,14 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
 
    **サマリー**
    \`\`\`
-   ## Verification Report: <change-name>
+   ## 検証レポート: <change-name>
 
-   ### Summary
-   | Dimension    | Status           |
+   ### サマリー
+   | 観点 | 状態 |
    |--------------|------------------|
-   | Completeness | X/Y tasks, N reqs|
-   | Correctness  | M/N reqs covered |
-   | Coherence    | Followed/Issues  |
+   | 完了性 | X/Y タスク、N 要件 |
+   | 正確性 | M/N 要件をカバー |
+   | 整合性 | 遵守/問題あり |
    \`\`\`
 
    **優先度別の指摘**:
@@ -202,7 +202,7 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
    openspec instructions apply --change "<name>" --json
    \`\`\`
 
-   変更ディレクトリと contextFiles が返る。利用可能なアーティファクトをすべて読む。
+   変更ディレクトリと \`contextFiles\`（アーティファクト ID から具体的なファイルパス配列への対応）が返る。利用可能なアーティファクトをすべて読む。
 
 4. **検証レポートの構造を初期化する**
 
@@ -216,7 +216,7 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
 5. **完了性の検証**
 
    **タスク完了**:
-   - contextFiles に tasks.md があれば読む
+   - \`contextFiles.tasks\` があれば、その中のすべてのファイルパスを読む
    - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
    - 完了数/総数を出す
    - 未完了がある場合:
@@ -254,13 +254,13 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
 7. **整合性の検証**
 
    **設計遵守**:
-   - design.md があれば:
+   - \`contextFiles.design\` があれば:
      - "Decision:", "Approach:", "Architecture:" などから決定事項を抽出
      - 実装が従っているか確認
      - 反している場合:
        - WARNING: "設計の決定が守られていない: <decision>"
        - 推奨: "実装を直すか design.md を実態に合わせて更新"
-   - design.md が無い場合はスキップし、"照合対象の design.md がない" と記録
+   - \`contextFiles.design\` が無い場合はスキップし、"照合対象の design.md がない" と記録
 
    **コードパターン整合**:
    - 新規コードがプロジェクトのパターンと一致しているか確認

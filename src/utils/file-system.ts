@@ -1,5 +1,8 @@
-import { promises as fs, constants as fsConstants } from 'fs';
+import * as nodeFs from 'fs';
 import path from 'path';
+
+const fs = nodeFs.promises;
+const { constants: fsConstants } = nodeFs;
 
 function isMarkerOnOwnLine(content: string, markerIndex: number, markerLength: number): boolean {
   let leftIndex = markerIndex - 1;
@@ -48,6 +51,23 @@ export class FileSystemUtils {
    */
   static toPosixPath(p: string): string {
     return p.replace(/\\/g, '/');
+  }
+
+  /**
+   * Returns a canonical absolute path when the target exists.
+   * Falls back to path.resolve() so callers can still produce a stable absolute path.
+   */
+  static canonicalizeExistingPath(targetPath: string): string {
+    try {
+      // Prefer the native resolver so Windows short-path aliases are expanded.
+      return nodeFs.realpathSync.native(targetPath);
+    } catch {
+      try {
+        return nodeFs.realpathSync(targetPath);
+      } catch {
+        return path.resolve(targetPath);
+      }
+    }
   }
 
   private static isWindowsBasePath(basePath: string): boolean {
@@ -254,9 +274,8 @@ export class FileSystemUtils {
           break;
         } catch (unlinkError: any) {
           if (attempt === maxRetries - 1) {
-            // Last attempt failed, but we successfully wrote the file, so permissions are OK
-            // Just log and continue - the temp file will be cleaned up eventually
-            console.debug(`Could not clean up test file ${testFile}: ${unlinkError.message}`);
+            // 書き込みは成功しているため権限は問題ない。掃除できなかった一時ファイルは後で削除される。
+            console.debug(`テストファイル ${testFile} を掃除できませんでした: ${unlinkError.message}`);
           } else {
             // Wait briefly before retrying (Windows file lock release)
             await new Promise((resolve) => setTimeout(resolve, 50));

@@ -920,6 +920,8 @@ openspec completion uninstall
 
 | 変数 | 説明 |
 |----------|-------------|
+| `OPENSPEC_TELEMETRY` | `0` に設定するとテレメトリを無効化 |
+| `DO_NOT_TRACK` | `1` に設定するとテレメトリを無効化（標準 DNT シグナル） |
 | `OPENSPEC_CONCURRENCY` | 一括検証のデフォルト並列数（デフォルト: 6） |
 | `EDITOR` または `VISUAL` | `openspec config edit` のエディタ指定 |
 | `NO_COLOR` | 設定時に色付き出力を無効化 |

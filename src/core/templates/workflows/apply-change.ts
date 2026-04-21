@@ -37,7 +37,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    \`\`\`
 
    ここから得られるもの:
-   - context ファイルのパス（スキーマにより proposal/specs/design/tasks や spec/tests/implementation/docs など）
+   - \`contextFiles\`: アーティファクト ID から具体的なファイルパス配列への対応（スキーマにより proposal/specs/design/tasks や spec/tests/implementation/docs など）
    - 進捗（total/complete/remaining）
    - タスク一覧と状態
    - 状態に応じた動的な指示
@@ -49,7 +49,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
 4. **コンテキストファイルを読む**
 
-   apply 指示の \`contextFiles\` にあるファイルを読む。
+   apply 指示の \`contextFiles\` に列挙されたすべてのファイルパスを読む。
    スキーマによって内容が変わる:
    - **spec-driven**: proposal, specs, design, tasks
    - その他: CLI 出力の contextFiles に従う
@@ -191,7 +191,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    \`\`\`
 
    ここから得られるもの:
-   - context ファイルのパス（スキーマにより変わる）
+   - \`contextFiles\`: アーティファクト ID から具体的なファイルパス配列への対応（スキーマにより変わる）
    - 進捗（total/complete/remaining）
    - タスク一覧と状態
    - 状態に応じた動的な指示
@@ -203,7 +203,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 
 4. **コンテキストファイルを読む**
 
-   apply 指示の \`contextFiles\` にあるファイルを読む。
+   apply 指示の \`contextFiles\` に列挙されたすべてのファイルパスを読む。
+   スキーマによって内容が変わる:
    - **spec-driven**: proposal, specs, design, tasks
    - その他: CLI 出力の contextFiles に従う
 

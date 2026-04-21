@@ -136,95 +136,95 @@ export function getBulkArchiveChangeSkillTemplate(): SkillTemplate {
    最終結果を表示:
 
    \`\`\`
-   ## Bulk Archive Complete
+   ## 一括アーカイブ完了
 
-   Archived 3 changes:
+   3 件の変更をアーカイブしました:
    - schema-management-cli -> archive/2026-01-19-schema-management-cli/
    - project-config -> archive/2026-01-19-project-config/
    - add-oauth -> archive/2026-01-19-add-oauth/
 
-   Skipped 1 change:
-   - add-verify-skill (user chose not to archive incomplete)
+   1 件の変更をスキップしました:
+   - add-verify-skill（未完了のためユーザーがアーカイブしないことを選択）
 
-   Spec sync summary:
-   - 4 delta specs synced to main specs
-   - 1 conflict resolved (auth: applied both in chronological order)
+   仕様同期サマリー:
+   - 4 件の差分仕様をメイン仕様へ同期
+   - 1 件の競合を解決（auth: 両方を時系列順に適用）
    \`\`\`
 
    失敗がある場合:
    \`\`\`
-   Failed 1 change:
-   - some-change: Archive directory already exists
+   1 件の変更に失敗しました:
+   - some-change: アーカイブディレクトリが既に存在します
    \`\`\`
 
 **競合解決の例**
 
 例1: 片方のみ実装
 \`\`\`
-Conflict: specs/auth/spec.md touched by [add-oauth, add-jwt]
+競合: specs/auth/spec.md が [add-oauth, add-jwt] で変更されています
 
-Checking add-oauth:
-- Delta adds "OAuth Provider Integration" requirement
-- Searching codebase... found src/auth/oauth.ts implementing OAuth flow
+add-oauth を確認:
+- 差分は "OAuth Provider Integration" 要件を追加
+- コードベースを検索... OAuth フローを実装する src/auth/oauth.ts を検出
 
-Checking add-jwt:
-- Delta adds "JWT Token Handling" requirement
-- Searching codebase... no JWT implementation found
+add-jwt を確認:
+- 差分は "JWT Token Handling" 要件を追加
+- コードベースを検索... JWT 実装は見つからず
 
-Resolution: Only add-oauth is implemented. Will sync add-oauth specs only.
+解決: add-oauth のみ実装済みです。add-oauth の仕様だけを同期します。
 \`\`\`
 
 例2: 両方実装
 \`\`\`
-Conflict: specs/api/spec.md touched by [add-rest-api, add-graphql]
+競合: specs/api/spec.md が [add-rest-api, add-graphql] で変更されています
 
-Checking add-rest-api (created 2026-01-10):
-- Delta adds "REST Endpoints" requirement
-- Searching codebase... found src/api/rest.ts
+add-rest-api を確認（2026-01-10 作成）:
+- 差分は "REST Endpoints" 要件を追加
+- コードベースを検索... src/api/rest.ts を検出
 
-Checking add-graphql (created 2026-01-15):
-- Delta adds "GraphQL Schema" requirement
-- Searching codebase... found src/api/graphql.ts
+add-graphql を確認（2026-01-15 作成）:
+- 差分は "GraphQL Schema" 要件を追加
+- コードベースを検索... src/api/graphql.ts を検出
 
-Resolution: Both implemented. Will apply add-rest-api specs first,
-then add-graphql specs (chronological order, newer takes precedence).
+解決: 両方とも実装済みです。add-rest-api の仕様を先に適用し、
+次に add-graphql の仕様を適用します（時系列順。新しいものを優先）。
 \`\`\`
 
 **成功時の出力**
 
 \`\`\`
-## Bulk Archive Complete
+## 一括アーカイブ完了
 
-Archived N changes:
+N 件の変更をアーカイブしました:
 - <change-1> -> archive/YYYY-MM-DD-<change-1>/
 - <change-2> -> archive/YYYY-MM-DD-<change-2>/
 
-Spec sync summary:
-- N delta specs synced to main specs
-- No conflicts (or: M conflicts resolved)
+仕様同期サマリー:
+- N 件の差分仕様をメイン仕様へ同期
+- 競合なし（または: M 件の競合を解決）
 \`\`\`
 
 **一部成功時の出力**
 
 \`\`\`
-## Bulk Archive Complete (partial)
+## 一括アーカイブ一部完了
 
-Archived N changes:
+N 件の変更をアーカイブしました:
 - <change-1> -> archive/YYYY-MM-DD-<change-1>/
 
-Skipped M changes:
-- <change-2> (user chose not to archive incomplete)
+M 件の変更をスキップしました:
+- <change-2>（未完了のためユーザーがアーカイブしないことを選択）
 
-Failed K changes:
-- <change-3>: Archive directory already exists
+K 件の変更に失敗しました:
+- <change-3>: アーカイブディレクトリが既に存在します
 \`\`\`
 
 **変更がない場合の出力**
 
 \`\`\`
-## No Changes to Archive
+## アーカイブ対象の変更なし
 
-No active changes found. Use \`/opsx:new\` to create a new change.
+進行中の変更はありません。\`/opsx:new\` で新しい変更を作成してください。
 \`\`\`
 
 **ガードレール**
@@ -377,95 +377,95 @@ export function getOpsxBulkArchiveCommandTemplate(): CommandTemplate {
    最終結果を表示:
 
    \`\`\`
-   ## Bulk Archive Complete
+   ## 一括アーカイブ完了
 
-   Archived 3 changes:
+   3 件の変更をアーカイブしました:
    - schema-management-cli -> archive/2026-01-19-schema-management-cli/
    - project-config -> archive/2026-01-19-project-config/
    - add-oauth -> archive/2026-01-19-add-oauth/
 
-   Skipped 1 change:
-   - add-verify-skill (user chose not to archive incomplete)
+   1 件の変更をスキップしました:
+   - add-verify-skill（未完了のためユーザーがアーカイブしないことを選択）
 
-   Spec sync summary:
-   - 4 delta specs synced to main specs
-   - 1 conflict resolved (auth: applied both in chronological order)
+   仕様同期サマリー:
+   - 4 件の差分仕様をメイン仕様へ同期
+   - 1 件の競合を解決（auth: 両方を時系列順に適用）
    \`\`\`
 
    失敗がある場合:
    \`\`\`
-   Failed 1 change:
-   - some-change: Archive directory already exists
+   1 件の変更に失敗しました:
+   - some-change: アーカイブディレクトリが既に存在します
    \`\`\`
 
 **競合解決の例**
 
 例1: 片方のみ実装
 \`\`\`
-Conflict: specs/auth/spec.md touched by [add-oauth, add-jwt]
+競合: specs/auth/spec.md が [add-oauth, add-jwt] で変更されています
 
-Checking add-oauth:
-- Delta adds "OAuth Provider Integration" requirement
-- Searching codebase... found src/auth/oauth.ts implementing OAuth flow
+add-oauth を確認:
+- 差分は "OAuth Provider Integration" 要件を追加
+- コードベースを検索... OAuth フローを実装する src/auth/oauth.ts を検出
 
-Checking add-jwt:
-- Delta adds "JWT Token Handling" requirement
-- Searching codebase... no JWT implementation found
+add-jwt を確認:
+- 差分は "JWT Token Handling" 要件を追加
+- コードベースを検索... JWT 実装は見つからず
 
-Resolution: Only add-oauth is implemented. Will sync add-oauth specs only.
+解決: add-oauth のみ実装済みです。add-oauth の仕様だけを同期します。
 \`\`\`
 
 例2: 両方実装
 \`\`\`
-Conflict: specs/api/spec.md touched by [add-rest-api, add-graphql]
+競合: specs/api/spec.md が [add-rest-api, add-graphql] で変更されています
 
-Checking add-rest-api (created 2026-01-10):
-- Delta adds "REST Endpoints" requirement
-- Searching codebase... found src/api/rest.ts
+add-rest-api を確認（2026-01-10 作成）:
+- 差分は "REST Endpoints" 要件を追加
+- コードベースを検索... src/api/rest.ts を検出
 
-Checking add-graphql (created 2026-01-15):
-- Delta adds "GraphQL Schema" requirement
-- Searching codebase... found src/api/graphql.ts
+add-graphql を確認（2026-01-15 作成）:
+- 差分は "GraphQL Schema" 要件を追加
+- コードベースを検索... src/api/graphql.ts を検出
 
-Resolution: Both implemented. Will apply add-rest-api specs first,
-then add-graphql specs (chronological order, newer takes precedence).
+解決: 両方とも実装済みです。add-rest-api の仕様を先に適用し、
+次に add-graphql の仕様を適用します（時系列順。新しいものを優先）。
 \`\`\`
 
 **成功時の出力**
 
 \`\`\`
-## Bulk Archive Complete
+## 一括アーカイブ完了
 
-Archived N changes:
+N 件の変更をアーカイブしました:
 - <change-1> -> archive/YYYY-MM-DD-<change-1>/
 - <change-2> -> archive/YYYY-MM-DD-<change-2>/
 
-Spec sync summary:
-- N delta specs synced to main specs
-- No conflicts (or: M conflicts resolved)
+仕様同期サマリー:
+- N 件の差分仕様をメイン仕様へ同期
+- 競合なし（または: M 件の競合を解決）
 \`\`\`
 
 **一部成功時の出力**
 
 \`\`\`
-## Bulk Archive Complete (partial)
+## 一括アーカイブ一部完了
 
-Archived N changes:
+N 件の変更をアーカイブしました:
 - <change-1> -> archive/YYYY-MM-DD-<change-1>/
 
-Skipped M changes:
-- <change-2> (user chose not to archive incomplete)
+M 件の変更をスキップしました:
+- <change-2>（未完了のためユーザーがアーカイブしないことを選択）
 
-Failed K changes:
-- <change-3>: Archive directory already exists
+K 件の変更に失敗しました:
+- <change-3>: アーカイブディレクトリが既に存在します
 \`\`\`
 
 **変更がない場合の出力**
 
 \`\`\`
-## No Changes to Archive
+## アーカイブ対象の変更なし
 
-No active changes found. Use \`/opsx:new\` to create a new change.
+進行中の変更はありません。\`/opsx:new\` で新しい変更を作成してください。
 \`\`\`
 
 **ガードレール**
