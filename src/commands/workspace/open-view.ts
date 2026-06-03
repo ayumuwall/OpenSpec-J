@@ -113,7 +113,7 @@ export function assertWorkspaceOpenSupportedOptions(options: WorkspaceOpenOption
 
   if (options.prepareOnly) {
     throw new WorkspaceCliError(
-      'workspace open は選択した opener からの起動に対応しています。プレビュー出力は将来の context/query 機能用に予約されています。',
+      'workspace open は選択した開き方で起動する操作に対応しています。プレビュー出力は将来の context/query 機能用に予約されています。',
       'workspace_open_prepare_only_unsupported',
       {
         target: 'workspace.open',
@@ -301,12 +301,12 @@ export async function prepareWorkspaceOpen(
           preferredOpener: openerOverride,
           linksForNewWorkspace: interactiveCreate
             ? () => promptSetupLinks({
-                heading: 'この workspace に repo または folder をリンク',
-                intro: 'この initiative を開くときに含めるローカル repo / folder を選ぶか、今はリンクなしで view を作成します。',
+                heading: 'この workspace にリポジトリまたはフォルダをリンク',
+                intro: 'この initiative を開くときに含めるローカルのリポジトリまたはフォルダを選ぶか、今はリンクなしで view を作成します。',
                 allowEmpty: true,
                 emptyName: 'workspace ファイルを作成',
                 emptyShort: 'リンクなしで作成',
-                emptyDescription: 'ローカル workspace view を作成し、repo または folder は後で追加',
+                emptyDescription: 'ローカル workspace view を作成し、リポジトリまたはフォルダは後で追加',
                 finishName: 'workspace を作成して開く',
                 finishShort: '作成して開く',
                 finishDescription: 'ローカル workspace view を作成して開き続ける',

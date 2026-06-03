@@ -309,7 +309,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
           {
             name: 'opener',
-            description: '優先 opener: codex-cli、claude、github-copilot、editor',
+            description: 'デフォルトの開き方: codex-cli、claude、github-copilot、editor',
             takesValue: true,
             values: ['codex-cli', 'claude', 'github-copilot', 'editor'],
           },
@@ -387,7 +387,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'update',
-        description: 'workspace ローカルの OpenSpec ガイドとエージェントスキルを更新',
+        description: 'ワークスペース内の OpenSpec ガイドとエージェントスキルを更新',
         acceptsPositional: true,
         positionals: [{ name: 'name', optional: true }],
         flags: [
@@ -398,7 +398,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
           {
             name: 'tools',
-            description: 'workspace のスキル配布対象エージェントを選択。ワークフローはグローバルプロファイルで選択',
+            description: 'ワークスペーススキルの配布対象エージェントを選択。ワークフローはグローバルプロファイルで選択',
             takesValue: true,
           },
           COMMON_FLAGS.json,
@@ -458,12 +458,12 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'context-store',
-    description: 'context store をセットアップ・確認',
+    description: 'ローカルの context store をセットアップ・確認',
     flags: [],
     subcommands: [
       {
         name: 'setup',
-        description: 'ローカル context store を作成または登録',
+        description: 'ローカルの context store を作成または登録',
         acceptsPositional: true,
         positionals: [{ name: 'id', optional: true }],
         flags: [
@@ -474,7 +474,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
           {
             name: 'init-git',
-            description: 'context store 内で Git リポジトリを初期化',
+            description: 'context store 内に Git リポジトリを初期化',
           },
           {
             name: 'no-init-git',
@@ -508,27 +508,27 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'remove',
-        description: 'ローカルの context-store 登録を解除し、ローカルフォルダも削除',
+        description: 'ローカルの context-store 登録を解除し、フォルダも削除',
         acceptsPositional: true,
         positionals: [{ name: 'id' }],
         flags: [
           {
             name: 'yes',
-            description: 'ローカル context-store フォルダの削除を確認済みにする',
+            description: 'ローカルの context-store フォルダ削除を確認済みにする',
           },
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'list',
-        description: '登録済み context store を一覧表示',
+        description: '登録済みの context store を一覧表示',
         flags: [
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'ls',
-        description: '登録済み context store を一覧表示',
+        description: '登録済みの context store を一覧表示',
         flags: [
           COMMON_FLAGS.json,
         ],
@@ -557,7 +557,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         flags: [
           {
             name: 'store',
-            description: 'ローカル context-store registry の context store ID',
+            description: 'ローカル context-store レジストリ上の context store ID',
             takesValue: true,
           },
           {
@@ -586,7 +586,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         flags: [
           {
             name: 'store',
-            description: 'ローカル context-store registry の context store ID',
+            description: 'ローカル context-store レジストリ上の context store ID',
             takesValue: true,
           },
           {
@@ -599,11 +599,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'list',
-        description: '登録済み context store 全体の initiative を一覧表示',
+        description: '登録済み context store 全体から initiative を一覧表示',
         flags: [
           {
             name: 'store',
-            description: 'ローカル context-store registry の context store ID',
+            description: 'ローカル context-store レジストリ上の context store ID',
             takesValue: true,
           },
           {
@@ -616,11 +616,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'ls',
-        description: '登録済み context store 全体の initiative を一覧表示',
+        description: '登録済み context store 全体から initiative を一覧表示',
         flags: [
           {
             name: 'store',
-            description: 'ローカル context-store registry の context store ID',
+            description: 'ローカル context-store レジストリ上の context store ID',
             takesValue: true,
           },
           {

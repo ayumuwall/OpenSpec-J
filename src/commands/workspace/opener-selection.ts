@@ -92,7 +92,7 @@ export function resolveWorkspaceOpenOpenerOverride(
       'workspace_opener_conflict',
       {
         target: 'workspace.opener',
-        fix: 'opener の上書き指定を 1 つだけ選んでください。',
+        fix: '開き方の上書き指定を 1 つだけ選んでください。',
       }
     );
   }
@@ -125,7 +125,7 @@ export async function resolveWorkspaceOpenOpener(
     const openerChoices = listWorkspaceOpenerChoices().filter((choice) => choice.available);
     if (openerChoices.length === 0) {
       throw new WorkspaceCliError(
-        'PATH 上に対応している workspace opener がありません。',
+        'PATH 上に workspace を開ける対応ツールがありません。',
         'workspace_no_available_openers',
         {
           target: 'workspace.opener',
@@ -138,11 +138,11 @@ export async function resolveWorkspaceOpenOpener(
   }
 
   throw new WorkspaceCliError(
-    'この workspace には preferred opener がまだ設定されていません。',
+    'この workspace にはデフォルトの開き方がまだ設定されていません。',
     'workspace_opener_unset',
     {
       target: 'workspace.opener',
-      fix: '--agent <tool> または --editor を指定するか、workspace setup を対話モードで実行してデフォルト opener を選んでください。',
+      fix: '--agent <tool> または --editor を指定するか、workspace setup を対話モードで実行してデフォルトの開き方を選んでください。',
     }
   );
 }

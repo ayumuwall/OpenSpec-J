@@ -438,7 +438,7 @@ describe('config profile interactive flow', () => {
       default: true,
     });
     expect(execSync).not.toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith('設定を更新しました。workspace-local skills に適用するには `openspec workspace update` を実行してください。');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定を更新しました。ワークスペース内のスキルに適用するには `openspec workspace update` を実行してください。');
   });
 
   it('confirmed workspace apply should run workspace update instead of repo-local update', async () => {
@@ -476,7 +476,7 @@ describe('config profile interactive flow', () => {
 
     expect(confirm).not.toHaveBeenCalled();
     expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('workspace-local なエージェントスキルが有効なグローバル profile と同期していません'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('ワークスペース内のエージェントスキルが有効なグローバル profile と同期していません'));
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('openspec workspace update'));
   });
 
@@ -512,7 +512,7 @@ describe('config profile interactive flow', () => {
     expect(select).not.toHaveBeenCalled();
     expect(checkbox).not.toHaveBeenCalled();
     expect(confirm).not.toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith('設定を更新しました。workspace-local skills に適用するには `openspec workspace update` を実行してください。');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定を更新しました。ワークスペース内のスキルに適用するには `openspec workspace update` を実行してください。');
   });
 
   it('Ctrl+C should cancel without stack trace and set interrupted exit code', async () => {

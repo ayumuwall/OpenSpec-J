@@ -222,7 +222,7 @@ describe('initiative command', () => {
     expect(create.exitCode).toBe(0);
     expect(create.stdout).toContain('initiative を作成しました');
     expect(create.stdout).toContain('ID: launch-billing-flow');
-    expect(create.stdout).toContain('Context store 名: team-context');
+    expect(create.stdout).toContain('コンテキストストア名: team-context');
     expect(create.stdout).toContain(
       `場所: ${expectedExistingPath(initiativeRoot(storeRoot, 'launch-billing-flow'))}`
     );
@@ -323,9 +323,9 @@ describe('initiative command', () => {
     const list = await runCLI(['initiative', 'ls'], { cwd: tempDir, env });
 
     expect(list.exitCode).toBe(0);
-    expect(list.stdout).toContain('OpenSpec initiatives（2 件の store 中 1 件）');
+    expect(list.stdout).toContain('OpenSpec initiatives（2 件の context store から 1 件）');
     expect(list.stdout).toContain('ID');
-    expect(list.stdout).toContain('Store');
+    expect(list.stdout).toContain('Context store');
     expect(list.stdout).toContain('タイトル');
     expect(list.stdout).toContain('billing-launch');
     expect(list.stdout).toContain('platform');
@@ -446,7 +446,7 @@ describe('initiative command', () => {
     expect(show.stdout).toContain('OpenSpec initiative: Billing Launch');
     expect(show.stdout).toContain('ID: billing-launch');
     expect(show.stdout).toContain('概要: Coordinate billing launch work.');
-    expect(show.stdout).toContain('Context store 名: platform');
+    expect(show.stdout).toContain('コンテキストストア名: platform');
     const expectedInitiativeRoot = expectedExistingPath(initiativeRoot(storeRoot, 'billing-launch'));
     expect(show.stdout).toContain(`場所: ${expectedInitiativeRoot}`);
     expect(show.stdout).toContain(

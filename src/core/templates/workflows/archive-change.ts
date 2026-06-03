@@ -35,7 +35,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    - **AskUserQuestion tool** で続行確認する
    - 同意があれば続行する
 
-   status が \`actionContext.mode: "workspace-planning"\` を報告した場合、このスライスでは workspace archive が未対応であると説明して停止する。workspace changes を repo-local archive へ移動したり、リンク済み repo を編集したりしない。
+   status が \`actionContext.mode: "workspace-planning"\` を報告した場合、このスライスでは workspace archive が未対応であると説明して停止する。workspace changes をリポジトリ内の archive へ移動したり、リンク済みリポジトリを編集したりしない。
 
 3. **タスク完了状況を確認する**
 
@@ -149,7 +149,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
    - 続行可否を確認する
    - 同意があれば続行する
 
-   status が \`actionContext.mode: "workspace-planning"\` を報告した場合、このスライスでは workspace archive が未対応であると説明して停止する。workspace changes を repo-local archive へ移動したり、リンク済み repo を編集したりしない。
+   status が \`actionContext.mode: "workspace-planning"\` を報告した場合、このスライスでは workspace archive が未対応であると説明して停止する。workspace changes をリポジトリ内の archive へ移動したり、リンク済みリポジトリを編集したりしない。
 
 3. **タスク完了状況を確認する**
 

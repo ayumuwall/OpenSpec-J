@@ -536,7 +536,7 @@ newCmd
   .option('--description <text>', 'README.md に追加する説明')
   .option('--goal <text>', '変更に保存する workspace product goal')
   .option('--areas <names>', '影響を受ける workspace link 名のカンマ区切り')
-  .option('--initiative <id>', 'repo-local change を initiative にリンク')
+  .option('--initiative <id>', 'リポジトリ内の change を initiative にリンク')
   .option('--store <id>', '--initiative 用の context store ID')
   .option('--store-path <path>', '--initiative 用の既存ローカル context store ルート')
   .option('--schema <name>', `使用するワークフロースキーマ（デフォルト: ${DEFAULT_SCHEMA}）`)
@@ -556,8 +556,8 @@ const setCmd = program.command('set').description('チェックイン済み Open
 
 setCmd
   .command('change <name>')
-  .description('repo-local change メタデータを設定')
-  .option('--initiative <id>', 'repo-local change を initiative にリンク')
+  .description('リポジトリ内の change メタデータを設定')
+  .option('--initiative <id>', 'リポジトリ内の change を initiative にリンク')
   .option('--store <id>', '--initiative 用の context store ID')
   .option('--store-path <path>', '--initiative 用の既存ローカル context store ルート')
   .option('--json', 'JSON で出力')

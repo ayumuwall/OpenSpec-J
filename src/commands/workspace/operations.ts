@@ -605,7 +605,7 @@ export async function updateWorkspaceLink(
   if (!hasWorkspaceLink(viewState.links, linkName)) {
     throw new WorkspaceCliError(`不明な workspace link '${linkName}' です。`, 'unknown_link_name', {
       target: `links.${linkName}`,
-      fix: 'openspec workspace doctor でリンク済み repo または folder を確認してください。',
+      fix: 'openspec workspace doctor でリンク済みリポジトリまたはフォルダを確認してください。',
     });
   }
 

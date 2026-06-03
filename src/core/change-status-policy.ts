@@ -93,9 +93,9 @@ export function buildActionContext(input: ActionContextInput): ActionContext {
       allowedEditRoots: [],
       requiresAffectedAreaSelection: true,
       constraints: [
-        'workspace-local な計画アーティファクトは、このローカル view の互換コンテキストとして扱ってください。',
+        'ワークスペース内の計画アーティファクトは、このローカル view の互換コンテキストとして扱ってください。',
         'initiative context がある場合は、永続的な調整には initiative を使ってください。',
-        '明示的な編集ルートが選択されるまでは、リンク済み repo と folder をコンテキストとして扱ってください。',
+        '明示的な編集ルートが選択されるまでは、リンク済みリポジトリとフォルダをコンテキストとして扱ってください。',
         '許可された編集ルートが明示されるまでは、実装編集を行わないでください。',
       ],
     };
@@ -108,7 +108,7 @@ export function buildActionContext(input: ActionContextInput): ActionContext {
     linkedContext: [],
     allowedEditRoots: [input.projectRoot],
     requiresAffectedAreaSelection: false,
-    constraints: ['repo-local な変更アーティファクトと実装編集は、このプロジェクト内に限定されます。'],
+    constraints: ['リポジトリ内の変更アーティファクトと実装編集は、このプロジェクト内に限定されます。'],
   };
 }
 

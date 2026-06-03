@@ -116,6 +116,19 @@ describe('InitCommand', () => {
       }
     });
 
+    it('should create Codex skills under .codex/skills', async () => {
+      const codexHome = path.join(testDir, 'codex-home');
+      process.env.CODEX_HOME = codexHome;
+      const initCommand = new InitCommand({ tools: 'codex', force: true });
+
+      await initCommand.execute(testDir);
+
+      const skillFile = path.join(testDir, '.codex', 'skills', 'openspec-propose', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+      expect(await fileExists(path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(false);
+      expect(await fileExists(path.join(codexHome, 'prompts', 'opsx-propose.md'))).toBe(true);
+    });
+
     it('should create core profile commands for Claude Code by default', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 

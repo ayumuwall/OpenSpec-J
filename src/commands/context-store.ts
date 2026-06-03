@@ -216,7 +216,7 @@ async function shouldInitializeGit(options: ContextStoreSetupOptions): Promise<b
 
   const { confirm } = await import('@inquirer/prompts');
   return confirm({
-    message: 'この context store で Git を初期化しますか？',
+    message: 'このコンテキストストアで Git を初期化しますか？',
     default: true,
   });
 }
@@ -238,7 +238,7 @@ async function promptContextStoreId(): Promise<string> {
   const { input } = await import('@inquirer/prompts');
 
   return input({
-    message: 'Context store 名',
+    message: 'コンテキストストア名',
     required: true,
     validate(value: string) {
       try {
@@ -256,7 +256,7 @@ async function promptContextStorePath(id: string): Promise<string> {
   const defaultPath = getDefaultContextStoreRoot(id);
 
   return input({
-    message: 'この context store をどこに置きますか？',
+    message: 'このコンテキストストアをどこに置きますか？',
     default: defaultPath,
     prefill: 'editable',
     required: true,
@@ -278,7 +278,7 @@ async function resolveSetupInput(
 
   if (!id && !interactive) {
     throw new ContextStoreError(
-      'context store 名を渡してください。',
+      'コンテキストストア名を渡してください。',
       'context_store_setup_id_required',
       {
         target: 'context_store.id',
@@ -342,13 +342,13 @@ async function confirmSetup(
   console.log('');
   console.log('OpenSpec は次を作成します:');
   console.log('');
-  console.log(`  Context store 名: ${prepared.id}`);
+  console.log(`  コンテキストストア名: ${prepared.id}`);
   console.log(`  場所: ${formatPathForHuman(prepared.root)}`);
   console.log(`  Git: ${initGit ? '初期化する' : '初期化しない'}`);
   console.log('');
 
   const confirmed = await confirm({
-    message: 'この context store を作成しますか？',
+    message: 'このコンテキストストアを作成しますか？',
     default: true,
   });
 
@@ -380,7 +380,7 @@ async function confirmRemove(id: string, root: string, options: ContextStoreRemo
 
   const { confirm } = await import('@inquirer/prompts');
   const confirmed = await confirm({
-    message: `ローカル context-store フォルダ ${formatPathForHuman(root)} を削除しますか？`,
+    message: `ローカルのコンテキストストアフォルダ ${formatPathForHuman(root)} を削除しますか？`,
     default: false,
   });
 
@@ -390,7 +390,7 @@ async function confirmRemove(id: string, root: string, options: ContextStoreRemo
       'context_store_remove_cancelled',
       {
         target: 'context_store.root',
-        fix: 'ローカル登録だけを忘れたい場合は context-store unregister を実行してください。',
+        fix: 'ファイルを残して登録だけ解除したい場合は context-store unregister を実行してください。',
       }
     );
   }
@@ -429,7 +429,7 @@ function printCleanupHuman(title: string, payload: ContextStoreCleanupOutput): v
 
 function printListHuman(payload: ContextStoreListOutput): void {
   if (payload.context_stores.length === 0) {
-    console.log('登録済み context store はありません。');
+    console.log('登録済みのコンテキストストアはありません。');
     console.log('');
     console.log('次:');
     console.log('  openspec context-store setup team-context');
@@ -437,7 +437,7 @@ function printListHuman(payload: ContextStoreListOutput): void {
     return;
   }
 
-  console.log(`OpenSpec context stores (${payload.context_stores.length})`);
+  console.log(`OpenSpec コンテキストストア (${payload.context_stores.length})`);
   console.log('');
   console.log(`${'ID'.padEnd(16)}場所`);
   for (const store of payload.context_stores) {
@@ -453,17 +453,17 @@ function formatMetadataHuman(store: ContextStoreDoctorOutput['context_stores'][n
 }
 
 function formatDoctorGitHuman(store: ContextStoreDoctorOutput['context_stores'][number]): string {
-  if (store.git.is_repository === null) return 'unknown';
-  return store.git.is_repository ? 'repository detected' : 'not detected';
+  if (store.git.is_repository === null) return '不明';
+  return store.git.is_repository ? 'Git リポジトリあり' : 'Git リポジトリなし';
 }
 
 function printDoctorHuman(payload: ContextStoreDoctorOutput): void {
   if (payload.context_stores.length === 0) {
-    console.log('登録済み context store はありません。');
+    console.log('登録済みのコンテキストストアはありません。');
     return;
   }
 
-  console.log('Context store 診断');
+  console.log('コンテキストストア診断');
   for (const store of payload.context_stores) {
     console.log('');
     console.log(store.id);
@@ -504,7 +504,7 @@ class ContextStoreCommand {
         return;
       }
 
-      printMutationHuman('Context store を準備しました', payload);
+      printMutationHuman('コンテキストストアを準備しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -526,7 +526,7 @@ class ContextStoreCommand {
         return;
       }
 
-      printMutationHuman('Context store を登録しました', payload);
+      printMutationHuman('コンテキストストアを登録しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -545,7 +545,7 @@ class ContextStoreCommand {
         return;
       }
 
-      printCleanupHuman('Context store の登録を解除しました', payload);
+      printCleanupHuman('コンテキストストアの登録を解除しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -566,7 +566,7 @@ class ContextStoreCommand {
         return;
       }
 
-      printCleanupHuman('Context store を削除しました', payload);
+      printCleanupHuman('コンテキストストアを削除しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -636,13 +636,13 @@ export function registerContextStoreCommand(program: Command): void {
   const contextStoreCommand = new ContextStoreCommand();
   const contextStore = program
     .command('context-store')
-    .description('ローカル context store をセットアップ・確認');
+    .description('ローカルのコンテキストストアをセットアップ・確認');
 
   contextStore
     .command('setup [id]')
-    .description('ローカル context store を作成して登録')
-    .option('--path <path>', 'context store フォルダパス。デフォルトは OpenSpec 管理のローカルデータ')
-    .option('--init-git', 'context store 内で Git リポジトリを初期化')
+    .description('ローカルのコンテキストストアを作成して登録')
+    .option('--path <path>', 'コンテキストストアのフォルダパス。デフォルトは OpenSpec 管理のローカルデータ')
+    .option('--init-git', 'コンテキストストア内で Git リポジトリを初期化')
     .option('--no-init-git', 'Git リポジトリを初期化しない')
     .option('--json', 'JSON で出力')
     .action(async (id: string | undefined, options: ContextStoreSetupOptions) => {
@@ -651,8 +651,8 @@ export function registerContextStoreCommand(program: Command): void {
 
   contextStore
     .command('register [path]')
-    .description('既存のローカル context store を登録')
-    .option('--id <id>', 'context store ID。デフォルトはメタデータまたはフォルダ名')
+    .description('既存のローカルコンテキストストアを登録')
+    .option('--id <id>', 'コンテキストストア ID。デフォルトはメタデータまたはフォルダ名')
     .option('--json', 'JSON で出力')
     .action(async (inputPath: string | undefined, options: ContextStoreRegisterOptions) => {
       await contextStoreCommand.register(inputPath, options);
@@ -660,7 +660,7 @@ export function registerContextStoreCommand(program: Command): void {
 
   contextStore
     .command('unregister <id>')
-    .description('ファイルを削除せず、ローカル context-store 登録を忘れる')
+    .description('ファイルを削除せず、ローカルの context-store 登録だけを解除')
     .option('--json', 'JSON で出力')
     .action(async (id: string, options: ContextStoreJsonOptions) => {
       await contextStoreCommand.unregister(id, options);
@@ -668,8 +668,8 @@ export function registerContextStoreCommand(program: Command): void {
 
   contextStore
     .command('remove <id>')
-    .description('ローカル context-store 登録を忘れ、そのローカルフォルダを削除')
-    .option('--yes', 'ローカル context-store フォルダ削除を確認')
+    .description('ローカルの context-store 登録を解除し、そのフォルダも削除')
+    .option('--yes', 'ローカルの context-store フォルダ削除を確認')
     .option('--json', 'JSON で出力')
     .action(async (id: string, options: ContextStoreRemoveOptions) => {
       await contextStoreCommand.remove(id, options);
@@ -678,7 +678,7 @@ export function registerContextStoreCommand(program: Command): void {
   contextStore
     .command('list')
     .alias('ls')
-    .description('ローカル登録済み context store を一覧表示')
+    .description('ローカル登録済みのコンテキストストアを一覧表示')
     .option('--json', 'JSON で出力')
     .action(async (options: ContextStoreJsonOptions) => {
       await contextStoreCommand.list(options);
@@ -686,7 +686,7 @@ export function registerContextStoreCommand(program: Command): void {
 
   contextStore
     .command('doctor [id]')
-    .description('ローカル context-store 登録とメタデータを確認')
+    .description('ローカルの context-store 登録とメタデータを確認')
     .option('--json', 'JSON で出力')
     .action(async (id: string | undefined, options: ContextStoreJsonOptions) => {
       await contextStoreCommand.doctor(id, options);

@@ -55,7 +55,7 @@ describe('available-tools', () => {
     });
 
     it('should only return tools that have a skillsDir property', async () => {
-      // .agents value has no skillsDir in AI_TOOLS config
+      // AGENTS.md compatibility entry has no skillsDir in AI_TOOLS config
       // Create directories for both a valid and the agents case
       await fs.mkdir(path.join(testDir, '.claude'), { recursive: true });
 

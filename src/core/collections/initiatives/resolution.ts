@@ -152,7 +152,7 @@ export function initiativeDiagnosticFromError(error: unknown): InitiativeDiagnos
   if (message.startsWith('Invalid initiative')) {
     return makeDiagnostic('error', 'invalid_initiative', message, {
       target: 'initiative',
-      fix: 'initiative folder の状態を修正してから再試行してください。',
+      fix: 'initiative フォルダの状態を修正してから再試行してください。',
     });
   }
 
@@ -197,7 +197,7 @@ export function parseInitiativeReference(
 
   if (options.store !== undefined || options.storePath !== undefined) {
     throw new InitiativeResolutionError(
-      '--initiative <store>/<id> と context store selector はどちらか一方だけを指定してください。',
+      '--initiative <store>/<id> と context store の選択オプションはどちらか一方だけを指定してください。',
       'context_store_selector_conflict',
       {
         target: 'context_store',
@@ -234,7 +234,7 @@ function contextStoreErrorAsInitiativeError(error: unknown): InitiativeResolutio
 
   return new InitiativeResolutionError(message, 'invalid_context_store', {
     target: 'context_store',
-    fix: 'context store registry を修正するか、--store-path <path> を指定してください。',
+    fix: 'context store レジストリを修正するか、--store-path <path> を指定してください。',
   });
 }
 
@@ -534,7 +534,7 @@ export async function listInitiativeViewReferences(
 
   if (contextStores.length === 0 && invalidCollections.length > 0) {
     throw new InitiativeResolutionError(
-      '登録済み context store に不正な initiative が含まれているため、initiative を読み取れませんでした。',
+      '登録済みの context store に不正な initiative が含まれているため、initiative を読み取れませんでした。',
       'initiative_collections_invalid',
       {
         target: 'initiative',
@@ -545,7 +545,7 @@ export async function listInitiativeViewReferences(
 
   if (contextStoreResults.length === 0) {
     throw new InitiativeResolutionError(
-      '登録済み context store から initiative を読み取れませんでした。',
+      '登録済みの context store から initiative を読み取れませんでした。',
       'context_stores_unreadable',
       {
         target: 'context_store',
@@ -619,7 +619,7 @@ export async function resolveInitiativeViewReference(
 
   if (unreadable.length > 0) {
     throw new InitiativeResolutionError(
-      `一部の context store を読み取れなかったため、'${parsed.initiativeId}' の initiative 検索は不完全です。`,
+      `一部の context store を読み取れなかったため、'${parsed.initiativeId}' の initiative 検索は完了できませんでした。`,
       'initiative_lookup_incomplete',
       {
         target: 'context_store',
@@ -633,7 +633,7 @@ export async function resolveInitiativeViewReference(
 
   if (matches.length === 0) {
     throw new InitiativeResolutionError(
-      `Initiative '${parsed.initiativeId}' は登録済み context store に見つかりませんでした。`,
+      `Initiative '${parsed.initiativeId}' は登録済みの context store に見つかりませんでした。`,
       'initiative_not_found',
       {
         target: 'initiative.id',

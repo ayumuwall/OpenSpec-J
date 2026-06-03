@@ -144,13 +144,13 @@ describe('workspace command interactive flows', () => {
     input.mockImplementation(async (options: { message: string; validate?: (value: string) => true | string }) => {
       if (options.message === 'Workspace 名:') {
         expect(options.validate?.('Bad_Name')).toBe(
-          'Workspace name は小文字・数字・単一ハイフン区切りの kebab-case でなければなりません'
+          'Workspace 名は小文字・数字・単一ハイフン区切りの kebab-case にしてください'
         );
         return 'platform';
       }
 
-      if (options.message === 'Repo または folder パス:') {
-        expect(options.validate?.('missing-api')).toBe('既存の repo または folder パスを入力してください。');
+      if (options.message === 'リポジトリまたはフォルダのパス:') {
+        expect(options.validate?.('missing-api')).toBe('既存のリポジトリまたはフォルダのパスを入力してください。');
         return api;
       }
 
@@ -163,7 +163,7 @@ describe('workspace command interactive flows', () => {
     expect(process.exitCode).toBeUndefined();
     expect(input.mock.calls.map((call) => call[0].message)).toEqual([
       'Workspace 名:',
-      'Repo または folder パス:',
+      'リポジトリまたはフォルダのパス:',
     ]);
     expect(input.mock.calls[0][0]).toEqual(
       expect.objectContaining({
@@ -199,7 +199,7 @@ describe('workspace command interactive flows', () => {
     );
   });
 
-  it('asks for a preferred opener after links and records the selected opener', async () => {
+  it('asks for a default opener after links and records the selected opener', async () => {
     const api = mkdir('repos/api');
     const binDir = mkdir('bin');
     const codePath = path.join(binDir, process.platform === 'win32' ? 'code.cmd' : 'code');
@@ -213,7 +213,7 @@ describe('workspace command interactive flows', () => {
         return 'platform';
       }
 
-      if (options.message === 'Repo または folder パス:') {
+      if (options.message === 'リポジトリまたはフォルダのパス:') {
         return api;
       }
 
@@ -224,7 +224,7 @@ describe('workspace command interactive flows', () => {
         return 'finish';
       }
 
-      if (options.message === '優先 opener:') {
+      if (options.message === 'デフォルトの開き方:') {
         expect(options.choices?.map((choice) => choice.value)).toEqual(
           expect.arrayContaining(['editor', 'github-copilot'])
         );
@@ -244,7 +244,7 @@ describe('workspace command interactive flows', () => {
     });
   });
 
-  it('asks which agents get OpenSpec skills and preselects the preferred opener', async () => {
+  it('asks which agents get OpenSpec skills and preselects the default opener', async () => {
     const api = mkdir('repos/api');
     const binDir = mkdir('bin');
     const codexPath = path.join(binDir, process.platform === 'win32' ? 'codex.cmd' : 'codex');
@@ -258,7 +258,7 @@ describe('workspace command interactive flows', () => {
         return 'platform';
       }
 
-      if (options.message === 'Repo または folder パス:') {
+      if (options.message === 'リポジトリまたはフォルダのパス:') {
         return api;
       }
 
@@ -269,7 +269,7 @@ describe('workspace command interactive flows', () => {
         return 'finish';
       }
 
-      if (options.message === '優先 opener:') {
+      if (options.message === 'デフォルトの開き方:') {
         return 'codex-cli';
       }
 
@@ -309,11 +309,11 @@ describe('workspace command interactive flows', () => {
         return 'platform';
       }
 
-      if (options.message === 'Repo または folder パス:') {
+      if (options.message === 'リポジトリまたはフォルダのパス:') {
         return firstApi;
       }
 
-      if (options.message === '別の repo または folder パス:') {
+      if (options.message === '別のリポジトリまたはフォルダのパス:') {
         return secondApi;
       }
 
@@ -334,8 +334,8 @@ describe('workspace command interactive flows', () => {
     expect(process.exitCode).toBeUndefined();
     expect(input.mock.calls.map((call) => call[0].message)).toEqual([
       'Workspace 名:',
-      'Repo または folder パス:',
-      '別の repo または folder パス:',
+      'リポジトリまたはフォルダのパス:',
+      '別のリポジトリまたはフォルダのパス:',
       'Link 名:',
     ]);
     expect(confirm).not.toHaveBeenCalled();
@@ -358,7 +358,7 @@ describe('workspace command interactive flows', () => {
         return 'platform';
       }
 
-      if (options.message === 'Repo または folder パス:') {
+      if (options.message === 'リポジトリまたはフォルダのパス:') {
         return linkedRoot;
       }
 
@@ -377,7 +377,7 @@ describe('workspace command interactive flows', () => {
     expect(process.exitCode).toBeUndefined();
     expect(input.mock.calls.map((call) => call[0].message)).toEqual([
       'Workspace 名:',
-      'Repo または folder パス:',
+      'リポジトリまたはフォルダのパス:',
       'Link 名:',
     ]);
     expect(confirm).not.toHaveBeenCalled();
@@ -465,7 +465,7 @@ describe('workspace command interactive flows', () => {
     expect(process.exitCode).toBe(1);
     expect(select).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('PATH 上に対応している workspace opener がありません。')
+      expect.stringContaining('PATH 上に workspace を開ける対応ツールがありません。')
     );
   });
 
@@ -532,7 +532,7 @@ describe('workspace command interactive flows', () => {
     let continuePromptCount = 0;
 
     input.mockImplementation(async (options: { message: string }) => {
-      if (options.message === 'Repo または folder パス:') {
+      if (options.message === 'リポジトリまたはフォルダのパス:') {
         return api;
       }
 
@@ -629,7 +629,7 @@ describe('workspace command interactive flows', () => {
               value: 'finish',
             }),
             expect.objectContaining({
-              name: 'repo または folder を追加',
+              name: 'リポジトリまたはフォルダを追加',
               value: 'add',
             }),
           ])

@@ -1519,7 +1519,7 @@ links:
 
     expect(editorOpen.exitCode).toBe(0);
     expect(editorOpen.stdout).toContain('Workspace を開きます: platform');
-    expect(editorOpen.stdout).toContain('Opener: VS Code editor');
+    expect(editorOpen.stdout).toContain('開き方: VS Code editor');
     expect(editorOpen.stdout).toContain('web ->');
     const workspaceFolders = JSON.parse(
       fs.readFileSync(getWorkspaceCodeWorkspacePath(setup.workspace.root, 'platform'), 'utf-8')
@@ -1651,7 +1651,7 @@ links:
       env,
     });
     expect(unset.exitCode).toBe(1);
-    expect(unset.stderr).toContain('preferred opener がまだ設定されていません');
+    expect(unset.stderr).toContain('デフォルトの開き方がまだ設定されていません');
 
     fs.writeFileSync(
       getWorkspaceViewStatePath(platform.workspace.root),

@@ -152,7 +152,7 @@ describe('context store registry facade', () => {
         localPath: storeRoot,
         globalDataDir: tempDir,
       })
-    ).rejects.toThrow(/登録済み id.*一致しません/u);
+    ).rejects.toThrow(/登録済み ID.*一致しません/u);
 
     await expect(readContextStoreRegistryState({ globalDataDir: tempDir })).resolves.toBeNull();
   });
@@ -413,7 +413,7 @@ describe('context store registry facade', () => {
   it('rejects missing registry entries and bad registered metadata', async () => {
     await expect(
       resolveRegisteredContextStore({ id: 'missing-context', globalDataDir: tempDir })
-    ).rejects.toThrow(/context store registry が見つかりません/u);
+    ).rejects.toThrow(/context store レジストリが見つかりません/u);
 
     const missingMetadataRoot = mkdir('missing-metadata');
     const mismatchedRoot = mkdir('mismatched');
@@ -449,7 +449,7 @@ describe('context store registry facade', () => {
 
     await expect(
       resolveRegisteredContextStore({ id: 'mismatched', globalDataDir: tempDir })
-    ).rejects.toThrow(/登録済み id.*一致しません/u);
+    ).rejects.toThrow(/登録済み ID.*一致しません/u);
   });
 
   it('refuses a prepared remove when the registry entry changes before deletion', async () => {

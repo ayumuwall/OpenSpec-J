@@ -20,7 +20,7 @@ export interface InitiativeSelectorOptions {
 }
 
 export const REPO_LOCAL_INITIATIVE_LINK_ERROR =
-  'Initiative link は repo-local change でのみ利用できます。実装計画を所有する repo からこのコマンドを実行してください。';
+  'Initiative link はリポジトリ内の change でのみ利用できます。実装計画を所有するリポジトリからこのコマンドを実行してください。';
 
 export function printJson(payload: unknown): void {
   console.log(JSON.stringify(payload, null, 2));

@@ -1,6 +1,6 @@
 ## Context
 
-workspace planning context、関連するリンク済み領域、制約を要約してください。
+workspace planning のコンテキスト、関連するリンク済み領域、制約を要約してください。
 
 ## Goals / Non-Goals
 
@@ -8,7 +8,7 @@ workspace planning context、関連するリンク済み領域、制約を要約
 -
 
 **Non-Goals:**
-- 影響領域が選択される前に repo-local な実装アーティファクトを作成すること。
+- 影響領域が選択される前に、リポジトリ内の実装アーティファクトを作成すること。
 
 ## Decisions
 

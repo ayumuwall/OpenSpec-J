@@ -22,9 +22,9 @@ export const WORKSPACE_GUIDANCE_BODY = `# OpenSpec Workspace Guidance
 
 - 調整された作業のローカルビューを開くために、この workspace を使います。
 - チーム横断またはリポジトリ横断の意図、決定、要件、調整コンテキストには initiative を使います。
-- リポジトリまたはチームが所有する実装計画には、リポジトリローカルの OpenSpec changes を使います。
+- リポジトリまたはチームが所有する実装計画には、リポジトリ内の OpenSpec changes を使います。
 - リンク済みリポジトリとフォルダは、コンテキスト確認、所有範囲の把握、作業を所有する場所での編集に使います。
-- workspace ローカルのファイルには、ローカルパス、opener 状態、エージェント設定、その他マシン固有のビュー状態だけを置きます。
+- workspace 内のファイルには、ローカルパス、開き方の設定、エージェント設定、その他マシン固有のビュー状態だけを置きます。
 - \`.openspec-workspace/view.yaml\` を手で編集せず、OpenSpec workspace コマンドを使ってください。
 - この workspace に古い beta の workspace-level planning ファイルが含まれる場合、ユーザーが明示的にその beta フローを使うよう求めない限り、互換用コンテキストとして扱ってください。`;
 

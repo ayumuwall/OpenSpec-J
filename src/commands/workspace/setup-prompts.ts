@@ -41,7 +41,7 @@ async function promptExistingPath(message: string, defaultPath?: string): Promis
         : path.resolve(process.cwd(), value);
       return fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()
         ? true
-        : '既存の repo または folder パスを入力してください。';
+        : '既存のリポジトリまたはフォルダのパスを入力してください。';
     },
   });
 
@@ -76,8 +76,8 @@ export async function promptSetupLinks(
 ): Promise<Record<string, string>> {
   const { select } = await import('@inquirer/prompts');
   const links: Record<string, string> = {};
-  const heading = options.heading ?? '[2/5] repo または folder をリンク';
-  const intro = options.intro ?? '現在のディレクトリから始めるか、別の repo パスを入力してください。';
+  const heading = options.heading ?? '[2/5] リポジトリまたはフォルダをリンク';
+  const intro = options.intro ?? '現在のディレクトリから始めるか、別のリポジトリパスを入力してください。';
 
   console.log('');
   console.log(chalk.bold(heading));
@@ -95,11 +95,11 @@ export async function promptSetupLinks(
             name: options.emptyName ?? options.finishName ?? 'workspace ファイルを作成',
             short: options.emptyShort ?? options.finishShort ?? 'workspace ファイルを作成',
             value: 'finish',
-            description: options.emptyDescription ?? 'repo または folder をリンクせずに workspace を作成',
+            description: options.emptyDescription ?? 'リポジトリまたはフォルダをリンクせずに workspace を作成',
           },
           {
-            name: 'repo または folder を追加',
-            short: 'repo を追加',
+            name: 'リポジトリまたはフォルダを追加',
+            short: 'リポジトリを追加',
             value: 'add',
             description: 'この workspace にローカル実装コンテキストを含める',
           },
@@ -113,7 +113,7 @@ export async function promptSetupLinks(
     }
 
     const resolvedPath = await promptExistingPath(
-      linkCount === 0 ? 'Repo または folder パス:' : '別の repo または folder パス:',
+      linkCount === 0 ? 'リポジトリまたはフォルダのパス:' : '別のリポジトリまたはフォルダのパス:',
       linkCount === 0 ? '.' : undefined
     );
     let linkName = inferLinkName(resolvedPath);
@@ -144,7 +144,7 @@ export async function promptSetupLinks(
           description: options.finishDescription ?? 'セットアップ後に workspace チェックを実行',
         },
         {
-          name: '別の repo または folder を追加',
+          name: '別のリポジトリまたはフォルダを追加',
           short: '別の項目を追加',
           value: 'add',
           description: 'この workspace に別のローカルディレクトリを含める',

@@ -85,7 +85,7 @@ async function promptWorkspaceName(initialName?: string): Promise<string> {
   const { input } = await import('@inquirer/prompts');
 
   console.log(chalk.bold('[1/5] workspace に名前を付ける'));
-  console.log(chalk.dim('repo グループ用の安定した名前を使ってください（例: platform）。'));
+  console.log(chalk.dim('リポジトリ群を表す、後から見ても分かる名前を使ってください（例: platform）。'));
   console.log('');
 
   return input({
@@ -97,7 +97,7 @@ async function promptWorkspaceName(initialName?: string): Promise<string> {
         validateWorkspaceNameForSetup(value);
         return true;
       } catch {
-        return 'Workspace name は小文字・数字・単一ハイフン区切りの kebab-case でなければなりません';
+        return 'Workspace 名は小文字・数字・単一ハイフン区切りの kebab-case にしてください';
       }
     },
   });
@@ -148,7 +148,7 @@ async function promptWorkspaceSkillAgents(
   if (preferredAgentId) {
     const preferredTool = tools.find((tool) => tool.value === preferredAgentId);
     if (preferredTool) {
-      console.log(`${preferredTool.name} は優先 opener と一致するため、あらかじめ選択されています。`);
+      console.log(`${preferredTool.name} はデフォルトの開き方と一致するため、あらかじめ選択されています。`);
     }
   }
 
@@ -220,7 +220,7 @@ function printDoctorHuman(result: { workspace: WorkspaceOutput; status: Workspac
   } else {
     console.log('  initiative の調整コンテキストは関連付けられていません。');
   }
-  console.log('  リンク済みリポジトリとフォルダは、選択時のローカル実装コンテキストです。');
+  console.log('  リンク済みリポジトリとフォルダは、実装対象を選ぶためのローカルコンテキストです。');
 
   if (issues.length === 0) {
     console.log('');
@@ -416,7 +416,7 @@ function printWorkspaceOpenHuman(prepared: PreparedWorkspaceOpen): void {
     console.log(`Initiative: ${prepared.initiative.store}/${prepared.initiative.id}`);
     console.log(`Initiative パス: ${prepared.initiative.root}`);
   }
-  console.log(`Opener: ${getWorkspaceOpenerLabel(prepared.opener)}`);
+  console.log(`開き方: ${getWorkspaceOpenerLabel(prepared.opener)}`);
 
   if (prepared.skipped.length === 0) {
     return;
@@ -467,10 +467,10 @@ class WorkspaceCommand {
       const links = interactive ? await promptSetupLinks() : await parseSetupLinks(options.link);
       if (interactive) {
         console.log('');
-        console.log(chalk.bold('[3/5] 優先 opener を選択'));
+        console.log(chalk.bold('[3/5] デフォルトの開き方を選択'));
       }
       const preferredOpener = interactive
-        ? await promptPreferredOpener('優先 opener:')
+        ? await promptPreferredOpener('デフォルトの開き方:')
         : parseSetupOpenerOption(options.opener);
 
       let selectedWorkspaceSkillAgents: string[] | undefined;

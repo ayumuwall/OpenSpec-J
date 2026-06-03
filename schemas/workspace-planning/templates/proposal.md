@@ -1,6 +1,6 @@
 ## Why
 
-この workspace-level change を計画する価値がある共有プロダクト目標、問題、または機会を説明してください。
+このワークスペース単位の change を計画する価値がある共有プロダクト目標、問題、または機会を説明してください。
 
 ## What Changes
 
@@ -24,5 +24,5 @@
 ## Impact
 
 - Workspace planning:
-- リンク済み repos または folders:
+- リンク済みリポジトリまたはフォルダ:
 - ユーザー向け挙動:

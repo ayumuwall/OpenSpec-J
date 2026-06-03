@@ -215,7 +215,7 @@ function printCreateHuman(payload: InitiativeCreateOutput): void {
   console.log(`ID: ${payload.initiative.id}`);
   console.log(`タイトル: ${payload.initiative.title}`);
   console.log(`状態: ${payload.initiative.status}`);
-  console.log(`Context store 名: ${payload.context_store.id}`);
+  console.log(`コンテキストストア名: ${payload.context_store.id}`);
   console.log(`場所: ${payload.initiative.root}`);
   console.log('');
   console.log(`作成ファイル (${payload.created_files.length}):`);
@@ -229,13 +229,13 @@ function printCreateHuman(payload: InitiativeCreateOutput): void {
 
 function printTableHeader(includeStore: boolean): void {
   const idHeader = 'ID'.padEnd(22);
-  const storeHeader = includeStore ? `${'Store'.padEnd(12)}` : '';
+  const storeHeader = includeStore ? `${'Context store'.padEnd(16)}` : '';
   console.log(`${idHeader}${storeHeader}タイトル`);
 }
 
 function printInitiativeRow(initiative: InitiativeOutput, includeStore: boolean): void {
   const id = initiative.id.padEnd(22);
-  const store = includeStore ? `${initiative.store.padEnd(12)}` : '';
+  const store = includeStore ? `${initiative.store.padEnd(16)}` : '';
   console.log(`${id}${store}${initiative.title}`);
 }
 
@@ -281,13 +281,13 @@ function printListHuman(payload: InitiativeListOutput): void {
   }
 
   if (payload.initiatives.length === 0) {
-    console.log('登録済み context store 全体で initiative は見つかりませんでした。');
+    console.log('登録済みの context store には initiative が見つかりませんでした。');
     printListStatuses(payload.status);
     return;
   }
 
   console.log(
-    `OpenSpec initiatives（${payload.context_stores.length} 件の store 中 ${payload.initiatives.length} 件）`
+    `OpenSpec initiatives（${payload.context_stores.length} 件の context store から ${payload.initiatives.length} 件）`
   );
   console.log('');
   printTableHeader(true);
@@ -306,7 +306,7 @@ function printShowHuman(payload: InitiativeShowOutput): void {
   console.log('');
   console.log(`ID: ${payload.initiative.id}`);
   console.log(`概要: ${payload.initiative.summary}`);
-  console.log(`Context store 名: ${payload.context_store.id}`);
+  console.log(`コンテキストストア名: ${payload.context_store.id}`);
   console.log(`場所: ${payload.initiative.root}`);
   console.log(`メタデータ: ${payload.initiative.metadata_path}`);
 }
@@ -497,7 +497,7 @@ export function registerInitiativeCommand(program: Command): void {
     initiative
       .command('list')
       .alias('ls')
-      .description('登録済み context store 全体の initiative を一覧表示')
+      .description('登録済み context store 全体から initiative を一覧表示')
   ).action(async (options: InitiativeListOptions) => {
     await initiativeCommand.list(options);
   });

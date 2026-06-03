@@ -397,7 +397,7 @@ describe('repo-local change initiative links', () => {
 
     expect(result.exitCode).toBe(1);
     const payload = parseJson(result);
-    expect(payload.status[0].message).toContain('repo-local change');
+    expect(payload.status[0].message).toContain('リポジトリ内の change');
     expect(fs.existsSync(path.join(workspaceRoot, 'changes', 'workspace-linked-change'))).toBe(false);
   });
 
@@ -527,6 +527,6 @@ describe('repo-local change initiative links', () => {
     );
 
     expect(result.exitCode).toBe(1);
-    expect(parseJson(result).status[0].message).toContain('repo-local change');
+    expect(parseJson(result).status[0].message).toContain('リポジトリ内の change');
   });
 });

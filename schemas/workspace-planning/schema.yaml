@@ -1,39 +1,39 @@
 name: workspace-planning
 version: 1
-description: 領域横断の変更向けワークスペース計画ワークフロー
+description: 複数領域にまたがる変更をワークスペースで計画するためのワークフロー
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: プロダクト目標、スコープ、影響領域、影響を含む共有ワークスペース proposal
+    description: プロダクト目標、スコープ、影響範囲、ユーザー影響をまとめるワークスペース用 proposal
     template: proposal.md
     instruction: |
-      共有プロダクト目標を一度だけ捉える、ワークスペースレベルの proposal を作成してください。
+      共有プロダクト目標を 1 か所にまとめる、ワークスペース用の proposal を作成してください。
 
       Sections:
       - **Why**: プロダクト目標または問題を 1-2 段落で簡潔に説明する。
       - **What Changes**: 領域横断の挙動、ワークフロー、機能の変更を列挙する。
-      - **Affected Areas**: 既知の影響領域を、可能なら登録済み workspace link 名で示す。スコープをまだ探索中なら、未解決事項を明示する。
-      - **Capabilities**: specs が必要な workspace-scoped capabilities を特定する。領域固有の要件は後で `specs/<area-or-repo>/<capability>/spec.md` 配下に置く。
-      - **Impact**: repo-local アーティファクトを作らず、ユーザー向け影響、計画への影響、想定される実装場所を要約する。
+      - **Affected Areas**: 既知の影響領域を、可能なら登録済み workspace link 名で示す。スコープをまだ調査中なら、未解決事項を明示する。
+      - **Capabilities**: specs が必要なワークスペース全体の capability を特定する。領域固有の要件は後で `specs/<area-or-repo>/<capability>/spec.md` 配下に置く。
+      - **Impact**: リポジトリ内アーティファクトを作らず、ユーザー影響、計画への影響、想定される実装場所を要約する。
 
-      明示的な実装ワークフローが影響領域を選択するまでは、リンク済み repo と folder は探索コンテキストとして扱ってください。
+      明示的な実装ワークフローで影響領域を選ぶまでは、リンク済みリポジトリとフォルダを調査用コンテキストとして扱ってください。
     requires: []
 
   - id: specs
     generates: "specs/**/*.md"
-    description: 影響領域と機能で整理された workspace-scoped specs
+    description: 影響領域と機能で整理したワークスペース用 specs
     template: spec.md
     instruction: |
-      何が変わるべきかを定義する workspace-scoped な仕様ファイルを作成してください。
+      何が変わるべきかを定義する、ワークスペース用の仕様ファイルを作成してください。
 
-      領域固有の要件には `specs/<area-or-repo>/<capability>/spec.md` を使います。登録済み領域が要件を所有する場合、先頭のパスセグメントは登録済み workspace link 名にしてください。領域が未解決の場合は探索用の領域名を使い、未解決の問いを requirement または scenario で明示してください。
+      領域固有の要件には `specs/<area-or-repo>/<capability>/spec.md` を使います。登録済み領域が要件を担当する場合、先頭のパスセグメントは登録済み workspace link 名にしてください。領域が未確定の場合は調査用の領域名を使い、未解決の問いを requirement または scenario で明示してください。
 
-      これらの specs は workspace change root 配下の計画アーティファクトです。workspace planning 中にリンク済み repo 内へ repo-local な spec ファイルを作成しないでください。
+      これらの specs は workspace change root 配下の計画アーティファクトです。workspace planning 中にリンク済みリポジトリ内へ spec ファイルを作成しないでください。
 
       Delta operations (use ## headers):
-      - **ADDED Requirements**: 新しい workspace-scoped behavior。
-      - **MODIFIED Requirements**: 変更された behavior。更新後の requirement 全体を含める。
-      - **REMOVED Requirements**: 廃止された behavior。Reason と Migration を含める。
+      - **ADDED Requirements**: 新しいワークスペース全体の振る舞い。
+      - **MODIFIED Requirements**: 変更された振る舞い。更新後の requirement 全体を含める。
+      - **REMOVED Requirements**: 廃止された振る舞い。Reason と Migration を含める。
       - **RENAMED Requirements**: 名前変更のみ。FROM:/TO: 形式を使う。
 
       各 requirement は SHALL/MUST の表現を使い、少なくとも 1 つの `#### Scenario:` ブロックを含めてください。
@@ -42,23 +42,23 @@ artifacts:
 
   - id: design
     generates: design.md
-    description: 領域横断の技術設計と調整判断
+    description: 領域横断の技術設計と調整方針
     template: design.md
     instruction: |
       workspace planning のための領域横断 design 文書を作成してください。
 
-      複数領域に影響する判断、領域間の引き継ぎ、共有制約、順序リスク、workspace plan をソース・オブ・トゥルースとして保つ方法に集中してください。行単位の実装詳細は避け、明示的な実装ワークフローが許可された編集ルートを提供するまで、リンク済み repo の編集をエージェントに指示しないでください。
+      複数領域に影響する判断、領域間の引き継ぎ、共有制約、順序リスク、workspace plan を計画の基準として保つ方法に集中してください。行単位の実装詳細は避け、明示的な実装ワークフローで編集可能なルートが決まるまで、リンク済みリポジトリの編集をエージェントに指示しないでください。
     requires:
       - proposal
 
   - id: tasks
     generates: tasks.md
-    description: workspace planning と後続の影響領域実装向け調整チェックリスト
+    description: workspace planning と後続の影響領域実装に向けた調整チェックリスト
     template: tasks.md
     instruction: |
-      workspace coordination タスクリストを作成してください。
+      workspace coordination 用のタスクリストを作成してください。
 
-      必要に応じてフェーズまたは影響領域ごとにタスクをグループ化します。実行可能な各項目は `- [ ]` のチェックボックスにしてください。実装タスクが領域固有の場合は影響領域名を示し、後続の実装ワークフローが許可された編集ルートを選択するまでは計画粒度に留めてください。
+      必要に応じてフェーズまたは影響領域ごとにタスクをグループ化します。実行可能な各項目は `- [ ]` のチェックボックスにしてください。実装タスクが領域固有の場合は影響領域名を示し、後続の実装ワークフローで編集可能なルートが決まるまでは計画レベルに留めてください。
     requires:
       - specs
       - design
@@ -68,5 +68,5 @@ apply:
   tracks: tasks.md
   instruction: |
     適用前に status と instructions の出力から workspace planning context を読んでください。
-    実装編集を行う前に、影響領域を選択し、許可された編集ルートを確認してください。
-    明示的な実装 context が利用可能になるまで、リンク済み repo と folder は読み取り専用の探索コンテキストとして扱ってください。
+    実装編集を行う前に、影響領域を選択し、編集可能なルートを確認してください。
+    明示的な実装 context が利用可能になるまで、リンク済みリポジトリとフォルダは読み取り専用の調査用コンテキストとして扱ってください。

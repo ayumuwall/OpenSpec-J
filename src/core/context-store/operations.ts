@@ -229,7 +229,7 @@ async function assertSetupPathIsNotNestedInGitRepo(
   if (!containingGitRoot) return;
 
   throw new ContextStoreError(
-    `context store setup パスは別の Git リポジトリ内にあります: ${containingGitRoot}`,
+    `context store setup のパスは別の Git リポジトリ内にあります: ${containingGitRoot}`,
     'context_store_setup_inside_git_repo',
     {
       target: 'context_store.root',
@@ -286,7 +286,7 @@ function resolveSetupRoot(id: string, inputPath: string | undefined): string {
 
 function resolveRegisterRoot(inputPath: string | undefined): string {
   if (inputPath === undefined || inputPath.trim().length === 0) {
-    throw new ContextStoreError('context store path を指定してください。', 'context_store_path_required', {
+    throw new ContextStoreError('context store のパスを指定してください。', 'context_store_path_required', {
       target: 'context_store.root',
       fix: 'openspec context-store register /path/to/context-store',
     });
@@ -331,7 +331,7 @@ async function prepareSetupPlan(
 
   if (kind === 'file' || kind === 'other') {
     throw new ContextStoreError(
-      `context store setup path はディレクトリではありません: ${storeRoot}`,
+      `context store setup のパスはディレクトリではありません: ${storeRoot}`,
       'context_store_setup_path_not_directory',
       {
         target: 'context_store.root',
@@ -359,17 +359,17 @@ async function prepareSetupPlan(
           'context_store_metadata_id_mismatch',
           {
             target: 'context_store.metadata',
-            fix: `id '${metadata.id}' を使うか、別の setup path を選んでください。`,
+            fix: `id '${metadata.id}' を使うか、別の setup パスを選んでください。`,
           }
         );
       }
     } else if (!(await isDirectoryEmpty(storeRoot))) {
       throw new ContextStoreError(
-        'context store setup は、空ではない folder の初期化にはまだ対応していません。',
+        'context store setup は、空ではないフォルダの初期化にはまだ対応していません。',
         'context_store_setup_non_empty_directory',
         {
           target: 'context_store.root',
-          fix: '空の folder を作成するか、既存の context store には context-store register を使ってください。',
+          fix: '空のフォルダを作成するか、既存の context store には context-store register を使ってください。',
         }
       );
     }
@@ -473,22 +473,22 @@ export async function registerExistingContextStore(
 
   if (kind === 'missing') {
     throw new ContextStoreError(
-      `context store path が存在しません: ${storeRoot}`,
+      `context store のパスが存在しません: ${storeRoot}`,
       'context_store_path_missing',
       {
         target: 'context_store.root',
-        fix: '登録前に context store folder を clone または作成してください。',
+        fix: '登録前に context store フォルダを clone または作成してください。',
       }
     );
   }
 
   if (kind !== 'directory') {
     throw new ContextStoreError(
-      `context store path はディレクトリではありません: ${storeRoot}`,
+      `context store のパスはディレクトリではありません: ${storeRoot}`,
       'context_store_path_not_directory',
       {
         target: 'context_store.root',
-        fix: '既存の context store directory を指定してください。',
+        fix: '既存の context store ディレクトリを指定してください。',
       }
     );
   }
@@ -502,7 +502,7 @@ export async function registerExistingContextStore(
       'context_store_metadata_id_mismatch',
       {
         target: 'context_store.id',
-        fix: `--id ${metadata.id} を使うか、別の folder を登録してください。`,
+        fix: `--id ${metadata.id} を使うか、別のフォルダを登録してください。`,
       }
     );
   }
@@ -587,11 +587,11 @@ async function assertSafeToDeleteContextStoreRoot(storeRoot: string, id: string)
 
   if (kind !== 'directory') {
     throw new ContextStoreError(
-      `context store path はディレクトリではありません: ${storeRoot}`,
+      `context store のパスはディレクトリではありません: ${storeRoot}`,
       'context_store_remove_path_not_directory',
       {
         target: 'context_store.root',
-        fix: 'このローカル registry entry を忘れるだけなら context-store unregister を実行してください。',
+        fix: 'このローカル登録だけを解除するなら context-store unregister を実行してください。',
       }
     );
   }
@@ -599,11 +599,11 @@ async function assertSafeToDeleteContextStoreRoot(storeRoot: string, id: string)
   const metadata = await readStoreMetadataForOperation(storeRoot);
   if (!metadata) {
     throw new ContextStoreError(
-      'context-store metadata がない folder は context store remove では削除できません。',
+      'context-store metadata がないフォルダは context store remove では削除できません。',
       'context_store_remove_metadata_missing',
       {
         target: 'context_store.metadata',
-        fix: 'このローカル registry entry を忘れるだけなら context-store unregister を実行してください。',
+        fix: 'このローカル登録だけを解除するなら context-store unregister を実行してください。',
       }
     );
   }
@@ -614,7 +614,7 @@ async function assertSafeToDeleteContextStoreRoot(storeRoot: string, id: string)
       'context_store_metadata_id_mismatch',
       {
         target: 'context_store.metadata',
-        fix: 'registry を修復するか、この folder を削除せず context-store unregister を実行してください。',
+        fix: 'レジストリを修復するか、このフォルダを削除せず context-store unregister を実行してください。',
       }
     );
   }
@@ -639,7 +639,7 @@ export async function removeContextStore(
         diagnostics.push(makeContextStoreDiagnostic(
           'warning',
           'context_store_root_missing',
-          'context store files は既に存在しません。',
+          'context store のファイルは既に存在しません。',
           {
             target: 'context_store.root',
           }
@@ -718,7 +718,7 @@ async function inspectContextStore(entry: {
     diagnostics.push(makeContextStoreDiagnostic(
       'error',
       'context_store_root_missing',
-      'context store location が存在しません。',
+      'context store の場所が存在しません。',
       {
         target: 'context_store.root',
         fix: `openspec context-store register /path/to/${entry.id} --id ${entry.id} を実行してください。`,
@@ -728,10 +728,10 @@ async function inspectContextStore(entry: {
     diagnostics.push(makeContextStoreDiagnostic(
       'error',
       'context_store_root_not_directory',
-      'context store location はディレクトリではありません。',
+      'context store の場所はディレクトリではありません。',
       {
         target: 'context_store.root',
-        fix: 'この context store にはディレクトリ path を登録してください。',
+        fix: 'この context store にはディレクトリパスを登録してください。',
       }
     ));
   } else {
@@ -742,7 +742,7 @@ async function inspectContextStore(entry: {
         diagnostics.push(makeContextStoreDiagnostic(
           'error',
           'context_store_metadata_missing',
-          'context store metadata がありません。',
+          'context store metadata が見つかりません。',
           {
             target: 'context_store.metadata',
             fix: `${metadataPath} を作成するか、context-store register を再実行してください。`,
@@ -753,10 +753,10 @@ async function inspectContextStore(entry: {
         diagnostics.push(makeContextStoreDiagnostic(
           'error',
           'context_store_metadata_id_mismatch',
-          `context store metadata id '${parsed.id}' は registry id '${entry.id}' と一致しません。`,
+          `context store metadata id '${parsed.id}' はレジストリ上の ID '${entry.id}' と一致しません。`,
           {
             target: 'context_store.metadata',
-            fix: 'id が一致するように、ローカル registry または store metadata を修復してください。',
+            fix: 'ID が一致するように、ローカルレジストリまたは store metadata を修復してください。',
           }
         ));
       } else {

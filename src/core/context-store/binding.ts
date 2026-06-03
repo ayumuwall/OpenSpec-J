@@ -242,7 +242,7 @@ export async function resolveSelectedContextStore(
       'invalid_context_store_path',
       {
         target: 'context_store.path',
-        fix: '既存の context store root を指定してください。',
+        fix: '既存の context store ルートを指定してください。',
       }
     );
   }
@@ -257,7 +257,7 @@ export async function resolveSelectedContextStore(
       'invalid_context_store_metadata',
       {
         target: 'context_store.metadata',
-        fix: `Fix ${getContextStoreMetadataPath(root)} before using this store.`,
+        fix: `この store を使う前に ${getContextStoreMetadataPath(root)} を修正してください。`,
       }
     );
   }
@@ -268,7 +268,7 @@ export async function resolveSelectedContextStore(
       'context_store_metadata_not_found',
       {
         target: 'context_store.metadata',
-        fix: '.openspec-store/store.yaml を含む context store root を指定してください。',
+        fix: '.openspec-store/store.yaml を含む context store ルートを指定してください。',
       }
     );
   }
@@ -318,9 +318,9 @@ export async function resolveContextStoreBinding(
   if (metadata.id !== observedId) {
     warnings.push({
       code: 'context_store_binding_id_changed',
-      message: `Context store at ${root} now reports id '${metadata.id}' instead of '${observedId}'.`,
+      message: `${root} の context store は現在 '${observedId}' ではなく '${metadata.id}' を報告しています。`,
       target: 'metadata.id',
-      fix: `Review ${getContextStoreMetadataPath(root)} or re-open the workspace with the intended context store.`,
+      fix: `${getContextStoreMetadataPath(root)} を確認するか、意図した context store で workspace を開き直してください。`,
     });
   }
 

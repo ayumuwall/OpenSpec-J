@@ -159,7 +159,7 @@ describe('context-store command', () => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { input, confirm } = await getPromptMocks();
     input.mockImplementation(async (options: { message: string; default?: string }) => {
-      if (options.message === 'Context store 名') return 'guided-context';
+      if (options.message === 'コンテキストストア名') return 'guided-context';
       return options.default;
     });
     confirm.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
@@ -168,18 +168,18 @@ describe('context-store command', () => {
 
     const storeRoot = getDefaultContextStoreRoot('guided-context', { globalDataDir });
     expect(input).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Context store 名',
+      message: 'コンテキストストア名',
     }));
     expect(input).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'この context store をどこに置きますか？',
+      message: 'このコンテキストストアをどこに置きますか？',
       default: storeRoot,
     }));
     expect(confirm).toHaveBeenNthCalledWith(1, {
-      message: 'この context store で Git を初期化しますか？',
+      message: 'このコンテキストストアで Git を初期化しますか？',
       default: true,
     });
     expect(confirm).toHaveBeenNthCalledWith(2, {
-      message: 'この context store を作成しますか？',
+      message: 'このコンテキストストアを作成しますか？',
       default: true,
     });
     expect(fs.existsSync(getContextStoreMetadataPath(storeRoot))).toBe(true);
@@ -274,11 +274,11 @@ describe('context-store command', () => {
       default: false,
     });
     expect(confirm).toHaveBeenNthCalledWith(2, {
-      message: 'この context store で Git を初期化しますか？',
+      message: 'このコンテキストストアで Git を初期化しますか？',
       default: true,
     });
     expect(confirm).toHaveBeenNthCalledWith(3, {
-      message: 'この context store を作成しますか？',
+      message: 'このコンテキストストアを作成しますか？',
       default: true,
     });
     expect(fs.existsSync(getContextStoreMetadataPath(storeRoot))).toBe(true);
@@ -679,11 +679,11 @@ describe('context-store command', () => {
 
     const storeRoot = getDefaultContextStoreRoot('interactive-context', { globalDataDir });
     expect(confirm).toHaveBeenNthCalledWith(1, {
-      message: 'この context store で Git を初期化しますか？',
+      message: 'このコンテキストストアで Git を初期化しますか？',
       default: true,
     });
     expect(confirm).toHaveBeenNthCalledWith(2, {
-      message: 'この context store を作成しますか？',
+      message: 'このコンテキストストアを作成しますか？',
       default: true,
     });
     expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(true);

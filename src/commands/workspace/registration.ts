@@ -54,10 +54,10 @@ export function registerWorkspaceCommandWith(
 
   workspace
     .command('setup')
-    .description('ワークスペースをセットアップし、既存の repo または folder をリンク')
+    .description('ワークスペースをセットアップし、既存のリポジトリまたはフォルダをリンク')
     .option('--name <name>', 'Workspace 名')
-    .option('--link <link>', 'Repo または folder のリンク。<path> または <name>=<path> を使用', collectOption, [])
-    .option('--opener <id>', '優先 opener: codex-cli, claude, github-copilot, editor')
+    .option('--link <link>', 'リポジトリまたはフォルダのリンク。<path> または <name>=<path> を使用', collectOption, [])
+    .option('--opener <id>', 'デフォルトの開き方: codex-cli, claude, github-copilot, editor')
     .option(
       '--tools <tools>',
       `エージェント向け OpenSpec スキルをインストール。"all" / "none" またはカンマ区切りで指定: ${getWorkspaceSkillToolIds().join(', ')}`
@@ -87,7 +87,7 @@ export function registerWorkspaceCommandWith(
   addWorkspaceSelectionOptions(
     workspace
       .command('link [nameOrPath] [path]')
-      .description('既存の repo または folder を workspace にリンク')
+      .description('既存のリポジトリまたはフォルダを workspace にリンク')
   ).action(async (
     nameOrPath: string | undefined,
     linkPath: string | undefined,
@@ -118,11 +118,11 @@ export function registerWorkspaceCommandWith(
 
   workspace
     .command('update [name]')
-    .description('workspace-local な OpenSpec ガイダンスとエージェントスキルを更新')
+    .description('ワークスペース内の OpenSpec ガイダンスとエージェントスキルを更新')
     .option('--workspace <name>', '既知のローカルワークスペースビューから選ぶ workspace 名')
     .option(
       '--tools <tools>',
-      `workspace skills の対象エージェントを選択。"all" / "none" またはカンマ区切りで指定: ${getWorkspaceSkillToolIds().join(', ')}。Global profile が workflows を選び、--tools が agents を選びます。`
+      `ワークスペーススキルの対象エージェントを選択。"all" / "none" またはカンマ区切りで指定: ${getWorkspaceSkillToolIds().join(', ')}。Global profile が workflows を選び、--tools が agents を選びます。`
     )
     .option('--json', 'JSON で出力')
     .option('--no-interactive', 'プロンプトを無効化')
@@ -138,10 +138,10 @@ export function registerWorkspaceCommandWith(
     .option('--store <id>', '--initiative 用の context store ID')
     .option('--store-path <path>', '--initiative 用の既存ローカル context store ルート')
     .option('--agent <tool>', 'このセッションで使うエージェント: codex-cli, claude, github-copilot')
-    .option('--editor', 'VS Code editor mode で workspace を開く')
-    .option('--prepare-only', '未対応: preview surface は将来の context/query コマンドの対象')
-    .option('--json', '起動後に生成された workspace view context を JSON で出力')
-    .option('--change <id>', '未対応: change-scoped open は将来の workspace change planning の対象')
+    .option('--editor', 'VS Code エディタモードで workspace を開く')
+    .option('--prepare-only', '未対応: プレビュー出力は将来の context/query コマンドの対象')
+    .option('--json', '起動後に生成された workspace view のコンテキストを JSON で出力')
+    .option('--change <id>', '未対応: change 単位の open は将来の workspace change planning の対象')
     .option('--no-interactive', 'プロンプトを無効化')
     .action(async (name: string | undefined, options: WorkspaceOpenOptions) => {
       await workspaceCommand.open(name, options);

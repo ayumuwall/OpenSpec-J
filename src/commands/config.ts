@@ -241,7 +241,7 @@ async function maybeWarnConfigDrift(
     if (hasWorkspaceSkillProfileDrift(viewState)) {
       console.log(
         colorize(
-          '警告: workspace-local なエージェントスキルが有効なグローバル profile と同期していません。同期するには `openspec workspace update` を実行してください。'
+          '警告: ワークスペース内のエージェントスキルが有効なグローバル profile と同期していません。同期するには `openspec workspace update` を実行してください。'
         )
       );
     }
@@ -253,7 +253,7 @@ async function maybeWarnConfigDrift(
 
 function printConfigProfileApplyGuidance(workspaceContext: WorkspaceConfigProfileContext | null): void {
   if (workspaceContext) {
-    console.log('設定を更新しました。workspace-local skills に適用するには `openspec workspace update` を実行してください。');
+    console.log('設定を更新しました。ワークスペース内のスキルに適用するには `openspec workspace update` を実行してください。');
     return;
   }
 
@@ -511,7 +511,7 @@ export function registerConfigCommand(program: Command): void {
   // config profile [preset]
   configCmd
     .command('profile [preset]')
-    .description('ワークフロー profile を設定（対話 picker または preset shortcut）')
+    .description('ワークフロー profile を設定（対話選択または preset shortcut）')
     .action(async (preset?: string) => {
       // Preset shortcut: `openspec config profile core`
       if (preset === 'core') {

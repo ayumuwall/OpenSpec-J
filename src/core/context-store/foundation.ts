@@ -97,21 +97,21 @@ function validateFolderStyleName(name: string, label: string): string {
 
 export function validateContextStoreId(id: string): string {
   try {
-    validateFolderStyleName(id, 'Context store id');
+    validateFolderStyleName(id, 'context store ID');
   } catch (error) {
     throw new ContextStoreError(
       error instanceof Error ? error.message : String(error),
       'invalid_context_store_id',
       {
         target: 'context_store.id',
-          fix: '小文字・数字・単一ハイフン区切りの kebab-case を使ってください。',
+        fix: '小文字・数字・単一ハイフン区切りの kebab-case を使ってください。',
       }
     );
   }
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) {
     throw new ContextStoreError(
-      'Context store id は小文字・数字・単一ハイフン区切りの kebab-case でなければなりません',
+      'context store ID は小文字・数字・単一ハイフン区切りの kebab-case にしてください',
       'invalid_context_store_id',
       {
         target: 'context_store.id',
@@ -457,7 +457,7 @@ export async function resolveGitContextStoreBackendConfig(
   cwd = process.cwd()
 ): Promise<ContextStoreGitBackendConfig> {
   if (input.localPath.length === 0) {
-    throw new Error('Context store local path は空にできません。');
+    throw new Error('context store のローカルパスは空にできません。');
   }
 
   const resolvedPath = path.isAbsolute(input.localPath)
@@ -465,15 +465,15 @@ export async function resolveGitContextStoreBackendConfig(
     : path.resolve(cwd, input.localPath);
 
   if (!(await pathIsDirectory(resolvedPath))) {
-    throw new Error(`Context store local path が存在しません: ${input.localPath}`);
+    throw new Error(`context store のローカルパスが存在しません: ${input.localPath}`);
   }
 
   if (input.remote !== undefined && input.remote.length === 0) {
-    throw new Error('Context store remote を指定する場合は空にできません。');
+    throw new Error('context store remote を指定する場合は空にできません。');
   }
 
   if (input.branch !== undefined && input.branch.length === 0) {
-    throw new Error('Context store branch を指定する場合は空にできません。');
+    throw new Error('context store branch を指定する場合は空にできません。');
   }
 
   return {

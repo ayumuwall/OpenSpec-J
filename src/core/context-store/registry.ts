@@ -94,22 +94,22 @@ export function assertNoRegisteredStoreConflict(
 
     if (entry.id === id) {
       throw new ContextStoreError(
-        `Context store '${id}' は既に ${getStoreRootForBackend(entry.backend)} に登録されています。`,
+        `context store '${id}' は既に ${getStoreRootForBackend(entry.backend)} に登録されています。`,
         'context_store_id_conflict',
         {
           target: 'context_store.id',
-          fix: '既存の登録を使うか、別の context store id を選んでください。',
+          fix: '既存の登録を使うか、別の context store ID を選んでください。',
         }
       );
     }
 
     if (entryPath === nextPath) {
       throw new ContextStoreError(
-        `Context store path は既に '${entry.id}' として登録されています。`,
+        `context store のパスは既に '${entry.id}' として登録されています。`,
         'context_store_path_conflict',
         {
           target: 'context_store.root',
-          fix: `既存の '${entry.id}' 登録を使うか、別の path を選んでください。`,
+          fix: `既存の '${entry.id}' 登録を使うか、別のパスを選んでください。`,
         }
       );
     }
@@ -146,7 +146,7 @@ function getRegisteredStoreOrThrow(
   if (!entry) {
     throw new ContextStoreError(`不明な context store '${id}' です`, 'context_store_not_found', {
       target: 'context_store.id',
-      fix: 'openspec context-store list で登録済み store を確認してください。',
+      fix: 'openspec context-store list で登録済みの context store を確認してください。',
     });
   }
 
@@ -177,11 +177,11 @@ function assertExpectedRegisteredBackend(
   if (!expected || contextStoreBackendsMatch(actual, expected)) return;
 
   throw new ContextStoreError(
-    `cleanup が完了する前に context store '${id}' が変更されました。`,
+    `cleanup が完了する前に context store '${id}' の登録内容が変更されました。`,
     'context_store_registry_changed',
     {
       target: 'context_store.registry',
-      fix: '現在の context-store registration を確認してから cleanup コマンドを再試行してください。',
+      fix: '現在の context-store 登録を確認してから cleanup コマンドを再実行してください。',
     }
   );
 }
@@ -217,7 +217,7 @@ async function ensureStoreMetadata(
   if (!metadata) {
     if (!options.writeIfMissing) {
       throw new ContextStoreError(
-        `登録済み context store '${id}' の metadata が ${getContextStoreMetadataPath(storeRoot)} にありません`,
+        `登録済み context store '${id}' のメタデータが ${getContextStoreMetadataPath(storeRoot)} にありません`,
         'context_store_metadata_missing',
         {
           target: 'context_store.metadata',
@@ -235,7 +235,7 @@ async function ensureStoreMetadata(
 
   if (metadata.id !== id) {
     throw new ContextStoreError(
-      `context store metadata id '${metadata.id}' は登録済み id '${id}' と一致しません`,
+      `context store metadata id '${metadata.id}' は登録済み ID '${id}' と一致しません`,
       'context_store_metadata_id_mismatch',
       {
         target: 'context_store.metadata',
@@ -362,7 +362,7 @@ export async function unregisterContextStoreRegistration(
   if (!removed) {
     throw new ContextStoreError(`不明な context store '${id}' です`, 'context_store_not_found', {
       target: 'context_store.id',
-      fix: 'openspec context-store list で登録済み store を確認してください。',
+      fix: 'openspec context-store list で登録済みの context store を確認してください。',
     });
   }
 
@@ -381,7 +381,7 @@ export async function resolveRegisteredContextStore(
   });
 
   if (!registry) {
-    throw new ContextStoreError('context store registry が見つかりません', 'no_context_store_registry', {
+    throw new ContextStoreError('context store レジストリが見つかりません', 'no_context_store_registry', {
       target: 'context_store.id',
       fix: '--store を使う前に context store を登録するか、--store-path <path> を指定してください。',
     });

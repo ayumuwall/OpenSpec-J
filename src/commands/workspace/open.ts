@@ -115,7 +115,7 @@ export function assertWorkspaceOpenerAvailable(
 
   const openerLabel = getWorkspaceOpenerLabel(opener);
   const manualPath = executable === 'code'
-    ? ` workspace ファイルを手動で開けます: ${codeWorkspacePath}`
+    ? ` workspace ファイルは手動でも開けます: ${codeWorkspacePath}`
     : '';
 
   throw new WorkspaceCliError(
@@ -123,7 +123,7 @@ export function assertWorkspaceOpenerAvailable(
     'workspace_opener_unavailable',
     {
       target: 'workspace.opener',
-      fix: `'${executable}' をインストールするか、別の opener を選択してください。`,
+      fix: `'${executable}' をインストールするか、別の開き方を選択してください。`,
     }
   );
 }

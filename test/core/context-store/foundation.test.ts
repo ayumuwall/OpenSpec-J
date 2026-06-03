@@ -241,7 +241,7 @@ id: acme-context
         parseContextStoreMetadataState(`version: 1
 id: Acme
 `)
-      ).toThrow(/Context store id は.*kebab-case/u);
+      ).toThrow(/context store ID は.*kebab-case/u);
 
       expect(() =>
         parseContextStoreMetadataState(`version: 1
