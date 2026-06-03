@@ -49,6 +49,150 @@ OpenSpec は作業を 2 つの主要領域に分けて整理します。
 
 この分離が重要です。複数の変更を並行で進められ、レビューしてから本仕様へ反映できます。アーカイブ時に差分がソース・オブ・トゥルースへ統合されます。
 
+## 調整用ワークスペース
+
+ワークスペース対応は beta です。以下のローカルビュー方式が現在の方向性ですが、外部自動化、連携、長期運用のワークフローでは、コマンドの挙動、状態ファイル、JSON 出力がまだ変わり得るものとして扱ってください。
+
+以下のコマンドは、リンク済みリポジトリやフォルダのローカルビューを開くための最初のセットアップフローを提供します。
+
+計画、実装、アーカイブの流れを 1 つのリポジトリが所有する場合、repo-local な OpenSpec プロジェクトが適切なデフォルトです。一方で、複数のリポジトリやフォルダにまたがる作業もあります。その場合、OpenSpec の調整用ワークスペースは、リンク済みパス、opener 状態、エージェント設定をまとめるマシンローカルなビューとして機能します。
+
+ワークスペースの考え方は次のとおりです。
+
+```text
+workspace     = context store、initiative、repo、folder に対するプライベートなローカルビュー
+context store = 永続的な共有コンテキストコンテナ
+initiative    = context store 内の永続的な調整コンテキスト
+link          = ワークスペースがローカルに解決できる repo または folder の安定名
+change        = 計画済み作業の 1 単位。実装は所有元リポジトリに属する
+```
+
+ワークスペースは repo-local プロジェクトとは異なる形を持ちます。
+
+```text
+getGlobalDataDir()/workspaces/<workspace-name>/
+├── .openspec-workspace/
+│   └── view.yaml                  # プライベートなローカルビュー記録
+├── AGENTS.md                      # 生成される実行時ガイダンス
+└── <workspace-name>.code-workspace # 生成されるエディタ workspace ファイル
+```
+
+repo-local な OpenSpec 状態は、既存の形を維持します。
+
+```text
+repo-root/
+└── openspec/
+    ├── specs/
+    └── changes/
+```
+
+ルートレベルの `workspace.yaml` ファイルは OpenSpec のワークスペース状態ではありません。ワークスペース状態は `.openspec-workspace/` 配下に名前空間化されるため、他ツールは同名のルートレベルファイルを引き続き所有できます。
+
+この区別は重要です。ワークスペースフォルダは、リンク済みリポジトリやフォルダを開いて調べるためのローカル調整 surface です。各リポジトリの `openspec/` ディレクトリは、repo-owned な specs、repo-local な changes、実装計画の置き場所であり続けます。ユーザーはワークスペースフォルダ内で repo-local な `openspec init` を実行する必要はありません。
+
+安定したリンク名により、ワークスペースはリポジトリやフォルダを参照します。プライベートなワークスペース記録は `api`, `web`, `checkout` などの名前を保持し、この実行環境のローカルパスへ対応づけます。
+
+```yaml
+# .openspec-workspace/view.yaml
+version: 1
+name: platform
+context: null
+links:
+  api: /repos/api
+  web: /repos/web
+```
+
+ワークスペースが initiative を開くと、`context` は選択された context-store binding と initiative ID を記録します。レジストリから選択した store は ID によって移植性を保ちます。パスで選択した store は、`.openspec-workspace/view.yaml` がプライベートなローカル状態であるため、意図的に実行環境ローカルのパスを保持します。
+
+```yaml
+context:
+  kind: initiative
+  store:
+    id: platform
+    selector:
+      kind: registry
+      id: platform
+  initiative:
+    id: billing-launch
+```
+
+リンク済みパスは、リポジトリ全体、大規模 monorepo 内のフォルダ、その他の既存フォルダのいずれでもかまいません。ワークスペース計画に参加する前に repo-local な `openspec/` 状態を持つ必要はありません。後続の実装、検証、アーカイブワークフローではリポジトリ側の準備がさらに必要になる場合がありますが、計画上の可視性はリンクから始まります。
+
+```text
+multi-repo:
+  api      -> /repos/api
+  web      -> /repos/web
+
+large monorepo:
+  billing  -> /repos/platform/services/billing
+  checkout -> /repos/platform/apps/checkout
+```
+
+管理対象ワークスペースは標準の OpenSpec データディレクトリ配下に置かれます。
+
+```text
+getGlobalDataDir()/workspaces
+```
+
+つまり、`XDG_DATA_HOME` が設定されている場合は `$XDG_DATA_HOME/openspec/workspaces`、Unix 系フォールバックでは `~/.local/share/openspec/workspaces`、ネイティブ Windows フォールバックでは `%LOCALAPPDATA%\openspec\workspaces` です。ネイティブ Windows shell、PowerShell、WSL2 は、それぞれ OpenSpec を実行しているランタイムのパス文字列を保持します。この基盤は `D:\repo`、`/mnt/d/repo`、UNC WSL パスの間の変換は行いません。
+
+管理対象ワークスペースは、上記の名前空間化されたプライベートビュー記録を使います。ワークスペースフォルダは、自身のプライベートなローカルビューについて正となります。
+
+ワークスペースで見えることは、変更へのコミットを意味しません。OpenSpec に関連するリポジトリやフォルダを把握させたいときにワークスペースをセットアップし、機能、修正、プロジェクト、その他の作業を計画する準備ができたら変更を作成します。
+
+便利なコマンド:
+
+```bash
+# ガイド付きセットアップ
+openspec workspace setup
+
+# 自動化向けセットアップ
+openspec workspace setup --no-interactive --name platform --link /repos/api --link web=/repos/web
+openspec workspace setup --no-interactive --name platform --link /repos/api --opener codex-cli
+
+# ローカルレジストリ上の既知のワークスペースを確認
+openspec workspace list
+openspec workspace ls
+
+# 選択したワークスペースのリンクを追加または修復
+openspec workspace link /repos/api
+openspec workspace link api-service /repos/api
+openspec workspace relink api-service /new/path/to/api
+
+# このマシンで解決できるものを確認
+openspec workspace doctor
+openspec workspace doctor --workspace platform
+
+# ワークスペースローカルのガイダンスとエージェントスキルを更新
+openspec workspace update
+openspec workspace update --workspace platform --tools codex,claude
+
+# リンク済み作業セットを開く
+openspec workspace open
+openspec workspace open platform --agent github-copilot
+openspec workspace open --editor
+
+# initiative をローカルワークスペースビューとして開く
+openspec workspace open --initiative billing-launch --store platform
+openspec workspace open --initiative billing-launch --store-path /repos/platform-context
+```
+
+`workspace setup` は常に標準のワークスペース場所にワークスペースを作成し、ローカルレジストリに記録し、ワークスペース場所を表示します。また、少なくとも 1 つのリンク済みリポジトリまたはフォルダを必要とします。対話セットアップでは優先 opener を確認し、選択したエージェント向けに OpenSpec スキルをインストールできます。非対話セットアップでは `--opener codex-cli`, `--opener claude`, `--opener github-copilot`, `--opener editor` のいずれかを指定した場合だけ保存します。
+
+ワークスペーススキルはワークスペースルートにのみインストールされます。有効なグローバル profile が生成対象のワークフロースキルを選び、`--tools` が配布先エージェントを選びます。グローバル delivery に commands が含まれていても、workspace setup と update はスラッシュコマンドファイルを作成しません。リンク済みリポジトリやフォルダを編集せず、ワークスペースローカルのガイダンスを更新し、管理対象のワークスペースローカルスキルディレクトリを追加・更新・削除するには `openspec workspace update` を実行します。
+
+OpenSpec はルートワークスペースの open ファイルも維持します。`AGENTS.md` 内の OpenSpec 管理ガイダンスブロックと、VS Code および GitHub Copilot-in-VS-Code で開くためのマシンローカルな `<workspace-name>.code-workspace` ファイルです。管理対象ワークスペースはリポジトリではないため、OpenSpec はデフォルトのワークスペース `.gitignore` やワークスペースレベルの `changes/` ディレクトリを作成しません。
+
+管理対象の VS Code workspace は、有効なリンク済みリポジトリまたはフォルダ、紐づく initiative context、OpenSpec ワークスペースファイルの順で一覧化します。VS Code はそれらをマルチルートワークスペースとして表示します。
+
+`workspace open` は、その 1 セッションで `--agent <tool>` または `--editor` を渡さない限り、保存済みの優先 opener でリンク済み作業セットを開きます。両方の opener 上書きを渡すとエラーです。ルートワークスペースを開くと、探索と文脈把握のためにリンク済みリポジトリやフォルダが見えるようになります。実装は、ユーザーが明示的に実装作業を依頼した後に始めます。
+
+`workspace link` と `workspace relink` は既存フォルダだけを記録します。リンク済みリポジトリやフォルダを作成、コピー、移動、初期化、編集することはありません。link または relink が成功すると、OpenSpec は管理対象ガイダンスと VS Code workspace ファイルを更新します。
+
+ワークスペースを 1 つ必要とするコマンドは、`--workspace <name>` を付ければどこからでも実行できます。ワークスペースフォルダまたはそのサブディレクトリ内で実行した場合、OpenSpec は現在のワークスペースを使います。既知のワークスペースが複数あり、`--workspace <name>` を渡していない場合、人向けコマンドは picker を表示します。`--json` と `--no-interactive` はプロンプトを出さず、構造化された status エラーで失敗します。
+
+直接のワークスペースコマンドは、スクリプト向けの JSON 出力に対応します。JSON レスポンスでは主要データを `workspace`, `workspaces`, `link` オブジェクトに保持し、警告やエラーを `status` 配列で報告します。正常なオブジェクトは `status: []` を使います。
+
 ## 仕様（Specs）
 
 仕様は、構造化された要件とシナリオでシステムの挙動を表します。

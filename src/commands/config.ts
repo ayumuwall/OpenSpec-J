@@ -22,6 +22,11 @@ import {
 import { CORE_WORKFLOWS, ALL_WORKFLOWS, getProfileWorkflows } from '../core/profiles.js';
 import { OPENSPEC_DIR_NAME } from '../core/config.js';
 import { hasProjectConfigDrift } from '../core/profile-sync-drift.js';
+import {
+  findWorkspaceRoot,
+  hasWorkspaceSkillProfileDrift,
+  readOptionalWorkspaceViewState,
+} from '../core/workspace/index.js';
 
 type ProfileAction = 'both' | 'delivery' | 'workflows' | 'keep';
 
@@ -41,50 +46,55 @@ interface WorkflowPromptMeta {
   description: string;
 }
 
+interface WorkspaceConfigProfileContext {
+  root: string;
+  commandCwd: string;
+}
+
 const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
   propose: {
-    name: 'Propose change',
-    description: 'Create proposal, design, and tasks from a request',
+    name: '変更を提案',
+    description: 'リクエストから proposal、design、tasks を作成',
   },
   explore: {
-    name: 'Explore ideas',
-    description: 'Investigate a problem before implementation',
+    name: 'アイデアを探索',
+    description: '実装前に問題を調査',
   },
   new: {
-    name: 'New change',
-    description: 'Create a new change scaffold quickly',
+    name: '新規変更',
+    description: '新しい変更のひな形を素早く作成',
   },
   continue: {
-    name: 'Continue change',
-    description: 'Resume work on an existing change',
+    name: '変更を継続',
+    description: '既存の変更作業を再開',
   },
   apply: {
-    name: 'Apply tasks',
-    description: 'Implement tasks from the current change',
+    name: 'タスクを適用',
+    description: '現在の変更のタスクを実装',
   },
   ff: {
     name: 'Fast-forward',
-    description: 'Run a faster implementation workflow',
+    description: '高速な実装ワークフローを実行',
   },
   sync: {
-    name: 'Sync specs',
-    description: 'Sync change artifacts with specs',
+    name: '仕様を同期',
+    description: '変更アーティファクトと仕様を同期',
   },
   archive: {
-    name: 'Archive change',
-    description: 'Finalize and archive a completed change',
+    name: '変更をアーカイブ',
+    description: '完了した変更を確定してアーカイブ',
   },
   'bulk-archive': {
-    name: 'Bulk archive',
-    description: 'Archive multiple completed changes together',
+    name: '一括アーカイブ',
+    description: '複数の完了済み変更をまとめてアーカイブ',
   },
   verify: {
-    name: 'Verify change',
-    description: 'Run verification checks against a change',
+    name: '変更を検証',
+    description: '変更に対する検証チェックを実行',
   },
   onboard: {
-    name: 'Onboard',
-    description: 'Guided onboarding flow for OpenSpec',
+    name: 'オンボーディング',
+    description: 'OpenSpec のガイド付きオンボーディングフロー',
   },
 };
 
@@ -186,7 +196,21 @@ export function diffProfileState(before: ProfileState, after: ProfileState): Pro
   };
 }
 
-function maybeWarnConfigDrift(
+async function resolveWorkspaceConfigProfileContext(
+  cwd = process.cwd()
+): Promise<WorkspaceConfigProfileContext | null> {
+  const workspaceRoot = await findWorkspaceRoot(cwd);
+  if (!workspaceRoot) {
+    return null;
+  }
+
+  return {
+    root: workspaceRoot,
+    commandCwd: cwd,
+  };
+}
+
+function maybeWarnProjectConfigDrift(
   projectDir: string,
   state: ProfileState,
   colorize: (message: string) => string
@@ -198,7 +222,42 @@ function maybeWarnConfigDrift(
   if (!hasProjectConfigDrift(projectDir, state.workflows, state.delivery)) {
     return;
   }
-  console.log(colorize('警告: グローバル設定がこのプロジェクトに反映されていません。`openspec update` で同期してください。'));
+  console.log(colorize('警告: グローバル設定がこのプロジェクトに反映されていません。同期するには `openspec update` を実行してください。'));
+}
+
+async function maybeWarnConfigDrift(
+  state: ProfileState,
+  colorize: (message: string) => string
+): Promise<void> {
+  const workspaceContext = await resolveWorkspaceConfigProfileContext();
+  if (workspaceContext) {
+    let viewState = null;
+    try {
+      viewState = await readOptionalWorkspaceViewState(workspaceContext.root);
+    } catch {
+      return;
+    }
+
+    if (hasWorkspaceSkillProfileDrift(viewState)) {
+      console.log(
+        colorize(
+          '警告: workspace-local なエージェントスキルが有効なグローバル profile と同期していません。同期するには `openspec workspace update` を実行してください。'
+        )
+      );
+    }
+    return;
+  }
+
+  maybeWarnProjectConfigDrift(process.cwd(), state, colorize);
+}
+
+function printConfigProfileApplyGuidance(workspaceContext: WorkspaceConfigProfileContext | null): void {
+  if (workspaceContext) {
+    console.log('設定を更新しました。workspace-local skills に適用するには `openspec workspace update` を実行してください。');
+    return;
+  }
+
+  console.log('設定を更新しました。プロジェクトに適用するには各プロジェクトで `openspec update` を実行してください。');
 }
 
 /**
@@ -209,12 +268,12 @@ function maybeWarnConfigDrift(
 export function registerConfigCommand(program: Command): void {
   const configCmd = program
     .command('config')
-    .description('グローバルな OpenSpec 設定を表示・変更する')
+    .description('グローバルな OpenSpec 設定を表示・変更')
     .option('--scope <scope>', '設定スコープ（現在は "global" のみ対応）')
     .hook('preAction', (thisCommand) => {
       const opts = thisCommand.opts();
       if (opts.scope && opts.scope !== 'global') {
-        console.error('エラー: プロジェクトローカル設定はまだ実装されていません');
+        console.error('エラー: project-local config はまだ実装されていません');
         process.exit(1);
       }
     });
@@ -230,7 +289,7 @@ export function registerConfigCommand(program: Command): void {
   // config list
   configCmd
     .command('list')
-    .description('現在の設定を一覧表示')
+    .description('現在の設定をすべて表示')
     .option('--json', 'JSON で出力')
     .action((options: { json?: boolean }) => {
       const config = getGlobalConfig();
@@ -252,17 +311,17 @@ export function registerConfigCommand(program: Command): void {
         console.log(formatValueYaml(config));
 
         // Annotate profile settings
-        const profileSource = rawConfig.profile !== undefined ? '（明示設定）' : '（デフォルト）';
-        const deliverySource = rawConfig.delivery !== undefined ? '（明示設定）' : '（デフォルト）';
-        console.log(`\nプロファイル設定:`);
+        const profileSource = rawConfig.profile !== undefined ? '(explicit)' : '(default)';
+        const deliverySource = rawConfig.delivery !== undefined ? '(explicit)' : '(default)';
+        console.log(`\nProfile settings:`);
         console.log(`  profile: ${config.profile} ${profileSource}`);
         console.log(`  delivery: ${config.delivery} ${deliverySource}`);
         if (config.profile === 'core') {
-          console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} （core プロファイル由来）`);
+          console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} (from core profile)`);
         } else if (config.workflows && config.workflows.length > 0) {
-          console.log(`  workflows: ${config.workflows.join(', ')} （明示設定）`);
+          console.log(`  workflows: ${config.workflows.join(', ')} (explicit)`);
         } else {
-          console.log(`  workflows: （なし）`);
+          console.log(`  workflows: (none)`);
         }
       }
     });
@@ -270,7 +329,7 @@ export function registerConfigCommand(program: Command): void {
   // config get
   configCmd
     .command('get <key>')
-    .description('特定の値を取得（生値、スクリプト向け）')
+    .description('特定の値を取得（raw、スクリプト向け）')
     .action((key: string) => {
       const config = getGlobalConfig();
       const value = getNestedValue(config as Record<string, unknown>, key);
@@ -290,17 +349,17 @@ export function registerConfigCommand(program: Command): void {
   // config set
   configCmd
     .command('set <key> <value>')
-    .description('値を設定（型は自動推論）')
-    .option('--string', '文字列として保存する')
+    .description('値を設定（型は自動変換）')
+    .option('--string', '値を文字列として保存')
     .option('--allow-unknown', '未知のキーの設定を許可')
     .action((key: string, value: string, options: { string?: boolean; allowUnknown?: boolean }) => {
       const allowUnknown = Boolean(options.allowUnknown);
       const keyValidation = validateConfigKeyPath(key);
       if (!keyValidation.valid && !allowUnknown) {
         const reason = keyValidation.reason ? ` ${keyValidation.reason}.` : '';
-        console.error(`エラー: 設定キー "${key}" が無効です。${reason}`);
-        console.error('利用可能なキーは "openspec config list" で確認してください。');
-        console.error('--allow-unknown を付けるとこのチェックを無視できます。');
+        console.error(`エラー: 無効な設定キー "${key}" です。${reason}`);
+        console.error('利用可能なキーを確認するには "openspec config list" を使ってください。');
+        console.error('このチェックを回避するには --allow-unknown を渡してください。');
         process.exitCode = 1;
         return;
       }
@@ -315,7 +374,7 @@ export function registerConfigCommand(program: Command): void {
       // Validate the new config
       const validation = validateConfig(newConfig);
       if (!validation.success) {
-        console.error(`エラー: 設定が無効です - ${validation.error}`);
+        console.error(`エラー: 無効な設定です - ${validation.error}`);
         process.exitCode = 1;
         return;
       }
@@ -326,20 +385,20 @@ export function registerConfigCommand(program: Command): void {
 
       const displayValue =
         typeof coercedValue === 'string' ? `"${coercedValue}"` : String(coercedValue);
-      console.log(`${key} を ${displayValue} に設定しました`);
+      console.log(`${key} = ${displayValue} を設定しました`);
     });
 
   // config unset
   configCmd
     .command('unset <key>')
-    .description('キーを削除（デフォルトに戻す）')
+    .description('キーを削除（デフォルトへ戻す）')
     .action((key: string) => {
       const config = getGlobalConfig() as Record<string, unknown>;
       const existed = deleteNestedValue(config, key);
 
       if (existed) {
         saveGlobalConfig(config as GlobalConfig);
-        console.log(`${key} を解除しました（デフォルトに戻しました）`);
+        console.log(`${key} を削除しました（デフォルトへ戻しました）`);
       } else {
         console.log(`キー "${key}" は設定されていません`);
       }
@@ -348,13 +407,13 @@ export function registerConfigCommand(program: Command): void {
   // config reset
   configCmd
     .command('reset')
-    .description('設定をデフォルトに戻す')
+    .description('設定をデフォルトへリセット')
     .option('--all', 'すべての設定をリセット（必須）')
     .option('-y, --yes', '確認プロンプトをスキップ')
     .action(async (options: { all?: boolean; yes?: boolean }) => {
       if (!options.all) {
-        console.error('エラー: reset には --all が必要です');
-        console.error('使い方: openspec config reset --all [-y]');
+        console.error('エラー: reset には --all フラグが必要です');
+        console.error('使用方法: openspec config reset --all [-y]');
         process.exitCode = 1;
         return;
       }
@@ -364,7 +423,7 @@ export function registerConfigCommand(program: Command): void {
         let confirmed: boolean;
         try {
           confirmed = await confirm({
-            message: 'すべての設定をデフォルトに戻しますか？',
+            message: 'すべての設定をデフォルトへリセットしますか？',
             default: false,
           });
         } catch (error) {
@@ -383,7 +442,7 @@ export function registerConfigCommand(program: Command): void {
       }
 
       saveGlobalConfig({ ...DEFAULT_CONFIG });
-      console.log('設定をデフォルトに戻しました');
+      console.log('設定をデフォルトへリセットしました');
     });
 
   // config edit
@@ -395,7 +454,7 @@ export function registerConfigCommand(program: Command): void {
 
       if (!editor) {
         console.error('エラー: エディタが設定されていません');
-        console.error('EDITOR または VISUAL 環境変数に利用したいエディタを設定してください');
+        console.error('EDITOR または VISUAL 環境変数に使いたいエディタを設定してください');
         console.error('例: export EDITOR=vim');
         process.exitCode = 1;
         return;
@@ -421,7 +480,7 @@ export function registerConfigCommand(program: Command): void {
           if (code === 0) {
             resolve();
           } else {
-            reject(new Error(`エディタが終了コード ${code} で終了しました`));
+            reject(new Error(`エディタがコード ${code} で終了しました`));
           }
         });
         child.on('error', reject);
@@ -433,12 +492,12 @@ export function registerConfigCommand(program: Command): void {
         const validation = validateConfig(parsedConfig);
 
         if (!validation.success) {
-          console.error(`エラー: 設定が無効です - ${validation.error}`);
+          console.error(`エラー: 無効な設定です - ${validation.error}`);
           process.exitCode = 1;
         }
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-          console.error(`エラー: 設定ファイルが見つかりません (${configPath})`);
+          console.error(`エラー: 設定ファイルが見つかりません: ${configPath}`);
         } else if (error instanceof SyntaxError) {
           console.error(`エラー: ${configPath} の JSON が無効です`);
           console.error(error.message);
@@ -452,7 +511,7 @@ export function registerConfigCommand(program: Command): void {
   // config profile [preset]
   configCmd
     .command('profile [preset]')
-    .description('ワークフロープロファイルを設定（対話型ピッカーまたはプリセット指定）')
+    .description('ワークフロー profile を設定（対話 picker または preset shortcut）')
     .action(async (preset?: string) => {
       // Preset shortcut: `openspec config profile core`
       if (preset === 'core') {
@@ -461,19 +520,20 @@ export function registerConfigCommand(program: Command): void {
         config.workflows = [...CORE_WORKFLOWS];
         // Preserve delivery setting
         saveGlobalConfig(config);
-        console.log('設定を更新しました。反映するには各プロジェクトで `openspec update` を実行してください。');
+        const workspaceContext = await resolveWorkspaceConfigProfileContext();
+        printConfigProfileApplyGuidance(workspaceContext);
         return;
       }
 
       if (preset) {
-        console.error(`エラー: 不明なプロファイルプリセット "${preset}" です。利用可能なプリセット: core`);
+        console.error(`エラー: 不明な profile preset "${preset}" です。利用可能な preset: core`);
         process.exitCode = 1;
         return;
       }
 
       // Non-interactive check
       if (!process.stdout.isTTY) {
-        console.error('対話モードが必要です。`openspec config profile core` を使うか、環境変数またはフラグで設定してください。');
+        console.error('対話モードが必要です。`openspec config profile core` を使うか、環境変数 / フラグで設定してください。');
         process.exitCode = 1;
         return;
       }
@@ -486,11 +546,11 @@ export function registerConfigCommand(program: Command): void {
         const config = getGlobalConfig();
         const currentState = resolveCurrentProfileState(config);
 
-        console.log(chalk.bold('\n現在のプロファイル設定'));
-        console.log(`  配信方法: ${currentState.delivery}`);
-        console.log(`  ワークフロー: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
-        console.log(chalk.dim('  配信方法 = ワークフローのインストール先（skills、commands、または両方）'));
-        console.log(chalk.dim('  ワークフロー = 利用可能なアクション（propose、explore、apply など）'));
+        console.log(chalk.bold('\n現在の profile 設定'));
+        console.log(`  Delivery: ${currentState.delivery}`);
+        console.log(`  Workflows: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
+        console.log(chalk.dim('  Delivery = ワークフローのインストール先（skills, commands, both）'));
+        console.log(chalk.dim('  Workflows = 利用可能な action（propose, explore, apply など）'));
         console.log();
 
         const action = await select<ProfileAction>({
@@ -498,30 +558,30 @@ export function registerConfigCommand(program: Command): void {
           choices: [
             {
               value: 'both',
-              name: '配信方法とワークフロー',
-              description: 'インストール方法と利用可能なアクションをまとめて更新',
+              name: 'Delivery と workflows',
+              description: 'インストールモードと利用可能 action をまとめて更新',
             },
             {
               value: 'delivery',
-              name: '配信方法のみ',
+              name: 'Delivery のみ',
               description: 'ワークフローのインストール先を変更',
             },
             {
               value: 'workflows',
-              name: 'ワークフローのみ',
+              name: 'Workflows のみ',
               description: '利用可能なワークフローアクションを変更',
             },
             {
               value: 'keep',
-              name: '現在の設定を維持して終了',
-              description: '設定を変更せずに終了',
+              name: '現在の設定を維持（終了）',
+              description: '設定を変更せず終了',
             },
           ],
         });
 
         if (action === 'keep') {
           console.log('設定変更はありません。');
-          maybeWarnConfigDrift(process.cwd(), currentState, chalk.yellow);
+          await maybeWarnConfigDrift(currentState, chalk.yellow);
           return;
         }
 
@@ -536,17 +596,17 @@ export function registerConfigCommand(program: Command): void {
             {
               value: 'both' as Delivery,
               name: '両方（skills + commands）',
-              description: 'ワークフローを skills と slash commands の両方でインストール',
+              description: 'workflows を skills と slash commands の両方としてインストール',
             },
             {
               value: 'skills' as Delivery,
               name: 'Skills のみ',
-              description: 'ワークフローを skills のみでインストール',
+              description: 'workflows を skills としてのみインストール',
             },
             {
               value: 'commands' as Delivery,
               name: 'Commands のみ',
-              description: 'ワークフローを slash commands のみでインストール',
+              description: 'workflows を slash commands としてのみインストール',
             },
           ];
           for (const choice of deliveryChoices) {
@@ -556,7 +616,7 @@ export function registerConfigCommand(program: Command): void {
           }
 
           nextState.delivery = await select<Delivery>({
-            message: '配信方法（ワークフローのインストール方法）:',
+            message: 'Delivery mode（workflows のインストール方法）:',
             choices: deliveryChoices,
             default: currentState.delivery,
           });
@@ -566,7 +626,7 @@ export function registerConfigCommand(program: Command): void {
           const formatWorkflowChoice = (workflow: string) => {
             const metadata = WORKFLOW_PROMPT_META[workflow] ?? {
               name: workflow,
-              description: `ワークフロー: ${workflow}`,
+              description: `Workflow: ${workflow}`,
             };
             return {
               value: workflow,
@@ -596,7 +656,7 @@ export function registerConfigCommand(program: Command): void {
         const diff = diffProfileState(currentState, nextState);
         if (!diff.hasChanges) {
           console.log('設定変更はありません。');
-          maybeWarnConfigDrift(process.cwd(), nextState, chalk.yellow);
+          await maybeWarnConfigDrift(nextState, chalk.yellow);
           return;
         }
 
@@ -611,6 +671,31 @@ export function registerConfigCommand(program: Command): void {
         config.workflows = nextState.workflows;
         saveGlobalConfig(config);
 
+        const workspaceContext = await resolveWorkspaceConfigProfileContext();
+        if (workspaceContext) {
+          const applyNow = await confirm({
+            message: 'この workspace に今すぐ変更を適用しますか？',
+            default: true,
+          });
+
+          if (applyNow) {
+            try {
+              execSync('npx openspec workspace update', {
+                stdio: 'inherit',
+                cwd: workspaceContext.commandCwd,
+              });
+              console.log('他の workspace に適用するには、それぞれで `openspec workspace update` を実行してください。');
+            } catch {
+              console.error('`openspec workspace update` に失敗しました。profile 変更を適用するには手動で実行してください。');
+              process.exitCode = 1;
+            }
+            return;
+          }
+
+          printConfigProfileApplyGuidance(workspaceContext);
+          return;
+        }
+
         // Check if inside an OpenSpec project
         const projectDir = process.cwd();
         const openspecDir = path.join(projectDir, OPENSPEC_DIR_NAME);
@@ -623,16 +708,16 @@ export function registerConfigCommand(program: Command): void {
           if (applyNow) {
             try {
               execSync('npx openspec update', { stdio: 'inherit', cwd: projectDir });
-              console.log('他のプロジェクトにも反映するには、それぞれで `openspec update` を実行してください。');
+              console.log('他のプロジェクトに適用するには、それぞれで `openspec update` を実行してください。');
             } catch {
-              console.error('`openspec update` に失敗しました。プロファイル変更を反映するには手動で実行してください。');
+              console.error('`openspec update` に失敗しました。profile 変更を適用するには手動で実行してください。');
               process.exitCode = 1;
             }
             return;
           }
         }
 
-        console.log('設定を更新しました。反映するには各プロジェクトで `openspec update` を実行してください。');
+        printConfigProfileApplyGuidance(null);
       } catch (error) {
         if (isPromptCancellationError(error)) {
           console.log('config profile をキャンセルしました。');

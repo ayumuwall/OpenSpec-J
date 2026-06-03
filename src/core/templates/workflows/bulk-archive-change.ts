@@ -37,6 +37,7 @@ export function getBulkArchiveChangeSkillTemplate(): SkillTemplate {
    a. **アーティファクト状態** - \`openspec status --change "<name>" --json\`
       - \`schemaName\` と \`artifacts\` を解析
       - \`done\` とそれ以外を判別
+      - 選択された変更のいずれかが \`actionContext.mode: "workspace-planning"\` を報告した場合、このスライスでは workspace bulk archive が未対応であると説明し、仕様同期や変更移動の前に停止する。repo-local path へフォールバックしたり、リンク済み repo を編集したりしない。
 
    b. **タスク完了** - \`openspec/changes/<name>/tasks.md\` を読む
       - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計
@@ -278,6 +279,7 @@ export function getOpsxBulkArchiveCommandTemplate(): CommandTemplate {
    a. **アーティファクト状態** - \`openspec status --change "<name>" --json\`
       - \`schemaName\` と \`artifacts\` を解析
       - \`done\` とそれ以外を判別
+      - 選択された変更のいずれかが \`actionContext.mode: "workspace-planning"\` を報告した場合、このスライスでは workspace bulk archive が未対応であると説明し、仕様同期や変更移動の前に停止する。repo-local path へフォールバックしたり、リンク済み repo を編集したりしない。
 
    b. **タスク完了** - \`openspec/changes/<name>/tasks.md\` を読む
       - \`- [ ]\`（未完了）と \`- [x]\`（完了）を集計

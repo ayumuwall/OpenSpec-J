@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.3.1 です。**<BR>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.4.1 です。**<BR>
 > v1.0.0 以降、本家版にも [Multi-Language](docs/multi-language.md)（多言語サポート）が追加され、生成物の言語を変更できるようになりました。**生成物だけ日本語にできれば十分な場合は、本家版 [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) をお使いください。**
 
 <br>
@@ -124,6 +124,17 @@ AI へ次のように伝えてください: `/opsx:propose <作りたいもの>`
 
 AI コーディングアシスタントは強力ですが、要件がチャット履歴だけに残ると結果が予測しづらくなります。OpenSpec は軽量な仕様レイヤーを追加し、コードを書く前に「何を作るか」を合意できます。
 
+## コミュニティスキーマ
+
+独立したリポジトリで配布されるサードパーティ製スキーマバンドルです。[github/spec-kit's community extension catalog](https://github.com/github/spec-kit/tree/main/extensions) がツール連携を扱うのと同じように、OpenSpec と他ツールを連携させる意見のあるワークフローを提供します。
+
+→ カスタマイズ docs の **[カタログを見る](docs/customization.md#community-schemas)**
+
+
+## なぜ OpenSpec なのか？
+
+AI コーディングアシスタントは強力ですが、要件がチャット履歴だけに残ると結果が予測しづらくなります。OpenSpec は軽量な仕様レイヤーを追加し、コードを書く前に「何を作るか」を合意できます。
+
 - **作る前に合意** — 人と AI が仕様に合意してからコードを書く
 - **整理された状態を維持** — 変更ごとに proposal/specs/design/tasks をまとめたフォルダを作成
 - **柔軟に進める** — 固定フェーズに縛られず、どの成果物もいつでも更新可能
@@ -155,7 +166,7 @@ openspec update
 
 ## 利用上のメモ
 
-**モデル選定**: OpenSpec は高い推論性能を持つモデルで最適に動作します。計画と実装の両方で Opus 4.5 と GPT 5.2 を推奨します。
+**モデル選定**: OpenSpec は高い推論性能を持つモデルで最適に動作します。計画と実装の両方で Codex 5.5 と Opus 4.7 を推奨します。
 
 **コンテキスト管理**: OpenSpec は整理されたコンテキストで最大効果を発揮します。実装開始前にコンテキストをクリアし、セッション中も不要な情報をため込みすぎないようにしてください。
 

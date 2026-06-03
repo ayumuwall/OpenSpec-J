@@ -65,7 +65,7 @@ openspec init
 
 これにより `.claude/skills/`（または各ツールのディレクトリ）にスキルが生成され、AI コーディングアシスタントが自動検出します。
 
-既定では `core` ワークフロープロファイル（`propose`, `explore`, `apply`, `archive`）が使われます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`）を使いたい場合は、`openspec config profile` で設定し、`openspec update` を実行してください。
+既定では `core` ワークフロープロファイル（`propose`, `explore`, `apply`, `sync`, `archive`）が使われます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`）を使いたい場合は、`openspec config profile` で設定し、`openspec update` を実行してください。
 
 セットアップ中に **プロジェクト設定**（`openspec/config.yaml`）の作成が促されます。任意ですが推奨です。
 
@@ -164,7 +164,7 @@ rules:
 | `/opsx:ff` | 計画アーティファクト一括生成（拡張ワークフロー） |
 | `/opsx:apply` | タスク実装（必要に応じてアーティファクト更新） |
 | `/opsx:verify` | 実装がアーティファクトに沿っているか検証（拡張ワークフロー） |
-| `/opsx:sync` | 仕様差分を本仕様へ同期（拡張ワークフロー、任意） |
+| `/opsx:sync` | 仕様差分を本仕様へ同期（既定ワークフロー、任意） |
 | `/opsx:archive` | 完了時のアーカイブ |
 | `/opsx:bulk-archive` | 複数の完了済み変更を一括アーカイブ（拡張ワークフロー） |
 | `/opsx:onboard` | 変更の開始から完了までをガイド付きで体験（拡張ワークフロー） |
@@ -212,3 +212,447 @@ rules:
 ```
 /opsx:archive   # 完了時にアーカイブ（仕様同期の確認が入る）
 ```
+## 既存変更を更新するか、新しい変更を始めるか
+
+実装前であれば、proposal や specs はいつでも編集できます。では、どこからが「改善」ではなく「別の作業」になるのでしょうか。
+
+### Proposal が捉えるもの
+
+proposal は 3 つのことを定義します。
+1. **意図** — どの問題を解くのか
+2. **スコープ** — 対象と対象外は何か
+3. **アプローチ** — どう解くのか
+
+判断のポイントは、どれがどれだけ変わったかです。
+
+### 既存変更を更新する場面
+
+**意図は同じで、実行方法を洗練している**
+- 想定していなかったエッジケースが見つかった
+- アプローチの調整は必要だが、目的は変わっていない
+- 実装してみたら設計が少しずれていた
+
+**スコープが狭まる**
+- 全体スコープが大きすぎると分かり、まず MVP を出したい
+- 「ダークモードを追加」→「ダークモード切り替えを追加（システム設定対応は v2）」
+
+**学びによる修正**
+- コードベース構造が想定と違っていた
+- 依存関係が期待どおり動かなかった
+- 「CSS 変数を使う」→「Tailwind の dark: prefix を使う」
+
+### 新しい変更を始める場面
+
+**意図が根本的に変わった**
+- 解く問題自体が変わった
+- 「ダークモードを追加」→「カスタムカラー、フォント、余白を含む包括的なテーマシステムを追加」
+
+**スコープが膨張した**
+- 変更が大きくなり、実質的に別作業になった
+- 更新後の proposal が元の proposal と別物になる
+- 「ログインバグを修正」→「認証システムを書き直す」
+
+**元の変更を完了できる**
+- 元の変更を「完了」として扱える
+- 新しい作業が改善ではなく独立した作業として成立する
+- 「ダークモード MVP を追加」を完了 → アーカイブ → 新しい変更「ダークモードを強化」
+
+### 判断の目安
+
+```
+                        ┌─────────────────────────────────────┐
+                        │     Is this the same work?          │
+                        └──────────────┬──────────────────────┘
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    │                  │                  │
+                    ▼                  ▼                  ▼
+             Same intent?      >50% overlap?      Can original
+             Same problem?     Same scope?        be "done" without
+                    │                  │          these changes?
+                    │                  │                  │
+          ┌────────┴────────┐  ┌──────┴──────┐   ┌───────┴───────┐
+          │                 │  │             │   │               │
+         YES               NO YES           NO  NO              YES
+          │                 │  │             │   │               │
+          ▼                 ▼  ▼             ▼   ▼               ▼
+       UPDATE            NEW  UPDATE       NEW  UPDATE          NEW
+```
+
+| テスト | 更新 | 新しい変更 |
+|------|--------|------------|
+| **同一性** | 「同じものを洗練している」 | 「別の作業」 |
+| **スコープの重なり** | 50% 超が重なる | 50% 未満しか重ならない |
+| **完了可能性** | 変更なしでは「完了」にできない | 元の変更を完了でき、新作業が独立する |
+| **履歴の読みやすさ** | 更新の連鎖が一貫した物語になる | パッチを重ねると明確さより混乱が増える |
+
+### 原則
+
+> **更新は文脈を保ち、新しい変更は明確さをもたらします。**
+>
+> 思考の履歴に価値があるなら更新を選びます。
+> パッチを重ねるより最初から始めた方が明確なら、新しい変更を選びます。
+
+Git ブランチのように考えてください。
+- 同じ機能に取り組んでいる間はコミットを続ける
+- 本当に新しい作業なら新しいブランチを始める
+- 場合によっては部分的な機能をマージし、フェーズ 2 として新しく始める
+
+## 何が違うのか
+
+| | Legacy (`/openspec:proposal`) | OPSX (`/opsx:*`) |
+|---|---|---|
+| **構造** | 大きな proposal 文書 1 つ | 依存関係を持つ個別アーティファクト |
+| **ワークフロー** | 線形フェーズ: plan → implement → archive | 流動的なアクション。いつでも何でもできる |
+| **反復** | 戻りづらい | 学びに応じてアーティファクトを更新 |
+| **カスタマイズ** | 固定構造 | スキーマ駆動（独自アーティファクトを定義） |
+
+**重要な洞察:** 作業は線形ではありません。OPSX は線形であるふりをやめます。
+
+## アーキテクチャ詳細
+
+このセクションでは、OPSX が内部でどう動くか、旧ワークフローとどう違うかを説明します。
+このセクションの例では拡張コマンドセット（`new`, `continue` など）を使います。既定の `core` ユーザーは、同じ流れを `propose → apply → sync → archive` に対応づけて読めます。
+
+### 哲学: フェーズではなくアクション
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         LEGACY WORKFLOW                                      │
+│                    (Phase-Locked, All-or-Nothing)                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐             │
+│   │   PLANNING   │ ───► │ IMPLEMENTING │ ───► │   ARCHIVING  │             │
+│   │    PHASE     │      │    PHASE     │      │    PHASE     │             │
+│   └──────────────┘      └──────────────┘      └──────────────┘             │
+│         │                     │                     │                       │
+│         ▼                     ▼                     ▼                       │
+│   /openspec:proposal   /openspec:apply      /openspec:archive              │
+│                                                                             │
+│   • Creates ALL artifacts at once                                          │
+│   • Can't go back to update specs during implementation                    │
+│   • Phase gates enforce linear progression                                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            OPSX WORKFLOW                                     │
+│                      (Fluid Actions, Iterative)                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│              ┌────────────────────────────────────────────┐                 │
+│              │           ACTIONS (not phases)             │                 │
+│              │                                            │                 │
+│              │   new ◄──► continue ◄──► apply ◄──► archive │                 │
+│              │    │          │           │           │    │                 │
+│              │    └──────────┴───────────┴───────────┘    │                 │
+│              │              any order                     │                 │
+│              └────────────────────────────────────────────┘                 │
+│                                                                             │
+│   • Create artifacts one at a time OR fast-forward                         │
+│   • Update specs/design/tasks during implementation                        │
+│   • Dependencies enable progress, phases don't exist                       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### コンポーネントアーキテクチャ
+
+**旧ワークフロー** は TypeScript 内のハードコードされたテンプレートを使います。
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      LEGACY WORKFLOW COMPONENTS                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Hardcoded Templates (TypeScript strings)                                  │
+│                    │                                                        │
+│                    ▼                                                        │
+│   Tool-specific configurators/adapters                                      │
+│                    │                                                        │
+│                    ▼                                                        │
+│   Generated Command Files (.claude/commands/openspec/*.md)                  │
+│                                                                             │
+│   • Fixed structure, no artifact awareness                                  │
+│   • Change requires code modification + rebuild                             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**OPSX** は外部スキーマと依存グラフエンジンを使います。
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         OPSX COMPONENTS                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Schema Definitions (YAML)                                                 │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  name: spec-driven                                                  │   │
+│   │  artifacts:                                                         │   │
+│   │    - id: proposal                                                   │   │
+│   │      generates: proposal.md                                         │   │
+│   │      requires: []              ◄── Dependencies                     │   │
+│   │    - id: specs                                                      │   │
+│   │      generates: specs/**/*.md  ◄── Glob patterns                    │   │
+│   │      requires: [proposal]      ◄── Enables after proposal           │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                    │                                                        │
+│                    ▼                                                        │
+│   Artifact Graph Engine                                                     │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  • Topological sort (dependency ordering)                           │   │
+│   │  • State detection (filesystem existence)                           │   │
+│   │  • Rich instruction generation (templates + context)                │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                    │                                                        │
+│                    ▼                                                        │
+│   Skill Files (.claude/skills/openspec-*/SKILL.md)                          │
+│                                                                             │
+│   • Cross-editor compatible (Claude Code, Cursor, Windsurf)                 │
+│   • Skills query CLI for structured data                                    │
+│   • Fully customizable via schema files                                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 依存グラフモデル
+
+アーティファクトは有向非巡回グラフ（DAG）を形成します。依存関係はゲートではなく、**次を可能にする条件**です。
+
+```
+                              proposal
+                             (root node)
+                                  │
+                    ┌─────────────┴─────────────┐
+                    │                           │
+                    ▼                           ▼
+                 specs                       design
+              (requires:                  (requires:
+               proposal)                   proposal)
+                    │                           │
+                    └─────────────┬─────────────┘
+                                  │
+                                  ▼
+                               tasks
+                           (requires:
+                           specs, design)
+                                  │
+                                  ▼
+                          ┌──────────────┐
+                          │ APPLY PHASE  │
+                          │ (requires:   │
+                          │  tasks)      │
+                          └──────────────┘
+```
+
+**状態遷移:**
+
+```
+   BLOCKED ────────────────► READY ────────────────► DONE
+      │                        │                       │
+   Missing                  All deps               File exists
+   dependencies             are DONE               on filesystem
+```
+
+### 情報の流れ
+
+**旧ワークフロー** — エージェントは静的な指示を受け取ります。
+
+```
+  User: "/openspec:proposal"
+           │
+           ▼
+  ┌─────────────────────────────────────────┐
+  │  Static instructions:                   │
+  │  • Create proposal.md                   │
+  │  • Create tasks.md                      │
+  │  • Create design.md                     │
+  │  • Create specs/<capability>/spec.md    │
+  │                                         │
+  │  No awareness of what exists or         │
+  │  dependencies between artifacts         │
+  └─────────────────────────────────────────┘
+           │
+           ▼
+  Agent creates ALL artifacts in one go
+```
+
+**OPSX** — エージェントは豊富な文脈を問い合わせます。
+
+```
+  User: "/opsx:continue"
+           │
+           ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  Step 1: Query current state                                             │
+  │  ┌────────────────────────────────────────────────────────────────────┐  │
+  │  │  $ openspec status --change "add-auth" --json                      │  │
+  │  │                                                                    │  │
+  │  │  {                                                                 │  │
+  │  │    "artifacts": [                                                  │  │
+  │  │      {"id": "proposal", "status": "done"},                         │  │
+  │  │      {"id": "specs", "status": "ready"},      ◄── First ready      │  │
+  │  │      {"id": "design", "status": "ready"},                          │  │
+  │  │      {"id": "tasks", "status": "blocked", "missingDeps": ["specs"]}│  │
+  │  │    ]                                                               │  │
+  │  │  }                                                                 │  │
+  │  └────────────────────────────────────────────────────────────────────┘  │
+  │                                                                          │
+  │  Step 2: Get rich instructions for ready artifact                        │
+  │  ┌────────────────────────────────────────────────────────────────────┐  │
+  │  │  $ openspec instructions specs --change "add-auth" --json          │  │
+  │  │                                                                    │  │
+  │  │  {                                                                 │  │
+  │  │    "template": "# Specification\n\n## ADDED Requirements...",      │  │
+  │  │    "dependencies": [{"id": "proposal", "path": "...", "done": true}│  │
+  │  │    "unlocks": ["tasks"]                                            │  │
+  │  │  }                                                                 │  │
+  │  └────────────────────────────────────────────────────────────────────┘  │
+  │                                                                          │
+  │  Step 3: Read dependencies → Create ONE artifact → Show what's unlocked  │
+  └──────────────────────────────────────────────────────────────────────────┘
+```
+
+### 反復モデル
+
+**旧ワークフロー** — 反復しづらい構造です。
+
+```
+  ┌─────────┐     ┌─────────┐     ┌─────────┐
+  │/proposal│ ──► │ /apply  │ ──► │/archive │
+  └─────────┘     └─────────┘     └─────────┘
+       │               │
+       │               ├── "Wait, the design is wrong"
+       │               │
+       │               ├── Options:
+       │               │   • Edit files manually (breaks context)
+       │               │   • Abandon and start over
+       │               │   • Push through and fix later
+       │               │
+       │               └── No official "go back" mechanism
+       │
+       └── Creates ALL artifacts at once
+```
+
+**OPSX** — 自然に反復できます。
+
+```
+  /opsx:new ───► /opsx:continue ───► /opsx:apply ───► /opsx:archive
+      │                │                  │
+      │                │                  ├── "The design is wrong"
+      │                │                  │
+      │                │                  ▼
+      │                │            Just edit design.md
+      │                │            and continue!
+      │                │                  │
+      │                │                  ▼
+      │                │         /opsx:apply picks up
+      │                │         where you left off
+      │                │
+      │                └── Creates ONE artifact, shows what's unlocked
+      │
+      └── Scaffolds change, waits for direction
+```
+
+### カスタムスキーマ
+
+スキーマ管理コマンドを使ってカスタムワークフローを作成できます。
+
+```bash
+# ゼロから新しいスキーマを作成（対話）
+openspec schema init my-workflow
+
+# 既存スキーマを出発点としてフォーク
+openspec schema fork spec-driven my-workflow
+
+# スキーマ構造を検証
+openspec schema validate my-workflow
+
+# スキーマがどこから解決されるか確認（デバッグに便利）
+openspec schema which my-workflow
+```
+
+スキーマは `openspec/schemas/`（プロジェクトローカル、バージョン管理対象）または `~/.local/share/openspec/schemas/`（ユーザーグローバル）に保存されます。
+
+**スキーマ構造:**
+```
+openspec/schemas/research-first/
+├── schema.yaml
+└── templates/
+    ├── research.md
+    ├── proposal.md
+    └── tasks.md
+```
+
+**schema.yaml の例:**
+```yaml
+name: research-first
+artifacts:
+  - id: research        # Added before proposal
+    generates: research.md
+    requires: []
+
+  - id: proposal
+    generates: proposal.md
+    requires: [research]  # Now depends on research
+
+  - id: tasks
+    generates: tasks.md
+    requires: [proposal]
+```
+
+**依存グラフ:**
+```
+   research ──► proposal ──► tasks
+```
+
+### まとめ
+
+| 観点 | 旧ワークフロー | OPSX |
+|--------|----------|------|
+| **テンプレート** | ハードコードされた TypeScript | 外部 YAML + Markdown |
+| **依存関係** | なし（一括生成） | トポロジカルソート付き DAG |
+| **状態** | フェーズベースの考え方 | ファイルシステム上の存在 |
+| **カスタマイズ** | ソースを編集して再ビルド | schema.yaml を作成 |
+| **反復** | フェーズ固定 | 流動的。何でも編集できる |
+| **エディタ対応** | ツール固有の configurator / adapter | 単一の skills ディレクトリ |
+
+## スキーマ
+
+スキーマは、存在するアーティファクトとその依存関係を定義します。現在利用できるもの:
+
+- **spec-driven**（デフォルト）: proposal → specs → design → tasks
+
+```bash
+# 利用可能なスキーマを一覧表示
+openspec schemas
+
+# すべてのスキーマと解決元を表示
+openspec schema which --all
+
+# 対話的に新しいスキーマを作成
+openspec schema init my-workflow
+
+# カスタマイズのため既存スキーマをフォーク
+openspec schema fork spec-driven my-workflow
+
+# 利用前にスキーマ構造を検証
+openspec schema validate my-workflow
+```
+
+## ヒント
+
+- 変更に入る前に考えを整理したいときは `/opsx:explore` を使う
+- 作りたいものが明確なら `/opsx:ff`、探索しながら進めるなら `/opsx:continue`
+- `/opsx:apply` 中に問題が見つかったら、アーティファクトを直してから続ける
+- タスクの進捗は `tasks.md` のチェックボックスで追跡する
+- 状態はいつでも `openspec status --change "name"` で確認できる
+
+## フィードバック
+
+この仕組みはまだ粗い部分があります。それは意図的です。何がうまく機能するかを学んでいる段階です。
+
+バグを見つけた、またはアイデアがある場合は、[Discord](https://discord.gg/YctCnvvshC) に参加するか、[GitHub](https://github.com/ayumuwall/OpenSpec-J/issues) で Issue を開いてください。

@@ -13,6 +13,7 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 | `/opsx:propose` | 変更を作成し、計画アーティファクトを一括生成する |
 | `/opsx:explore` | 変更に入る前に考えを整理する |
 | `/opsx:apply` | 変更のタスクを実装する |
+| `/opsx:sync` | 仕様差分を本仕様へ統合する |
 | `/opsx:archive` | 完了した変更をアーカイブする |
 
 ### 拡張ワークフローのコマンド（custom ワークフロー選択時）
@@ -23,7 +24,6 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 | `/opsx:continue` | 依存関係に基づいて次のアーティファクトを作る |
 | `/opsx:ff` | Fast-forward: 計画アーティファクトを一括生成する |
 | `/opsx:verify` | 実装がアーティファクトに沿っているか検証する |
-| `/opsx:sync` | 仕様差分を本仕様へ統合する |
 | `/opsx:bulk-archive` | 複数の変更を一括でアーカイブする |
 | `/opsx:onboard` | ワークフロー全体をガイド付きで体験する |
 
@@ -617,6 +617,7 @@ AI ツールによってコマンド記法が少し異なります。各ツー�
 | Cursor | `/opsx-propose`, `/opsx-apply` |
 | Windsurf | `/opsx-propose`, `/opsx-apply` |
 | Copilot (IDE) | `/opsx-propose`, `/opsx-apply` |
+| Kimi CLI | `/skill:openspec-propose`, `/skill:openspec-apply-change` などのスキルベース呼び出し（`opsx-*` コマンドファイルは生成されない） |
 | Trae | `/openspec-propose`, `/openspec-apply-change` などのスキルベース呼び出し（`opsx-*` コマンドファイルは生成されない） |
 
 記法や見え方はツールごとに異なっても、意図するワークフローは同じです。

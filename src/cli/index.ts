@@ -2,8 +2,9 @@ import { Command } from 'commander';
 import { createRequire } from 'module';
 import ora from 'ora';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
-import { AI_TOOLS } from '../core/config.js';
+import { AI_TOOLS, OPENSPEC_DIR_NAME } from '../core/config.js';
 import { UpdateCommand } from '../core/update.js';
 import { ListCommand } from '../core/list.js';
 import { ArchiveCommand } from '../core/archive.js';
@@ -16,6 +17,10 @@ import { CompletionCommand } from '../commands/completion.js';
 import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
+import { registerWorkspaceCommand } from '../commands/workspace.js';
+import { registerContextStoreCommand } from '../commands/context-store.js';
+import { registerInitiativeCommand } from '../commands/initiative.js';
+import { findWorkspaceRoot } from '../core/workspace/index.js';
 import {
   statusCommand,
   instructionsCommand,
@@ -23,12 +28,14 @@ import {
   templatesCommand,
   schemasCommand,
   newChangeCommand,
+  setChangeCommand,
   DEFAULT_SCHEMA,
   type StatusOptions,
   type InstructionsOptions,
   type TemplatesOptions,
   type SchemasOptions,
   type NewChangeOptions,
+  type SetChangeOptions,
 } from '../commands/workflow/index.js';
 import { maybeShowTelemetryNotice, trackCommand, shutdown } from '../telemetry/index.js';
 
@@ -90,12 +97,28 @@ program.hook('postAction', async () => {
 const availableToolIds = AI_TOOLS.filter((tool) => tool.skillsDir).map((tool) => tool.value);
 const toolsOptionDescription = `対話なしで AI ツールを設定します。"all" / "none" またはカンマ区切りで指定してください: ${availableToolIds.join(', ')}`;
 
+async function hasRepoLocalOpenSpecProject(projectPath: string): Promise<boolean> {
+  try {
+    const stats = await fs.stat(path.join(projectPath, OPENSPEC_DIR_NAME));
+    return stats.isDirectory();
+  } catch (error) {
+    const code =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? (error as { code?: unknown }).code
+        : undefined;
+    if (code !== 'ENOENT' && code !== 'ENOTDIR') {
+      throw error;
+    }
+    return false;
+  }
+}
+
 program
   .command('init [path]')
   .description('プロジェクトで OpenSpec を初期化')
   .option('--tools <tools>', toolsOptionDescription)
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
-  .option('--profile <profile>', 'グローバル設定プロファイルを上書き（core またはカスタム）')
+  .option('--profile <profile>', 'グローバル設定 profile を上書き（core または custom）')
   .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string }) => {
     try {
       // Validate that the path is a valid directory
@@ -110,7 +133,7 @@ program
         if (error.code === 'ENOENT') {
           // Directory doesn't exist, but we can create it
           console.log(`ディレクトリ "${targetPath}" が存在しないため作成します。`);
-        } else if (error.message && error.message.includes('not a directory')) {
+        } else if (error.message && error.message.includes('ディレクトリではありません')) {
           throw error;
         } else {
           throw new Error(`パス "${targetPath}" にアクセスできません: ${error.message}`);
@@ -161,6 +184,18 @@ program
     try {
       const resolvedPath = path.resolve(targetPath);
       const updateCommand = new UpdateCommand({ force: options?.force });
+      if (await hasRepoLocalOpenSpecProject(resolvedPath)) {
+        await updateCommand.execute(resolvedPath);
+        return;
+      }
+
+      const workspaceRoot = await findWorkspaceRoot(resolvedPath);
+      if (workspaceRoot) {
+        throw new Error(
+          'OpenSpec workspace を検出しました。ワークスペースローカルのガイダンスとスキルを更新するには `openspec workspace update` を実行してください。'
+        );
+      }
+
       await updateCommand.execute(resolvedPath);
     } catch (error) {
       console.log(); // Empty line for spacing
@@ -232,12 +267,12 @@ changeCmd
 
 changeCmd
   .command('list')
-  .description('アクティブな変更を一覧表示（非推奨: "openspec list" を使用）')
+  .description('すべてのアクティブな変更を一覧表示（非推奨: "openspec list" を使用）')
   .option('--json', 'JSON で出力')
-  .option('--long', 'ID とタイトルを件数付きで表示')
+  .option('--long', 'ID、タイトル、件数を表示')
   .action(async (options?: { json?: boolean; long?: boolean }) => {
     try {
-      console.error('警告: "openspec change list" は非推奨です。"openspec list" を使用してください。');
+      console.error('警告: "openspec change list" は非推奨です。"openspec list" を使ってください。');
       const changeCommand = new ChangeCommand();
       await changeCommand.list(options);
     } catch (error) {
@@ -269,8 +304,8 @@ program
   .command('archive [change-name]')
   .description('完了した変更をアーカイブし、本仕様を更新')
   .option('-y, --yes', '確認プロンプトをスキップ')
-  .option('--skip-specs', '仕様更新をスキップ（インフラ/ツール/ドキュメントのみの変更向け）')
-  .option('--no-validate', '検証をスキップ（非推奨、要確認）')
+  .option('--skip-specs', '仕様更新処理をスキップ（インフラ、ツール、docs のみの変更に有用）')
+  .option('--no-validate', '検証をスキップ（非推奨、確認が必要）')
   .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean }) => {
     try {
       const archiveCommand = new ArchiveCommand();
@@ -285,6 +320,9 @@ program
 registerSpecCommand(program);
 registerConfigCommand(program);
 registerSchemaCommand(program);
+registerWorkspaceCommand(program);
+registerContextStoreCommand(program);
+registerInitiativeCommand(program);
 
 // Top-level validate command
 program
@@ -293,10 +331,10 @@ program
   .option('--all', 'すべての変更と仕様を検証')
   .option('--changes', 'すべての変更を検証')
   .option('--specs', 'すべての仕様を検証')
-  .option('--type <type>', '名前が曖昧な場合に指定: change|spec')
+  .option('--type <type>', 'あいまいな場合に項目タイプを指定: change|spec')
   .option('--strict', '厳密検証モードを有効化')
   .option('--json', '検証結果を JSON で出力')
-  .option('--concurrency <n>', '並列検証の上限（環境変数 OPENSPEC_CONCURRENCY または 6）')
+  .option('--concurrency <n>', '最大同時検証数（デフォルトは環境変数 OPENSPEC_CONCURRENCY または 6）')
   .option('--no-interactive', '対話プロンプトを無効化')
   .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string }) => {
     try {
@@ -314,15 +352,15 @@ program
   .command('show [item-name]')
   .description('変更または仕様を表示')
   .option('--json', 'JSON で出力')
-  .option('--type <type>', '名前が曖昧な場合に指定: change|spec')
+  .option('--type <type>', 'あいまいな場合に項目タイプを指定: change|spec')
   .option('--no-interactive', '対話プロンプトを無効化')
   // change-only flags
   .option('--deltas-only', '差分のみ表示（JSON のみ、変更）')
   .option('--requirements-only', '--deltas-only の別名（非推奨、変更）')
   // spec-only flags
-  .option('--requirements', 'JSON のみ: 要件だけ表示（シナリオ除外）')
-  .option('--no-scenarios', 'JSON のみ: シナリオを除外')
-  .option('-r, --requirement <id>', 'JSON のみ: 指定 ID（1 始まり）の要件を表示')
+  .option('--requirements', 'JSON のみ: 要件のみ表示（シナリオを除外）')
+  .option('--no-scenarios', 'JSON のみ: シナリオ内容を除外')
+  .option('-r, --requirement <id>', 'JSON のみ: ID（1 始まり）で特定要件を表示')
   // allow unknown options to pass-through to underlying command implementation
   .allowUnknownOption(true)
   .action(async (itemName?: string, options?: { json?: boolean; type?: string; noInteractive?: boolean; [k: string]: any }) => {
@@ -359,7 +397,7 @@ const completionCmd = program
 
 completionCmd
   .command('generate [shell]')
-  .description('シェル補完スクリプトを生成（標準出力へ出力）')
+  .description('シェル用補完スクリプトを生成（標準出力へ出力）')
   .action(async (shell?: string) => {
     try {
       const completionCommand = new CompletionCommand();
@@ -373,8 +411,8 @@ completionCmd
 
 completionCmd
   .command('install [shell]')
-  .description('シェル補完スクリプトをインストール')
-  .option('--verbose', '詳細なインストール出力を表示')
+  .description('シェル用補完スクリプトをインストール')
+  .option('--verbose', 'インストールの詳細出力を表示')
   .action(async (shell?: string, options?: { verbose?: boolean }) => {
     try {
       const completionCommand = new CompletionCommand();
@@ -388,7 +426,7 @@ completionCmd
 
 completionCmd
   .command('uninstall [shell]')
-  .description('シェル補完スクリプトをアンインストール')
+  .description('シェル用補完スクリプトをアンインストール')
   .option('-y, --yes', '確認プロンプトをスキップ')
   .action(async (shell?: string, options?: { yes?: boolean }) => {
     try {
@@ -404,7 +442,7 @@ completionCmd
 // Hidden command for machine-readable completion data
 program
   .command('__complete <type>', { hidden: true })
-  .description('補完データを機械可読形式で出力（内部用）')
+  .description('機械可読形式で補完データを出力（内部用）')
   .action(async (type: string) => {
     try {
       const completionCommand = new CompletionCommand();
@@ -423,8 +461,8 @@ program
 program
   .command('status')
   .description('変更のアーティファクト完了状況を表示')
-  .option('--change <id>', '対象の変更名')
-  .option('--schema <name>', 'スキーマを上書き（config.yaml から自動判定）')
+  .option('--change <id>', '状態を表示する変更名')
+  .option('--schema <name>', 'スキーマを上書き（config.yaml から自動検出）')
   .option('--json', 'JSON で出力')
   .action(async (options: StatusOptions) => {
     try {
@@ -441,7 +479,7 @@ program
   .command('instructions [artifact]')
   .description('アーティファクト作成やタスク適用の指示を出力')
   .option('--change <id>', '変更名')
-  .option('--schema <name>', 'スキーマを上書き（config.yaml から自動判定）')
+  .option('--schema <name>', 'スキーマを上書き（config.yaml から自動検出）')
   .option('--json', 'JSON で出力')
   .action(async (artifactId: string | undefined, options: InstructionsOptions) => {
     try {
@@ -463,7 +501,7 @@ program
   .command('templates')
   .description('スキーマ内のアーティファクトのテンプレートパスを表示')
   .option('--schema <name>', `使用するスキーマ（デフォルト: ${DEFAULT_SCHEMA}）`)
-  .option('--json', 'JSON で出力（アーティファクト ID→パス）')
+  .option('--json', 'アーティファクト ID からテンプレートパスへの対応を JSON で出力')
   .action(async (options: TemplatesOptions) => {
     try {
       await templatesCommand(options);
@@ -477,7 +515,7 @@ program
 // Schemas command
 program
   .command('schemas')
-  .description('利用可能なワークフロースキーマを一覧表示')
+  .description('利用可能なワークフロースキーマを説明付きで一覧表示')
   .option('--json', 'JSON で出力（エージェント向け）')
   .action(async (options: SchemasOptions) => {
     try {
@@ -496,7 +534,13 @@ newCmd
   .command('change <name>')
   .description('新しい変更ディレクトリを作成')
   .option('--description <text>', 'README.md に追加する説明')
+  .option('--goal <text>', '変更に保存する workspace product goal')
+  .option('--areas <names>', '影響を受ける workspace link 名のカンマ区切り')
+  .option('--initiative <id>', 'repo-local change を initiative にリンク')
+  .option('--store <id>', '--initiative 用の context store ID')
+  .option('--store-path <path>', '--initiative 用の既存ローカル context store ルート')
   .option('--schema <name>', `使用するワークフロースキーマ（デフォルト: ${DEFAULT_SCHEMA}）`)
+  .option('--json', 'JSON で出力')
   .action(async (name: string, options: NewChangeOptions) => {
     try {
       await newChangeCommand(name, options);
@@ -507,4 +551,32 @@ newCmd
     }
   });
 
-program.parse();
+// Set command group
+const setCmd = program.command('set').description('チェックイン済み OpenSpec メタデータを設定');
+
+setCmd
+  .command('change <name>')
+  .description('repo-local change メタデータを設定')
+  .option('--initiative <id>', 'repo-local change を initiative にリンク')
+  .option('--store <id>', '--initiative 用の context store ID')
+  .option('--store-path <path>', '--initiative 用の既存ローカル context store ルート')
+  .option('--json', 'JSON で出力')
+  .action(async (name: string, options: SetChangeOptions) => {
+    try {
+      await setChangeCommand(name, options);
+    } catch (error) {
+      console.log();
+      ora().fail(`エラー: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+export { program };
+
+export function runCli(argv = process.argv): void {
+  program.parse(argv);
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runCli();
+}

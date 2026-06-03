@@ -39,7 +39,7 @@ export class Validator {
       issues.push(...this.applySpecRules(spec, content));
       
     } catch (error) {
-      const baseMessage = error instanceof Error ? error.message : '不明なエラー';
+      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
       const enriched = this.enrichTopLevelError(specName, baseMessage);
       issues.push({
         level: 'ERROR',
@@ -65,7 +65,7 @@ export class Validator {
       }
       issues.push(...this.applySpecRules(spec, content));
     } catch (error) {
-      const baseMessage = error instanceof Error ? error.message : '不明なエラー';
+      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
       const enriched = this.enrichTopLevelError(specName, baseMessage);
       issues.push({ level: 'ERROR', path: 'file', message: enriched });
     }
@@ -91,7 +91,7 @@ export class Validator {
       issues.push(...this.applyChangeRules(change, content));
       
     } catch (error) {
-      const baseMessage = error instanceof Error ? error.message : '不明なエラー';
+      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
       const enriched = this.enrichTopLevelError(changeName, baseMessage);
       issues.push({
         level: 'ERROR',
@@ -157,19 +157,19 @@ export class Validator {
           const key = normalizeRequirementName(block.name);
           totalDeltas++;
           if (addedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED に重複する要件があります: "${block.name}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in ADDED: "${block.name}"` });
           } else {
             addedNames.add(key);
           }
           const requirementText = this.extractRequirementText(block.raw);
           if (!requirementText) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" に要件本文がありません` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" is missing requirement text` });
           } else if (!this.containsShallOrMust(requirementText)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" には SHALL または MUST が必要です` });
+            issues.push({ level: 'ERROR', path: entryPath, message: this.buildMissingShallOrMustMessage('ADDED', block.name) });
           }
           const scenarioCount = this.countScenarios(block.raw);
           if (scenarioCount < 1) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" には少なくとも 1 つのシナリオが必要です` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" must include at least one scenario` });
           }
         }
 
@@ -178,19 +178,19 @@ export class Validator {
           const key = normalizeRequirementName(block.name);
           totalDeltas++;
           if (modifiedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED に重複する要件があります: "${block.name}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in MODIFIED: "${block.name}"` });
           } else {
             modifiedNames.add(key);
           }
           const requirementText = this.extractRequirementText(block.raw);
           if (!requirementText) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" に要件本文がありません` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" is missing requirement text` });
           } else if (!this.containsShallOrMust(requirementText)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" には SHALL または MUST が必要です` });
+            issues.push({ level: 'ERROR', path: entryPath, message: this.buildMissingShallOrMustMessage('MODIFIED', block.name) });
           }
           const scenarioCount = this.countScenarios(block.raw);
           if (scenarioCount < 1) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" には少なくとも 1 つのシナリオが必要です` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" must include at least one scenario` });
           }
         }
 
@@ -199,7 +199,7 @@ export class Validator {
           const key = normalizeRequirementName(name);
           totalDeltas++;
           if (removedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `REMOVED に重複する要件があります: "${name}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in REMOVED: "${name}"` });
           } else {
             removedNames.add(key);
           }
@@ -211,12 +211,12 @@ export class Validator {
           const toKey = normalizeRequirementName(to);
           totalDeltas++;
           if (renamedFrom.has(fromKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED の FROM が重複しています: "${from}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate FROM in RENAMED: "${from}"` });
           } else {
             renamedFrom.add(fromKey);
           }
           if (renamedTo.has(toKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED の TO が重複しています: "${to}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate TO in RENAMED: "${to}"` });
           } else {
             renamedTo.add(toKey);
           }
@@ -225,25 +225,25 @@ export class Validator {
         // Cross-section conflicts (within the same spec file)
         for (const n of modifiedNames) {
           if (removedNames.has(n)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `要件が MODIFIED と REMOVED の両方に存在します: "${n}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Requirement present in both MODIFIED and REMOVED: "${n}"` });
           }
           if (addedNames.has(n)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `要件が MODIFIED と ADDED の両方に存在します: "${n}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Requirement present in both MODIFIED and ADDED: "${n}"` });
           }
         }
         for (const n of addedNames) {
           if (removedNames.has(n)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `要件が ADDED と REMOVED の両方に存在します: "${n}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `Requirement present in both ADDED and REMOVED: "${n}"` });
           }
         }
         for (const { from, to } of plan.renamed) {
           const fromKey = normalizeRequirementName(from);
           const toKey = normalizeRequirementName(to);
           if (modifiedNames.has(fromKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED が RENAMED 前の名前を参照しています。新しいヘッダー "${to}" を使ってください` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED references old name from RENAMED. Use new header for "${to}"` });
           }
           if (addedNames.has(toKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED の TO が ADDED と衝突しています: "${to}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED TO collides with ADDED for "${to}"` });
           }
         }
       }
@@ -255,14 +255,14 @@ export class Validator {
       issues.push({
         level: 'ERROR',
         path: specPath,
-        message: VALIDATION_MESSAGES.DELTA_SECTION_WITHOUT_REQUIREMENTS(this.formatSectionList(sections)),
+        message: `Delta sections ${this.formatSectionList(sections)} were found, but no requirement entries parsed. Ensure each section includes at least one "### Requirement:" block (REMOVED may use bullet list syntax).`,
       });
     }
     for (const path of missingHeaderSpecs) {
       issues.push({
         level: 'ERROR',
         path,
-        message: VALIDATION_MESSAGES.DELTA_SECTION_MISSING_HEADER,
+        message: 'No delta sections found. Add headers such as "## ADDED Requirements" or move non-delta notes outside specs/.',
       });
     }
 
@@ -357,35 +357,20 @@ export class Validator {
 
   private enrichTopLevelError(itemId: string, baseMessage: string): string {
     const msg = baseMessage.trim();
-
-    // NOTE: upstream は英語メッセージを吐くため includes 判定を残しつつ、
-    // 日本語化後のメッセージでもガイドを付けられるよう両方のパターンを確認する。
-    if (
-      msg === VALIDATION_MESSAGES.CHANGE_NO_DELTAS
-    ) {
+    if (msg === VALIDATION_MESSAGES.CHANGE_NO_DELTAS) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_NO_DELTAS}`;
     }
-
     if (
       msg.includes('Spec must have a Purpose section') ||
       msg.includes('Spec must have a Requirements section') ||
-      msg.includes('Purpose セクションは必須です') ||
-      msg.includes('Requirements セクションは必須です') ||
       msg.includes(VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY) ||
       msg.includes(VALIDATION_MESSAGES.SPEC_NO_REQUIREMENTS)
     ) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS}`;
     }
-
-    if (
-      msg.includes('Change must have a Why section') ||
-      msg.includes('Change must have a What Changes section') ||
-      msg.includes('Why セクション') || // 日本語でも Why が無い/短い場合
-      msg.includes(VALIDATION_MESSAGES.CHANGE_WHAT_EMPTY)
-    ) {
+    if (msg.includes('Change must have a Why section') || msg.includes('Change must have a What Changes section')) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_CHANGE_SECTIONS}`;
     }
-
     return msg;
   }
 
@@ -462,6 +447,24 @@ export class Validator {
 
   private containsShallOrMust(text: string): boolean {
     return /\b(SHALL|MUST)\b/.test(text);
+  }
+
+  /**
+   * Build an error message for a requirement block whose body lacks SHALL/MUST.
+   *
+   * When the SHALL/MUST keyword already appears in the requirement header (e.g.
+   * `### Requirement: The system SHALL ...`) the original generic error
+   * ("must contain SHALL or MUST") is confusing because the keyword is visibly
+   * present in the spec. Per the OpenSpec conventions the keyword has to live
+   * on the requirement body line (the line right after the header), so we point
+   * the author at that exact fix when the keyword is found in the header only.
+   */
+  private buildMissingShallOrMustMessage(action: 'ADDED' | 'MODIFIED', blockName: string): string {
+    const base = `${action} "${blockName}" には SHALL または MUST が必要です`;
+    if (this.containsShallOrMust(blockName)) {
+      return `${base}。ヘッダーだけでなく要件本文に含めてください。SHALL/MUST 文は "### Requirement: ..." 見出しの直後の行へ移動してください。`;
+    }
+    return base;
   }
 
   private countScenarios(blockRaw: string): number {

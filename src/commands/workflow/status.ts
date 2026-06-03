@@ -6,6 +6,7 @@
 
 import ora from 'ora';
 import chalk from 'chalk';
+import { resolveCurrentPlanningHomeSync, getChangeDir } from '../../core/planning-home.js';
 import {
   loadChangeContext,
   formatChangeStatus,
@@ -34,32 +35,37 @@ export interface StatusOptions {
 // -----------------------------------------------------------------------------
 
 export async function statusCommand(options: StatusOptions): Promise<void> {
-  const spinner = options.json ? undefined : ora('変更の状況を読み込み中...').start();
+  const spinner = options.json ? undefined : ora('変更ステータスを読み込み中...').start();
 
   try {
-    const projectRoot = process.cwd();
+    const planningHome = resolveCurrentPlanningHomeSync();
+    const projectRoot = planningHome.root;
 
-    // 変更なしの場合は正常扱い — status は情報提供コマンドなので
-    // 「変更なし」は有効な状態であり、エラーではない。
+    // Handle no-changes case gracefully — status is informational,
+    // so "no changes" is a valid state, not an error.
     if (!options.change) {
-      const available = await getAvailableChanges(projectRoot);
+      const available = await getAvailableChanges(projectRoot, planningHome.changesDir);
       if (available.length === 0) {
         spinner?.stop();
         if (options.json) {
           console.log(JSON.stringify({ changes: [], message: '進行中の変更はありません。' }, null, 2));
           return;
         }
-        console.log('進行中の変更はありません。`openspec new change <name>` で作成してください。');
+        console.log('進行中の変更はありません。作成するには: openspec new change <name>');
         return;
       }
-      // 変更は存在するが --change が未指定
+      // Changes exist but --change not provided
       spinner?.stop();
       throw new Error(
-        `必須オプション --change が指定されていません。利用可能な変更:\n  ${available.join('\n  ')}`
+        `必須オプション --change が指定されていません。有効な変更:\n  ${available.join('\n  ')}`
       );
     }
 
-    const changeName = await validateChangeExists(options.change, projectRoot);
+    const changeName = await validateChangeExists(
+      options.change,
+      projectRoot,
+      planningHome.changesDir
+    );
 
     // Validate schema if explicitly provided
     if (options.schema) {
@@ -67,7 +73,10 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     }
 
     // loadChangeContext will auto-detect schema from metadata if not provided
-    const context = loadChangeContext(projectRoot, changeName, options.schema);
+    const context = loadChangeContext(projectRoot, changeName, options.schema, {
+      changeDir: getChangeDir(planningHome, changeName),
+      planningHome,
+    });
     const status = formatChangeStatus(context);
 
     spinner?.stop();
@@ -90,6 +99,16 @@ export function printStatusText(status: ChangeStatus): void {
 
   console.log(`変更: ${status.changeName}`);
   console.log(`スキーマ: ${status.schemaName}`);
+  if (status.initiative) {
+    console.log(`Initiative: ${status.initiative.store}/${status.initiative.id}`);
+  }
+  if (status.planningHome) {
+    const label = status.planningHome.kind === 'workspace'
+      ? `workspace${status.planningHome.workspaceName ? ` (${status.planningHome.workspaceName})` : ''}`
+      : 'repo';
+    console.log(`計画ホーム: ${label}`);
+    console.log(`変更ルート: ${status.changeRoot}`);
+  }
   console.log(`進捗: ${doneCount}/${total} アーティファクト完了`);
   console.log();
 
@@ -99,7 +118,7 @@ export function printStatusText(status: ChangeStatus): void {
     let line = `${indicator} ${artifact.id}`;
 
     if (artifact.status === 'blocked' && artifact.missingDeps && artifact.missingDeps.length > 0) {
-      line += color(` （ブロック要因: ${artifact.missingDeps.join(', ')}）`);
+      line += color(` (ブロック元: ${artifact.missingDeps.join(', ')})`);
     }
 
     console.log(line);

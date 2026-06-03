@@ -8,7 +8,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 | 項目 | 旧ワークフロー | OPSX |
 |--------|--------|------|
-| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:apply`, `/opsx:archive`（拡張ワークフローコマンドは任意） |
+| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:apply`, `/opsx:sync`, `/opsx:archive`（拡張ワークフローコマンドは任意） |
 | **進め方** | すべてのアーティファクトを一括作成 | 段階的にも一括でも選べる |
 | **やり直し** | フェーズゲートがあり戻りづらい | いつでもアーティファクトを更新可能 |
 | **カスタマイズ** | 固定構造 | スキーマ駆動で自由に拡張 |
@@ -84,7 +84,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 `openspec init` と `openspec update` はどちらも旧ファイルを検出し、同じクリーンアップを案内します。用途に合わせて選んでください。
 
-- 新規インストールでは、既定で `core` プロファイル（`propose`, `explore`, `apply`, `archive`）が設定されます。
+- 新規インストールでは、既定で `core` プロファイル（`propose`, `explore`, `apply`, `sync`, `archive`）が設定されます。
 - 既存環境の移行では、必要に応じて `custom` プロファイルを生成し、これまで入っていたワークフロー構成を維持します。
 
 ### `openspec init` を使う
@@ -295,7 +295,7 @@ AI が「必須 vs 削減」の判断を手伝います。
 | `/opsx:continue` | 次のアーティファクトを 1 つずつ作る |
 | `/opsx:ff` | 計画アーティファクトを一括生成 |
 | `/opsx:verify` | 実装が仕様に合うか検証 |
-| `/opsx:sync` | アーカイブ前に仕様マージ結果を確認する |
+| `/opsx:sync` | 仕様差分を本仕様へ統合する |
 | `/opsx:bulk-archive` | 複数変更を一括アーカイブ |
 | `/opsx:onboard` | 変更の開始から完了までをガイド付きで体験する |
 
@@ -559,6 +559,7 @@ project/
 │       ├── openspec-propose/     # 既定の core プロファイル
 │       ├── openspec-explore/
 │       ├── openspec-apply-change/
+│       ├── openspec-sync-specs/
 │       └── ...                   # 拡張プロファイルでは new/continue/ff 等も追加
 ├── CLAUDE.md                     # OpenSpec マーカーを削除、内容は保持
 └── AGENTS.md                     # OpenSpec マーカーを削除、内容は保持

@@ -146,7 +146,7 @@ export class ZshInstaller {
       return true;
     } catch (error: any) {
       // Fail gracefully - don't break installation
-      console.debug(`.zshrc の補完設定に失敗しました: ${error.message}`);
+      console.debug(`Unable to configure .zshrc for completions: ${error.message}`);
       return false;
     }
   }
@@ -163,27 +163,6 @@ export class ZshInstaller {
       return content.includes(this.ZSHRC_MARKERS.start) && content.includes(this.ZSHRC_MARKERS.end);
     } catch {
       return false;
-    }
-  }
-
-  /**
-   * Check if fpath configuration is needed for a given directory
-   * Used to verify if Oh My Zsh (or other) completions directory is already in fpath
-   *
-   * @param completionsDir - Directory to check for in fpath
-   * @returns true if configuration is needed, false if directory is already referenced
-   */
-  private async needsFpathConfig(completionsDir: string): Promise<boolean> {
-    try {
-      const zshrcPath = this.getZshrcPath();
-      const content = await fs.readFile(zshrcPath, 'utf-8');
-
-      // Check if fpath already includes this directory
-      return !content.includes(completionsDir);
-    } catch (error) {
-      // If we can't read .zshrc, assume config is needed
-      console.debug(`fpath 設定確認のため .zshrc を読み込めませんでした: ${error instanceof Error ? error.message : String(error)}`);
-      return true;
     }
   }
 
@@ -238,7 +217,7 @@ export class ZshInstaller {
       return true;
     } catch (error: any) {
       // Fail gracefully
-      console.debug(`.zshrc の設定削除に失敗しました: ${error.message}`);
+      console.debug(`Unable to remove .zshrc configuration: ${error.message}`);
       return false;
     }
   }
@@ -265,8 +244,8 @@ export class ZshInstaller {
             isOhMyZsh,
             message: '補完スクリプトは既にインストール済みです（最新）',
             instructions: [
-              '補完スクリプトは既にインストール済みで最新の状態です。',
-              '補完が動作しない場合は、exec zsh を試してください。',
+              '補完スクリプトは既にインストール済みで最新です。',
+              '補完が動かない場合は exec zsh を試してください。',
             ],
           };
         }
@@ -274,7 +253,7 @@ export class ZshInstaller {
         isUpdate = true;
       } catch (error: any) {
         // File doesn't exist or can't be read, proceed with installation
-        console.debug(`既存の補完ファイルを読み込めませんでした: ${targetPath} (${error.message})`);
+        console.debug(`Unable to read existing completion file at ${targetPath}: ${error.message}`);
       }
 
       // Ensure the directory exists
@@ -287,17 +266,10 @@ export class ZshInstaller {
       // Write the completion script
       await fs.writeFile(targetPath, completionScript, 'utf-8');
 
-      // Auto-configure .zshrc
+      // Auto-configure .zshrc for standard Zsh only.
+      // Oh My Zsh loads custom/completions and runs compinit itself.
       let zshrcConfigured = false;
-      if (isOhMyZsh) {
-        // For Oh My Zsh, verify that custom/completions is in fpath
-        // If not, add it to .zshrc
-        const needsConfig = await this.needsFpathConfig(targetDir);
-        if (needsConfig) {
-          zshrcConfigured = await this.configureZshrc(targetDir);
-        }
-      } else {
-        // Standard Zsh always needs .zshrc configuration
+      if (!isOhMyZsh) {
         zshrcConfigured = await this.configureZshrc(targetDir);
       }
 
@@ -316,14 +288,14 @@ export class ZshInstaller {
       let message: string;
       if (isUpdate) {
         message = backupPath
-          ? '補完スクリプトを更新しました（前のバージョンをバックアップしました）'
+          ? '補完スクリプトを更新しました（以前のバージョンをバックアップしました）'
           : '補完スクリプトを更新しました';
       } else {
         message = isOhMyZsh
-          ? 'Oh My Zsh 向けに補完スクリプトをインストールしました'
+          ? 'Oh My Zsh 用の補完スクリプトをインストールしました'
           : zshrcConfigured
-            ? '補完スクリプトのインストールと .zshrc の設定が完了しました'
-            : 'Zsh 向けに補完スクリプトをインストールしました';
+            ? '補完スクリプトをインストールし、.zshrc の設定が完了しました'
+            : 'Zsh 用の補完スクリプトをインストールしました';
       }
 
       return {
@@ -352,11 +324,11 @@ export class ZshInstaller {
    */
   private generateOhMyZshFpathGuidance(completionsDir: string): string[] | undefined {
     return [
-      '補足: Oh My Zsh は通常 custom/completions の補完を自動で読み込みます。',
-      `${completionsDir} が fpath に含まれているか、次のコマンドで確認してください:`,
+      'Note: Oh My Zsh typically auto-loads completions from custom/completions.',
+      `Verify that ${completionsDir} is in your fpath by running:`,
       '  echo $fpath | grep "custom/completions"',
       '',
-      '見つからない場合、補完が動作しない可能性があります。シェルを再起動して反映してください。',
+      'If not found, completions may not work. Restart your shell to ensure changes take effect.',
     ];
   }
 
@@ -371,8 +343,8 @@ export class ZshInstaller {
     if (isOhMyZsh) {
       return [
         '補完スクリプトを Oh My Zsh の補完ディレクトリにインストールしました。',
-        'シェルを再起動するか、exec zsh を実行してください。',
-        '補完は自動的に有効になります。',
+        'シェルを再起動するか exec zsh を実行してください。',
+        '補完は自動的に有効になるはずです。',
       ];
     } else {
       const completionsDir = path.dirname(installedPath);
@@ -381,18 +353,18 @@ export class ZshInstaller {
       return [
         '補完スクリプトを ~/.zsh/completions/ にインストールしました。',
         '',
-        '~/.zshrc に次の内容を追加して補完を有効化してください:',
+        '補完を有効にするには、次を ~/.zshrc に追加してください:',
         '',
-        '  # 補完ディレクトリを fpath に追加',
+        `  # 補完ディレクトリを fpath に追加`,
         `  fpath=(${completionsDir} $fpath)`,
         '',
         '  # 補完システムを初期化',
         '  autoload -Uz compinit',
         '  compinit',
         '',
-        'その後、シェルを再起動するか、exec zsh を実行してください。',
+        'その後、シェルを再起動するか exec zsh を実行してください。',
         '',
-        `追加前に、${zshrcPath} に同じ行が存在しないか確認してください。`,
+        `追加前に、これらの行が ${zshrcPath} に既に存在しないか確認してください。`,
       ];
     }
   }
@@ -435,7 +407,7 @@ export class ZshInstaller {
 
       const messages: string[] = [];
       if (scriptRemoved) {
-        messages.push(`${targetPath} から補完スクリプトを削除しました`);
+        messages.push(`補完スクリプトを削除しました: ${targetPath}`);
       }
       if (zshrcCleaned && !isOhMyZsh) {
         messages.push('~/.zshrc から OpenSpec の設定を削除しました');
@@ -448,7 +420,7 @@ export class ZshInstaller {
     } catch (error) {
       return {
         success: false,
-        message: `補完スクリプトのアンインストールに失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+        message: `Failed to uninstall completion script: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   }

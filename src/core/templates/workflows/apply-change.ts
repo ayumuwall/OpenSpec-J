@@ -47,6 +47,8 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    - \`state: "all_done"\`: 祝ってアーカイブを提案
    - それ以外: 実装へ進む
 
+   **Workspace guard:** status JSON が \`actionContext.mode: "workspace-planning"\` かつ \`allowedEditRoots\` が空であることを示す場合、このスライスでは full workspace apply が未対応であると説明する。リンク済み repo / folder は読み取り専用コンテキストとして扱い、明示的な実装ワークフローで影響領域を選択するようユーザーに依頼し、ファイル編集前に停止する。
+
 4. **コンテキストファイルを読む**
 
    apply 指示の \`contextFiles\` に列挙されたすべてのファイルパスを読む。
@@ -200,6 +202,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    - \`state: "blocked"\`（不足アーティファクト）: メッセージを表示し、\`/opsx:continue\` を案内
    - \`state: "all_done"\`: 祝ってアーカイブを提案
    - それ以外: 実装へ進む
+
+   **Workspace guard:** status JSON が \`actionContext.mode: "workspace-planning"\` かつ \`allowedEditRoots\` が空であることを示す場合、このスライスでは full workspace apply が未対応であると説明する。リンク済み repo / folder は読み取り専用コンテキストとして扱い、明示的な実装ワークフローで影響領域を選択するようユーザーに依頼し、ファイル編集前に停止する。
 
 4. **コンテキストファイルを読む**
 

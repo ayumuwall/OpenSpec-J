@@ -1,101 +1,112 @@
 # 対応ツール
 
-OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、現在のプロファイル・ワークフロー選択と `delivery` 設定に基づいて、選択したツール向けの連携設定を行います。
+OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、有効な profile / workflow 選択と delivery mode に基づいて、選択したツール向けの連携設定を行います。
 
 ## 仕組み
 
 選択した各ツールに対して、OpenSpec は次をインストールできます。
 
-1. **Skills**（`delivery` に `skills` が含まれる場合）— `/opsx:*` ワークフローを動かす再利用可能な指示ファイル
-2. **Commands**（`delivery` に `commands` が含まれる場合）— ツール固有のスラッシュコマンド紐付け
+1. **Skills**（delivery に skills が含まれる場合）: `.../skills/openspec-*/SKILL.md`
+2. **Commands**（delivery に commands が含まれる場合）: ツール固有の `opsx-*` コマンドファイル
 
-既定では `core` プロファイルが使われ、`propose`, `explore`, `apply`, `archive` が含まれます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`）は `openspec config profile` と `openspec update` で有効化できます。
+既定では `core` profile が使われ、次のワークフローが含まれます。
+- `propose`
+- `explore`
+- `apply`
+- `sync`
+- `archive`
 
-## ツール別ディレクトリ
+拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`）は、`openspec config profile` で有効化し、その後 `openspec update` を実行します。
 
-| ツール | Skills の場所 | Commands の場所 |
-|------|-----------------|-------------------|
-| Amazon Q Developer | `.amazonq/skills/` | `.amazonq/prompts/` |
-| Antigravity | `.agent/skills/` | `.agent/workflows/` |
-| Auggie (Augment CLI) | `.augment/skills/` | `.augment/commands/` |
-| Bob Shell | `.bob/skills/` | `.bob/commands/` |
-| Claude Code | `.claude/skills/` | `.claude/commands/opsx/` |
-| Cline | `.cline/skills/` | `.clinerules/workflows/` |
-| CodeBuddy | `.codebuddy/skills/` | `.codebuddy/commands/opsx/` |
-| Codex | `.codex/skills/` | `~/.codex/prompts/`\* |
-| Continue | `.continue/skills/` | `.continue/prompts/` |
-| CoStrict | `.cospec/skills/` | `.cospec/openspec/commands/` |
-| Crush | `.crush/skills/` | `.crush/commands/opsx/` |
-| Cursor | `.cursor/skills/` | `.cursor/commands/` |
-| Factory Droid | `.factory/skills/` | `.factory/commands/` |
-| ForgeCode | `.forge/skills/` | 生成なし（スキル呼び出しのみ） |
-| Gemini CLI | `.gemini/skills/` | `.gemini/commands/opsx/` |
-| GitHub Copilot | `.github/skills/` | `.github/prompts/`\*\* |
-| iFlow | `.iflow/skills/` | `.iflow/commands/` |
-| Junie | `.junie/skills/` | `.junie/commands/` |
-| Kilo Code | `.kilocode/skills/` | `.kilocode/workflows/` |
-| Kiro | `.kiro/skills/` | `.kiro/prompts/` |
-| Lingma | `.lingma/skills/` | `.lingma/commands/` |
-| OpenCode | `.opencode/skills/` | `.opencode/commands/` |
-| Pi | `.pi/skills/` | `.pi/prompts/` |
-| Qoder | `.qoder/skills/` | `.qoder/commands/opsx/` |
-| Qwen Code | `.qwen/skills/` | `.qwen/commands/` |
-| RooCode | `.roo/skills/` | `.roo/commands/` |
-| Trae | `.trae/skills/` | 生成なし（スキルベースの `/openspec-*` 呼び出しを使用） |
-| Windsurf | `.windsurf/skills/` | `.windsurf/workflows/` |
+## ツール別ディレクトリリファレンス
 
-\* Codex のコマンドはプロジェクト内ではなく、グローバルなホームディレクトリ（`~/.codex/prompts/` または `$CODEX_HOME/prompts/`）にインストールされます。
+| ツール（ID） | Skills パスパターン | Command パスパターン |
+|-----------|---------------------|----------------------|
+| Amazon Q Developer (`amazon-q`) | `.amazonq/skills/openspec-*/SKILL.md` | `.amazonq/prompts/opsx-<id>.md` |
+| Antigravity (`antigravity`) | `.agent/skills/openspec-*/SKILL.md` | `.agent/workflows/opsx-<id>.md` |
+| Auggie (`auggie`) | `.augment/skills/openspec-*/SKILL.md` | `.augment/commands/opsx-<id>.md` |
+| IBM Bob Shell (`bob`) | `.bob/skills/openspec-*/SKILL.md` | `.bob/commands/opsx-<id>.md` |
+| Claude Code (`claude`) | `.claude/skills/openspec-*/SKILL.md` | `.claude/commands/opsx/<id>.md` |
+| Cline (`cline`) | `.cline/skills/openspec-*/SKILL.md` | `.clinerules/workflows/opsx-<id>.md` |
+| CodeBuddy (`codebuddy`) | `.codebuddy/skills/openspec-*/SKILL.md` | `.codebuddy/commands/opsx/<id>.md` |
+| Codex (`codex`) | `.codex/skills/openspec-*/SKILL.md` | `$CODEX_HOME/prompts/opsx-<id>.md`\* |
+| ForgeCode (`forgecode`) | `.forge/skills/openspec-*/SKILL.md` | 生成なし（コマンドアダプターなし。スキルベースの `/openspec-*` 呼び出しを使用） |
+| Continue (`continue`) | `.continue/skills/openspec-*/SKILL.md` | `.continue/prompts/opsx-<id>.prompt` |
+| CoStrict (`costrict`) | `.cospec/skills/openspec-*/SKILL.md` | `.cospec/openspec/commands/opsx-<id>.md` |
+| Crush (`crush`) | `.crush/skills/openspec-*/SKILL.md` | `.crush/commands/opsx/<id>.md` |
+| Cursor (`cursor`) | `.cursor/skills/openspec-*/SKILL.md` | `.cursor/commands/opsx-<id>.md` |
+| Factory Droid (`factory`) | `.factory/skills/openspec-*/SKILL.md` | `.factory/commands/opsx-<id>.md` |
+| Gemini CLI (`gemini`) | `.gemini/skills/openspec-*/SKILL.md` | `.gemini/commands/opsx/<id>.toml` |
+| GitHub Copilot (`github-copilot`) | `.github/skills/openspec-*/SKILL.md` | `.github/prompts/opsx-<id>.prompt.md`\*\* |
+| iFlow (`iflow`) | `.iflow/skills/openspec-*/SKILL.md` | `.iflow/commands/opsx-<id>.md` |
+| Junie (`junie`) | `.junie/skills/openspec-*/SKILL.md` | `.junie/commands/opsx-<id>.md` |
+| Kilo Code (`kilocode`) | `.kilocode/skills/openspec-*/SKILL.md` | `.kilocode/workflows/opsx-<id>.md` |
+| Kimi CLI (`kimi`) | `.kimi/skills/openspec-*/SKILL.md` | 生成なし（コマンドアダプターなし。スキルベースの `/skill:openspec-*` 呼び出しを使用） |
+| Kiro (`kiro`) | `.kiro/skills/openspec-*/SKILL.md` | `.kiro/prompts/opsx-<id>.prompt.md` |
+| Lingma (`lingma`) | `.lingma/skills/openspec-*/SKILL.md` | `.lingma/commands/opsx/<id>.md` |
+| Mistral Vibe (`vibe`) | `.vibe/skills/openspec-*/SKILL.md` | 生成なし（コマンドアダプターなし。スキルベースの `/openspec-*` 呼び出しを使用） |
+| OpenCode (`opencode`) | `.opencode/skills/openspec-*/SKILL.md` | `.opencode/commands/opsx-<id>.md` |
+| Pi (`pi`) | `.pi/skills/openspec-*/SKILL.md` | `.pi/prompts/opsx-<id>.md` |
+| Qoder (`qoder`) | `.qoder/skills/openspec-*/SKILL.md` | `.qoder/commands/opsx/<id>.md` |
+| Qwen Code (`qwen`) | `.qwen/skills/openspec-*/SKILL.md` | `.qwen/commands/opsx-<id>.toml` |
+| RooCode (`roocode`) | `.roo/skills/openspec-*/SKILL.md` | `.roo/commands/opsx-<id>.md` |
+| Trae (`trae`) | `.trae/skills/openspec-*/SKILL.md` | 生成なし（コマンドアダプターなし。スキルベースの `/openspec-*` 呼び出しを使用） |
+| Windsurf (`windsurf`) | `.windsurf/skills/openspec-*/SKILL.md` | `.windsurf/workflows/opsx-<id>.md` |
 
-\*\* GitHub Copilot の `.github/prompts/*.prompt.md` ファイルは、**IDE 拡張機能のみ**（VS Code, JetBrains, Visual Studio）でカスタムスラッシュコマンドとして認識されます。GitHub Copilot CLI は現在このディレクトリのカスタムプロンプトをサポートしていません — [github/copilot-cli#618](https://github.com/github/copilot-cli/issues/618) を参照してください。Copilot CLI を使用している場合は、`.github/agents/` に[カスタムエージェント](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-custom-agents)を手動でセットアップする必要があります。
+\* Codex のコマンドはプロジェクト内ではなく、グローバルな Codex ホーム（`$CODEX_HOME/prompts/` が設定されている場合はそこ、未設定なら `~/.codex/prompts/`）にインストールされます。
+
+\*\* GitHub Copilot の prompt ファイルは IDE 拡張機能（VS Code, JetBrains, Visual Studio）でカスタムスラッシュコマンドとして認識されます。Copilot CLI は現在 `.github/prompts/*.prompt.md` を直接読み込みません。
 
 ## 非対話セットアップ
 
-CI/CD やスクリプトでセットアップする場合は `--tools` フラグを使います。必要なら `--profile` も指定できます。
+CI/CD やスクリプトでセットアップする場合は、`--tools` を使います。必要なら `--profile` も指定できます。
 
 ```bash
 # 特定のツールを設定
 openspec init --tools claude,cursor
 
-# 全ツールを設定
+# すべての対応ツールを設定
 openspec init --tools all
 
 # ツール設定をスキップ
 openspec init --tools none
 
-# 今回だけ core プロファイルで初期化
+# 今回の init 実行だけ profile を上書き
 openspec init --profile core
 ```
 
-**利用可能なツール ID:** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codebuddy`, `codex`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `forgecode`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kiro`, `lingma`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
+**利用可能なツール ID (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `vibe`, `windsurf`
 
-## インストールされるもの
+## ワークフロー依存のインストール
 
-生成されるスキルとコマンドの数は固定ではなく、選択したワークフローと `delivery` 設定に依存します。
+OpenSpec は、選択されたワークフローに基づいてワークフロー成果物をインストールします。
 
-| スキル | 目的 |
-|-------|---------|
-| `openspec-explore` | アイデア探索の思考パートナー |
-| `openspec-new-change` | 新しい変更の開始 |
-| `openspec-continue-change` | 次のアーティファクト作成 |
-| `openspec-ff-change` | 計画アーティファクトの一括生成 |
-| `openspec-apply-change` | タスク実装 |
-| `openspec-verify-change` | 実装の検証 |
-| `openspec-sync-specs` | 仕様差分の同期（任意） |
-| `openspec-archive-change` | 変更のアーカイブ |
-| `openspec-bulk-archive-change` | 複数変更の一括アーカイブ |
-| `openspec-onboard` | ワークフロー全体のガイド付きオンボード |
-| `openspec-propose` | 変更と計画アーティファクトの一括生成 |
+- **Core profile（デフォルト）:** `propose`, `explore`, `apply`, `sync`, `archive`
+- **Custom selection:** すべての workflow ID から任意のサブセット:
+  `propose`, `explore`, `new`, `continue`, `apply`, `ff`, `sync`, `archive`, `bulk-archive`, `verify`, `onboard`
 
-これらのスキルは `/opsx:propose`, `/opsx:new`, `/opsx:apply` などのスラッシュコマンドで呼び出されます。詳細は [コマンド](commands.md) を参照してください。
+つまり、skill / command の数は固定ではなく、profile と delivery に依存します。
 
-## 新しいツールを追加する
+## 生成されるスキル名
 
-別の AI コーディングアシスタントを追加したい場合は、[コマンドアダプターパターン](../CONTRIBUTING.md) を参照するか、GitHub Issue を作成してください。
+profile / workflow 設定で選択された場合、OpenSpec は次のスキルを生成します。
 
----
+- `openspec-propose`
+- `openspec-explore`
+- `openspec-new-change`
+- `openspec-continue-change`
+- `openspec-apply-change`
+- `openspec-ff-change`
+- `openspec-sync-specs`
+- `openspec-archive-change`
+- `openspec-bulk-archive-change`
+- `openspec-verify-change`
+- `openspec-onboard`
+
+コマンドの挙動は [コマンド](commands.md)、`init` / `update` オプションは [CLI](cli.md) を参照してください。
 
 ## 関連
 
-- [CLI リファレンス](cli.md) — ターミナルコマンド
-- [コマンド](commands.md) — スラッシュコマンドとスキル
-- [はじめに](getting-started.md) — 初回セットアップ
+- [CLI リファレンス](cli.md) - ターミナルコマンド
+- [コマンド](commands.md) - スラッシュコマンドとスキル
+- [はじめに](getting-started.md) - 初回セットアップ

@@ -15,6 +15,7 @@ import {
   resolveArtifactOutputs,
   type ArtifactInstructions,
 } from '../../core/artifact-graph/index.js';
+import { getChangeDir, resolveCurrentPlanningHomeSync } from '../../core/planning-home.js';
 import {
   validateChangeExists,
   validateSchemaExists,
@@ -49,8 +50,13 @@ export async function instructionsCommand(
   const spinner = options.json ? undefined : ora('指示を生成中...').start();
 
   try {
-    const projectRoot = process.cwd();
-    const changeName = await validateChangeExists(options.change, projectRoot);
+    const planningHome = resolveCurrentPlanningHomeSync();
+    const projectRoot = planningHome.root;
+    const changeName = await validateChangeExists(
+      options.change,
+      projectRoot,
+      planningHome.changesDir
+    );
 
     // Validate schema if explicitly provided
     if (options.schema) {
@@ -58,7 +64,10 @@ export async function instructionsCommand(
     }
 
     // loadChangeContext will auto-detect schema from metadata if not provided
-    const context = loadChangeContext(projectRoot, changeName, options.schema);
+    const context = loadChangeContext(projectRoot, changeName, options.schema, {
+      changeDir: getChangeDir(planningHome, changeName),
+      planningHome,
+    });
 
     if (!artifactId) {
       spinner?.stop();
@@ -101,7 +110,8 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     changeName,
     schemaName,
     changeDir,
-    outputPath,
+    initiative,
+    resolvedOutputPath,
     description,
     instruction,
     context,
@@ -115,11 +125,16 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   console.log(`<artifact id="${artifactId}" change="${changeName}" schema="${schemaName}">`);
   console.log();
 
+  if (initiative) {
+    console.log(`<initiative store="${initiative.store}" id="${initiative.id}" />`);
+    console.log();
+  }
+
   // Warning for blocked artifacts
   if (isBlocked) {
     const missing = dependencies.filter((d) => !d.done).map((d) => d.id);
     console.log('<warning>');
-    console.log('このアーティファクトには未完了の依存関係があります。先に完了するか、注意して進めてください。');
+    console.log('このアーティファクトには未完了の依存関係があります。先に完了するか、慎重に進めてください。');
     console.log(`不足: ${missing.join(', ')}`);
     console.log('</warning>');
     console.log();
@@ -135,7 +150,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // Project context (AI constraint - do not include in output)
   if (context) {
     console.log('<project_context>');
-    console.log('<!-- これは背景情報です。出力に含めないでください。 -->');
+    console.log('<!-- これは背景情報です。出力には含めないでください。 -->');
     console.log(context);
     console.log('</project_context>');
     console.log();
@@ -144,7 +159,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // Rules (AI constraint - do not include in output)
   if (rules && rules.length > 0) {
     console.log('<rules>');
-    console.log('<!-- これは守るべき制約です。出力に含めないでください。 -->');
+    console.log('<!-- これは従うべき制約です。出力には含めないでください。 -->');
     for (const rule of rules) {
       console.log(`- ${rule}`);
     }
@@ -155,7 +170,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // Dependencies (files to read for context)
   if (dependencies.length > 0) {
     console.log('<dependencies>');
-    console.log('このアーティファクトを作成する前に、以下のファイルを文脈として読んでください:');
+    console.log('このアーティファクトを作成する前に、コンテキストとして以下のファイルを読んでください:');
     console.log();
     for (const dep of dependencies) {
       const status = dep.done ? 'done' : 'missing';
@@ -171,7 +186,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Output location
   console.log('<output>');
-  console.log(`出力先: ${path.join(changeDir, outputPath)}`);
+  console.log(`Write to: ${resolvedOutputPath}`);
   console.log('</output>');
   console.log();
 
@@ -185,21 +200,21 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Template
   console.log('<template>');
-  console.log('<!-- これを出力ファイルの構成として使用し、各セクションを埋めてください。 -->');
+  console.log('<!-- Use this as the structure for your output file. Fill in the sections. -->');
   console.log(template.trim());
   console.log('</template>');
   console.log();
 
   // Success criteria placeholder
   console.log('<success_criteria>');
-  console.log('<!-- スキーマの検証ルールで定義されます -->');
+  console.log('<!-- To be defined in schema validation rules -->');
   console.log('</success_criteria>');
   console.log();
 
   // Unlocks
   if (unlocks.length > 0) {
     console.log('<unlocks>');
-    console.log(`このアーティファクトを完了すると有効になります: ${unlocks.join(', ')}`);
+    console.log(`Completing this artifact enables: ${unlocks.join(', ')}`);
     console.log('</unlocks>');
     console.log();
   }
@@ -246,10 +261,14 @@ function parseTasksFile(content: string): TaskItem[] {
 export async function generateApplyInstructions(
   projectRoot: string,
   changeName: string,
-  schemaName?: string
+  schemaName?: string,
+  planningHome = resolveCurrentPlanningHomeSync({ startPath: projectRoot })
 ): Promise<ApplyInstructions> {
   // loadChangeContext will auto-detect schema from metadata if not provided
-  const context = loadChangeContext(projectRoot, changeName, schemaName);
+  const context = loadChangeContext(projectRoot, changeName, schemaName, {
+    changeDir: getChangeDir(planningHome, changeName),
+    planningHome,
+  });
   const changeDir = context.changeDir;
 
   // Get the full schema to access the apply phase configuration
@@ -308,7 +327,7 @@ export async function generateApplyInstructions(
     // Tracking file configured but doesn't exist yet
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `${tracksFilename} ファイルが見つからないため、作成が必要です。\nopenspec-continue-change を使って追跡ファイルを生成してください。`;
+    instruction = `${tracksFilename} ファイルが見つからないため、作成が必要です。\nopenspec-continue-change で追跡ファイルを生成してください。`;
   } else if (tracksFile && tracksFileExists && total === 0) {
     // Tracking file exists but contains no tasks
     const tracksFilename = path.basename(tracksFile);
@@ -316,21 +335,21 @@ export async function generateApplyInstructions(
     instruction = `${tracksFilename} ファイルは存在しますが、タスクがありません。\n${tracksFilename} にタスクを追加するか、openspec-continue-change で再生成してください。`;
   } else if (tracksFile && remaining === 0 && total > 0) {
     state = 'all_done';
-    instruction = 'すべてのタスクが完了しました！この変更はアーカイブ可能です。\nアーカイブ前にテストの実行と変更内容のレビューを検討してください。';
+    instruction = 'すべてのタスクが完了しました！この変更はアーカイブ可能です。\nアーカイブ前にテスト実行と変更レビューを検討してください。';
   } else if (!tracksFile) {
     // No tracking file configured in schema - ready to apply
     state = 'ready';
-    instruction = schemaInstruction?.trim() ?? '必要なアーティファクトがすべて完了しました。実装を進めてください。';
+    instruction = schemaInstruction?.trim() ?? '必要なアーティファクトがすべて完了しました。実装に進んでください。';
   } else {
     state = 'ready';
-    instruction = schemaInstruction?.trim()
-      ?? 'コンテキストファイルを読み、未完了タスクを進めながら完了にしてください。\nブロッカーや不明点があればいったん停止してください。';
+    instruction = schemaInstruction?.trim() ?? 'コンテキストファイルを読み、未完了タスクを進め、進捗に合わせて完了マークする。\nブロッカーや不明点があれば一旦止めて確認する。';
   }
 
   return {
     changeName,
     changeDir,
     schemaName: context.schemaName,
+    ...(context.initiative ? { initiative: context.initiative } : {}),
     contextFiles,
     progress: { total, complete, remaining },
     tasks,
@@ -344,8 +363,13 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
   const spinner = options.json ? undefined : ora('適用指示を生成中...').start();
 
   try {
-    const projectRoot = process.cwd();
-    const changeName = await validateChangeExists(options.change, projectRoot);
+    const planningHome = resolveCurrentPlanningHomeSync();
+    const projectRoot = planningHome.root;
+    const changeName = await validateChangeExists(
+      options.change,
+      projectRoot,
+      planningHome.changesDir
+    );
 
     // Validate schema if explicitly provided
     if (options.schema) {
@@ -353,7 +377,12 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
     }
 
     // generateApplyInstructions uses loadChangeContext which auto-detects schema
-    const instructions = await generateApplyInstructions(projectRoot, changeName, options.schema);
+    const instructions = await generateApplyInstructions(
+      projectRoot,
+      changeName,
+      options.schema,
+      planningHome
+    );
 
     spinner?.stop();
 
@@ -370,10 +399,13 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
 }
 
 export function printApplyInstructionsText(instructions: ApplyInstructions): void {
-  const { changeName, schemaName, contextFiles, progress, tasks, state, missingArtifacts, instruction } = instructions;
+  const { changeName, schemaName, initiative, contextFiles, progress, tasks, state, missingArtifacts, instruction } = instructions;
 
   console.log(`## 適用: ${changeName}`);
   console.log(`スキーマ: ${schemaName}`);
+  if (initiative) {
+    console.log(`Initiative: ${initiative.store}/${initiative.id}`);
+  }
   console.log();
 
   // Warning for blocked state
@@ -381,7 +413,7 @@ export function printApplyInstructionsText(instructions: ApplyInstructions): voi
     console.log('### ⚠️ ブロック中');
     console.log();
     console.log(`不足アーティファクト: ${missingArtifacts.join(', ')}`);
-    console.log('先に openspec-continue-change スキルで作成してください。');
+    console.log('先に openspec-continue-change スキルでこれらを作成してください。');
     console.log();
   }
 

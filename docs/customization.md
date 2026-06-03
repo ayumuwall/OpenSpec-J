@@ -337,6 +337,20 @@ openspec schema fork spec-driven with-review
 
 ---
 
+## コミュニティスキーマ
+
+OpenSpec は、独立したリポジトリで配布されるコミュニティ管理スキーマにも対応しています。[github/spec-kit's community extension catalog](https://github.com/github/spec-kit/tree/main/extensions) が spec-kit で担う役割と同じように、OpenSpec と他のツールやシステムを連携させる意見のあるワークフローを提供します。
+
+コミュニティスキーマは OpenSpec core には vendoring されません。それぞれ独自のリポジトリにあり、独自のリリース周期で管理されます。使う場合は、スキーマバンドルをプロジェクトの `openspec/schemas/<schema-name>/` ディレクトリへコピーしてください（各リポジトリの README にインストール手順があります）。
+
+| スキーマ | メンテナー | リポジトリ | 説明 |
+|--------|-----------|-----------|-------------|
+| `superpowers-bridge` | @JiangWay | [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas/tree/main/superpowers-bridge) | OpenSpec のアーティファクト管理と [obra/superpowers](https://github.com/obra/superpowers) の実行スキル（brainstorming, writing-plans, subagent 経由の TDD, code review, finishing）を統合します。Superpowers が標準では扱わない範囲を補う、証拠優先の `retrospective` アーティファクトを追加します。 |
+
+> コミュニティスキーマを提供したい場合は、リポジトリへのリンクを含む Issue を開くか、この表に行を追加する PR を送ってください。
+
+---
+
 ## 関連
 
 - [CLI リファレンス: スキーマコマンド](cli.md#schema-commands) - スキーマ関連コマンド

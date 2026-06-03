@@ -36,17 +36,18 @@ OPSX（柔軟なアクション）:
 - `/opsx:propose`
 - `/opsx:explore`
 - `/opsx:apply`
+- `/opsx:sync`
 - `/opsx:archive`
 
 典型的な流れ:
 
 ```text
-/opsx:propose ──► /opsx:apply ──► /opsx:archive
+/opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
 ```
 
 ### 拡張フルワークフロー（`custom` 選択）
 
-`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard` を使いたい場合は、次を実行します。
+明示的なひな形作成・組み立て用コマンド（`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard`）を使いたい場合は、次で有効化します。
 
 ```bash
 openspec config profile

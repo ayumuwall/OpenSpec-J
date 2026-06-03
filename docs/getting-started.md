@@ -9,7 +9,7 @@ OpenSpec は、コードを書く前に「何を作るか」を人と AI コー�
 **既定のクイックパス（`core` プロファイル）:**
 
 ```text
-/opsx:propose ──► /opsx:apply ──► /opsx:archive
+/opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
 ```
 
 **拡張パス（`custom` ワークフロー選択時）:**
@@ -18,7 +18,7 @@ OpenSpec は、コードを書く前に「何を作るか」を人と AI コー�
 /opsx:new ──► /opsx:ff または /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
 
-既定のグローバルプロファイルは `core` で、`propose`, `explore`, `apply`, `archive` が含まれます。拡張ワークフローを使いたい場合は、`openspec config profile` の後に `openspec update` を実行します。
+既定のグローバルプロファイルは `core` で、`propose`, `explore`, `apply`, `sync`, `archive` が含まれます。拡張ワークフローのコマンドを使いたい場合は、`openspec config profile` の後に `openspec update` を実行します。
 
 ## OpenSpec が作るもの
 

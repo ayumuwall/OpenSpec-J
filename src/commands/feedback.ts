@@ -145,14 +145,14 @@ function submitViaGhCli(title: string, body: string): void {
     console.log(`\n✓ フィードバックを送信しました！`);
     console.log(`Issue URL: ${issueUrl}\n`);
   } catch (error: any) {
-    // Display the error output from gh CLI
+    // gh CLI のエラー出力を表示する
     if (error.stderr) {
       console.error(error.stderr.toString());
     } else if (error.message) {
       console.error(error.message);
     }
 
-    // Exit with the same code as gh CLI
+    // gh CLI と同じ終了コードで終了する
     process.exit(error.status ?? 1);
   }
 }
