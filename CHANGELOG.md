@@ -8,44 +8,44 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 - **[OpenSpec-J]** README / CLI リファレンス / workspace beta ガイド / context store・initiative 関連コマンド / workspace planning スキーマの v1.4.1 追加文言を日本語化
 - **[OpenSpec-J]** README の同期元バージョンを OpenSpec v1.4.1 に更新
 
-### Patch Changes
+### パッチ変更
 
 - [#1165](https://github.com/Fission-AI/OpenSpec/pull/1165) [`0a01146`](https://github.com/Fission-AI/OpenSpec/commit/0a01146c181a3af8dbf645547bcbe20c0d48d615) [@TabishB](https://github.com/TabishB) ありがとう！ - beta workspace の表示状態を `.openspec-workspace/view.yaml` へ移動しました。トップレベルの `openspec update` が workspace update に振り分けられないようにし、外部ルートの `workspace.yaml` を無視することで Dagster プロジェクトも通常どおり更新できるようにしました。
 
 ## 1.4.0
 
-### Minor Changes
+### マイナー変更
 
-- [#1003](https://github.com/Fission-AI/OpenSpec/pull/1003) [`342ed43`](https://github.com/Fission-AI/OpenSpec/commit/342ed43e694abba65a3ea275f94ba3b77df85da3) Thanks [@Miss-you](https://github.com/Miss-you)! - ### New Features
+- [#1003](https://github.com/Fission-AI/OpenSpec/pull/1003) [`342ed43`](https://github.com/Fission-AI/OpenSpec/commit/342ed43e694abba65a3ea275f94ba3b77df85da3) [@Miss-you](https://github.com/Miss-you) ありがとう！ - ### 新機能
 
-  - **Kimi CLI support** — OpenSpec can now initialize Kimi CLI as a supported skills-only tool using `.kimi/skills/`
+  - **Kimi CLI サポート** — OpenSpec は `.kimi/skills/` を使い、Kimi CLI を skills-only の対応ツールとして初期化できるようになりました。
 
-  ### Other
+  ### その他
 
-  - Added Kimi-specific docs and init coverage aligned with skill-based `/skill:openspec-*` usage
+  - Kimi 専用ドキュメントと init のテスト範囲を追加し、スキルベースの `/skill:openspec-*` 利用に合わせました。
 
-- [#1154](https://github.com/Fission-AI/OpenSpec/pull/1154) [`aa16080`](https://github.com/Fission-AI/OpenSpec/commit/aa16080d16b70f7b26cebd465334b2e16c0e7a43) Thanks [@TabishB](https://github.com/TabishB)! - ### New Features
+- [#1154](https://github.com/Fission-AI/OpenSpec/pull/1154) [`aa16080`](https://github.com/Fission-AI/OpenSpec/commit/aa16080d16b70f7b26cebd465334b2e16c0e7a43) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 新機能
 
-  - **Mistral Vibe support** — OpenSpec can now initialize Mistral Vibe as a supported skills-only tool using `.vibe/skills/`
+  - **Mistral Vibe サポート** — OpenSpec は `.vibe/skills/` を使い、Mistral Vibe を skills-only の対応ツールとして初期化できるようになりました。
 
-  ### Bug Fixes
+  ### バグ修正
 
-  - **Case-insensitive requirement headers** — Requirement headers are now parsed regardless of capitalization, so specs no longer fail to parse over header casing
-  - **Zsh completions on oh-my-zsh** — Fixed shell completion setup so tab completion installs correctly under oh-my-zsh's `compinit`
+  - **大文字小文字を区別しない requirement 見出し** — Requirement 見出しを大文字小文字に関係なく解析するようになり、見出しの表記ゆれで仕様の解析に失敗しなくなりました。
+  - **oh-my-zsh での zsh 補完** — shell 補完のセットアップを修正し、oh-my-zsh の `compinit` 環境でもタブ補完が正しくインストールされるようになりました。
 
-  ### Other
+  ### その他
 
-  - **Clearer validation hints** — When a requirement has SHALL/MUST only in its header, `openspec validate` now points you to move the keyword onto the requirement body line instead of showing the generic error
+  - **わかりやすい検証ヒント** — requirement の見出しだけに SHALL/MUST が含まれる場合、`openspec validate` は汎用エラーではなく、キーワードを requirement 本文行へ移すよう案内するようになりました。
 
-- [#1030](https://github.com/Fission-AI/OpenSpec/pull/1030) [`485c97e`](https://github.com/Fission-AI/OpenSpec/commit/485c97e97d766e35dd16c02370baee2044abc4f4) Thanks [@TabishB](https://github.com/TabishB)! - ### New Features
+- [#1030](https://github.com/Fission-AI/OpenSpec/pull/1030) [`485c97e`](https://github.com/Fission-AI/OpenSpec/commit/485c97e97d766e35dd16c02370baee2044abc4f4) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 新機能
 
-  - Include the sync workflow in the default core profile so new installs generate `/opsx:sync` skills and commands by default.
+  - sync ワークフローをデフォルトの core profile に含めました。新規インストールでは `/opsx:sync` のスキルとコマンドがデフォルトで生成されます。
 
-### Patch Changes
+### パッチ変更
 
-- [#1111](https://github.com/Fission-AI/OpenSpec/pull/1111) [`7fdb177`](https://github.com/Fission-AI/OpenSpec/commit/7fdb1771585b1688597d73dde5a8bc906084d0de) Thanks [@TabishB](https://github.com/TabishB)! - ### Fixed
+- [#1111](https://github.com/Fission-AI/OpenSpec/pull/1111) [`7fdb177`](https://github.com/Fission-AI/OpenSpec/commit/7fdb1771585b1688597d73dde5a8bc906084d0de) [@TabishB](https://github.com/TabishB) ありがとう！ - ### 修正
 
-  - Preserve workspace planning detection when Windows short paths or symlink aliases resolve to a canonical workspace root.
+  - Windows の短いパスやシンボリックリンクの別名が正規の workspace ルートへ解決される場合でも、workspace planning の検出を維持するようにしました。
 
 ## 1.3.1
 
