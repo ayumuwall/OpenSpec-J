@@ -200,7 +200,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Template
   console.log('<template>');
-  console.log('<!-- Use this as the structure for your output file. Fill in the sections. -->');
+  console.log('<!-- 出力ファイルの構成として使い、各セクションを埋めてください。 -->');
   console.log(template.trim());
   console.log('</template>');
   console.log();

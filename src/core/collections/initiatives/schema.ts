@@ -78,7 +78,7 @@ const InitiativeStateSchema = z.object({
   summary: nonBlankString('summary'),
   status: z.enum(INITIATIVE_STATUSES),
   created: z.string().regex(INITIATIVE_DATE_PATTERN, {
-    message: 'created must be YYYY-MM-DD format',
+    message: 'created は YYYY-MM-DD 形式でなければなりません',
   }),
   owners: z.array(nonBlankString('owner')).default([]),
   metadata: InitiativeMetadataSchema.default({}),
@@ -101,7 +101,7 @@ function parseYamlObject(content: string, label: string): unknown {
     return parseYaml(content);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid ${label}: ${message}`);
+    throw new Error(`${label} が不正です: ${message}`);
   }
 }
 
@@ -109,20 +109,20 @@ export function validateInitiativeId(id: string): string {
   assertNoNul(id, 'Initiative id');
 
   if (id.length === 0) {
-    throw new Error('Initiative id must not be empty');
+    throw new Error('Initiative id は空にできません');
   }
 
   if (id === '.' || id === '..') {
-    throw new Error(`Initiative id must not be '${id}'`);
+    throw new Error(`Initiative id を '${id}' にはできません`);
   }
 
   if (/[\\/]/u.test(id)) {
-    throw new Error('Initiative id must not contain path separators');
+    throw new Error('Initiative id にパス区切り文字は含められません');
   }
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) {
     throw new Error(
-      'Initiative id must be kebab-case with lowercase letters, numbers, and single hyphen separators'
+      'Initiative id は小文字・数字・単一ハイフン区切りの kebab-case でなければなりません'
     );
   }
 

@@ -202,7 +202,7 @@ describe('repo-local change initiative links', () => {
     expect(result.exitCode).toBe(1);
     const payload = parseJson(result);
     expect(payload.change).toBeNull();
-    expect(payload.status[0].message).toContain('Pass --initiative <id>');
+    expect(payload.status[0].message).toContain('--initiative <id>');
     expect(fs.existsSync(changeDir('blank-linked-change'))).toBe(false);
   });
 
@@ -397,7 +397,7 @@ describe('repo-local change initiative links', () => {
 
     expect(result.exitCode).toBe(1);
     const payload = parseJson(result);
-    expect(payload.status[0].message).toContain('repo-local changes');
+    expect(payload.status[0].message).toContain('repo-local change');
     expect(fs.existsSync(path.join(workspaceRoot, 'changes', 'workspace-linked-change'))).toBe(false);
   });
 
@@ -502,7 +502,7 @@ describe('repo-local change initiative links', () => {
       { cwd: tempDir, env }
     );
     expect(conflict.exitCode).toBe(1);
-    expect(parseJson(conflict).status[0].message).toContain('already linked');
+    expect(parseJson(conflict).status[0].message).toContain('既に');
     expect(fs.readFileSync(metadataPath('idempotent-link'), 'utf-8')).toBe(before);
   });
 
@@ -527,6 +527,6 @@ describe('repo-local change initiative links', () => {
     );
 
     expect(result.exitCode).toBe(1);
-    expect(parseJson(result).status[0].message).toContain('repo-local changes');
+    expect(parseJson(result).status[0].message).toContain('repo-local change');
   });
 });

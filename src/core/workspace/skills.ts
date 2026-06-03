@@ -75,7 +75,7 @@ function resolveWorkspaceSkillProfileContext(): WorkspaceSkillProfileContext {
   const deliveryNotice =
     delivery === 'skills'
       ? null
-      : 'Workspace setup installs skills only; workspace command generation is not part of this slice.';
+      : 'Workspace setup は skills のみをインストールします。workspace command generation はこの範囲には含まれません。';
 
   return {
     profile,
@@ -327,7 +327,7 @@ export async function generateWorkspaceAgentSkills(
   if (selectedAgentIds.length === 0) {
     report.skipped.push({
       reason: 'no_agents_selected',
-      message: 'No workspace agent skills were selected.',
+      message: 'workspace agent skills が選択されていません。',
     });
     return report;
   }
@@ -341,7 +341,7 @@ export async function generateWorkspaceAgentSkills(
         tool_id: tool.value,
         name: tool.name,
         reason: 'no_profile_workflows',
-        message: 'The active global profile does not select any workflows.',
+        message: '有効な global profile では workflow が選択されていません。',
       });
     }
     return report;
@@ -423,8 +423,8 @@ export async function updateWorkspaceAgentSkills(
       report.skipped.push({
         reason: previousSkillState ? 'no_agents_selected' : 'no_stored_agent_selection',
         message: previousSkillState
-          ? 'No workspace agent skills were selected.'
-          : 'No workspace agent skill selection is stored. Pass --tools <ids> to install skills.',
+          ? 'workspace agent skills が選択されていません。'
+          : 'workspace agent skill の選択状態が保存されていません。skills をインストールするには --tools <ids> を指定してください。',
       });
     }
     return report;
@@ -454,7 +454,7 @@ export async function updateWorkspaceAgentSkills(
         tool_id: tool.value,
         name: tool.name,
         reason: 'no_profile_workflows',
-        message: 'The active global profile does not select any workflows.',
+        message: '有効な global profile では workflow が選択されていません。',
       });
     }
     return report;

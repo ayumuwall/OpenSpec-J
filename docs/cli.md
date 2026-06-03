@@ -732,26 +732,26 @@ openspec archive update-ci-config --skip-specs
 
 ### `openspec new change`
 
-Create a repo-local change directory and optional checked-in metadata.
+repo-local な変更ディレクトリと、必要に応じてコミット対象の metadata を作成します。
 
 ```bash
 openspec new change <name> [options]
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--description <text>` | Description to add to `README.md` |
-| `--goal <text>` | Workspace product goal to store with the change |
-| `--areas <names>` | Comma-separated affected workspace link names |
-| `--initiative <id>` | Link the repo-local change to an initiative |
+| `--description <text>` | `README.md` に追加する説明 |
+| `--goal <text>` | change に保存する workspace のプロダクト目標 |
+| `--areas <names>` | 影響を受ける workspace link 名のカンマ区切り |
+| `--initiative <id>` | repo-local change を initiative にリンク |
 | `--store <id>` | `--initiative` で使う context store ID |
-| `--store-path <path>` | Existing local context store root for `--initiative` |
-| `--schema <name>` | Workflow schema to use |
-| `--json` | Output JSON |
+| `--store-path <path>` | `--initiative` で使う既存のローカル context store root |
+| `--schema <name>` | 使用する workflow schema |
+| `--json` | JSON で出力 |
 
-Examples:
+例:
 
 ```bash
 openspec new change add-billing-api --initiative billing-launch --store platform
@@ -760,22 +760,22 @@ openspec new change add-billing-api --initiative platform/billing-launch --json
 
 ### `openspec set change`
 
-Update checked-in repo-local change metadata without recreating the change.
+change を作り直さずに、コミット対象の repo-local change metadata を更新します。
 
 ```bash
 openspec set change <name> [options]
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Description |
+| オプション | 説明 |
 |--------|-------------|
-| `--initiative <id>` | Link the repo-local change to an initiative |
+| `--initiative <id>` | repo-local change を initiative にリンク |
 | `--store <id>` | `--initiative` で使う context store ID |
-| `--store-path <path>` | Existing local context store root for `--initiative` |
+| `--store-path <path>` | `--initiative` で使う既存のローカル context store root |
 | `--json` | Output JSON |
 
-`set change --initiative` is idempotent when the requested link already exists and refuses to replace a different existing initiative link.
+`set change --initiative` は、指定したリンクが既に存在する場合は冪等に動作し、別の既存 initiative link の置き換えは拒否します。
 
 ### `openspec status`
 
@@ -1002,7 +1002,7 @@ openspec schema init research-first
 
 # 非対話 + アーティファクト指定
 openspec schema init rapid \
-  --description "Rapid iteration workflow" \
+  --description "高速に反復するワークフロー" \
   --artifacts "proposal,tasks" \
   --default
 ```
@@ -1239,7 +1239,7 @@ openspec feedback <message> [options]
 **例:**
 
 ```bash
-openspec feedback "Add support for custom artifact types" \
+openspec feedback "独自アーティファクト型のサポートを追加してほしい" \
   --body "組み込み以外の独自アーティファクト型を定義できるようにしたいです。"
 ```
 

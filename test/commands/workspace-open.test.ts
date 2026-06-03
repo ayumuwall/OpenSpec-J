@@ -52,7 +52,7 @@ describe('workspace open launchers', () => {
         '/repos/api',
         '--add-dir',
         '/repos/web',
-        'Open this OpenSpec workspace.',
+        'この OpenSpec workspace を開いてください。',
       ],
       cwd: '/workspace',
       openerLabel: 'codex-cli',
@@ -67,7 +67,7 @@ describe('workspace open launchers', () => {
       )
     ).toEqual({
       executable: 'claude',
-      args: ['--add-dir', '/repos/api', 'Open this OpenSpec workspace.'],
+      args: ['--add-dir', '/repos/api', 'この OpenSpec workspace を開いてください。'],
       cwd: '/workspace',
       openerLabel: 'Claude',
     });
@@ -113,7 +113,7 @@ describe('workspace open launchers', () => {
           '/repos/api',
           '--add-dir',
           'C:\\Program Files\\repo',
-          'Open this OpenSpec workspace.',
+          'この OpenSpec workspace を開いてください。',
         ],
         cwd: '/workspace',
         shell: false,

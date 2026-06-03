@@ -165,11 +165,11 @@ async function cleanupCreatedInitiative(
     await fileSystem.rm(initiativeRoot, { recursive: true, force: true });
   } catch (cleanupError) {
     throw new Error(
-      `Failed to create initiative '${initiativeId}' and cleanup failed: ${errorMessage(originalError)}; cleanup: ${errorMessage(cleanupError)}`
+      `initiative '${initiativeId}' の作成に失敗し、cleanup にも失敗しました: ${errorMessage(originalError)}; cleanup: ${errorMessage(cleanupError)}`
     );
   }
 
-  throw new Error(`Failed to create initiative '${initiativeId}': ${errorMessage(originalError)}`);
+  throw new Error(`initiative '${initiativeId}' の作成に失敗しました: ${errorMessage(originalError)}`);
 }
 
 export async function createInitiative(input: CreateInitiativeInput): Promise<InitiativeState> {
@@ -185,10 +185,10 @@ export async function createInitiative(input: CreateInitiativeInput): Promise<In
     await fileSystem.mkdir(initiativeRoot, { recursive: false });
   } catch (error) {
     if (isPathExistsError(error)) {
-      throw new Error(`Initiative '${state.id}' already exists at ${initiativeRoot}`);
+      throw new Error(`Initiative '${state.id}' は既に ${initiativeRoot} に存在します`);
     }
 
-    throw new Error(`Failed to create initiative '${state.id}': ${errorMessage(error)}`);
+    throw new Error(`initiative '${state.id}' の作成に失敗しました: ${errorMessage(error)}`);
   }
 
   try {
@@ -265,7 +265,7 @@ export async function listInitiatives(input: ListInitiativesInput): Promise<Init
       return [];
     }
 
-    throw new Error(`Failed to list initiatives: ${errorMessage(error)}`);
+    throw new Error(`initiative の一覧取得に失敗しました: ${errorMessage(error)}`);
   }
 
   const initiatives: InitiativeState[] = [];

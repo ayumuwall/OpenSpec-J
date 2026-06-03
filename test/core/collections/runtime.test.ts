@@ -51,7 +51,7 @@ describe('collection runtime', () => {
         expect(() => validateMount(invalidValue)).toThrow();
       }
 
-      expect(() => validateMount('.openspec-store')).toThrow(/reserved/u);
+      expect(() => validateMount('.openspec-store')).toThrow(/予約/u);
     });
   });
 
@@ -106,7 +106,7 @@ describe('collection runtime', () => {
       });
       expect(registry.get('missing')).toBeUndefined();
       expect(registry.require('decisions').mount).toBe('decisions');
-      expect(() => registry.require('missing')).toThrow(/Unknown collection/u);
+      expect(() => registry.require('missing')).toThrow(/不明な collection/u);
     });
 
     it('rejects duplicate collection ids and mounts', () => {
@@ -200,7 +200,7 @@ describe('collection runtime', () => {
       });
       expect(decisions.handle).toBeUndefined();
       expect(mounted.get('missing')).toBeUndefined();
-      expect(() => mounted.require('missing')).toThrow(/Unknown mounted collection/u);
+      expect(() => mounted.require('missing')).toThrow(/不明な mounted collection/u);
     });
 
     it('rejects empty store roots', () => {

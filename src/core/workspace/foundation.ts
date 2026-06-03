@@ -294,7 +294,7 @@ export function parseWorkspacePreferredOpenerValue(value: string): WorkspacePref
   }
 
   throw new Error(
-    `Unsupported workspace opener '${value}'. Supported values: ${formatSupportedOpenerValues()}`
+    `未対応の workspace opener '${value}' です。対応している値: ${formatSupportedOpenerValues()}`
   );
 }
 
@@ -316,7 +316,7 @@ export function validateWorkspacePreferredOpener(
   }
 
   throw new Error(
-    `Unsupported workspace opener '${opener.kind}:${opener.id}'. Supported values: ${formatSupportedOpenerValues()}`
+    `未対応の workspace opener '${opener.kind}:${opener.id}' です。対応している値: ${formatSupportedOpenerValues()}`
   );
 }
 

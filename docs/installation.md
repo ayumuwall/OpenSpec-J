@@ -27,7 +27,7 @@ yarn global add @ayumuwall/openspec@latest
 ### bun
 
 Bun can install OpenSpec globally, but OpenSpec currently runs on Node.js.
-You still need Node.js 20.19.0 or higher available on `PATH`.
+`PATH` 上で Node.js 20.19.0 以上を利用できる必要があります。
 
 ```bash
 bun add -g @ayumuwall/openspec@latest

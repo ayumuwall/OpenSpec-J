@@ -440,10 +440,10 @@ describe('workspace command interactive flows', () => {
     expect(process.exitCode).toBeUndefined();
     expect(select).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Open with:',
+        message: '開く方法:',
       })
     );
-    const openerPrompt = select.mock.calls.find(([options]) => options.message === 'Open with:')?.[0];
+    const openerPrompt = select.mock.calls.find(([options]) => options.message === '開く方法:')?.[0];
     expect(openerPrompt?.default).toBe('editor');
     expect(openerPrompt?.choices.map((choice: { value: string }) => choice.value)).toEqual(
       expect.arrayContaining(['editor', 'github-copilot'])
@@ -465,7 +465,7 @@ describe('workspace command interactive flows', () => {
     expect(process.exitCode).toBe(1);
     expect(select).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No supported workspace opener is available on PATH.')
+      expect.stringContaining('PATH 上に対応している workspace opener がありません。')
     );
   });
 

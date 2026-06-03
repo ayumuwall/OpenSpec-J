@@ -17,7 +17,7 @@ pnpm changeset
 3. **Version PR** — changeset が main にマージされると、CI が "Version Packages" PR を作成・更新
 4. **リリース** — Version PR のマージで npm publish と GitHub Release を実行
 
-> **Note:** 既定では通常のリリース周期に乗せます。メンテナーまたはリリース担当者が、その PR に専用のリリースノートとバージョン追跡を求める場合に changeset を追加してください。バージョニング（`changeset version`）と公開は CI で自動実行されます。
+> **注:** 既定では通常のリリース周期に乗せます。メンテナーまたはリリース担当者が、その PR に専用のリリースノートとバージョン追跡を求める場合に changeset を追加してください。バージョニング（`changeset version`）と公開は CI で自動実行されます。
 
 ## テンプレート
 
@@ -28,25 +28,25 @@ changeset は次の構成で書きます:
 "@fission-ai/openspec": patch
 ---
 
-### New Features
+### 新機能
 
-- **Feature name** — What users can now do
+- **機能名** — ユーザーが新しくできるようになったこと
 
-### Bug Fixes
+### バグ修正
 
-- Fixed issue where X happened when Y
+- Y のときに X が発生する問題を修正
 
-### Breaking Changes
+### 破壊的変更
 
-- `oldMethod()` has been removed, use `newMethod()` instead
+- `oldMethod()` を削除しました。代わりに `newMethod()` を使ってください
 
-### Deprecations
+### 非推奨
 
-- `legacyOption` is deprecated and will be removed in v2.0
+- `legacyOption` は非推奨になり、v2.0 で削除されます
 
-### Other
+### その他
 
-- Internal refactoring of X for better performance
+- 性能改善のため X の内部リファクタリングを実施
 ```
 
 必要なセクションだけ残してください。
@@ -76,22 +76,22 @@ changeset は次の構成で書きます:
 
 ## よい説明文の書き方
 
-**Do:** ユーザー向けに書く
+**良い例:** ユーザー向けに書く
 ```markdown
-- **Shell completions** — Bash/Fish/PowerShell でタブ補完が使えるようになった
+- **シェル補完** — Bash/Fish/PowerShell でタブ補完が使えるようになった
 ```
 
-**Don't:** 実装詳細を書く
+**悪い例:** 実装詳細を書く
 ```markdown
 - Bash/Fish/PowerShell 向けの ShellCompletionGenerator を追加
 ```
 
-**Do:** 影響が分かるように説明する
+**良い例:** 影響が分かるように説明する
 ```markdown
 - Linux で `XDG_CONFIG_HOME` を尊重するよう設定読み込みを修正
 ```
 
-**Don't:** 修正番号だけ書く
+**悪い例:** 修正番号だけ書く
 ```markdown
-- Fixed #123
+- #123 を修正
 ```

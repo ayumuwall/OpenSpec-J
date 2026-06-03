@@ -251,7 +251,7 @@ async function initGitRepository(storeRoot: string): Promise<boolean> {
       'context_store_git_init_failed',
       {
         target: 'context_store.git',
-        fix: 'Install Git or rerun setup with --no-init-git.',
+        fix: 'Git をインストールするか、--no-init-git を付けて setup を再実行してください。',
       }
     );
   }
@@ -271,7 +271,7 @@ function expandUserPath(inputPath: string): string {
 
 function resolveSetupRoot(id: string, inputPath: string | undefined): string {
   if (inputPath !== undefined && inputPath.trim().length === 0) {
-    throw new ContextStoreError('Pass a non-empty --path value.', 'context_store_path_required', {
+    throw new ContextStoreError('空ではない --path の値を指定してください。', 'context_store_path_required', {
       target: 'context_store.root',
       fix: `openspec context-store setup ${id} --path /path/to/context-store`,
     });
@@ -286,7 +286,7 @@ function resolveSetupRoot(id: string, inputPath: string | undefined): string {
 
 function resolveRegisterRoot(inputPath: string | undefined): string {
   if (inputPath === undefined || inputPath.trim().length === 0) {
-    throw new ContextStoreError('Pass a context store path.', 'context_store_path_required', {
+    throw new ContextStoreError('context store path を指定してください。', 'context_store_path_required', {
       target: 'context_store.root',
       fix: 'openspec context-store register /path/to/context-store',
     });
@@ -331,11 +331,11 @@ async function prepareSetupPlan(
 
   if (kind === 'file' || kind === 'other') {
     throw new ContextStoreError(
-      `Context store setup path is not a directory: ${storeRoot}`,
+      `context store setup path はディレクトリではありません: ${storeRoot}`,
       'context_store_setup_path_not_directory',
       {
         target: 'context_store.root',
-        fix: 'Choose an empty directory or omit --path to use the managed OpenSpec context-store location.',
+        fix: '空のディレクトリを選ぶか、--path を省略して OpenSpec 管理下の context-store 位置を使ってください。',
       }
     );
   }
@@ -355,21 +355,21 @@ async function prepareSetupPlan(
     if (metadata) {
       if (metadata.id !== id) {
         throw new ContextStoreError(
-          `Context store metadata id '${metadata.id}' does not match requested id '${id}'.`,
+          `context store metadata id '${metadata.id}' は要求された id '${id}' と一致しません。`,
           'context_store_metadata_id_mismatch',
           {
             target: 'context_store.metadata',
-            fix: `Use id '${metadata.id}' or choose a different setup path.`,
+            fix: `id '${metadata.id}' を使うか、別の setup path を選んでください。`,
           }
         );
       }
     } else if (!(await isDirectoryEmpty(storeRoot))) {
       throw new ContextStoreError(
-        'Context store setup does not support initializing a non-empty folder yet.',
+        'context store setup は、空ではない folder の初期化にはまだ対応していません。',
         'context_store_setup_non_empty_directory',
         {
           target: 'context_store.root',
-          fix: 'Create an empty folder or use context-store register for an existing context store.',
+          fix: '空の folder を作成するか、既存の context store には context-store register を使ってください。',
         }
       );
     }
@@ -473,22 +473,22 @@ export async function registerExistingContextStore(
 
   if (kind === 'missing') {
     throw new ContextStoreError(
-      `Context store path does not exist: ${storeRoot}`,
+      `context store path が存在しません: ${storeRoot}`,
       'context_store_path_missing',
       {
         target: 'context_store.root',
-        fix: 'Clone or create the context store folder before registering it.',
+        fix: '登録前に context store folder を clone または作成してください。',
       }
     );
   }
 
   if (kind !== 'directory') {
     throw new ContextStoreError(
-      `Context store path is not a directory: ${storeRoot}`,
+      `context store path はディレクトリではありません: ${storeRoot}`,
       'context_store_path_not_directory',
       {
         target: 'context_store.root',
-        fix: 'Pass an existing context store directory.',
+        fix: '既存の context store directory を指定してください。',
       }
     );
   }
@@ -498,11 +498,11 @@ export async function registerExistingContextStore(
 
   if (metadata && explicitId !== undefined && metadata.id !== explicitId) {
     throw new ContextStoreError(
-      `Context store metadata id '${metadata.id}' does not match --id '${explicitId}'.`,
+      `context store metadata id '${metadata.id}' は --id '${explicitId}' と一致しません。`,
       'context_store_metadata_id_mismatch',
       {
         target: 'context_store.id',
-        fix: `Use --id ${metadata.id} or register a different folder.`,
+        fix: `--id ${metadata.id} を使うか、別の folder を登録してください。`,
       }
     );
   }
@@ -587,11 +587,11 @@ async function assertSafeToDeleteContextStoreRoot(storeRoot: string, id: string)
 
   if (kind !== 'directory') {
     throw new ContextStoreError(
-      `Context store path is not a directory: ${storeRoot}`,
+      `context store path はディレクトリではありません: ${storeRoot}`,
       'context_store_remove_path_not_directory',
       {
         target: 'context_store.root',
-        fix: 'Run context-store unregister if you only want to forget this local registry entry.',
+        fix: 'このローカル registry entry を忘れるだけなら context-store unregister を実行してください。',
       }
     );
   }
@@ -599,22 +599,22 @@ async function assertSafeToDeleteContextStoreRoot(storeRoot: string, id: string)
   const metadata = await readStoreMetadataForOperation(storeRoot);
   if (!metadata) {
     throw new ContextStoreError(
-      'Context store remove refuses to delete a folder without context-store metadata.',
+      'context-store metadata がない folder は context store remove では削除できません。',
       'context_store_remove_metadata_missing',
       {
         target: 'context_store.metadata',
-        fix: 'Run context-store unregister if you only want to forget this local registry entry.',
+        fix: 'このローカル registry entry を忘れるだけなら context-store unregister を実行してください。',
       }
     );
   }
 
   if (metadata.id !== id) {
     throw new ContextStoreError(
-      `Context store metadata id '${metadata.id}' does not match requested id '${id}'.`,
+      `context store metadata id '${metadata.id}' は要求された id '${id}' と一致しません。`,
       'context_store_metadata_id_mismatch',
       {
         target: 'context_store.metadata',
-        fix: 'Repair the registry or run context-store unregister instead of deleting this folder.',
+        fix: 'registry を修復するか、この folder を削除せず context-store unregister を実行してください。',
       }
     );
   }
@@ -639,7 +639,7 @@ export async function removeContextStore(
         diagnostics.push(makeContextStoreDiagnostic(
           'warning',
           'context_store_root_missing',
-          'Context store files were already missing.',
+          'context store files は既に存在しません。',
           {
             target: 'context_store.root',
           }
@@ -718,20 +718,20 @@ async function inspectContextStore(entry: {
     diagnostics.push(makeContextStoreDiagnostic(
       'error',
       'context_store_root_missing',
-      'Context store location does not exist.',
+      'context store location が存在しません。',
       {
         target: 'context_store.root',
-        fix: `Run openspec context-store register /path/to/${entry.id} --id ${entry.id}.`,
+        fix: `openspec context-store register /path/to/${entry.id} --id ${entry.id} を実行してください。`,
       }
     ));
   } else if (kind !== 'directory') {
     diagnostics.push(makeContextStoreDiagnostic(
       'error',
       'context_store_root_not_directory',
-      'Context store location is not a directory.',
+      'context store location はディレクトリではありません。',
       {
         target: 'context_store.root',
-        fix: 'Register a directory path for this context store.',
+        fix: 'この context store にはディレクトリ path を登録してください。',
       }
     ));
   } else {
@@ -742,10 +742,10 @@ async function inspectContextStore(entry: {
         diagnostics.push(makeContextStoreDiagnostic(
           'error',
           'context_store_metadata_missing',
-          'Context store metadata is missing.',
+          'context store metadata がありません。',
           {
             target: 'context_store.metadata',
-            fix: `Create ${metadataPath} or rerun context-store register.`,
+            fix: `${metadataPath} を作成するか、context-store register を再実行してください。`,
           }
         ));
       } else if (parsed.id !== entry.id) {
@@ -753,10 +753,10 @@ async function inspectContextStore(entry: {
         diagnostics.push(makeContextStoreDiagnostic(
           'error',
           'context_store_metadata_id_mismatch',
-          `Context store metadata id '${parsed.id}' does not match registry id '${entry.id}'.`,
+          `context store metadata id '${parsed.id}' は registry id '${entry.id}' と一致しません。`,
           {
             target: 'context_store.metadata',
-            fix: 'Repair the local registry or store metadata so the ids match.',
+            fix: 'id が一致するように、ローカル registry または store metadata を修復してください。',
           }
         ));
       } else {
@@ -768,7 +768,7 @@ async function inspectContextStore(entry: {
         error,
         'context_store_metadata_invalid',
         'context_store.metadata',
-        `Repair ${metadataPath}.`
+        `${metadataPath} を修復してください。`
       ));
     }
 
@@ -793,9 +793,9 @@ export async function doctorContextStores(id?: string): Promise<ContextStoreDoct
 
   if (!registry) {
     if (selectedId !== undefined) {
-      throw new ContextStoreError(`Unknown context store '${selectedId}'.`, 'context_store_not_found', {
+      throw new ContextStoreError(`不明な context store '${selectedId}' です。`, 'context_store_not_found', {
         target: 'context_store.id',
-        fix: 'Run openspec context-store list to see registered stores.',
+        fix: 'openspec context-store list で登録済み store を確認してください。',
       });
     }
 
@@ -808,9 +808,9 @@ export async function doctorContextStores(id?: string): Promise<ContextStoreDoct
     : entries;
 
   if (selectedId && selected.length === 0) {
-    throw new ContextStoreError(`Unknown context store '${selectedId}'.`, 'context_store_not_found', {
+    throw new ContextStoreError(`不明な context store '${selectedId}' です。`, 'context_store_not_found', {
       target: 'context_store.id',
-      fix: 'Run openspec context-store list to see registered stores.',
+      fix: 'openspec context-store list で登録済み store を確認してください。',
     });
   }
 

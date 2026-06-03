@@ -180,7 +180,7 @@ function validateSelectorConflict(
 ): void {
   if (options.store !== undefined && options.storePath !== undefined) {
     throw new ContextStoreError(
-      'Pass either --store <id> or --store-path <path>, not both.',
+      '--store <id> と --store-path <path> はどちらか一方だけを指定してください。',
       'context_store_selector_conflict',
       {
         target: 'context_store',
@@ -198,7 +198,7 @@ export function requireContextStoreSelector(
 
   if (options.store === undefined && options.storePath === undefined) {
     throw new ContextStoreError(
-      'Pass --store <id> or --store-path <path>.',
+      '--store <id> または --store-path <path> を指定してください。',
       'context_store_required',
       {
         target: 'context_store',
@@ -242,7 +242,7 @@ export async function resolveSelectedContextStore(
       'invalid_context_store_path',
       {
         target: 'context_store.path',
-        fix: 'Pass an existing context store root.',
+        fix: '既存の context store root を指定してください。',
       }
     );
   }
@@ -264,11 +264,11 @@ export async function resolveSelectedContextStore(
 
   if (!metadata) {
     throw new ContextStoreError(
-      `Context store metadata not found at ${getContextStoreMetadataPath(root)}`,
+      `${getContextStoreMetadataPath(root)} に context store metadata が見つかりません`,
       'context_store_metadata_not_found',
       {
         target: 'context_store.metadata',
-        fix: 'Pass a context store root that contains .openspec-store/store.yaml.',
+        fix: '.openspec-store/store.yaml を含む context store root を指定してください。',
       }
     );
   }
@@ -309,7 +309,7 @@ export async function resolveContextStoreBinding(
   const metadata = await readOptionalContextStoreMetadataState(root);
 
   if (!metadata) {
-    throw new Error(`Context store metadata not found at ${getContextStoreMetadataPath(root)}`);
+    throw new Error(`${getContextStoreMetadataPath(root)} に context store metadata が見つかりません`);
   }
 
   const warnings: ContextStoreBindingWarning[] = [];

@@ -104,18 +104,18 @@ export function validateContextStoreId(id: string): string {
       'invalid_context_store_id',
       {
         target: 'context_store.id',
-        fix: 'Use kebab-case with lowercase letters, numbers, and single hyphen separators.',
+          fix: '小文字・数字・単一ハイフン区切りの kebab-case を使ってください。',
       }
     );
   }
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) {
     throw new ContextStoreError(
-      'Context store id must be kebab-case with lowercase letters, numbers, and single hyphen separators',
+      'Context store id は小文字・数字・単一ハイフン区切りの kebab-case でなければなりません',
       'invalid_context_store_id',
       {
         target: 'context_store.id',
-        fix: 'Use kebab-case with lowercase letters, numbers, and single hyphen separators.',
+        fix: '小文字・数字・単一ハイフン区切りの kebab-case を使ってください。',
       }
     );
   }
@@ -389,9 +389,9 @@ async function acquireContextStoreRegistryLock(
       return await fs.open(lockPath, 'wx');
     } catch (error) {
       if (!isNodeErrorCode(error, 'EEXIST') || Date.now() >= deadline) {
-        throw new ContextStoreError('Context store registry is busy.', 'context_store_registry_busy', {
+        throw new ContextStoreError('context store registry は使用中です。', 'context_store_registry_busy', {
           target: 'context_store.registry',
-          fix: 'Retry the command after the current registry update finishes.',
+          fix: '現在の registry 更新が完了してからコマンドを再試行してください。',
         });
       }
 
@@ -457,7 +457,7 @@ export async function resolveGitContextStoreBackendConfig(
   cwd = process.cwd()
 ): Promise<ContextStoreGitBackendConfig> {
   if (input.localPath.length === 0) {
-    throw new Error('Context store local path must not be empty.');
+    throw new Error('Context store local path は空にできません。');
   }
 
   const resolvedPath = path.isAbsolute(input.localPath)
@@ -465,15 +465,15 @@ export async function resolveGitContextStoreBackendConfig(
     : path.resolve(cwd, input.localPath);
 
   if (!(await pathIsDirectory(resolvedPath))) {
-    throw new Error(`Context store local path does not exist: ${input.localPath}`);
+    throw new Error(`Context store local path が存在しません: ${input.localPath}`);
   }
 
   if (input.remote !== undefined && input.remote.length === 0) {
-    throw new Error('Context store remote must not be empty when provided.');
+    throw new Error('Context store remote を指定する場合は空にできません。');
   }
 
   if (input.branch !== undefined && input.branch.length === 0) {
-    throw new Error('Context store branch must not be empty when provided.');
+    throw new Error('Context store branch を指定する場合は空にできません。');
   }
 
   return {

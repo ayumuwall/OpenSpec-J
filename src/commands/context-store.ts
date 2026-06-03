@@ -545,7 +545,7 @@ class ContextStoreCommand {
         return;
       }
 
-      printCleanupHuman('Unregistered context store', payload);
+      printCleanupHuman('Context store の登録を解除しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -566,7 +566,7 @@ class ContextStoreCommand {
         return;
       }
 
-      printCleanupHuman('Removed context store', payload);
+      printCleanupHuman('Context store を削除しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,

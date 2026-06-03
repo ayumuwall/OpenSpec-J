@@ -453,9 +453,9 @@ describe('artifact-workflow CLI commands', () => {
           sourceOfTruth: 'workspace-local',
           allowedEditRoots: [],
           constraints: expect.arrayContaining([
-            'Treat workspace-local planning artifacts as compatibility context for this local view.',
-            'Use initiatives for durable coordination when initiative context exists.',
-            'Treat linked repos and folders as context until an explicit edit root is selected.',
+            'workspace-local な計画アーティファクトは、このローカル view の互換コンテキストとして扱ってください。',
+            'initiative context がある場合は、永続的な調整には initiative を使ってください。',
+            '明示的な編集ルートが選択されるまでは、リンク済み repo と folder をコンテキストとして扱ってください。',
           ]),
         })
       );

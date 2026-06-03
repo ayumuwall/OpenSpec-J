@@ -187,11 +187,11 @@ export async function newChangeCommand(name: string | undefined, options: NewCha
 
     if (planningHome.kind === 'workspace' && !initiative) {
       if (affectedAreas.length > 0) {
-        console.log(`Affected areas: ${affectedAreas.join(', ')}`);
+        console.log(`影響領域: ${affectedAreas.join(', ')}`);
       } else {
-        console.log('Affected areas: unresolved; identify them in change metadata or coordination tasks as planning continues.');
+        console.log('影響領域: 未解決。計画を進めながら change metadata または調整タスクで特定してください。');
       }
-      console.log('Next: run openspec status --change "' + name + '" to inspect workspace planning artifacts.');
+      console.log('次: openspec status --change "' + name + '" を実行して workspace planning アーティファクトを確認してください。');
     }
   } catch (error) {
     spinner?.stop();

@@ -63,16 +63,16 @@ function validateKebabSegment(value: string, label: string): string {
   }
 
   if (value === '.' || value === '..') {
-    throw new Error(`${label} must not be '${value}'`);
+    throw new Error(`${label} を '${value}' にはできません`);
   }
 
   if (/[\\/]/u.test(value)) {
-    throw new Error(`${label} must not contain path separators`);
+    throw new Error(`${label} にパス区切り文字は含められません`);
   }
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value)) {
     throw new Error(
-      `${label} must be kebab-case with lowercase letters, numbers, and single hyphen separators`
+      `${label} は小文字・数字・単一ハイフン区切りの kebab-case でなければなりません`
     );
   }
 
@@ -87,7 +87,7 @@ export function validateMount(mount: string): string {
   assertNoNul(mount, 'Collection mount');
 
   if (mount.startsWith('.')) {
-    throw new Error(`Collection mount '${mount}' is reserved`);
+    throw new Error(`Collection mount '${mount}' は予約されています`);
   }
 
   return validateKebabSegment(mount, 'Collection mount');
@@ -109,15 +109,15 @@ export function parseCollectionPath(input = ''): string {
   }
 
   if (input.includes('\\')) {
-    throw new Error('Collection path must use forward slashes');
+    throw new Error('Collection path はスラッシュ区切りにしてください');
   }
 
   if (isWindowsDrivePath(input)) {
-    throw new Error('Collection path must not be a Windows drive path');
+    throw new Error('Collection path に Windows drive path は使えません');
   }
 
   if (isUncPath(input) || path.posix.isAbsolute(input)) {
-    throw new Error('Collection path must be relative');
+    throw new Error('Collection path は相対パスでなければなりません');
   }
 
   const segments = input.split('/');
@@ -189,7 +189,7 @@ export function createCollectionRegistry(
       const definition = this.get<THandle>(collectionId);
 
       if (!definition) {
-        throw new Error(`Unknown collection '${collectionId}'`);
+        throw new Error(`不明な collection '${collectionId}' です`);
       }
 
       return definition;
@@ -307,7 +307,7 @@ export function mountCollections(input: MountCollectionsInput): MountedCollectio
       const mountedCollection = this.get<THandle>(collectionId);
 
       if (!mountedCollection) {
-        throw new Error(`Unknown mounted collection '${collectionId}'`);
+        throw new Error(`不明な mounted collection '${collectionId}' です`);
       }
 
       return mountedCollection;

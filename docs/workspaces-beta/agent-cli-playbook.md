@@ -1,6 +1,6 @@
 # エージェント向け OpenSpec CLI プレイブック
 
-Beta note: workspace と initiative のフローは利用可能ですが、まだ小さな範囲です。平易なコマンド、明確なパス、短いステータス報告を優先してください。
+ベータ版の注意: workspace と initiative のフローは利用可能ですが、まだ小さな範囲です。平易なコマンド、明確なパス、短いステータス報告を優先してください。
 
 ## まずコンテキストを解決する
 
@@ -31,7 +31,7 @@ openspec context-store setup team-context --path /path/to/team-context --init-gi
 context store 内に共有調整コンテキストを作成します。
 
 ```bash
-openspec initiative create billing-launch --store team-context --title "Billing Launch" --summary "Get billing live without losing the plot."
+openspec initiative create billing-launch --store team-context --title "Billing Launch" --summary "混乱を避けながら billing を公開する。"
 ```
 
 その後、context store 内の initiative ファイルを編集します。

@@ -433,9 +433,9 @@ preferred_opener:
         parseWorkspaceViewState(
           'version: 1\nname: platform\ncontext: null\nlinks: {}\npreferred_opener:\n  kind: agent\n  id: editor\n'
         )
-      ).toThrow(/Unsupported workspace opener/);
+      ).toThrow(/未対応の workspace opener/);
       expect(() => parseWorkspacePreferredOpenerValue('cursor')).toThrow(
-        /Unsupported workspace opener/
+        /未対応の workspace opener/
       );
     });
 

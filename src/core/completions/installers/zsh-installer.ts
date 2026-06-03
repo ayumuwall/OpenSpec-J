@@ -324,11 +324,11 @@ export class ZshInstaller {
    */
   private generateOhMyZshFpathGuidance(completionsDir: string): string[] | undefined {
     return [
-      'Note: Oh My Zsh typically auto-loads completions from custom/completions.',
-      `Verify that ${completionsDir} is in your fpath by running:`,
+      '注: Oh My Zsh は通常 custom/completions から補完を自動読み込みします。',
+      `次を実行して ${completionsDir} が fpath に含まれることを確認してください:`,
       '  echo $fpath | grep "custom/completions"',
       '',
-      'If not found, completions may not work. Restart your shell to ensure changes take effect.',
+      '見つからない場合、補完が動作しないことがあります。変更を確実に反映するため shell を再起動してください。',
     ];
   }
 
@@ -420,7 +420,7 @@ export class ZshInstaller {
     } catch (error) {
       return {
         success: false,
-        message: `Failed to uninstall completion script: ${error instanceof Error ? error.message : String(error)}`,
+        message: `補完スクリプトのアンインストールに失敗しました: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   }

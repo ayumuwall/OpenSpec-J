@@ -144,7 +144,7 @@ describe('initiative operations', () => {
         summary: 'Do not overwrite existing initiative.',
         getCurrentDate: () => '2026-05-22',
       })
-    ).rejects.toThrow(/already exists/u);
+    ).rejects.toThrow(/既に.*存在/u);
 
     expect(
       parseInitiativeState(

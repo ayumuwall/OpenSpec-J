@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 // Artifact definition schema
 export const ArtifactSchema = z.object({
-  id: z.string().min(1, { error: 'Artifact ID is required' }),
-  generates: z.string().min(1, { error: 'generates field is required' }),
+  id: z.string().min(1, { error: 'Artifact ID は必須です' }),
+  generates: z.string().min(1, { error: 'generates フィールドは必須です' }),
   description: z.string(),
-  template: z.string().min(1, { error: 'template field is required' }),
+  template: z.string().min(1, { error: 'template フィールドは必須です' }),
   instruction: z.string().optional(),
   requires: z.array(z.string()).default([]),
 });
@@ -13,7 +13,7 @@ export const ArtifactSchema = z.object({
 // Apply phase configuration for schema-aware apply instructions
 export const ApplyPhaseSchema = z.object({
   // Artifact IDs that must exist before apply is available
-  requires: z.array(z.string()).min(1, { error: 'At least one required artifact' }),
+  requires: z.array(z.string()).min(1, { error: '必要なアーティファクトを少なくとも 1 つ指定してください' }),
   // Path to file with checkboxes for progress (relative to change dir), or null if no tracking
   tracks: z.string().nullable().optional(),
   // Custom guidance for the apply phase
@@ -22,10 +22,10 @@ export const ApplyPhaseSchema = z.object({
 
 // Full schema YAML structure
 export const SchemaYamlSchema = z.object({
-  name: z.string().min(1, { error: 'Schema name is required' }),
-  version: z.number().int().positive({ error: 'Version must be a positive integer' }),
+  name: z.string().min(1, { error: 'Schema name は必須です' }),
+  version: z.number().int().positive({ error: 'Version は正の整数でなければなりません' }),
   description: z.string().optional(),
-  artifacts: z.array(ArtifactSchema).min(1, { error: 'At least one artifact required' }),
+  artifacts: z.array(ArtifactSchema).min(1, { error: 'アーティファクトを少なくとも 1 つ指定してください' }),
   // Optional apply phase configuration (for schema-aware apply instructions)
   apply: ApplyPhaseSchema.optional(),
 });

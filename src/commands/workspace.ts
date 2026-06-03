@@ -109,7 +109,7 @@ function parseSetupToolsOption(tools: string): string[] {
   } catch (error) {
     throw new WorkspaceCliError(asErrorMessage(error), 'invalid_workspace_setup_tools', {
       target: 'workspace.skills',
-      fix: `Use --tools all, --tools none, or one of: ${getWorkspaceSkillToolIds().join(', ')}`,
+      fix: `--tools all、--tools none、または次のいずれかを使ってください: ${getWorkspaceSkillToolIds().join(', ')}`,
     });
   }
 }
@@ -120,7 +120,7 @@ function parseUpdateToolsOption(tools: string): string[] {
   } catch (error) {
     throw new WorkspaceCliError(asErrorMessage(error), 'invalid_workspace_update_tools', {
       target: 'workspace.skills',
-      fix: `Use --tools all, --tools none, or one of: ${getWorkspaceSkillToolIds().join(', ')}`,
+      fix: `--tools all、--tools none、または次のいずれかを使ってください: ${getWorkspaceSkillToolIds().join(', ')}`,
     });
   }
 }

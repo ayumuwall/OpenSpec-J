@@ -27,10 +27,10 @@ function workspaceNotInKnownViewsWarning(): WorkspaceStatus {
   return makeStatus(
     'warning',
     'workspace_not_in_known_views',
-    'This workspace is not in the managed local workspace views list.',
+    'この workspace は管理対象のローカル workspace view 一覧に含まれていません。',
     {
       target: 'workspace.root',
-      fix: 'Use openspec workspace list to inspect managed workspace views.',
+      fix: 'openspec workspace list で管理対象の workspace view を確認してください。',
     }
   );
 }
@@ -91,11 +91,11 @@ export async function selectWorkspaceForCommand(
 
     if (!entry) {
       throw new WorkspaceCliError(
-        `Unknown OpenSpec workspace '${workspaceName}'.`,
+        `不明な OpenSpec workspace '${workspaceName}' です。`,
         'workspace_not_found',
         {
           target: 'workspace.name',
-          fix: 'Run openspec workspace list to see known workspaces.',
+          fix: 'openspec workspace list で既知の workspace を確認してください。',
         }
       );
     }

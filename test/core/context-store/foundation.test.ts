@@ -241,7 +241,7 @@ id: acme-context
         parseContextStoreMetadataState(`version: 1
 id: Acme
 `)
-      ).toThrow(/Context store id must be kebab-case/u);
+      ).toThrow(/Context store id は.*kebab-case/u);
 
       expect(() =>
         parseContextStoreMetadataState(`version: 1
@@ -343,22 +343,22 @@ local_path: /repos/acme
     it('rejects missing paths and empty optional Git config values', async () => {
       await expect(
         resolveGitContextStoreBackendConfig({ localPath: '' }, tempDir)
-      ).rejects.toThrow(/must not be empty/u);
+      ).rejects.toThrow(/空にできません/u);
 
       await expect(
         resolveGitContextStoreBackendConfig({ localPath: 'missing' }, tempDir)
-      ).rejects.toThrow(/does not exist/u);
+      ).rejects.toThrow(/存在しません/u);
 
       const localPath = path.join(tempDir, 'acme-context');
       fs.mkdirSync(localPath, { recursive: true });
 
       await expect(
         resolveGitContextStoreBackendConfig({ localPath, remote: '' }, tempDir)
-      ).rejects.toThrow(/remote must not be empty/u);
+      ).rejects.toThrow(/remote.*空にできません/u);
 
       await expect(
         resolveGitContextStoreBackendConfig({ localPath, branch: '' }, tempDir)
-      ).rejects.toThrow(/branch must not be empty/u);
+      ).rejects.toThrow(/branch.*空にできません/u);
     });
   });
 });

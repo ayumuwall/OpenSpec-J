@@ -140,7 +140,7 @@ rules:
 
 ### トラブルシューティング
 
-**"Unknown artifact ID in rules: X"**
+**"rules に未知のアーティファクト ID があります: X"**
 - アーティファクト ID がスキーマと一致するか確認
 - `openspec schemas --json` で ID を確認
 
@@ -343,17 +343,17 @@ Git ブランチのように考えてください。
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │              ┌────────────────────────────────────────────┐                 │
-│              │           ACTIONS (not phases)             │                 │
+│              │           アクション（フェーズではない）   │                 │
 │              │                                            │                 │
 │              │   new ◄──► continue ◄──► apply ◄──► archive │                 │
 │              │    │          │           │           │    │                 │
 │              │    └──────────┴───────────┴───────────┘    │                 │
-│              │              any order                     │                 │
+│              │              任意の順序                    │                 │
 │              └────────────────────────────────────────────┘                 │
 │                                                                             │
-│   • Create artifacts one at a time OR fast-forward                         │
-│   • Update specs/design/tasks during implementation                        │
-│   • Dependencies enable progress, phases don't exist                       │
+│   • アーティファクトを 1 つずつ作成、または fast-forward                  │
+│   • 実装中に specs/design/tasks を更新                                     │
+│   • 進捗は依存関係で制御し、フェーズは存在しない                          │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -453,8 +453,8 @@ Git ブランチのように考えてください。
 ```
    BLOCKED ────────────────► READY ────────────────► DONE
       │                        │                       │
-   Missing                  All deps               File exists
-   dependencies             are DONE               on filesystem
+   依存関係が                すべての依存が            ファイルが
+   不足                      DONE                   ファイルシステム上に存在
 ```
 
 ### 情報の流れ
@@ -466,18 +466,18 @@ Git ブランチのように考えてください。
            │
            ▼
   ┌─────────────────────────────────────────┐
-  │  Static instructions:                   │
-  │  • Create proposal.md                   │
-  │  • Create tasks.md                      │
-  │  • Create design.md                     │
-  │  • Create specs/<capability>/spec.md    │
+  │  静的な指示:                            │
+  │  • proposal.md を作成                   │
+  │  • tasks.md を作成                      │
+  │  • design.md を作成                     │
+  │  • specs/<capability>/spec.md を作成    │
   │                                         │
-  │  No awareness of what exists or         │
-  │  dependencies between artifacts         │
+  │  既存ファイルやアーティファクト間の      │
+  │  依存関係を把握できない                 │
   └─────────────────────────────────────────┘
            │
            ▼
-  Agent creates ALL artifacts in one go
+  エージェントが全アーティファクトを一度に作成
 ```
 
 **OPSX** — エージェントは豊富な文脈を問い合わせます。
@@ -487,21 +487,21 @@ Git ブランチのように考えてください。
            │
            ▼
   ┌──────────────────────────────────────────────────────────────────────────┐
-  │  Step 1: Query current state                                             │
+  │  Step 1: 現在の状態を問い合わせる                                       │
   │  ┌────────────────────────────────────────────────────────────────────┐  │
   │  │  $ openspec status --change "add-auth" --json                      │  │
   │  │                                                                    │  │
   │  │  {                                                                 │  │
   │  │    "artifacts": [                                                  │  │
   │  │      {"id": "proposal", "status": "done"},                         │  │
-  │  │      {"id": "specs", "status": "ready"},      ◄── First ready      │  │
+  │  │      {"id": "specs", "status": "ready"},      ◄── 最初に ready     │  │
   │  │      {"id": "design", "status": "ready"},                          │  │
   │  │      {"id": "tasks", "status": "blocked", "missingDeps": ["specs"]}│  │
   │  │    ]                                                               │  │
   │  │  }                                                                 │  │
   │  └────────────────────────────────────────────────────────────────────┘  │
   │                                                                          │
-  │  Step 2: Get rich instructions for ready artifact                        │
+  │  Step 2: ready なアーティファクト向けの詳しい指示を取得                 │
   │  ┌────────────────────────────────────────────────────────────────────┐  │
   │  │  $ openspec instructions specs --change "add-auth" --json          │  │
   │  │                                                                    │  │
@@ -512,7 +512,7 @@ Git ブランチのように考えてください。
   │  │  }                                                                 │  │
   │  └────────────────────────────────────────────────────────────────────┘  │
   │                                                                          │
-  │  Step 3: Read dependencies → Create ONE artifact → Show what's unlocked  │
+  │  Step 3: 依存を読む → 1 つだけ作成 → unlock されたものを表示             │
   └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -525,16 +525,16 @@ Git ブランチのように考えてください。
   │/proposal│ ──► │ /apply  │ ──► │/archive │
   └─────────┘     └─────────┘     └─────────┘
        │               │
-       │               ├── "Wait, the design is wrong"
+       │               ├── "待って、設計が間違っている"
        │               │
-       │               ├── Options:
-       │               │   • Edit files manually (breaks context)
-       │               │   • Abandon and start over
-       │               │   • Push through and fix later
+       │               ├── 選択肢:
+       │               │   • 手動でファイルを編集（文脈が壊れる）
+       │               │   • 破棄してやり直す
+       │               │   • そのまま進めて後で修正
        │               │
-       │               └── No official "go back" mechanism
+       │               └── 公式の「戻る」仕組みはない
        │
-       └── Creates ALL artifacts at once
+       └── 全アーティファクトを一度に作成
 ```
 
 **OPSX** — 自然に反復できます。
@@ -542,7 +542,7 @@ Git ブランチのように考えてください。
 ```
   /opsx:new ───► /opsx:continue ───► /opsx:apply ───► /opsx:archive
       │                │                  │
-      │                │                  ├── "The design is wrong"
+      │                │                  ├── "設計が間違っている"
       │                │                  │
       │                │                  ▼
       │                │            Just edit design.md

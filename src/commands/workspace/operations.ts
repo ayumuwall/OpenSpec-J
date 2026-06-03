@@ -245,7 +245,7 @@ export async function createManagedWorkspace(
 
   if (await directoryExists(targetWorkspaceRoot)) {
     throw new WorkspaceCliError(
-      `Workspace '${workspaceName}' already exists at ${targetWorkspaceRoot}.`,
+      `Workspace '${workspaceName}' は既に ${targetWorkspaceRoot} に存在します。`,
       'workspace_already_exists',
       {
         target: 'workspace.name',
@@ -603,9 +603,9 @@ export async function updateWorkspaceLink(
   const viewState = await readWorkspaceViewForMutation(selected);
 
   if (!hasWorkspaceLink(viewState.links, linkName)) {
-    throw new WorkspaceCliError(`Unknown workspace link '${linkName}'.`, 'unknown_link_name', {
+    throw new WorkspaceCliError(`不明な workspace link '${linkName}' です。`, 'unknown_link_name', {
       target: `links.${linkName}`,
-      fix: 'Run openspec workspace doctor to see linked repos or folders.',
+      fix: 'openspec workspace doctor でリンク済み repo または folder を確認してください。',
     });
   }
 
@@ -636,7 +636,7 @@ function sameWorkspaceContext(
 function formatWorkspaceContext(context: WorkspaceContextState | null): string {
   return context
     ? `${formatContextStoreBinding(context.store)}/${getWorkspaceContextInitiativeId(context)}`
-    : 'no initiative context';
+    : 'initiative context なし';
 }
 
 export function deriveWorkspaceNameForInitiative(initiativeId: string): string {
@@ -654,11 +654,11 @@ async function readExistingManagedWorkspaceView(
 
   if (!(await isWorkspaceRoot(workspaceRoot))) {
     throw new WorkspaceCliError(
-      `Workspace name '${workspaceName}' collides with a non-workspace directory at ${workspaceRoot}.`,
+      `Workspace name '${workspaceName}' は ${workspaceRoot} にある workspace ではないディレクトリと衝突しています。`,
       'workspace_name_collision',
       {
         target: 'workspace.name',
-        fix: 'Choose an explicit unused workspace name.',
+        fix: '未使用の workspace 名を明示的に選んでください。',
       }
     );
   }
@@ -766,11 +766,11 @@ export async function selectOrCreateWorkspaceForInitiativeOpen(input: {
   if (matches.length > 1) {
     const names = matches.map((match) => match.state.name).sort((a, b) => a.localeCompare(b));
     throw new WorkspaceCliError(
-      `Multiple workspaces are already bound to ${formatWorkspaceContext(input.context)}: ${names.join(', ')}.`,
+      `複数の workspace が既に ${formatWorkspaceContext(input.context)} に紐付いています: ${names.join(', ')}。`,
       'workspace_initiative_selection_ambiguous',
       {
         target: 'workspace.name',
-        fix: 'Retry with an explicit workspace name.',
+        fix: 'workspace 名を明示して再試行してください。',
       }
     );
   }
@@ -788,11 +788,11 @@ export async function selectOrCreateWorkspaceForInitiativeOpen(input: {
     }
 
     throw new WorkspaceCliError(
-      `Default workspace name '${derivedName}' is already used by a workspace with ${formatWorkspaceContext(existingDerived.state.context)}.`,
+      `デフォルト workspace name '${derivedName}' は、${formatWorkspaceContext(existingDerived.state.context)} を持つ workspace で既に使われています。`,
       'workspace_name_collision',
       {
         target: 'workspace.name',
-        fix: `Retry with an explicit workspace name: openspec workspace open <name> --initiative ${getWorkspaceContextStoreId(input.context)}/${getWorkspaceContextInitiativeId(input.context)}`,
+        fix: `workspace 名を明示して再試行してください: openspec workspace open <name> --initiative ${getWorkspaceContextStoreId(input.context)}/${getWorkspaceContextInitiativeId(input.context)}`,
       }
     );
   }

@@ -70,7 +70,7 @@ function printSetChangeHuman(payload: SetChangeOutput): void {
     return;
   }
 
-  const verb = payload.updated ? 'Linked' : 'Change already linked';
+  const verb = payload.updated ? 'リンクしました' : 'change は既にリンク済みです';
   console.log(`${verb}: ${payload.change.id}`);
   console.log(`Initiative: ${formatInitiativeLink(payload.initiative)}`);
   console.log(`Metadata: ${payload.change.metadataPath}`);
@@ -82,7 +82,7 @@ export async function setChangeCommand(
 ): Promise<void> {
   try {
     if (!name) {
-      throw new Error('Missing required argument <name>');
+      throw new Error('必須引数 <name> が不足しています。');
     }
 
     assertInitiativeReference(options.initiative);
@@ -117,7 +117,7 @@ export async function setChangeCommand(
 
     if (metadata.initiative) {
       throw new Error(
-        `Change '${changeName}' is already linked to initiative ${formatInitiativeLink(metadata.initiative)}.`
+        `Change '${changeName}' は既に initiative ${formatInitiativeLink(metadata.initiative)} にリンクされています。`
       );
     }
 

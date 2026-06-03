@@ -130,28 +130,29 @@ export function initiativeDiagnosticFromError(error: unknown): InitiativeDiagnos
 
   if (
     message.startsWith(INITIATIVE_ALREADY_EXISTS_PREFIX) &&
-    message.includes(
+    (message.includes(
       INITIATIVE_ALREADY_EXISTS_MARKER,
       INITIATIVE_ALREADY_EXISTS_PREFIX.length
-    )
+    ) ||
+      /^Initiative '[^']+' は既に/u.test(message))
   ) {
     return makeDiagnostic('error', 'initiative_already_exists', message, {
       target: 'initiative.id',
-      fix: 'Choose a new initiative id or list existing initiatives first.',
+      fix: '新しい initiative id を選ぶか、先に既存の initiative を一覧してください。',
     });
   }
 
   if (message.startsWith('Initiative id ')) {
     return makeDiagnostic('error', 'invalid_initiative_id', message, {
       target: 'initiative.id',
-      fix: 'Use kebab-case with lowercase letters, numbers, and single hyphen separators.',
+      fix: '小文字・数字・単一ハイフン区切りの kebab-case を使ってください。',
     });
   }
 
   if (message.startsWith('Invalid initiative')) {
     return makeDiagnostic('error', 'invalid_initiative', message, {
       target: 'initiative',
-      fix: 'Fix the initiative folder state and retry.',
+      fix: 'initiative folder の状態を修正してから再試行してください。',
     });
   }
 
@@ -163,7 +164,7 @@ function requireInitiativeId(
   commandName: 'create' | 'show'
 ): string {
   if (id === undefined || id.trim().length === 0) {
-    throw new InitiativeResolutionError('Pass an initiative id.', 'initiative_id_required', {
+    throw new InitiativeResolutionError('initiative id を指定してください。', 'initiative_id_required', {
       target: 'initiative.id',
       fix: `openspec initiative ${commandName} <id>`,
     });
@@ -185,22 +186,22 @@ export function parseInitiativeReference(
 
   if (parts.length !== 2 || parts[0].length === 0 || parts[1].length === 0) {
     throw new InitiativeResolutionError(
-      `Invalid initiative reference '${initiativeId}'.`,
+      `initiative reference '${initiativeId}' が不正です。`,
       'invalid_initiative_reference',
       {
         target: 'initiative.id',
-        fix: 'Use <initiative-id>, <store>/<initiative-id>, or <initiative-id> --store <store>.',
+        fix: '<initiative-id>、<store>/<initiative-id>、または <initiative-id> --store <store> を使ってください。',
       }
     );
   }
 
   if (options.store !== undefined || options.storePath !== undefined) {
     throw new InitiativeResolutionError(
-      'Pass either --initiative <store>/<id> or a context store selector, not both.',
+      '--initiative <store>/<id> と context store selector はどちらか一方だけを指定してください。',
       'context_store_selector_conflict',
       {
         target: 'context_store',
-        fix: 'Use --initiative <store>/<id> or --initiative <id> --store <store>.',
+        fix: '--initiative <store>/<id> または --initiative <id> --store <store> を使ってください。',
       }
     );
   }
@@ -227,13 +228,13 @@ function contextStoreErrorAsInitiativeError(error: unknown): InitiativeResolutio
   if (message.startsWith('Context store id ')) {
     return new InitiativeResolutionError(message, 'invalid_context_store_id', {
       target: 'context_store.id',
-      fix: 'Use kebab-case with lowercase letters, numbers, and single hyphen separators.',
+      fix: '小文字・数字・単一ハイフン区切りの kebab-case を使ってください。',
     });
   }
 
   return new InitiativeResolutionError(message, 'invalid_context_store', {
     target: 'context_store',
-    fix: 'Fix the context store registry or pass --store-path <path>.',
+    fix: 'context store registry を修正するか、--store-path <path> を指定してください。',
   });
 }
 

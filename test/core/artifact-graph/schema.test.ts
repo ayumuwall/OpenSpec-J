@@ -67,7 +67,7 @@ artifacts:
     template: templates/proposal.md
 `;
       expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(yaml)).toThrow(/positive/);
+      expect(() => parseSchema(yaml)).toThrow(/正の整数/);
     });
 
     it('should throw on empty artifacts array', () => {

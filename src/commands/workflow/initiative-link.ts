@@ -20,7 +20,7 @@ export interface InitiativeSelectorOptions {
 }
 
 export const REPO_LOCAL_INITIATIVE_LINK_ERROR =
-  'Initiative links are supported only for repo-local changes. Run this command from the repo that owns the implementation plan.';
+  'Initiative link は repo-local change でのみ利用できます。実装計画を所有する repo からこのコマンドを実行してください。';
 
 export function printJson(payload: unknown): void {
   console.log(JSON.stringify(payload, null, 2));
@@ -49,17 +49,17 @@ export function statusFromError(
 
 export function assertInitiativeSelectorsHaveReference(options: InitiativeSelectorOptions): void {
   if (!options.initiative && (options.store !== undefined || options.storePath !== undefined)) {
-    throw new Error('Pass --initiative when using --store or --store-path.');
+    throw new Error('--store または --store-path を使う場合は --initiative も指定してください。');
   }
 
   if (options.initiative !== undefined && options.initiative.trim().length === 0) {
-    throw new Error('Pass --initiative <id> to link a change to an initiative.');
+    throw new Error('change を initiative にリンクするには --initiative <id> を指定してください。');
   }
 }
 
 export function assertInitiativeReference(value: string | undefined): asserts value is string {
   if (value === undefined || value.trim().length === 0) {
-    throw new Error('Pass --initiative <id> to set a change initiative link.');
+    throw new Error('change initiative link を設定するには --initiative <id> を指定してください。');
   }
 }
 

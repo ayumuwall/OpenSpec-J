@@ -93,10 +93,10 @@ export function buildActionContext(input: ActionContextInput): ActionContext {
       allowedEditRoots: [],
       requiresAffectedAreaSelection: true,
       constraints: [
-        'Treat workspace-local planning artifacts as compatibility context for this local view.',
-        'Use initiatives for durable coordination when initiative context exists.',
-        'Treat linked repos and folders as context until an explicit edit root is selected.',
-        'Do not make implementation edits without an explicit allowed edit root.',
+        'workspace-local な計画アーティファクトは、このローカル view の互換コンテキストとして扱ってください。',
+        'initiative context がある場合は、永続的な調整には initiative を使ってください。',
+        '明示的な編集ルートが選択されるまでは、リンク済み repo と folder をコンテキストとして扱ってください。',
+        '許可された編集ルートが明示されるまでは、実装編集を行わないでください。',
       ],
     };
   }
@@ -108,7 +108,7 @@ export function buildActionContext(input: ActionContextInput): ActionContext {
     linkedContext: [],
     allowedEditRoots: [input.projectRoot],
     requiresAffectedAreaSelection: false,
-    constraints: ['Repo-local change artifacts and implementation edits are scoped to this project.'],
+    constraints: ['repo-local な変更アーティファクトと実装編集は、このプロジェクト内に限定されます。'],
   };
 }
 
@@ -118,17 +118,17 @@ export function buildNextSteps(input: ChangeNextStepsInput): string[] {
 
   if (readyArtifact) {
     steps.push(
-      `Run openspec instructions ${readyArtifact.id} --change "${input.changeName}" --json before writing that artifact.`
+      `そのアーティファクトを書く前に openspec instructions ${readyArtifact.id} --change "${input.changeName}" --json を実行してください。`
     );
   } else if (input.allArtifactsComplete) {
-    steps.push('All planning artifacts are complete; review tasks before implementation.');
+    steps.push('すべての計画アーティファクトが完了しています。実装前に tasks をレビューしてください。');
   }
 
   if (input.planningHome?.kind === 'workspace') {
     if (input.affectedAreas?.unresolved) {
-      steps.push('Identify affected areas in change metadata or coordination tasks as planning continues.');
+      steps.push('計画を進めながら、change metadata または調整タスクで影響領域を特定してください。');
     }
-    steps.push('Select an affected area and allowed edit root before implementation edits.');
+    steps.push('実装編集の前に、影響領域と許可された編集ルートを選択してください。');
   }
 
   return steps;

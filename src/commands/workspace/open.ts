@@ -16,7 +16,7 @@ import {
 } from '../../core/workspace/index.js';
 import { SelectedWorkspace, WorkspaceCliError, asErrorMessage } from './types.js';
 
-export const WORKSPACE_OPEN_MINIMAL_PROMPT = 'Open this OpenSpec workspace.';
+export const WORKSPACE_OPEN_MINIMAL_PROMPT = 'この OpenSpec workspace を開いてください。';
 const CODEX_CLI_WRITABLE_ROOT_SANDBOX_ARGS = ['--sandbox', 'workspace-write'] as const;
 const require = createRequire(import.meta.url);
 const spawn = require('cross-spawn') as typeof nodeSpawn;
@@ -188,7 +188,7 @@ export async function launchWorkspaceOpenCommand(
     child.on('error', (error) => {
       reject(
         new WorkspaceCliError(
-          `Could not launch ${command.openerLabel}: ${asErrorMessage(error)}`,
+          `${command.openerLabel} を起動できませんでした: ${asErrorMessage(error)}`,
           'workspace_opener_launch_failed',
           {
             target: 'workspace.opener',
@@ -206,7 +206,7 @@ export async function launchWorkspaceOpenCommand(
       const reason = signal ? `signal ${signal}` : `exit code ${code}`;
       reject(
         new WorkspaceCliError(
-          `${command.openerLabel} exited with ${reason}.`,
+          `${command.openerLabel} が ${reason} で終了しました。`,
           'workspace_opener_launch_failed',
           {
             target: 'workspace.opener',

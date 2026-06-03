@@ -60,7 +60,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 const PlainObjectSchema = z.custom<Record<string, unknown>>(isPlainObject, {
-  message: 'must be an object',
+  message: 'object でなければなりません',
 });
 
 const PreferredOpenerSchema = z

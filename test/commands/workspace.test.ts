@@ -292,7 +292,7 @@ describe('workspace command', () => {
         workflow_ids: ['apply', 'archive'],
         selected_agents: ['codex'],
         skills_only: true,
-        delivery_notice: expect.stringContaining('skills only'),
+        delivery_notice: expect.stringContaining('skills のみ'),
         generated: [
           expect.objectContaining({
             tool_id: 'codex',
@@ -396,7 +396,7 @@ describe('workspace command', () => {
         workflow_ids: ['propose', 'explore', 'apply', 'sync', 'archive'],
         selected_agents: ['codex'],
         skills_only: true,
-        delivery_notice: expect.stringContaining('skills only'),
+        delivery_notice: expect.stringContaining('skills のみ'),
         refreshed: [
           expect.objectContaining({
             tool_id: 'codex',
@@ -1567,7 +1567,7 @@ links:
       'workspace-write',
       '--add-dir',
       expectedApi,
-      'Open this OpenSpec workspace.',
+      'この OpenSpec workspace を開いてください。',
     ]);
     expect(readWorkspaceState(setup.workspace.root).preferred_opener).toEqual({
       kind: 'editor',

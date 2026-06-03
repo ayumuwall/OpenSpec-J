@@ -148,7 +148,7 @@ preferred_opener:
       parseWorkspaceLocalState(
         'version: 1\npaths: {}\npreferred_opener:\n  kind: agent\n  id: editor\n'
       )
-    ).toThrow(/Unsupported workspace opener/);
+    ).toThrow(/未対応の workspace opener/);
   });
 
   it('converts legacy state parts to and from canonical view state', async () => {

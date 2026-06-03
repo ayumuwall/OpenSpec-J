@@ -25,7 +25,7 @@ export async function promptPreferredOpener(
       name: formatOpenerChoiceName(choice),
       short: choice.label,
       value: choice.value,
-      description: choice.unavailableNote ?? `Use ${choice.label}`,
+      description: choice.unavailableNote ?? `${choice.label} を使う`,
     })),
     theme: workspaceSelectTheme,
   });
@@ -45,7 +45,7 @@ export function parseSetupOpenerOption(
   } catch (error) {
     throw new WorkspaceCliError(asErrorMessage(error), 'unsupported_workspace_opener', {
       target: 'workspace.opener',
-      fix: 'Use --opener codex-cli, --opener claude, --opener github-copilot, or --opener editor.',
+      fix: '--opener codex-cli、--opener claude、--opener github-copilot、または --opener editor を使ってください。',
     });
   }
 }
@@ -60,11 +60,11 @@ export function parseWorkspaceAgentOverride(agent: string): WorkspacePreferredOp
 
   if (!opener || opener.kind !== 'agent') {
     throw new WorkspaceCliError(
-      `Unsupported workspace agent '${agent}'. Supported agents: codex-cli, claude, github-copilot.`,
+      `未対応の workspace agent '${agent}' です。対応している agent: codex-cli, claude, github-copilot。`,
       'unsupported_workspace_agent',
       {
         target: 'workspace.opener',
-        fix: 'Use --agent codex-cli, --agent claude, or --agent github-copilot.',
+        fix: '--agent codex-cli、--agent claude、または --agent github-copilot を使ってください。',
       }
     );
   }
@@ -125,16 +125,16 @@ export async function resolveWorkspaceOpenOpener(
     const openerChoices = listWorkspaceOpenerChoices().filter((choice) => choice.available);
     if (openerChoices.length === 0) {
       throw new WorkspaceCliError(
-        'No supported workspace opener is available on PATH.',
+        'PATH 上に対応している workspace opener がありません。',
         'workspace_no_available_openers',
         {
           target: 'workspace.opener',
-          fix: "Install VS Code ('code'), codex-cli ('codex'), or Claude ('claude'), then retry.",
+          fix: "VS Code ('code')、codex-cli ('codex')、または Claude ('claude') をインストールしてから再試行してください。",
         }
       );
     }
 
-    return promptPreferredOpener('Open with:', openerChoices);
+    return promptPreferredOpener('開く方法:', openerChoices);
   }
 
   throw new WorkspaceCliError(

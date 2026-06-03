@@ -515,7 +515,7 @@ openspec init --force
 
 IDE を再起動してください。skills は起動時に検出されます。
 
-### "Unknown artifact ID in rules"
+### "rules に未知のアーティファクト ID があります"
 
 `rules:` のキーがスキーマのアーティファクト ID と一致しているか確認してください。
 

@@ -39,7 +39,7 @@ export class Validator {
       issues.push(...this.applySpecRules(spec, content));
       
     } catch (error) {
-      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
+      const baseMessage = error instanceof Error ? error.message : '不明なエラー';
       const enriched = this.enrichTopLevelError(specName, baseMessage);
       issues.push({
         level: 'ERROR',
@@ -65,7 +65,7 @@ export class Validator {
       }
       issues.push(...this.applySpecRules(spec, content));
     } catch (error) {
-      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
+      const baseMessage = error instanceof Error ? error.message : '不明なエラー';
       const enriched = this.enrichTopLevelError(specName, baseMessage);
       issues.push({ level: 'ERROR', path: 'file', message: enriched });
     }
@@ -91,7 +91,7 @@ export class Validator {
       issues.push(...this.applyChangeRules(change, content));
       
     } catch (error) {
-      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
+      const baseMessage = error instanceof Error ? error.message : '不明なエラー';
       const enriched = this.enrichTopLevelError(changeName, baseMessage);
       issues.push({
         level: 'ERROR',
@@ -240,7 +240,7 @@ export class Validator {
           const fromKey = normalizeRequirementName(from);
           const toKey = normalizeRequirementName(to);
           if (modifiedNames.has(fromKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED references old name from RENAMED. Use new header for "${to}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED が RENAMED の古い名前を参照しています。"${to}" の新しい見出しを使ってください` });
           }
           if (addedNames.has(toKey)) {
             issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED TO collides with ADDED for "${to}"` });
@@ -255,14 +255,14 @@ export class Validator {
       issues.push({
         level: 'ERROR',
         path: specPath,
-        message: `Delta sections ${this.formatSectionList(sections)} were found, but no requirement entries parsed. Ensure each section includes at least one "### Requirement:" block (REMOVED may use bullet list syntax).`,
+        message: `Delta sections ${this.formatSectionList(sections)} が見つかりましたが、requirement エントリを解析できませんでした。各セクションに少なくとも 1 つの "### Requirement:" ブロックを含めてください（REMOVED では箇条書き構文も使えます）。`,
       });
     }
     for (const path of missingHeaderSpecs) {
       issues.push({
         level: 'ERROR',
         path,
-        message: 'No delta sections found. Add headers such as "## ADDED Requirements" or move non-delta notes outside specs/.',
+        message: 'delta section が見つかりません。"## ADDED Requirements" などの見出しを追加するか、delta ではないメモを specs/ の外へ移動してください。',
       });
     }
 
