@@ -10,6 +10,8 @@ OpenSpec には 3 つのカスタマイズレベルがあります。
 
 ---
 
+<a id="project-configuration"></a>
+
 ## プロジェクト設定
 
 `openspec/config.yaml` はチーム向けに最も手軽にカスタマイズする方法です。次ができます:
@@ -90,6 +92,8 @@ OpenSpec がスキーマを選ぶ順番:
 4. デフォルト（`spec-driven`）
 
 ---
+
+<a id="custom-schemas"></a>
 
 ## カスタムスキーマ
 
@@ -337,11 +341,13 @@ openspec schema fork spec-driven with-review
 
 ---
 
+<a id="community-schemas"></a>
+
 ## コミュニティスキーマ
 
 OpenSpec は、独立したリポジトリで配布されるコミュニティ管理スキーマにも対応しています。[github/spec-kit's community extension catalog](https://github.com/github/spec-kit/tree/main/extensions) が spec-kit で担う役割と同じように、OpenSpec と他のツールやシステムを連携させる意見のあるワークフローを提供します。
 
-コミュニティスキーマは OpenSpec core には vendoring されません。それぞれ独自のリポジトリにあり、独自のリリース周期で管理されます。使う場合は、スキーマバンドルをプロジェクトの `openspec/schemas/<schema-name>/` ディレクトリへコピーしてください（各リポジトリの README にインストール手順があります）。
+コミュニティスキーマは OpenSpec core には同梱されません。それぞれ独自のリポジトリにあり、独自のリリース周期で管理されます。使う場合は、スキーマバンドルをプロジェクトの `openspec/schemas/<schema-name>/` ディレクトリへコピーしてください（各リポジトリの README にインストール手順があります）。
 
 | スキーマ | メンテナー | リポジトリ | 説明 |
 |--------|-----------|-----------|-------------|

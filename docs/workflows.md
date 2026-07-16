@@ -175,6 +175,8 @@ AI:  Creating specs...
 
 **こんな用途に最適:** パフォーマンスの最適化、デバッグ、アーキテクチャ上の決定、不明瞭な要件。
 
+<a id="parallel-changes"></a>
+
 ### 並行した変更
 
 複数の変更を同時に処理します。
@@ -346,6 +348,8 @@ AI:  ✓ Synced specs to openspec/specs/auth/spec.md
 
 **経験則:** 事前に全範囲を説明できる場合は、`/opsx:ff` を使用してください。途中で解決する場合は、`/opsx:continue` を使用してください。
 
+<a id="when-to-update-vs-start-fresh"></a>
+
 ### 更新する時期と新たに開始する時期
 
 よくある質問: 既存の変更をいつ更新しても問題ありませんか?いつ新しい変更を開始する必要がありますか?
@@ -366,22 +370,22 @@ AI:  ✓ Synced specs to openspec/specs/auth/spec.md
 
 ```text
                      ┌─────────────────────────────────────┐
-                     │     Is this the same work?          │
+                     │     同じ作業か？                    │
                      └──────────────┬──────────────────────┘
                                     │
                  ┌──────────────────┼──────────────────┐
                  │                  │                  │
                  ▼                  ▼                  ▼
-          Same intent?      >50% overlap?      Can original
-          Same problem?     Same scope?        be "done" without
-                 │                  │          these changes?
+          同じ意図？        50% 超重なる？     元の変更は
+          同じ問題？        同じ範囲？         これなしで
+                 │                  │          「完了」にできる？
                  │                  │                  │
        ┌────────┴────────┐  ┌──────┴──────┐   ┌───────┴───────┐
        │                 │  │             │   │               │
       YES               NO YES           NO  NO              YES
        │                 │  │             │   │               │
        ▼                 ▼  ▼             ▼   ▼               ▼
-    UPDATE            NEW  UPDATE       NEW  UPDATE          NEW
+    更新              新規  更新        新規  更新           新規
 ```
 
 **例: 「ダークモードを追加」**
@@ -425,6 +429,8 @@ AI:  Let me investigate your current setup and options...
 ```
 
 探索により、成果物を作成する前に思考が明確になります。
+
+<a id="verify-check-your-work"></a>
 
 ### アーカイブする前に確認する
 

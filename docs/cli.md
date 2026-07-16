@@ -821,6 +821,8 @@ openspec schemas
 
 ---
 
+<a id="schema-commands"></a>
+
 ## スキーマコマンド
 
 カスタムワークフロースキーマの作成・管理に使用します。

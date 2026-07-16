@@ -159,6 +159,8 @@ openspec init --force --tools claude
 
 ---
 
+<a id="migrating-projectmd-to-configyaml"></a>
+
 ## project.md から config.yaml へ移行
 
 旧 `openspec/project.md` は自由記述の Markdown でした。新しい `openspec/config.yaml` は構造化され、**すべての計画リクエストに注入** されます。これにより AI が常に文脈を持った状態でアーティファクトを作ります。
@@ -503,7 +505,7 @@ openspec schema fork spec-driven my-workflow
 
 ## トラブルシューティング
 
-### "Legacy files detected in non-interactive mode"
+### "非対話モードでレガシーファイルが検出されました"
 
 CI など非対話環境で実行しています。次を使ってください。
 

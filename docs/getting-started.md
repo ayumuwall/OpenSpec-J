@@ -259,7 +259,7 @@ AI:  Archiving add-dark-mode...
 CLI を使用して変更を確認します。
 
 ```bash
-# List active changes
+# アクティブな変更を一覧表示
 openspec list
 
 # View change details

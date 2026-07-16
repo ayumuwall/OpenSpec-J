@@ -81,27 +81,29 @@ openspec update                              # run inside each project
 
 `openspec update` regenerates the skill and command files for the tools you've configured, so your slash commands stay current with the installed version.
 
-## Uninstalling
+<a id="uninstalling"></a>
 
-There's no `openspec uninstall` command, because OpenSpec is just a global package plus some files in your project. Removing it is a few manual steps, and nothing here touches your source code.
+## アンインストール
 
-**1. Remove the global package:**
+`openspec uninstall` コマンドはありません。OpenSpec はグローバルパッケージと、プロジェクト内に生成されたいくつかのファイルで構成されているだけだからです。削除は手動で数ステップ行います。ここで説明する操作がソースコードに触れることはありません。
+
+**1. グローバルパッケージを削除します。**
 
 ```bash
 npm uninstall -g @ayumuwall/openspec   # or: pnpm rm -g / yarn global remove / bun rm -g
 ```
 
-**2. Remove OpenSpec from a project (optional).** Delete the `openspec/` directory if you no longer want its specs and changes:
+**2. プロジェクトから OpenSpec を削除します（任意）。** 仕様と変更が不要であれば、`openspec/` ディレクトリを削除します。
 
 ```bash
 rm -rf openspec/
 ```
 
-Think before you do this: `openspec/specs/` and `openspec/changes/archive/` are your record of how the system behaves and why it changed. If you might want that history, keep the folder (or keep it in git) even after uninstalling.
+この操作の前に確認してください。`openspec/specs/` と `openspec/changes/archive/` は、システムがどう振る舞い、なぜ変わったかの記録です。その履歴が必要になる可能性があるなら、アンインストール後もフォルダーを残すか、Git に残してください。
 
 **3. 生成された AI ツール用ファイルを削除します（任意）。** OpenSpec は `.claude/skills/openspec-*/` や `.cursor/commands/opsx-*` など、ツールごとのディレクトリにスキルファイルやコマンドファイルを書き込みます。設定したツールに対応する `openspec-*` スキルと `opsx-*` コマンドを削除してください。ツールごとの正確なパスは [サポートされているツール](supported-tools.md) にあります。
 
-If you also have OpenSpec marker blocks in files like `CLAUDE.md` or `AGENTS.md`, remove those blocks by hand; your own content in those files is yours to keep.
+`CLAUDE.md` や `AGENTS.md` などに OpenSpec のマーカーブロックが残っている場合は、そのブロックだけ手動で削除してください。それらのファイル内のあなた自身の内容は、そのまま残して構いません。
 
 ## 次のステップ
 

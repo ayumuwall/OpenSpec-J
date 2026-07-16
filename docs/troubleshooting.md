@@ -35,6 +35,8 @@ openspec init --tools claude,cursor
 
 ツール ID の完全な一覧は [サポートされているツール](supported-tools.md) にあります。すべてを対象にするには `--tools all`、ツールのセットアップをスキップするには `--tools none` を使います。
 
+<a id="commands-dont-show-up"></a>
+
 ## コマンドが表示されない
 
 `/opsx:propose` (または同等のツール) が表示されない場合、または何も実行しない場合は、このリストを調べてください。チェックが早い順に並べられます。

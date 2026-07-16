@@ -49,181 +49,189 @@ OpenSpec は作業を 2 つの主要領域に分けて整理します。
 
 この分離が重要です。複数の変更を並行で進められ、レビューしてから本仕様へ反映できます。アーカイブ時に差分が信頼できる基準へ統合されます。
 
-## Specs
+<a id="specs"></a>
 
-Specs describe your system's behavior using structured requirements and scenarios.
+## 仕様
 
-### Structure
+仕様は、構造化された要件とシナリオでシステムの振る舞いを説明します。
+
+### 構造
 
 ```
 openspec/specs/
 ├── auth/
-│   └── spec.md           # Authentication behavior
+│   └── spec.md           # 認証の振る舞い
 ├── payments/
-│   └── spec.md           # Payment processing
+│   └── spec.md           # 支払い処理
 ├── notifications/
-│   └── spec.md           # Notification system
+│   └── spec.md           # 通知システム
 └── ui/
-    └── spec.md           # UI behavior and themes
+    └── spec.md           # UI の振る舞いとテーマ
 ```
 
-Organize specs by domain — logical groupings that make sense for your system. Common patterns:
+仕様はドメインごとに整理します。ドメインとは、システムにとって意味のある論理グループです。よくある分け方は次の通りです。
 
-- **By feature area**: `auth/`, `payments/`, `search/`
-- **By component**: `api/`, `frontend/`, `workers/`
-- **By bounded context**: `ordering/`, `fulfillment/`, `inventory/`
+- **機能領域別**: `auth/`, `payments/`, `search/`
+- **コンポーネント別**: `api/`, `frontend/`, `workers/`
+- **境界づけられたコンテキスト別**: `ordering/`, `fulfillment/`, `inventory/`
 
-### Spec Format
+### 仕様フォーマット
 
-A spec contains requirements, and each requirement has scenarios:
+仕様には要件が含まれ、各要件にはシナリオがあります。
 
 ```markdown
-# Auth Specification
+# Auth 仕様
 
 ## Purpose
-Authentication and session management for the application.
+アプリケーションの認証とセッション管理。
 
 ## Requirements
 
-### Requirement: User Authentication
-The system SHALL issue a JWT token upon successful login.
+### Requirement: ユーザー認証
+システムはログイン成功時に JWT トークンを発行しなければならない。(SHALL)
 
-#### Scenario: Valid credentials
-- GIVEN a user with valid credentials
-- WHEN the user submits login form
-- THEN a JWT token is returned
-- AND the user is redirected to dashboard
+#### Scenario: 有効な認証情報
+- GIVEN 有効な認証情報を持つユーザー
+- WHEN ユーザーがログインフォームを送信する
+- THEN JWT トークンが返される
+- AND ユーザーはダッシュボードへリダイレクトされる
 
-#### Scenario: Invalid credentials
-- GIVEN invalid credentials
-- WHEN the user submits login form
-- THEN an error message is displayed
-- AND no token is issued
+#### Scenario: 無効な認証情報
+- GIVEN 無効な認証情報
+- WHEN ユーザーがログインフォームを送信する
+- THEN エラーメッセージが表示される
+- AND トークンは発行されない
 
 ### Requirement: セッション期限
-The system MUST expire sessions after 30 minutes of inactivity.
+システムは 30 分間操作がない場合にセッションを期限切れにしなければならない。(MUST)
 
 #### Scenario: アイドルタイムアウト
 - GIVEN 認証済みセッション
-- WHEN 30 minutes pass without activity
+- WHEN 30 分間操作がない
 - THEN セッションは無効化される
-- AND the user must re-authenticate
+- AND ユーザーは再認証しなければならない
 ```
 
-**Key elements:**
+**主な要素:**
 
-| Element | Purpose |
-|---------|---------|
-| `## Purpose` | High-level description of this spec's domain |
-| `### Requirement:` | A specific behavior the system must have |
-| `#### Scenario:` | A concrete example of the requirement in action |
-| SHALL/MUST/SHOULD | RFC 2119 keywords indicating requirement strength |
+| 要素 | 目的 |
+| --- | --- |
+| `## Purpose` | この仕様ドメインの概要 |
+| `### Requirement:` | システムが満たすべき具体的な振る舞い |
+| `#### Scenario:` | 要件が実際に成立する具体例 |
+| SHALL/MUST/SHOULD | 要件の強さを示す RFC 2119 キーワード |
 
-### Why Structure Specs This Way
+### なぜこの構造にするのか
 
-**Requirements are the "what"** — they state what the system should do without specifying implementation.
+**要件は「何を」です。** 実装方法ではなく、システムが何をすべきかを述べます。
 
-**Scenarios are the "when"** — they provide concrete examples that can be verified. Good scenarios:
-- Are testable (you could write an automated test for them)
-- Cover both happy path and edge cases
-- Use Given/When/Then or similar structured format
+**シナリオは「どんなときに」です。** 検証可能な具体例を示します。良いシナリオは次の性質を持ちます。
+- テスト可能である（自動テストを書ける）
+- 正常系とエッジケースの両方をカバーする
+- Given/When/Then などの構造化形式を使う
 
-**RFC 2119 keywords** (SHALL, MUST, SHOULD, MAY) communicate intent:
-- **MUST/SHALL** — absolute requirement
-- **SHOULD** — recommended, but exceptions exist
-- **MAY** — optional
+**RFC 2119 キーワード**（SHALL, MUST, SHOULD, MAY）は意図を伝えます。
+- **MUST/SHALL** — 必須要件
+- **SHOULD** — 推奨。ただし例外はあり得る
+- **MAY** — 任意
 
-### What a Spec Is (and Is Not)
+<a id="what-a-spec-is-and-is-not"></a>
 
-A spec is a **behavior contract**, not an implementation plan.
+### 仕様とは何か、何ではないか
 
-Good spec content:
-- Observable behavior users or downstream systems rely on
-- Inputs, outputs, and error conditions
-- External constraints (security, privacy, reliability, compatibility)
-- Scenarios that can be tested or explicitly validated
+仕様は **振る舞いの契約** であり、実装計画ではありません。
 
-Avoid in specs:
-- Internal class/function names
-- Library or framework choices
-- Step-by-step implementation details
-- Detailed execution plans (those belong in `design.md` or `tasks.md`)
+仕様に書くべき内容:
+- ユーザーや下流システムが依存する、観測可能な振る舞い
+- 入力、出力、エラー条件
+- 外部制約（セキュリティ、プライバシー、信頼性、互換性）
+- テストまたは明示的に検証できるシナリオ
 
-Quick test:
-- If implementation can change without changing externally visible behavior, it likely does not belong in the spec.
+仕様では避ける内容:
+- 内部クラス名や関数名
+- ライブラリやフレームワークの選択
+- 実装手順の詳細
+- 詳細な実行計画（それらは `design.md` や `tasks.md` に書く）
 
-### Keep It Lightweight: Progressive Rigor
+簡単な判定:
+- 外部から見える振る舞いを変えずに実装を変更できるなら、それは仕様に書く内容ではない可能性が高いです。
 
-OpenSpec aims to avoid bureaucracy. Use the lightest level that still makes the change verifiable.
+### 軽量に保つ: 段階的な厳密さ
 
-**Lite spec (default):**
-- Short behavior-first requirements
-- Clear scope and non-goals
-- A few concrete acceptance checks
+OpenSpec は官僚的な手続きを避けることを目指します。変更を検証可能に保てる範囲で、最も軽いレベルを使ってください。
 
-**Full spec (for higher risk):**
-- Cross-team or cross-repo changes
-- API/contract changes, migrations, security/privacy concerns
-- Changes where ambiguity is likely to cause expensive rework
+**軽量仕様（デフォルト）:**
+- 振る舞いを中心にした短い要件
+- 明確なスコープと非目標
+- いくつかの具体的な受け入れ確認
 
-Most changes should stay in Lite mode.
+**完全仕様（高リスク向け）:**
+- チームやリポジトリをまたぐ変更
+- API/契約変更、移行、セキュリティ/プライバシー上の懸念
+- 曖昧さが高コストな手戻りにつながりやすい変更
 
-### Human + Agent Collaboration
+ほとんどの変更は軽量モードで十分です。
 
-In many teams, humans explore and agents draft artifacts. The intended loop is:
+### 人間 + エージェントの協働
 
-1. Human provides intent, context, and constraints.
-2. Agent converts this into behavior-first requirements and scenarios.
-3. Agent keeps implementation detail in `design.md` and `tasks.md`, not `spec.md`.
-4. Validation confirms structure and clarity before implementation.
+多くのチームでは、人間が探索し、エージェントがアーティファクトを下書きします。想定するループは次の通りです。
 
-This keeps specs readable for humans and consistent for agents.
+1. 人間が意図、文脈、制約を渡す。
+2. エージェントがそれを、振る舞いを中心にした要件とシナリオへ変換する。
+3. エージェントは実装詳細を `spec.md` ではなく `design.md` と `tasks.md` に置く。
+4. 実装前に検証で構造と明確さを確認する。
 
-## Changes
+これにより、仕様は人間にとって読みやすく、エージェントにとって一貫したものになります。
 
-A change is a proposed modification to your system, packaged as a folder with everything needed to understand and implement it.
+<a id="changes"></a>
 
-### Change Structure
+## 変更
+
+変更は、システムへの修正案です。理解と実装に必要なものをすべて含むフォルダーとしてまとめられます。
+
+### 変更の構造
 
 ```
 openspec/changes/add-dark-mode/
-├── proposal.md           # Why and what
-├── design.md             # How (technical approach)
-├── tasks.md              # Implementation checklist
-├── .openspec.yaml        # Change metadata (optional)
-└── specs/                # Delta specs
+├── proposal.md           # なぜ、何を
+├── design.md             # どう実装するか（技術的アプローチ）
+├── tasks.md              # 実装チェックリスト
+├── .openspec.yaml        # 変更メタデータ（任意）
+└── specs/                # 仕様差分
     └── ui/
-        └── spec.md       # What's changing in ui/spec.md
+        └── spec.md       # ui/spec.md の変更内容
 ```
 
-Each change is self-contained. It has:
-- **Artifacts** — documents that capture intent, design, and tasks
-- **Delta specs** — specifications for what's being added, modified, or removed
-- **Metadata** — optional configuration for this specific change
+各変更は自己完結しています。含まれるものは次の通りです。
+- **アーティファクト** — 意図、設計、タスクを記録する文書
+- **仕様差分** — 追加、変更、削除される内容の仕様
+- **メタデータ** — その変更固有の任意設定
 
-### Why Changes Are Folders
+### なぜ変更をフォルダーにするのか
 
-Packaging a change as a folder has several benefits:
+変更をフォルダーとしてまとめることには、いくつかの利点があります。
 
-1. **Everything together.** Proposal, design, tasks, and specs live in one place. No hunting through different locations.
+1. **すべてが 1 か所にある。** 提案、設計、タスク、仕様が同じ場所にあります。別々の場所を探し回る必要がありません。
 
-2. **Parallel work.** Multiple changes can exist simultaneously without conflicting. Work on `add-dark-mode` while `fix-auth-bug` is also in progress.
+2. **並行作業しやすい。** 複数の変更を同時に持っても衝突しにくくなります。`fix-auth-bug` が進行中でも、`add-dark-mode` に取り組めます。
 
-3. **Clean history.** When archived, changes move to `changes/archive/` with their full context preserved. You can look back and understand not just what changed, but why.
+3. **履歴がきれいに残る。** アーカイブ時に、変更は文脈ごと `changes/archive/` に移動します。後から、何が変わったかだけでなく、なぜ変わったかも理解できます。
 
-4. **Review-friendly.** A change folder is easy to review — open it, read the proposal, check the design, see the spec deltas.
+4. **レビューしやすい。** 変更フォルダーはレビューしやすい単位です。開いて、提案を読み、設計を確認し、仕様差分を見れば済みます。
 
-## Artifacts
+<a id="artifacts"></a>
 
-Artifacts are the documents within a change that guide the work.
+## アーティファクト
 
-### The Artifact Flow
+アーティファクトは、変更内にある作業を導く文書です。
+
+### アーティファクトの流れ
 
 ```
-proposal ──────► specs ──────► design ──────► tasks ──────► implement
+proposal ──────► specs ──────► design ──────► tasks ──────► 実装
     │               │             │              │
-   why            what           how          steps
- + scope        changes       approach      to take
+   なぜ           何が           どう          実行
+ + 範囲          変わるか       進めるか      手順
 ```
 
 アーティファクトは順に積み上がります。前の内容が次の文脈になります。
@@ -264,7 +272,7 @@ CSS カスタムプロパティでテーマを管理し、React Context で
 
 #### Specs（`specs/` 内の差分仕様）
 
-差分仕様は **現在の仕様に対して何が変わるか** を表します。詳しくは [Delta Specs](#delta-specs) を参照してください。
+差分仕様は **現在の仕様に対して何が変わるか** を表します。詳しくは [仕様差分](#delta-specs) を参照してください。
 
 #### Design（`design.md`）
 
@@ -343,7 +351,9 @@ Tasks は **実装チェックリスト** です。具体的な手順をチェ�
 - 1 セッションで終わる粒度にする
 - 完了したらチェックを付ける
 
-## Delta Specs
+<a id="delta-specs"></a>
+
+## 仕様差分
 
 差分仕様は、OpenSpec がブラウンフィールド開発で機能するための中核概念です。**何が変わるか** を表し、全文の再掲を避けます。
 
@@ -386,7 +396,7 @@ Tasks は **実装チェックリスト** です。具体的な手順をチェ�
 （2FA 導入に伴い廃止。ユーザーは毎セッション再認証が必要。）
 ```
 
-### Delta セクション
+### 差分セクション
 
 | セクション | 意味 | アーカイブ時の挙動 |
 |---------|---------|------------------------|
@@ -498,6 +508,8 @@ artifacts:
 ```
 
 カスタムスキーマの詳細は [カスタマイズ](customization.md) を参照してください。
+
+<a id="archive"></a>
 
 ## アーカイブ
 

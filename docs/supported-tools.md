@@ -1,6 +1,6 @@
 # 対応ツール
 
-OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、有効な profile / workflow 選択と delivery mode に基づいて、選択したツール向けの連携設定を行います。
+OpenSpec は多くの AI コーディングアシスタントに対応しています。`openspec init` を実行すると、有効なプロファイル、ワークフロー選択、配信モードに基づいて、選択したツール向けの連携設定を行います。
 
 ## 仕組み
 
@@ -76,21 +76,21 @@ openspec init --tools none
 openspec init --profile core
 ```
 
-**Available tool IDs (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
+**利用可能なツール ID（`--tools`）:** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
 ## ワークフロー依存のインストール
 
 OpenSpec は、選択されたワークフローに基づいてワークフロー成果物をインストールします。
 
-- **Core profile（デフォルト）:** `propose`, `explore`, `apply`, `sync`, `archive`
-- **Custom selection:** すべての workflow ID から任意のサブセット:
+- **core プロファイル（デフォルト）:** `propose`, `explore`, `apply`, `sync`, `archive`
+- **カスタム選択:** すべてのワークフロー ID から任意のサブセット:
   `propose`, `explore`, `new`, `continue`, `apply`, `ff`, `sync`, `archive`, `bulk-archive`, `verify`, `onboard`
 
 つまり、skill / command の数は固定ではなく、profile と delivery に依存します。
 
 ## 生成されるスキル名
 
-profile / workflow 設定で選択された場合、OpenSpec は次のスキルを生成します。
+プロファイル / ワークフロー設定で選択された場合、OpenSpec は次のスキルを生成します。
 
 - `openspec-propose`
 - `openspec-explore`

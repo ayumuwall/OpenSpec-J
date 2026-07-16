@@ -101,6 +101,8 @@ Solo、OpenSpec は、単一のリポジトリ上でユーザーと AI を正直
 
 > ストアは **ベータ版** です。 [Stores User Guide](docs/stores-beta/user-guide.md)] から始めてください。
 
+<a id="quick-start"></a>
+
 ## クイックスタート
 
 **Node.js 20.19.0 以降が必要です。**

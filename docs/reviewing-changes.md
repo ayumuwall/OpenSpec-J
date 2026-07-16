@@ -86,6 +86,8 @@ The system SHALL let a user switch between light and dark themes.
 
 ここでやるのは見積もりや細かな管理ではありません。計画が、すでに受け入れた要件と一致しているかを確認します。
 
+<a id="pushing-back-is-cheap"></a>
+
 ## 押し返すのは安い
 
 3 つの質問のどれかで違和感があれば、そこで止めてください。フェーズはなく、何もロックされていません。問題を直してから進みます。[変更の編集](editing-changes.md) と同じく、方法は 2 つです。
