@@ -1,6 +1,6 @@
 # OPSX Workflow
 
-> Feedback welcome on [Discord](https://discord.gg/YctCnvvshC).
+> フィードバックは [Discord](https://discord.gg/YctCnvvshC) で歓迎しています。
 
 ## What Is It?
 
@@ -153,7 +153,7 @@ rules:
 - Context is limited to 50KB
 - Summarize or link to external docs instead
 
-## Commands
+## コマンド
 
 | Command | What it does |
 |---------|--------------|
@@ -213,7 +213,7 @@ Works through tasks, checking them off as you go. If you're juggling multiple ch
 ```
 /opsx:update add-dark-mode - we're storing the theme in a cookie now
 ```
-Revises the change's existing planning artifacts and keeps them coherent - in any direction (a design edit may ripple back to the proposal). Planning artifacts only: it never edits code, and it never creates missing artifacts (that's `/opsx:continue`). Every edit is confirmed with you first. If the change was already implemented, it recommends `/opsx:apply` so the code catches up with the revised plan. If your revision changes the change's *intent*, start fresh instead - see [When to Update vs. Start Fresh](#when-to-update-vs-start-fresh).
+既存の計画成果物を改訂し、全体の整合性を保ちます。設計の修正が提案へ戻るように、どの方向にも波及できます。対象は計画成果物だけです。コードは編集せず、存在しない成果物も作りません（それは `/opsx:continue` の役割です）。各編集は、先にユーザーへ確認します。すでに実装済みの変更であれば、改訂後の計画にコードを追従させるため `/opsx:apply` を勧めます。改訂によって変更の *意図* が変わる場合は、新しい変更として始めてください。詳しくは [更新するか、新しく始めるか](#when-to-update-vs-start-fresh) を参照してください。
 
 ### Finish up
 ```

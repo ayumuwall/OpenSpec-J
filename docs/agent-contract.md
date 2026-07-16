@@ -59,7 +59,7 @@
 ### 4.5 `instructions <artifact> --json`
 `{ "changeName", "artifactId", "schemaName", "changeDir", "planningHome"?, "outputPath", "resolvedOutputPath", "existingOutputPaths", "description", "instruction"?, "context"?, "rules"?, "references"?: ReferenceIndexEntry[], "template", "dependencies": [{id,done,path,description}], "unlocks", "root" }`。
 
-`ReferenceIndexEntry`: `{ "store_id", "root"?, "specs"?: [{id,summary}], "fetch"?, "status": [] }` — 解決されたエントリには root/specs/fetch が含まれます。未解決のキャリー store_id + 警告ステータス。インデックスの上限は 50KB (`reference_index_truncated`) です。
+`ReferenceIndexEntry`: `{ "store_id", "root"?, "specs"?: [{id,summary}], "fetch"?, "status": [] }` — 解決済みのエントリには `root` / `specs` / `fetch` が含まれます。未解決のエントリは `store_id` と警告ステータスを保持します。インデックスの上限は 50KB (`reference_index_truncated`) です。
 
 ### 4.6 `instructions apply --json`
 `{ "changeName", "changeDir", "schemaName", "contextFiles": { "<artifactId>": ["/abs", ...] }, "progress": {total,complete,remaining}, "tasks": [{id,description,done}], "state": "blocked"|"all_done"|"ready", "missingArtifacts"?, "instruction", "references"?, "root" }`。
@@ -80,16 +80,16 @@
 セットアップ/登録: `{ "store": {id, root, metadata_path?}, "registry": {path, registered, already_registered}, "git": {is_repository, initialized, committed}, "created_files": [], "status": [] }`。登録解除/削除: `{ "store", "registry": {path, removed}, "files": {deleted, deleted_path, left_on_disk}, "status": [] }`。リスト: `{ "stores": [{id, root}], "status": [] }`。医師: `{ "stores": [ { id, root, metadata_path?, openspec_root: {...healthy, status}, metadata: {present, valid, id?, remote}, git: {is_repository, has_commits, has_uncommitted_changes, has_remote, origin_url}, status } ], "status": [] }` (`null` = 不明/未調査)。健康診断結果出口 0;失敗した場合は、一致する null 形状を持つ exit 1 が発生します。即時キャンセルは 130 で終了します。
 
 ### 4.12 `schemas --json` / `templates --json`
-`schemas`: ベアアレイ `[ {name, description, artifacts, source} ]`。 `templates`: キー付きオブジェクト `{ "<artifactId>": {path, source} }`。どちらも cwd ベースで、ルート/ステータス キーはありません。
+`schemas`: ルートオブジェクトで包まない配列 `[ {name, description, artifacts, source} ]`。`templates`: キー付きオブジェクト `{ "<artifactId>": {path, source} }`。どちらも cwd ベースで、`root` / `status` キーはありません。
 
 ## 5. 終了コードコントラクト
 
-|状況 |終了 |標準出力 |
+| 状況 | 終了 | 標準出力 |
 |---|---|---|
-|成功（含む）健康に関する所見 (医師/コンテキスト/ストア医師) | 0 |ペイロード |
+| 成功（doctor / context / store doctor の健全性所見を含む） | 0 | ペイロード |
 | `--json` モードでのコマンドの失敗 | 1 | `status: [d]` とコマンドの null 形状を持つ 1 つの JSON ドキュメント |
-|失敗した項目のある `validate` | 1 |完全なレポート |
-|即時キャンセル（`store`グループ、ヒューマンモード） | 130 |標準エラー出力のみ |
+| 失敗した項目のある `validate` | 1 | 完全なレポート |
+| 即時キャンセル（`store` グループ、ヒューマンモード） | 130 | 標準エラー出力のみ |
 
 ## 6. 診断コードカタログ
 
@@ -127,11 +127,11 @@
 
 キャップストーン監査によって記録されます。公開キーの名前変更は、このリリース以降の製品決定が延期されます。
 
-1. ~~`--json` モードでは、いくつかの障害パスが JSON ドキュメントなしで標準エラー出力のみを出力しました。~~ キャップストーン ガントレット ラウンドで修正されました: `show`/`validate` の不明で曖昧なアイテムは `{status:[{code: unknown_item | ambiguous_item, ...}]}` を出力します。 JSON 対応の失敗ヘルパー (コマンドの null 形状 + `status`) を介した `instructions`/`list`/`show`/`validate`/`status` ルートでエラーがスローされました。 `store <unknown subcommand> --json` は `{status:[{code: unknown_store_subcommand}]}` を発行します。 `list` は、解決失敗時に `{changes|specs: [], root: null}` のヌル形状を保持します。
+1. ~~`--json` モードでは、一部の失敗パスが JSON ドキュメントを出さず、標準エラー出力だけを返していました。~~ キャップストーンのガントレットで修正済みです。`show` / `validate` の不明・曖昧な項目は `{status:[{code: unknown_item | ambiguous_item, ...}]}` を出力します。`instructions` / `list` / `show` / `validate` / `status` ルートのエラーは、JSON 対応の失敗ヘルパー（コマンドごとの null 形状 + `status`）を経由します。`store <unknown subcommand> --json` は `{status:[{code: unknown_store_subcommand}]}` を出力します。`list` は、解決失敗時も `{changes|specs: [], root: null}` の null 形状を維持します。
 2. `store_root_missing` は 2 つの重大度 (削除時の警告、ストア ドクターのエラー) で出力されます。これはコンテキストに依存しており、上記で説明しています。
 3.snake_case (ストア ファミリー) と CamelCase (ワークフロー ファミリー) のキー ケーシング。 `root.store_id` はどこでもスネークケースです。
 4. src には 4 つの並列エンベロープ型宣言が存在します。アーカイブ診断には `target` が含まれることはありません。
 5. `list --json` は、変更ごとに `status` キーを文字列列挙として再利用します。
-6. `validate` 出力のみが `version` フィールドを伝送します。
+6. `validate` 出力だけが `version` フィールドを含みます。
 7. `schemas`/`templates` はルート選択を無視します (CWD ベース、`--store` なし)。
 8. 非推奨の名詞形式 (`change`/`spec` サブコマンド) は、`root`/`status` なしでエンベロープされていないペイロードを出力します。
