@@ -49,14 +49,14 @@ describe('FileSystemUtils', () => {
       await fs.writeFile(filePath, 'test content');
       
       const exists = await FileSystemUtils.fileExists(filePath);
-      expect(exists).toBe(true);
+      expect(既に存在します).toBe(true);
     });
 
     it('should return false for non-existing file', async () => {
       const filePath = path.join(testDir, 'non-existent.txt');
       
       const exists = await FileSystemUtils.fileExists(filePath);
-      expect(exists).toBe(false);
+      expect(既に存在します).toBe(false);
     });
 
     it('should return false for directory path', async () => {
@@ -64,7 +64,7 @@ describe('FileSystemUtils', () => {
       await fs.mkdir(dirPath);
       
       const exists = await FileSystemUtils.fileExists(dirPath);
-      expect(exists).toBe(true); // fs.access doesn't distinguish between files and directories
+      expect(既に存在します).toBe(true); // fs.access doesn't distinguish between files and directories
     });
   });
 
@@ -74,14 +74,14 @@ describe('FileSystemUtils', () => {
       await fs.mkdir(dirPath);
       
       const exists = await FileSystemUtils.directoryExists(dirPath);
-      expect(exists).toBe(true);
+      expect(既に存在します).toBe(true);
     });
 
     it('should return false for non-existing directory', async () => {
       const dirPath = path.join(testDir, 'non-existent-dir');
       
       const exists = await FileSystemUtils.directoryExists(dirPath);
-      expect(exists).toBe(false);
+      expect(既に存在します).toBe(false);
     });
 
     it('should return false for file path', async () => {
@@ -89,7 +89,7 @@ describe('FileSystemUtils', () => {
       await fs.writeFile(filePath, 'content');
       
       const exists = await FileSystemUtils.directoryExists(filePath);
-      expect(exists).toBe(false);
+      expect(既に存在します).toBe(false);
     });
   });
 
@@ -234,6 +234,21 @@ describe('FileSystemUtils', () => {
 
       const canWrite = await FileSystemUtils.canWriteFile(dirPath);
       expect(canWrite).toBe(true);
+    });
+
+    it.skipIf(process.platform === 'win32')('should return false for directory without search permission', async () => {
+      const dirPath = path.join(testDir, 'write-only-dir');
+      await fs.mkdir(dirPath);
+      await fs.chmod(dirPath, 0o222);
+
+      let canWrite = false;
+      try {
+        canWrite = await FileSystemUtils.canWriteFile(dirPath);
+      } finally {
+        await fs.chmod(dirPath, 0o755);
+      }
+
+      expect(canWrite).toBe(false);
     });
 
     it('should traverse multiple non-existent parent directories', async () => {

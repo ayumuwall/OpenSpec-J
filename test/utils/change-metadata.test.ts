@@ -93,7 +93,7 @@ describe('ChangeMetadataSchema', () => {
         initiative: {
           store: 'platform',
           id: 'billing-launch',
-          path: '/tmp/context-store/initiatives/billing-launch',
+          path: '/tmp/store/initiatives/billing-launch',
           summary: 'Copied initiative prose',
         },
       });
@@ -215,14 +215,14 @@ describe('readChangeMetadata', () => {
     const metaPath = path.join(changeDir, '.openspec.yaml');
     await fs.writeFile(metaPath, '{ invalid yaml', 'utf-8');
 
-    expect(() => readChangeMetadata(changeDir)).toThrow(ChangeMetadataError);
+    expect(() => readChangeMetadata(changeDir)).toThrow(ChangeMetadataエラー);
   });
 
   it('should throw ChangeMetadataError for missing schema field', async () => {
     const metaPath = path.join(changeDir, '.openspec.yaml');
     await fs.writeFile(metaPath, 'created: "2025-01-05"\n', 'utf-8');
 
-    expect(() => readChangeMetadata(changeDir)).toThrow(ChangeMetadataError);
+    expect(() => readChangeMetadata(changeDir)).toThrow(ChangeMetadataエラー);
   });
 
   it('should throw ChangeMetadataError for unknown schema', async () => {
@@ -274,7 +274,7 @@ describe('resolveSchemaForChange', () => {
     const metaPath = path.join(changeDir, '.openspec.yaml');
     await fs.writeFile(metaPath, '{ invalid yaml', 'utf-8');
 
-    expect(() => resolveSchemaForChange(changeDir)).toThrow(ChangeMetadataError);
+    expect(() => resolveSchemaForChange(changeDir)).toThrow(ChangeMetadataエラー);
   });
 
   it('should use project config schema when no metadata exists', async () => {
@@ -361,7 +361,7 @@ describe('validateSchemaName', () => {
   });
 
   it('should throw for unknown schema', () => {
-    expect(() => validateSchemaName('unknown-schema')).toThrow(
+    expect(() => validateSchemaName('不明-schema')).toThrow(
       /スキーマ 'unknown-schema' が見つかりません/
     );
   });

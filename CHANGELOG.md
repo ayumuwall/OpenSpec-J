@@ -2,6 +2,77 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.6.0
+
+- **[OpenSpec-J]** OpenSpec v1.5.0 / v1.6.0 の upstream 変更を取り込み
+- **[OpenSpec-J]** Stores・worksets・`/opsx:update`・Oh My Pi / Trae 対応を含む新規ドキュメント、CLI 文言、OPSX テンプレートを日本語化
+- **[OpenSpec-J]** 翻訳棚卸し: v1.0.0 以降に変更された `src/**/*.ts` のユーザー向け文言を再点検
+- **[OpenSpec-J]** README の同期元バージョンを OpenSpec v1.6.0 に更新
+
+### マイナーな変更
+
+- [#1090](https://github.com/Fission-AI/OpenSpec/pull/1090) [`3f0ca3f`](https://github.com/Fission-AI/OpenSpec/commit/3f0ca3f6ce6f2ec41260c5cbe7954b7e46adcf43) ありがとうございます [@jjxyxsjr](https://github.com/jjxyxsjr)!] - ### 新機能
+
+- **TRAE コマンド アダプター** - Trae IDE 用のコマンド アダプターを追加し、カスタム スラッシュ コマンド用の `.trae/commands/opsx-<id>.md` ファイルの生成を可能にします。
+
+- [#1340](https://github.com/Fission-AI/OpenSpec/pull/1340) [`1552731`](https://github.com/Fission-AI/OpenSpec/commit/15527310f9be13cc9a4035ea01b93ba85873d956) ありがとうございます [@TabishB](https://github.com/TabishB)! - ### 新機能
+
+- **Oh My Pi サポート** — ツール検出や予想される `.omp` ディレクトリ レイアウトなど、Oh My Pi プロジェクト用のネイティブ OPSX コマンドとスキルを生成します。
+- **計画成果物を適切に更新** — `/opsx:update` を使用して、既存の変更の計画成果物を修正し、関連する成果物を調整し、実装作業を `/opsx:apply` に委任し続けます。
+
+### バグ修正
+
+- **ストアの新規登録** — 空の変更、仕様、またはアーカイブ ディレクトリがコミットされる前に、新しく作成したストアを登録して使用します。
+- **より安全な要件のアーカイブ** - 古い `MODIFIED` 要件が、以前のアーカイブによって追加されたシナリオをサイレントに削除するのを防ぎます。
+
+### パッチの変更
+
+- [#1300](https://github.com/Fission-AI/OpenSpec/pull/1300) [`a5bfeda`](https://github.com/Fission-AI/OpenSpec/commit/a5bfedafc8b3d914fe01d05eb36ad9ad3fbe35a2) ありがとうございます] [@clay-good](https://github.com/clay-good)! - ＃＃＃ 特徴
+
+- **生成されたスキルとコマンドでの OpenSpec CLI の自動承認** - 生成されたすべての `SKILL.md` (すべてのツール) とすべての Claude Code `/opsx:*` スラッシュ コマンドには、前面に `allowed-tools: Bash(openspec:*)` が含まれるようになりました。そのため、エージェント スキル標準を尊重するエージェントは、呼び出しごとに承認を求めるプロンプトを表示せずに `openspec` コマンドを実行します。このフィールドを認識しないツールはそれを無視します。範囲は `openspec` CLI に限定されます。 `allowed-tools` は制限ではなく事前承認を行うため、スキルまたはコマンドが使用する他のすべてのツールは通常の権限設定で使用可能なままになります。
+
+- [#1311](https://github.com/Fission-AI/OpenSpec/pull/1311) [`5956a8e`](https://github.com/Fission-AI/OpenSpec/commit/5956a8e872f41a8f690922b5c9b6927970252b2a) ありがとうございます] [@danilopopeye](https://github.com/danilopopeye)! - ### バグ修正
+
+- **ヒューマン モードでブロックされたときに `archive` がゼロ以外で終了する** — `openspec archive <change> -y` (および `--json` 以外の呼び出し) は、検証が失敗して何もアーカイブされなかった場合に終了コード 0 を返さなくなりました。人間モードの 3 つのブロック パス (デルタ仕様検証の失敗、仕様の再構築の失敗、および再構築された仕様の検証の失敗) は、既存の `--json` の動作と一致する `process.exitCode = 1` を設定するようになりました。以前は、コマンドは「検証に失敗しました」（または「中止されました。ファイルは変更されませんでした。」）を出力して 0 で終了し、スクリプトと CI にアーカイブが成功したと信じさせていました。 `archive` を、`apply` 命令に対してすでに承認されているのと同じ終了コード保証に合わせます (#1250)。
+
+- [#1280](https://github.com/Fission-AI/OpenSpec/pull/1280) [`a325305`](https://github.com/Fission-AI/OpenSpec/commit/a3253051ea1934fd0d76620addb855dfce801742) ありがとうございます] [@clay-good](https://github.com/clay-good)! - ### バグ修正
+
+- **`validate` は `status` のような変更を解決します** — `openspec validate <change>` (および `--all`/`--changes` および対話型セレクター) は、`proposal.md` を必要とするのではなく、`status`/`instructions` と一致するディレクトリの存在によって変更を解決するようになりました。スキャフォールドまたはまだオーサリング中の変更は、`Unknown item` として報告されるのではなく検証され、解決されたが無効な変更はゼロ以外で終了するようになりました。デルタ検出では、ネストされた `specs/<area>/<capability>/spec.md` レイアウトも再帰されます。 (#1182)
+- **タスクの進行状況はネストされた/グロブ `tasks.md` を読み取ります** — `openspec view`、`list`、および `archive` 不完全タスク ゲートは、追跡されたタスク アーティファクトの `generates` グロブ (`status` が使用するのと同じファイル解像度) を通じてタスクの進行状況を解決するようになり、ネストされた `tasks.md` ファイルにタスクが存在する変更は正しく分類されます。未完成のままアーカイブすることはできなくなります。 (#1202)
+- **本体キーワードのヒントはメイン仕様に適用する必要があります** — 規範的なキーワードが `### Requirement:` ヘッダー内にのみ存在するメイン仕様要件は、変更デルタとして同じ対象を絞った「本体行に移動する」修正を 1 回だけ発行されるようになりました。 (#1156)
+
+- [#1281](https://github.com/Fission-AI/OpenSpec/pull/1281) [`9a0dfb5`](https://github.com/Fission-AI/OpenSpec/commit/9a0dfb5cd136b423c9f13c0b29ec3ea69761b4e6) ありがとうございます] [@clay-good](https://github.com/clay-good)! - ### バグ修正
+
+- **要件読み取りの忠実度** — `validate <change>`、`validate <spec>`、および `archive` で使用される要件リーダーは、1 つのフェンス、メタデータ、および複数行を認識した抽出に統合され、変更デルタ パスとメイン仕様パスの間の既知の相違点が解消されました (残りの相違点は変更の設計ドキュメントに文書化されています)。
+
+- 後の本文行に折り返される `SHALL`/`MUST` キーワードは、削除されずに検出されます (#361)。
+- 説明の前のメタデータ行 (`**ID**:`、`**Priority**:`) は仕様パス上でスキップされ、変更パス (#418) と一致します。完全にメタデータとして記述された要件 (`**Constraint**: The system MUST ...` など) は、その行を空にするのではなくテキストとして保持します。
+- 散文行の前にある囲われたコード ブロックは要件テキストになりません (#312)。
+- フェンスで囲まれた例内の `#### Scenario:` は、`validate <spec>` と一致する `validate <change>` の実際のシナリオとしてカウントされなくなりました。
+- `SHALL`/`MUST` 検出では、すべてのリーダーにわたって 1 つの単語全体の述語が使用され、本文のない要件は両方のパスのヘッダー タイトルにフォールバックします。
+
+表示される要件テキスト (JSON 出力やデルタの説明など) に、最初の行だけではなく完全な要件本文が反映されるようになりました。アーカイブされた仕様の内容は変更されません。アーカイブの再構築では、解析されたテキストではなく、生の `### Requirement:` ブロックが読み取られます。
+
+- **表面の非正規デルタ ヘッダー** — `## ADDED`/`## MODIFIED Requirements` セクションに正規の `### Requirement:` ヘッダーではないレベル 3 ヘッダー (デルタ リーダーが暗黙的にスキップするヘッダー (浮遊 `### Documentation Requirements` ディバイダーなど) が含まれている場合)、`validate <change>` は INFO ノートを発行するようになりました。このメモは、`--strict` (#498) を含め、`valid` の結果を変更することはありません。
+
+## 1.5.0
+
+### マイナーな変更
+
+- [#1267](https://github.com/Fission-AI/OpenSpec/pull/1267) [`96f6cac`](https://github.com/Fission-AI/OpenSpec/commit/96f6cacb206c65bee30066f6a1f4e9b855a0d783) ありがとうございます] [@TabishB](https://github.com/TabishB)! - ### 新機能
+
+- **ストア (非常に初期のベータ)** — 仕様と変更を整理する簡単な方法としてストアを導入し、ワークスペースとイニシアチブ モデルを置き換えます。この機能は非常に初期のベータ版です。今後のリリースでは荒削りな点や重大な変更が含まれることが予想されます。
+
+### バグ修正
+
+- **構成解析** — JSON コンテナーにラップされた構成値が正しく解析されるようになりました。
+
+### パッチの変更
+
+- [#1240](https://github.com/Fission-AI/OpenSpec/pull/1240) [`cbf386b`](https://github.com/Fission-AI/OpenSpec/commit/cbf386bd6888f103f8ff7d59b3eab98ce5b57998) ありがとうございます] [@zied-jlassi](https://github.com/zied-jlassi)! - 修正(アダプター): 生成された YAML フロントマターでのエスケープ改行
+
+`escapeYamlValue` は、引用符が必要な文字として `\r` にフラグを立てましたが、それをエスケープしなかったので、二重引用符で囲まれたスカラー内にリテラルのキャリッジ リターンが残され、YAML 行の折りたたみ/正規化によって暗黙的に値が破損する可能性がありました (CRLF で作成されたコマンドの説明では現実的です)。復帰は `\r` としてエスケープされるようになりました。ヘルパー (以前は 5 つのアダプター (bob、claude、cursor、pi、windsurf) にわたって逐語的に複製されていました) は、共有 `command-generation/yaml.ts` モジュールに抽出されるため、動作の一貫性が保たれ、1 か所で修正されます。
+
 ## 1.4.1
 
 - **[OpenSpec-J]** v1.4.1 追従のため、beta workspace のローカル表示状態を `.openspec-workspace/view.yaml` に移す upstream 変更を取り込み

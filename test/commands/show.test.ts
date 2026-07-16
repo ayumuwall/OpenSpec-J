@@ -112,7 +112,7 @@ describe('top-level show command', () => {
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
       const stderr = err.stderr.toString();
-      expect(stderr).toContain("項目 'unknown-item' が見つかりません");
+      expect(stderr).toContain("項目 '不明-item' が見つかりません");
       expect(stderr).toContain('もしかして:');
     } finally {
       process.chdir(originalCwd);

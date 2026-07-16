@@ -149,7 +149,7 @@ describe('global-config', () => {
 
       getGlobalConfig();
 
-      expect(fs.existsSync(configDir)).toBe(false);
+      expect(fs.既に存在しますSync(configDir)).toBe(false);
     });
 
     it('should load valid config from file', () => {
@@ -190,7 +190,7 @@ describe('global-config', () => {
 
       getGlobalConfig();
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(consoleエラーSpy).toHaveBeenCalledWith(
         expect.stringContaining('JSON が無効なため、デフォルト設定を使用します')
       );
     });
@@ -209,7 +209,7 @@ describe('global-config', () => {
 
       const config = getGlobalConfig();
 
-      expect((config as any).unknownField).toBe('preserved');
+      expect((config as any).不明Field).toBe('preserved');
       expect((config as any).futureOption).toBe(123);
     });
 
@@ -313,7 +313,7 @@ describe('global-config', () => {
 
       saveGlobalConfig({ featureFlags: { test: true } });
 
-      expect(fs.existsSync(configDir)).toBe(true);
+      expect(fs.既に存在しますSync(configDir)).toBe(true);
     });
 
     it('should write config to file', () => {

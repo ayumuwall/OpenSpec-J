@@ -88,7 +88,7 @@ complete -c openspec -a 'init' -d 'Initialize OpenSpec'
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('Fish 用の補完スクリプトをインストールしました');
-      expect(result.installedPath).toBe(path.join(testHomeDir, '.config', 'fish', 'completions', 'openspec.fish'));
+      expect(result.インストールPath).toBe(path.join(testHomeDir, '.config', 'fish', 'completions', 'openspec.fish'));
       expect(result.backupPath).toBeUndefined();
       expect(result.instructions).toHaveLength(2);
       expect(result.instructions![0]).toContain('Fish は ~/.config/fish/completions/ から補完を自動で読み込みます');
@@ -186,7 +186,7 @@ complete -c openspec -a 'validate' -d 'Validate specs'
       const result = await spacedInstaller.install(mockCompletionScript);
 
       expect(result.success).toBe(true);
-      expect(result.installedPath).toContain('openspec fish test');
+      expect(result.インストールPath).toContain('openspec fish test');
 
       // Cleanup
       await fs.rm(spacedHomeDir, { recursive: true, force: true });
@@ -284,6 +284,23 @@ complete -c openspec -a 'init'
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('補完スクリプトを削除しました');
+    });
+
+    it.skipIf(process.platform === 'win32')('should uninstall read-only file when parent directory is writable', async () => {
+      await installer.install(mockCompletionScript);
+      const targetPath = path.join(testHomeDir, '.config', 'fish', 'completions', 'openspec.fish');
+      await fs.chmod(targetPath, 0o444);
+
+      let result: Awaited<ReturnType<FishInstaller['uninstall']>> | undefined;
+      try {
+        result = await installer.uninstall();
+      } finally {
+        await fs.chmod(targetPath, 0o644).catch(() => undefined);
+      }
+
+      const fileExists = await fs.access(targetPath).then(() => true).catch(() => false);
+      expect(result?.success).toBe(true);
+      expect(fileExists).toBe(false);
     });
 
     // Skip on Windows: fs.chmod() on directories doesn't restrict write access on Windows

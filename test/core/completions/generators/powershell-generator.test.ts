@@ -117,7 +117,7 @@ describe('PowerShellGenerator', () => {
 			expect(script).toContain('--strict');
 			expect(script).toContain('Enable strict mode');
 			expect(script).toContain('--json');
-			expect(script).toContain('Output as JSON');
+			expect(script).toContain('JSON として出力');
 		});
 
 		it('should handle flags with short options', () => {

@@ -47,8 +47,10 @@ export interface SpecsApplyOutput {
   noChanges: boolean;
 }
 
-const formatDeltaValidationError = (specName: string, detail: string): string =>
-  `${specName} の delta の検証に失敗しました: ${detail}`;
+interface ScenarioBlock {
+  name: string;
+  raw: string;
+}
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -104,7 +106,8 @@ export async function findSpecUpdates(changeDir: string, mainSpecsDir: string): 
  */
 export async function buildUpdatedSpec(
   update: SpecUpdate,
-  changeName: string
+  changeName: string,
+  options: { silent?: boolean } = {}
 ): Promise<{ rebuilt: string; counts: { added: number; modified: number; removed: number; renamed: number } }> {
   // Read change spec content (delta-format expected)
   const changeContent = await fs.readFile(update.source, 'utf-8');
@@ -119,10 +122,7 @@ export async function buildUpdatedSpec(
     const name = normalizeRequirementName(add.name);
     if (addedNames.has(name)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `ADDED に重複した要件があります（"### Requirement: ${add.name}"）`
-        )
+        `${specName} validation failed - duplicate requirement in ADDED for header "### Requirement: ${add.name}"`
       );
     }
     addedNames.add(name);
@@ -132,10 +132,7 @@ export async function buildUpdatedSpec(
     const name = normalizeRequirementName(mod.name);
     if (modifiedNames.has(name)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `MODIFIED に重複した要件があります（"### Requirement: ${mod.name}"）`
-        )
+        `${specName} validation failed - duplicate requirement in MODIFIED for header "### Requirement: ${mod.name}"`
       );
     }
     modifiedNames.add(name);
@@ -145,10 +142,7 @@ export async function buildUpdatedSpec(
     const name = normalizeRequirementName(rem);
     if (removedNamesSet.has(name)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `REMOVED に重複した要件があります（"### Requirement: ${rem}"）`
-        )
+        `${specName} validation failed - duplicate requirement in REMOVED for header "### Requirement: ${rem}"`
       );
     }
     removedNamesSet.add(name);
@@ -160,18 +154,12 @@ export async function buildUpdatedSpec(
     const toNorm = normalizeRequirementName(to);
     if (renamedFromSet.has(fromNorm)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `RENAMED の FROM が重複しています（"### Requirement: ${from}"）`
-        )
+        `${specName} validation failed - duplicate FROM in RENAMED for header "### Requirement: ${from}"`
       );
     }
     if (renamedToSet.has(toNorm)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `RENAMED の TO が重複しています（"### Requirement: ${to}"）`
-        )
+        `${specName} validation failed - duplicate TO in RENAMED for header "### Requirement: ${to}"`
       );
     }
     renamedFromSet.add(fromNorm);
@@ -193,39 +181,27 @@ export async function buildUpdatedSpec(
     const toNorm = normalizeRequirementName(to);
     if (modifiedNames.has(fromNorm)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `RENAMED がある場合、MODIFIED は新しい見出し（"### Requirement: ${to}"）を参照する必要があります`
-        )
+        `${specName} validation failed - when a rename exists, MODIFIED must reference the NEW header "### Requirement: ${to}"`
       );
     }
     // Detect ADDED colliding with a RENAMED TO
     if (addedNames.has(toNorm)) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `RENAMED の TO が ADDED と衝突しています（"### Requirement: ${to}"）`
-        )
+        `${specName} validation failed - RENAMED TO header collides with ADDED for "### Requirement: ${to}"`
       );
     }
   }
   if (conflicts.length > 0) {
     const c = conflicts[0];
     throw new Error(
-      formatDeltaValidationError(
-        specName,
-        `同一の要件が複数のセクションにあります（${c.a} と ${c.b}、"### Requirement: ${c.name}"）`
-      )
+      `${specName} validation failed - requirement present in multiple sections (${c.a} and ${c.b}) for header "### Requirement: ${c.name}"`
     );
   }
   const hasAnyDelta = plan.added.length + plan.modified.length + plan.removed.length + plan.renamed.length > 0;
   if (!hasAnyDelta) {
     throw new Error(
-      formatDeltaValidationError(
-        specName,
-        `delta の解析で操作が見つかりませんでした（${path.basename(path.dirname(update.source))}）。` +
-          '変更仕様には ADDED/MODIFIED/REMOVED/RENAMED セクションが必要です。'
-      )
+      `Delta parsing found no operations for ${path.basename(path.dirname(update.source))}. ` +
+        `Provide ADDED/MODIFIED/REMOVED/RENAMED sections in change spec.`
     );
   }
 
@@ -239,18 +215,14 @@ export async function buildUpdatedSpec(
     // REMOVED will be ignored with a warning since there's nothing to remove
     if (plan.modified.length > 0 || plan.renamed.length > 0) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          '対象仕様が存在しません。新規仕様では ADDED のみ許可されます。' +
-            'MODIFIED と RENAMED は既存仕様が必要です。'
-        )
+        `${specName}: target spec does not exist; only ADDED requirements are allowed for new specs. MODIFIED and RENAMED operations require an existing spec.`
       );
     }
     // Warn about REMOVED requirements being ignored for new specs
-    if (plan.removed.length > 0) {
+    if (plan.removed.length > 0 && !options.silent) {
       console.log(
         chalk.yellow(
-          `⚠️  警告: ${specName} - 新規仕様のため REMOVED の要件 ${plan.removed.length} 件を無視しました（削除対象がありません）。`
+          `⚠️  Warning: ${specName} - ${plan.removed.length} REMOVED requirement(s) ignored for new spec (nothing to remove).`
         )
       );
     }
@@ -281,20 +253,10 @@ export async function buildUpdatedSpec(
     const from = normalizeRequirementName(r.from);
     const to = normalizeRequirementName(r.to);
     if (!nameToBlock.has(from)) {
-      throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `RENAMED に失敗しました: 参照元が見つかりません（"### Requirement: ${r.from}"）`
-        )
-      );
+      throw new Error(`${specName} RENAMED failed for header "### Requirement: ${r.from}" - source not found`);
     }
     if (nameToBlock.has(to)) {
-      throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `RENAMED に失敗しました: 変更先が既に存在します（"### Requirement: ${r.to}"）`
-        )
-      );
+      throw new Error(`${specName} RENAMED failed for header "### Requirement: ${r.to}" - target already exists`);
     }
     const block = nameToBlock.get(from)!;
     const newHeader = `### Requirement: ${to}`;
@@ -316,12 +278,7 @@ export async function buildUpdatedSpec(
       // For new specs, REMOVED requirements are already warned about and ignored
       // For existing specs, missing requirements are an error
       if (!isNewSpec) {
-        throw new Error(
-          formatDeltaValidationError(
-            specName,
-            `REMOVED に失敗しました: 見つかりません（"### Requirement: ${name}"）`
-          )
-        );
+        throw new Error(`${specName} REMOVED failed for header "### Requirement: ${name}" - not found`);
       }
       // Skip removal for new specs (already warned above)
       continue;
@@ -332,22 +289,21 @@ export async function buildUpdatedSpec(
   // MODIFIED
   for (const mod of plan.modified) {
     const key = normalizeRequirementName(mod.name);
-    if (!nameToBlock.has(key)) {
-      throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `MODIFIED に失敗しました: 見つかりません（"### Requirement: ${mod.name}"）`
-        )
-      );
+    const currentBlock = nameToBlock.get(key);
+    if (!currentBlock) {
+      throw new Error(`${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - not found`);
     }
     // Replace block with provided raw (ensure header line matches key)
     const modHeaderMatch = mod.raw.split('\n')[0].match(/^###\s*Requirement:\s*(.+)\s*$/i);
     if (!modHeaderMatch || normalizeRequirementName(modHeaderMatch[1]) !== key) {
       throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `MODIFIED に失敗しました: 本文の見出しが一致しません（"### Requirement: ${mod.name}"）`
-        )
+        `${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - header mismatch in content`
+      );
+    }
+    const missingScenarios = findMissingCurrentScenarios(currentBlock, mod);
+    if (missingScenarios.length > 0) {
+      throw new Error(
+        `${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - current spec contains scenario(s) not present in the modified block: ${missingScenarios.map(name => `"${name}"`).join(', ')}. Refresh the change spec before archiving to avoid dropping scenarios.`
       );
     }
     nameToBlock.set(key, mod);
@@ -357,12 +313,7 @@ export async function buildUpdatedSpec(
   for (const add of plan.added) {
     const key = normalizeRequirementName(add.name);
     if (nameToBlock.has(key)) {
-      throw new Error(
-        formatDeltaValidationError(
-          specName,
-          `ADDED に失敗しました: 既に存在します（"### Requirement: ${add.name}"）`
-        )
-      );
+      throw new Error(`${specName} ADDED failed for header "### Requirement: ${add.name}" - already exists`);
     }
     nameToBlock.set(key, add);
   }
@@ -415,15 +366,18 @@ export async function buildUpdatedSpec(
 export async function writeUpdatedSpec(
   update: SpecUpdate,
   rebuilt: string,
-  counts: { added: number; modified: number; removed: number; renamed: number }
+  counts: { added: number; modified: number; removed: number; renamed: number },
+  options: { silent?: boolean; displayPath?: string } = {}
 ): Promise<void> {
   // Create target directory if needed
   const targetDir = path.dirname(update.target);
   await fs.mkdir(targetDir, { recursive: true });
   await fs.writeFile(update.target, rebuilt);
 
+  if (options.silent) return;
+
   const specName = path.basename(path.dirname(update.target));
-  console.log(`openspec/specs/${specName}/spec.md に変更を適用:`);
+  console.log(`Applying changes to ${options.displayPath ?? `openspec/specs/${specName}/spec.md`}:`);
   if (counts.added) console.log(`  + ${counts.added} 追加`);
   if (counts.modified) console.log(`  ~ ${counts.modified} 更新`);
   if (counts.removed) console.log(`  - ${counts.removed} 削除`);
@@ -436,6 +390,41 @@ export async function writeUpdatedSpec(
 export function buildSpecSkeleton(specFolderName: string, changeName: string): string {
   const titleBase = specFolderName;
   return `# ${titleBase} Specification\n\n## Purpose\nTBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。\n\n## Requirements\n`;
+}
+
+function findMissingCurrentScenarios(current: RequirementBlock, incoming: RequirementBlock): string[] {
+  const incomingScenarioNames = new Set(parseScenarioBlocks(incoming.raw).map((scenario) => scenario.name));
+  return parseScenarioBlocks(current.raw)
+    .filter((scenario) => !incomingScenarioNames.has(scenario.name))
+    .map((scenario) => scenario.name);
+}
+
+function parseScenarioBlocks(requirementRaw: string): ScenarioBlock[] {
+  const lines = requirementRaw.replace(/\r\n?/g, '\n').split('\n');
+  const scenarios: ScenarioBlock[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const headerMatch = lines[index].match(/^####\s*Scenario:\s*(.+)\s*$/);
+    if (!headerMatch) {
+      index++;
+      continue;
+    }
+
+    const start = index;
+    const name = headerMatch[1].trim();
+    index++;
+    while (index < lines.length && !/^####\s*Scenario:\s*(.+)\s*$/.test(lines[index])) {
+      index++;
+    }
+
+    scenarios.push({
+      name,
+      raw: lines.slice(start, index).join('\n').trimEnd(),
+    });
+  }
+
+  return scenarios;
 }
 
 /**

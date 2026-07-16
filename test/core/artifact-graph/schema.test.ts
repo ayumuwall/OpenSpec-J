@@ -39,7 +39,7 @@ artifacts:
   - id: proposal
     description: Missing generates and template
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/generates/);
     });
 
@@ -52,7 +52,7 @@ artifacts:
     description: Test
     template: templates/proposal.md
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/name/);
     });
 
@@ -66,7 +66,7 @@ artifacts:
     description: Test
     template: templates/proposal.md
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/正の整数/);
     });
 
@@ -76,7 +76,7 @@ name: test
 version: 1
 artifacts: []
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/artifact/i);
     });
 
@@ -94,7 +94,7 @@ artifacts:
     description: Duplicate
     template: templates/other.md
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/Duplicate artifact ID: proposal/);
     });
 
@@ -110,7 +110,7 @@ artifacts:
     requires:
       - nonexistent
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/Invalid dependency reference.*nonexistent/);
     });
 
@@ -126,7 +126,7 @@ artifacts:
     requires:
       - A
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/Cyclic dependency detected/);
     });
 
@@ -148,7 +148,7 @@ artifacts:
     requires:
       - A
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/Cyclic dependency detected/);
       expect(() => parseSchema(yaml)).toThrow(/→/);
     });
@@ -177,7 +177,7 @@ artifacts:
     requires:
       - B
 `;
-      expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
+      expect(() => parseSchema(yaml)).toThrow(SchemaValidationエラー);
       expect(() => parseSchema(yaml)).toThrow(/Cyclic dependency detected/);
       // Should contain all three in the cycle path
       const error = (() => {

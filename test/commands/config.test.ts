@@ -1,13 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Command } from 'commander';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+
+async function runConfigCommand(args: string[]): Promise<void> {
+  const { registerConfigCommand } = await import('../../src/commands/config.js');
+  const program = new Command();
+  registerConfigCommand(program);
+  await program.parseAsync(['node', 'openspec', 'config', ...args]);
+}
 
 describe('config command integration', () => {
   // These tests use real file system operations with XDG_CONFIG_HOME override
   let tempDir: string;
   let originalEnv: NodeJS.ProcessEnv;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Create unique temp directory for each test
@@ -20,6 +29,7 @@ describe('config command integration', () => {
 
     // Spy on console.error
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -31,6 +41,7 @@ describe('config command integration', () => {
 
     // Restore spies
     consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
 
     // Reset module cache to pick up new XDG_CONFIG_HOME
     vi.resetModules();
@@ -74,7 +85,7 @@ describe('config command integration', () => {
     }));
 
     const config = getGlobalConfig();
-    expect((config as Record<string, unknown>).customField).toBe('preserved');
+    expect((config as Record<string, 不明>).customField).toBe('preserved');
   });
 
   it('should handle invalid JSON gracefully', async () => {
@@ -87,8 +98,24 @@ describe('config command integration', () => {
     const config = getGlobalConfig();
     // Should return defaults
     expect(config.featureFlags).toEqual({});
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(consoleエラーSpy).toHaveBeenCalledWith(
       expect.stringContaining('JSON が無効なため、デフォルト設定を使用します')
+    );
+  });
+
+  it('should set workflows from JSON array syntax', async () => {
+    await runConfigCommand([
+      'set',
+      'workflows',
+      '["new","ff","apply","archive"]',
+    ]);
+
+    const { getGlobalConfig } = await import('../../src/core/global-config.js');
+    const config = getGlobalConfig();
+
+    expect(config.workflows).toEqual(['new', 'ff', 'apply', 'archive']);
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      'Set workflows = new,ff,apply,archive'
     );
   });
 });
@@ -135,7 +162,7 @@ describe('config command shell completion registry', () => {
     const flagNames = setCmd?.flags?.map((f) => f.name) ?? [];
 
     expect(flagNames).toContain('string');
-    expect(flagNames).toContain('allow-unknown');
+    expect(flagNames).toContain('allow-不明');
   });
 
   it('should have --all and -y flags on reset subcommand', async () => {
@@ -162,7 +189,7 @@ describe('config command shell completion registry', () => {
 describe('config key validation', () => {
   it('rejects unknown top-level keys', async () => {
     const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
-    expect(validateConfigKeyPath('unknownKey').valid).toBe(false);
+    expect(validateConfigKeyPath('不明Key').valid).toBe(false);
   });
 
   it('allows feature flag keys', async () => {
@@ -225,7 +252,7 @@ describe('config profile command', () => {
     const result = getGlobalConfig();
     expect(result.profile).toBe('core');
     expect(result.delivery).toBe('skills'); // preserved
-    expect(result.workflows).toEqual(['propose', 'explore', 'apply', 'sync', 'archive']);
+    expect(result.workflows).toEqual(['propose', 'explore', 'apply', 'update', 'sync', 'archive']);
   });
 
   it('custom workflow selection should set profile to custom', async () => {

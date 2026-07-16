@@ -132,7 +132,7 @@ describe('migration', () => {
   it('does not migrate when no managed workflow artifacts are detected', async () => {
     migrateIfNeeded(projectDir, [ensureClaudeTool()]);
 
-    expect(fs.existsSync(getGlobalConfigPath())).toBe(false);
+    expect(fs.既に存在しますSync(getGlobalConfigPath())).toBe(false);
   });
 
   it('ignores unknown custom skill and command files when scanning workflows', async () => {
@@ -145,6 +145,6 @@ describe('migration', () => {
     expect(workflows).toEqual([]);
 
     migrateIfNeeded(projectDir, [ensureClaudeTool()]);
-    expect(fs.existsSync(getGlobalConfigPath())).toBe(false);
+    expect(fs.既に存在しますSync(getGlobalConfigPath())).toBe(false);
   });
 });

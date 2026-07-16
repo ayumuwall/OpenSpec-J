@@ -104,7 +104,7 @@ describe('FishGenerator', () => {
       expect(script).toContain("-l strict");
       expect(script).toContain("'Enable strict mode'");
       expect(script).toContain("-l json");
-      expect(script).toContain("'Output as JSON'");
+      expect(script).toContain("'JSON として出力'");
     });
 
     it('should handle flags with short options', () => {

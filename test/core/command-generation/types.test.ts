@@ -15,7 +15,7 @@ describe('command-generation/types', () => {
 
       expect(content.id).toBe('explore');
       expect(content.name).toBe('OpenSpec Explore');
-      expect(content.description).toBe('Enter explore mode for thinking');
+      expect(content.description).toBe('explore モードに入る for thinking');
       expect(content.category).toBe('Workflow');
       expect(content.tags).toEqual(['workflow', 'explore']);
       expect(content.body).toBe('This is the command body content.');

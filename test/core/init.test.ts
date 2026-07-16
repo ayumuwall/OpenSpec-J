@@ -82,11 +82,12 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      // Core profile: propose, explore, apply, sync, archive
+      // Core profile: propose, explore, apply, update, sync, archive
       const coreSkillNames = [
         'openspec-propose',
         'openspec-explore',
         'openspec-apply-change',
+        'openspec-update-change',
         'openspec-sync-specs',
         'openspec-archive-change',
       ];
@@ -134,11 +135,12 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      // Core profile: propose, explore, apply, sync, archive
+      // Core profile: propose, explore, apply, update, sync, archive
       const coreCommandNames = [
         'opsx/propose.md',
         'opsx/explore.md',
         'opsx/apply.md',
+        'opsx/update.md',
         'opsx/sync.md',
         'opsx/archive.md',
       ];
@@ -203,6 +205,29 @@ describe('InitCommand', () => {
           (entry) => entry.includes('コマンド生成をスキップ: kimi') && entry.includes('アダプタなし'),
         ),
       ).toBe(true);
+    });
+
+    it('should create both skills and commands for Trae with adapter', async () => {
+      saveGlobalConfig({
+        configuredTools: [],
+        delivery: 'both',
+      });
+
+      const initCommand = new InitCommand({ tools: 'trae', force: true });
+      await initCommand.execute(testDir);
+
+      // Skills should be created
+      const skillFile = path.join(testDir, '.trae', 'skills', 'openspec-explore', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+
+      // Commands should also be created (Trae has an adapter)
+      const commandFile = path.join(testDir, '.trae', 'commands', 'opsx-explore.md');
+      expect(await fileExists(commandFile)).toBe(true);
+
+      const commandContent = await fs.readFile(commandFile, 'utf-8');
+      expect(commandContent).toContain('---');
+      expect(commandContent).toContain('name:');
+      expect(commandContent).toContain('description:');
     });
 
     it('should create skills for multiple tools at once', async () => {
@@ -702,7 +727,7 @@ describe('InitCommand - profile and detection features', () => {
     await initCommand.execute(testDir);
 
     expect(showWelcomeScreenMock).toHaveBeenCalled();
-    expect(confirmMock).not.toHaveBeenCalled();
+    expect(確定Mock).not.toHaveBeenCalled();
 
     const exploreSkill = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
     const newChangeSkill = path.join(testDir, '.claude', 'skills', 'openspec-new-change', 'SKILL.md');

@@ -1,263 +1,271 @@
-# OPSX ワークフロー
+# OPSX Workflow
 
-> フィードバックは [Discord](https://discord.gg/YctCnvvshC) へ。
+> Feedback welcome on [Discord](https://discord.gg/YctCnvvshC).
 
-## これは何？
+## What Is It?
 
-OPSX は OpenSpec の標準ワークフローです。
+OPSX is now the standard workflow for OpenSpec.
 
-OpenSpec の変更に向けた **柔軟で反復しやすいワークフロー** を提供します。固定フェーズではなく、いつでも実行できるアクションとして扱います。
+It's a **fluid, iterative workflow** for OpenSpec changes. No more rigid phases — just actions you can take anytime.
 
-## なぜ必要なのか
+## Why This Exists
 
-従来の OpenSpec ワークフローは動きますが、**固定されすぎている**問題がありました。
+The legacy OpenSpec workflow works, but it's **locked down**:
 
-- **指示がコードに埋め込まれている** — TypeScript に埋め込まれていて変えられない
-- **一括生成しかない** — 1 つのコマンドで全部作るため、分割テストが難しい
-- **固定構造** — 全員同じ流れでカスタマイズできない
-- **ブラックボックス** — AI 出力が悪くてもプロンプトを調整できない
+- **Instructions are hardcoded** — buried in TypeScript, you can't change them
+- **All-or-nothing** — one big command creates everything, can't test individual pieces
+- **Fixed structure** — same workflow for everyone, no customization
+- **Black box** — when AI output is bad, you can't tweak the prompts
 
-**OPSX はこの制約を外します。** 誰でも以下が可能になります。
+**OPSX opens it up.** Now anyone can:
 
-1. **指示を実験** — テンプレートを編集し、出力を改善
-2. **細かくテスト** — アーティファクト単位で検証
-3. **ワークフローをカスタマイズ** — 独自アーティファクトと依存関係を定義
-4. **高速に反復** — テンプレートを変えたら即検証
+1. **Experiment with instructions** — edit a template, see if the AI does better
+2. **Test granularly** — validate each artifact's instructions independently
+3. **Customize workflows** — define your own artifacts and dependencies
+4. **Iterate quickly** — change a template, test immediately, no rebuild
 
 ```
-従来ワークフロー:                     OPSX:
+Legacy workflow:                      OPSX:
 ┌────────────────────────┐           ┌────────────────────────┐
-│  パッケージに固定      │           │  schema.yaml           │◄── ここを編集
-│  (変更不可)            │           │  templates/*.md        │◄── またはここ
+│  Hardcoded in package  │           │  schema.yaml           │◄── You edit this
+│  (can't change)        │           │  templates/*.md        │◄── Or this
 │        ↓               │           │        ↓               │
-│  新しいリリース待ち    │           │  即座に反映            │
+│  Wait for new release  │           │  Instant effect        │
 │        ↓               │           │        ↓               │
-│  改善を願う            │           │  自分で検証            │
+│  Hope it's better      │           │  Test it yourself      │
 └────────────────────────┘           └────────────────────────┘
 ```
 
-**対象は全員:**
-- **チーム** — 実際の作業に合うワークフローを作れる
-- **パワーユーザー** — プロンプトを調整して出力品質を向上
-- **OpenSpec 開発者** — リリース不要で新アプローチを試せる
+**This is for everyone:**
+- **Teams** — create workflows that match how you actually work
+- **Power users** — tweak prompts to get better AI outputs for your codebase
+- **OpenSpec contributors** — experiment with new approaches without releases
 
-私たちはまだ学習中です。OPSX は皆で学ぶための仕組みです。
+We're all still learning what works best. OPSX lets us learn together.
 
-## 体験の違い
+## The User Experience
 
-**線形ワークフローの問題:**
-「計画フェーズ→実装フェーズ→完了」と進めると、現実の作業とズレます。実装中に設計が違うと気づくことは多く、仕様に戻る必要があるのに戻りづらい。
+**The problem with linear workflows:**
+You're "in planning phase", then "in implementation phase", then "done". But real work doesn't work that way. You implement something, realize your design was wrong, need to update specs, continue implementing. Linear phases fight against how work actually happens.
 
-**OPSX の考え方:**
-- **フェーズではなくアクション** — いつでも作成/更新/実装/アーカイブが可能
-- **依存関係は可能性** — 次に何ができるかを示すだけで強制しない
+**OPSX approach:**
+- **Actions, not phases** — create, implement, update, archive — do any of them anytime
+- **Dependencies are enablers** — they show what's possible, not what's required next
 
 ```
-  proposal ──→ specs ──→ design ──→ tasks ──→ 実装
+  proposal ──→ specs ──→ design ──→ tasks ──→ implement
 ```
 
-## セットアップ
+## Setup
 
 ```bash
-# openspec をインストール・初期化済みであること
+# Make sure you have openspec installed — skills are automatically generated
 openspec init
 ```
 
-これにより `.claude/skills/`（または各ツールのディレクトリ）にスキルが生成され、AI コーディングアシスタントが自動検出します。
+This creates skills in `.claude/skills/` (or equivalent) that AI coding assistants auto-detect.
 
-既定では `core` ワークフロープロファイル（`propose`, `explore`, `apply`, `sync`, `archive`）が使われます。拡張ワークフロー（`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`）を使いたい場合は、`openspec config profile` で設定し、`openspec update` を実行してください。
+By default, OpenSpec uses the `core` workflow profile (`propose`, `explore`, `apply`, `sync`, `archive`). If you want the expanded workflow commands (`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`), configure them with `openspec config profile` and apply with `openspec update`.
 
-セットアップ中に **プロジェクト設定**（`openspec/config.yaml`）の作成が促されます。任意ですが推奨です。
+During setup, you'll be prompted to create a **project config** (`openspec/config.yaml`). This is optional but recommended.
 
-## プロジェクト設定
+## Project Configuration
 
-プロジェクト設定は、デフォルト設定やプロジェクト文脈をアーティファクトに注入するための仕組みです。
+Project config lets you set defaults and inject project-specific context into all artifacts.
 
-### 設定の作成
+### Creating Config
 
-`openspec init` の実行中に作成するか、手動で作成できます。
+Config is created during `openspec init`, or manually:
 
 ```yaml
 # openspec/config.yaml
 schema: spec-driven
 
 context: |
-  技術スタック: TypeScript, React, Node.js
-  API 規約: RESTful, JSON レスポンス
-  テスト: ユニットは Vitest、E2E は Playwright
-  スタイル: ESLint + Prettier、strict TypeScript
+  Tech stack: TypeScript, React, Node.js
+  API conventions: RESTful, JSON responses
+  Testing: Vitest for unit tests, Playwright for e2e
+  Style: ESLint with Prettier, strict TypeScript
 
 rules:
   proposal:
-    - ロールバック計画を含める
-    - 影響を受けるチームを明記
+    - Include rollback plan
+    - Identify affected teams
   specs:
-    - シナリオは Given/When/Then 形式を使う
+    - Use Given/When/Then format for scenarios
   design:
-    - 複雑なフローにはシーケンス図を含める
+    - Include sequence diagrams for complex flows
 ```
 
-### 設定フィールド
+### Config Fields
 
-| フィールド | 型 | 説明 |
+| Field | Type | Description |
 |-------|------|-------------|
-| `schema` | string | 新規変更のデフォルトスキーマ（例: `spec-driven`） |
-| `context` | string | 全アーティファクトに注入する文脈 |
-| `rules` | object | アーティファクトごとのルール（キーはアーティファクト ID） |
+| `schema` | string | Default schema for new changes (e.g., `spec-driven`) |
+| `context` | string | Project context injected into all artifact instructions |
+| `rules` | object | Per-artifact rules, keyed by artifact ID |
 
-### 仕組み
+### How It Works
 
-**スキーマ優先順位**（高→低）:
-1. CLI フラグ（`--schema <name>`）
-2. 変更メタデータ（変更ディレクトリ内の `.openspec.yaml`）
-3. プロジェクト設定（`openspec/config.yaml`）
-4. デフォルト（`spec-driven`）
+**Schema precedence** (highest to lowest):
+1. CLI flag (`--schema <name>`)
+2. Change metadata (`.openspec.yaml` in change directory)
+3. Project config (`openspec/config.yaml`)
+4. Default (`spec-driven`)
 
-**コンテキスト注入:**
-- すべてのアーティファクト指示に追加
-- `<context>...</context>` で囲まれる
-- プロジェクト規約を AI が把握できる
+**Context injection:**
+- Context is prepended to every artifact's instructions
+- Wrapped in `<context>...</context>` tags
+- Helps AI understand your project's conventions
 
-**ルール注入:**
-- 該当アーティファクトにのみ注入
-- `<rules>...</rules>` で囲まれる
-- `context` の後、テンプレートの前に挿入
+**Rules injection:**
+- Rules are only injected for matching artifacts
+- Wrapped in `<rules>...</rules>` tags
+- Appear after context, before the template
 
-### スキーマ別アーティファクト ID
+### Artifact IDs by Schema
 
-**spec-driven**（デフォルト）:
-- `proposal` — 変更提案
-- `specs` — 仕様
-- `design` — 技術設計
-- `tasks` — 実装タスク
+**spec-driven** (default):
+- `proposal` — Change proposal
+- `specs` — Specifications
+- `design` — Technical design
+- `tasks` — Implementation tasks
 
-### 設定検証
+### Config Validation
 
-- `rules` に未知のアーティファクト ID がある場合は警告
-- スキーマ名は利用可能なもののみ有効
-- `context` は 50KB まで
-- YAML 構文エラーは行番号付きで表示
+- Unknown artifact IDs in `rules` generate warnings
+- Schema names are validated against available schemas
+- Context has a 50KB size limit
+- Invalid YAML is reported with line numbers
 
-### トラブルシューティング
+### Troubleshooting
 
-**"rules に未知のアーティファクト ID があります: X"**
-- アーティファクト ID がスキーマと一致するか確認
-- `openspec schemas --json` で ID を確認
+**"Unknown artifact ID in rules: X"**
+- Check artifact IDs match your schema (see list above)
+- Run `openspec schemas --json` to see artifact IDs for each schema
 
-**設定が反映されない:**
-- `openspec/config.yaml` にあるか確認（`.yml` ではない）
-- YAML 構文を検証
-- 変更は即時反映（再起動不要）
+**Config not being applied:**
+- Ensure file is at `openspec/config.yaml` (not `.yml`)
+- Check YAML syntax with a validator
+- Config changes take effect immediately (no restart needed)
 
-**`context` が大きすぎる:**
-- 50KB 制限あり
-- 重要な情報に絞る
+**Context too large:**
+- Context is limited to 50KB
+- Summarize or link to external docs instead
 
-## コマンド
+## Commands
 
-| コマンド | できること |
-|---------|------------|
-| `/opsx:propose` | 変更を作成し、計画アーティファクトを 1 ステップで生成（既定のクイックパス） |
-| `/opsx:explore` | 相談・調査・要件整理 |
-| `/opsx:new` | 新規変更のひな形を作成（拡張ワークフロー） |
-| `/opsx:continue` | 次のアーティファクト作成（拡張ワークフロー） |
-| `/opsx:ff` | 計画アーティファクト一括生成（拡張ワークフロー） |
-| `/opsx:apply` | タスク実装（必要に応じてアーティファクト更新） |
-| `/opsx:verify` | 実装がアーティファクトに沿っているか検証（拡張ワークフロー） |
-| `/opsx:sync` | 仕様差分を本仕様へ同期（既定ワークフロー、任意） |
-| `/opsx:archive` | 完了時のアーカイブ |
-| `/opsx:bulk-archive` | 複数の完了済み変更を一括アーカイブ（拡張ワークフロー） |
-| `/opsx:onboard` | 変更の開始から完了までをガイド付きで体験（拡張ワークフロー） |
+| Command | What it does |
+|---------|--------------|
+| `/opsx:propose` | Create a change and generate planning artifacts in one step (default quick path) |
+| `/opsx:explore` | Think through ideas, investigate problems, clarify requirements |
+| `/opsx:new` | Start a new change scaffold (expanded workflow) |
+| `/opsx:continue` | Create the next artifact (expanded workflow) |
+| `/opsx:ff` | Fast-forward planning artifacts (expanded workflow) |
+| `/opsx:apply` | Implement tasks, updating artifacts as needed |
+| `/opsx:update` | Revise a change's planning artifacts and keep them coherent |
+| `/opsx:verify` | Validate implementation against artifacts (expanded workflow) |
+| `/opsx:sync` | Sync delta specs to main (default workflow, optional) |
+| `/opsx:archive` | Archive when done |
+| `/opsx:bulk-archive` | Archive multiple completed changes (expanded workflow) |
+| `/opsx:onboard` | Guided walkthrough of an end-to-end change (expanded workflow) |
 
-## 使い方
+## Usage
 
-### アイデアの探索
+### Explore an idea
 ```
 /opsx:explore
 ```
-構造なしで相談できます。洞察が固まったら `/opsx:propose`（既定）または `/opsx:new`/`/opsx:ff`（拡張）へ。
+Think through ideas, investigate problems, compare options. No structure required - just a thinking partner. When insights crystallize, transition to `/opsx:propose` (default) or `/opsx:new`/`/opsx:ff` (expanded).
 
-### 変更開始
+### Start a new change
 ```
 /opsx:propose
 ```
-変更を作成し、実装前に必要な計画アーティファクトを生成します。
+Creates the change and generates planning artifacts needed before implementation.
 
-拡張ワークフローを有効にしている場合は、代わりに次も使えます。
+If you've enabled expanded workflows, you can instead use:
 
 ```text
-/opsx:new        # ひな形のみ
-/opsx:continue   # アーティファクトを 1 つずつ作成
-/opsx:ff         # 計画アーティファクトを一括作成
+/opsx:new        # scaffold only
+/opsx:continue   # create one artifact at a time
+/opsx:ff         # create all planning artifacts at once
 ```
 
-### アーティファクト作成
+### Create artifacts
 ```
 /opsx:continue
 ```
-依存関係に応じて作成可能なアーティファクトを提示し、1 つずつ作成します。
+Shows what's ready to create based on dependencies, then creates one artifact. Use repeatedly to build up your change incrementally.
 
 ```
 /opsx:ff add-dark-mode
 ```
-計画アーティファクトを一括生成します。
+Creates all planning artifacts at once. Use when you have a clear picture of what you're building.
 
-### 実装フェーズ（柔軟に進める）
+### Implement (the fluid part)
 ```
 /opsx:apply
 ```
-タスクを進め、必要ならアーティファクトを更新します。複数の変更を並行で進めている場合は `/opsx:apply <name>` を使います。そうでない場合は会話から推論され、判断できないときは選択を促されます。
+Works through tasks, checking them off as you go. If you're juggling multiple changes, you can run `/opsx:apply <name>`; otherwise it should infer from the conversation and prompt you to choose if it can't tell.
 
-### 完了
+### Updating a change
 ```
-/opsx:archive   # 完了時にアーカイブ（仕様同期の確認が入る）
+/opsx:update add-dark-mode - we're storing the theme in a cookie now
 ```
-## 既存変更を更新するか、新しい変更を始めるか
+Revises the change's existing planning artifacts and keeps them coherent - in any direction (a design edit may ripple back to the proposal). Planning artifacts only: it never edits code, and it never creates missing artifacts (that's `/opsx:continue`). Every edit is confirmed with you first. If the change was already implemented, it recommends `/opsx:apply` so the code catches up with the revised plan. If your revision changes the change's *intent*, start fresh instead - see [When to Update vs. Start Fresh](#when-to-update-vs-start-fresh).
 
-実装前であれば、proposal や specs はいつでも編集できます。では、どこからが「改善」ではなく「別の作業」になるのでしょうか。
+### Finish up
+```
+/opsx:archive   # Move to archive when done (prompts to sync specs if needed)
+```
 
-### Proposal が捉えるもの
+## When to Update vs. Start Fresh
 
-proposal は 3 つのことを定義します。
-1. **意図** — どの問題を解くのか
-2. **スコープ** — 対象と対象外は何か
-3. **アプローチ** — どう解くのか
+You can always edit your proposal or specs before implementation. But when does refining become "this is different work"?
 
-判断のポイントは、どれがどれだけ変わったかです。
+### What a Proposal Captures
 
-### 既存変更を更新する場面
+A proposal defines three things:
+1. **Intent** — What problem are you solving?
+2. **Scope** — What's in/out of bounds?
+3. **Approach** — How will you solve it?
 
-**意図は同じで、実行方法を洗練している**
-- 想定していなかったエッジケースが見つかった
-- アプローチの調整は必要だが、目的は変わっていない
-- 実装してみたら設計が少しずれていた
+The question is: which changed, and by how much?
 
-**スコープが狭まる**
-- 全体スコープが大きすぎると分かり、まず MVP を出したい
-- 「ダークモードを追加」→「ダークモード切り替えを追加（システム設定対応は v2）」
+### Update the Existing Change When:
 
-**学びによる修正**
-- コードベース構造が想定と違っていた
-- 依存関係が期待どおり動かなかった
-- 「CSS 変数を使う」→「Tailwind の dark: prefix を使う」
+**Same intent, refined execution**
+- You discover edge cases you didn't consider
+- The approach needs tweaking but the goal is unchanged
+- Implementation reveals the design was slightly off
 
-### 新しい変更を始める場面
+**Scope narrows**
+- You realize full scope is too big, want to ship MVP first
+- "Add dark mode" → "Add dark mode toggle (system preference in v2)"
 
-**意図が根本的に変わった**
-- 解く問題自体が変わった
-- 「ダークモードを追加」→「カスタムカラー、フォント、余白を含む包括的なテーマシステムを追加」
+**Learning-driven corrections**
+- Codebase isn't structured how you thought
+- A dependency doesn't work as expected
+- "Use CSS variables" → "Use Tailwind's dark: prefix instead"
 
-**スコープが膨張した**
-- 変更が大きくなり、実質的に別作業になった
-- 更新後の proposal が元の proposal と別物になる
-- 「ログインバグを修正」→「認証システムを書き直す」
+### Start a New Change When:
 
-**元の変更を完了できる**
-- 元の変更を「完了」として扱える
-- 新しい作業が改善ではなく独立した作業として成立する
-- 「ダークモード MVP を追加」を完了 → アーカイブ → 新しい変更「ダークモードを強化」
+**Intent fundamentally changed**
+- The problem itself is different now
+- "Add dark mode" → "Add comprehensive theme system with custom colors, fonts, spacing"
 
-### 判断の目安
+**Scope exploded**
+- Change grew so much it's essentially different work
+- Original proposal would be unrecognizable after updates
+- "Fix login bug" → "Rewrite auth system"
+
+**Original is completable**
+- The original change can be marked "done"
+- New work stands alone, not a refinement
+- Complete "Add dark mode MVP" → Archive → New change "Enhance dark mode"
+
+### The Heuristics
 
 ```
                         ┌─────────────────────────────────────┐

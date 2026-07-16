@@ -11,6 +11,8 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
+import { classifyOpenSpecDir, storePointerProblem } from './project-config.js';
+import { findRepoPlanningRootSync } from './planning-home.js';
 import { transformToHyphenCommands } from '../utils/command-references.js';
 import {
   AI_TOOLS,
@@ -65,6 +67,7 @@ const WORKFLOW_TO_SKILL_DIR: Record<string, string> = {
   'new': 'openspec-new-change',
   'continue': 'openspec-continue-change',
   'apply': 'openspec-apply-change',
+  'update': 'openspec-update-change',
   'ff': 'openspec-ff-change',
   'sync': 'openspec-sync-specs',
   'archive': 'openspec-archive-change',
@@ -109,6 +112,33 @@ export class InitCommand {
 
     // 検証は裏側で静かに実行する
     const extendMode = await this.validate(projectPath, openspecPath);
+
+    // Pointer guard (slice 3.2): a config-only openspec/ with a store:
+    // declaration is externalized planning, not a root to extend — and a
+    // subdirectory of such a repo must not silently grow a nested root.
+    // Refuse before legacy cleanup, migration, or prompts touch anything.
+    // In extend mode the walk finds projectPath itself; otherwise it
+    // finds the nearest ancestor root (so pointer-repo subdirectories
+    // refuse exactly where a normal command would resolve the pointer).
+    const guardRoot = findRepoPlanningRootSync(projectPath);
+    if (guardRoot) {
+      const { hasPlanningShape, pointer } = classifyOpenSpecDir(guardRoot);
+      if (!hasPlanningShape) {
+        if (pointer.malformed) {
+          throw new Error(
+            `The store declaration in ${pointer.filePath} is invalid (` +
+              storePointerProblem(pointer.malformed) +
+              `). Fix or remove the store: line before running openspec init.`
+          );
+        }
+        if (pointer.value !== undefined) {
+          throw new Error(
+            `This repo's planning is externalized to store '${pointer.value}' (${pointer.filePath}). ` +
+              `Remove the store: line first to convert this repo to a local OpenSpec root.`
+          );
+        }
+      }
+    }
 
     // 旧ファイルを検出してクリーンアップを処理する
     await this.handleLegacyCleanup(projectPath, extendMode);
@@ -537,8 +567,8 @@ export class InitCommand {
             const skillFile = path.join(skillDir, 'SKILL.md');
 
             // generatedBy を含む YAML フロントマター付き SKILL.md を生成する。
-            // OpenCode / Pi はハイフン形式のコマンド参照を使う。
-            const transformer = (tool.value === 'opencode' || tool.value === 'pi') ? transformToHyphenCommands : undefined;
+            // Use hyphen-based command references for tools where filename === command name (oh-my-pi, opencode, pi)
+            const transformer = (tool.value === 'opencode' || tool.value === 'pi' || tool.value === 'oh-my-pi') ? transformToHyphenCommands : undefined;
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
             // スキルファイルを書き込む
@@ -605,10 +635,6 @@ export class InitCommand {
       return 'exists';
     }
 
-    // 非対話モードで --force がない場合、設定作成をスキップ
-    if (!this.canPromptInteractively() && !this.force) {
-      return 'skipped';
-    }
 
     try {
       const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA });

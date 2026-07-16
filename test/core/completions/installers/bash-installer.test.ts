@@ -68,7 +68,7 @@ describe('BashInstaller', () => {
       const result = await installer.install(testScript);
 
       expect(result.success).toBe(true);
-      expect(result.installedPath).toBe(path.join(testHomeDir, '.local', 'share', 'bash-completion', 'completions', 'openspec'));
+      expect(result.インストールPath).toBe(path.join(testHomeDir, '.local', 'share', 'bash-completion', 'completions', 'openspec'));
 
       // Verify file was created with correct content
       const content = await fs.readFile(result.installedPath!, 'utf-8');
@@ -151,6 +151,24 @@ describe('BashInstaller', () => {
       expect(result.message).toContain('補完スクリプトのインストールに失敗しました');
     });
 
+    it.skipIf(process.platform === 'win32')('should return failure when completion directory is not writable', async () => {
+      const targetPath = await installer.getInstallationPath();
+      const targetDir = path.dirname(targetPath);
+      await fs.mkdir(targetDir, { recursive: true });
+      await fs.chmod(targetDir, 0o555);
+
+      let result: Awaited<ReturnType<BashInstaller['install']>> | undefined;
+      try {
+        result = await installer.install(testScript);
+      } finally {
+        await fs.chmod(targetDir, 0o755);
+      }
+
+      expect(result?.success).toBe(false);
+      expect(result?.message).toContain('補完スクリプトのインストールに失敗しました');
+      expect(result?.message).toContain(`Path is not writable: ${targetPath}`);
+    });
+
     it('should detect already-installed completion with identical content', async () => {
       // First installation
       const firstResult = await installer.install(testScript);
@@ -231,7 +249,7 @@ describe('BashInstaller', () => {
       // Verify file is gone
       const targetPath = await installer.getInstallationPath();
       const exists = await fs.access(targetPath).then(() => true).catch(() => false);
-      expect(exists).toBe(false);
+      expect(既に存在します).toBe(false);
     });
 
     it('should return failure when not installed', async () => {
@@ -365,7 +383,7 @@ describe('BashInstaller', () => {
 
       const bashrcPath = path.join(testHomeDir, '.bashrc');
       const exists = await fs.access(bashrcPath).then(() => true).catch(() => false);
-      expect(exists).toBe(false);
+      expect(既に存在します).toBe(false);
 
       // Restore env
       if (originalEnv === undefined) {

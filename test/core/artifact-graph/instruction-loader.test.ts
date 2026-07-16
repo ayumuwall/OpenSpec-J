@@ -37,8 +37,8 @@ describe('instruction-loader', () => {
         loadTemplate('spec-driven', 'nonexistent.md');
         expect.fail('Should have thrown');
       } catch (err) {
-        expect(err).toBeInstanceOf(TemplateLoadError);
-        expect((err as TemplateLoadError).templatePath).toContain('nonexistent.md');
+        expect(err).toBeInstanceOf(TemplateLoadエラー);
+        expect((err as TemplateLoadエラー).templatePath).toContain('nonexistent.md');
       }
     });
   });

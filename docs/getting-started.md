@@ -1,252 +1,289 @@
-# はじめに
+# はじめる
 
-このガイドでは、OpenSpec をインストール・初期化した後の使い方を説明します。インストール手順は [README](../README.md#クイックスタート) を参照してください。
+このガイドでは、OpenSpec をインストールして初期化した後に OpenSpec がどのように動作するかについて説明します。インストール手順については、[メインの README](../README.md#quick-start) または [インストール ガイド ](installation.md)] を参照してください。ドキュメント セット全体を初めて知りますか? [ドキュメント home](README.md) はすべてをマップします。
+
+> **これらのコマンドはどこに入力すればよいですか?** 2 つの場所に入力し、それらを混同することが初期段階で最もよくあるつまずきです。
+>
+> - `openspec ...` コマンド (`openspec init` など) は **ターミナル** で実行されます。
+> - `/opsx:...` コマンド (`/opsx:propose` など) は、**AI アシスタントのチャット**、つまりコードの作成を要求するのと同じボックスで実行されます。
+>
+> 開始するための個別の「対話モード」はありません。チャットにスラッシュ コマンドを入力するだけで、アシスタントがそこからコマンドを取得します。完全な説明: [コマンドの仕組み](how-commands-work.md)。
+
+## 最初の 5 分間
+
+ループ全体。各ステップは、それが発生する場所によってラベル付けされています。
+
+```text
+TERMINAL   $ npm install -g @ayumuwall/openspec@latest
+TERMINAL   $ cd your-project && openspec init
+AI CHAT      /opsx:explore                    (optional: think it through first)
+AI CHAT      /opsx:propose add-dark-mode      (AI drafts the plan; you review it)
+AI CHAT      /opsx:apply                      (AI builds it)
+AI CHAT      /opsx:archive                    (specs updated, change filed away)
+```
+
+2 つの端末ステップを設定すれば、チャットを開始できます。このガイドの残りの部分では、各ステップの内容と何が表示されるかを明らかにします。
+
+> **何を構築すればよいかまだわかりませんか? `/opsx:explore` から始めましょう。** これは、アーティファクトやコードが存在する前に、コードベースを読み取り、オプションを検討し、曖昧なアイデアを具体的な計画に研ぎ澄ます、ノーステーク パートナーです。画像が鮮明になったら、`/opsx:propose` にハンドオフします。これは、自信を持って間違ったものを構築してしまう AI を扱うための唯一の最良の習慣です。 [探索ガイド](explore.md)]を参照してください。
 
 ## 仕組み
 
-OpenSpec は、コードを書く前に「何を作るか」を人と AI コーディングアシスタントで合意できるようにします。
+OpenSpec は、コードを作成する前に、AI コーディング アシスタントと何を構築するかについて合意するのに役立ちます。
 
-**既定のクイックパス（`core` プロファイル）:**
+**デフォルトのクイック パス (コア プロファイル):**
 
 ```text
-/opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
+/opsx:explore ──► /opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
+   (optional)
 ```
 
-**拡張パス（`custom` ワークフロー選択時）:**
+何をすべきか考えている場合は `/opsx:explore` から始め、すでにわかっている場合は `/opsx:propose` に直接ジャンプします。 Explore はデフォルトのプロファイルに含まれているため、必要なときにいつでも利用できます。
 
+**展開されたパス (カスタム ワークフローの選択):**
+
+```text
+/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
-/opsx:new ──► /opsx:ff または /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
-```
 
-既定のグローバルプロファイルは `core` で、`propose`, `explore`, `apply`, `sync`, `archive` が含まれます。拡張ワークフローのコマンドを使いたい場合は、`openspec config profile` の後に `openspec update` を実行します。
+デフォルトのグローバル プロファイルは `core` で、これには `propose`、`explore`、`apply`、`sync`、および `archive` が含まれます。 `openspec config profile`、次に `openspec update` を使用して、拡張されたワークフロー コマンドを有効にできます。
 
-## OpenSpec が作るもの
+## OpenSpec が作成するもの
 
 `openspec init` を実行すると、プロジェクトは次の構造になります。
 
 ```
 openspec/
-├── specs/              # ソース・オブ・トゥルース（システムの挙動）
+├── specs/              # Source of truth (your system's behavior)
 │   └── <domain>/
 │       └── spec.md
-├── changes/            # 変更提案（変更ごとに 1 フォルダ）
+├── changes/            # Proposed updates (one folder per change)
 │   └── <change-name>/
 │       ├── proposal.md
 │       ├── design.md
 │       ├── tasks.md
-│       └── specs/      # 仕様差分（何が変わるか）
+│       └── specs/      # Delta specs (what's changing)
 │           └── <domain>/
 │               └── spec.md
-└── config.yaml         # プロジェクト設定（任意）
+└── config.yaml         # Project configuration (optional)
 ```
 
-**重要な 2 つのディレクトリ:**
+**2 つの主要なディレクトリ:**
 
-- **`specs/`** - ソース・オブ・トゥルース。現在のシステム挙動を示す仕様が入ります。ドメイン単位で整理します（例: `specs/auth/`, `specs/payments/`）。
+- **`specs/`** - 真実の情報源。これらの仕様は、システムが現在どのように動作するかを説明します。ドメインごとに整理されます (例: `specs/auth/`、`specs/payments/`)。
 
-- **`changes/`** - 変更提案。変更ごとに 1 つのフォルダを持ち、すべてのアーティファクトをまとめます。完了した変更は `specs/` に統合されます。
+- **`changes/`** - 修正案。変更ごとに、関連するすべてのアーティファクトを含む独自のフォルダーが取得されます。変更が完了すると、その仕様はメインの `specs/` ディレクトリにマージされます。
 
-## アーティファクトの理解
+## アーティファクトを理解する
 
-各変更フォルダには、作業を導くアーティファクトが含まれます。
+各変更フォルダーには、作業をガイドする成果物が含まれています。
 
-| アーティファクト | 目的 |
+|アーティファクト |目的 |
 |----------|---------|
-| `proposal.md` | 「なぜ / 何を」— 目的、スコープ、アプローチを記録 |
-| `specs/` | ADDED/MODIFIED/REMOVED の仕様差分 |
-| `design.md` | 「どうやって」— 技術的アプローチと設計判断 |
-| `tasks.md` | 実装チェックリスト（チェックボックス） |
+| `proposal.md` | 「なぜ」と「何を」 - 意図、範囲、アプローチを捉える |
+| `specs/` |追加/変更/削除された要件を示す仕様差分 |
+| `design.md` | 「方法」 - 技術的なアプローチとアーキテクチャの決定 |
+| `tasks.md` |チェックボックス付きの実装チェックリスト |
 
-**アーティファクトは連鎖する:**
+**アーティファクトは相互に構築されます:**
 
 ```
-proposal ──► specs ──► design ──► tasks ──► 実装
+proposal ──► specs ──► design ──► tasks ──► implement
    ▲           ▲          ▲                    │
    └───────────┴──────────┴────────────────────┘
-            学びに応じて更新
+            update as you learn
 ```
 
-実装しながら学んだことに応じて、前のアーティファクトを更新して構いません。
+実装中に詳細を学びながら、いつでも以前の成果物に戻って改良することができます。
 
 ## 仕様差分の仕組み
 
-仕様差分は OpenSpec の核となる考え方です。現在の仕様に対して「何が変わるか」を明示します。
+仕様差分は OpenSpec の重要な概念です。現在の仕様と比較して何が変更されているかを示します。
 
-### 形式
+### フォーマット
 
-仕様差分はセクションで変更タイプを示します。
+仕様差分では、セクションを使用して変更の種類を示します。
 
 ```markdown
-# Auth の仕様差分
+# Delta for Auth
 
 ## ADDED Requirements
 
-### Requirement: 二要素認証
-システムはログイン時に第二要素を要求しなければならない。(MUST)
+### Requirement: Two-Factor Authentication
+The system MUST require a second factor during login.
 
-#### Scenario: OTP が必要
-- GIVEN 2FA を有効にしたユーザー
-- WHEN 有効な認証情報を送信したとき
-- THEN OTP チャレンジが表示される
+#### Scenario: OTP required
+- GIVEN a user with 2FA enabled
+- WHEN the user submits valid credentials
+- THEN an OTP challenge is presented
 
 ## MODIFIED Requirements
 
-### Requirement: セッションタイムアウト
-システムは 30 分間操作がない場合にセッションを期限切れにしなければならない。(SHALL)
-（以前: 60 分）
+### Requirement: Session Timeout
+The system SHALL expire sessions after 30 minutes of inactivity.
+(Previously: 60 minutes)
 
-#### Scenario: アイドルタイムアウト
-- GIVEN 認証済みセッション
-- WHEN 30 分間操作がない
-- THEN セッションは無効化される
+#### Scenario: Idle timeout
+- GIVEN an authenticated session
+- WHEN 30 minutes pass without activity
+- THEN the session is invalidated
 
 ## REMOVED Requirements
 
-### Requirement: ログイン状態を保持
-（2FA 導入に伴い廃止）
+### Requirement: Remember Me
+(Deprecated in favor of 2FA)
 ```
 
-### アーカイブ時に起きること
+### アーカイブで何が起こるか
 
-変更をアーカイブすると:
+変更をアーカイブする場合:
 
-1. **ADDED** の要件は本仕様に追加
-2. **MODIFIED** の要件は既存版を置換
-3. **REMOVED** の要件は本仕様から削除
+1. **追加** 要件が主要仕様に追加されます
+2. **修正** 要件は既存のバージョンを置き換えます
+3. **削除** 要件がメイン仕様から削除されました
 
-変更フォルダは監査用に `openspec/changes/archive/` へ移動します。
+変更フォルダーは監査履歴用に `openspec/changes/archive/` に移動します。
 
 ## 例: 最初の変更
 
-例として、アプリにダークモードを追加する流れを見てみましょう。
+アプリケーションにダーク モードを追加する手順を見てみましょう。
 
-### 1. 変更を開始（既定）
+### 1. 変更を開始します (デフォルト)
 
 ```text
-あなた: /opsx:propose add-dark-mode
+You: /opsx:propose add-dark-mode
 
-AI:  openspec/changes/add-dark-mode/ を作成しました
-     ✓ proposal.md — 目的と変更内容
-     ✓ specs/       — 要件とシナリオ
-     ✓ design.md    — 技術的アプローチ
-     ✓ tasks.md     — 実装チェックリスト
-     実装の準備ができました！
+AI:  Created openspec/changes/add-dark-mode/
+     ✓ proposal.md — why we're doing this, what's changing
+     ✓ specs/       — requirements and scenarios
+     ✓ design.md    — technical approach
+     ✓ tasks.md     — implementation checklist
+     Ready for implementation!
 ```
 
-拡張ワークフロープロファイルを有効にしている場合は、`/opsx:new` の後に `/opsx:ff`（または `/opsx:continue` で段階的に作成）という 2 ステップでも進められます。
+拡張されたワークフロー プロファイルを有効にしている場合は、`/opsx:new`、次に `/opsx:ff` (または段階的に `/opsx:continue`) の 2 つのステップとしてこれを実行することもできます。
 
-### 2. 何が作られるか
+### 2. 何が作成されるか
 
-**proposal.md** - 目的を記録:
+**proposal.md** - 意図をキャプチャします。
 
 ```markdown
-# 提案: ダークモードの追加
+# Proposal: Add Dark Mode
 
-## 目的
-夜間使用時の目の疲れを軽減するため、ダークモードが求められています。
+## Intent
+Users have requested a dark mode option to reduce eye strain
+during nighttime usage.
 
-## スコープ
-- 設定にテーマ切り替えを追加
-- システム設定の検出をサポート
-- 設定を localStorage に保存
+## Scope
+- Add theme toggle in settings
+- Support system preference detection
+- Persist preference in localStorage
 
-## アプローチ
-CSS カスタムプロパティでテーマを管理し、React Context で
-状態を管理します。
+## Approach
+Use CSS custom properties for theming with a React context
+for state management.
 ```
 
-**specs/ui/spec.md** - 新しい要件の差分:
+**specs/ui/spec.md** - 新しい要件を示すデルタ:
 
 ```markdown
-# UI の仕様差分
+# Delta for UI
 
 ## ADDED Requirements
 
-### Requirement: テーマ選択
-システムはユーザーがライト/ダークテーマを選択できるようにしなければならない。(SHALL)
+### Requirement: Theme Selection
+The system SHALL allow users to choose between light and dark themes.
 
-#### Scenario: 手動切り替え
-- GIVEN 任意のページにいるユーザー
-- WHEN テーマ切り替えをクリックしたとき
-- THEN テーマが即座に切り替わる
-- AND 設定がセッションを超えて保持される
+#### Scenario: Manual toggle
+- GIVEN a user on any page
+- WHEN the user clicks the theme toggle
+- THEN the theme switches immediately
+- AND the preference persists across sessions
 
-#### Scenario: システム設定
-- GIVEN 保存された設定がないユーザー
-- WHEN アプリが読み込まれたとき
-- THEN システムの優先カラースキームが使用される
+#### Scenario: System preference
+- GIVEN a user with no saved preference
+- WHEN the application loads
+- THEN the system's preferred color scheme is used
 ```
 
 **tasks.md** - 実装チェックリスト:
 
 ```markdown
-# タスク
+# Tasks
 
-## 1. テーマ基盤
-- [ ] 1.1 light/dark 状態を持つ ThemeContext を作成
-- [ ] 1.2 色用の CSS カスタムプロパティを追加
-- [ ] 1.3 localStorage への保存を実装
+## 1. Theme Infrastructure
+- [ ] 1.1 Create ThemeContext with light/dark state
+- [ ] 1.2 Add CSS custom properties for colors
+- [ ] 1.3 Implement localStorage persistence
 
-## 2. UI コンポーネント
-- [ ] 2.1 ThemeToggle コンポーネントを作成
-- [ ] 2.2 設定ページに切り替えを追加
-- [ ] 2.3 ヘッダーにクイック切り替えを追加
+## 2. UI Components
+- [ ] 2.1 Create ThemeToggle component
+- [ ] 2.2 Add toggle to settings page
+- [ ] 2.3 Update Header to include quick toggle
 
-## 3. スタイリング
-- [ ] 3.1 ダークテーマのカラーパレットを定義
-- [ ] 3.2 コンポーネントを CSS 変数に対応させる
+## 3. Styling
+- [ ] 3.1 Define dark theme color palette
+- [ ] 3.2 Update components to use CSS variables
 ```
 
-### 4. 実装
+### 3. 実装する
 
 ```
 You: /opsx:apply
 
-AI:  タスクを実行中...
-     ✓ 1.1 light/dark 状態を持つ ThemeContext を作成しました
-     ✓ 1.2 globals.css に CSS カスタムプロパティを追加しました
-     ✓ 1.3 localStorage への保存を実装しました
-     ✓ 2.1 ThemeToggle コンポーネントを作成しました
+AI:  Working through tasks...
+     ✓ 1.1 Created ThemeContext with light/dark state
+     ✓ 1.2 Added CSS custom properties to globals.css
+     ✓ 1.3 Implemented localStorage persistence
+     ✓ 2.1 Created ThemeToggle component
      ...
-     すべてのタスクが完了しました！
+     All tasks complete!
 ```
 
-実装中に設計の調整が必要になった場合は、アーティファクトを更新して続ければ OK です。
+実装中に、デザインを調整する必要があることがわかった場合は、アーティファクトを更新して続行します。
 
-### 5. アーカイブ
+### 4. アーカイブ
 
 ```
 You: /opsx:archive
 
-AI:  add-dark-mode をアーカイブ中...
-     ✓ 仕様を openspec/specs/ui/spec.md にマージしました
-     ✓ openspec/changes/archive/2025-01-24-add-dark-mode/ に移動しました
-     完了！次の機能に取り掛かれます。
+AI:  Archiving add-dark-mode...
+     ✓ Merged specs into openspec/specs/ui/spec.md
+     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
+     Done! Ready for the next feature.
 ```
 
-これで仕様差分が本仕様に統合され、システムの挙動が記録されます。
+仕様差分はメイン仕様の一部となり、システムがどのように動作するかを文書化します。
 
 ## 検証とレビュー
 
-CLI で変更状況を確認できます。
+CLI を使用して変更を確認します。
 
 ```bash
-# アクティブな変更を一覧表示
+# List active changes
 openspec list
 
-# 変更の詳細を表示
+# View change details
 openspec show add-dark-mode
 
-# 仕様の書式を検証
+# Validate spec formatting
 openspec validate add-dark-mode
 
-# 対話型ダッシュボード
+# Interactive dashboard
 openspec view
 ```
 
-## 次に読むもの
+## 次のステップ
 
-- [ワークフロー](workflows.md) - 代表的なフローと使い分け
-- [コマンド](commands.md) - スラッシュコマンドの全リファレンス
-- [コンセプト](concepts.md) - 仕様・変更・スキーマの理解
-- [カスタマイズ](customization.md) - 自分のワークフローに合わせる
+- [Explore First](explore.md) - コミットする前に、`/opsx:explore` を使用してアイデアを検討します。
+- [Change](reviewing-changes.md) のレビュー - コードの前に、AI が草案する計画で何をチェックするか
+- [良い仕様を書く](writing-specs.md) - 強力な要件とシナリオはどのようなものであるか]
+- [既存のプロジェクト](existing-projects.md)でOpenSpecを使用する - 大規模なブラウンフィールドコードベースから開始する
+- [Change](editing-changes.md) の編集と反復 - 成果物を更新し、戻り、手動編集を調整します
+- [コアコンセプトの概要](overview.md) - メンタルモデル全体を 1 ページにまとめたもの
+- [例とレシピ](examples.md) - 実際の変更、最初から最後まで
+- [Workflows](workflows.md) - 一般的なパターンと各コマンドの使用時期
+- [Commands](commands.md) - すべてのスラッシュ コマンドの完全なリファレンス
+- [Concepts](concepts.md) - 仕様、変更、スキーマについての深い理解
+- [カスタマイズ](customization.md) - OpenSpecを自分のやり方で動作させる
+- [Stores](stores-beta/user-guide.md) - リポジトリまたはチームにまたがる計画を立てていますか?独自のリポジトリに保持します (ベータ版)
+- [FAQ](faq.md) および [トラブルシューティング ](troubleshooting.md) - 行き詰まった場合]

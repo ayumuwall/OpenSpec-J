@@ -110,7 +110,7 @@ describe('ZshInstaller', () => {
 
       expect(result.success).toBe(true);
       expect(result.isOhMyZsh).toBe(true);
-      expect(result.installedPath).toBe(path.join(ohMyZshPath, 'custom', 'completions', '_openspec'));
+      expect(result.インストールPath).toBe(path.join(ohMyZshPath, 'custom', 'completions', '_openspec'));
       expect(result.message).toContain('Oh My Zsh');
 
       // Verify file was created with correct content
@@ -123,7 +123,7 @@ describe('ZshInstaller', () => {
 
       expect(result.success).toBe(true);
       expect(result.isOhMyZsh).toBe(false);
-      expect(result.installedPath).toBe(path.join(testHomeDir, '.zsh', 'completions', '_openspec'));
+      expect(result.インストールPath).toBe(path.join(testHomeDir, '.zsh', 'completions', '_openspec'));
 
       // Verify file was created
       const content = await fs.readFile(result.installedPath!, 'utf-8');
@@ -194,15 +194,15 @@ describe('ZshInstaller', () => {
       }
     });
 
-    it('should handle installation errors gracefully', async () => {
-      // Create installer with non-existent/invalid home directory
-      // Use a path that will fail on both Unix and Windows
-      const invalidPath = process.platform === 'win32'
-        ? 'Z:\\nonexistent\\invalid\\path'  // Non-existent drive letter on Windows
-        : '/root/invalid/nonexistent/path';  // Permission-denied path on Unix
-      const invalidInstaller = new ZshInstaller(invalidPath);
+    it.skipIf(process.platform === 'win32')('should handle installation errors gracefully', async () => {
+      const restrictedHome = path.join(testHomeDir, 'restricted-home');
+      await fs.mkdir(restrictedHome, { recursive: true });
+      await fs.chmod(restrictedHome, 0o555);
+      const invalidInstaller = new ZshInstaller(restrictedHome);
 
       const result = await invalidInstaller.install(testScript);
+
+      await fs.chmod(restrictedHome, 0o755);
 
       expect(result.success).toBe(false);
       expect(result.message).toContain('補完スクリプトのインストールに失敗しました');
@@ -263,7 +263,7 @@ describe('ZshInstaller', () => {
         try {
           const zshrcContent = await fs.readFile(zshrcPath, 'utf-8');
           // Verify the path is quoted in fpath
-          expect(zshrcContent).toContain(`fpath=("${path.dirname(result.installedPath!)}" $fpath)`);
+          expect(zshrcContent).toContain(`fpath=("${path.dirname(result.インストールPath!)}" $fpath)`);
         } catch {
           // .zshrc might not exist if auto-config was disabled
         }
@@ -349,7 +349,7 @@ describe('ZshInstaller', () => {
     it('should return not installed when script does not exist', async () => {
       const info = await installer.getInstallationInfo();
 
-      expect(info.installed).toBe(false);
+      expect(info.インストール).toBe(false);
       expect(info.path).toBeUndefined();
       expect(info.isOhMyZsh).toBeUndefined();
     });
@@ -359,7 +359,7 @@ describe('ZshInstaller', () => {
 
       const info = await installer.getInstallationInfo();
 
-      expect(info.installed).toBe(true);
+      expect(info.インストール).toBe(true);
       expect(info.path).toBeDefined();
       expect(info.path).toContain('_openspec');
       expect(info.isOhMyZsh).toBe(false);
@@ -373,7 +373,7 @@ describe('ZshInstaller', () => {
 
       const info = await installer.getInstallationInfo();
 
-      expect(info.installed).toBe(true);
+      expect(info.インストール).toBe(true);
       expect(info.isOhMyZsh).toBe(true);
       expect(info.path).toContain('.oh-my-zsh');
     });
@@ -496,7 +496,7 @@ describe('ZshInstaller', () => {
 
       const zshrcPath = path.join(testHomeDir, '.zshrc');
       const exists = await fs.access(zshrcPath).then(() => true).catch(() => false);
-      expect(exists).toBe(false);
+      expect(既に存在します).toBe(false);
 
       // Restore env
       if (originalEnv === undefined) {
@@ -506,15 +506,15 @@ describe('ZshInstaller', () => {
       }
     });
 
-    it('should handle write permission errors gracefully', async () => {
-      // Create installer with path that can't be written
-      // Use a path that will fail on both Unix and Windows
-      const invalidPath = process.platform === 'win32'
-        ? 'Z:\\nonexistent\\invalid\\path'  // Non-existent drive letter on Windows
-        : '/root/invalid/path';  // Permission-denied path on Unix
-      const invalidInstaller = new ZshInstaller(invalidPath);
+    it.skipIf(process.platform === 'win32')('should handle write permission errors gracefully', async () => {
+      const restrictedHome = path.join(testHomeDir, 'restricted-home');
+      await fs.mkdir(restrictedHome, { recursive: true });
+      await fs.chmod(restrictedHome, 0o555);
+      const invalidInstaller = new ZshInstaller(restrictedHome);
 
       const result = await invalidInstaller.configureZshrc(completionsDir);
+
+      await fs.chmod(restrictedHome, 0o755);
 
       expect(result).toBe(false);
     });

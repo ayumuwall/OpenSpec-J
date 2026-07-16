@@ -6,7 +6,14 @@
 
 import ora from 'ora';
 import chalk from 'chalk';
-import { resolveCurrentPlanningHomeSync, getChangeDir } from '../../core/planning-home.js';
+import { getChangeDir } from '../../core/planning-home.js';
+import {
+  resolveRootForCommand,
+  toPlanningHome,
+  toRootOutput,
+  withStoreFlag,
+  isStoreSelectedRoot,
+} from '../../core/root-selection.js';
 import {
   loadChangeContext,
   formatChangeStatus,
@@ -27,6 +34,8 @@ import {
 export interface StatusOptions {
   change?: string;
   schema?: string;
+  store?: string;
+  storePath?: string;
   json?: boolean;
 }
 
@@ -35,23 +44,38 @@ export interface StatusOptions {
 // -----------------------------------------------------------------------------
 
 export async function statusCommand(options: StatusOptions): Promise<void> {
+  // The root resolves (and the store banner prints) before the spinner starts
+  // so the two do not fight over stderr.
+  const root = await resolveRootForCommand(options, { json: options.json });
+  if (!root) {
+    return;
+  }
+
   const spinner = options.json ? undefined : ora('変更ステータスを読み込み中...').start();
 
   try {
-    const planningHome = resolveCurrentPlanningHomeSync();
-    const projectRoot = planningHome.root;
+    const planningHome = toPlanningHome(root);
+    const projectRoot = root.path;
+    const rootOutput = toRootOutput(root);
+    const newChangeHint = withStoreFlag(root, 'openspec new change <name>');
 
     // Handle no-changes case gracefully — status is informational,
     // so "no changes" is a valid state, not an error.
     if (!options.change) {
-      const available = await getAvailableChanges(projectRoot, planningHome.changesDir);
+      const available = await getAvailableChanges(projectRoot, root.changesDir);
       if (available.length === 0) {
         spinner?.stop();
         if (options.json) {
-          console.log(JSON.stringify({ changes: [], message: '進行中の変更はありません。' }, null, 2));
+          console.log(
+            JSON.stringify(
+              { changes: [], message: 'アクティブな変更はありません。', root: rootOutput },
+              null,
+              2
+            )
+          );
           return;
         }
-        console.log('進行中の変更はありません。作成するには: openspec new change <name>');
+        console.log(`アクティブな変更はありません。 Create one with: ${newChangeHint}`);
         return;
       }
       // Changes exist but --change not provided
@@ -64,7 +88,8 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     const changeName = await validateChangeExists(
       options.change,
       projectRoot,
-      planningHome.changesDir
+      root.changesDir,
+      { newChangeHint }
     );
 
     // Validate schema if explicitly provided
@@ -77,12 +102,15 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
       changeDir: getChangeDir(planningHome, changeName),
       planningHome,
     });
-    const status = formatChangeStatus(context);
+    const status = formatChangeStatus(
+      context,
+      isStoreSelectedRoot(root) ? { storeId: root.storeId } : {}
+    );
 
     spinner?.stop();
 
     if (options.json) {
-      console.log(JSON.stringify(status, null, 2));
+      console.log(JSON.stringify({ ...status, root: rootOutput }, null, 2));
       return;
     }
 
@@ -99,15 +127,8 @@ export function printStatusText(status: ChangeStatus): void {
 
   console.log(`変更: ${status.changeName}`);
   console.log(`スキーマ: ${status.schemaName}`);
-  if (status.initiative) {
-    console.log(`Initiative: ${status.initiative.store}/${status.initiative.id}`);
-  }
-  if (status.planningHome) {
-    const label = status.planningHome.kind === 'workspace'
-      ? `workspace${status.planningHome.workspaceName ? ` (${status.planningHome.workspaceName})` : ''}`
-      : 'repo';
-    console.log(`計画ホーム: ${label}`);
-    console.log(`変更ルート: ${status.changeRoot}`);
+  if (status.changeRoot) {
+    console.log(`変更Root: ${status.changeRoot}`);
   }
   console.log(`進捗: ${doneCount}/${total} アーティファクト完了`);
   console.log();

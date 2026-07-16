@@ -5,14 +5,16 @@ OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検�
 ## 概要
 
 | カテゴリ | コマンド | 目的 |
-|----------|----------|------|
+|----------|----------|---------|
 | **セットアップ** | `init`, `update` | プロジェクトの OpenSpec 初期化・更新 |
-| **ワークスペース（beta）** | `workspace setup`, `workspace list`, `workspace ls`, `workspace link`, `workspace relink`, `workspace doctor`, `workspace update`, `workspace open` | 連携リポジトリやフォルダをまとめて扱うローカルビューをセットアップ |
-| **共有コンテキスト（beta）** | `context-store setup`, `context-store register`, `context-store unregister`, `context-store remove`, `context-store list`, `context-store doctor`, `initiative create`, `initiative show`, `initiative list` | ローカルの context-store 登録と、永続的な initiative コンテキストを管理 |
+| **Stores (standalone OpenSpec repos)** | `store setup`, `store register`, `store unregister`, `store remove`, `store list`, `store doctor` | Manage stores — standalone OpenSpec repos you've registered |
+| **Health** | `doctor` | Report relationship health for the resolved root |
+| **Working context** | `context` | Assemble the working set (root + referenced stores) |
+| **Personal worksets** | `workset create`, `workset list`, `workset open`, `workset remove` | Keep and open personal, local working views in your tool |
 | **閲覧** | `list`, `view`, `show` | 変更と仕様を確認 |
 | **検証** | `validate` | 変更と仕様の問題をチェック |
 | **ライフサイクル** | `archive` | 完了した変更を確定 |
-| **ワークフロー** | `new change`, `set change`, `status`, `instructions`, `templates`, `schemas` | アーティファクト主導ワークフローの支援 |
+| **Workflow** | `new change`, `status`, `instructions`, `templates`, `schemas` | Artifact-driven workflow support |
 | **スキーマ** | `schema init`, `schema fork`, `schema validate`, `schema which` | カスタムワークフローの作成と管理 |
 | **設定** | `config` | 設定の閲覧と変更 |
 | **ユーティリティ** | `feedback`, `completion` | フィードバック送信とシェル連携 |
@@ -28,9 +30,10 @@ OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検�
 これらは対話的で、ターミナル操作向けです。
 
 | コマンド | 目的 |
-|---------|------|
+|---------|---------|
 | `openspec init` | プロジェクト初期化（対話プロンプト） |
 | `openspec view` | 対話型ダッシュボード |
+| `openspec workset open <name>` | Open a saved workset (editor window or terminal agent session) |
 | `openspec config edit` | エディタで設定を開く |
 | `openspec feedback` | GitHub へフィードバック送信 |
 | `openspec completion install` | シェル補完のインストール |
@@ -40,7 +43,7 @@ OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検�
 これらは `--json` に対応し、AI エージェントやスクリプトから利用できます。
 
 | コマンド | 人向け用途 | エージェント用途 |
-|---------|-----------|------------------|
+|---------|-----------|-----------|
 | `openspec list` | 変更/仕様の一覧 | `--json` で構造化データ |
 | `openspec show <item>` | 内容の閲覧 | `--json` で解析用データ |
 | `openspec validate` | 問題の検出 | `--all --json` で一括検証 |
@@ -48,22 +51,16 @@ OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検�
 | `openspec instructions` | 次の手順 | `--json` で指示を取得 |
 | `openspec templates` | テンプレート参照 | `--json` でパス解決 |
 | `openspec schemas` | スキーマ一覧 | `--json` でスキーマ探索 |
-| `openspec workspace setup --no-interactive` | 明示的な入力でワークスペースを作成 | `--json` で構造化されたセットアップ結果 |
-| `openspec workspace list` | 既知のワークスペースを一覧 | `--json` で型付きワークスペースオブジェクト |
-| `openspec workspace link` | リポジトリまたはフォルダをリンク | `--json` で構造化されたリンク結果 |
-| `openspec workspace relink` | リンク済みパスを修復 | `--json` で構造化されたリンク結果 |
-| `openspec workspace doctor` | 1 つのワークスペースを診断 | `--json` で構造化された状態 |
-| `openspec workspace update` | ワークスペース内のガイダンスとエージェントスキルを更新 | `--tools` でエージェントを選択し、profile でワークフローを選択 |
-| `openspec context-store setup <id>` | ローカルの context store を作成 | 明示入力 + `--json` で構造化されたセットアップ結果 |
-| `openspec context-store register <path>` | 既存の context store を登録 | `--json` で構造化された登録結果 |
-| `openspec context-store unregister <id>` | ローカルの context-store 登録を解除 | `--json` で構造化されたクリーンアップ結果 |
-| `openspec context-store remove <id>` | 登録済みローカル context-store フォルダを削除 | 非対話削除は `--yes --json` |
-| `openspec context-store list` | 登録済みの context store を一覧 | `--json` で構造化された登録情報 |
-| `openspec context-store doctor` | ローカルの context store 設定を診断 | `--json` で構造化された診断結果 |
-| `openspec initiative list` | 共有 initiative を一覧 | `--json` で構造化された initiative レコード |
-| `openspec initiative show <id>` | initiative を解決 | `--json` で正規パスとメタデータ |
-| `openspec new change <id>` | リポジトリ内の変更ひな形を作成 | `--json`、共有連携には `--initiative` |
-| `openspec set change <id>` | チェックイン済み変更メタデータを更新 | `--json`、共有連携には `--initiative` |
+| `openspec store setup <id>` | Create and register a local store | `--json` with explicit inputs for structured setup output |
+| `openspec store register <path>` | Register an existing store | `--json` for structured registration output |
+| `openspec store unregister <id>` | Forget a local store registration | `--json` for structured cleanup output |
+| `openspec store remove <id>` | Delete a registered local store folder | `--yes --json` for non-interactive deletion |
+| `openspec store list` | Browse registered stores | `--json` for structured registrations |
+| `openspec store doctor` | Check local store setup | `--json` for structured diagnostics |
+| `openspec new change <id>` | Create repo-local change scaffolding | `--json`, plus `--store <id>` to use a registered store as the OpenSpec root |
+| `openspec workset create [name]` | Compose a personal working view | `--member <path> --json` for non-interactive composition |
+| `openspec workset list` | Browse saved worksets | `--json` for structured views |
+| `openspec workset remove <name>` | Delete a saved view | `--yes --json` for non-interactive removal |
 
 ---
 
@@ -107,7 +104,9 @@ openspec init [path] [options]
 
 `--profile custom` を指定すると、グローバル設定（`openspec config profile`）で現在選ばれているワークフロー群を使います。
 
-**対応ツール ID (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `opencode`, `pi`, `qoder`, `lingma`, `qwen`, `roocode`, `trae`, `windsurf`
+**Supported tool IDs (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `codex`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
+
+> This list mirrors `AI_TOOLS` in `src/core/config.ts`. See [Supported Tools](supported-tools.md) for each tool's skill and command paths.
 
 **例:**
 
@@ -177,312 +176,201 @@ openspec update
 
 ---
 
-## ワークスペースコマンド
+## Stores (standalone OpenSpec repos)
 
-ワークスペースコマンドは beta です。現在はローカルビュー方式を採用していますが、外部自動化・連携・長期運用のワークフローでは、コマンドの挙動、状態ファイル、JSON 出力がまだ変わり得るものとして扱ってください。
+> **Beta.** Stores and the features built on them (references, working context, worksets) are new; command names, flags, file formats, and JSON output may change shape between releases. For the problem-first walkthrough, see the [stores guide](stores-beta/user-guide.md).
 
-調整用ワークスペースは、リンク済みリポジトリやフォルダをまとめて見るための、このマシン上だけの作業ビューです。ワークスペースで見えることは変更へのコミットを意味しません。OpenSpec に把握させたいリポジトリやフォルダをリンクし、具体的な作業計画を立てる準備ができたら変更を作成します。
+A store is a standalone OpenSpec repo you've registered on this machine — for example a planning repo or a contracts repo. Registering a store lets normal commands (`list`, `show`, `status`, `validate`, `new change`, `archive`, ...) act in it from anywhere by passing `--store <id>`.
 
-### `openspec workspace setup`
+### `openspec store setup`
 
-標準の OpenSpec ワークスペース場所にワークスペースを作成し、既存のリポジトリまたはフォルダを少なくとも 1 つリンクします。
+Create and register a local store. With no arguments in a terminal,
+OpenSpec guides the user through setup. Agents and scripts should pass explicit
+inputs and use `--json`.
 
 ```bash
-openspec workspace setup [options]
+openspec store setup [id] [options]
 ```
 
 **オプション:**
 
 | オプション | 説明 |
 |--------|-------------|
-| `--name <name>` | ワークスペース名。名前は kebab-case |
-| `--link <path>` | 既存のリポジトリまたはフォルダをリンクし、フォルダ名からリンク名を推定 |
-| `--link <name>=<path>` | 明示的なリンク名で既存のリポジトリまたはフォルダをリンク |
-| `--opener <id>` | 非対話セットアップ時にデフォルトの開き方を保存。`codex-cli`, `claude`, `github-copilot`, `editor` |
-| `--tools <tools>` | エージェント向けにワークスペース内の OpenSpec スキルをインストール。`all`, `none`, カンマ区切りのツール ID を指定 |
-| `--no-interactive` | プロンプトを無効化。`--name` と 1 つ以上の `--link` が必要 |
-| `--json` | JSON を出力。`--no-interactive` が必要 |
-
-**例:**
-
-```bash
-openspec workspace setup
-openspec workspace setup --no-interactive --name platform --link /repos/api --link web=/repos/web
-openspec workspace setup --no-interactive --name platform --link /repos/api --opener codex-cli
-openspec workspace setup --no-interactive --name platform --link /repos/api --tools codex,claude
-openspec workspace setup --no-interactive --json --name checkout --link /repos/platform/apps/checkout
-```
-
-対話セットアップではデフォルトの開き方を確認し、選択したエージェント向けにワークスペース内の OpenSpec スキルをインストールできます。非対話セットアップでは `--opener` を指定した場合だけデフォルトの開き方を保存します。指定しない場合、対応する開き方が利用できる対話端末では後から `workspace open` が確認し、スクリプトには `--agent <tool>` または `--editor` の指定を求めます。
-
-この beta 範囲におけるワークスペーススキルのインストールは skills-only です。グローバルの delivery が `commands` または `both` でも、workspace setup はワークスペースルートにエージェントスキルフォルダを書き込むだけで、スラッシュコマンドファイルは作成しません。有効なグローバル profile がインストール対象のワークフロースキルを選び、`--tools` が配布先エージェントを選びます。非対話セットアップで `--tools` を省略するとスキルはインストールされず、後から `workspace update --tools <ids>` で追加できます。
-
-### `openspec workspace list`
-
-ローカルレジストリにある既知の OpenSpec ワークスペースを一覧表示します。
-
-```bash
-openspec workspace list [--json]
-openspec workspace ls [--json]
-```
-
-一覧には各ワークスペースの場所とリンク済みリポジトリまたはフォルダが表示されます。古いレジストリレコードは報告されますが、自動では修正されません。
-
-### `openspec workspace link`
-
-1 つのワークスペースに既存のリポジトリまたはフォルダを記録します。
-
-```bash
-openspec workspace link [name] <path> [options]
-```
-
-**オプション:**
-
-| オプション | 説明 |
-|--------|-------------|
-| `--workspace <name>` | ローカルレジストリから既知のワークスペースを選択 |
-| `--json` | JSON を出力 |
-| `--no-interactive` | ワークスペース選択プロンプトを無効化 |
-
-**例:**
-
-```bash
-openspec workspace link /repos/api
-openspec workspace link api-service /repos/api
-openspec workspace link --workspace platform /repos/platform/apps/checkout
-```
-
-パスは事前に存在している必要があります。相対パスはコマンド実行時の現在ディレクトリを基準に解決され、検証済みの絶対パスとしてこのマシン上のワークスペース状態に保存されます。リンク先はリポジトリ全体、パッケージ、サービス、アプリ、またはリポジトリ内の `openspec/` 状態を持たないフォルダでもかまいません。
-
-### `openspec workspace relink`
-
-既存リンクのローカルパスを修復または変更します。
-
-```bash
-openspec workspace relink <name> <path> [options]
-```
-
-パスは事前に存在している必要があります。relink は安定したリンク名に対応するマシンローカルパスだけを更新します。
-
-### `openspec workspace doctor`
-
-現在のマシンで 1 つのワークスペースが何を解決できるか確認します。
-
-```bash
-openspec workspace doctor [options]
-```
-
-doctor はワークスペースの場所、リンク済みリポジトリまたはフォルダ、欠落パス、存在する場合はリポジトリ内 specs パス、推奨修正を表示します。互換性のため、JSON 出力には workspace planning パスも含まれます。問題を報告するだけで、自動修復はしません。
-
-ワークスペースを 1 つ必要とするコマンドは、ワークスペースフォルダまたはそのサブディレクトリ内で実行された場合、現在のワークスペースを使います。それ以外の場所では `--workspace <name>` を渡すか、対話端末の選択画面で選ぶか、既知のワークスペースが 1 つだけならそれを使います。`--json` または `--no-interactive` モードで選択が曖昧な場合は、構造化された status エラーで失敗し、`--workspace <name>` を提案します。
-
-JSON レスポンスは型付きオブジェクトと `status` 配列を使います。主要データは `workspace`, `workspaces`, `link` に入り、警告とエラーは `status` に入ります。
-
-### `openspec workspace update`
-
-ワークスペース内の OpenSpec ガイダンスとエージェントスキルを更新します。
-
-```bash
-openspec workspace update [name] [options]
-```
-
-**オプション:**
-
-| オプション | 説明 |
-|--------|-------------|
-| `--workspace <name>` | ローカルレジストリから既知のワークスペースを選択 |
-| `--tools <tools>` | ワークスペーススキルの対象エージェントを選択。`all`, `none`, カンマ区切りのツール ID を指定 |
-| `--json` | JSON を出力 |
-| `--no-interactive` | ワークスペース選択プロンプトを無効化 |
-
-**例:**
-
-```bash
-openspec workspace update
-openspec workspace update platform
-openspec workspace update --workspace platform --tools codex,claude
-openspec workspace update --workspace platform --tools none
-```
-
-`workspace update` は生成済みのワークスペースガイダンスブロックと、ワークスペースを開くためのローカルファイルを更新します。エージェントスキルについては、`--tools` を省略すると保存済みのワークスペーススキル対象エージェントを再利用します。`--tools` を渡すと保存済み選択が置き換わります。ワークスペースルート内の OpenSpec 管理ワークフロースキルディレクトリだけを更新し、選択解除された管理対象ワークフロースキルを削除します。リンク済みリポジトリやフォルダには触れません。
-
-ワークスペース内で `openspec update` を実行しても、ワークスペース内のファイルは更新されません。ワークスペース内のガイダンスとスキルを更新したい場合は `openspec workspace update` を使い、リポジトリ側のツールファイルを更新したい場合は対象リポジトリ内で `openspec update` を実行してください。
-
-### `openspec workspace open`
-
-保存済みの開き方、1 セッションだけのエージェント上書き、または VS Code エディタモードで、ワークスペースの作業セットを開きます。
-
-```bash
-openspec workspace open [name] [options]
-```
-
-**オプション:**
-
-| オプション | 説明 |
-|--------|-------------|
-| `--workspace <name>` | 位置引数のワークスペース名のエイリアス |
-| `--initiative <id>` | initiative をローカルワークスペースビューとして開く。`<id>` または `<store>/<id>` を指定 |
-| `--store <id>` | `--initiative` 用の登録済み context store ID |
-| `--store-path <path>` | `--initiative` 用の既存ローカル context store ルート |
-| `--agent <tool>` | この 1 セッションだけ、使うエージェントを上書き。`codex-cli`, `claude`, `github-copilot` |
-| `--editor` | 管理対象の VS Code workspace ファイルを通常のエディタワークスペースとして開く |
-| `--no-interactive` | ワークスペースと開き方の選択プロンプトを無効化 |
-
-**例:**
-
-```bash
-openspec workspace open
-openspec workspace open platform
-openspec workspace open platform --agent github-copilot
-openspec workspace open --agent codex-cli
-openspec workspace open --editor
-openspec workspace open --initiative billing-launch --store platform
-openspec workspace open --initiative platform/billing-launch
-```
-
-`workspace open` はワークスペース内で実行された場合は現在のワークスペースを使い、それ以外の場所で既知のワークスペースが 1 つだけなら自動選択し、複数ある場合は選択を求めます。`--agent` と `--editor` は保存済みの開き方を変更しません。両方の上書きを同時に渡すとエラーです。`--agent <tool>` または `--editor` のどちらかを選んでください。
-
-`--initiative` を使うと、OpenSpec はその initiative 用のプライベートなローカルワークスペースビューを準備または選択します。レジストリから選んだ store は ID で保存されます。ワークスペースビューはプライベートなローカル状態なので、`--store-path` は実行時ローカルのパス選択子を保存します。
-
-OpenSpec は VS Code エディタと GitHub Copilot-in-VS-Code で開くため、ワークスペースルートに `<workspace-name>.code-workspace` を維持します。このファイルはこのマシン上だけのワークスペース状態です。
-
-管理対象の VS Code workspace には、有効なリンク済みリポジトリまたはフォルダ、紐づく initiative のコンテキスト、OpenSpec ワークスペースファイルがこの順で入ります。VS Code はそれらをマルチルートワークスペースとして表示します。
-
-ワークスペースを開くと、調査と文脈把握のためにリンク済みリポジトリやフォルダが見えるようになります。実装編集は、明示的なユーザー依頼と通常の OpenSpec 実装ワークフローの後に開始してください。
-
----
-
-## 共有コンテキストコマンド
-
-context store と initiative は beta の調整用機能です。context store は永続的な共有コンテキストを、このマシン上のフォルダとして登録する仕組みです。通常は Git 管理されたフォルダ、または既存リポジトリを clone したフォルダを使います。initiative は context store 内の共有調整コンテキストで、リポジトリ内の変更は共有計画を各リポジトリへコピーせずに initiative へリンクできます。
-
-### `openspec context-store setup`
-
-ローカルの context store を作成して登録します。ターミナルで引数なしに実行すると、OpenSpec がセットアップを案内します。エージェントやスクリプトは明示的な入力を渡し、`--json` を使ってください。
-
-```bash
-openspec context-store setup [id] [options]
-```
-
-**オプション:**
-
-| オプション | 説明 |
-|--------|-------------|
-| `--path <path>` | context store として使うフォルダパス。デフォルトは OpenSpec の管理対象ローカルデータディレクトリ |
-| `--init-git` | context store 内に Git リポジトリを初期化 |
-| `--no-init-git` | Git リポジトリを初期化しない |
+| `--path <path>` | Folder where the store should live (for example `~/openspec/<id>`) |
+| `--remote <url>` | Record the canonical remote in the new store's `store.yaml` |
+| `--init-git` | Initialize a Git repository with an initial commit (default) |
+| `--no-init-git` | Skip every Git action: no init, no initial commit |
 | `--json` | JSON を出力 |
 
-`--path` を省略すると、setup は `getGlobalDataDir()/context-stores/<id>` 配下に context store を作成します。`XDG_DATA_HOME` が設定されている場合は `$XDG_DATA_HOME/openspec/context-stores/<id>`、Unix 系のフォールバックでは `~/.local/share/openspec/context-stores/<id>` です。既に clone 済みのフォルダやチーム用フォルダを使いたい場合は `--path` を渡してください。
+Non-interactive runs (`--json`, scripts, agents) must pass both the store id and `--path`. In an interactive terminal, setup prompts for the location with an editable suggestion in a visible, user-owned place (for example `~/openspec/<id>`); it never defaults to OpenSpec's managed data directory.
 
 例:
 
 ```bash
-openspec context-store setup
-openspec context-store setup team-context
-openspec context-store setup team-context --path /repos/team-context --no-init-git
-openspec context-store setup team-context --json --no-init-git
+openspec store setup
+openspec store setup team-context
+openspec store setup team-context --path ~/openspec/team-context --no-init-git
+openspec store setup team-context --path ~/openspec/team-context --no-init-git --json
 ```
 
-### `openspec context-store register`
+### `openspec store register`
 
-既存のローカル context store フォルダを登録します。
+Register an existing local store folder. During the stores beta, a root may be
+registered before any changes exist, specs have been applied, or changes have
+been archived; in that case `openspec/changes/`, `openspec/specs/`, and
+`openspec/changes/archive/` may be absent until normal commands create them.
+A config-only repo that declares `store: <id>` remains a pointer to another
+store and is not registered as a store root unless that pointer is removed.
 
 ```bash
-openspec context-store register [path] [options]
+openspec store register [path] [options]
 ```
 
 **オプション:**
 
 | オプション | 説明 |
 |--------|-------------|
-| `--id <id>` | context store ID。デフォルトはメタデータまたはフォルダ名 |
+| `--id <id>` | Store id; defaults to store metadata or folder name |
+| `--yes` | Confirm creating store identity metadata for a healthy OpenSpec root |
 | `--json` | JSON を出力 |
 
-### `openspec context-store unregister`
+### `openspec store unregister`
 
-ファイルを削除せず、ローカルの context-store 登録だけを解除します。
+Forget a local store registration without deleting files.
 
 ```bash
-openspec context-store unregister <id> [--json]
+openspec store unregister <id> [--json]
 ```
 
-context store を移動した、別の場所へ clone し直した、またはこのマシン上の OpenSpec に表示させたくない場合に使います。
+Use this when a store was moved, cloned somewhere else, or should no longer be
+shown by OpenSpec on this machine.
 
-### `openspec context-store remove`
+### `openspec store remove`
 
-ローカルの context-store 登録を解除し、そのフォルダも削除します。
+Forget a local store registration and delete its local folder.
 
 ```bash
-openspec context-store remove <id> [--yes] [--json]
+openspec store remove <id> [--yes] [--json]
 ```
 
-`remove` は対話端末では削除前に正確なフォルダを表示します。エージェント、スクリプト、JSON 呼び出し元は削除確認として `--yes` を渡す必要があります。OpenSpec は、一致する context-store メタデータを含まないフォルダの削除を拒否します。
+`remove` shows the exact folder before deleting in an interactive terminal.
+Agents, scripts, and JSON callers must pass `--yes` to confirm deletion.
+OpenSpec refuses to delete a folder that does not contain matching
+store metadata.
 
-### `openspec context-store list`
+### `openspec store list`
 
-ローカル登録済みの context store を一覧表示します。
+List locally registered stores.
 
 ```bash
-openspec context-store list [--json]
-openspec context-store ls [--json]
+openspec store list [--json]
+openspec store ls [--json]
 ```
 
-### `openspec context-store doctor`
+### `openspec store doctor`
 
-ローカルの context-store 登録、メタデータ、Git の有無を確認します。
+Check local store registration, metadata, and Git presence.
 
 ```bash
-openspec context-store doctor [id] [--json]
+openspec store doctor [id] [--json]
 ```
 
 doctor は診断専用です。context store を変更せず、欠落したルート、メタデータ不一致、不正なローカルレジストリ状態を報告します。
 
-### `openspec initiative create`
+### Referencing stores from a project
 
-context store 内に initiative を作成します。
+A project repo can declare which stores its work draws on in `openspec/config.yaml`:
 
-```bash
-openspec initiative create <id> --title <title> --summary <summary> [options]
+```yaml
+schema: spec-driven
+references:
+  - team-context
 ```
 
-**オプション:**
+From then on, `openspec instructions` output in that repo (both the per-artifact and `apply` surfaces, JSON and human modes) carries an index of each referenced store's specs — spec ids, a one-line summary from each spec's Purpose section, and the fetch command (`openspec show <spec-id> --type spec --store <id>`). The index is built live from the registered checkout on every run; spec content is never copied into the output.
 
-| オプション | 説明 |
-|--------|-------------|
-| `--store <id>` | ローカルレジストリ上の context store ID |
-| `--store-path <path>` | 既存のローカル context store ルート |
-| `--title <title>` | initiative のタイトル |
-| `--summary <summary>` | initiative の概要 |
-| `--json` | JSON を出力 |
+References are read-only context. They never change where commands act: work stays in the repo's own root, and writing to a referenced store remains an explicit `--store` action. A reference that cannot be resolved (for example, a store not registered on this machine) degrades to a warning in the index with the exact fix, and instructions still generate. `openspec doctor` reports reference health in one place.
 
-### `openspec initiative list`
+### Recording where a store is cloned from
 
-initiative を一覧表示します。セレクタを指定しない場合、登録済みの context store をすべて検索し、一部を読み取れなかった場合は `status` で警告します。
+A store can record its canonical clone source in its committed identity file, so onboarding never dead-ends at "register the store":
 
 ```bash
-openspec initiative list [options]
-openspec initiative ls [options]
+openspec store setup team-context --path ~/openspec/team-context \
+  --remote git@github.com:acme/team-context.git
 ```
 
-**オプション:**
+The remote lands in `.openspec-store/store.yaml` inside the initial commit, so every clone is born knowing it. For an existing store, edit `store.yaml` by hand and commit. `store doctor` shows the recorded remote (and the checkout's observed Git origin); setup/register sharing guidance names it; and register records the checkout's origin in the machine-local registry.
 
-| オプション | 説明 |
-|--------|-------------|
-| `--store <id>` | 登録済み context store 1 つだけを対象にする |
-| `--store-path <path>` | 既存のローカル context store ルート 1 つだけを対象にする |
-| `--json` | JSON を出力 |
+A reference declaration can carry the clone source too, so a teammate who doesn't have the store yet gets a complete, pasteable fix (`git clone <remote> <path> && openspec store register <path> --id <id>`):
 
-### `openspec initiative show`
+```yaml
+references:
+  - { id: team-context, remote: "git@github.com:acme/team-context.git" }
+```
 
-initiative を解決し、正規の場所を表示します。
+Recording a remote is not sync: OpenSpec never clones, pulls, or pushes on its own.
+
+### Declaring a default store
+
+A repo whose planning is fully externalized — no local `openspec/specs/` or `openspec/changes/` — can declare its store once instead of passing `--store` on every command:
+
+```yaml
+# openspec/config.yaml (the only file under openspec/)
+store: team-context
+```
+
+Normal commands then resolve to the declared store automatically; the root banner and JSON `root` block report `source: "declared"` with the store id, and printed hints still carry `--store <id>`. The declaration is a fallback, never an override: explicit `--store` always wins, and a directory with real planning folders ignores the pointer (with a warning). To convert a pointer repo into a local OpenSpec root, remove the `store:` line and run `openspec init` — init refuses to scaffold while the declaration is present.
+
+## Doctor (relationship health)
+
+One read-only question, one place: is the OpenSpec root healthy, and are the stores it references available on this machine?
 
 ```bash
-openspec initiative show <id> [options]
-openspec initiative show <store>/<id> [options]
+openspec doctor [--store <id>] [--json]
 ```
 
-`--store` を指定しない場合、OpenSpec は登録済み context store を検索します。同じ initiative ID が複数の context store に存在する場合は、`--store <id>` を渡すか `<store>/<id>` 形式を使ってください。
+The report separates root health, store metadata health (including a note when the recorded remote and the checkout's origin diverge), and reference health (the same diagnostics instructions show, with clone fixes for unresolved references). Health findings of any severity exit 0 — agents read the `status` arrays; only command failures (no root, unknown store) exit 1. Doctor never clones, syncs, or repairs. To get the assembled set itself rather than its health, use `openspec context`.
+
+## Working context (the assembled set)
+
+Everything this work relates to through OpenSpec declarations, in one working set: the OpenSpec root and the stores it references.
+
+```bash
+openspec context [--store <id>] [--json] [--code-workspace <path> [--force]]
+```
+
+The JSON brief is agent-consumable (each available referenced store carries its fetch recipe; unresolved members carry the same fixes instructions and doctor show). `--code-workspace` additionally writes a VS Code workspace file containing the root plus the available referenced stores (`ref:<id>` folders) — the one write this command performs, refused without `--force` if the file exists. Unavailable members are reported, never guessed at.
+
+"Working context" is the assembled set; the `context:` field in `openspec/config.yaml` is project background injected into instructions — two different things. `openspec doctor` answers whether the set is healthy; `openspec context` answers what the set is.
+
+## Personal worksets
+
+> **Beta.** Worksets are part of the new beta surface; commands, flags, and file formats may change shape between releases. For the walkthrough, see the [stores guide](stores-beta/user-guide.md#worksets-reopen-the-folders-you-work-on-together).
+
+A workset is a personal, named view of the folders you work on together — a planning root plus whatever else you choose — kept on your machine and reopened by name in your tool. It is purely local: never committed, never shared, never derived from declarations, and removing one never touches a member folder.
+
+```bash
+openspec workset create [name] [--member <path> | --member <name>=<path>]... [--tool <id>] [--json]
+openspec workset list [--json]
+openspec workset open <name> [--tool <id>]
+openspec workset remove <name> [--yes] [--json]
+```
+
+`create` runs a short guided flow (or takes `--member` flags non-interactively; the first member is the primary — sessions start there). `open` launches the chosen tool: editors (VS Code, Cursor) open a window with every member and return; CLI agents (Claude Code, codex) take over this terminal as a session with every member attached and no prompt pre-filled, ending when you exit. A member folder missing at open time is skipped with a note; the rest opens. The saved tool preference is overridable per open with `--tool`.
+
+Supporting a new tool is configuration, not code. Every tool is one of two launch styles — `workspace-file` (launched with the generated `.code-workspace`) or `attach-dirs` (one attach flag per member) — and the `openers` key in the global `config.json` (open it with `openspec config edit`) adds tools or adjusts built-ins per field:
+
+```json
+{
+  "openers": {
+    "zed": { "style": "workspace-file" },
+    "claude": { "attach_flag": "--dir" }
+  }
+}
+```
+
+All workset state lives under the global data dir's `worksets/` folder (the saved views plus the generated `<name>.code-workspace` files, regenerated on every open); deleting that folder removes every trace.
 
 ---
 
@@ -521,9 +409,8 @@ openspec list --json
 **出力（テキスト）:**
 
 ```
-アクティブな変更:
-  add-dark-mode     UI テーマ切り替え機能
-  fix-login-bug     セッションタイムアウト処理
+Changes:
+  add-dark-mode     No tasks      just now
 ```
 
 ---
@@ -732,50 +619,35 @@ openspec archive update-ci-config --skip-specs
 
 ### `openspec new change`
 
-リポジトリ内の変更ディレクトリと、必要に応じてコミット対象のメタデータを作成します。
+Create a change directory and optional checked-in metadata in the resolved OpenSpec root.
 
 ```bash
 openspec new change <name> [options]
 ```
+
+Change names must use lowercase kebab-case. They start with a lowercase letter,
+then contain lowercase letters, numbers, and single hyphens. They cannot start
+with a number, contain spaces, underscores, uppercase letters, consecutive
+hyphens, or leading/trailing hyphens. When including an external ticket ID,
+prefix it with a word, for example `ticket-123-add-notifications` instead of
+`123-add-notifications`.
 
 **オプション:**
 
 | オプション | 説明 |
 |--------|-------------|
 | `--description <text>` | `README.md` に追加する説明 |
-| `--goal <text>` | change に保存する workspace のプロダクト目標 |
-| `--areas <names>` | 影響を受ける workspace link 名のカンマ区切り |
-| `--initiative <id>` | リポジトリ内の change を initiative にリンク |
-| `--store <id>` | `--initiative` で使う context store ID |
-| `--store-path <path>` | `--initiative` で使う既存のローカル context store ルート |
+| `--goal <text>` | Optional goal metadata to store with the change |
 | `--schema <name>` | 使用する workflow schema |
-| `--json` | JSON で出力 |
+| `--store <id>` | Store id to use as the OpenSpec root (a store is a standalone OpenSpec repo you've registered) |
+| `--json` | JSON を出力 |
 
 例:
 
 ```bash
-openspec new change add-billing-api --initiative billing-launch --store platform
-openspec new change add-billing-api --initiative platform/billing-launch --json
+openspec new change add-billing-api
+openspec new change add-billing-api --store team-context --json
 ```
-
-### `openspec set change`
-
-change を作り直さずに、コミット対象のリポジトリ内 change メタデータを更新します。
-
-```bash
-openspec set change <name> [options]
-```
-
-**オプション:**
-
-| オプション | 説明 |
-|--------|-------------|
-| `--initiative <id>` | リポジトリ内の change を initiative にリンク |
-| `--store <id>` | `--initiative` で使う context store ID |
-| `--store-path <path>` | `--initiative` で使う既存のローカル context store ルート |
-| `--json` | JSON で出力 |
-
-`set change --initiative` は、指定したリンクが既に存在する場合は冪等に動作し、別の既存 initiative link の置き換えは拒否します。
 
 ### `openspec status`
 
@@ -1117,7 +989,7 @@ openspec schema which spec-driven
 
 ```
 spec-driven の解決元: package
-  ソース: /usr/local/lib/node_modules/@ayumuwall/openspec/schemas/spec-driven
+  Source: /usr/local/lib/node_modules/@ayumuwall/openspec/schemas/spec-driven
 ```
 
 **スキーマの優先順位:**
@@ -1192,9 +1064,9 @@ openspec config profile core
 - 現在の設定を維持（終了）
 
 現在の設定を維持した場合、変更は書き込まれず更新プロンプトも表示されません。
-設定変更はないが、現在のプロジェクトまたはワークスペースファイルがグローバル profile / delivery と同期していない場合、OpenSpec は警告を表示します。リポジトリ内プロジェクトでは `openspec update`、ワークスペース内のガイダンスとスキルでは `openspec workspace update` を提案します。
+If there are no config changes but the current project files are out of sync with your global profile/delivery, OpenSpec will show a warning and suggest `openspec update`.
 `Ctrl+C` を押しても処理をきれいにキャンセルでき（スタックトレースなし）、コード `130` で終了します。
-ワークフローチェックリストで `[x]` はグローバル設定でワークフローが選択済みであることを意味します。プロジェクトファイルに反映するには `openspec update` を実行してください（プロジェクト内で `Apply changes to this project now?` と表示された場合は適用を選択）。ワークスペース内では `openspec workspace update` を使い、ワークスペース内のガイダンスとスキルを更新します。この更新は生成されるエージェントワークフローファイルについては skills-only のままで、ワークスペース用スラッシュコマンドは生成しません。
+In the workflow checklist, `[x]` means the workflow is selected in global config. To apply those selections to project files, run `openspec update` (or choose `Apply changes to this project now?` when prompted inside a project).
 
 **対話例:**
 

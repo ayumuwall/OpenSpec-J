@@ -22,11 +22,7 @@ import {
 import { CORE_WORKFLOWS, ALL_WORKFLOWS, getProfileWorkflows } from '../core/profiles.js';
 import { OPENSPEC_DIR_NAME } from '../core/config.js';
 import { hasProjectConfigDrift } from '../core/profile-sync-drift.js';
-import {
-  findWorkspaceRoot,
-  hasWorkspaceSkillProfileDrift,
-  readOptionalWorkspaceViewState,
-} from '../core/workspace/index.js';
+import { isPromptCancellationError } from './shared-output.js';
 
 type ProfileAction = 'both' | 'delivery' | 'workflows' | 'keep';
 
@@ -44,11 +40,6 @@ interface ProfileStateDiff {
 interface WorkflowPromptMeta {
   name: string;
   description: string;
-}
-
-interface WorkspaceConfigProfileContext {
-  root: string;
-  commandCwd: string;
 }
 
 const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
@@ -98,12 +89,6 @@ const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
   },
 };
 
-function isPromptCancellationError(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    (error.name === 'ExitPromptError' || error.message.includes('force closed the prompt with SIGINT'))
-  );
-}
 
 /**
  * Resolve the effective current profile state from global config defaults.
@@ -196,20 +181,6 @@ export function diffProfileState(before: ProfileState, after: ProfileState): Pro
   };
 }
 
-async function resolveWorkspaceConfigProfileContext(
-  cwd = process.cwd()
-): Promise<WorkspaceConfigProfileContext | null> {
-  const workspaceRoot = await findWorkspaceRoot(cwd);
-  if (!workspaceRoot) {
-    return null;
-  }
-
-  return {
-    root: workspaceRoot,
-    commandCwd: cwd,
-  };
-}
-
 function maybeWarnProjectConfigDrift(
   projectDir: string,
   state: ProfileState,
@@ -225,38 +196,7 @@ function maybeWarnProjectConfigDrift(
   console.log(colorize('警告: グローバル設定がこのプロジェクトに反映されていません。同期するには `openspec update` を実行してください。'));
 }
 
-async function maybeWarnConfigDrift(
-  state: ProfileState,
-  colorize: (message: string) => string
-): Promise<void> {
-  const workspaceContext = await resolveWorkspaceConfigProfileContext();
-  if (workspaceContext) {
-    let viewState = null;
-    try {
-      viewState = await readOptionalWorkspaceViewState(workspaceContext.root);
-    } catch {
-      return;
-    }
-
-    if (hasWorkspaceSkillProfileDrift(viewState)) {
-      console.log(
-        colorize(
-          '警告: ワークスペース内のエージェントスキルが有効なグローバル profile と同期していません。同期するには `openspec workspace update` を実行してください。'
-        )
-      );
-    }
-    return;
-  }
-
-  maybeWarnProjectConfigDrift(process.cwd(), state, colorize);
-}
-
-function printConfigProfileApplyGuidance(workspaceContext: WorkspaceConfigProfileContext | null): void {
-  if (workspaceContext) {
-    console.log('設定を更新しました。ワークスペース内のスキルに適用するには `openspec workspace update` を実行してください。');
-    return;
-  }
-
+function printConfigProfileApplyGuidance(): void {
   console.log('設定を更新しました。プロジェクトに適用するには各プロジェクトで `openspec update` を実行してください。');
 }
 
@@ -520,8 +460,7 @@ export function registerConfigCommand(program: Command): void {
         config.workflows = [...CORE_WORKFLOWS];
         // Preserve delivery setting
         saveGlobalConfig(config);
-        const workspaceContext = await resolveWorkspaceConfigProfileContext();
-        printConfigProfileApplyGuidance(workspaceContext);
+        printConfigProfileApplyGuidance();
         return;
       }
 
@@ -581,7 +520,7 @@ export function registerConfigCommand(program: Command): void {
 
         if (action === 'keep') {
           console.log('設定変更はありません。');
-          await maybeWarnConfigDrift(currentState, chalk.yellow);
+          maybeWarnProjectConfigDrift(process.cwd(), currentState, chalk.yellow);
           return;
         }
 
@@ -656,7 +595,7 @@ export function registerConfigCommand(program: Command): void {
         const diff = diffProfileState(currentState, nextState);
         if (!diff.hasChanges) {
           console.log('設定変更はありません。');
-          await maybeWarnConfigDrift(nextState, chalk.yellow);
+          maybeWarnProjectConfigDrift(process.cwd(), nextState, chalk.yellow);
           return;
         }
 
@@ -670,31 +609,6 @@ export function registerConfigCommand(program: Command): void {
         config.delivery = nextState.delivery;
         config.workflows = nextState.workflows;
         saveGlobalConfig(config);
-
-        const workspaceContext = await resolveWorkspaceConfigProfileContext();
-        if (workspaceContext) {
-          const applyNow = await confirm({
-            message: 'この workspace に今すぐ変更を適用しますか？',
-            default: true,
-          });
-
-          if (applyNow) {
-            try {
-              execSync('npx openspec workspace update', {
-                stdio: 'inherit',
-                cwd: workspaceContext.commandCwd,
-              });
-              console.log('他の workspace に適用するには、それぞれで `openspec workspace update` を実行してください。');
-            } catch {
-              console.error('`openspec workspace update` に失敗しました。profile 変更を適用するには手動で実行してください。');
-              process.exitCode = 1;
-            }
-            return;
-          }
-
-          printConfigProfileApplyGuidance(workspaceContext);
-          return;
-        }
 
         // Check if inside an OpenSpec project
         const projectDir = process.cwd();
@@ -717,7 +631,7 @@ export function registerConfigCommand(program: Command): void {
           }
         }
 
-        printConfigProfileApplyGuidance(null);
+        printConfigProfileApplyGuidance();
       } catch (error) {
         if (isPromptCancellationError(error)) {
           console.log('config profile をキャンセルしました。');

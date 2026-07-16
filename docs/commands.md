@@ -1,33 +1,34 @@
 # コマンド
 
-OpenSpec のスラッシュコマンドのリファレンスです。これらのコマンドは AI コーディングアシスタント（例: Claude Code, Cursor, Windsurf）のチャット UI から呼び出します。
+これは、OpenSpec のスラッシュ コマンドのリファレンスです。これらのコマンドは、AI コーディング アシスタントのチャット インターフェイス (Claude Code、Cursor、Windsurf など) で呼び出されます。
 
-ワークフローの使い分けは [ワークフロー](workflows.md)、CLI コマンドは [CLI](cli.md) を参照してください。
+ワークフロー パターンと各コマンドをいつ使用するかについては、「Workflows](workflows.md). CLI コマンドについては、「CLI](cli.md).
 
 ## クイックリファレンス
 
-### 既定のクイックパス（`core` プロファイル）
+### デフォルトのクイック パス (`core` プロファイル)
 
-| コマンド | 目的 |
+|コマンド |目的 |
 |---------|---------|
-| `/opsx:propose` | 変更を作成し、計画アーティファクトを一括生成する |
-| `/opsx:explore` | 変更に入る前に考えを整理する |
-| `/opsx:apply` | 変更のタスクを実装する |
-| `/opsx:sync` | 仕様差分を本仕様へ統合する |
-| `/opsx:archive` | 完了した変更をアーカイブする |
+| `/opsx:propose` | 1 ステップで変更を作成し、計画成果物を生成します。
+| `/opsx:explore` |変更に取り組む前にアイデアをよく考えてください |
+| `/opsx:apply` |変更からタスクを実装する |
+| `/opsx:update` |変更の計画成果物を改訂し、一貫性を保つ |
+| `/opsx:sync` |仕様差分をメイン仕様にマージ |
+| `/opsx:archive` |完了した変更をアーカイブする |
 
-### 拡張ワークフローのコマンド（custom ワークフロー選択時）
+### 拡張されたワークフロー コマンド (カスタム ワークフローの選択)
 
-| コマンド | 目的 |
+|コマンド |目的 |
 |---------|---------|
-| `/opsx:new` | 新しい変更のひな形を作る |
-| `/opsx:continue` | 依存関係に基づいて次のアーティファクトを作る |
-| `/opsx:ff` | Fast-forward: 計画アーティファクトを一括生成する |
-| `/opsx:verify` | 実装がアーティファクトに沿っているか検証する |
-| `/opsx:bulk-archive` | 複数の変更を一括でアーカイブする |
-| `/opsx:onboard` | ワークフロー全体をガイド付きで体験する |
+| `/opsx:new` |新しい変更スキャフォールドを開始する |
+| `/opsx:continue` |依存関係に基づいて次のアーティファクトを作成します。
+| `/opsx:ff` |早送り: すべての計画成果物を一度に作成します。
+| `/opsx:verify` |実装がアーティファクトと一致することを検証する |
+| `/opsx:bulk-archive` |複数の変更を一度にアーカイブ |
+| `/opsx:onboard` |完全なワークフローを介したガイド付きチュートリアル |
 
-既定のグローバルプロファイルは `core` です。拡張ワークフローを有効にしたい場合は、`openspec config profile` でワークフローを選び、プロジェクトで `openspec update` を実行してください。
+デフォルトのグローバル プロファイルは `core` です。拡張ワークフロー コマンドを有効にするには、`openspec config profile` を実行し、ワークフローを選択して、プロジェクトで `openspec update` を実行します。
 
 ---
 
@@ -35,670 +36,723 @@ OpenSpec のスラッシュコマンドのリファレンスです。これら�
 
 ### `/opsx:propose`
 
-変更を作成し、計画アーティファクトを 1 ステップで生成します。`core` プロファイルにおける既定の開始コマンドです。
+新しい変更を作成し、1 つのステップで計画成果物を生成します。これは、`core` プロファイルのデフォルトの開始コマンドです。
 
-**構文:**
+**構文：**
 ```text
 /opsx:propose [change-name-or-description]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name-or-description` | いいえ | kebab-case の変更名、または自然言語の変更説明 |
+| `change-name-or-description` |いいえ | Kebab ケースの名前または平易な言語の変更の説明 |
 
-**何をするか:**
+**機能:**
 - `openspec/changes/<change-name>/` を作成します
-- 実装前に必要なアーティファクトを生成します（`spec-driven` では proposal / specs / design / tasks）
-- `/opsx:apply` に進める状態になったら停止します
+- 実装前に必要な成果物を生成します (`spec-driven` の場合: 提案、仕様、設計、タスク)
+- `/opsx:apply` の変更の準備ができたら停止します
 
-**例:**
+**例：**
 ```text
-あなた: /opsx:propose add-dark-mode
+You: /opsx:propose add-dark-mode
 
-AI:  openspec/changes/add-dark-mode/ を作成しました
+AI:  Created openspec/changes/add-dark-mode/
      ✓ proposal.md
      ✓ specs/ui/spec.md
      ✓ design.md
      ✓ tasks.md
-     実装の準備ができました。/opsx:apply を実行してください。
+     Ready for implementation. Run /opsx:apply.
 ```
 
 **ヒント:**
-- 最短で一通り完了まで進めたいときに使う
-- アーティファクトを段階的に制御したいなら、拡張ワークフローを有効にして `/opsx:new` + `/opsx:continue` を使う
+- 最速のエンドツーエンド パスにこれを使用します
+- 段階的なアーティファクト制御が必要な場合は、拡張ワークフローを有効にして、`/opsx:new` + `/opsx:continue` を使用します。
 
 ---
 
 ### `/opsx:explore`
 
-変更を開始する前に、アイデアの整理・課題の調査・要件の明確化を行います。
+> **迷ったときはここから始めてください。** Explore は、リスクのない思考パートナーです。コードベースを読み取り、オプションを比較し、変更が存在する前に曖昧なアイデアを具体的な計画に磨き上げます。デフォルトのプロファイルで出荷されます。完全なケースとその他の例については、[Explore First](explore.md) ガイド] を参照してください。
 
-**構文:**
+変更に取り組む前に、アイデアを熟考し、問題を調査し、要件を明確にします。
+
+**構文：**
 ```
 /opsx:explore [topic]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `topic` | いいえ | 探索・調査したいテーマ |
+| `topic` |いいえ |調べたいこと、調べたいこと |
 
-**何をするか:**
-- 形式に縛られない探索的な対話を開始する
-- コードベースを調査して疑問に答える
-- 代替案やアプローチを比較する
-- 思考整理のための図を作成する
-- 洞察が固まったら `/opsx:propose`（既定）または `/opsx:new`（拡張）へ移行できる
+**機能:**
+- 構造を必要とせずに探索的な会話を開始します
+- 質問に答えるためにコードベースを調査します
+- オプションとアプローチを比較します
+- 思考を明確にするための視覚的な図を作成します
+- 洞察が具体化したら、`/opsx:propose` (デフォルト) または `/opsx:new` (拡張ワークフロー) に移行可能
 
-**例:**
+**例：**
 ```text
-あなた: /opsx:explore
+You: /opsx:explore
 
-AI:  何を探索しましょうか？
+AI:  What would you like to explore?
 
-あなた: モバイルアプリの認証はどう実装するべき？
+You: How should we handle authentication for the mobile app?
 
-AI:  既存の認証構成を調べます...
-     [コードベースを解析]
+AI:  Let me investigate your current auth setup...
+     [Analyzes codebase]
 
-     Web はセッションベース認証ですね。
-     モバイル向けには主に次の 3 案があります:
+     I see you're using session-based auth for the web app.
+     For mobile, we have three main options:
 
-     1. JWT トークン（ステートレスでオフライン向き）
-     2. OAuth2（サードパーティログインが必要な場合）
-     3. 既存セッションの拡張（簡単だが接続が必要）
+     1. JWT tokens (stateless, works offline)
+     2. OAuth2 (if you need third-party login)
+     3. Extend current sessions (simpler, but requires connectivity)
 
-     既に API の CORS 設定はあります。どの方向に興味がありますか？
+     Your API already has CORS configured. Which direction interests you?
 
-あなた: JWT にしよう。変更を開始できる？
+You: Let's go with JWT. Can we start a change for that?
 
-AI:  準備できています。/opsx:propose add-jwt-auth を実行して変更を始めてください。
+AI:  Ready when you are. Run /opsx:propose add-jwt-auth to begin.
 ```
 
 **ヒント:**
-- 要件が曖昧なときや調査が必要なときに使う
-- 探索中はアーティファクトを作成しない
-- 複数案の比較に向いている
-- ファイル読み込みや全文検索も可能
+- 要件が不明瞭な場合、または調査する必要がある場合に使用します。
+- 探索中にアーティファクトは作成されません
+- 決定する前に複数のアプローチを比較するのに適しています
+- ファイルの読み取りとコードベースの検索が可能
 
 ---
 
 ### `/opsx:new`
 
-新しい変更のひな形を作成します。変更フォルダを作成し、その後 `/opsx:continue` または `/opsx:ff` でアーティファクトを生成します。
+新しい変更の足場を開始します。変更フォルダーを作成し、`/opsx:continue` または `/opsx:ff` でアーティファクトが生成されるのを待ちます。
 
-このコマンドは拡張ワークフローに含まれ、既定の `core` プロファイルには含まれません。
+このコマンドは、拡張ワークフロー セットの一部です (デフォルトの `core` プロファイルには含まれていません)。
 
-**構文:**
+**構文：**
 ```
 /opsx:new [change-name] [--schema <schema-name>]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | 変更フォルダ名（未指定ならプロンプト） |
-| `--schema` | いいえ | 使用するワークフロースキーマ（デフォルト: 設定 or `spec-driven`） |
+| `change-name` |いいえ |変更フォルダーの名前 (指定しない場合はプロンプトが表示されます) |
+| `--schema` |いいえ |使用するワークフロー スキーマ (デフォルト: 構成または `spec-driven` から) |
 
-**何をするか:**
-- `openspec/changes/<change-name>/` を作成
-- 変更フォルダに `.openspec.yaml` を作成
-- 最初に作成できるアーティファクトを表示
-- 変更名やスキーマ未指定ならプロンプト
+**機能:**
+- `openspec/changes/<change-name>/` ディレクトリを作成します
+- 変更フォルダーに `.openspec.yaml` メタデータ ファイルを作成します
+- 作成の準備ができた最初のアーティファクト テンプレートを表示します
+- 名前とスキーマが指定されていない場合は変更を求めるプロンプトが表示されます
 
 **作成されるもの:**
 ```
 openspec/changes/<change-name>/
-└── .openspec.yaml    # 変更メタデータ（スキーマ、作成日など）
+└── .openspec.yaml    # Change metadata (schema, created date)
 ```
 
-**例:**
+**例：**
 ```
-あなた: /opsx:new add-dark-mode
+You: /opsx:new add-dark-mode
 
-AI:  openspec/changes/add-dark-mode/ を作成しました
-     スキーマ: spec-driven
+AI:  Created openspec/changes/add-dark-mode/
+     Schema: spec-driven
 
-     作成準備完了: proposal
-     /opsx:continue で 1 つずつ作成、または /opsx:ff で一括作成できます。
+     Ready to create: proposal
+     Use /opsx:continue to create it, or /opsx:ff to create all artifacts.
 ```
 
 **ヒント:**
-- わかりやすい名前を付ける: `add-feature`, `fix-bug`, `refactor-module`
-- `update`, `changes`, `wip` のような汎用名は避ける
-- スキーマは `openspec/config.yaml` でも指定可能
+- わかりやすい名前を使用します: `add-feature`、`fix-bug`、`refactor-module`
+- `update`、`changes`、`wip` などの一般的な名前は避けてください。
+- スキーマはプロジェクト構成(`openspec/config.yaml`)でも設定できます
 
 ---
 
 ### `/opsx:continue`
 
-依存関係チェーン上で次のアーティファクトを作成します。1 つずつ進めたいときに使います。
+依存関係チェーンに次のアーティファクトを作成します。段階的に進行するために一度に 1 つのアーティファクトを作成します。
 
-**構文:**
+**構文：**
 ```
 /opsx:continue [change-name]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | 続ける変更名（未指定なら文脈から推測） |
+| `change-name` |いいえ |どの変更を続行するか (指定されていない場合はコンテキストから推測) |
 
-**何をするか:**
-- アーティファクトの依存関係グラフを参照
-- どれが ready / blocked かを表示
-- ready の先頭アーティファクトを作成
-- 依存ファイルを読み込んで文脈化
-- 作成後に次の候補を提示
+**機能:**
+- アーティファクトの依存関係グラフをクエリします。
+- 準備ができているアーティファクトとブロックされているアーティファクトを表示します
+- 最初の準備完了アーティファクトを作成します
+- コンテキストの依存関係ファイルを読み取ります
+- 作成後に利用可能になるものを表示します
 
-**例:**
+**例：**
 ```
-あなた: /opsx:continue
+You: /opsx:continue
 
-AI:  変更: add-dark-mode
+AI:  Change: add-dark-mode
 
-     アーティファクト状況:
-     ✓ proposal    (完了)
-     ◆ specs       (準備完了)
-     ◆ design      (準備完了)
-     ○ tasks       (ブロック中 - 必要: specs)
+     Artifact status:
+     ✓ proposal    (done)
+     ◆ specs       (ready)
+     ◆ design      (ready)
+     ○ tasks       (blocked - needs: specs)
 
-     specs を作成中...
+     Creating specs...
 
-     [proposal.md を読み、要件に基づき specs を作成]
+     [Reads proposal.md, creates specs based on requirements]
 
-     ✓ openspec/changes/add-dark-mode/specs/ui/spec.md を作成しました
+     ✓ Created openspec/changes/add-dark-mode/specs/ui/spec.md
 
-     次に作成可能: tasks
-     /opsx:continue で次のアーティファクトを作成できます。
+     Now available: tasks
+     Run /opsx:continue to create the next artifact.
 ```
 
 **ヒント:**
-- 各アーティファクトを都度レビューしたいときに便利
-- 複雑な変更でコントロールしたい場合に向く
-- 複数のアーティファクトが同時に作成可能になることがある
-- 作成後に編集してから続きを作れる
+- 続行する前に各成果物を確認したい場合に使用します
+- 制御が必要な複雑な変更に適しています
+- 複数のアーティファクトが同時に準備可能になる場合があります
+- 続行する前に、作成したアーティファクトを編集できます
 
 ---
 
 ### `/opsx:ff`
 
-アーティファクト作成を Fast-forward します。計画アーティファクトを一括生成します。
+アーティファクトの作成を早送りします。すべての計画成果物を一度に作成します。
 
-**構文:**
+**構文：**
 ```
 /opsx:ff [change-name]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | 対象の変更名（未指定なら文脈から推測） |
+| `change-name` |いいえ |早送りする変更 (指定されていない場合はコンテキストから推測) |
 
-**何をするか:**
-- 依存順にすべてのアーティファクトを作成
-- TODO リストで進捗を追跡
-- `apply-required` のアーティファクトが完了したら停止
-- 各アーティファクト作成前に依存を読み込む
+**機能:**
+- すべてのアーティファクトを依存関係の順序で作成します
+- ToDo リストを通じて進捗状況を追跡
+- すべての `apply-required` アーティファクトが完了すると停止します
+- 次のアーティファクトを作成する前に各依存関係を読み取ります。
 
-**例:**
+**例：**
 ```
-あなた: /opsx:ff add-dark-mode
+You: /opsx:ff add-dark-mode
 
-AI:  add-dark-mode を Fast-forward 中...
+AI:  Fast-forwarding add-dark-mode...
 
-     ✓ proposal.md を作成中
-     ✓ specs/ui/spec.md を作成中
-     ✓ design.md を作成中
-     ✓ tasks.md を作成中
+     ✓ Creating proposal.md
+     ✓ Creating specs/ui/spec.md
+     ✓ Creating design.md
+     ✓ Creating tasks.md
 
-     計画アーティファクトがすべて完了しました！
-     実装の準備ができました。/opsx:apply で開始できます。
+     All planning artifacts complete!
+     Ready for implementation. Run /opsx:apply to begin.
 ```
 
 **ヒント:**
-- 何を作るか明確なときに向く
-- `/opsx:continue` より速い
-- 後から編集してもよい
-- 小〜中規模の変更に向く
+- 何を構築しているのか明確なイメージがある場合に使用します
+- `/opsx:continue` よりも高速で簡単な変更が可能
+- 後でもアーティファクトを編集できます
+- 小規模から中規模の機能に適しています
 
 ---
 
 ### `/opsx:apply`
 
-変更のタスクを実装します。タスク一覧を見ながらコードを書き進めます。
+変更からタスクを実装します。コードを記述し、項目にチェックを入れて、タスク リストを実行します。
 
-**構文:**
+**構文：**
 ```
 /opsx:apply [change-name]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | 実装対象の変更名（未指定なら文脈から推測） |
+| `change-name` |いいえ |どの変更を実装するか (指定されていない場合はコンテキストから推測) |
 
-**何をするか:**
-- `tasks.md` を読み、不完全なタスクを特定
-- タスクを順番に実行
-- コードを書き、必要ならテストを実行
-- チェックボックス `[x]` で完了を記録
+**機能:**
+- `tasks.md` を読み取り、不完全なタスクを識別します
+- タスクを 1 つずつ実行します
+- 必要に応じてコードを記述し、ファイルを作成し、テストを実行します
+- チェックボックス `[x]` でタスクが完了したことをマークします
 
-**例:**
+**例：**
 ```
-あなた: /opsx:apply
+You: /opsx:apply
 
-AI:  add-dark-mode を実装中...
+AI:  Implementing add-dark-mode...
 
-     tasks.md を読み込み:
-     - [ ] 1.1 ThemeContext を作成
-     - [ ] 1.2 CSS カスタムプロパティを追加
-     - [ ] 1.3 localStorage 永続化を実装
+     Reading tasks.md:
+     - [ ] 1.1 Create ThemeContext
+     - [ ] 1.2 Add CSS custom properties
+     - [ ] 1.3 Implement localStorage persistence
 
-     1.1 に着手: ThemeContext を作成中...
-     [src/context/ThemeContext.tsx を作成]
+     Working on 1.1: Create ThemeContext...
+     [Creates src/context/ThemeContext.tsx]
 
-     ✓ 1.1 完了
+     ✓ 1.1 Complete
 
-     1.2 に着手: CSS カスタムプロパティを追加中...
-     [src/styles/globals.css を更新]
+     Working on 1.2: Add CSS custom properties...
+     [Updates src/styles/globals.css]
 
-     ✓ 1.2 完了
+     ✓ 1.2 Complete
      ...
 ```
 
 **ヒント:**
-- 中断しても再開できる
-- 変更名を指定すれば並行作業にも対応
-- 進捗は `tasks.md` のチェックで管理
+- 中断された場合、中断したところから再開できます
+- 変更名を指定して並行変更に使用します
+- 完了状態は `tasks.md` チェックボックスで追跡されます
+
+---
+
+### `/opsx:update`
+
+変更の既存の計画成果物を改訂し、相互の一貫性を保ちます。アーティファクトのみを計画し、コードを編集することはありません。
+
+**構文：**
+
+```text
+/opsx:update [change-name]
+```
+
+**引数:**
+
+|引数 |必須 |説明 |
+|----------|----------|-------------|
+| `change-name` |いいえ |どの変更を更新するか (指定されていない場合はコンテキストから推測) |
+
+**機能:**
+
+- `openspec status --change <name> --json` 経由で変更のアーティファクトを読み取ります
+- 要求されたリビジョンを適用するか、アーティファクトに名前を付けていない場合は矛盾がないかレビューします。
+- 他の既存の成果物をあらゆる方向に調整します (デザインの編集が提案に反映される可能性があります)
+- 執筆前に編集内容を一度に 1 つずつ確認します。
+- 次のステップを推奨して終了します: `/opsx:continue` (アーティファクトが欠落)、`/opsx:apply` (修正された計画をコードに取り込む)、または `/opsx:archive` (すべて完了)
+
+**例：**
+
+```text
+You: /opsx:update add-dark-mode - we're storing the theme in a cookie now, not localStorage
+
+AI:  Reading add-dark-mode artifacts...
+
+     The design references localStorage in two places; tasks 1.3 covers
+     localStorage persistence; the proposal doesn't mention storage.
+
+     Proposed revisions:
+     1. design.md - swap localStorage decision for cookie storage
+     2. tasks.md - reword task 1.3 to cookie persistence
+
+     Apply revision 1? (design.md)
+```
+
+**ヒント:**
+
+- 欠落したアーティファクトは作成されません - それは `/opsx:continue`
+- 変更がすでに実装されている場合は、コードが改訂された計画と一致するように `/opsx:apply` をフォローアップします。
+- リビジョンによって変更の *意図* が変更される場合は、代わりに新しい変更を新たに開始してください ([いつ更新するか、いつ更新するか。](opsx.md#when-to-update-vs-start-fresh) を開始するかを参照)。
 
 ---
 
 ### `/opsx:verify`
 
-実装がアーティファクトに合っているか検証します。完成度・正確性・整合性をチェックします。
+実装が変更成果物と一致することを検証します。完全性、正確性、一貫性をチェックします。
 
-**構文:**
+**構文：**
 ```
 /opsx:verify [change-name]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | 検証対象の変更名（未指定なら文脈から推測） |
+| `change-name` |いいえ |どの変更を確認するか (指定されていない場合はコンテキストから推測) |
 
-**何をするか:**
-- 実装品質を 3 つの観点で確認
-- コードベース内に実装の証拠があるか探索
-- CRITICAL / WARNING / SUGGESTION で指摘を分類
-- アーカイブをブロックしないが、問題を可視化
+**機能:**
+- 実装品質の 3 つの側面をチェックします
+- コードベースで実装の証拠を検索します
+- 重大、警告、または提案として分類された問題を報告します
+- アーカイブはブロックされませんが、問題が表面化します
 
-**検証の観点:**
+**検証寸法:**
 
-| 観点 | 検証内容 |
+|寸法 |検証内容 |
 |-----------|-------------------|
-| **Completeness** | タスク完了、要件実装、シナリオ網羅 |
-| **Correctness** | 仕様意図との一致、エッジケース対応 |
-| **Coherence** | 設計意図の反映、パターン整合性 |
+| **完全性** |すべてのタスクが完了し、すべての要件が実装され、シナリオがカバーされています。
+| **正確さ** |実装は仕様の意図と一致し、エッジケースは処理されます。
+| **一貫性** |設計上の決定はコードに反映され、パターンは一貫しています |
 
-**例:**
+**例：**
 ```
-あなた: /opsx:verify
+You: /opsx:verify
 
-AI:  add-dark-mode を検証中...
+AI:  Verifying add-dark-mode...
 
-     完全性
-     ✓ tasks.md の 8 タスクすべてにチェック済み
-     ✓ specs のすべての要件に対応コードあり
-     ⚠ シナリオ「システム設定検出」のテストカバレッジなし
+     COMPLETENESS
+     ✓ All 8 tasks in tasks.md are checked
+     ✓ All requirements in specs have corresponding code
+     ⚠ Scenario "System preference detection" has no test coverage
 
-     正確性
-     ✓ 実装が仕様の意図に一致
-     ✓ シナリオのエッジケースを処理済み
-     ✓ エラー状態が仕様定義と一致
+     CORRECTNESS
+     ✓ Implementation matches spec intent
+     ✓ Edge cases from scenarios are handled
+     ✓ Error states match spec definitions
 
-     整合性
-     ✓ 設計判断がコード構造に反映
-     ✓ 命名規則が design.md と一貫
-     ⚠ 設計には「CSS 変数」とあるが、実装は Tailwind クラスを使用
+     COHERENCE
+     ✓ Design decisions reflected in code structure
+     ✓ Naming conventions consistent with design.md
+     ⚠ Design mentions "CSS variables" but implementation uses Tailwind classes
 
-     まとめ
+     SUMMARY
      ─────────────────────────────
-     重大な問題: 0
-     警告: 2
-     アーカイブ準備: 完了（警告あり）
+     Critical issues: 0
+     Warnings: 2
+     Ready to archive: Yes (with warnings)
 
-     推奨対応:
-     1. システム設定検出のテストを追加
-     2. design.md を Tailwind 使用に更新、または CSS 変数にリファクタ
+     Recommendations:
+     1. Add test for system preference detection
+     2. Update design.md to reflect Tailwind usage, or refactor to use CSS variables
 ```
 
 **ヒント:**
-- アーカイブ前に実行してズレを早期発見する
-- 警告はアーカイブを止めないが、問題のサイン
-- AI 作業のレビューに向く
-- 実装とアーティファクトの乖離を見つけられる
+- 不一致を早期に発見するために、アーカイブする前に実行します。
+- 警告はアーカイブをブロックしませんが、潜在的な問題を示します
+- コミットする前に AI の作業をレビューするのに適しています
+- アーティファクトと実装の間のドリフトを明らかにできる
 
 ---
 
 ### `/opsx:sync`
 
-**任意コマンド。** 変更の仕様差分を本仕様へ統合します。通常はアーカイブ時に確認が出るため、手動実行は必須ではありません。
+**オプションのコマンド。** 変更からの仕様差分をメイン仕様にマージします。アーカイブでは、必要に応じて同期を求めるプロンプトが表示されるため、通常はこれを手動で実行する必要はありません。
 
-**構文:**
+**構文：**
 ```
 /opsx:sync [change-name]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | 同期対象の変更名（未指定なら文脈から推測） |
+| `change-name` |いいえ |どの変更を同期するか (指定されていない場合はコンテキストから推測) |
 
-**何をするか:**
-- 変更フォルダの仕様差分を読み込み
-- ADDED / MODIFIED / REMOVED / RENAMED を解析
-- `openspec/specs/` に統合
-- 差分に含まれない既存内容は保持
-- 変更自体はアーカイブされない（アクティブのまま）
+**機能:**
+- 変更フォルダーから仕様差分を読み取ります
+- 追加/変更/削除/名前変更されたセクションを解析します
+- 変更をメインの `openspec/specs/` ディレクトリにマージします
+- デルタに記載されていない既存のコンテンツを保持します
+- 変更をアーカイブしません (アクティブのままです)
 
-**例:**
+**例：**
 ```text
-あなた: /opsx:sync
+You: /opsx:sync
 
-AI:  add-dark-mode の仕様差分を同期中...
+AI:  Syncing add-dark-mode delta specs...
 
-     読み込み: openspec/changes/add-dark-mode/specs/ui/spec.md
-     対象:     openspec/specs/ui/spec.md
+     Reading: openspec/changes/add-dark-mode/specs/ui/spec.md
+     Target:  openspec/specs/ui/spec.md
 
-     適用する変更:
-     ✓ ADDED: テーマ選択の要件（2 シナリオ）
-     ✓ ADDED: アクセシビリティの要件（1 シナリオ）
+     Changes to apply:
+     ✓ ADDED: Theme Selection requirement (2 scenarios)
+     ✓ ADDED: Accessibility requirement (1 scenario)
 
-     マージ中...
-     ✓ openspec/specs/ui/spec.md を更新しました
+     Merging...
+     ✓ openspec/specs/ui/spec.md updated
 
-     変更はアクティブのままです。完了したら /opsx:archive を実行してください。
+     Change remains active. Run /opsx:archive when ready to complete.
 ```
 
-**手動で使う場面:**
+**手動で使用する場合:**
 
-| 状況 | sync を使う？ |
+|シナリオ |同期を使用しますか? |
 |----------|-----------|
-| 長期変更で先に本仕様へ反映したい | はい |
-| 複数の並行変更が最新仕様を必要とする | はい |
-| マージ結果を別途レビューしたい | はい |
-| すぐアーカイブする予定 | いいえ（アーカイブが処理する） |
+|長期にわたる変更、アーカイブする前にメインで仕様が必要 |はい |
+|複数の変更を並行して行うには、基本仕様を更新する必要があります。はい |
+|マージを個別にプレビュー/レビューしたい |はい |
+|クイック変更、アーカイブに直接移動 |いいえ (アーカイブが処理します) |
 
 **ヒント:**
-- ただのコピーではなく、差分を賢く統合する
-- 既存要件へのシナリオ追加にも対応
-- 同期後も変更はアクティブのまま
-- 多くの場合はアーカイブ時の確認で十分
+- 同期はコピーアンドペーストではなくインテリジェントに行われます
+- 重複することなく、既存の要件にシナリオを追加できます。
+- 変更は同期後もアクティブのままになります (アーカイブされません)
+- ほとんどのユーザーはこれを直接呼び出す必要はありません。必要に応じてプロンプトをアーカイブしてください。
 
 ---
 
 ### `/opsx:archive`
 
-完了した変更をアーカイブします。変更を確定し、アーカイブフォルダへ移動します。
+完了した変更をアーカイブします。変更を確定し、アーカイブ フォルダーに移動します。
 
-**構文:**
+**構文：**
 ```
 /opsx:archive [change-name]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-name` | いいえ | アーカイブ対象の変更名（未指定なら文脈から推測） |
+| `change-name` |いいえ |どの変更をアーカイブするか (指定されていない場合はコンテキストから推測) |
 
-**何をするか:**
-- アーティファクトの完了状況を確認
-- タスク完了状況を確認（未完了なら警告）
-- 仕様差分が未同期なら同期を提案
-- 変更フォルダを `openspec/changes/archive/YYYY-MM-DD-<name>/` に移動
-- 監査用にアーティファクトを保存
+**機能:**
+- アーティファクトの完了ステータスを確認します
+- タスクの完了を確認します（不完全な場合は警告します）
+- まだ同期されていない場合は、仕様差分を同期するよう提案します
+- 変更フォルダーを `openspec/changes/archive/YYYY-MM-DD-<name>/` に移動します
+- 監査証跡のためにすべての成果物を保存します
 
-**例:**
+**例：**
 ```text
-あなた: /opsx:archive
+You: /opsx:archive
 
-AI:  add-dark-mode をアーカイブ中...
+AI:  Archiving add-dark-mode...
 
-     アーティファクト状況:
-     ✓ proposal.md 存在
-     ✓ specs/ 存在
-     ✓ design.md 存在
-     ✓ tasks.md 存在（8/8 タスク完了）
+     Artifact status:
+     ✓ proposal.md exists
+     ✓ specs/ exists
+     ✓ design.md exists
+     ✓ tasks.md exists (8/8 tasks complete)
 
-     仕様差分: 未同期
-     → 今すぐ同期しますか？（推奨）
+     Delta specs: Not yet synced
+     → Sync now? (recommended)
 
-あなた: はい
+You: Yes
 
-AI:  ✓ 仕様を openspec/specs/ui/spec.md に同期しました
-     ✓ openspec/changes/archive/2025-01-24-add-dark-mode/ に移動しました
+AI:  ✓ Synced specs to openspec/specs/ui/spec.md
+     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
 
-     変更のアーカイブが完了しました。
+     Change archived successfully.
 ```
 
 **ヒント:**
-- 未完了タスクがあってもアーカイブは可能だが警告される
-- 仕様差分の同期はアーカイブ時でも事前でも可
-- アーカイブ済み変更は履歴として保持される
-- `/opsx:verify` を先に使うと安心
+- アーカイブは不完全なタスクをブロックしませんが、警告を出します
+- 仕様差分はアーカイブ中または事前に同期可能
+- アーカイブされた変更は履歴として保存されます
+- 問題を見つけるには、最初に `/opsx:verify` を使用してください
 
 ---
 
 ### `/opsx:bulk-archive`
 
-複数の変更を一括でアーカイブします。仕様の競合も検出します。
+完了した複数の変更を一度にアーカイブします。変更間の仕様の競合を処理します。
 
-**構文:**
+**構文：**
 ```
 /opsx:bulk-archive [change-names...]
 ```
 
 **引数:**
-| 引数 | 必須 | 説明 |
+|引数 |必須 |説明 |
 |----------|----------|-------------|
-| `change-names` | いいえ | アーカイブ対象の変更（省略時は選択プロンプト） |
+| `change-names` |いいえ |アーカイブへの特定の変更 (指定されていない場合は選択を求めるプロンプトが表示されます) |
 
-**何をするか:**
-- 完了済み変更を一覧表示
-- 各変更を検証
-- 変更間の仕様競合を検出
-- 実装状態を確認して競合を解消
-- 作成日の古い順にアーカイブ
+**機能:**
+- 完了したすべての変更をリストします。
+- アーカイブする前に各変更を検証します
+- 変更にまたがる仕様の競合を検出します
+- 実際に実装されている内容を確認して競合を解決します。
+- 時系列順にアーカイブ
 
-**例:**
+**例：**
 ```
-あなた: /opsx:bulk-archive
+You: /opsx:bulk-archive
 
-AI:  完了済み変更を 3 件発見:
-     - add-dark-mode (8/8 タスク完了)
-     - fix-login-bug (3/3 タスク完了)
-     - update-footer (2/2 タスク完了)
+AI:  Found 3 completed changes:
+     - add-dark-mode (8/8 tasks complete)
+     - fix-login-bug (3/3 tasks complete)
+     - update-footer (2/2 tasks complete)
 
-     仕様の競合を確認中...
-     ⚠ add-dark-mode と update-footer が両方 specs/ui/ に触れています
+     Checking for spec conflicts...
+     ⚠ add-dark-mode and update-footer both touch specs/ui/
 
-     コードベースを確認して解消中...
-     両方の変更は実装済み。作成日順にマージします:
-     1. add-dark-mode (1 月 20 日作成)
-     2. update-footer (1 月 22 日作成)
+     Inspecting codebase to resolve...
+     Both changes are implemented. Will merge in chronological order:
+     1. add-dark-mode (created Jan 20)
+     2. update-footer (created Jan 22)
 
-     3 件すべてをアーカイブしますか？
+     Archive all 3 changes?
 
-あなた: はい
+You: Yes
 
-AI:  ✓ add-dark-mode をアーカイブしました
-     ✓ fix-login-bug をアーカイブしました
-     ✓ update-footer をアーカイブしました
-     仕様マージ順: add-dark-mode → update-footer
+AI:  ✓ Archived add-dark-mode
+     ✓ Archived fix-login-bug
+     ✓ Archived update-footer
+     Specs merged: add-dark-mode → update-footer
 ```
 
 **ヒント:**
-- 並行作業の整理に向く
-- 競合解消はエージェントが実装状況を確認して行う
-- 変更は作成日の順でアーカイブされる
-- 仕様の上書き前に確認が入る
+- 並行作業ストリームに適しています
+- 競合解決はエージェント的です (コードベースをチェックします)
+- 変更は作成順にアーカイブされます
+- 仕様の内容を上書きする前にプロンプ​​トを表示
 
 ---
 
 ### `/opsx:onboard`
 
-OpenSpec のワークフローを一通り体験するガイド付きオンボーディングです。実際のコードベースを使って進めます。
+完全な OpenSpec ワークフローによるガイド付きオンボーディング。実際のコードベースを使用した対話型チュートリアル。
 
-**構文:**
+**構文：**
 ```
 /opsx:onboard
 ```
 
-**何をするか:**
-- ワークフロー一周をナレーション付きで案内
-- コードベースをスキャンして改善点を探す
-- 実際の変更とアーティファクトを作成
-- 小さく安全な改善を実装
-- 変更をアーカイブ
-- 各ステップを解説
+**機能:**
+- ナレーション付きでワークフロー サイクル全体を説明します
+- コードベースをスキャンして実際の改善の機会を探します
+- 実際の成果物を使用して実際の変更を作成します
+- 実際の作業を実装します (小さくて安全な変更)
+- 完了した変更をアーカイブします
+- 各ステップを発生時に説明します
 
 **フェーズ:**
-1. ウェルカムとコードベース解析
-2. 改善ポイントの発見
-3. 変更作成（`/opsx:new`）
-4. proposal 作成
-5. specs 作成
-6. design 作成
-7. tasks 作成
-8. 実装（`/opsx:apply`）
-9. 実装検証
-10. 変更アーカイブ
-11. まとめと次の手順
+1. ようこそとコードベース分析
+2. 改善の機会を見つける
+3. 変更の作成 (`/opsx:new`)
+4. 提案書の作成
+5. 仕様の作成
+6. デザインを書く
+7. タスクの作成
+8. タスクの実装 (`/opsx:apply`)
+9. 実装の検証
+10. 変更のアーカイブ
+11. まとめと次のステップ
 
-**例:**
+**例：**
 ```
-あなた: /opsx:onboard
+You: /opsx:onboard
 
-AI:  OpenSpec へようこそ！
+AI:  Welcome to OpenSpec!
 
-     実際のコードベースを使ってワークフロー全体を案内します。
-     小さな改善点を見つけ、変更を作成し、実装してアーカイブします。
+     I'll walk you through the complete workflow using your actual codebase.
+     We'll find something small to improve, create a proper change for it,
+     implement it, and archive it.
 
-     コードベースをスキャンして改善点を探します...
+     Let me scan your codebase for opportunities...
 
-     [コードベースを解析]
+     [Analyzes codebase]
 
-     いくつか改善できそうな点が見つかりました:
-     1. お問い合わせフォームに入力バリデーションを追加
-     2. 認証フローのエラーメッセージを改善
-     3. 非同期ボタンにローディング状態を追加
+     I found a few things we could work on:
+     1. Add input validation to the contact form
+     2. Improve error messages in the auth flow
+     3. Add loading states to async buttons
 
-     どれに興味がありますか？（別の提案も歓迎です）
+     Which interests you? (or suggest something else)
 ```
 
 **ヒント:**
-- 初学者がワークフローを学ぶのに最適
-- トイ例ではなく実コードで進める
-- 作った変更は残しても捨ててもよい
-- 所要時間は 15〜30 分程度
+- ワークフローを学ぶ新規ユーザーに最適
+- おもちゃのサンプルではなく、実際のコードを使用します
+- 保持または破棄できる実際の変更を作成します
+- 完了までに 15 ～ 30 分かかります
 
 ---
 
-## AI ツール別のコマンド記法
+## AIツールによるコマンド構文
 
-AI ツールによってコマンド記法が少し異なります。各ツールに合わせた形式を使ってください。
+AI ツールが異なれば、使用するコマンド構文も若干異なります。ツールに一致する形式を使用してください。
 
-| ツール | 記法例 |
+|ツール |構文例 |
 |------|----------------|
-| Claude Code | `/opsx:propose`, `/opsx:apply` |
-| Cursor | `/opsx-propose`, `/opsx-apply` |
-| Windsurf | `/opsx-propose`, `/opsx-apply` |
-| Copilot (IDE) | `/opsx-propose`, `/opsx-apply` |
-| Kimi CLI | `/skill:openspec-propose`, `/skill:openspec-apply-change` などのスキルベース呼び出し（`opsx-*` コマンドファイルは生成されない） |
-| Trae | `/openspec-propose`, `/openspec-apply-change` などのスキルベース呼び出し（`opsx-*` コマンドファイルは生成されない） |
+|クロード・コード | `/opsx:propose`、`/opsx:apply` |
+|カーソル | `/opsx-propose`、`/opsx-apply` |
+|ウィンドサーフィン | `/opsx-propose`、`/opsx-apply` |
+|コパイロット (IDE) | `/opsx-propose`、`/opsx-apply` |
+|オーマイパイ | `/opsx-propose`、`/opsx-apply` |
+|キミ・クリ | `/skill:openspec-propose`、`/skill:openspec-apply-change` などのスキルベースの呼び出し (`opsx-*` コマンド ファイルは生成されません) |
+|トレイ | `/opsx-propose`、`/opsx-apply` |
 
-記法や見え方はツールごとに異なっても、意図するワークフローは同じです。
+目的はどのツールでも同じですが、コマンドの表示方法は統合によって異なる場合があります。
 
-> **注:** GitHub Copilot のコマンド（`.github/prompts/*.prompt.md`）は IDE 拡張機能（VS Code, JetBrains, Visual Studio）でのみ利用できます。GitHub Copilot CLI は現在、カスタムプロンプトファイルを直接サポートしていません。詳細と回避策は [対応ツール](supported-tools.md) を参照してください。
+> **注意:** GitHub Copilot コマンド (`.github/prompts/*.prompt.md`) は、IDE 拡張機能 (VS Code、JetBrains、Visual Studio) でのみ使用できます。 GitHub Copilot CLI は現在、カスタム プロンプト ファイルをサポートしていません。詳細と回避策については、[サポートされているツール](supported-tools.md)] を参照してください。
 
 ---
 
-## 旧コマンド
+## 従来のコマンド
 
-これらは旧来の「一括生成」ワークフローのコマンドです。現在は OPSX を推奨します。
+これらのコマンドは、古い「一括」ワークフローを使用します。これらは引き続き機能しますが、OPSX コマンドの使用をお勧めします。
 
-| コマンド | 内容 |
+|コマンド |何をするのか |
 |---------|--------------|
-| `/openspec:proposal` | proposal/specs/design/tasks を一括生成 |
-| `/openspec:apply` | 変更を実装 |
-| `/openspec:archive` | 変更をアーカイブ |
+| `/openspec:proposal` |すべての成果物 (提案書、仕様書、設計、タスク) を一度に作成 |
+| `/openspec:apply` |変更を実装する |
+| `/openspec:archive` |変更をアーカイブする |
 
-**旧コマンドを使う場面:**
-- 旧ワークフローを使っている既存プロジェクト
-- 一括生成で十分な単純な変更
-- 一度に作る運用が好みの場合
+**従来のコマンドを使用する場合:**
+- 古いワークフローを使用している既存のプロジェクト
+- 増分アーティファクト作成が不要な単純な変更
+- 全か無かのアプローチを好む
 
 **OPSX への移行:**
-旧来の変更も OPSX コマンドで継続できます。アーティファクト構造は互換です。
+レガシーの変更は、OPSX コマンドを使用して続行できます。アーティファクト構造は互換性があります。
 
 ---
 
 ## トラブルシューティング
 
-### "変更が見つかりません"
+### 「変更が見つかりません」
 
-変更名が特定できませんでした。
+コマンドは、どの変更を処理すべきかを特定できませんでした。
 
-**対処:**
-- 変更名を明示: `/opsx:apply add-dark-mode`
-- 変更フォルダの存在確認: `openspec list`
-- 正しいディレクトリで実行しているか確認
+**解決策:**
+- 変更名を明示的に指定します: `/opsx:apply add-dark-mode`
+- 変更フォルダーが存在することを確認します: `openspec list`
+- 正しいプロジェクト ディレクトリにいることを確認します
 
-### "ready なアーティファクトがありません"
+### 「アーティファクトの準備ができていません」
 
-すべてのアーティファクトが完了済みか、依存関係でブロックされています。
+すべてのアーティファクトは完了しているか、欠落している依存関係によってブロックされています。
 
-**対処:**
-- `openspec status --change <name>` でブロック要因を確認
-- 依存アーティファクトの有無を確認
-- 先に依存アーティファクトを作成
+**解決策:**
+- `openspec status --change <name>` を実行して、何がブロックされているかを確認します
+- 必要なアーティファクトが存在するかどうかを確認します
+- 不足している依存関係アーティファクトを最初に作成します
 
-### "スキーマが見つかりません"
+### 「スキーマが見つかりません」
 
-指定したスキーマが存在しません。
+指定されたスキーマは存在しません。
 
-**対処:**
-- 利用可能なスキーマ一覧: `openspec schemas`
-- スキーマ名の綴りを確認
-- カスタムスキーマなら作成: `openspec schema init <name>`
+**解決策:**
+- 利用可能なスキーマのリスト: `openspec schemas`
+- スキーマ名のスペルを確認してください
+- カスタムの場合はスキーマを作成します: `openspec schema init <name>`
 
-### コマンドが認識されない
+### コマンドが認識されません
 
-AI ツールが OpenSpec コマンドを認識しません。
+AI ツールは OpenSpec コマンドを認識しません。
 
-**対処:**
-- OpenSpec を初期化済みか確認: `openspec init`
-- スキルを再生成: `openspec update`
-- `.claude/skills/` があるか確認（Claude Code の場合）
-- AI ツールを再起動してスキルを再読み込み
+**解決策:**
+- OpenSpec が初期化されていることを確認します: `openspec init`
+- スキル再生成：`openspec update`
+- `.claude/skills/` ディレクトリが存在することを確認します (クロード コードの場合)
+- AI ツールを再起動して新しいスキルを習得します
 
-### アーティファクトがうまく生成されない
+### アーティファクトが正しく生成されない
 
-AI が不完全または不正確なアーティファクトを作成します。
+AI は不完全または不正確なアーティファクトを作成します。
 
-**対処:**
-- `openspec/config.yaml` にプロジェクトコンテキストを追加
-- アーティファクト別ルールで補足指示を追加
-- 変更説明を具体的にする
-- `/opsx:ff` ではなく `/opsx:continue` を使う
+**解決策:**
+- `openspec/config.yaml` にプロジェクト コンテキストを追加
+- 特定のガイダンスのためのアーティファクトごとのルールを追加します
+- 変更の説明にさらに詳細を記載します
+- より詳細に制御するには、`/opsx:continue` の代わりに `/opsx:ff` を使用します。
 
 ---
 
-## 次に読むもの
+## 次のステップ
 
-- [ワークフロー](workflows.md) - 代表的なフローと使い分け
-- [CLI](cli.md) - 管理と検証のターミナルコマンド
-- [カスタマイズ](customization.md) - カスタムスキーマとワークフロー
+- [Workflows](workflows.md) - 一般的なパターンと各コマンドの使用時期
+- [CLI](cli.md) - 管理と検証のための端末コマンド
+- [カスタマイズ](customization.md) - カスタム スキーマとワークフローを作成する

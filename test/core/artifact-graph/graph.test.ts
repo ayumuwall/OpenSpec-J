@@ -218,7 +218,7 @@ artifacts:
       ]);
       const graph = ArtifactGraph.fromSchema(schema);
 
-      expect(graph.getBlocked(new Set())).toEqual({});
+      expect(graph.getブロック中(new Set())).toEqual({});
     });
 
     it('should return artifact blocked by single dependency', () => {
@@ -228,7 +228,7 @@ artifacts:
       ]);
       const graph = ArtifactGraph.fromSchema(schema);
 
-      expect(graph.getBlocked(new Set())).toEqual({ B: ['A'] });
+      expect(graph.getブロック中(new Set())).toEqual({ B: ['A'] });
     });
 
     it('should return artifact blocked by multiple dependencies', () => {
@@ -240,7 +240,7 @@ artifacts:
       const graph = ArtifactGraph.fromSchema(schema);
 
       // Neither A nor B completed
-      expect(graph.getBlocked(new Set())).toEqual({ C: ['A', 'B'] });
+      expect(graph.getブロック中(new Set())).toEqual({ C: ['A', 'B'] });
     });
 
     it('should only list unmet dependencies', () => {
@@ -252,7 +252,7 @@ artifacts:
       const graph = ArtifactGraph.fromSchema(schema);
 
       // A completed, B not
-      expect(graph.getBlocked(new Set(['A']))).toEqual({ C: ['B'] });
+      expect(graph.getブロック中(new Set(['A']))).toEqual({ C: ['B'] });
     });
 
     it('should not include completed artifacts', () => {
@@ -262,7 +262,7 @@ artifacts:
       ]);
       const graph = ArtifactGraph.fromSchema(schema);
 
-      expect(graph.getBlocked(new Set(['A', 'B']))).toEqual({});
+      expect(graph.getブロック中(new Set(['A', 'B']))).toEqual({});
     });
   });
 });

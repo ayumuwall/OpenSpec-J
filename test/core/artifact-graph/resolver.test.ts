@@ -133,7 +133,7 @@ artifacts:
 `;
       fs.writeFileSync(path.join(userSchemaDir, 'schema.yaml'), invalidSchema);
 
-      expect(() => resolveSchema('spec-driven')).toThrow(SchemaLoadError);
+      expect(() => resolveSchema('spec-driven')).toThrow(SchemaLoadエラー);
     });
 
     it('should include file path in validation error message', () => {
@@ -225,7 +225,7 @@ version: [[[invalid yaml
         resolveSchema('spec-driven');
         expect.fail('Should have thrown');
       } catch (e) {
-        expect(e).toBeInstanceOf(SchemaLoadError);
+        expect(e).toBeInstanceOf(SchemaLoadエラー);
         const error = e as SchemaLoadError;
         expect(error.message).toContain('解析に失敗しました');
         expect(error.message).toContain(schemaPath);
@@ -313,7 +313,7 @@ version: [[[invalid yaml
       const schemas = listSchemas();
 
       expect(schemas).toContain('valid-schema');
-      expect(schemas).not.toContain('empty-dir');
+      expect(schemas).not.toContain('空にできません-dir');
     });
   });
 

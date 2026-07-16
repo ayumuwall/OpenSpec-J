@@ -335,7 +335,7 @@ describe('FeedbackCommand', () => {
       }
 
       // Should display the error from gh CLI
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(consoleエラーSpy).toHaveBeenCalledWith(
         expect.stringContaining('Network connectivity issue')
       );
     });

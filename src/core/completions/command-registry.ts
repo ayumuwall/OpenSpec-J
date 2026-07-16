@@ -57,6 +57,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         values: ['recent', 'name'],
       },
       COMMON_FLAGS.json,
+      COMMON_FLAGS.store,
     ],
   },
   {
@@ -92,6 +93,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         takesValue: true,
       },
       COMMON_FLAGS.noInteractive,
+      COMMON_FLAGS.store,
     ],
   },
   {
@@ -126,6 +128,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         description: '指定した ID の要件を表示（JSON のみ、仕様向け）',
         takesValue: true,
       },
+      COMMON_FLAGS.store,
     ],
   },
   {
@@ -148,6 +151,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'no-validate',
         description: '検証を省略（非推奨）',
       },
+      {
+        name: 'json',
+        description: 'Output as JSON (non-interactive)',
+      },
+      COMMON_FLAGS.store,
     ],
   },
   {
@@ -165,6 +173,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         takesValue: true,
       },
       COMMON_FLAGS.json,
+      COMMON_FLAGS.store,
     ],
   },
   {
@@ -184,6 +193,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         takesValue: true,
       },
       COMMON_FLAGS.json,
+      COMMON_FLAGS.store,
     ],
   },
   {
@@ -223,27 +233,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
           {
             name: 'goal',
-            description: '変更に保存する workspace のプロダクトゴール',
-            takesValue: true,
-          },
-          {
-            name: 'areas',
-            description: '影響を受ける workspace link 名（カンマ区切り）',
-            takesValue: true,
-          },
-          {
-            name: 'initiative',
-            description: 'リポジトリ内の変更を initiative に紐付け',
-            takesValue: true,
-          },
-          {
-            name: 'store',
-            description: '--initiative で使う context store ID',
-            takesValue: true,
-          },
-          {
-            name: 'store-path',
-            description: '--initiative で使う既存のローカル context store ルート',
+            description: 'Optional goal metadata to store with the change',
             takesValue: true,
           },
           {
@@ -252,254 +242,65 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             takesValue: true,
           },
           COMMON_FLAGS.json,
+          COMMON_FLAGS.store,
         ],
       },
     ],
   },
   {
-    name: 'set',
-    description: 'チェックインされる OpenSpec メタデータを設定',
-    flags: [],
-    subcommands: [
-      {
-        name: 'change',
-        description: 'リポジトリ内の変更メタデータを設定',
-        acceptsPositional: true,
-        positionalType: 'change-id',
-        positionals: [{ name: 'name', type: 'change-id' }],
-        flags: [
-          {
-            name: 'initiative',
-            description: 'リポジトリ内の変更を initiative に紐付け',
-            takesValue: true,
-          },
-          {
-            name: 'store',
-            description: '--initiative で使う context store ID',
-            takesValue: true,
-          },
-          {
-            name: 'store-path',
-            description: '--initiative で使う既存のローカル context store ルート',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-        ],
-      },
-    ],
-  },
-  {
-    name: 'workspace',
-    description: '調整用 workspace をセットアップ・確認',
+    name: 'store',
+    description:
+      'Create and manage stores - standalone OpenSpec repos you register on this machine',
     flags: [],
     subcommands: [
       {
         name: 'setup',
-        description: 'workspace をセットアップし、既存リポジトリまたはフォルダをリンク',
-        flags: [
-          {
-            name: 'name',
-            description: 'workspace 名',
-            takesValue: true,
-          },
-          {
-            name: 'link',
-            description: 'リポジトリまたはフォルダのリンク。<path> または <name>=<path> を指定',
-            takesValue: true,
-          },
-          {
-            name: 'opener',
-            description: 'デフォルトの開き方: codex-cli、claude、github-copilot、editor',
-            takesValue: true,
-            values: ['codex-cli', 'claude', 'github-copilot', 'editor'],
-          },
-          {
-            name: 'tools',
-            description: 'エージェント用 OpenSpec スキルをインストール（all、none、またはカンマ区切りのツール ID）',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-          COMMON_FLAGS.noInteractive,
-        ],
-      },
-      {
-        name: 'list',
-        description: '既知の OpenSpec workspace を一覧表示',
-        flags: [
-          COMMON_FLAGS.json,
-        ],
-      },
-      {
-        name: 'ls',
-        description: '既知の OpenSpec workspace を一覧表示',
-        flags: [
-          COMMON_FLAGS.json,
-        ],
-      },
-      {
-        name: 'link',
-        description: '既存リポジトリまたはフォルダを workspace にリンク',
-        acceptsPositional: true,
-        positionals: [
-          { name: 'name-or-path', type: 'path', optional: true },
-          { name: 'path', type: 'path', optional: true },
-        ],
-        flags: [
-          {
-            name: 'workspace',
-            description: 'ローカル workspace view の workspace 名',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-          COMMON_FLAGS.noInteractive,
-        ],
-      },
-      {
-        name: 'relink',
-        description: '既存 workspace link のローカルパスを更新',
-        acceptsPositional: true,
-        positionals: [
-          { name: 'name' },
-          { name: 'path', type: 'path' },
-        ],
-        flags: [
-          {
-            name: 'workspace',
-            description: 'ローカル workspace view の workspace 名',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-          COMMON_FLAGS.noInteractive,
-        ],
-      },
-      {
-        name: 'doctor',
-        description: 'このマシンで workspace が解決できる内容を確認',
-        flags: [
-          {
-            name: 'workspace',
-            description: 'ローカル workspace view の workspace 名',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-          COMMON_FLAGS.noInteractive,
-        ],
-      },
-      {
-        name: 'update',
-        description: 'ワークスペース内の OpenSpec ガイドとエージェントスキルを更新',
-        acceptsPositional: true,
-        positionals: [{ name: 'name', optional: true }],
-        flags: [
-          {
-            name: 'workspace',
-            description: 'ローカル workspace view の workspace 名',
-            takesValue: true,
-          },
-          {
-            name: 'tools',
-            description: 'ワークスペーススキルの配布対象エージェントを選択。ワークフローはグローバルプロファイルで選択',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-          COMMON_FLAGS.noInteractive,
-        ],
-      },
-      {
-        name: 'open',
-        description: 'workspace をエージェントまたは VS Code エディタで開く',
-        acceptsPositional: true,
-        positionals: [{ name: 'name', optional: true }],
-        flags: [
-          {
-            name: 'workspace',
-            description: 'ローカル workspace view の workspace 名',
-            takesValue: true,
-          },
-          {
-            name: 'initiative',
-            description: 'initiative をローカル workspace view として開く',
-            takesValue: true,
-          },
-          {
-            name: 'store',
-            description: '--initiative で使う context store ID',
-            takesValue: true,
-          },
-          {
-            name: 'store-path',
-            description: '--initiative で使う既存のローカル context store ルート',
-            takesValue: true,
-          },
-          {
-            name: 'agent',
-            description: 'このセッションで使うエージェント: codex-cli、claude、github-copilot',
-            takesValue: true,
-            values: ['codex-cli', 'claude', 'github-copilot'],
-          },
-          {
-            name: 'editor',
-            description: 'workspace を VS Code エディタモードで開く',
-          },
-          {
-            name: 'prepare-only',
-            description: '未対応: プレビュー表示は将来の context/query コマンドで扱います',
-          },
-          COMMON_FLAGS.json,
-          {
-            name: 'change',
-            description: '未対応: 変更単位の open は将来の workspace change planning で扱います',
-            takesValue: true,
-          },
-          COMMON_FLAGS.noInteractive,
-        ],
-      },
-    ],
-  },
-  {
-    name: 'context-store',
-    description: 'ローカルの context store をセットアップ・確認',
-    flags: [],
-    subcommands: [
-      {
-        name: 'setup',
-        description: 'ローカルの context store を作成または登録',
+        description: 'Create or register a local store',
         acceptsPositional: true,
         positionals: [{ name: 'id', optional: true }],
         flags: [
           {
             name: 'path',
-            description: 'context store として使うディレクトリ',
+            description: 'Directory to use for the store',
             takesValue: true,
           },
           {
             name: 'init-git',
-            description: 'context store 内に Git リポジトリを初期化',
+            description: 'Initialize a Git repository in the store',
           },
           {
             name: 'no-init-git',
             description: 'Git リポジトリの初期化を省略',
+          },
+          {
+            name: 'remote',
+            description: 'Canonical clone source recorded in store.yaml',
+            takesValue: true,
           },
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'register',
-        description: '既存の context store ディレクトリを登録',
+        description: 'Register an existing store directory',
         acceptsPositional: true,
         positionals: [{ name: 'path', type: 'path', optional: true }],
         flags: [
           {
             name: 'id',
-            description: 'context store ID',
+            description: 'Store id',
             takesValue: true,
+          },
+          {
+            name: 'yes',
+            description: 'Confirm creating store identity metadata',
           },
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'unregister',
-        description: 'ファイルを削除せずローカルの context-store 登録を解除',
+        description: 'Forget a local store registration without deleting files',
         acceptsPositional: true,
         positionals: [{ name: 'id' }],
         flags: [
@@ -508,34 +309,34 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'remove',
-        description: 'ローカルの context-store 登録を解除し、フォルダも削除',
+        description: 'Forget a local store registration and delete its local folder',
         acceptsPositional: true,
         positionals: [{ name: 'id' }],
         flags: [
           {
             name: 'yes',
-            description: 'ローカルの context-store フォルダ削除を確認済みにする',
+            description: 'Confirm local store folder deletion',
           },
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'list',
-        description: '登録済みの context store を一覧表示',
+        description: 'List registered stores',
         flags: [
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'ls',
-        description: '登録済みの context store を一覧表示',
+        description: 'List registered stores',
         flags: [
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'doctor',
-        description: 'ローカル context-store 登録とメタデータを確認',
+        description: 'Check local store registration and metadata',
         acceptsPositional: true,
         positionals: [{ name: 'id', optional: true }],
         flags: [
@@ -545,53 +346,50 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     ],
   },
   {
-    name: 'initiative',
-    description: '調整用 initiative を作成・一覧表示',
+    name: 'context',
+    description: 'Print the working context for the resolved OpenSpec root',
+    flags: [
+      COMMON_FLAGS.json,
+      COMMON_FLAGS.store,
+      {
+        name: 'code-workspace',
+        description: 'Also write a VS Code workspace file for the set',
+        takesValue: true,
+      },
+      {
+        name: 'force',
+        description: 'Overwrite an existing --code-workspace file',
+      },
+    ],
+  },
+  {
+    name: 'doctor',
+    description: 'Report relationship health for the resolved OpenSpec root',
+    flags: [
+      COMMON_FLAGS.json,
+      COMMON_FLAGS.store,
+    ],
+  },
+  {
+    name: 'workset',
+    description: 'Compose, keep, and open personal working views (purely local)',
     flags: [],
     subcommands: [
       {
         name: 'create',
-        description: 'context store 内に initiative を作成',
+        description: 'Compose and save a named working view of folders you choose',
         acceptsPositional: true,
-        positionals: [{ name: 'id', optional: true }],
+        positionals: [{ name: 'name', optional: true }],
         flags: [
           {
-            name: 'store',
-            description: 'ローカル context-store レジストリ上の context store ID',
+            name: 'member',
+            description:
+              'Member folder as <path> or <name>=<path>; repeatable, first is the primary',
             takesValue: true,
           },
           {
-            name: 'store-path',
-            description: '既存のローカル context store ルート',
-            takesValue: true,
-          },
-          {
-            name: 'title',
-            description: 'initiative のタイトル',
-            takesValue: true,
-          },
-          {
-            name: 'summary',
-            description: 'initiative の概要',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-        ],
-      },
-      {
-        name: 'show',
-        description: 'initiative の場所と読み方を表示',
-        acceptsPositional: true,
-        positionals: [{ name: 'id' }],
-        flags: [
-          {
-            name: 'store',
-            description: 'ローカル context-store レジストリ上の context store ID',
-            takesValue: true,
-          },
-          {
-            name: 'store-path',
-            description: '既存のローカル context store ルート',
+            name: 'tool',
+            description: 'Preferred tool to open this workset with',
             takesValue: true,
           },
           COMMON_FLAGS.json,
@@ -599,34 +397,37 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'list',
-        description: '登録済み context store 全体から initiative を一覧表示',
-        flags: [
-          {
-            name: 'store',
-            description: 'ローカル context-store レジストリ上の context store ID',
-            takesValue: true,
-          },
-          {
-            name: 'store-path',
-            description: '既存のローカル context store ルート',
-            takesValue: true,
-          },
-          COMMON_FLAGS.json,
-        ],
+        description: 'Show saved worksets with their members',
+        flags: [COMMON_FLAGS.json],
       },
       {
         name: 'ls',
-        description: '登録済み context store 全体から initiative を一覧表示',
+        description: 'Show saved worksets with their members',
+        flags: [COMMON_FLAGS.json],
+      },
+      {
+        name: 'open',
+        description:
+          'Open a saved workset in your tool (editor window or agent session)',
+        acceptsPositional: true,
+        positionals: [{ name: 'name' }],
         flags: [
           {
-            name: 'store',
-            description: 'ローカル context-store レジストリ上の context store ID',
+            name: 'tool',
+            description: 'Open with this tool just this once',
             takesValue: true,
           },
+        ],
+      },
+      {
+        name: 'remove',
+        description: 'Delete a saved workset (member folders are never touched)',
+        acceptsPositional: true,
+        positionals: [{ name: 'name' }],
+        flags: [
           {
-            name: 'store-path',
-            description: '既存のローカル context store ルート',
-            takesValue: true,
+            name: 'yes',
+            description: 'Confirm removal non-interactively',
           },
           COMMON_FLAGS.json,
         ],

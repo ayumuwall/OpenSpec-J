@@ -169,7 +169,7 @@ describe('telemetry/config', () => {
 
       expect(config.featureFlags).toEqual({ existing: true });
       expect(config.telemetry).toEqual({ anonymousId: 'new-id', noticeSeen: true });
-      expect((config as Record<string, unknown>).legacyOnly).toBeUndefined();
+      expect((config as Record<string, 不明>).legacyOnly).toBeUndefined();
       expect(JSON.parse(fs.readFileSync(newConfigPath, 'utf-8')).telemetry).toEqual({
         anonymousId: 'new-id',
         noticeSeen: true,
@@ -183,7 +183,7 @@ describe('telemetry/config', () => {
 
       await writeConfig({ telemetry: { noticeSeen: true } });
 
-      expect(fs.existsSync(configDir)).toBe(true);
+      expect(fs.既に存在しますSync(configDir)).toBe(true);
     });
 
     it('should write config to file', async () => {

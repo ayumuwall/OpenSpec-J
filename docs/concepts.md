@@ -49,314 +49,175 @@ OpenSpec は作業を 2 つの主要領域に分けて整理します。
 
 この分離が重要です。複数の変更を並行で進められ、レビューしてから本仕様へ反映できます。アーカイブ時に差分が信頼できる基準へ統合されます。
 
-## 調整用ワークスペース
+## Specs
 
-ワークスペース対応は beta です。現在はローカルビュー方式を採用していますが、外部自動化、連携、長期運用のワークフローでは、コマンドの挙動、状態ファイル、JSON 出力がまだ変わり得るものとして扱ってください。
+Specs describe your system's behavior using structured requirements and scenarios.
 
-以下のコマンドは、リンク済みリポジトリやフォルダをまとめて扱うローカルビューを作るための、最初のセットアップフローです。
-
-計画、実装、アーカイブの流れを 1 つのリポジトリで完結できる場合は、リポジトリ内の OpenSpec プロジェクトを使うのが標準です。一方で、複数のリポジトリやフォルダにまたがる作業もあります。その場合、OpenSpec の調整用ワークスペースは、リンク済みパス、開き方の設定、エージェント設定をまとめる、このマシン上だけのビューとして機能します。
-
-ワークスペースの考え方は次のとおりです。
-
-```text
-workspace     = context store、initiative、リポジトリ、フォルダに対するプライベートなローカルビュー
-context store = 永続的な共有コンテキストの置き場所
-initiative    = context store 内の永続的な調整コンテキスト
-link          = ワークスペースがこのマシン上で解決できるリポジトリまたはフォルダの安定名
-change        = 計画済み作業の 1 単位。実装は担当リポジトリに属する
-```
-
-ワークスペースは、リポジトリ内の OpenSpec プロジェクトとは別の形を持ちます。
-
-```text
-getGlobalDataDir()/workspaces/<workspace-name>/
-├── .openspec-workspace/
-│   └── view.yaml                  # プライベートなローカルビュー記録
-├── AGENTS.md                      # 生成される実行時ガイダンス
-└── <workspace-name>.code-workspace # 生成されるエディタ workspace ファイル
-```
-
-リポジトリ内の OpenSpec 状態は、既存の形を維持します。
-
-```text
-repo-root/
-└── openspec/
-    ├── specs/
-    └── changes/
-```
-
-ルートレベルの `workspace.yaml` ファイルは OpenSpec のワークスペース状態ではありません。ワークスペース状態は `.openspec-workspace/` 配下に名前空間化されるため、他ツールは同名のルートレベルファイルを引き続き所有できます。
-
-この区別は重要です。ワークスペースフォルダは、リンク済みリポジトリやフォルダを開いて調べるためのローカルな調整場所です。各リポジトリの `openspec/` ディレクトリは、そのリポジトリが所有する specs、changes、実装計画の置き場所であり続けます。ユーザーはワークスペースフォルダ内で `openspec init` を実行する必要はありません。
-
-安定したリンク名により、ワークスペースはリポジトリやフォルダを参照します。プライベートなワークスペース記録は `api`, `web`, `checkout` などの名前を保持し、この実行環境のローカルパスへ対応づけます。
-
-```yaml
-# .openspec-workspace/view.yaml
-version: 1
-name: platform
-context: null
-links:
-  api: /repos/api
-  web: /repos/web
-```
-
-ワークスペースが initiative を開くと、`context` は選択した context-store の紐付けと initiative ID を記録します。レジストリから選択した context store は ID で保存するため、別の環境でも扱いやすくなります。パスで選択した context store は、`.openspec-workspace/view.yaml` がプライベートなローカル状態であるため、意図的にその実行環境のローカルパスを保持します。
-
-```yaml
-context:
-  kind: initiative
-  store:
-    id: platform
-    selector:
-      kind: registry
-      id: platform
-  initiative:
-    id: billing-launch
-```
-
-リンク済みパスは、リポジトリ全体、大規模 monorepo 内のフォルダ、その他の既存フォルダのいずれでもかまいません。ワークスペース計画に参加する時点では、リンク先がリポジトリ内の `openspec/` 状態を持っている必要はありません。後続の実装、検証、アーカイブワークフローではリポジトリ側の準備がさらに必要になる場合がありますが、計画上の可視性はリンクから始まります。
-
-```text
-multi-repo:
-  api      -> /repos/api
-  web      -> /repos/web
-
-large monorepo:
-  billing  -> /repos/platform/services/billing
-  checkout -> /repos/platform/apps/checkout
-```
-
-管理対象ワークスペースは標準の OpenSpec データディレクトリ配下に置かれます。
-
-```text
-getGlobalDataDir()/workspaces
-```
-
-つまり、`XDG_DATA_HOME` が設定されている場合は `$XDG_DATA_HOME/openspec/workspaces`、Unix 系フォールバックでは `~/.local/share/openspec/workspaces`、ネイティブ Windows フォールバックでは `%LOCALAPPDATA%\openspec\workspaces` です。ネイティブ Windows shell、PowerShell、WSL2 は、それぞれ OpenSpec を実行しているランタイムのパス文字列を保持します。この基盤は `D:\repo`、`/mnt/d/repo`、UNC WSL パスの間の変換は行いません。
-
-管理対象ワークスペースは、上記の名前空間化されたプライベートビュー記録を使います。ワークスペースフォルダは、そのローカルビューの基準となる場所です。
-
-ワークスペースで見えることは、変更へのコミットを意味しません。OpenSpec に関連するリポジトリやフォルダを把握させたいときにワークスペースをセットアップし、機能、修正、プロジェクト、その他の作業を計画する準備ができたら変更を作成します。
-
-便利なコマンド:
-
-```bash
-# ガイド付きセットアップ
-openspec workspace setup
-
-# 自動化向けセットアップ
-openspec workspace setup --no-interactive --name platform --link /repos/api --link web=/repos/web
-openspec workspace setup --no-interactive --name platform --link /repos/api --opener codex-cli
-
-# ローカルレジストリ上の既知のワークスペースを確認
-openspec workspace list
-openspec workspace ls
-
-# 選択したワークスペースのリンクを追加または修復
-openspec workspace link /repos/api
-openspec workspace link api-service /repos/api
-openspec workspace relink api-service /new/path/to/api
-
-# このマシンで解決できるものを確認
-openspec workspace doctor
-openspec workspace doctor --workspace platform
-
-# ワークスペース内のガイダンスとエージェントスキルを更新
-openspec workspace update
-openspec workspace update --workspace platform --tools codex,claude
-
-# リンク済み作業セットを開く
-openspec workspace open
-openspec workspace open platform --agent github-copilot
-openspec workspace open --editor
-
-# initiative をローカルワークスペースビューとして開く
-openspec workspace open --initiative billing-launch --store platform
-openspec workspace open --initiative billing-launch --store-path /repos/platform-context
-```
-
-`workspace setup` は常に標準のワークスペース場所にワークスペースを作成し、ローカルレジストリに記録して、作成場所を表示します。少なくとも 1 つのリポジトリまたはフォルダをリンクする必要があります。対話セットアップではデフォルトの開き方を確認し、選択したエージェント向けに OpenSpec スキルをインストールできます。非対話セットアップでは `--opener codex-cli`, `--opener claude`, `--opener github-copilot`, `--opener editor` のいずれかを指定した場合だけ保存します。
-
-ワークスペーススキルはワークスペースルートにのみインストールされます。有効なグローバル profile が生成対象のワークフロースキルを選び、`--tools` が配布先エージェントを選びます。グローバル delivery に commands が含まれていても、workspace setup と update はスラッシュコマンドファイルを作成しません。リンク済みリポジトリやフォルダを編集せず、ワークスペース内のガイダンスを更新し、OpenSpec 管理のワークスペース内スキルディレクトリを追加・更新・削除するには `openspec workspace update` を実行します。
-
-OpenSpec はワークスペースを開くための補助ファイルも管理します。`AGENTS.md` 内の OpenSpec 管理ガイダンスブロックと、VS Code および GitHub Copilot-in-VS-Code で開くためのマシンローカルな `<workspace-name>.code-workspace` ファイルです。管理対象ワークスペースはリポジトリではないため、OpenSpec はデフォルトのワークスペース `.gitignore` やワークスペースレベルの `changes/` ディレクトリを作成しません。
-
-管理対象の VS Code workspace には、有効なリンク済みリポジトリまたはフォルダ、紐づく initiative のコンテキスト、OpenSpec ワークスペースファイルがこの順で入ります。VS Code はそれらをマルチルートワークスペースとして表示します。
-
-`workspace open` は、その 1 セッションで `--agent <tool>` または `--editor` を渡さない限り、保存済みの開き方でリンク済み作業セットを開きます。両方の上書き指定を渡すとエラーです。ワークスペースを開くと、調査と文脈把握のためにリンク済みリポジトリやフォルダが見えるようになります。実装は、ユーザーが明示的に実装作業を依頼した後に始めます。
-
-`workspace link` と `workspace relink` は既存フォルダだけを記録します。リンク済みリポジトリやフォルダを作成、コピー、移動、初期化、編集することはありません。link または relink が成功すると、OpenSpec は管理対象ガイダンスと VS Code workspace ファイルを更新します。
-
-ワークスペースを 1 つ必要とするコマンドは、`--workspace <name>` を付ければどこからでも実行できます。ワークスペースフォルダまたはそのサブディレクトリ内で実行した場合、OpenSpec は現在のワークスペースを使います。既知のワークスペースが複数あり、`--workspace <name>` を渡していない場合、人向けコマンドは選択画面を表示します。`--json` と `--no-interactive` はプロンプトを出さず、構造化された status エラーで失敗します。
-
-直接のワークスペースコマンドは、スクリプト向けの JSON 出力に対応します。JSON レスポンスでは主要データを `workspace`, `workspaces`, `link` オブジェクトに保持し、警告やエラーを `status` 配列で報告します。正常なオブジェクトは `status: []` を使います。
-
-## 仕様（Specs）
-
-仕様は、構造化された要件とシナリオでシステムの挙動を表します。
-
-### 構成
+### Structure
 
 ```
 openspec/specs/
 ├── auth/
-│   └── spec.md           # 認証の挙動
+│   └── spec.md           # Authentication behavior
 ├── payments/
-│   └── spec.md           # 決済処理
+│   └── spec.md           # Payment processing
 ├── notifications/
-│   └── spec.md           # 通知システム
+│   └── spec.md           # Notification system
 └── ui/
-    └── spec.md           # UI の挙動とテーマ
+    └── spec.md           # UI behavior and themes
 ```
 
-仕様はドメイン単位で整理します。よくあるパターン:
+Organize specs by domain — logical groupings that make sense for your system. Common patterns:
 
-- **機能単位**: `auth/`, `payments/`, `search/`
-- **コンポーネント単位**: `api/`, `frontend/`, `workers/`
-- **境界づけられたコンテキスト単位**: `ordering/`, `fulfillment/`, `inventory/`
+- **By feature area**: `auth/`, `payments/`, `search/`
+- **By component**: `api/`, `frontend/`, `workers/`
+- **By bounded context**: `ordering/`, `fulfillment/`, `inventory/`
 
-### 仕様フォーマット
+### Spec Format
 
-仕様は要件で構成され、各要件にはシナリオがあります。
+A spec contains requirements, and each requirement has scenarios:
 
-````markdown
-# Auth 仕様
+```markdown
+# Auth Specification
 
 ## Purpose
-アプリケーションの認証とセッション管理。
+Authentication and session management for the application.
 
 ## Requirements
 
-### Requirement: ユーザー認証
-システムはログイン成功時に JWT トークンを発行しなければならない。(SHALL)
+### Requirement: User Authentication
+The system SHALL issue a JWT token upon successful login.
 
-#### Scenario: 有効な認証情報
-- GIVEN 有効な認証情報を持つユーザー
-- WHEN ログインフォームを送信したとき
-- THEN JWT トークンが返される
-- AND ユーザーはダッシュボードにリダイレクトされる
+#### Scenario: Valid credentials
+- GIVEN a user with valid credentials
+- WHEN the user submits login form
+- THEN a JWT token is returned
+- AND the user is redirected to dashboard
 
-#### Scenario: 無効な認証情報
-- GIVEN 無効な認証情報
-- WHEN ログインフォームを送信したとき
-- THEN エラーメッセージが表示される
-- AND トークンは発行されない
+#### Scenario: Invalid credentials
+- GIVEN invalid credentials
+- WHEN the user submits login form
+- THEN an error message is displayed
+- AND no token is issued
 
 ### Requirement: セッション期限
-システムは 30 分間操作がない場合にセッションを期限切れにしなければならない。(MUST)
+The system MUST expire sessions after 30 minutes of inactivity.
 
 #### Scenario: アイドルタイムアウト
 - GIVEN 認証済みセッション
-- WHEN 30 分間操作がない
+- WHEN 30 minutes pass without activity
 - THEN セッションは無効化される
-- AND ユーザーは再認証が必要になる
+- AND the user must re-authenticate
 ```
 
-**主要要素:**
+**Key elements:**
 
-| 要素 | 目的 |
+| Element | Purpose |
 |---------|---------|
-| `## Purpose` | 仕様が扱うドメインの概要 |
-| `### Requirement:` | システムが満たすべき具体的挙動 |
-| `#### Scenario:` | 要件が実際に発生する具体例 |
-| SHALL/MUST | RFC 2119 による強さの表現 |
+| `## Purpose` | High-level description of this spec's domain |
+| `### Requirement:` | A specific behavior the system must have |
+| `#### Scenario:` | A concrete example of the requirement in action |
+| SHALL/MUST/SHOULD | RFC 2119 keywords indicating requirement strength |
 
-### この構造を採用する理由
+### Why Structure Specs This Way
 
-**要件は「何を」** — 実装の詳細ではなく、必要な挙動を定義します。
+**Requirements are the "what"** — they state what the system should do without specifying implementation.
 
-**シナリオは「いつ」** — 具体例として検証可能にします。良いシナリオは次の特徴があります。
-- テスト可能（自動テストに落とせる）
-- ハッピーパスとエッジケースの両方を含む
-- Given/When/Then などの構造化形式を使う
+**Scenarios are the "when"** — they provide concrete examples that can be verified. Good scenarios:
+- Are testable (you could write an automated test for them)
+- Cover both happy path and edge cases
+- Use Given/When/Then or similar structured format
 
-**RFC 2119 キーワード**（SHALL, MUST）は意図の強さを表します。
-- **MUST/SHALL** — 絶対要件
+**RFC 2119 keywords** (SHALL, MUST, SHOULD, MAY) communicate intent:
+- **MUST/SHALL** — absolute requirement
+- **SHOULD** — recommended, but exceptions exist
+- **MAY** — optional
 
-### 仕様とは何か（そして何でないか）
+### What a Spec Is (and Is Not)
 
-仕様は**挙動の契約**であり、実装計画ではありません。
+A spec is a **behavior contract**, not an implementation plan.
 
-仕様に含めるべき内容:
-- ユーザーや下流システムが依存する観測可能な挙動
-- 入力、出力、エラー条件
-- 外部制約（セキュリティ、プライバシー、信頼性、互換性）
-- テスト可能または明示的に検証できるシナリオ
+Good spec content:
+- Observable behavior users or downstream systems rely on
+- Inputs, outputs, and error conditions
+- External constraints (security, privacy, reliability, compatibility)
+- Scenarios that can be tested or explicitly validated
 
-仕様に含めないもの:
-- 内部クラス名・関数名
-- ライブラリやフレームワークの選択
-- ステップバイステップの実装詳細
-- 詳細な実行計画（それらは `design.md` または `tasks.md` に属する）
+Avoid in specs:
+- Internal class/function names
+- Library or framework choices
+- Step-by-step implementation details
+- Detailed execution plans (those belong in `design.md` or `tasks.md`)
 
-簡単な確認:
-- 実装が変わっても外部から見える挙動が変わらないなら、仕様に含める必要はおそらくない。
+Quick test:
+- If implementation can change without changing externally visible behavior, it likely does not belong in the spec.
 
-### 軽量に保つ: 段階的な厳密さ
+### Keep It Lightweight: Progressive Rigor
 
-OpenSpec は官僚主義を避けることを目指しています。変更を検証可能にする最低限のレベルを使ってください。
+OpenSpec aims to avoid bureaucracy. Use the lightest level that still makes the change verifiable.
 
-**ライト仕様（デフォルト）:**
-- 短い挙動優先の要件
-- 明確なスコープと対象外事項
-- 少数の具体的な受け入れ確認
+**Lite spec (default):**
+- Short behavior-first requirements
+- Clear scope and non-goals
+- A few concrete acceptance checks
 
-**フル仕様（リスクが高い場合）:**
-- チームまたはリポジトリをまたぐ変更
-- API/契約変更、マイグレーション、セキュリティ/プライバシーへの懸念
-- 曖昧さが高コストな手戻りを引き起こしやすい変更
+**Full spec (for higher risk):**
+- Cross-team or cross-repo changes
+- API/contract changes, migrations, security/privacy concerns
+- Changes where ambiguity is likely to cause expensive rework
 
-ほとんどの変更はライトモードで十分です。
+Most changes should stay in Lite mode.
 
-### 人とエージェントの協働
+### Human + Agent Collaboration
 
-多くのチームでは、人が探索しエージェントがアーティファクトを作成します。想定されるループ:
+In many teams, humans explore and agents draft artifacts. The intended loop is:
 
-1. 人が意図・文脈・制約を提供する。
-2. エージェントがそれを挙動優先の要件とシナリオに変換する。
-3. エージェントは実装詳細を `spec.md` ではなく `design.md` と `tasks.md` に置く。
-4. 検証が実装前に構造と明確さを確認する。
+1. Human provides intent, context, and constraints.
+2. Agent converts this into behavior-first requirements and scenarios.
+3. Agent keeps implementation detail in `design.md` and `tasks.md`, not `spec.md`.
+4. Validation confirms structure and clarity before implementation.
 
-これにより、仕様は人にとって読みやすく、エージェントにとって一貫したものになります。
+This keeps specs readable for humans and consistent for agents.
 
-## 変更（Changes）
+## Changes
 
-変更は、システムへの修正をまとめたフォルダです。理解・実装に必要なものをすべて含みます。
+A change is a proposed modification to your system, packaged as a folder with everything needed to understand and implement it.
 
-### 変更の構造
+### Change Structure
 
 ```
 openspec/changes/add-dark-mode/
-├── proposal.md           # なぜ・何を
-├── design.md             # どうやって（技術的アプローチ）
-├── tasks.md              # 実装チェックリスト
-├── .openspec.yaml        # 変更メタデータ（任意）
-└── specs/                # 仕様差分
+├── proposal.md           # Why and what
+├── design.md             # How (technical approach)
+├── tasks.md              # Implementation checklist
+├── .openspec.yaml        # Change metadata (optional)
+└── specs/                # Delta specs
     └── ui/
-        └── spec.md       # ui/spec.md への変更内容
+        └── spec.md       # What's changing in ui/spec.md
 ```
 
-各変更は自己完結します。
-- **アーティファクト** — 目的・設計・タスクを記録する文書
-- **仕様差分** — 追加/変更/削除される内容
-- **メタデータ** — 変更固有の設定（任意）
+Each change is self-contained. It has:
+- **Artifacts** — documents that capture intent, design, and tasks
+- **Delta specs** — specifications for what's being added, modified, or removed
+- **Metadata** — optional configuration for this specific change
 
-### 変更をフォルダにする理由
+### Why Changes Are Folders
 
-変更をフォルダで管理する利点:
+Packaging a change as a folder has several benefits:
 
-1. **一箇所にまとまる。** proposal/design/tasks/specs が同じ場所で見える。
-2. **並行作業。** `add-dark-mode` と `fix-auth-bug` を同時に進めても衝突しない。
-3. **履歴が明瞭。** アーカイブで `changes/archive/` に移動し、背景を含めて保存される。
-4. **レビューしやすい。** フォルダを開けば内容がまとまっている。
+1. **Everything together.** Proposal, design, tasks, and specs live in one place. No hunting through different locations.
 
-## アーティファクト
+2. **Parallel work.** Multiple changes can exist simultaneously without conflicting. Work on `add-dark-mode` while `fix-auth-bug` is also in progress.
 
-アーティファクトは変更内の文書で、作業の道筋を示します。
+3. **Clean history.** When archived, changes move to `changes/archive/` with their full context preserved. You can look back and understand not just what changed, but why.
 
-### アーティファクトの流れ
+4. **Review-friendly.** A change folder is easy to review — open it, read the proposal, check the design, see the spec deltas.
+
+## Artifacts
+
+Artifacts are the documents within a change that guide the work.
+
+### The Artifact Flow
 
 ```
 proposal ──────► specs ──────► design ──────► tasks ──────► implement

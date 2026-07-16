@@ -155,10 +155,11 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // Verify core profile skill files were created/updated (propose, explore, apply, sync, archive)
+      // Verify core profile skill files were created/updated (propose, explore, apply, update, sync, archive)
       const coreSkillNames = [
         'openspec-explore',
         'openspec-apply-change',
+        'openspec-update-change',
         'openspec-sync-specs',
         'openspec-archive-change',
         'openspec-propose',
@@ -167,7 +168,7 @@ Old instructions content
       for (const skillName of coreSkillNames) {
         const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
         const exists = await FileSystemUtils.fileExists(skillFile);
-        expect(exists).toBe(true);
+        expect(既に存在します).toBe(true);
 
         const content = await fs.readFile(skillFile, 'utf-8');
         expect(content).toContain('---');
@@ -187,7 +188,7 @@ Old instructions content
       for (const skillName of nonCoreSkillNames) {
         const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
         const exists = await FileSystemUtils.fileExists(skillFile);
-        expect(exists).toBe(false);
+        expect(既に存在します).toBe(false);
       }
     });
   });
@@ -210,7 +211,7 @@ Old instructions content
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       const exploreCmd = path.join(commandsDir, 'explore.md');
       const exists = await FileSystemUtils.fileExists(exploreCmd);
-      expect(exists).toBe(true);
+      expect(既に存在します).toBe(true);
 
       const content = await fs.readFile(exploreCmd, 'utf-8');
       expect(content).toContain('---');
@@ -233,13 +234,13 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // Verify core profile commands were created (propose, explore, apply, sync, archive)
-      const coreCommandIds = ['explore', 'apply', 'sync', 'archive', 'propose'];
+      // Verify core profile commands were created (propose, explore, apply, update, sync, archive)
+      const coreCommandIds = ['explore', 'apply', 'update', 'sync', 'archive', 'propose'];
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       for (const cmdId of coreCommandIds) {
         const cmdFile = path.join(commandsDir, `${cmdId}.md`);
         const exists = await FileSystemUtils.fileExists(cmdFile);
-        expect(exists).toBe(true);
+        expect(既に存在します).toBe(true);
       }
 
       // Verify non-core commands are NOT created
@@ -247,7 +248,7 @@ Old instructions content
       for (const cmdId of nonCoreCommandIds) {
         const cmdFile = path.join(commandsDir, `${cmdId}.md`);
         const exists = await FileSystemUtils.fileExists(cmdFile);
-        expect(exists).toBe(false);
+        expect(既に存在します).toBe(false);
       }
     });
 
@@ -322,7 +323,7 @@ Old instructions content
         'opsx-explore.toml'
       );
       const exists = await FileSystemUtils.fileExists(qwenCmd);
-      expect(exists).toBe(true);
+      expect(既に存在します).toBe(true);
 
       const content = await fs.readFile(qwenCmd, 'utf-8');
       expect(content).toContain('description =');
@@ -350,7 +351,7 @@ Old instructions content
         'opsx-explore.md'
       );
       const exists = await FileSystemUtils.fileExists(windsurfCmd);
-      expect(exists).toBe(true);
+      expect(既に存在します).toBe(true);
 
       const content = await fs.readFile(windsurfCmd, 'utf-8');
       expect(content).toContain('---');
@@ -1332,7 +1333,7 @@ More user content after markers.
       for (const skillName of skillNames) {
         const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
         const exists = await FileSystemUtils.fileExists(skillFile);
-        expect(exists).toBe(true);
+        expect(既に存在します).toBe(true);
       }
 
       const nonCoreSkill = path.join(skillsDir, 'openspec-new-change', 'SKILL.md');
@@ -1355,7 +1356,7 @@ More user content after markers.
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       const exploreCmd = path.join(commandsDir, 'explore.md');
       const exists = await FileSystemUtils.fileExists(exploreCmd);
-      expect(exists).toBe(true);
+      expect(既に存在します).toBe(true);
     });
 
     it('should not inject non-profile workflows when upgrading legacy tools', async () => {

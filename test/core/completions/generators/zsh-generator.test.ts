@@ -105,7 +105,7 @@ describe('ZshGenerator', () => {
       expect(script).toContain('--strict');
       expect(script).toContain('[Enable strict mode]');
       expect(script).toContain('--json');
-      expect(script).toContain('[Output as JSON]');
+      expect(script).toContain('[JSON として出力]');
     });
 
     it('should handle flags with short options', () => {
@@ -328,7 +328,7 @@ describe('ZshGenerator', () => {
 
       const script = generator.generate(commands);
 
-      expect(script).toContain("\\'quotes\\'");
+      expect(script).toContain("'\\''quotes'\\''");
       expect(script).toContain('\\[brackets\\]');
       expect(script).toContain('\\\\slash');
       expect(script).toContain('\\:');

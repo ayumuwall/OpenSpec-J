@@ -1,153 +1,153 @@
-name: spec-driven
-version: 1
-description: OpenSpec の既定ワークフロー - proposal → specs → design → tasks
-artifacts:
-  - id: proposal
-    generates: proposal.md
-    description: 変更の概要を示す初期提案ドキュメント
-    template: proposal.md
-    instruction: |
-      この変更がなぜ必要か（WHY）を明確にする提案ドキュメントを作成する。
-
-      セクション:
-      - **Why**: 問題や機会を 1〜2 文で説明する。何を解決するのか？なぜ今か？
-      - **What Changes**: 変更点の箇条書き。新しい機能/修正/削除を具体的に書く。破壊的変更は **BREAKING** を付ける。
-      - **Capabilities**: 作成・更新する仕様を特定する:
-        - **New Capabilities**: 追加する機能を列挙。各項目は新しい `specs/<name>/spec.md` になる。kebab-case を使う（例: `user-auth`, `data-export`）。
-        - **Modified Capabilities**: 既存機能の REQUIREMENTS が変わるものを列挙。仕様レベルの振る舞いが変わる場合のみ対象（実装詳細のみの変更は除外）。各項目は差分仕様ファイルが必要。既存の仕様名は `openspec/specs/` を確認。要件変更が無い場合は空でよい。
-      - **Impact**: 影響を受けるコード、API、依存関係、システム。
-
-      重要: Capabilities セクションは必須。proposal と specs の間の契約になる。
-      記入前に既存の仕様を調査すること。
-      ここに書いた各 capability には対応する spec ファイルが必要になる。
-
-      簡潔に（1〜2 ページ）。「なぜ（why）」に集中し、「どう実装するか」は design.md に書く。
-
-      これは土台であり、specs / design / tasks はすべてこれに基づく。
-    requires: []
-
-  - id: specs
-    generates: "specs/**/*.md"
-    description: 変更の詳細仕様
-    template: spec.md
-    instruction: |
-      システムが何をするか（WHAT）を定義する仕様ファイルを作成する。
-
-      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。
-      - New capabilities: proposal にある kebab-case 名を正確に使う（specs/<capability>/spec.md）。
-      - Modified capabilities: 既存の spec フォルダ名（openspec/specs/<capability>/）を使い、差分 spec を specs/<capability>/spec.md に作成する。
-
-      差分操作（## 見出しを使用）:
-      - **ADDED Requirements**: 新しい機能
-      - **MODIFIED Requirements**: 振る舞い変更 - MUST で全文更新する
-      - **REMOVED Requirements**: 廃止機能 - **Reason** と **Migration** を必ず記載
-      - **RENAMED Requirements**: 名称変更のみ - FROM:/TO: 形式
-
-      書式ルール:
-      - 各要件: `### Requirement: <name>` の後に本文を書く
-      - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）
-      - 語尾は「〜しなければならない。(SHALL)」の形式に揃える。文中に SHALL/MUST を挿入しない。
-      - 各シナリオ: `#### Scenario: <name>` を WHEN/THEN 形式で書く
-      - **CRITICAL**: シナリオは必ず 4 つのハッシュ（`####`）を使う。3 つや箇条書きにすると静かに失敗する。
-      - すべての要件は少なくとも 1 つのシナリオを持つ。
-
-      MODIFIED 要件の手順:
-      1. openspec/specs/<capability>/spec.md で既存要件を探す
-      2. `### Requirement:` から全シナリオまでを丸ごとコピー
-      3. `## MODIFIED Requirements` 配下に貼り付け、振る舞い変更を反映
-      4. 見出しテキストが完全一致していることを確認（空白差は無視）
-
-      よくある落とし穴: MODIFIED で部分的に書くとアーカイブ時に詳細が失われる。
-      既存の振る舞いを変えずに追加するなら ADDED を使う。
-
-      例:
-      ```
-      ## ADDED Requirements
-
-      ### Requirement: ユーザーはデータをエクスポートできる
-      システムはユーザーが CSV 形式でデータをエクスポートできるようにしなければならない。(SHALL)
-
-      #### Scenario: エクスポート成功
-      - **WHEN** ユーザーが「エクスポート」ボタンをクリックする
-      - **THEN** システムは全ユーザーデータを含む CSV ファイルをダウンロードする
-
-      ## REMOVED Requirements
-
-      ### Requirement: 旧エクスポート
-      **Reason**: 新しいエクスポートシステムに置き換え
-      **Migration**: /api/v2/export の新しいエクスポートエンドポイントを使用
-      ```
-
-      仕様はテスト可能にすること。各シナリオは潜在的なテストケースになる。
-    requires:
-      - proposal
-
-  - id: design
-    generates: design.md
-    description: 実装詳細を含む技術設計ドキュメント
-    template: design.md
-    instruction: |
-      変更をどう実装するか（HOW）を説明する設計ドキュメントを作成する。
-
-      design.md を作成する条件（該当する場合のみ作成）:
-      - 横断的変更（複数サービス/モジュール）または新しいアーキテクチャパターン
-      - 新しい外部依存、または大きなデータモデル変更
-      - セキュリティ、パフォーマンス、移行の複雑さ
-      - 実装前に技術判断が必要な曖昧さ
-
-      セクション:
-      - **Context**: 背景、現状、制約、関係者
-      - **Goals / Non-Goals**: この設計で達成することと明示的に除外すること
-      - **Decisions**: 主要な技術判断と理由（なぜ X ではなく Y か）。各判断に代替案の検討も含める。
-      - **Risks / Trade-offs**: 既知の制約や失敗しうる点。形式: [Risk] → Mitigation
-      - **Migration Plan**: デプロイ手順、ロールバック戦略（該当する場合）
-      - **Open Questions**: 未決事項や解くべき疑問
-
-      行ごとの実装詳細ではなく、アーキテクチャと方針に集中する。
-      動機は proposal、要件は specs を参照する。
-
-      良い設計ドキュメントは技術判断の「なぜ」を説明する。
-    requires:
-      - proposal
-
-  - id: tasks
-    generates: tasks.md
-    description: 進捗追跡できる実装チェックリスト
-    template: tasks.md
-    instruction: |
-      実装作業を分解したタスクリストを作成する。
-
-      **IMPORTANT: 下記テンプレートに厳密に従う。** apply フェーズは
-      チェックボックス形式を解析して進捗を追跡する。`- [ ]` を使わないタスクは追跡されない。
-
-      ガイドライン:
-      - 関連タスクを ## 番号付き見出し配下にまとめる
-      - 各タスクは必ずチェックボックス: `- [ ] X.Y タスク内容`
-      - 1 セッションで終わる大きさにする
-      - 依存順に並べる（最初にやるべきものから）
-
-      例:
-      ```
-      ## 1. セットアップ
-
-      - [ ] 1.1 新しいモジュール構成を作成
-      - [ ] 1.2 package.json に依存関係を追加
-
-      ## 2. コア実装
-
-      - [ ] 2.1 データエクスポート関数を実装
-      - [ ] 2.2 CSV 変換ユーティリティを追加
-      ```
-
-      何を作るかは specs、どう作るかは design を参照する。
-      各タスクは検証可能であること（完了がわかること）。
-    requires:
-      - specs
-      - design
-
-apply:
-  requires: [tasks]
-  tracks: tasks.md
-  instruction: |
-    コンテキストファイルを読み、未完了タスクを進め、進捗に合わせて完了マークする。
-    ブロッカーや不明点があれば一旦止めて確認する。
+name: spec-driven      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+version: 1      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+description: OpenSpec の既定ワークフロー - proposal → specs → design → tasks      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+artifacts:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  - id: proposal      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    generates: proposal.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    description: 変更の概要を示す初期提案ドキュメント      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    template: proposal.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    instruction: |      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      この変更がなぜ必要か（WHY）を明確にする提案ドキュメントを作成する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      セクション:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Why**: 問題や機会を 1〜2 文で説明する。何を解決するのか？なぜ今か？      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **What Changes**: 変更点の箇条書き。新しい機能/修正/削除を具体的に書く。破壊的変更は **BREAKING** を付ける。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Capabilities**: 作成・更新する仕様を特定する:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+        - **New Capabilities**: 追加する機能を列挙。各項目は新しい `specs/<name>/spec.md` になる。kebab-case を使う（例: `user-auth`, `data-export`）。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+        - **Modified Capabilities**: 既存機能の REQUIREMENTS が変わるものを列挙。仕様レベルの振る舞いが変わる場合のみ対象（実装詳細のみの変更は除外）。各項目は差分仕様ファイルが必要。既存の仕様名は `openspec/specs/` を確認。要件変更が無い場合は空でよい。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Impact**: 影響を受けるコード、API、依存関係、システム。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      重要: Capabilities セクションは必須。proposal と specs の間の契約になる。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      記入前に既存の仕様を調査すること。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ここに書いた各 capability には対応する spec ファイルが必要になる。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      簡潔に（1〜2 ページ）。「なぜ（why）」に集中し、「どう実装するか」は design.md に書く。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      これは土台であり、specs / design / tasks はすべてこれに基づく。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    requires: []      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  - id: specs      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    generates: "specs/**/*.md"      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    description: 変更の詳細仕様      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    template: spec.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    instruction: |      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      システムが何をするか（WHAT）を定義する仕様ファイルを作成する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - New capabilities: proposal にある kebab-case 名を正確に使う（specs/<capability>/spec.md）。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - Modified capabilities: 既存の spec フォルダ名（openspec/specs/<capability>/）を使い、差分 spec を specs/<capability>/spec.md に作成する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      差分操作（## 見出しを使用）:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **ADDED Requirements**: 新しい機能      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **MODIFIED Requirements**: 振る舞い変更 - MUST で全文更新する      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **REMOVED Requirements**: 廃止機能 - **Reason** と **Migration** を必ず記載      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **RENAMED Requirements**: 名称変更のみ - FROM:/TO: 形式      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      書式ルール:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 各要件: `### Requirement: <name>` の後に本文を書く      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 語尾は「〜しなければならない。(SHALL)」の形式に揃える。文中に SHALL/MUST を挿入しない。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 各シナリオ: `#### Scenario: <name>` を WHEN/THEN 形式で書く      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **CRITICAL**: シナリオは必ず 4 つのハッシュ（`####`）を使う。3 つや箇条書きにすると静かに失敗する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - すべての要件は少なくとも 1 つのシナリオを持つ。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      MODIFIED 要件の手順:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      1. openspec/specs/<capability>/spec.md で既存要件を探す      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      2. `### Requirement:` から全シナリオまでを丸ごとコピー      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      3. `## MODIFIED Requirements` 配下に貼り付け、振る舞い変更を反映      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      4. 見出しテキストが完全一致していることを確認（空白差は無視）      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      よくある落とし穴: MODIFIED で部分的に書くとアーカイブ時に詳細が失われる。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      既存の振る舞いを変えずに追加するなら ADDED を使う。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      例:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ```      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ## ADDED Requirements      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ### Requirement: ユーザーはデータをエクスポートできる      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      システムはユーザーが CSV 形式でデータをエクスポートできるようにしなければならない。(SHALL)      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      #### Scenario: エクスポート成功      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **WHEN** ユーザーが「エクスポート」ボタンをクリックする      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **THEN** システムは全ユーザーデータを含む CSV ファイルをダウンロードする      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ## REMOVED Requirements      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ### Requirement: 旧エクスポート      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      **Reason**: 新しいエクスポートシステムに置き換え      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      **Migration**: /api/v2/export の新しいエクスポートエンドポイントを使用      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ```      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      仕様はテスト可能にすること。各シナリオは潜在的なテストケースになる。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    requires:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - proposal      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  - id: design      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    generates: design.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    description: 実装詳細を含む技術設計ドキュメント      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    template: design.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    instruction: |      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      変更をどう実装するか（HOW）を説明する設計ドキュメントを作成する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      design.md を作成する条件（該当する場合のみ作成）:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 横断的変更（複数サービス/モジュール）または新しいアーキテクチャパターン      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 新しい外部依存、または大きなデータモデル変更      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - セキュリティ、パフォーマンス、移行の複雑さ      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 実装前に技術判断が必要な曖昧さ      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      セクション:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Context**: 背景、現状、制約、関係者      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Goals / Non-Goals**: この設計で達成することと明示的に除外すること      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Decisions**: 主要な技術判断と理由（なぜ X ではなく Y か）。各判断に代替案の検討も含める。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Risks / Trade-offs**: 既知の制約や失敗しうる点。形式: [Risk] → Mitigation      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Migration Plan**: デプロイ手順、ロールバック戦略（該当する場合）      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - **Open Questions**: 未決事項や解くべき疑問      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      行ごとの実装詳細ではなく、アーキテクチャと方針に集中する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      動機は proposal、要件は specs を参照する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      良い設計ドキュメントは技術判断の「なぜ」を説明する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    requires:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - proposal      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  - id: tasks      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    generates: tasks.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    description: 進捗追跡できる実装チェックリスト      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    template: tasks.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    instruction: |      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      実装作業を分解したタスクリストを作成する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      **IMPORTANT: 下記テンプレートに厳密に従う。** apply フェーズは      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      チェックボックス形式を解析して進捗を追跡する。`- [ ]` を使わないタスクは追跡されない。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ガイドライン:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 関連タスクを ## 番号付き見出し配下にまとめる      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 各タスクは必ずチェックボックス: `- [ ] X.Y タスク内容`      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 1 セッションで終わる大きさにする      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - 依存順に並べる（最初にやるべきものから）      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      例:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ```      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ## 1. セットアップ      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - [ ] 1.1 新しいモジュール構成を作成      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - [ ] 1.2 package.json に依存関係を追加      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ## 2. コア実装      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - [ ] 2.1 データエクスポート関数を実装      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - [ ] 2.2 CSV 変換ユーティリティを追加      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      ```      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      何を作るかは specs、どう作るかは design を参照する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      各タスクは検証可能であること（完了がわかること）。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    requires:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - specs      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      - design      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+apply:      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  requires: [tasks]      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  tracks: tasks.md      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+  instruction: |      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    コンテキストファイルを読み、未完了タスクを進め、進捗に合わせて完了マークする。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
+    ブロッカーや不明点があれば一旦止めて確認する。      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec を作成する。      差分操作（## 見出しを使用）:      書式ルール:
