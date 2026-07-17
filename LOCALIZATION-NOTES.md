@@ -10,12 +10,13 @@
 - ファイル: `src/core/validation/validator.ts` (`enrichTopLevelError`)
 - 症状: upstream の英語メッセージを `includes` で判定しガイド文を付加する実装だったため、日本語化後はガイドが付かないケースが発生。
 - 対応: 英語メッセージに加え、日本語化済みの定数 (`VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY`, `SPEC_NO_REQUIREMENTS`, `CHANGE_WHAT_EMPTY` など) や「Why セクション」文字列もトリガーに追加し、両言語でガイドを付与できるよう拡張。
+- 追加確認（v1.6.0 追従後）: `CHANGE_WHY_TOO_SHORT` のように「必須」ではなく「短すぎる」系の日本語メッセージでも、変更ファイルの必須セクションガイドが付く必要がある。`enrichTopLevelError` の条件を見直すときは、`CHANGE_WHAT_EMPTY` だけでなく `CHANGE_WHY_TOO_SHORT` と `Why セクション` 系メッセージも確認する。
 - フォローアップ: upstream でメッセージ文言が増減した場合は、英語/日本語両方のトリガーを見直す。英語/日本語のガイド付与を直接確認するユニットテストを追加すると安全。
 
 ### 単数/複数の表記を日本語で統一する扱い
 - 仕様: 日本語では単数・複数の揺れを避け、カウントは「件」や「タスク」など固定表記に寄せる。
 - 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は常に「タスク」表記、`src/core/view.ts` と `src/core/list.ts` は `件` を用いた固定表記に統一。
-- 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。
+- 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。`ADDED` / `MODIFIED` だけでなく、`REMOVED` / `RENAMED` の `description` もユーザー向け表示に出る可能性があるため、upstream 追従時に英語へ戻っていないか確認する。
 
 ### CLI 結合テスト: 固定一時ディレクトリは並列実行で衝突する
 - ファイル: `test/commands/validate.test.ts`, `test/commands/spec.test.ts`
