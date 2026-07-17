@@ -26,7 +26,7 @@ yarn global add @ayumuwall/openspec@latest
 
 ### bun
 
-Bun can install OpenSpec globally, but OpenSpec currently runs on Node.js.
+Bun で OpenSpec をグローバルインストールできますが、OpenSpec の実行には現在 Node.js が必要です。
 `PATH` 上で Node.js 20.19.0 以上を利用できる必要があります。
 
 ```bash
@@ -70,16 +70,16 @@ nix profile install github:ayumuwall/OpenSpec-J
 openspec --version
 ```
 
-## Updating
+## 更新
 
-Upgrade the package, then refresh each project's generated files:
+パッケージをアップグレードしてから、各プロジェクトで生成済みファイルを更新します。
 
 ```bash
-npm install -g @ayumuwall/openspec@latest   # or pnpm/yarn/bun equivalent
-openspec update                              # run inside each project
+npm install -g @ayumuwall/openspec@latest   # pnpm/yarn/bun でも同等のコマンドを使えます
+openspec update                              # 各プロジェクト内で実行します
 ```
 
-`openspec update` regenerates the skill and command files for the tools you've configured, so your slash commands stay current with the installed version.
+`openspec update` は設定済みツール向けのスキルファイルとコマンドファイルを再生成します。これにより、スラッシュコマンドをインストール済みバージョンに合わせて最新化できます。
 
 <a id="uninstalling"></a>
 
@@ -90,7 +90,7 @@ openspec update                              # run inside each project
 **1. グローバルパッケージを削除します。**
 
 ```bash
-npm uninstall -g @ayumuwall/openspec   # or: pnpm rm -g / yarn global remove / bun rm -g
+npm uninstall -g @ayumuwall/openspec   # または pnpm rm -g / yarn global remove / bun rm -g
 ```
 
 **2. プロジェクトから OpenSpec を削除します（任意）。** 仕様と変更が不要であれば、`openspec/` ディレクトリを削除します。

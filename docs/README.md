@@ -95,12 +95,12 @@ OpenSpec は、あなたと AI コーディングアシスタントが **コー�
 ## 30 秒版
 
 ```text
-1. Install        npm install -g @ayumuwall/openspec@latest
-2. Initialize     cd your-project && openspec init
-3. Explore        (in your AI chat)  /opsx:explore           ← optional, but a great habit
-4. Propose        (in your AI chat)  /opsx:propose add-dark-mode
-5. Build          (in your AI chat)  /opsx:apply
-6. Archive        (in your AI chat)  /opsx:archive
+1. インストール   npm install -g @ayumuwall/openspec@latest
+2. 初期化         cd your-project && openspec init
+3. 探索           (AI チャットで)  /opsx:explore           ← 任意ですが、良い習慣です
+4. 提案           (AI チャットで)  /opsx:propose add-dark-mode
+5. 実装           (AI チャットで)  /opsx:apply
+6. アーカイブ     (AI チャットで)  /opsx:archive
 ```
 
 ステップ 1 と 2 はターミナルで実行します。残りは AI アシスタントのチャットで実行します。この分割だけは覚えてください。理由は [コマンドの仕組み](how-commands-work.md) で説明しています。ステップ 3 は任意ですが、迷ったときに `/opsx:explore` から始めるのは強い習慣です。
@@ -109,6 +109,6 @@ OpenSpec は、あなたと AI コーディングアシスタントが **コー�
 
 - **Discord:** [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC) — 質問、アイデア、相談。
 - **GitHub Issues:** [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues) — バグ報告と機能リクエスト。
-- **`openspec feedback "your message"`** — ターミナルから直接フィードバックを送信します（GitHub Issue が作成されます）。
+- **`openspec feedback "メッセージ"`** — ターミナルから直接フィードバックを送信します（GitHub Issue が作成されます）。
 
 このドキュメントに誤り、古い情報、分かりにくい説明を見つけた場合は、それもバグです。Issue または PR を送ってください。ドキュメント改善は価値の高い貢献です。

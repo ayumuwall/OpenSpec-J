@@ -2,7 +2,7 @@
   <a href="https://github.com/Fission-AI/OpenSpec">
     <picture>
       <source srcset="assets/openspec_bg.png">
-      <img src="assets/openspec_bg.png" alt="OpenSpec logo">
+      <img src="assets/openspec_bg.png" alt="OpenSpec ロゴ">
     </picture>
   </a>
 </p>
@@ -30,17 +30,17 @@
 私たちの哲学:
 
 ```text
-→ fluid not rigid
-→ iterative not waterfall
-→ easy not complex
-→ built for brownfield not just greenfield
-→ scalable from personal projects to enterprises
+→ 固定的ではなく柔軟に
+→ ウォーターフォールではなく反復的に
+→ 複雑ではなく扱いやすく
+→ 新規開発だけでなく既存コードベースにも対応
+→ 個人プロジェクトからエンタープライズまで拡張可能
 ```
 
-> [!ヒント]
+> [!TIP]
 > **新しいワークフローが利用可能になりました!** 新しいアーティファクトに基づいたワークフローを使用して OpenSpec を再構築しました。
 >
-> `/opsx:propose "your idea"` を実行して開始します。 → 【詳しくはこちら](docs/opsx.md)
+> `/opsx:propose "あなたのアイデア"` を実行して開始します。 → [詳しくはこちら](docs/opsx.md)
 
 <p align="center">
 最新情報については、<a href="https://x.com/0xTab">@0xTab on X</a> をフォローしてください。ヘルプや質問については、<a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> に参加してください。
@@ -48,58 +48,59 @@
 
 <!-- TODO: Add GIF demo of /opsx:propose → /opsx:archive workflow -->
 
-## 実際の動作を確認してください
+## 実際の流れ
 
 ```text
 You: /opsx:explore
-AI:  What would you like to explore?
-You: I want dark mode but I'm not sure how to do it cleanly.
-AI:  Let me look at your styling setup...
-     Cleanest path here: CSS variables + a small theme context,
-     with system-preference detection. No new dependencies. Scope it?
-You: Yes, let's do it.
+AI:  何を調べたいですか？
+You: ダークモードを入れたいけれど、きれいな実装方法がまだ分かりません。
+AI:  スタイル周りの構成を確認します...
+     ここでは CSS 変数と小さなテーマコンテキストを使い、
+     システム設定の検出を加えるのが一番素直です。
+     新しい依存関係は不要です。この範囲で進めますか？
+You: はい、それで進めましょう。
 
 You: /opsx:propose add-dark-mode
-AI:  Created openspec/changes/add-dark-mode/
-     ✓ proposal.md — why we're doing this, what's changing
-     ✓ specs/       — requirements and scenarios
-     ✓ design.md    — technical approach
-     ✓ tasks.md     — implementation checklist
-     Ready for implementation!
+AI:  openspec/changes/add-dark-mode/ を作成しました
+     ✓ proposal.md — 目的と変更内容
+     ✓ specs/       — 要件とシナリオ
+     ✓ design.md    — 技術的な方針
+     ✓ tasks.md     — 実装チェックリスト
+     実装に進めます。
 
 You: /opsx:apply
-AI:  Implementing tasks...
-     ✓ 1.1 Add theme context provider
-     ✓ 1.2 Create toggle component
-     ✓ 2.1 Add CSS variables
-     ✓ 2.2 Wire up localStorage
-     All tasks complete!
+AI:  タスクを実装しています...
+     ✓ 1.1 テーマコンテキストプロバイダーを追加
+     ✓ 1.2 トグルコンポーネントを作成
+     ✓ 2.1 CSS 変数を追加
+     ✓ 2.2 localStorage と連携
+     すべてのタスクが完了しました。
 
 You: /opsx:archive
-AI:  Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
-     Specs updated. Ready for the next feature.
+AI:  openspec/changes/archive/2025-01-23-add-dark-mode/ にアーカイブしました
+     仕様を更新しました。次の機能に進めます。
 ```
 
 <details>
 <summary><strong>OpenSpec ダッシュボード</strong></summary>
 
 <p align="center">
-  <img src="assets/openspec_dashboard.png" alt="OpenSpec dashboard preview" width="90%">
+  <img src="assets/openspec_dashboard.png" alt="OpenSpec ダッシュボードのプレビュー" width="90%">
 </p>
 
 </details>
 
-## チームが OpenSpec を採用する理由
+## チームで OpenSpec を使う理由
 
-Solo、OpenSpec は、単一のリポジトリ上でユーザーと AI を正直に保ちます。チームでは、難しい部分が動きます。機能は API サーバー、Web アプリ、共有ライブラリにまたがります。要件は 1 つのチームによって所有され、他のチームによって使用されます。計画はコードが存在する前から始まります。
+個人利用では、OpenSpec は 1 つのリポジトリ上で人間と AI の認識をそろえます。チームでは、難しさの中心が変わります。機能は API サーバー、Web アプリ、共有ライブラリにまたがります。要件を所有するチームと、それを利用するチームが分かれることもあります。計画は、コードが存在する前から始まります。
 
-**[Stores](docs/stores-beta/user-guide.md)** が答えです - 独自のリポジトリで計画しています。すでにご存知の `openspec/` の形状 (仕様と変更点) は、他のものと同様に `git push` でも共有されます。すべてのリポジトリにわたって、チーム全体とすべてのコーディング エージェントが読むことができる 1 つの信頼できる情報源。
+そのための仕組みが **[Stores](docs/stores-beta/user-guide.md)** です。計画を専用リポジトリに置き、すでに見慣れた `openspec/` の構造（仕様と変更）を `git push` で共有します。複数リポジトリにまたがる作業でも、チーム全体とすべてのコーディングエージェントが読める、信頼できる 1 つの情報源を持てます。
 
 - **クロスリポジトリ機能** — コードが 3 つのリポジトリにある場合でも、1 つの変更、1 つの計画。
-- **共有要件** — プラットフォーム チームが仕様を所有します。製品チームは、コーディング エージェントがそれらを読み取ることができる場所で、それらを読み取り専用で参照します。ドリフトwikiはありません。
-- **コードの前に計画を立てる** — 今すぐストアに計画を取り込みます。コード リポジトリは後で追いつきます。
+- **共有要件** — プラットフォームチームが仕様を所有し、製品チームはコーディングエージェントが読める場所から読み取り専用で参照します。Wiki と実装がずれていく状態を避けられます。
+- **コードの前に計画を立てる** — まずストアに計画を置き、コードリポジトリは後から追従できます。
 
-> ストアは **ベータ版** です。 [Stores User Guide](docs/stores-beta/user-guide.md)] から始めてください。
+> ストアは **ベータ版** です。まずは [Stores ユーザーガイド](docs/stores-beta/user-guide.md) を参照してください。
 
 <a id="quick-start"></a>
 
@@ -113,7 +114,7 @@ OpenSpec をグローバルにインストールします。
 npm install -g @ayumuwall/openspec@latest
 ```
 
-次に、プロジェクト ディレクトリに移動して初期化します。
+次に、プロジェクトディレクトリに移動して初期化します。
 
 ```bash
 cd your-project
@@ -122,8 +123,8 @@ openspec init
 
 次に AI に話しかけます。
 
-- **Not sure what to build yet?** Start with `/opsx:explore`, a no-stakes thinking partner that reads your code, weighs options, and shapes a plan before anything is written. ([Explore guide](docs/explore.md))
-- **欲しいものはもう決まっていますか?** `/opsx:propose <what-you-want-to-build>` に直接アクセスしてください。
+- **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、何かを書く前に計画の形へ整理してくれる安全な相談相手です。([探索ガイド](docs/explore.md))
+- **欲しいものはもう決まっていますか?** `/opsx:propose <what-you-want-to-build>` へ直接進んでください。
 
 どちらもデフォルトのプロファイルに含まれています。拡張ワークフロー（`/opsx:new`、`/opsx:continue`、`/opsx:ff`、`/opsx:verify`、`/opsx:bulk-archive`、`/opsx:onboard`）が必要な場合は、`openspec config profile`で選択し、`openspec update`で適用します。
 
@@ -134,49 +135,49 @@ openspec init
 
 ## ドキュメント
 
-**ここから始めてください:** **[Documentation Home](docs/README.md)**] はすべてをマップします。 OpenSpec は初めてですか? [はじめに](docs/getting-started.md)]を読んでから、[コマンドの仕組み](docs/how-commands-work.md) (実際に`/opsx:propose`と入力するところ)]を読んでください。
+**ここから始めてください:** **[ドキュメントホーム](docs/README.md)** に全体像をまとめています。OpenSpec が初めてなら、まず [はじめに](docs/getting-started.md) を読み、次に [コマンドの仕組み](docs/how-commands-work.md) で `/opsx:propose` をどこに入力するか確認してください。
 
 → **[はじめに](docs/getting-started.md)**: 最初のステップ<br>
-→ **[Explore First](docs/explore.md)**: コミットする前に `/opsx:explore` でよく考えてください<br>
-→ **[コマンドの仕組み](docs/how-commands-work.md)**: スラッシュ コマンドが実行される場所と CLI が異なる場所<br>
+→ **[まずは探索する](docs/explore.md)**: コミットする前に `/opsx:explore` で考えを整理する<br>
+→ **[コマンドの仕組み](docs/how-commands-work.md)**: スラッシュコマンドを実行する場所と CLI との違い<br>
 → **[コアコンセプトの概要](docs/overview.md)**: メンタルモデル全体、1 ページ<br>
 → **[例とレシピ](docs/examples.md)**: 実際の変更の開始から終了まで<br>
 → **[ワークフロー](docs/workflows.md)**: コンボとパターン<br>
-→ **[既存のプロジェクト](docs/existing-projects.md)**: ブラウンフィールド コードベースで OpenSpec を採用<br>
-→ **[Change](docs/editing-changes.md) の編集**: 成果物を更新し、戻って、手動編集を調整します<br>
-→ **[Commands](docs/commands.md)**: スラッシュコマンドとスキル<br>
+→ **[既存プロジェクト](docs/existing-projects.md)**: ブラウンフィールドのコードベースに OpenSpec を導入する<br>
+→ **[変更の編集](docs/editing-changes.md)**: アーティファクトの更新、戻り作業、手動編集との整合<br>
+→ **[コマンド](docs/commands.md)**: スラッシュコマンドとスキル<br>
 → **[CLI](docs/cli.md)**: 端末リファレンス<br>
 → **[Stores](docs/stores-beta/user-guide.md)**: 別のリポジトリで計画し、チーム全体で共有します (ベータ版)<br>
-→ **[サポートされているツール](docs/supported-tools.md)**: ツールの統合とインストール パス<br>
-→ **[Concepts](docs/concepts.md)**: すべてがどのように適合するか<br>
+→ **[サポートされているツール](docs/supported-tools.md)**: ツール統合とインストール先<br>
+→ **[コンセプト](docs/concepts.md)**: それぞれの要素がどうつながるか<br>
 → **[多言語](docs/multi-language.md)**: 多言語サポート<br>
-→ **[カスタマイズ](docs/customization.md)**: 自分のものにしましょう<br>
-→ **[FAQ](docs/faq.md)** · **[トラブルシューティング](docs/troubleshooting.md)** · **[用語集](docs/glossary.md)**]: クイックヘルプ
+→ **[カスタマイズ](docs/customization.md)**: 自分の環境に合わせる<br>
+→ **[FAQ](docs/faq.md)** · **[トラブルシューティング](docs/troubleshooting.md)** · **[用語集](docs/glossary.md)**: クイックヘルプ
 
 
 ## コミュニティスキーマ
 
-スタンドアロン リポジトリ経由で配布されるサードパーティ スキーマ バンドル - これらは、[github/spec-kit のコミュニティ拡張カタログ ](https://github.com/github/spec-kit/tree/main/extensions) がツール統合を処理する方法と同様に、OpenSpec を他のツールと統合する独自のワークフローを提供します。
+スタンドアロンリポジトリ経由で配布されるサードパーティのスキーマバンドルです。[github/spec-kit のコミュニティ拡張カタログ](https://github.com/github/spec-kit/tree/main/extensions) がツール統合を扱うのと同じように、OpenSpec を他のツールと連携させるための独自ワークフローを提供します。
 
-→ **[カスタマイズ ドキュメントのカタログ](docs/customization.md#community-schemas)**を参照してください。
+→ **[カスタマイズドキュメントのカタログ](docs/customization.md#community-schemas)**を参照してください。
 
 
 ## なぜ OpenSpec を使うのか?
 
-AI コーディング アシスタントは強力ですが、要件がチャット履歴にのみ存在する場合は予測できません。 OpenSpec は軽量仕様レイヤーを追加するため、コードを記述する前に何を構築するかについて合意できます。
+AI コーディングアシスタントは強力ですが、要件がチャット履歴にしか残らない場合、結果は予測しにくくなります。OpenSpec は軽量な仕様レイヤーを追加し、コードを書く前に何を作るか合意できるようにします。
 
-- **構築する前に同意します** — コードを作成する前に人間と AI が仕様を調整します
-- **整理整頓** — 変更ごとに、提案、仕様、設計、タスクを含む独自のフォルダーが作成されます。
+- **構築する前に合意する** — コードを書く前に人間と AI が仕様をすり合わせます
+- **整理しやすい** — 変更ごとに、提案、仕様、設計、タスクを含む専用フォルダーが作成されます
 - **流動的に作業** — 厳格なフェーズ ゲートを使用せず、いつでもアーティファクトを更新できます
-- **ツールを使用** — スラッシュ コマンドを使用して 30 以上の AI アシスタントと連携します
+- **普段のツールで使える** — スラッシュコマンドを通じて 30 以上の AI アシスタントと連携します
 
 ### 比較方法
 
-**vs. [Spec Kit](https://github.com/github/spec-kit)** (GitHub) — 徹底的だが重量級。厳格なフェーズ ゲート、大量の Markdown、Python セットアップ。 OpenSpec は軽量で、自由に反復できます。
+**vs. [Spec Kit](https://github.com/github/spec-kit)** (GitHub) — 徹底的ですが重量級です。厳格なフェーズゲート、大量の Markdown、Python セットアップが必要です。OpenSpec は軽量で、自由に反復できます。
 
-**vs. [Kiro](https://kiro.dev)** (AWS) — 強力ですが、IDE にロックされており、Claude モデルに限定されています。 OpenSpec は、すでに使用しているツールと連携して動作します。
+**vs. [Kiro](https://kiro.dev)** (AWS) — 強力ですが、IDE にロックされており、Claude モデルに限定されています。OpenSpec は、すでに使用しているツールと連携して動作します。
 
-**vs.何もない** — 仕様のない AI コーディングは、曖昧なプロンプトと予測不可能な結果を​​意味します。 OpenSpec は、形式的な手順を行わずに予測可能性をもたらします。
+**vs. 何も使わない** — 仕様のない AI コーディングは、曖昧なプロンプトと予測しにくい結果につながります。OpenSpec は、重い手続きを増やさずに予測可能性を高めます。
 
 ## OpenSpec の更新
 
@@ -188,7 +189,7 @@ npm install -g @ayumuwall/openspec@latest
 
 **エージェントの指示を更新します**
 
-各プロジェクト内でこれを実行して AI ガイダンスを再生成し、最新のスラッシュ コマンドがアクティブであることを確認します。
+各プロジェクト内でこれを実行して AI ガイダンスを再生成し、最新のスラッシュコマンドが有効になっていることを確認します。
 
 ```bash
 openspec update
@@ -198,7 +199,7 @@ openspec update
 
 **モデルの選択**: OpenSpec は高度な推論モデルで最もよく機能します。計画と実装の両方に Codex 5.5 と Opus 4.7 をお勧めします。
 
-**コンテキストの衛生管理**: OpenSpec は、クリーンなコンテキスト ウィンドウから恩恵を受けます。実装を開始する前にコンテキストをクリアし、セッション全体を通じてコン​​テキストの健全性を維持します。
+**コンテキスト管理**: OpenSpec は、クリーンなコンテキストウィンドウで使うと効果を発揮しやすくなります。実装を始める前にコンテキストを整理し、セッション中も不要な情報を持ち込みすぎないようにしてください。
 
 ## 貢献する
 
@@ -206,9 +207,9 @@ openspec update
 
 **大規模な変更** — 新機能、重要なリファクタリング、またはアーキテクチャの変更については、実装を開始する前に意図と目標を調整できるよう、まず OpenSpec の変更提案を提出してください。
 
-提案書を作成するときは、OpenSpec の哲学を念頭に置いてください。つまり、私たちはさまざまなコーディング エージェント、モデル、ユース ケースにわたるさまざまなユーザーにサービスを提供しています。変更は誰にとってもうまくいくはずです。
+提案書を作成するときは、OpenSpec の哲学を念頭に置いてください。私たちは、さまざまなコーディングエージェント、モデル、ユースケースを使う幅広いユーザーに向けて OpenSpec を作っています。変更は、特定の環境だけでなく多くの利用者にとってうまく機能するべきです。
 
-**AI によって生成されたコードは歓迎されます** - テストと検証が行われている限り。 AI によって生成されたコードを含む PR には、使用されたコーディング エージェントとモデルについて言及する必要があります (例: 「claude-opus-4-5-20251101 を使用してクロード コードで生成」)。
+**AI によって生成されたコードは歓迎されます** — テストと検証が行われている限り。AI 生成コードを含む PR では、使用したコーディングエージェントとモデルを明記してください（例: 「Claude Code で claude-opus-4-5-20251101 を使用して生成」）。
 
 ### 開発
 
@@ -216,9 +217,9 @@ openspec update
 - ビルド: `pnpm run build`
 - テスト: `pnpm test`
 - CLI をローカルで開発: `pnpm run dev` または `pnpm run dev:cli`
-- 従来のコミット (1 行): `type(scope): subject`
+- Conventional Commit (1 行): `type(scope): subject`
 
-## 他の
+## その他
 
 <details>
 <summary><strong>テレメトリー</strong></summary>
@@ -234,7 +235,7 @@ OpenSpec は匿名の使用状況統計を収集します。
 <details>
 <summary><strong>メンテナとアドバイザー</strong></summary>
 
-プロジェクトの指導を支援するコアメンテナーとアドバイザーのリストについては、[MAINTAINERS.md](MAINTAINERS.md)] を参照してください。
+プロジェクトの方向づけを支援するコアメンテナーとアドバイザーのリストについては、[MAINTAINERS.md](MAINTAINERS.md) を参照してください。
 
 </details>
 
