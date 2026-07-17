@@ -17,14 +17,14 @@ OpenSpec は通常、1 つのコードリポジトリ内にあります。コー
 ## 形
 
 ```
-            team-plans  (a store: planning in its own repo)
+            team-plans  (ストア: 計画専用の独立リポジトリ)
             ├── .openspec-store/store.yaml     identity: "I am team-plans"
             └── openspec/
-                ├── specs/      what is true
-                └── changes/    what is in motion
+                ├── specs/      確定した仕様
+                └── changes/    進行中の変更
                       ▲
-                      │ registered on each machine by name;
-                      │ shared by pushing/cloning like any repo
+                      │ 各マシンで名前を付けて登録
+                      │ 通常のリポジトリと同じく push / clone で共有
         ┌─────────────┼─────────────┐
         │             │             │
     web-app       api-server     mobile-app
@@ -45,14 +45,14 @@ openspec store setup team-plans --path ~/openspec/team-plans
 ```
 
 ```
-Store ready: team-plans
-Location: /Users/you/openspec/team-plans
-OpenSpec root: ready
-Registry: registered
+ストア準備完了: team-plans
+場所: /Users/you/openspec/team-plans
+OpenSpec ルート: 準備完了
+レジストリ: 登録済み
 
-Next: run normal OpenSpec commands against this store, for example:
+次: このストアに対して通常の OpenSpec コマンドを実行します。例:
   openspec new change <change-id> --store team-plans
-Share this store by committing and pushing it like any Git repo.
+このストアは、通常の Git リポジトリと同じようにコミットして push することで共有します。
 ```
 
 ```bash
@@ -60,10 +60,10 @@ openspec new change add-login --store team-plans
 ```
 
 ```
-Using OpenSpec root: team-plans (/Users/you/openspec/team-plans)
-Created change 'add-login' at /Users/you/openspec/team-plans/openspec/changes/add-login/
+使用中の OpenSpec ルート: team-plans (/Users/you/openspec/team-plans)
+変更 'add-login' を /Users/you/openspec/team-plans/openspec/changes/add-login/ に作成しました
 Schema: spec-driven
-Next: openspec status --change add-login --store team-plans
+次: openspec status --change add-login --store team-plans
 ```
 
 モデルはこれだけです。以降のライフサイクルは通常の OpenSpec と同じで、`status`、`instructions`、`validate`、`archive` などの各コマンドに `--store team-plans` を付けます。出力されるヒントにも同じフラグが含まれます。`Using OpenSpec root:` 行を見ると、コマンドがどのルートに対して動いているかが常に分かります。
@@ -113,7 +113,7 @@ openspec status --change add-login
 ```
 
 ```
-Using OpenSpec root: team-plans (/Users/you/openspec/team-plans)
+使用中の OpenSpec ルート: team-plans (/Users/you/openspec/team-plans)
 ...
 ```
 
@@ -125,15 +125,15 @@ Using OpenSpec root: team-plans (/Users/you/openspec/team-plans)
 
 ```
    platform-reqs (store)                 api-server (code repo)
-   owned by the platform team            owned by a product team
+   platform チームが所有                 product チームが所有
    ┌──────────────────────────┐          ┌──────────────────────────┐
    │ openspec/specs/          │ ◀────────│ openspec/config.yaml     │
-   │   payments/spec.md       │ reads    │   references:            │
+   │   payments/spec.md       │ 読み取り │   references:            │
    │   auth/spec.md           │          │     - platform-reqs      │
    │                          │          │ openspec/specs/          │
-   │ openspec/changes/        │          │   (their own designs)    │
-   │   platform work          │          │ openspec/changes/        │
-   │                          │          │   (their own work)       │
+   │ openspec/changes/        │          │   (自分たちの設計)       │
+   │   platform 側の作業      │          │ openspec/changes/        │
+   │                          │          │   (自分たちの作業)       │
    │                          │          └──────────────────────────┘
    └──────────────────────────┘
 ```
@@ -170,30 +170,30 @@ openspec workset create platform \
 **「セットアップは正常か？」** — `openspec doctor` は現在のルートと参照ストアを確認し、検出結果ごとに貼り付け可能な修正コマンドを表示します。
 
 ```
-Doctor
+診断
 
-Root
-  Location: /Users/you/src/api-server
-  OpenSpec root: ok
+ルート
+  場所: /Users/you/src/api-server
+  OpenSpec ルート: ok
 
-References
+参照
   - platform-reqs: ok (/Users/you/openspec/platform-reqs)
-  - design-system: Referenced store 'design-system' is not registered on this machine.
-    Fix: git clone -- git@github.com:acme/design-system.git '/Users/you/openspec/design-system' && openspec store register '/Users/you/openspec/design-system' --id design-system
+  - design-system: 参照ストア 'design-system' はこのマシンに登録されていません。
+    修正: git clone -- git@github.com:acme/design-system.git '/Users/you/openspec/design-system' && openspec store register '/Users/you/openspec/design-system' --id design-system
 
 ```
 
 **「何を対象に作業しているか？」** — `openspec context` は、OpenSpec の宣言から作業コンテキストを組み立てます。現在のルートと、それが参照するストアが表示されます。
 
 ```
-Working context for api-server (/Users/you/src/api-server)
+api-server の作業コンテキスト (/Users/you/src/api-server)
 
-OpenSpec root
+OpenSpec ルート
   api-server  /Users/you/src/api-server
 
-Referenced stores
+参照ストア
   platform-reqs  /Users/you/openspec/platform-reqs
-    Fetch: openspec show <spec-id> --type spec --store platform-reqs
+    取得: openspec show <spec-id> --type spec --store platform-reqs
 ```
 
 どちらもエージェント向けの `--json` をサポートします。`openspec context --code-workspace <path>` は、さらに VS Code ワークスペースファイルを書き出し、全体のセットを含めます。このコマンドが行う書き込みはそれだけです。
@@ -206,7 +206,7 @@ Referenced stores
   workset "platform"                 openspec workset open platform
   ├── team-plans   ~/openspec/team-plans         │
   ├── api-server   ~/src/api-server              ▼
-  └── web-app      ~/src/web-app       all three open in your tool
+  └── web-app      ~/src/web-app       3 つすべてをツールで開く
 ```
 
 ```bash
@@ -217,7 +217,7 @@ openspec workset list
 ```
 
 ```
-platform  (opens in VS Code)
+platform  (VS Code で開く)
   team-plans  /Users/you/openspec/team-plans
   api-server  /Users/you/src/api-server
 ```
@@ -231,15 +231,13 @@ platform  (opens in VS Code)
 通常のコマンドは、次の順序で同じようにルートを解決します。
 
 ```
-1. --store <id>          you said so explicitly        → that store
-2. nearest openspec/     a real planning root here     → this repo
-   (walking up from cwd)
-3. store: pointer        config.yaml declares a store  → that store
-4. none of the above     stores registered on this     → error with a
-                         machine?                        selection hint
-                         no stores registered?         → the current
-                                                          directory
-                                                          (classic behavior)
+1. --store <id>          明示的に指定した             → そのストア
+2. nearest openspec/     近くに実体のある計画ルート   → このリポジトリ
+   (cwd から親方向に探索)
+3. store: pointer        config.yaml が store を宣言  → そのストア
+4. none of the above     このマシンにストア登録あり?  → 選択ヒント付きエラー
+                         ストア登録なし?             → 現在のディレクトリ
+                                                         (従来の挙動)
 ```
 
 `Using OpenSpec root:` 行（および `--json` 出力の `root` ブロック）を見ると、どのケースに該当したかが分かります。
