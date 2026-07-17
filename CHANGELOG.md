@@ -7,6 +7,7 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 - **[OpenSpec-J]** OpenSpec v1.5.0 / v1.6.0 の upstream 変更を取り込み
 - **[OpenSpec-J]** Stores・worksets・`/opsx:update`・Oh My Pi / Trae 対応を含む新規ドキュメント、CLI 文言、OPSX テンプレートを日本語化
 - **[OpenSpec-J]** 翻訳棚卸し: v1.0.0 以降に変更された `src/**/*.ts` のユーザー向け文言を再点検
+- **[OpenSpec-J]** 翻訳棚卸し: README と docs の対話例・AI 出力例・コードコメントに残っていた英語文言を日本語化
 - **[OpenSpec-J]** README の同期元バージョンを OpenSpec v1.6.0 に更新
 
 ### マイナーな変更
