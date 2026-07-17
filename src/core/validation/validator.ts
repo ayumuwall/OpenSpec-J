@@ -451,7 +451,13 @@ export class Validator {
     ) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS}`;
     }
-    if (msg.includes('Change must have a Why section') || msg.includes('Change must have a What Changes section')) {
+    if (
+      msg.includes('Change must have a Why section') ||
+      msg.includes('Change must have a What Changes section') ||
+      msg.includes(VALIDATION_MESSAGES.CHANGE_WHY_TOO_SHORT) ||
+      msg.includes('Why セクション') ||
+      msg.includes(VALIDATION_MESSAGES.CHANGE_WHAT_EMPTY)
+    ) {
       return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_CHANGE_SECTIONS}`;
     }
     return msg;

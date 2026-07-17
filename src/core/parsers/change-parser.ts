@@ -125,7 +125,7 @@ export class ChangeParser extends MarkdownParser {
         deltas.push({
           spec: specName,
           operation: 'REMOVED' as DeltaOperation,
-          description: `Remove requirement: ${req.text}`,
+          description: `要件を削除: ${req.text}`,
           requirement: req,
           requirements: [req],
         });
@@ -140,7 +140,7 @@ export class ChangeParser extends MarkdownParser {
         deltas.push({
           spec: specName,
           operation: 'RENAMED' as DeltaOperation,
-          description: `Rename requirement from "${rename.from}" to "${rename.to}"`,
+          description: `要件名を変更: "${rename.from}" から "${rename.to}"`,
           rename,
         });
       });
