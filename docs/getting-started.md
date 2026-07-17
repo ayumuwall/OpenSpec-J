@@ -14,12 +14,12 @@
 ループ全体。各ステップは、それが発生する場所によってラベル付けされています。
 
 ```text
-TERMINAL   $ npm install -g @ayumuwall/openspec@latest
-TERMINAL   $ cd your-project && openspec init
-AI CHAT      /opsx:explore                    (optional: think it through first)
-AI CHAT      /opsx:propose add-dark-mode      (AI drafts the plan; you review it)
-AI CHAT      /opsx:apply                      (AI builds it)
-AI CHAT      /opsx:archive                    (specs updated, change filed away)
+ターミナル   $ npm install -g @ayumuwall/openspec@latest
+ターミナル   $ cd your-project && openspec init
+AIチャット    /opsx:explore                    (任意: 先に考えを整理する)
+AIチャット    /opsx:propose add-dark-mode      (AI が計画を下書きし、あなたが確認する)
+AIチャット    /opsx:apply                      (AI が実装する)
+AIチャット    /opsx:archive                    (仕様を更新し、変更を保存する)
 ```
 
 2 つの端末ステップを設定すれば、チャットを開始できます。このガイドの残りの部分では、各ステップの内容と何が表示されるかを明らかにします。
@@ -34,7 +34,7 @@ OpenSpec は、コードを作成する前に、AI コーディング アシス�
 
 ```text
 /opsx:explore ──► /opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
-   (optional)
+   (任意)
 ```
 
 何をすべきか考えている場合は `/opsx:explore` から始め、すでにわかっている場合は `/opsx:propose` に直接ジャンプします。 Explore はデフォルトのプロファイルに含まれているため、必要なときにいつでも利用できます。
@@ -42,7 +42,7 @@ OpenSpec は、コードを作成する前に、AI コーディング アシス�
 **展開されたパス (カスタム ワークフローの選択):**
 
 ```text
-/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
+/opsx:new ──► /opsx:ff または /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
 
 デフォルトのグローバル プロファイルは `core` で、これには `propose`、`explore`、`apply`、`sync`、および `archive` が含まれます。 `openspec config profile`、次に `openspec update` を使用して、拡張されたワークフロー コマンドを有効にできます。
@@ -53,18 +53,18 @@ OpenSpec は、コードを作成する前に、AI コーディング アシス�
 
 ```
 openspec/
-├── specs/              # Source of truth (your system's behavior)
+├── specs/              # ソース・オブ・トゥルース（システムの現在の振る舞い）
 │   └── <domain>/
 │       └── spec.md
-├── changes/            # Proposed updates (one folder per change)
+├── changes/            # 変更提案（変更ごとに 1 フォルダー）
 │   └── <change-name>/
 │       ├── proposal.md
 │       ├── design.md
 │       ├── tasks.md
-│       └── specs/      # Delta specs (what's changing)
+│       └── specs/      # 仕様差分（何を変更するか）
 │           └── <domain>/
 │               └── spec.md
-└── config.yaml         # Project configuration (optional)
+└── config.yaml         # プロジェクト設定（任意）
 ```
 
 **2 つの主要なディレクトリ:**
@@ -90,7 +90,7 @@ openspec/
 proposal ──► specs ──► design ──► tasks ──► implement
    ▲           ▲          ▲                    │
    └───────────┴──────────┴────────────────────┘
-            update as you learn
+            学んだことに合わせて更新する
 ```
 
 実装中に詳細を学びながら、いつでも以前の成果物に戻って改良することができます。
@@ -109,28 +109,28 @@ proposal ──► specs ──► design ──► tasks ──► implement
 ## ADDED Requirements
 
 ### Requirement: Two-Factor Authentication
-The system MUST require a second factor during login.
+システムはログイン時に第 2 要素を要求しなければならない。
 
 #### Scenario: OTP required
-- GIVEN a user with 2FA enabled
-- WHEN the user submits valid credentials
-- THEN an OTP challenge is presented
+- GIVEN 2FA が有効なユーザー
+- WHEN ユーザーが有効な認証情報を送信する
+- THEN OTP チャレンジが表示される
 
 ## MODIFIED Requirements
 
 ### Requirement: Session Timeout
-The system SHALL expire sessions after 30 minutes of inactivity.
-(Previously: 60 minutes)
+システムは 30 分間操作がないセッションを期限切れにするものとする。
+（以前: 60 分）
 
 #### Scenario: Idle timeout
-- GIVEN an authenticated session
-- WHEN 30 minutes pass without activity
-- THEN the session is invalidated
+- GIVEN 認証済みセッション
+- WHEN 操作がないまま 30 分が経過する
+- THEN セッションは無効化される
 
 ## REMOVED Requirements
 
 ### Requirement: Remember Me
-(Deprecated in favor of 2FA)
+（2FA を優先するため非推奨）
 ```
 
 ### アーカイブで何が起こるか
@@ -152,12 +152,12 @@ The system SHALL expire sessions after 30 minutes of inactivity.
 ```text
 You: /opsx:propose add-dark-mode
 
-AI:  Created openspec/changes/add-dark-mode/
-     ✓ proposal.md — why we're doing this, what's changing
-     ✓ specs/       — requirements and scenarios
-     ✓ design.md    — technical approach
-     ✓ tasks.md     — implementation checklist
-     Ready for implementation!
+AI:  openspec/changes/add-dark-mode/ を作成しました
+     ✓ proposal.md — 目的と変更内容
+     ✓ specs/       — 要件とシナリオ
+     ✓ design.md    — 技術的な方針
+     ✓ tasks.md     — 実装チェックリスト
+     実装に進めます。
 ```
 
 拡張されたワークフロー プロファイルを有効にしている場合は、`/opsx:new`、次に `/opsx:ff` (または段階的に `/opsx:continue`) の 2 つのステップとしてこれを実行することもできます。
@@ -170,17 +170,17 @@ AI:  Created openspec/changes/add-dark-mode/
 # Proposal: Add Dark Mode
 
 ## Intent
-Users have requested a dark mode option to reduce eye strain
-during nighttime usage.
+夜間利用時の目の負担を減らすため、ユーザーから
+ダークモードのオプションが求められている。
 
 ## Scope
-- Add theme toggle in settings
-- Support system preference detection
-- Persist preference in localStorage
+- 設定画面にテーマ切り替えを追加する
+- システム設定の検出をサポートする
+- 選択した設定を localStorage に保存する
 
 ## Approach
-Use CSS custom properties for theming with a React context
-for state management.
+テーマ管理には CSS カスタムプロパティを使い、
+状態管理には React コンテキストを使う。
 ```
 
 **specs/ui/spec.md** - 新しい要件を示すデルタ:
@@ -191,18 +191,18 @@ for state management.
 ## ADDED Requirements
 
 ### Requirement: Theme Selection
-The system SHALL allow users to choose between light and dark themes.
+システムは、ユーザーがライトテーマとダークテーマを選択できるようにするものとする。
 
 #### Scenario: Manual toggle
-- GIVEN a user on any page
-- WHEN the user clicks the theme toggle
-- THEN the theme switches immediately
-- AND the preference persists across sessions
+- GIVEN 任意のページを表示しているユーザー
+- WHEN ユーザーがテーマトグルをクリックする
+- THEN テーマが即座に切り替わる
+- AND 選択内容はセッションをまたいで保持される
 
 #### Scenario: System preference
-- GIVEN a user with no saved preference
-- WHEN the application loads
-- THEN the system's preferred color scheme is used
+- GIVEN 保存済み設定がないユーザー
+- WHEN アプリケーションが読み込まれる
+- THEN システムの優先カラースキームが使用される
 ```
 
 **tasks.md** - 実装チェックリスト:
@@ -211,18 +211,18 @@ The system SHALL allow users to choose between light and dark themes.
 # Tasks
 
 ## 1. Theme Infrastructure
-- [ ] 1.1 Create ThemeContext with light/dark state
-- [ ] 1.2 Add CSS custom properties for colors
-- [ ] 1.3 Implement localStorage persistence
+- [ ] 1.1 ライト/ダーク状態を持つ ThemeContext を作成する
+- [ ] 1.2 色用の CSS カスタムプロパティを追加する
+- [ ] 1.3 localStorage への永続化を実装する
 
 ## 2. UI Components
-- [ ] 2.1 Create ThemeToggle component
-- [ ] 2.2 Add toggle to settings page
-- [ ] 2.3 Update Header to include quick toggle
+- [ ] 2.1 ThemeToggle コンポーネントを作成する
+- [ ] 2.2 設定ページにトグルを追加する
+- [ ] 2.3 Header にクイックトグルを追加する
 
 ## 3. Styling
-- [ ] 3.1 Define dark theme color palette
-- [ ] 3.2 Update components to use CSS variables
+- [ ] 3.1 ダークテーマのカラーパレットを定義する
+- [ ] 3.2 CSS 変数を使うようにコンポーネントを更新する
 ```
 
 ### 3. 実装する
@@ -230,13 +230,13 @@ The system SHALL allow users to choose between light and dark themes.
 ```
 You: /opsx:apply
 
-AI:  Working through tasks...
-     ✓ 1.1 Created ThemeContext with light/dark state
-     ✓ 1.2 Added CSS custom properties to globals.css
-     ✓ 1.3 Implemented localStorage persistence
-     ✓ 2.1 Created ThemeToggle component
+AI:  タスクを進めています...
+     ✓ 1.1 ライト/ダーク状態を持つ ThemeContext を作成
+     ✓ 1.2 globals.css に CSS カスタムプロパティを追加
+     ✓ 1.3 localStorage への永続化を実装
+     ✓ 2.1 ThemeToggle コンポーネントを作成
      ...
-     All tasks complete!
+     すべてのタスクが完了しました。
 ```
 
 実装中に、デザインを調整する必要があることがわかった場合は、アーティファクトを更新して続行します。
@@ -246,10 +246,10 @@ AI:  Working through tasks...
 ```
 You: /opsx:archive
 
-AI:  Archiving add-dark-mode...
-     ✓ Merged specs into openspec/specs/ui/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
-     Done! Ready for the next feature.
+AI:  add-dark-mode をアーカイブしています...
+     ✓ 仕様を openspec/specs/ui/spec.md にマージ
+     ✓ openspec/changes/archive/2025-01-24-add-dark-mode/ に移動
+     完了しました。次の機能に進めます。
 ```
 
 仕様差分はメイン仕様の一部となり、システムがどのように動作するかを文書化します。
@@ -262,13 +262,13 @@ CLI を使用して変更を確認します。
 # アクティブな変更を一覧表示
 openspec list
 
-# View change details
+# 変更の詳細を表示
 openspec show add-dark-mode
 
-# Validate spec formatting
+# 仕様の書式を検証
 openspec validate add-dark-mode
 
-# Interactive dashboard
+# 対話型ダッシュボード
 openspec view
 ```
 
