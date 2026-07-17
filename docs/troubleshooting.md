@@ -66,8 +66,8 @@ openspec update
 コマンドは、どの変更を意味するのかを判断できませんでした。明示的に名前を付けるか、存在するものを確認します。
 
 ```bash
-openspec list                    # see active changes
-/opsx:apply add-dark-mode        # name the change in chat
+openspec list                    # アクティブな変更を表示
+/opsx:apply add-dark-mode        # チャットで変更名を指定
 ```
 
 また、正しいプロジェクトディレクトリにいることも確認してください。
@@ -87,9 +87,9 @@ openspec status --change <name>
 検証では、構造上の問題がないか仕様と変更をチェックします。メッセージを読みます。ファイルと問題の名前が示されています。
 
 ```bash
-openspec validate <name>           # validate one item
-openspec validate --all            # validate everything
-openspec validate --all --strict   # stricter checks, good for CI
+openspec validate <name>           # 1 件を検証
+openspec validate --all            # すべて検証
+openspec validate --all --strict   # より厳密に検証（CI 向け）
 ```
 
 一般的な原因は、必須セクションの欠落（シナリオのない仕様など）または不正なデルタヘッダーです。ファイルを修正して再実行してください。[CLI リファレンス](cli.md#openspec-validate) には出力形式が記載されています。
@@ -134,9 +134,9 @@ openspec schemas --json
 参照したスキーマ名は存在しません。利用可能なものをリストし、スペルを確認します。
 
 ```bash
-openspec schemas                    # list available schemas
-openspec schema which <name>        # see where a schema resolves from
-openspec schema init <name>         # create a custom one
+openspec schemas                    # 利用可能なスキーマを一覧表示
+openspec schema which <name>        # スキーマの解決元を表示
+openspec schema init <name>         # カスタムスキーマを作成
 ```
 
 詳しくは [カスタマイズ](customization.md#custom-schemas) を参照してください。
@@ -163,6 +163,6 @@ IDE を再起動します。多くのツールは起動時にスキルを検出�
 
 - **Discord:** [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC)
 - **GitHub Issues:** [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues)
-- **端末から:** `openspec feedback "what went wrong"` が問題を開きます。
+- **端末から:** `openspec feedback "問題の内容"` が Issue を作成します。
 
 問題を報告するときは、OpenSpec バージョン（`openspec --version`）、Node バージョン（`node --version`）、AI ツール、実行した正確なコマンドと出力を含めてください。対応が速くなります。

@@ -23,12 +23,12 @@
 考え方は単純です。成果物は実際の計画ですが、署名済みで変更不能な契約ではありません。AI は常に現在の内容に基づいて動くため、内容を編集すれば作業を制御できます。
 
 ```text
-You: I want to change the approach in this change.
+You: この変更のアプローチを変えたいです。
 
-You: [edit design.md, or tell the AI:]
-     Update design.md to use a background job instead of a synchronous call.
+You: [design.md を編集する、または AI に伝える:]
+     同期呼び出しではなくバックグラウンドジョブを使うように design.md を更新してください。
 
-AI:  Updated design.md. The task list still fits; want me to continue applying?
+AI:  design.md を更新しました。タスクリストはまだ合っています。続けて実装しますか？
 
 You: /opsx:apply
 ```

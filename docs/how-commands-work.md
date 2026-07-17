@@ -16,29 +16,29 @@ OpenSpec は 1 つのプロジェクトですが、役割は 2 つあります�
 **CLI（ターミナル側）。** `openspec` という名前のプログラムです。シェルから実行します。プロジェクトのセットアップ、変更の一覧表示、検証、ダッシュボード表示、完了した変更のアーカイブなどを行います。iTerm、VS Code ターミナル、PowerShell など、`git` や `npm` を実行する場所で使います。
 
 ```bash
-openspec init        # set up OpenSpec in this project
-openspec list        # see active changes
-openspec view        # open the interactive dashboard
+openspec init        # このプロジェクトに OpenSpec をセットアップ
+openspec list        # アクティブな変更を表示
+openspec view        # 対話型ダッシュボードを開く
 ```
 
 **スラッシュコマンド（チャット側）。** `/opsx:propose` や `/opsx:apply` のような短いコマンドです。AI に OpenSpec のワークフローに従うよう指示します。提案を作り、仕様を書き、タスクリストから実装し、完了したらアーカイブします。Claude Code、Cursor、Windsurf、Copilot など、使っている AI アシスタントのチャットに入力します。
 
 ```text
-/opsx:propose add-dark-mode    (typed in your AI chat)
-/opsx:apply                    (typed in your AI chat)
-/opsx:archive                  (typed in your AI chat)
+/opsx:propose add-dark-mode    (AI チャットに入力)
+/opsx:apply                    (AI チャットに入力)
+/opsx:archive                  (AI チャットに入力)
 ```
 
 図にするとこうです。
 
 ```text
-        YOUR TERMINAL                         YOUR AI ASSISTANT'S CHAT
+        あなたのターミナル                     AI アシスタントのチャット
    ┌──────────────────────┐               ┌──────────────────────────────┐
-   │  $ openspec init     │   installs    │  /opsx:propose add-dark-mode  │
+   │  $ openspec init     │  インストール │  /opsx:propose add-dark-mode  │
    │  $ openspec list     │  ──────────►  │  /opsx:apply                  │
-   │  $ openspec view     │   commands    │  /opsx:archive                │
-   └──────────────────────┘    & skills   └──────────────────────────────┘
-        run openspec here                       run /opsx:* here
+   │  $ openspec view     │ コマンドと    │  /opsx:archive                │
+   └──────────────────────┘  スキル       └──────────────────────────────┘
+        openspec はここで実行                  /opsx:* はここで実行
 ```
 
 `openspec init` をターミナルで実行すると、AI ツール側にスラッシュコマンドやスキルがインストールされます。ターミナル側がチャット側をセットアップします。その後の日常的な作業は、主にチャットで進みます。
@@ -135,19 +135,19 @@ CLI は **エンジン** です。変更フォルダーの構造、アーティ�
 TERMINAL   $ npm install -g @ayumuwall/openspec@latest
 TERMINAL   $ cd your-project
 TERMINAL   $ openspec init
-              (installs slash commands into your AI tool)
+              (AI ツールにスラッシュコマンドをインストール)
 
 AI CHAT      /opsx:explore
-              (optional: think the idea through with the AI first)
+              (任意: 先に AI と一緒にアイデアを整理)
 
 AI CHAT      /opsx:propose add-dark-mode
-              (AI drafts proposal, specs, design, tasks)
+              (AI が proposal、specs、design、tasks を下書き)
 
 AI CHAT      /opsx:apply
-              (AI builds it, checking off tasks)
+              (AI がタスクをチェックしながら実装)
 
 AI CHAT      /opsx:archive
-              (change is merged into your specs and filed away)
+              (変更を仕様へマージし、アーカイブ)
 ```
 
 セットアップはターミナルで行います。その後の作業は主にチャットで進みます。これが基本のリズムです。

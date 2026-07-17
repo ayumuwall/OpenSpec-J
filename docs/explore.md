@@ -49,39 +49,40 @@ Explore は**会話**であり、生成コマンドではありません。
 ```text
 You: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を調べたいですか？
 
-You: Our checkout sometimes creates duplicate orders. I don't know why
-     and I don't know how to fix it safely.
+You: チェックアウトで重複注文が発生することがあります。原因も、
+     安全な直し方も分かっていません。
 
-AI:  Let me dig into the checkout path...
-     [reads the order service, the payment webhook handler, and the
-      client submit logic]
+AI:  チェックアウト経路を詳しく見ます...
+     [注文サービス、支払い Webhook ハンドラー、
+      クライアントの送信ロジックを読む]
 
-     Here's what I found. There are two ways a duplicate can happen:
+     分かったことです。重複が起きる経路は 2 つあります。
 
-     1. The client can submit twice (double-click, retry on slow network).
-        Nothing debounces it.
-     2. The payment webhook can fire more than once, and the handler
-        creates an order each time. There's no idempotency key.
+     1. クライアントが 2 回送信できる（二重クリック、低速ネットワークでの再試行）。
+        デバウンスされていません。
+     2. 支払い Webhook が複数回発火し、ハンドラーがそのたびに注文を作成します。
+        冪等性キーがありません。
 
-     Cause #2 is the dangerous one: it can charge and fulfill twice.
+     危険なのは原因 2 です。二重に請求・処理される可能性があります。
 
-     Three ways to fix it, roughly in order of robustness:
-     - Idempotency key on the order-creation endpoint (handles both causes)
-     - Dedup on the webhook by payment-intent id (handles #2 only)
-     - Client-side debounce (handles #1 only, papers over the real bug)
+     堅牢な順に、おおまかに 3 つの直し方があります。
+     - 注文作成エンドポイントに冪等性キーを入れる（両方の原因に対応）
+     - Webhook 側で payment-intent id によって重複排除する（原因 2 のみ対応）
+     - クライアント側でデバウンスする（原因 1 のみ対応、本質的な問題は残る）
 
-     Given your code already stores the payment-intent id, the
-     idempotency-key approach is a small change with the biggest payoff.
-     Want me to scope that?
+     既存コードはすでに payment-intent id を保存しているため、
+     冪等性キーの方法が小さな変更で最も効果が大きそうです。
+     この範囲で切り出しますか？
 
-You: Yes, let's do the idempotency key.
+You: はい。冪等性キーで進めましょう。
 
 You: /opsx:propose add-order-idempotency-key
 
-AI:  Created openspec/changes/add-order-idempotency-key/, with a proposal
-     and delta spec grounded in what we just found. Ready for implementation.
+AI:  openspec/changes/add-order-idempotency-key/ を作成し、
+     今見つけた内容に基づく proposal と仕様差分を用意しました。
+     実装に進めます。
 ```
 
 出発点は「何かがおかしいが、触るのが怖い」でした。短い探索で、根本原因、優先順位付きの選択肢、既存コードに基づく推奨案、具体的な変更スコープが見えました。先に考えたからこそ、その後の提案が鋭くなります。
@@ -92,7 +93,7 @@ Explore 自体は何もアーカイブしません。準備ができたら変更
 
 ```text
 explore  ──►  propose  ──►  apply  ──►  archive
- (think)     (agree)       (build)     (record)
+ (考える)    (合意する)    (実装する)   (記録する)
 ```
 
 「これを変更にしましょう」と自然文で言っても、`/opsx:propose <name>` を直接実行しても構いません。どちらの場合も、探索で得た検討内容は使い捨ての雑談ではなく、提案の土台になります。
@@ -117,7 +118,7 @@ explore  ──►  propose  ──►  apply  ──►  archive
 
 ## 次に読むもの
 
-- [Commands: `/opsx:explore`](commands.md#opsxexplore): 正確なコマンドリファレンス
+- [コマンド: `/opsx:explore`](commands.md#opsxexplore): 正確なコマンドリファレンス
 - [ワークフロー](workflows.md): 日常のループの中で探索を使う方法
 - [例とレシピ](examples.md#recipe-3-exploring-before-you-commit): 探索を使う完全なウォークスルー
 - [はじめに](getting-started.md): 探索を含む最初の変更ガイド

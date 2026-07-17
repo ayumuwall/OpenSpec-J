@@ -57,12 +57,12 @@
 ```text
 You: /opsx:propose add-dark-mode
 
-AI:  Created openspec/changes/add-dark-mode/
+AI:  openspec/changes/add-dark-mode/ を作成しました
      ✓ proposal.md
      ✓ specs/ui/spec.md
      ✓ design.md
      ✓ tasks.md
-     Ready for implementation. Run /opsx:apply.
+     実装に進めます。/opsx:apply を実行してください。
 ```
 
 **ヒント:**
@@ -98,25 +98,25 @@ AI:  Created openspec/changes/add-dark-mode/
 ```text
 You: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を調べたいですか？
 
-You: How should we handle authentication for the mobile app?
+You: モバイルアプリの認証はどう扱うべきですか？
 
-AI:  Let me investigate your current auth setup...
-     [Analyzes codebase]
+AI:  現在の認証構成を調べます...
+     [コードベースを分析]
 
-     I see you're using session-based auth for the web app.
-     For mobile, we have three main options:
+     Web アプリではセッションベース認証を使っています。
+     モバイル向けには主に 3 つの選択肢があります。
 
-     1. JWT tokens (stateless, works offline)
-     2. OAuth2 (if you need third-party login)
-     3. Extend current sessions (simpler, but requires connectivity)
+     1. JWT トークン（ステートレスで、オフラインでも扱いやすい）
+     2. OAuth2（サードパーティログインが必要な場合）
+     3. 現在のセッションを拡張（単純だが、接続が必要）
 
-     Your API already has CORS configured. Which direction interests you?
+     API にはすでに CORS が設定されています。どの方向に興味がありますか？
 
-You: Let's go with JWT. Can we start a change for that?
+You: JWT で進めましょう。その変更を開始できますか？
 
-AI:  Ready when you are. Run /opsx:propose add-jwt-auth to begin.
+AI:  準備できています。/opsx:propose add-jwt-auth を実行して開始してください。
 ```
 
 **ヒント:**
@@ -153,18 +153,18 @@ AI:  Ready when you are. Run /opsx:propose add-jwt-auth to begin.
 **作成されるもの:**
 ```
 openspec/changes/<change-name>/
-└── .openspec.yaml    # Change metadata (schema, created date)
+└── .openspec.yaml    # 変更メタデータ（スキーマ、作成日）
 ```
 
 **例：**
 ```
 You: /opsx:new add-dark-mode
 
-AI:  Created openspec/changes/add-dark-mode/
-     Schema: spec-driven
+AI:  openspec/changes/add-dark-mode/ を作成しました
+     スキーマ: spec-driven
 
-     Ready to create: proposal
-     Use /opsx:continue to create it, or /opsx:ff to create all artifacts.
+     作成可能: proposal
+     /opsx:continue で作成するか、/opsx:ff ですべてのアーティファクトを作成してください。
 ```
 
 **ヒント:**
@@ -199,22 +199,22 @@ AI:  Created openspec/changes/add-dark-mode/
 ```
 You: /opsx:continue
 
-AI:  Change: add-dark-mode
+AI:  変更: add-dark-mode
 
-     Artifact status:
-     ✓ proposal    (done)
-     ◆ specs       (ready)
-     ◆ design      (ready)
-     ○ tasks       (blocked - needs: specs)
+     アーティファクト状態:
+     ✓ proposal    (完了)
+     ◆ specs       (準備完了)
+     ◆ design      (準備完了)
+     ○ tasks       (ブロック中 - 必要: specs)
 
-     Creating specs...
+     specs を作成しています...
 
-     [Reads proposal.md, creates specs based on requirements]
+     [proposal.md を読み、要件に基づいて specs を作成]
 
-     ✓ Created openspec/changes/add-dark-mode/specs/ui/spec.md
+     ✓ openspec/changes/add-dark-mode/specs/ui/spec.md を作成しました
 
-     Now available: tasks
-     Run /opsx:continue to create the next artifact.
+     次に利用可能: tasks
+     次のアーティファクトを作成するには /opsx:continue を実行してください。
 ```
 
 **ヒント:**
@@ -249,15 +249,15 @@ AI:  Change: add-dark-mode
 ```
 You: /opsx:ff add-dark-mode
 
-AI:  Fast-forwarding add-dark-mode...
+AI:  add-dark-mode を早送りしています...
 
-     ✓ Creating proposal.md
-     ✓ Creating specs/ui/spec.md
-     ✓ Creating design.md
-     ✓ Creating tasks.md
+     ✓ proposal.md を作成
+     ✓ specs/ui/spec.md を作成
+     ✓ design.md を作成
+     ✓ tasks.md を作成
 
-     All planning artifacts complete!
-     Ready for implementation. Run /opsx:apply to begin.
+     すべての計画アーティファクトが完了しました。
+     実装に進めます。開始するには /opsx:apply を実行してください。
 ```
 
 **ヒント:**
@@ -292,22 +292,22 @@ AI:  Fast-forwarding add-dark-mode...
 ```
 You: /opsx:apply
 
-AI:  Implementing add-dark-mode...
+AI:  add-dark-mode を実装しています...
 
-     Reading tasks.md:
-     - [ ] 1.1 Create ThemeContext
-     - [ ] 1.2 Add CSS custom properties
-     - [ ] 1.3 Implement localStorage persistence
+     tasks.md を読み取っています:
+     - [ ] 1.1 ThemeContext を作成
+     - [ ] 1.2 CSS カスタムプロパティを追加
+     - [ ] 1.3 localStorage 永続化を実装
 
-     Working on 1.1: Create ThemeContext...
-     [Creates src/context/ThemeContext.tsx]
+     1.1 に着手: ThemeContext を作成...
+     [src/context/ThemeContext.tsx を作成]
 
-     ✓ 1.1 Complete
+     ✓ 1.1 完了
 
-     Working on 1.2: Add CSS custom properties...
-     [Updates src/styles/globals.css]
+     1.2 に着手: CSS カスタムプロパティを追加...
+     [src/styles/globals.css を更新]
 
-     ✓ 1.2 Complete
+     ✓ 1.2 完了
      ...
 ```
 
@@ -345,18 +345,19 @@ AI:  Implementing add-dark-mode...
 **例：**
 
 ```text
-You: /opsx:update add-dark-mode - we're storing the theme in a cookie now, not localStorage
+You: /opsx:update add-dark-mode - テーマは localStorage ではなく cookie に保存することになりました
 
-AI:  Reading add-dark-mode artifacts...
+AI:  add-dark-mode のアーティファクトを読んでいます...
 
-     The design references localStorage in two places; tasks 1.3 covers
-     localStorage persistence; the proposal doesn't mention storage.
+     design.md では 2 箇所で localStorage に触れています。
+     tasks の 1.3 は localStorage 永続化を扱っています。
+     proposal.md では保存先に触れていません。
 
-     Proposed revisions:
-     1. design.md - swap localStorage decision for cookie storage
-     2. tasks.md - reword task 1.3 to cookie persistence
+     提案する修正:
+     1. design.md - localStorage の判断を cookie 保存へ差し替え
+     2. tasks.md - タスク 1.3 を cookie 永続化に言い換え
 
-     Apply revision 1? (design.md)
+     修正 1 を適用しますか？ (design.md)
 ```
 
 **ヒント:**
@@ -399,32 +400,32 @@ AI:  Reading add-dark-mode artifacts...
 ```
 You: /opsx:verify
 
-AI:  Verifying add-dark-mode...
+AI:  add-dark-mode を検証しています...
 
-     COMPLETENESS
-     ✓ All 8 tasks in tasks.md are checked
-     ✓ All requirements in specs have corresponding code
-     ⚠ Scenario "System preference detection" has no test coverage
+     完全性
+     ✓ tasks.md の 8 個のタスクはすべてチェック済み
+     ✓ specs のすべての要件に対応するコードがある
+     ⚠ シナリオ「システム設定の検出」にはテストカバレッジがない
 
-     CORRECTNESS
-     ✓ Implementation matches spec intent
-     ✓ Edge cases from scenarios are handled
-     ✓ Error states match spec definitions
+     正確さ
+     ✓ 実装は仕様の意図と一致している
+     ✓ シナリオ由来のエッジケースが処理されている
+     ✓ エラー状態は仕様の定義と一致している
 
-     COHERENCE
-     ✓ Design decisions reflected in code structure
-     ✓ Naming conventions consistent with design.md
-     ⚠ Design mentions "CSS variables" but implementation uses Tailwind classes
+     一貫性
+     ✓ 設計判断がコード構造に反映されている
+     ✓ 命名規則は design.md と一致している
+     ⚠ design.md は「CSS variables」に触れているが、実装は Tailwind クラスを使っている
 
-     SUMMARY
+     サマリー
      ─────────────────────────────
-     Critical issues: 0
-     Warnings: 2
-     Ready to archive: Yes (with warnings)
+     重大な問題: 0
+     警告: 2
+     アーカイブ可能: はい（警告あり）
 
-     Recommendations:
-     1. Add test for system preference detection
-     2. Update design.md to reflect Tailwind usage, or refactor to use CSS variables
+     推奨:
+     1. システム設定検出のテストを追加する
+     2. Tailwind 利用を反映するよう design.md を更新するか、CSS 変数を使うようリファクタリングする
 ```
 
 **ヒント:**
@@ -460,19 +461,19 @@ AI:  Verifying add-dark-mode...
 ```text
 You: /opsx:sync
 
-AI:  Syncing add-dark-mode delta specs...
+AI:  add-dark-mode の仕様差分を同期しています...
 
-     Reading: openspec/changes/add-dark-mode/specs/ui/spec.md
-     Target:  openspec/specs/ui/spec.md
+     読み取り元: openspec/changes/add-dark-mode/specs/ui/spec.md
+     反映先:     openspec/specs/ui/spec.md
 
-     Changes to apply:
-     ✓ ADDED: Theme Selection requirement (2 scenarios)
-     ✓ ADDED: Accessibility requirement (1 scenario)
+     適用する変更:
+     ✓ ADDED: Theme Selection 要件（2 シナリオ）
+     ✓ ADDED: Accessibility 要件（1 シナリオ）
 
-     Merging...
-     ✓ openspec/specs/ui/spec.md updated
+     マージしています...
+     ✓ openspec/specs/ui/spec.md を更新しました
 
-     Change remains active. Run /opsx:archive when ready to complete.
+     変更はアクティブなままです。完了できる状態になったら /opsx:archive を実行してください。
 ```
 
 **手動で使用する場合:**
@@ -517,23 +518,23 @@ AI:  Syncing add-dark-mode delta specs...
 ```text
 You: /opsx:archive
 
-AI:  Archiving add-dark-mode...
+AI:  add-dark-mode をアーカイブしています...
 
-     Artifact status:
-     ✓ proposal.md exists
-     ✓ specs/ exists
-     ✓ design.md exists
-     ✓ tasks.md exists (8/8 tasks complete)
+     アーティファクト状態:
+     ✓ proposal.md が存在
+     ✓ specs/ が存在
+     ✓ design.md が存在
+     ✓ tasks.md が存在（8/8 タスク完了）
 
-     Delta specs: Not yet synced
-     → Sync now? (recommended)
+     仕様差分: まだ同期されていません
+     → 今すぐ同期しますか？（推奨）
 
-You: Yes
+You: はい
 
-AI:  ✓ Synced specs to openspec/specs/ui/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
+AI:  ✓ 仕様を openspec/specs/ui/spec.md に同期しました
+     ✓ openspec/changes/archive/2025-01-24-add-dark-mode/ に移動しました
 
-     Change archived successfully.
+     変更をアーカイブしました。
 ```
 
 **ヒント:**
@@ -569,27 +570,27 @@ AI:  ✓ Synced specs to openspec/specs/ui/spec.md
 ```
 You: /opsx:bulk-archive
 
-AI:  Found 3 completed changes:
-     - add-dark-mode (8/8 tasks complete)
-     - fix-login-bug (3/3 tasks complete)
-     - update-footer (2/2 tasks complete)
+AI:  完了した変更が 3 件見つかりました:
+     - add-dark-mode（8/8 タスク完了）
+     - fix-login-bug（3/3 タスク完了）
+     - update-footer（2/2 タスク完了）
 
-     Checking for spec conflicts...
-     ⚠ add-dark-mode and update-footer both touch specs/ui/
+     仕様の競合を確認しています...
+     ⚠ add-dark-mode と update-footer はどちらも specs/ui/ に触れています
 
-     Inspecting codebase to resolve...
-     Both changes are implemented. Will merge in chronological order:
-     1. add-dark-mode (created Jan 20)
-     2. update-footer (created Jan 22)
+     解決のためにコードベースを確認しています...
+     どちらの変更も実装済みです。時系列順にマージします:
+     1. add-dark-mode（1 月 20 日作成）
+     2. update-footer（1 月 22 日作成）
 
-     Archive all 3 changes?
+     3 件すべてをアーカイブしますか？
 
-You: Yes
+You: はい
 
-AI:  ✓ Archived add-dark-mode
-     ✓ Archived fix-login-bug
-     ✓ Archived update-footer
-     Specs merged: add-dark-mode → update-footer
+AI:  ✓ add-dark-mode をアーカイブしました
+     ✓ fix-login-bug をアーカイブしました
+     ✓ update-footer をアーカイブしました
+     仕様をマージしました: add-dark-mode → update-footer
 ```
 
 **ヒント:**
@@ -634,22 +635,22 @@ AI:  ✓ Archived add-dark-mode
 ```
 You: /opsx:onboard
 
-AI:  Welcome to OpenSpec!
+AI:  OpenSpec へようこそ！
 
-     I'll walk you through the complete workflow using your actual codebase.
-     We'll find something small to improve, create a proper change for it,
-     implement it, and archive it.
+     実際のコードベースを使って、完全なワークフローを案内します。
+     小さな改善点を見つけ、それに対応する変更を作成し、
+     実装してアーカイブします。
 
-     Let me scan your codebase for opportunities...
+     改善の機会を探すため、コードベースをスキャンします...
 
-     [Analyzes codebase]
+     [コードベースを分析]
 
-     I found a few things we could work on:
-     1. Add input validation to the contact form
-     2. Improve error messages in the auth flow
-     3. Add loading states to async buttons
+     取り組めそうな候補がいくつか見つかりました:
+     1. 問い合わせフォームに入力検証を追加する
+     2. 認証フローのエラーメッセージを改善する
+     3. 非同期ボタンにローディング状態を追加する
 
-     Which interests you? (or suggest something else)
+     どれに興味がありますか？（別の案を提案しても構いません）
 ```
 
 **ヒント:**

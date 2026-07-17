@@ -2,22 +2,22 @@
 
 **最初からコードベース全体を文書化する必要はありません。仕様は、いま変更しようとしている範囲だけを書きます。** これが、既存プロジェクトに OpenSpec を導入するときに最も重要な考え方です。OpenSpec はブラウンフィールドを前提に設計されています。
 
-よくある心配は次のようなものです。「私のアプリは 80,000 行古いです。OpenSpec が役立つようになる前に、すべての仕様を書かなければなりませんか?」いいえ、あなたもそれは嫌でしょう、そして私たちもそうでしょう。 OpenSpec は、一度に 1 つの変更を加えることで仕様を拡張します。最初の変更でそのスライスが文書化され、次の変更でそのスライスが文書化され、数か月にわたって、実際に行う作業に基づいて仕様が自然に埋められていきます。
+よくある心配は次のようなものです。「私のアプリは 80,000 行ある古いコードベースです。OpenSpec が役立つようになる前に、すべての仕様を書かなければなりませんか?」いいえ、あなたもそれは嫌でしょうし、私たちもそうです。OpenSpec は、一度に 1 つの変更を加えることで仕様を広げます。最初の変更でそのスライスが文書化され、次の変更でまた別のスライスが文書化されます。数か月にわたって、実際に行う作業に基づいて仕様が自然に埋まっていきます。
 
 このガイドでは、海を沸騰させずに初日から始める方法を示します。
 
-## 第 32 バージョン
+## 30 秒版
 
 ```bash
 $ cd your-existing-project
-$ openspec init          # adds openspec/ and your AI tool's commands
+$ openspec init          # openspec/ と AI ツール用コマンドを追加
 ```
 
 次に、AI チャットで次のようにします。
 
 ```text
-/opsx:explore            # optional: have the AI read the area you'll touch
-/opsx:propose <a real, small change you actually need>
+/opsx:explore            # 任意: これから触る領域を AI に読ませる
+/opsx:propose <実際に必要な小さな変更>
 /opsx:apply
 /opsx:archive
 ```
@@ -43,15 +43,16 @@ OpenSpec の変更は **デルタ**、つまり `ADDED`、`MODIFIED`、`REMOVED`
 ```text
 You: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を調べたいですか？
 
-You: I need to add rate limiting to our public API, but I'm not sure
-     how requests currently flow through the middleware.
+You: public API にレート制限を追加する必要がありますが、
+     現在リクエストがミドルウェアをどう通っているのか分かっていません。
 
-AI:  Let me trace it... [reads the router, middleware stack, and config]
-     Requests hit Express, pass through auth middleware, then your
-     controllers. There's no rate-limiting layer today. The cleanest
-     insertion point is a middleware right after auth. Want me to scope it?
+AI:  流れを追います... [ルーター、ミドルウェアスタック、設定を読む]
+     リクエストは Express に入り、認証ミドルウェアを通ってから
+     コントローラーに到達します。現時点ではレート制限レイヤーはありません。
+     一番きれいな挿入点は、認証直後のミドルウェアです。
+     この範囲で切り出しますか？
 ```
 
 AI が実際の構造を理解した状態になるため、生成される提案は汎用テンプレートではなくコードに合ったものになります。大規模なコードベースでは、この習慣だけでも大きく手間を減らせます。詳しくは [まずは探索する](explore.md) を参照してください。
@@ -71,8 +72,8 @@ You: /opsx:propose add-api-rate-limiting
 最初に拡張されたコマンドをオンにします。
 
 ```bash
-$ openspec config profile      # select the expanded workflows
-$ openspec update              # apply them to this project
+$ openspec config profile      # 拡張ワークフローを選択
+$ openspec update              # このプロジェクトに適用
 ```
 
 次にチャットで:
@@ -93,10 +94,10 @@ PRD、SRS、正式な仕様、あるいは TLA+ モデルがすでにあるか�
 
 ```text
 You: /opsx:explore
-You: Here's the section of our PRD about checkout. I'm implementing the
-     "guest checkout" requirement next.
-     [paste the relevant requirement]
-AI:  [reads it, asks clarifying questions, then helps scope a change]
+You: PRD のチェックアウトに関する該当セクションです。次に
+     「ゲストチェックアウト」要件を実装します。
+     [関連する要件を貼り付け]
+AI:  [内容を読み、確認質問をしてから、変更のスコープ設定を支援]
 You: /opsx:propose add-guest-checkout
 ```
 

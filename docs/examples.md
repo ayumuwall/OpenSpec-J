@@ -15,12 +15,12 @@
 ```text
 You: /opsx:propose add-logout-button
 
-AI:  Created openspec/changes/add-logout-button/
-     ✓ proposal.md — why and what
-     ✓ specs/      — the new requirement and its scenarios
-     ✓ design.md   — technical approach
-     ✓ tasks.md    — implementation checklist
-     Ready for implementation. Run /opsx:apply.
+AI:  openspec/changes/add-logout-button/ を作成しました
+     ✓ proposal.md — 目的と変更内容
+     ✓ specs/      — 新しい要件とシナリオ
+     ✓ design.md   — 技術的な方針
+     ✓ tasks.md    — 実装チェックリスト
+     実装に進めます。/opsx:apply を実行してください。
 ```
 
 ここで計画を読みます。`proposal.md` と仕様差分を開いてください。OpenSpec の価値はこの時点にあります。400 行のコードが書かれた後ではなく、まだ短い計画の段階で前提の誤りを見つけられます。間違いがあれば、アーティファクトを直接編集してから続行します。
@@ -28,18 +28,18 @@ AI:  Created openspec/changes/add-logout-button/
 ```text
 You: /opsx:apply
 
-AI:  Working through tasks...
-     ✓ 1.1 Add logout button to header
-     ✓ 1.2 Clear session on click
-     ✓ 1.3 Add confirmation dialog
-     All tasks complete!
+AI:  タスクを進めています...
+     ✓ 1.1 ヘッダーにログアウトボタンを追加
+     ✓ 1.2 クリック時にセッションをクリア
+     ✓ 1.3 確認ダイアログを追加
+     すべてのタスクが完了しました。
 
 You: /opsx:archive
 
-AI:  Archiving add-logout-button...
-     ✓ Merged specs into openspec/specs/auth/spec.md
-     ✓ Moved to openspec/changes/archive/2026-06-22-add-logout-button/
-     Done. Ready for the next change.
+AI:  add-logout-button をアーカイブしています...
+     ✓ 仕様を openspec/specs/auth/spec.md にマージ
+     ✓ openspec/changes/archive/2026-06-22-add-logout-button/ に移動
+     完了しました。次の変更に進めます。
 ```
 
 これで完了です。ログアウトの動作は仕様に取り込まれ、変更は完全な文脈ごとファイルとして残ります。
@@ -53,11 +53,11 @@ AI:  Archiving add-logout-button...
 ```text
 You: /opsx:propose fix-login-redirect-loop
 
-AI:  Created openspec/changes/fix-login-redirect-loop/
-     The proposal captures the current broken behavior and the
-     intended behavior. The delta spec MODIFIES the redirect
-     requirement so it's now precise and testable.
-     Ready for implementation.
+AI:  openspec/changes/fix-login-redirect-loop/ を作成しました
+     proposal.md には現在の壊れた動作と意図した動作を記録しました。
+     仕様差分ではリダイレクト要件を MODIFIED として更新し、
+     正確でテスト可能な形にしています。
+     実装に進めます。
 ```
 
 修正は、新しいシナリオを伴う `MODIFIED` 要件として記録されます。そのため、次の担当者や次の AI セッションは、何を直したかだけでなく「正しい」とは何かを理解できます。あとは通常どおり `/opsx:apply` と `/opsx:archive` を実行します。
@@ -75,22 +75,22 @@ AI:  Created openspec/changes/fix-login-redirect-loop/
 ```text
 You: /opsx:explore
 
-AI:  What would you like to explore?
+AI:  何を調べたいですか？
 
-You: Page loads feel slow but I don't know where the time goes.
+You: ページの読み込みが遅く感じますが、どこに時間がかかっているのか分かりません。
 
-AI:  Let me look... I found three likely culprits:
-     1. Large unoptimized images on the product list
-     2. Synchronous data fetching that blocks render
-     3. Re-renders triggered by context changes
-     Which should we tackle first?
+AI:  確認します... 可能性が高い原因が 3 つ見つかりました:
+     1. 商品一覧にある最適化されていない大きな画像
+     2. レンダリングをブロックする同期的なデータ取得
+     3. コンテキスト変更によって発生する再レンダリング
+     どれから対応しますか？
 
-You: The data fetching one.
+You: データ取得の問題です。
 
 You: /opsx:propose optimize-product-list-fetching
 
-AI:  Created the change, with a proposal informed by what we just
-     found. Ready for implementation.
+AI:  変更を作成し、先ほど見つけた内容を反映した proposal を用意しました。
+     実装に進めます。
 ```
 
 探索すると、何かを変更する前に考えが整理されます。洞察が具体化したら提案へ進み、AI はその文脈を引き継ぎます。
@@ -102,25 +102,25 @@ AI:  Created the change, with a proposal informed by what we just
 変更は独立したフォルダーなので、別々の作業は自然に分離されます。修正を開始して出荷し、あとで元の機能に戻れます。
 
 ```text
-You: I'm partway through add-dark-mode, but I need to fix a login bug now.
+You: add-dark-mode の途中ですが、今はログインのバグを直す必要があります。
 
 You: /opsx:propose fix-login-redirect
 
-AI:  Created openspec/changes/fix-login-redirect/. Ready for implementation.
+AI:  openspec/changes/fix-login-redirect/ を作成しました。実装に進めます。
 
 You: /opsx:apply
 
-AI:  Implemented the fix. All tasks complete.
+AI:  修正を実装しました。すべてのタスクが完了しました。
 
 You: /opsx:archive
 
-AI:  ✓ Archived fix-login-redirect.
+AI:  ✓ fix-login-redirect をアーカイブしました。
 
-You: Back to dark mode.
+You: ダークモードに戻ります。
 
 You: /opsx:apply add-dark-mode
 
-AI:  Resuming add-dark-mode. Picking up at task 2.3: Update Header...
+AI:  add-dark-mode を再開します。タスク 2.3「Header を更新」から続けます...
 ```
 
 `/opsx:apply add-dark-mode` のように変更名を指定すると、複数の変更がアクティブなときでも AI に対象を明示できます。進捗は `tasks.md` のチェックボックスで追跡されるため、AI はどこから再開すればよいか分かります。
@@ -136,10 +136,9 @@ AI:  Resuming add-dark-mode. Picking up at task 2.3: Update Header...
 ```text
 You: /opsx:propose refactor-payment-module
 
-AI:  Created the change. The proposal states the goal (split the
-     payment module, no behavior change) and the design captures
-     the new structure. No spec changes, since behavior is identical.
-     Ready for implementation.
+AI:  変更を作成しました。proposal.md には目的（payment モジュールを分割し、
+     動作は変えないこと）を記録し、design.md には新しい構造をまとめました。
+     動作は同じなので、仕様変更はありません。実装に進めます。
 ```
 
 仕様に影響しない変更をアーカイブする場合は、ターミナルコマンドで仕様更新をスキップできます。
@@ -157,8 +156,8 @@ $ openspec archive refactor-payment-module --skip-specs
 core の `/opsx:propose` は、計画成果物をまとめて下書きします。1 ステップずつ進めたい場合は、拡張コマンドを有効にします。
 
 ```bash
-$ openspec config profile      # select the expanded workflows
-$ openspec update              # apply them to this project
+$ openspec config profile      # 拡張ワークフローを選択
+$ openspec update              # このプロジェクトに適用
 ```
 
 これで、段階的にひな形を作って進められます。
@@ -166,15 +165,15 @@ $ openspec update              # apply them to this project
 ```text
 You: /opsx:new add-2fa
 
-AI:  Created openspec/changes/add-2fa/. Ready to create: proposal.
+AI:  openspec/changes/add-2fa/ を作成しました。作成可能: proposal。
 
 You: /opsx:continue
 
-AI:  Created proposal.md. Now available: specs, design.
+AI:  proposal.md を作成しました。次に利用可能: specs, design。
 
 You: /opsx:continue
 
-AI:  Created specs/auth/spec.md. Now available: design.
+AI:  specs/auth/spec.md を作成しました。次に利用可能: design。
 ```
 
 作成された各アーティファクトを確認し、必要なら編集し、納得したら次へ進みます。残りを一度に下書きしたい場合は、`/opsx:ff` で残りの計画成果物をまとめて作れます。アーカイブ前には、`/opsx:verify` で実装が仕様と一致しているか確認できます。詳しくは [ワークフロー](workflows.md#opsxff-vs-opsxcontinue) を参照してください。
@@ -188,9 +187,9 @@ AI:  Created specs/auth/spec.md. Now available: design.
 ```text
 You: /opsx:onboard
 
-AI:  Welcome to OpenSpec! I'll walk you through a complete change
-     using your actual codebase. Let me scan for a small, safe
-     improvement we can make together...
+AI:  OpenSpec へようこそ！実際のコードベースを使って、
+     変更の一連の流れを案内します。一緒に取り組める
+     小さく安全な改善を探します...
 ```
 
 `/opsx:onboard` は、実際の小さな改善を見つけ、変更を作成し、実装し、アーカイブするところまで案内します。15〜30 分ほどかかりますが、実際の変更が残ります。採用しても、破棄しても構いません。最も手触りのある学習方法です。詳しくは [コマンド](commands.md#opsxonboard) を参照してください。
@@ -200,10 +199,10 @@ AI:  Welcome to OpenSpec! I'll walk you through a complete change
 状態はいつでもターミナルから確認できます。
 
 ```bash
-$ openspec list                      # active changes
-$ openspec show add-dark-mode        # one change in detail
-$ openspec validate add-dark-mode    # check structure
-$ openspec view                      # interactive dashboard
+$ openspec list                      # アクティブな変更
+$ openspec show add-dark-mode        # 1 つの変更の詳細
+$ openspec validate add-dark-mode    # 構造を確認
+$ openspec view                      # 対話型ダッシュボード
 ```
 
 これらは読み取り・検査用のコマンドです。提案や実装は、引き続きチャット側のスラッシュコマンドで行います。詳しくは [CLI リファレンス](cli.md) を参照してください。

@@ -12,18 +12,18 @@ README.md は直前に対応済みのため対象外。`docs/**/*.md` のうち�
   - `proposal.md` / `spec.md` / `tasks.md` のサンプル本文も英語のまま。見出しや `## ADDED Requirements` などパーサ依存部分は維持し、説明文・要件文・タスク文を日本語化する。
   - CLI コメントに `# View change details`, `# Validate spec formatting` が残る。
 
-- [ ] `docs/commands.md`
+- [x] `docs/commands.md`
   - コマンドリファレンス全体に英語の対話例・出力例が多数残る。
   - 対象例: `/opsx:propose`, `/opsx:explore`, `/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:apply`, `/opsx:update`, `/opsx:verify`, `/opsx:sync`, `/opsx:archive`, `/opsx:bulk-archive`, `/opsx:onboard`
   - 例: `What would you like to explore?`, `Let me investigate...`, `Ready for implementation. Run /opsx:apply.`, `Now available: tasks`, `Ready to archive: Yes (with warnings)`, `Welcome to OpenSpec!`
 
-- [ ] `docs/workflows.md`
+- [x] `docs/workflows.md`
   - ワークフロー別の会話例に英語が多く残る。
   - 対象例: Explore、クイック機能、探索的、並行変更、一括アーカイブ、検証、アーカイブ。
   - 日本語と英語が混在しているブロックがあり、文体の揺れが目立つ。
   - 同じ文が重複している箇所あり: `完了した変更が複数ある場合は、/opsx:bulk-archive を使用します。`
 
-- [ ] `docs/examples.md`
+- [x] `docs/examples.md`
   - レシピ集の会話例がほぼ英語のまま。
   - 対象例: logout button、login redirect、performance exploration、parallel changes、refactor、2FA、onboard。
   - README と同じ方針で、`You:` / `AI:` ラベルとコマンド・ファイルパスは維持し、自然な日本語の対話へ置き換える。
@@ -32,21 +32,21 @@ README.md は直前に対応済みのため対象外。`docs/**/*.md` のうち�
 
 読む頻度はやや下がるが、対話例として英語が目立つ箇所。
 
-- [ ] `docs/explore.md`
+- [x] `docs/explore.md`
   - Explore の代表例が英語。
   - 例: `What would you like to explore?`, `Let me dig into the checkout path...`, `Here's what I found.`, `Want me to scope that?`, `Created openspec/changes/... Ready for implementation.`
   - 図中の `(think)`, `(agree)`, `(build)`, `(record)` も日本語化候補。
 
-- [ ] `docs/existing-projects.md`
+- [x] `docs/existing-projects.md`
   - 大規模コードベース向けの探索例と PRD 例が英語。
   - 例: `I need to add rate limiting...`, `Let me trace it...`, `Requests hit Express...`, `Here's the section of our PRD...`, `[reads it, asks clarifying questions...]`
   - bash コメント `# select the expanded workflows`, `# apply them to this project` も日本語化候補。
 
-- [ ] `docs/editing-changes.md`
+- [x] `docs/editing-changes.md`
   - 変更方針を変える対話例が英語。
   - 例: `I want to change the approach in this change.`, `[edit design.md, or tell the AI:]`, `Updated design.md. The task list still fits; want me to continue applying?`
 
-- [ ] `docs/reviewing-changes.md`
+- [x] `docs/reviewing-changes.md`
   - `/opsx:verify` の検証出力例が英語。
   - 例: `Verifying add-dark-mode...`, `COMPLETENESS`, `All 8 tasks...`, `Scenario ... has no test coverage`
 

@@ -54,12 +54,12 @@ openspec/changes/add-dark-mode/
 ## ADDED Requirements
 
 ### Requirement: Dark Mode Toggle
-The system SHALL let a user switch between light and dark themes.
+システムは、ユーザーがライトテーマとダークテーマを切り替えられるようにするものとする。
 
 #### Scenario: Respects the OS preference on first load
-- GIVEN a user who has never set a theme
-- WHEN they open the app on a device set to dark mode
-- THEN the app renders in dark mode
+- GIVEN テーマを一度も設定していないユーザー
+- WHEN ダークモードに設定されたデバイスでアプリを開く
+- THEN アプリはダークモードで表示される
 ```
 
 **良い要件:** テスターに渡せる明確な `SHALL`/`MUST` 文が 1 つあり、その文を実際に検証する GIVEN/WHEN/THEN シナリオが少なくとも 1 つある。
@@ -110,12 +110,12 @@ The system SHALL let a user switch between light and dark themes.
 ```
 You: /opsx:verify
 
-AI:  Verifying add-dark-mode...
+AI:  add-dark-mode を検証しています...
 
-     COMPLETENESS
-     ✓ All 8 tasks in tasks.md are checked
-     ✓ All requirements in specs have corresponding code
-     ⚠ Scenario "Respects the OS preference on first load" has no test coverage
+     完全性
+     ✓ tasks.md の 8 個のタスクはすべてチェック済み
+     ✓ specs のすべての要件に対応するコードがある
+     ⚠ シナリオ「初回読み込み時に OS 設定を尊重する」にはテストカバレッジがない
 ```
 
 問題は重大、警告、提案として示されますが、アーカイブは**ブロックされません**。差分を見える化し、判断はあなたに残します。これは「AI がコードを書いたか」と「合意したものを作ったか」の違いを確認するための手順です。
