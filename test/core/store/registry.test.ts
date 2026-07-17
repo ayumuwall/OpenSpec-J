@@ -129,7 +129,7 @@ describe('store registry facade', () => {
         localPath: newRoot,
         globalDataDir: tempDir,
       })
-    ).rejects.toThrow(/already registered/u);
+    ).rejects.toThrow(/既に .* に登録されています/u);
 
     const stores = await listRegisteredStores({ globalDataDir: tempDir });
     expect(stores.map((store) => store.id)).toEqual(['acme-context', 'zeta-context']);

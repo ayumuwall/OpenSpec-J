@@ -153,7 +153,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'json',
-        description: 'Output as JSON (non-interactive)',
+        description: 'JSON として出力（非対話）',
       },
       COMMON_FLAGS.store,
     ],
@@ -233,7 +233,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
           {
             name: 'goal',
-            description: 'Optional goal metadata to store with the change',
+            description: '変更に保存する任意の目標メタデータ',
             takesValue: true,
           },
           {
@@ -250,23 +250,23 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   {
     name: 'store',
     description:
-      'Create and manage stores - standalone OpenSpec repos you register on this machine',
+      'このマシンに登録する独立した OpenSpec リポジトリ（ストア）を作成・管理',
     flags: [],
     subcommands: [
       {
         name: 'setup',
-        description: 'Create or register a local store',
+        description: 'ローカルストアを作成または登録',
         acceptsPositional: true,
         positionals: [{ name: 'id', optional: true }],
         flags: [
           {
             name: 'path',
-            description: 'Directory to use for the store',
+            description: 'ストアに使用するディレクトリ',
             takesValue: true,
           },
           {
             name: 'init-git',
-            description: 'Initialize a Git repository in the store',
+            description: 'ストア内で Git リポジトリを初期化',
           },
           {
             name: 'no-init-git',
@@ -274,7 +274,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
           {
             name: 'remote',
-            description: 'Canonical clone source recorded in store.yaml',
+            description: 'store.yaml に記録する正規 clone 元',
             takesValue: true,
           },
           COMMON_FLAGS.json,
@@ -282,25 +282,25 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'register',
-        description: 'Register an existing store directory',
+        description: '既存のストアディレクトリを登録',
         acceptsPositional: true,
         positionals: [{ name: 'path', type: 'path', optional: true }],
         flags: [
           {
             name: 'id',
-            description: 'Store id',
+            description: 'ストア ID',
             takesValue: true,
           },
           {
             name: 'yes',
-            description: 'Confirm creating store identity metadata',
+            description: 'ストア識別メタデータの作成を確認',
           },
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'unregister',
-        description: 'Forget a local store registration without deleting files',
+        description: 'ファイルを削除せずにローカルストア登録を解除',
         acceptsPositional: true,
         positionals: [{ name: 'id' }],
         flags: [
@@ -309,34 +309,34 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'remove',
-        description: 'Forget a local store registration and delete its local folder',
+        description: 'ローカルストア登録を解除し、ローカルフォルダーを削除',
         acceptsPositional: true,
         positionals: [{ name: 'id' }],
         flags: [
           {
             name: 'yes',
-            description: 'Confirm local store folder deletion',
+            description: 'ローカルストアフォルダーの削除を確認',
           },
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'list',
-        description: 'List registered stores',
+        description: '登録済みストアを一覧表示',
         flags: [
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'ls',
-        description: 'List registered stores',
+        description: '登録済みストアを一覧表示',
         flags: [
           COMMON_FLAGS.json,
         ],
       },
       {
         name: 'doctor',
-        description: 'Check local store registration and metadata',
+        description: 'ローカルストア登録とメタデータを確認',
         acceptsPositional: true,
         positionals: [{ name: 'id', optional: true }],
         flags: [
@@ -347,24 +347,24 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'context',
-    description: 'Print the working context for the resolved OpenSpec root',
+    description: '解決済み OpenSpec ルートの作業コンテキストを出力',
     flags: [
       COMMON_FLAGS.json,
       COMMON_FLAGS.store,
       {
         name: 'code-workspace',
-        description: 'Also write a VS Code workspace file for the set',
+        description: 'この集合用の VS Code workspace ファイルも書き出す',
         takesValue: true,
       },
       {
         name: 'force',
-        description: 'Overwrite an existing --code-workspace file',
+        description: '既存の --code-workspace ファイルを上書き',
       },
     ],
   },
   {
     name: 'doctor',
-    description: 'Report relationship health for the resolved OpenSpec root',
+    description: '解決済み OpenSpec ルートの関連状態を診断',
     flags: [
       COMMON_FLAGS.json,
       COMMON_FLAGS.store,
@@ -372,24 +372,24 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'workset',
-    description: 'Compose, keep, and open personal working views (purely local)',
+    description: '個人用の作業ビューを構成・保存・表示（ローカル限定）',
     flags: [],
     subcommands: [
       {
         name: 'create',
-        description: 'Compose and save a named working view of folders you choose',
+        description: '選択したフォルダーから名前付きの作業ビューを構成して保存',
         acceptsPositional: true,
         positionals: [{ name: 'name', optional: true }],
         flags: [
           {
             name: 'member',
             description:
-              'Member folder as <path> or <name>=<path>; repeatable, first is the primary',
+              'メンバーフォルダーを <path> または <name>=<path> で指定（複数回指定可、最初がプライマリ）',
             takesValue: true,
           },
           {
             name: 'tool',
-            description: 'Preferred tool to open this workset with',
+            description: 'このワークセットを開く優先ツール',
             takesValue: true,
           },
           COMMON_FLAGS.json,
@@ -397,37 +397,37 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'list',
-        description: 'Show saved worksets with their members',
+        description: '保存済みワークセットとメンバーを表示',
         flags: [COMMON_FLAGS.json],
       },
       {
         name: 'ls',
-        description: 'Show saved worksets with their members',
+        description: '保存済みワークセットとメンバーを表示',
         flags: [COMMON_FLAGS.json],
       },
       {
         name: 'open',
         description:
-          'Open a saved workset in your tool (editor window or agent session)',
+          '保存済みワークセットをツールで開く（エディターウィンドウまたはエージェントセッション）',
         acceptsPositional: true,
         positionals: [{ name: 'name' }],
         flags: [
           {
             name: 'tool',
-            description: 'Open with this tool just this once',
+            description: '今回だけこのツールで開く',
             takesValue: true,
           },
         ],
       },
       {
         name: 'remove',
-        description: 'Delete a saved workset (member folders are never touched)',
+        description: '保存済みワークセットを削除（メンバーフォルダーは削除しません）',
         acceptsPositional: true,
         positionals: [{ name: 'name' }],
         flags: [
           {
             name: 'yes',
-            description: 'Confirm removal non-interactively',
+            description: '非対話で削除を確認',
           },
           COMMON_FLAGS.json,
         ],

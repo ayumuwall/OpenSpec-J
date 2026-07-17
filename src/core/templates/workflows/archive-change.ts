@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getArchiveChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-archive-change',
-    description: 'Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete.',
+    description: '実験的ワークフローで完了した変更をアーカイブします。実装完了後に変更を確定してアーカイブしたいときに使用します。',
     instructions: `実験的ワークフローで完了した変更をアーカイブします。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -99,14 +99,14 @@ JSON を解析して以下を理解します。
 **成功時の出力**
 
 \`\`\`
-## Archive Complete
+## アーカイブ完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from \`planningHome.changesDir\`/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
+**仕様:** ✓ 本仕様へ同期済み（または「delta spec なし」「同期をスキップ」）
 
-All artifacts complete. All tasks complete.
+すべてのアーティファクトが完了しています。すべてのタスクが完了しています。
 \`\`\`
 
 **ガードレール**
@@ -116,9 +116,9 @@ All artifacts complete. All tasks complete.
 - アーカイブに移動するときに .openspec.yaml を保持します (ディレクトリと一緒に移動します)。
 - 何が起こったのかを明確に要約する
 - 同期が要求された場合は、openspec-sync-specs アプローチを使用します (エージェント主導)
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting`,
+- delta spec が存在する場合は、確認前に必ず同期評価を実行し、統合サマリーを表示する`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -126,7 +126,7 @@ All artifacts complete. All tasks complete.
 export function getOpsxArchiveCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Archive',
-    description: 'Archive a completed change in the experimental workflow',
+    description: '実験的ワークフローで完了した変更をアーカイブする',
     category: 'Workflow',
     tags: ['workflow', 'archive', 'experimental'],
     content: `実験的ワークフローで完了した変更をアーカイブします。
@@ -217,61 +217,61 @@ JSON を解析して以下を理解します。
 **成功時の出力**
 
 \`\`\`
-## Archive Complete
+## アーカイブ完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from \`planningHome.changesDir\`/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
+**仕様:** ✓ 本仕様へ同期済み
 
-All artifacts complete. All tasks complete.
+すべてのアーティファクトが完了しています。すべてのタスクが完了しています。
 \`\`\`
 
 **成功時の出力 (デルタ仕様なし)**
 
 \`\`\`
-## Archive Complete
+## アーカイブ完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from \`planningHome.changesDir\`/YYYY-MM-DD-<name>/
-**Specs:** No delta specs
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
+**仕様:** delta spec なし
 
-All artifacts complete. All tasks complete.
+すべてのアーティファクトが完了しています。すべてのタスクが完了しています。
 \`\`\`
 
 **成功時の出力と警告**
 
 \`\`\`
-## Archive Complete (with warnings)
+## アーカイブ完了（警告あり）
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from \`planningHome.changesDir\`/YYYY-MM-DD-<name>/
-**Specs:** Sync skipped (user chose to skip)
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
+**仕様:** 同期をスキップ（ユーザーがスキップを選択）
 
-**Warnings:**
-- Archived with 2 incomplete artifacts
-- Archived with 3 incomplete tasks
-- Delta spec sync was skipped (user chose to skip)
+**警告:**
+- 未完了アーティファクト 2 件を含めてアーカイブしました
+- 未完了タスク 3 件を含めてアーカイブしました
+- delta spec 同期をスキップしました（ユーザーがスキップを選択）
 
-Review the archive if this was not intentional.
+意図した結果でない場合はアーカイブを確認してください。
 \`\`\`
 
 **エラー時の出力 (アーカイブが存在する)**
 
 \`\`\`
-## Archive Failed
+## アーカイブ失敗
 
-**Change:** <change-name>
-**Target:** the archive path derived from \`planningHome.changesDir\`/YYYY-MM-DD-<name>/
+**変更:** <change-name>
+**対象:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
 
-Target archive directory already exists.
+対象のアーカイブディレクトリは既に存在します。
 
-**Options:**
-1. Rename the existing archive
-2. Delete the existing archive if it's a duplicate
-3. Wait until a different date to archive
+**選択肢:**
+1. 既存のアーカイブ名を変更する
+2. 重複であれば既存のアーカイブを削除する
+3. 別の日付になるまで待ってアーカイブする
 \`\`\`
 
 **ガードレール**
@@ -281,6 +281,6 @@ Target archive directory already exists.
 - アーカイブに移動するときに .openspec.yaml を保持します (ディレクトリと一緒に移動します)。
 - 何が起こったのかを明確に要約する
 - 同期が要求された場合は、スキル ツールを使用して \`openspec-sync-specs\` を呼び出します (エージェント主導)
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting`
+- delta spec が存在する場合は、必ず同期評価を実行し、確認前に統合サマリーを表示します`
   };
 }

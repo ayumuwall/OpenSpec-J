@@ -353,10 +353,10 @@ describe('reference index assembly', () => {
     // truncation warning's own lines are exempt.
     const rendered = renderReferencedStoresBlock(entries);
     const exempt =
-      Buffer.byteLength(`  Note: ${entry.status[0].message}\n  Fix: ${entry.status[0].fix}\n`);
+      Buffer.byteLength(`  メモ: ${entry.status[0].message}\n  修正: ${entry.status[0].fix}\n`);
     expect(Buffer.byteLength(rendered, 'utf-8')).toBeLessThanOrEqual(50 * 1024 + exempt);
     // The rendered block states the truncation, not just an orphan fix.
-    expect(rendered).toContain('Note: Referenced store \'huge-context\' index truncated');
+    expect(rendered).toContain('メモ: Referenced store \'huge-context\' index truncated');
   });
 
   it('renders the XML block and markdown section consistently', async () => {
@@ -373,9 +373,9 @@ describe('reference index assembly', () => {
     expect(block).toContain('  - billing: Usage-based invoicing.');
     expect(block).toContain('  - bare');
     expect(block).not.toContain('  - bare:');
-    expect(block).toContain('Fetch: openspec show <spec-id> --type spec --store team-context');
-    expect(block).toContain("Store missing-context: Referenced store 'missing-context' is not registered on this machine.");
-    expect(block).toContain('Fix: Get a checkout from a teammate and run: openspec store register <path> --id missing-context');
+    expect(block).toContain('取得: openspec show <spec-id> --type spec --store team-context');
+    expect(block).toContain("ストア missing-context: Referenced store 'missing-context' is not registered on this machine.");
+    expect(block).toContain('修正: Get a checkout from a teammate and run: openspec store register <path> --id missing-context');
 
     expect(section).toContain('### Referenced Stores');
     expect(section).toContain('  - billing: Usage-based invoicing.');

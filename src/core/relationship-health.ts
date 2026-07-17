@@ -73,8 +73,8 @@ export function inspectRelationships(input: InspectRelationshipsInput): Relation
     status.push(
       warning(
         'root_pointer_ignored',
-        `${input.bothShapesPointer.filePath} declares store '${input.bothShapesPointer.value}', but this directory is a real OpenSpec root; the declaration is ignored.`,
-        `Remove the store: line from ${input.bothShapesPointer.filePath}, or move the planning files into the store.`
+        `${input.bothShapesPointer.filePath} はストア '${input.bothShapesPointer.value}' を宣言していますが、このディレクトリは実際の OpenSpec ルートです。この宣言は無視します。`,
+        `${input.bothShapesPointer.filePath} から store: 行を削除するか、planning ファイルをストアへ移動してください。`
       )
     );
   }

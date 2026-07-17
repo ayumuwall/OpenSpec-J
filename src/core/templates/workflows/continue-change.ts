@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getContinueChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-continue-change',
-    description: 'Continue working on an OpenSpec change by creating the next artifact. Use when the user wants to progress their change, create the next artifact, or continue their workflow.',
+    description: '次のアーティファクトを作成して OpenSpec 変更の作業を継続します。変更を進めたい、次のアーティファクトを作成したい、またはワークフローを継続したいときに使用します。',
     instructions: `次の成果物を作成して変更作業を続けます。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -120,9 +120,9 @@ JSON を解析して現在の状態を理解します。応答には次のもの
 - スキーマのアーティファクト シーケンスを使用し、特定のアーティファクト名を想定しないでください。
 - **重要**: \`context\` と \`rules\` はあなたに対する制約であり、ファイルの内容ではありません
 - \`<context>\`、\`<rules>\`、\`<project_context>\` ブロックをアーティファクトにコピーしないでください
-  - These guide what you write, but should never appear in the output`,
+  - これらは書く内容を導くためのものであり、出力本文には決して含めないでください`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -130,7 +130,7 @@ JSON を解析して現在の状態を理解します。応答には次のもの
 export function getOpsxContinueCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Continue',
-    description: 'Continue working on a change - create the next artifact (Experimental)',
+    description: '変更作業を継続し、次のアーティファクトを作成する（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `次の成果物を作成して変更作業を続けます。

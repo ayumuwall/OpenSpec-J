@@ -122,9 +122,9 @@ export function toolUnknownError(
     .filter((opener) => isOpenerEnabled(opener))
     .map((opener) => opener.id)
     .join(', ');
-  return new StoreError(`Unknown tool '${toolId}'.`, 'workset_tool_unknown', {
+  return new StoreError(`不明なツール '${toolId}' です。`, 'workset_tool_unknown', {
     target: 'workset.tool',
-    fix: `Known tools: ${knownIds}. Add new tools under "openers" in ${getGlobalConfigPath()}.`,
+    fix: `既知のツール: ${knownIds}。新しいツールは ${getGlobalConfigPath()} の "openers" に追加してください。`,
   });
 }
 
@@ -153,14 +153,14 @@ export function toolUnavailableError(
   const alternative = firstInstalledAlternative(table, opener.id, scan);
 
   return new StoreError(
-    `${opener.label} ('${opener.command}') is not on PATH.`,
+    `${opener.label} ('${opener.command}') が PATH にありません。`,
     'workset_tool_unavailable',
     {
       target: 'workset.tool',
       fix:
         alternative !== null
-          ? `Install '${opener.command}' or run: openspec workset open ${worksetName} --tool ${alternative}`
-          : `Install '${opener.command}', then rerun: openspec workset open ${worksetName}`,
+          ? `'${opener.command}' をインストールするか、次を実行してください: openspec workset open ${worksetName} --tool ${alternative}`
+          : `'${opener.command}' をインストールしてから再実行してください: openspec workset open ${worksetName}`,
     }
   );
 }
@@ -175,11 +175,11 @@ export function noToolInstalledError(
     .map((opener) => opener.command)
     .join(', ');
   return new StoreError(
-    'None of the known tools is on PATH.',
+    '既知のツールが PATH にありません。',
     'workset_tool_unavailable',
     {
       target: 'workset.tool',
-      fix: `Install one of: ${commands}. Then rerun: openspec workset open ${worksetName}`,
+      fix: `次のいずれかをインストールしてください: ${commands}。その後、再実行してください: openspec workset open ${worksetName}`,
     }
   );
 }

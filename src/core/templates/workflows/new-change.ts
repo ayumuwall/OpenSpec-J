@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getNewChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-new-change',
-    description: 'Start a new OpenSpec change using the experimental artifact workflow. Use when the user wants to create a new feature, fix, or modification with a structured step-by-step approach.',
+    description: '実験的アーティファクトワークフローで新しい OpenSpec 変更を開始します。新機能、修正、変更を構造化された手順で作成したいときに使用します。',
     instructions: `実験的な成果物主導のアプローチを使用して、新しい変更を開始します。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -75,9 +75,9 @@ ${STORE_SELECTION_GUIDANCE}
 - 最初の成果物テンプレートの表示以降は進めないでください。
 - 名前が無効な場合 (ケバブケースではない)、有効な名前を尋ねます
 - その名前の変更がすでに存在する場合は、代わりにその変更を続行することを提案します
-- Pass --schema if using a non-default workflow`,
+- デフォルト以外のワークフローを使う場合は --schema を渡してください`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -85,7 +85,7 @@ ${STORE_SELECTION_GUIDANCE}
 export function getOpsxNewCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: New',
-    description: 'Start a new change using the experimental artifact workflow (OPSX)',
+    description: '実験的アーティファクトワークフローで新しい変更を開始する（OPSX）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `実験的な成果物主導のアプローチを使用して、新しい変更を開始します。

@@ -251,7 +251,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Output location
   console.log('<output>');
-  console.log(`Write to: ${resolvedOutputPath}`);
+  console.log(`書き込み先: ${resolvedOutputPath}`);
   console.log('</output>');
   console.log();
 
@@ -272,14 +272,14 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // Success criteria placeholder
   console.log('<success_criteria>');
-  console.log('<!-- To be defined in schema validation rules -->');
+  console.log('<!-- スキーマ検証ルールで定義予定 -->');
   console.log('</success_criteria>');
   console.log();
 
   // Unlocks
   if (unlocks.length > 0) {
     console.log('<unlocks>');
-    console.log(`Completing this artifact enables: ${unlocks.join(', ')}`);
+    console.log(`このアーティファクトを完了すると有効になります: ${unlocks.join(', ')}`);
     console.log('</unlocks>');
     console.log();
   }

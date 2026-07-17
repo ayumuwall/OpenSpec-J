@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getFfChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-ff-change',
-    description: 'Fast-forward through OpenSpec artifact creation. Use when the user wants to quickly create all artifacts needed for implementation without stepping through each one individually.',
+    description: 'OpenSpec アーティファクト作成を一気に進めます。各ステップを個別に進めず、実装に必要な全アーティファクトを素早く作成したいときに使用します。',
     instructions: `アーティファクトの作成を早送り - 実装を開始するために必要なものをすべて一度に生成します。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -103,9 +103,9 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 - 新しい依存関係アーティファクトを作成する前に、必ず依存関係アーティファクトを読み取ります。
 - 文脈が非常に不明確な場合は、ユーザーに尋ねます。ただし、勢いを維持するために合理的な決定を下すことを好みます
 - その名前の変更がすでに存在する場合は、代わりにその変更を続行することを提案します
-- Verify each artifact file exists after writing before proceeding to next`,
+- 次へ進む前に、書き込み後の各アーティファクトファイルが存在することを確認します`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -113,7 +113,7 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 export function getOpsxFfCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Fast Forward',
-    description: 'Create a change and generate all artifacts needed for implementation in one go',
+    description: '変更を作成し、実装に必要な全アーティファクトを一括生成する',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `アーティファクトの作成を早送りして、実装を開始するために必要なものをすべて生成します。
@@ -208,6 +208,6 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 - 新しい依存関係アーティファクトを作成する前に、必ず依存関係アーティファクトを読み取ります。
 - 文脈が非常に不明確な場合は、ユーザーに尋ねます。ただし、勢いを維持するために合理的な決定を下すことを好みます
 - その名前の変更がすでに存在する場合は、ユーザーがそれを続行するか、それとも新しい変更を作成するかを尋ねます。
-- Verify each artifact file exists after writing before proceeding to next`
+- 次へ進む前に、書き込み後の各アーティファクトファイルが存在することを確認します`
   };
 }

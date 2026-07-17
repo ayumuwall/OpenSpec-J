@@ -49,31 +49,30 @@ export function getFeedbackSkillTemplate(): SkillTemplate {
 **ドラフト例**
 
 \`\`\`
-Title: Error handling in artifact workflow needs improvement
+Title: アーティファクトワークフローのエラーハンドリング改善
 
 Body:
-I was working on creating a new change and encountered an issue with
-the artifact workflow. When I tried to continue after creating the
-proposal, the system didn't clearly indicate that I needed to complete
-the specs first.
+新しい変更を作成している途中で、アーティファクトワークフローに関する問題に遭遇しました。
+proposal 作成後に続行しようとした際、先に specs を完了する必要があることが
+システムから明確に示されませんでした。
 
-Suggestion: Add clearer error messages that explain dependency chains
-in the artifact workflow. Something like "Cannot create design.md
-because specs are not complete (0/2 done)."
+Suggestion: アーティファクトワークフロー内の依存関係を説明する、
+より明確なエラーメッセージを追加してください。例えば
+"specs が完了していないため design.md を作成できません（0/2 完了）" のような内容です。
 
-Context: Using the spec-driven schema with <path>/my-project
+Context: <path>/my-project で spec-driven スキーマを使用
 \`\`\`
 
 **匿名化の例**
 
-Before:
+変更前:
 \`\`\`
 Working on /Users/john/mycompany/auth-service/src/oauth.ts
 Failed with API key: sk_live_abc123xyz
 Working at Acme Corp
 \`\`\`
 
-After:
+変更後:
 \`\`\`
 Working on <path>/oauth.ts
 Failed with API key: <redacted>

@@ -164,7 +164,7 @@ describe('store canonical remote (3.3)', () => {
         { cwd: tempDir, env }
       );
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain(`Share it: teammates clone ${TEST_NET_URL}`);
+      expect(result.stdout).toContain(`共有方法: チームメイトは ${TEST_NET_URL}`);
     });
   });
 
@@ -250,7 +250,7 @@ describe('store canonical remote (3.3)', () => {
       const storeRoot = makeUnregisteredStore('origin-only-context', { origin: TEST_NET_URL });
       const result = await runCLI(['store', 'register', storeRoot], { cwd: tempDir, env });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain(`Share it: teammates clone ${TEST_NET_URL}`);
+      expect(result.stdout).toContain(`共有方法: チームメイトは ${TEST_NET_URL}`);
     });
 
     it('prefers the canonical remote over the origin in sharing guidance', async () => {
@@ -260,7 +260,7 @@ describe('store canonical remote (3.3)', () => {
         metadataRemote: canonical,
       });
       const result = await runCLI(['store', 'register', storeRoot], { cwd: tempDir, env });
-      expect(result.stdout).toContain(`Share it: teammates clone ${canonical}`);
+      expect(result.stdout).toContain(`共有方法: チームメイトは ${canonical}`);
     });
   });
 
@@ -454,7 +454,7 @@ describe('store canonical remote (3.3)', () => {
       expect(store.status).toEqual([]);
 
       const human = await runCLI(['store', 'doctor', 'doc-context'], { cwd: tempDir, env });
-      expect(human.stdout).toContain(`  Remote: ${canonical}`);
+      expect(human.stdout).toContain(`  リモート: ${canonical}`);
       expect(human.stdout).not.toContain(TEST_NET_URL);
 
       // The remote-bearing store.yaml resolves normally with --store.
@@ -474,7 +474,7 @@ describe('store canonical remote (3.3)', () => {
       });
       const human = await runCLI(['store', 'doctor', 'quiet-context'], { cwd: tempDir, env });
       expect(human.exitCode).toBe(0);
-      expect(human.stdout).not.toContain('Remote:');
+      expect(human.stdout).not.toContain('リモート:');
     });
   });
 });

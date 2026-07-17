@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getVerifyChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-verify-change',
-    description: 'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
+    description: '実装が変更アーティファクトと一致しているか検証します。アーカイブ前に、実装が完了していて正しく一貫しているか確認したいときに使用します。',
     instructions: `実装が変更成果物 (仕様、タスク、設計) と一致していることを確認します。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -116,14 +116,14 @@ JSON を解析して以下を理解します。
 
 **概要スコアカード**:
    \`\`\`
-   ## Verification Report: <change-name>
+   ## 検証レポート: <change-name>
 
-   ### Summary
-   | Dimension    | Status           |
+   ### サマリー
+   | 観点         | 状態             |
    |--------------|------------------|
-   | Completeness | X/Y tasks, N reqs|
-   | Correctness  | M/N reqs covered |
-   | Coherence    | Followed/Issues  |
+   | 完全性       | X/Y タスク、N 要件 |
+   | 正確性       | M/N 要件をカバー |
+   | 一貫性       | 準拠/問題あり    |
    \`\`\`
 
 **優先度別の問題**:
@@ -170,9 +170,9 @@ JSON を解析して以下を理解します。
 - 問題のグループ化されたリスト (重大/警告/提案)
 - 形式のコード参照: \`file.ts:123\`
 - 具体的で実行可能な推奨事項
-- No vague suggestions like "consider reviewing"`,
+- 「確認を検討してください」のような曖昧な提案はしない`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -180,7 +180,7 @@ JSON を解析して以下を理解します。
 export function getOpsxVerifyCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Verify',
-    description: 'Verify implementation matches change artifacts before archiving',
+    description: 'アーカイブ前に実装が変更アーティファクトと一致しているか検証する',
     category: 'Workflow',
     tags: ['workflow', 'verify', 'experimental'],
     content: `実装が変更成果物 (仕様、タスク、設計) と一致していることを確認します。
@@ -288,14 +288,14 @@ JSON を解析して以下を理解します。
 
 **概要スコアカード**:
    \`\`\`
-   ## Verification Report: <change-name>
+   ## 検証レポート: <change-name>
 
-   ### Summary
-   | Dimension    | Status           |
+   ### サマリー
+   | 観点         | 状態             |
    |--------------|------------------|
-   | Completeness | X/Y tasks, N reqs|
-   | Correctness  | M/N reqs covered |
-   | Coherence    | Followed/Issues  |
+   | 完全性       | X/Y タスク、N 要件 |
+   | 正確性       | M/N 要件をカバー |
+   | 一貫性       | 準拠/問題あり    |
    \`\`\`
 
 **優先度別の問題**:
@@ -342,6 +342,6 @@ JSON を解析して以下を理解します。
 - 問題のグループ化されたリスト (重大/警告/提案)
 - 形式のコード参照: \`file.ts:123\`
 - 具体的で実行可能な推奨事項
-- No vague suggestions like "consider reviewing"`
+- 「確認を検討してください」のような曖昧な提案はしない`
   };
 }

@@ -83,9 +83,9 @@ describe('openspec doctor (3.6)', () => {
     // Banner on stderr in human mode; sections in the transcript voice.
     const human = await runCLI(['doctor', '--store', 'team-context'], { cwd: tempDir, env });
     expect(human.exitCode).toBe(0);
-    expect(human.stderr).toContain('Using OpenSpec root: team-context');
-    expect(human.stdout).toContain('Root');
-    expect(human.stdout).toContain('  Store: team-context (metadata ok)');
+    expect(human.stderr).toContain('OpenSpec ルートを使用: team-context');
+    expect(human.stdout).toContain('ルート');
+    expect(human.stdout).toContain('  ストア: team-context (メタデータ ok)');
     expect(human.stdout).toContain(`  - upstream-context: ok (${upstream})`);
 
     // Nearest-root session.
@@ -104,7 +104,7 @@ describe('openspec doctor (3.6)', () => {
   it('renders none-declared sections distinguishably', async () => {
     const result = await runCLI(['doctor', '--store', 'team-context'], { cwd: tempDir, env });
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('References\n  (none declared)');
+    expect(result.stdout).toContain('参照\n  (宣言なし)');
     const json = await runCLI(['doctor', '--json', '--store', 'team-context'], {
       cwd: tempDir,
       env,
@@ -133,7 +133,7 @@ describe('openspec doctor (3.6)', () => {
     );
 
     const human = await runCLI(['doctor', '--store', 'team-context'], { cwd: tempDir, env });
-    expect(human.stdout).toContain('Fix: git clone --');
+    expect(human.stdout).toContain('修正: git clone --');
   });
 
   it('distinguishes an empty registry from an unreadable one', async () => {
@@ -234,7 +234,7 @@ describe('openspec doctor (3.6)', () => {
     const bare = mkdir('bare-dir-human');
     const result = await runCLI(['doctor'], { cwd: bare, env });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Error: No OpenSpec root found');
+    expect(result.stderr).toContain('エラー: 現在のディレクトリまたは親ディレクトリに OpenSpec ルートが見つかりません');
     expect(result.stderr).not.toContain('at ');
   });
 
@@ -244,7 +244,7 @@ describe('openspec doctor (3.6)', () => {
       'schema: spec-driven\nreferences:\n  - team-context\n'
     );
     const result = await runCLI(['doctor', '--store', 'team-context'], { cwd: tempDir, env });
-    expect(result.stdout).toContain('(declared references all resolve to this root)');
+    expect(result.stdout).toContain('(宣言済み参照はすべてこのルートに解決されます)');
     expect(result.stdout).not.toContain('References\n  (none declared)');
   });
 

@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getUpdateChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-update-change',
-    description: "Update an OpenSpec change by revising its existing planning artifacts and keeping them coherent with one another. Use when the user wants to revise a change's plan, fold new decisions into it, or reconcile its artifacts after an edit. Never edits code.",
+    description: '既存の planning アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。コードは編集しません。',
     instructions: `変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -84,9 +84,9 @@ JSON を解析して現在の状態を理解します。応答には次のもの
 - \`existingOutputPaths\` 内の具体的なファイルのみを編集します。グロブ \`resolvedOutputPath\` には決して書き込まないでください。
 - ビルド フロンティアを進めないでください。新しいアーティファクトや glob アーティファクトの下に新しいファイルはありません。これが \`/opsx:continue\` の仕事です。
 - 書き込む前に、すべての編集をユーザーに確認してください。
-- If the request changes the change's *intent* rather than refining it, recommend starting fresh with \`/opsx:new\` (the "Update vs. Start Fresh" heuristic).`,
+- リクエストが変更を洗練するのではなく変更の *意図* を変える場合は、\`/opsx:new\` で新しく始めることを推奨します（「更新 vs 新規開始」の判断基準）。`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -94,7 +94,7 @@ JSON を解析して現在の状態を理解します。応答には次のもの
 export function getOpsxUpdateCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Update',
-    description: "Update a change - revise existing planning artifacts and keep them coherent (Experimental)",
+    description: '変更を更新し、既存の planning アーティファクトを修正して一貫性を保つ（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
@@ -170,6 +170,6 @@ JSON を解析して現在の状態を理解します。応答には次のもの
 - \`existingOutputPaths\` 内の具体的なファイルのみを編集します。グロブ \`resolvedOutputPath\` には決して書き込まないでください。
 - ビルド フロンティアを進めないでください。新しいアーティファクトや glob アーティファクトの下に新しいファイルはありません。これが \`/opsx:continue\` の仕事です。
 - 書き込む前に、すべての編集をユーザーに確認してください。
-- If the request changes the change's *intent* rather than refining it, recommend starting fresh with \`/opsx:new\` (the "Update vs. Start Fresh" heuristic).`
+- リクエストが変更を洗練するのではなく変更の *意図* を変える場合は、\`/opsx:new\` で新しく始めることを推奨します（「更新 vs 新規開始」の判断基準）。`
   };
 }

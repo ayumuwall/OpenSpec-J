@@ -335,7 +335,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'my-new-feature'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       const output = getOutput(result);
-      expect(output).toContain("Created change 'my-new-feature' at openspec/changes/my-new-feature/");
+      expect(output).toContain("変更 'my-new-feature' を作成しました: openspec/changes/my-new-feature/");
 
       const changeDir = path.join(changesDir, 'my-new-feature');
       const stat = await fs.stat(changeDir);
@@ -349,7 +349,7 @@ describe('artifact-workflow CLI commands', () => {
       );
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('--initiative is no longer supported');
+      expect(output).toContain('--initiative はサポート終了です');
       await expect(fs.stat(path.join(changesDir, 'linked-change'))).rejects.toMatchObject({
         code: 'ENOENT',
       });
@@ -361,7 +361,7 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('--areas is no longer supported');
+      expect(output).toContain('--areas はサポート終了です');
       await expect(fs.stat(path.join(changesDir, 'area-change'))).rejects.toMatchObject({
         code: 'ENOENT',
       });
@@ -401,7 +401,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'invalid name'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Error');
+      expect(output).toContain('エラー');
     });
 
     it('errors for duplicate change name', async () => {

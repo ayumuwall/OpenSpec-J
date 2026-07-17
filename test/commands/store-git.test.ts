@@ -132,9 +132,9 @@ describe('store git lifecycle', () => {
       message: 'このストアを作成しますか？',
       default: true,
     });
-    expect(consoleLogSpy).toHaveBeenCalledWith('  Git: initialized');
+    expect(consoleLogSpy).toHaveBeenCalledWith('  Git: 初期化する');
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      'Share this store by committing and pushing it like any Git repo.'
+      '共有方法: 通常の Git リポジトリと同じように commit / push してください。'
     );
     expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(true);
     const committed = execFileSync('git', ['log', '--format=%s'], { cwd: storeRoot })
@@ -388,9 +388,9 @@ describe('store git lifecycle', () => {
     expect(register.exitCode).toBe(1);
     const registerStatus = parseJson(register).status[0];
     expect(registerStatus.code).toBe('store_register_root_unhealthy');
-    expect(registerStatus.message).toContain('no commits');
+    expect(registerStatus.message).toContain('コミットのない Git リポジトリ');
     expect(registerStatus.fix).toBe(
-      'If this is a store clone: commit and push the origin store, pull it into this clone, then rerun register.'
+      'これがストア clone の場合: origin 側のストアで commit / push し、この clone に pull してから register を再実行してください。'
     );
   });
 });

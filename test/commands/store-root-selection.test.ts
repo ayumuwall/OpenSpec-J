@@ -130,8 +130,8 @@ describe('store root selection for normal commands', () => {
         env,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
-      expect(result.stdout).toContain("Created change 'add-billing'");
+      expect(result.stderr).toContain(`OpenSpec ルートを使用: team-context (${storeRoot})`);
+      expect(result.stdout).toContain("変更 'add-billing' を作成しました");
       expect(result.stdout).toContain(
         path.join(storeRoot, 'openspec', 'changes', 'add-billing')
       );
@@ -332,7 +332,7 @@ describe('store root selection for normal commands', () => {
       });
       expect(result.exitCode).toBe(0);
       expect(result.stdout.startsWith('## Why')).toBe(true);
-      expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
+      expect(result.stderr).toContain(`OpenSpec ルートを使用: team-context (${storeRoot})`);
     });
 
     it('keeps instructions stdout as the artifact payload', async () => {
@@ -344,7 +344,7 @@ describe('store root selection for normal commands', () => {
       );
       expect(result.exitCode).toBe(0);
       expect(result.stdout.startsWith('<artifact id="design"')).toBe(true);
-      expect(result.stderr).toContain('Using OpenSpec root: team-context');
+      expect(result.stderr).toContain('OpenSpec ルートを使用: team-context');
     });
 
     it('writes the status banner to stderr in human mode', async () => {
@@ -355,9 +355,9 @@ describe('store root selection for normal commands', () => {
         { cwd: appRepo, env }
       );
       expect(result.exitCode).toBe(0);
-      expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
+      expect(result.stderr).toContain(`OpenSpec ルートを使用: team-context (${storeRoot})`);
       expect(result.stdout).toContain('変更: store-change');
-      expect(result.stdout).not.toContain('Using OpenSpec root');
+      expect(result.stdout).not.toContain('OpenSpec ルートを使用');
     });
   });
 
@@ -685,7 +685,7 @@ describe('store root selection for normal commands', () => {
       );
       expect(result.exitCode).toBe(1);
       const output = result.stdout + result.stderr;
-      expect(output).toContain('--initiative is no longer supported');
+      expect(output).toContain('--initiative はサポート終了です');
       expect(
         fs.existsSync(path.join(localRepo, 'openspec', 'changes', 'linked-change'))
       ).toBe(false);

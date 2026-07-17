@@ -143,7 +143,7 @@ function submitViaGhCli(title: string, body: string): void {
 
     const issueUrl = result.trim();
     console.log(`\n✓ フィードバックを送信しました！`);
-    console.log(`Issue URL: ${issueUrl}\n`);
+    console.log(`Issue URL（課題 URL）: ${issueUrl}\n`);
   } catch (error: any) {
     // gh CLI のエラー出力を表示する
     if (error.stderr) {

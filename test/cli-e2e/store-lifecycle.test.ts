@@ -259,7 +259,7 @@ describe('standalone store lifecycle journey', () => {
     const humanDoctor = await runCLI(['store', 'doctor', STORE_ID], { env: machineA });
     expect(humanDoctor.exitCode).toBe(0);
     expect(humanDoctor.stdout).toContain(
-      'Git: repository detected (commits: yes, uncommitted changes: no, remote: none)'
+      'Git: リポジトリ検出済み (コミット: あり, 未コミット変更: なし, remote: なし)'
     );
   });
 
@@ -284,7 +284,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineA, cwd: projectDir }
     );
     expect(status.exitCode).toBe(0);
-    expect(status.stderr).toContain(`Using OpenSpec root: ${STORE_ID}`);
+    expect(status.stderr).toContain(`OpenSpec ルートを使用: ${STORE_ID}`);
     expect(status.stdout).not.toContain('Planning home');
 
     const instructions = await runCLI(
@@ -403,7 +403,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineB, cwd: base }
     );
     expect(created.exitCode).toBe(0);
-    expect(created.stderr).toContain(`Using OpenSpec root: ${STORE_ID}`);
+    expect(created.stderr).toContain(`OpenSpec ルートを使用: ${STORE_ID}`);
     expect(created.stdout).toContain(`--store ${STORE_ID}`);
 
     const instructions = await runCLI(
@@ -450,7 +450,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineB, cwd: base }
     );
     expect(failedApply.exitCode).not.toBe(0);
-    expect(failedApply.stderr).toContain(`Using OpenSpec root: ${STORE_ID}`);
+    expect(failedApply.stderr).toContain(`OpenSpec ルートを使用: ${STORE_ID}`);
     expect(failedApply.stderr).toContain(`openspec new change <name> --store ${STORE_ID}`);
   }, JOURNEY_TIMEOUT_MS);
 

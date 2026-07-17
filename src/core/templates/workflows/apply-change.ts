@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-apply-change',
-    description: 'Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.',
+    description: 'OpenSpec 変更のタスクを実装します。実装を開始、継続、またはタスクに沿って進めたいときに使用します。',
     instructions: `OpenSpec の変更からタスクを実装します。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -95,52 +95,52 @@ JSON を解析して以下を理解します。
 **実装時の出力**
 
 \`\`\`
-## Implementing: <change-name> (schema: <schema-name>)
+## 実装中: <change-name> (schema: <schema-name>)
 
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 3/7 に取り組み中: <タスク説明>
+[...実装中...]
+✓ タスク完了
 
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 4/7 に取り組み中: <タスク説明>
+[...実装中...]
+✓ タスク完了
 \`\`\`
 
 **完了時の出力**
 
 \`\`\`
-## Implementation Complete
+## 実装完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 7/7 タスク完了 ✓
 
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
+### このセッションで完了
+- [x] タスク 1
+- [x] タスク 2
 ...
 
-All tasks complete! Ready to archive this change.
+すべてのタスクが完了しました。この変更をアーカイブできます。
 \`\`\`
 
 **一時停止時の出力 (問題が発生しました)**
 
 \`\`\`
-## Implementation Paused
+## 実装一時停止
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 4/7 タスク完了
 
-### Issue Encountered
-<description of the issue>
+### 発生した問題
+<問題の説明>
 
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
+**選択肢:**
+1. <選択肢 1>
+2. <選択肢 2>
+3. 別のアプローチ
 
-What would you like to do?
+どう進めますか？
 \`\`\`
 
 **ガードレール**
@@ -158,9 +158,9 @@ What would you like to do?
 このスキルは、「変更に対するアクション」モデルをサポートします。
 
 - **いつでも呼び出すことができます**: すべてのアーティファクトが完了する前 (タスクが存在する場合)、部分的な実装後、他のアクションとインターリーブされます。
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly`,
+- **アーティファクト更新を許可**: 実装中に設計上の問題が明らかになった場合は、アーティファクト更新を提案してください。フェーズに固定せず、流動的に進めます`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -168,7 +168,7 @@ What would you like to do?
 export function getOpsxApplyCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Apply',
-    description: 'Implement tasks from an OpenSpec change (Experimental)',
+    description: 'OpenSpec 変更のタスクを実装する（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `OpenSpec の変更からタスクを実装します。
@@ -255,52 +255,52 @@ JSON を解析して以下を理解します。
 **実装時の出力**
 
 \`\`\`
-## Implementing: <change-name> (schema: <schema-name>)
+## 実装中: <change-name> (schema: <schema-name>)
 
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 3/7 に取り組み中: <タスク説明>
+[...実装中...]
+✓ タスク完了
 
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 4/7 に取り組み中: <タスク説明>
+[...実装中...]
+✓ タスク完了
 \`\`\`
 
 **完了時の出力**
 
 \`\`\`
-## Implementation Complete
+## 実装完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 7/7 タスク完了 ✓
 
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
+### このセッションで完了
+- [x] タスク 1
+- [x] タスク 2
 ...
 
-All tasks complete! You can archive this change with \`/opsx:archive\`.
+すべてのタスクが完了しました。\`/opsx:archive\` でこの変更をアーカイブできます。
 \`\`\`
 
 **一時停止時の出力 (問題が発生しました)**
 
 \`\`\`
-## Implementation Paused
+## 実装一時停止
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 4/7 タスク完了
 
-### Issue Encountered
-<description of the issue>
+### 発生した問題
+<問題の説明>
 
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
+**選択肢:**
+1. <選択肢 1>
+2. <選択肢 2>
+3. 別のアプローチ
 
-What would you like to do?
+どう進めますか？
 \`\`\`
 
 **ガードレール**

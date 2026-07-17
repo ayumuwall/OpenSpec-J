@@ -120,7 +120,7 @@ describe('worksets core', () => {
     it('fails the hand-edit contract violations as invalid_workset_file', () => {
       const file = getWorksetsFilePath(options());
       const cases: Array<{ content: string; problem: RegExp }> = [
-        { content: '{not yaml', problem: /Invalid worksets file/ },
+        { content: '{not yaml', problem: /ワークセットファイルが不正です/ },
         {
           content: 'version: 2\nworksets: {}\n',
           problem: /version/,
@@ -158,7 +158,7 @@ describe('worksets core', () => {
           ).diagnostic;
           expect(diagnostic.code).toBe('invalid_workset_file');
           expect(diagnostic.message).toMatch(candidate.problem);
-          expect(diagnostic.fix).toBe(`Repair or remove ${file}.`);
+          expect(diagnostic.fix).toBe(`${file} を修復するか削除してください。`);
         }
       }
     });
@@ -206,7 +206,7 @@ describe('worksets core', () => {
         ).diagnostic;
         expect(diagnostic.code).toBe('workset_exists');
         expect(diagnostic.fix).toBe(
-          'Choose another name, or remove it first: openspec workset remove platform'
+          '別の名前を選ぶか、先に削除してください: openspec workset remove platform'
         );
       }
     });
@@ -226,7 +226,7 @@ describe('worksets core', () => {
         ).diagnostic;
         expect(diagnostic.code).toBe('workset_not_found');
         expect(diagnostic.fix).toBe(
-          'Saved worksets: platform. See them with: openspec workset list'
+          '保存済みワークセット: platform。確認するには: openspec workset list'
         );
       }
 
@@ -238,7 +238,7 @@ describe('worksets core', () => {
           error as { diagnostic: { fix?: string } }
         ).diagnostic;
         expect(diagnostic.fix).toBe(
-          'Create it first: openspec workset create absent'
+          '先に作成してください: openspec workset create absent'
         );
       }
     });

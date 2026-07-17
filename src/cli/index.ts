@@ -49,7 +49,7 @@ const STORE_OPTION_DESCRIPTION = COMMON_FLAGS.store.description;
 function hiddenStorePathOption(): Option {
   return new Option(
     '--store-path <path>',
-    'Not supported; register the path with "openspec store register <path>" and use --store <id>'
+    'サポートされていません。"openspec store register <path>" でパスを登録し、--store <id> を使用してください'
   ).hideHelp();
 }
 
@@ -70,11 +70,11 @@ function failWithError(
     process.exitCode = 1;
     return;
   }
-  ora().fail(`Error: ${(error as Error).message}`);
+  ora().fail(`エラー: ${(error as Error).message}`);
   // Resolution and store errors carry a pasteable fix - never drop it.
   const fix = (error as { diagnostic?: { fix?: string } }).diagnostic?.fix;
   if (fix) {
-    console.error(`Fix: ${fix}`);
+    console.error(`修正: ${fix}`);
   }
   process.exitCode = process.exitCode ?? 1;
 }
@@ -329,7 +329,7 @@ program
   .option('-y, --yes', '確認プロンプトをスキップ')
   .option('--skip-specs', '仕様更新処理をスキップ（インフラ、ツール、docs のみの変更に有用）')
   .option('--no-validate', '検証をスキップ（非推奨、確認が必要）')
-  .option('--json', 'Output as JSON (non-interactive)')
+  .option('--json', 'JSON として出力（非対話）')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
   .action(async (changeName?: string, options?: ArchiveOptions) => {
@@ -560,15 +560,15 @@ newCmd
   .command('change <name>')
   .description('新しい変更ディレクトリを作成')
   .option('--description <text>', 'README.md に追加する説明')
-  .option('--goal <text>', 'Optional goal metadata to store with the change')
+  .option('--goal <text>', '変更に保存する任意の目標メタデータ')
   .option('--schema <name>', `使用するワークフロースキーマ（デフォルト: ${DEFAULT_SCHEMA}）`)
   .option('--json', 'JSON で出力')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
   // Removed options kept registered (hidden) so users get a deliberate
   // explanation instead of a generic unknown-option error.
-  .addOption(new Option('--initiative <id>', 'No longer supported').hideHelp())
-  .addOption(new Option('--areas <names>', 'No longer supported').hideHelp())
+  .addOption(new Option('--initiative <id>', 'サポート終了').hideHelp())
+  .addOption(new Option('--areas <names>', 'サポート終了').hideHelp())
   .action(async (name: string, options: NewChangeOptions) => {
     try {
       await newChangeCommand(name, options);

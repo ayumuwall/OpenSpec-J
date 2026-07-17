@@ -72,7 +72,7 @@ export async function composeInteractively(
   if (members.length > 0) {
     finalizeWorkset(name, members, input.tool, table);
     for (const member of members) {
-      console.log(`  Added '${member.name}' (${member.path})`);
+      console.log(`  追加しました: '${member.name}' (${member.path})`);
     }
   }
 
@@ -81,8 +81,8 @@ export async function composeInteractively(
       const next = await prompts.select({
         message: '別のフォルダーを追加するか、完了してください:',
         choices: [
-          { name: 'Finish', value: 'finish' },
-          { name: 'Add another folder', value: 'add' },
+          { name: '完了', value: 'finish' },
+          { name: '別のフォルダーを追加', value: 'add' },
         ],
         default: 'finish',
       });
@@ -98,7 +98,7 @@ export async function composeInteractively(
       async validate(value: string) {
         const resolved = path.resolve(expandUserPath(value));
         if (!(await pathIsDirectory(resolved))) {
-          return `'${value}' is not an existing folder`;
+          return `'${value}' は存在するフォルダーではありません`;
         }
         return true;
       },
@@ -117,7 +117,7 @@ export async function composeInteractively(
             return problem;
           }
           if (members.some((member) => member.name === value)) {
-            return `duplicate member name '${value}'`;
+            return `メンバー名 '${value}' が重複しています`;
           }
           return true;
         },
@@ -125,7 +125,7 @@ export async function composeInteractively(
     }
 
     members.push({ name: label, path: resolvedPath });
-    console.log(`  Added '${label}' (${resolvedPath})`);
+    console.log(`  追加しました: '${label}' (${resolvedPath})`);
   }
 
   console.log('');
@@ -139,7 +139,7 @@ export async function composeInteractively(
         '  既知のツールが PATH にないため、設定は保存しません。'
       );
       console.log(
-        `  (Known tools: ${choices.map((choice) => `${choice.opener.id} ${choice.note ?? ''}`.trim()).join(', ')})`
+        `  (既知のツール: ${choices.map((choice) => `${choice.opener.id} ${choice.note ?? ''}`.trim()).join(', ')})`
       );
     } else {
       tool = await promptToolFromChoices(available);
@@ -165,7 +165,7 @@ export async function promptToolFromChoices(
 export async function promptOpenNow(label: string): Promise<boolean> {
   const { confirm } = await import('@inquirer/prompts');
   return confirm({
-    message: `Open it now in ${label}?`,
+    message: `今すぐ ${label} で開きますか？`,
     default: true,
   });
 }
@@ -176,13 +176,13 @@ export async function confirmRemoveInteractively(
 ): Promise<boolean> {
   const { confirm } = await import('@inquirer/prompts');
 
-  console.log(`Workset '${workset.name}':`);
+  console.log(`ワークセット '${workset.name}':`);
   for (const row of formatMemberRows(workset.members)) {
     console.log(`  ${row}`);
   }
 
   return confirm({
-    message: `Remove workset '${workset.name}'? (member folders are never touched)`,
+    message: `ワークセット '${workset.name}' を削除しますか？（メンバーフォルダーは削除されません）`,
     default: false,
   });
 }

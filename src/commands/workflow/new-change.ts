@@ -55,7 +55,7 @@ interface NewChangeOutput {
 function assertRemovedOptionsAbsent(options: NewChangeOptions): void {
   if (options.initiative !== undefined) {
     throw new RootSelectionError(
-      '--initiative is no longer supported. Normal changes no longer attach to initiatives; --store <id> selects the OpenSpec root.',
+      '--initiative はサポート終了です。通常の変更は initiative に紐づきません。OpenSpec ルートの選択には --store <id> を使ってください。',
       'initiative_option_removed',
       { target: 'change.options' }
     );
@@ -63,7 +63,7 @@ function assertRemovedOptionsAbsent(options: NewChangeOptions): void {
 
   if (options.areas !== undefined) {
     throw new RootSelectionError(
-      '--areas is no longer supported. Workspace affected areas are not part of the normal OpenSpec root path.',
+      '--areas はサポート終了です。ワークスペースの影響範囲は通常の OpenSpec ルートパスには含まれません。',
       'areas_option_removed',
       { target: 'change.options' }
     );
@@ -80,9 +80,9 @@ function printCreatedChangeHuman(
     !isStoreSelectedRoot(root) && root.path === process.cwd()
       ? formatChangeLocation(toPlanningHome(root), payload.change.id)
       : payload.change.path;
-  console.log(`Created change '${payload.change.id}' at ${location}/`);
+  console.log(`変更 '${payload.change.id}' を作成しました: ${location}/`);
   console.log(`スキーマ: ${payload.change.schema}`);
-  console.log(`Next: ${withStoreFlag(root, `openspec status --change ${payload.change.id}`)}`);
+  console.log(`次: ${withStoreFlag(root, `openspec status --change ${payload.change.id}`)}`);
 }
 
 export async function newChangeCommand(name: string | undefined, options: NewChangeOptions): Promise<void> {

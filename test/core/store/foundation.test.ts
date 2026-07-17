@@ -160,7 +160,7 @@ stores:
         parseStoreRegistryState(`version: 2
 stores: {}
 `)
-      ).toThrow(/Invalid store registry state/u);
+      ).toThrow(/store registry state が不正です/u);
 
       expect(() =>
         parseStoreRegistryState(`version: 1
@@ -170,7 +170,7 @@ stores:
       type: git
       local_path: /repos/acme
 `)
-      ).toThrow(/Invalid store id/u);
+      ).toThrow(/store id が不正です/u);
 
       expect(() =>
         parseStoreRegistryState(`version: 1
@@ -180,7 +180,7 @@ stores:
       type: memory
       local_path: /repos/acme
 `)
-      ).toThrow(/Invalid store registry state/u);
+      ).toThrow(/store registry state が不正です/u);
 
       expect(() =>
         parseStoreRegistryState(`version: 1
@@ -190,7 +190,7 @@ stores:
       type: git
       local_path: ""
 `)
-      ).toThrow(/Invalid store registry state/u);
+      ).toThrow(/store registry state が不正です/u);
     });
 
     it('rejects unknown registry fields', () => {
@@ -199,7 +199,7 @@ stores:
 stores: {}
 extra: true
 `)
-      ).toThrow(/Invalid store registry state/u);
+      ).toThrow(/store registry state が不正です/u);
 
       expect(() =>
         parseStoreRegistryState(`version: 1
@@ -210,7 +210,7 @@ stores:
       local_path: /repos/acme
       depth: 1
 `)
-      ).toThrow(/Invalid store registry state/u);
+      ).toThrow(/store registry state が不正です/u);
     });
   });
 
@@ -241,7 +241,7 @@ id: Acme
 id: acme
 local_path: /repos/acme
 `)
-      ).toThrow(/Invalid store metadata state/u);
+      ).toThrow(/store metadata state が不正です/u);
     });
   });
 
@@ -303,7 +303,7 @@ local_path: /repos/acme
       fs.writeFileSync(getStoreMetadataPath(storeRoot), 'version: nope\n');
 
       await expect(readOptionalStoreMetadataState(storeRoot)).rejects.toThrow(
-        /Invalid store metadata state/u
+        /store metadata state が不正です/u
       );
     });
   });

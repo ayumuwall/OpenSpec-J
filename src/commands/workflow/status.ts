@@ -75,7 +75,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
           );
           return;
         }
-        console.log(`アクティブな変更はありません。 Create one with: ${newChangeHint}`);
+        console.log(`アクティブな変更はありません。作成するには: ${newChangeHint}`);
         return;
       }
       // Changes exist but --change not provided

@@ -538,7 +538,7 @@ Old instructions content
       );
 
       // Apply skill should contain implementation instructions
-      expect(skillContent.toLowerCase()).toContain('task');
+      expect(skillContent).toContain('タスク');
     });
   });
 

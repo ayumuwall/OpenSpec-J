@@ -187,19 +187,19 @@ async function resolveStoreRoot(
       // The doctor pointer lives in the message because human-mode command
       // wrappers print only the message, not the fix field.
       throw new RootSelectionError(
-        `Store '${id}' is missing identity metadata at ${inspection.metadataPath}. ${doctorFix(id)}`,
+        `ストア '${id}' の識別メタデータが ${inspection.metadataPath} にありません。${doctorFix(id)}`,
         'store_identity_mismatch',
         { target: 'store.metadata', fix: doctorFix(id) }
       );
     case 'metadata_id_mismatch':
       throw new RootSelectionError(
-        `Store '${id}' metadata id '${inspection.actualId}' does not match its registered id. ${doctorFix(id)}`,
+        `ストア '${id}' のメタデータ ID '${inspection.actualId}' が登録 ID と一致しません。${doctorFix(id)}`,
         'store_identity_mismatch',
         { target: 'store.metadata', fix: doctorFix(id) }
       );
     case 'unhealthy_root':
       throw new RootSelectionError(
-        `Store '${id}' does not have a healthy OpenSpec root at ${storeRoot}: ${inspection.problems} ${doctorFix(id)}`,
+        `ストア '${id}' の ${storeRoot} に正常な OpenSpec ルートがありません: ${inspection.problems} ${doctorFix(id)}`,
         'unhealthy_store_root',
         { target: 'openspec.root', fix: doctorFix(id) }
       );
@@ -251,7 +251,7 @@ export async function inspectRegisteredStore(
   if (!inspection.healthy) {
     const problems =
       inspection.diagnostics.map((diagnostic) => diagnostic.message).join(' ') ||
-      'OpenSpec root is missing or incomplete.';
+      'OpenSpec ルートがないか不完全です。';
     return { kind: 'unhealthy_root', problems };
   }
 
@@ -297,7 +297,7 @@ async function resolveNearestOrDeclaredRoot(
   if (hasPlanningShape) {
     if (pointer.value !== undefined) {
       console.error(
-        `Warning: ${pointer.filePath} declares store '${pointer.value}', but this directory is a real OpenSpec root; the declaration is ignored.`
+        `警告: ${pointer.filePath} はストア '${pointer.value}' を宣言していますが、このディレクトリは実際の OpenSpec ルートです。この宣言は無視します。`
       );
     }
     return makeRoot(nearestRoot, 'nearest');
@@ -306,7 +306,7 @@ async function resolveNearestOrDeclaredRoot(
   if (pointer.malformed) {
     const problem = storePointerProblem(pointer.malformed);
     throw new RootSelectionError(
-      `Invalid store declaration in ${pointer.filePath}: ${problem}.`,
+      `${pointer.filePath} のストア宣言が不正です: ${problem}。`,
       'invalid_store_pointer',
       {
         target: 'store.pointer',
@@ -384,20 +384,20 @@ export async function resolveOpenSpecRoot(
 
   if (registeredIds.length > 0) {
     throw new RootSelectionError(
-      `No OpenSpec root found in the current directory or its ancestors. Registered stores: ${registeredIds.join(', ')}. Pass --store <id> to use one, or run openspec init to create a local root.`,
+      `現在のディレクトリまたは親ディレクトリに OpenSpec ルートが見つかりません。登録済みストア: ${registeredIds.join(', ')}。使用するには --store <id> を指定するか、openspec init でローカルルートを作成してください。`,
       'no_root_with_registered_stores',
       {
         target: 'openspec.root',
-        fix: `Rerun with --store <id> (registered: ${registeredIds.join(', ')}) or run openspec init.`,
+        fix: `--store <id> を付けて再実行するか（登録済み: ${registeredIds.join(', ')}）、openspec init を実行してください。`,
       }
     );
   }
 
   if (options.allowImplicitRoot === false) {
     throw new RootSelectionError(
-      'No OpenSpec root found from the current directory.',
+      '現在のディレクトリから OpenSpec ルートが見つかりません。',
       'no_openspec_root',
-      { target: 'openspec.root', fix: 'Run openspec init to create a root here.' }
+      { target: 'openspec.root', fix: 'ここにルートを作成するには openspec init を実行してください。' }
     );
   }
 
@@ -439,7 +439,7 @@ export function isStoreSelectedRoot(
  */
 export function emitStoreRootBanner(root: ResolvedOpenSpecRoot): void {
   if (isStoreSelectedRoot(root)) {
-    console.error(`Using OpenSpec root: ${root.storeId} (${root.path})`);
+    console.error(`OpenSpec ルートを使用: ${root.storeId} (${root.path})`);
   }
 }
 

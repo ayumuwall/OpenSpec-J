@@ -19,9 +19,9 @@ const bodies: Array<[string, string]> = [
 describe('update-change templates', () => {
   it('generates the expected skill and command shape (3.1)', () => {
     expect(skill.name).toBe('openspec-update-change');
-    expect(skill.description).toContain('Never edits code');
+    expect(skill.description).toContain('コードは編集しません');
     expect(skill.license).toBe('MIT');
-    expect(skill.compatibility).toBe('Requires openspec CLI.');
+    expect(skill.compatibility).toBe('OpenSpec CLI が必要です。');
     expect(skill.metadata).toEqual({ author: 'openspec', version: '1.0' });
 
     expect(command.name).toBe('OPSX: Update');
@@ -81,8 +81,8 @@ describe('update-change templates', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('ユーザーが確認した後にのみ書き込みます');
       expect(body, label).toContain('ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください');
-      expect(body, label).toContain('recommend starting fresh with `/opsx:new`');
-      expect(body, label).toContain('Update vs. Start Fresh');
+      expect(body, label).toContain('`/opsx:new` で新しく始めることを推奨します');
+      expect(body, label).toContain('更新 vs 新規開始');
     }
   });
 });

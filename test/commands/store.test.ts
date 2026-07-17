@@ -659,7 +659,7 @@ describe('store command', () => {
     await runStoreCommand(['register', storeRoot]);
 
     expect(confirm).toHaveBeenCalledWith({
-      message: "Turn this OpenSpec root into store 'team-context'?",
+      message: "この OpenSpec ルートをストア 'team-context' に変換しますか？",
       default: false,
     });
     expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
@@ -1130,10 +1130,10 @@ describe('store command', () => {
     expect(conflict.exitCode).toBe(1);
     const conflictStatus = parseJson(conflict).status[0];
     expect(conflictStatus.code).toBe('store_id_conflict');
-    expect(conflictStatus.message).toContain('One checkout per store id');
+    expect(conflictStatus.message).toContain('ストア ID ごとに 1 つの checkout');
     expect(conflictStatus.message).toContain(expectedExistingPath(original));
     expect(conflictStatus.fix).toContain('openspec store unregister team-context');
-    expect(conflictStatus.fix).not.toContain('different store id');
+    expect(conflictStatus.fix).not.toContain('別のストア ID');
 
     // Mismatched --id when the metadata id is already registered elsewhere:
     // the fix names the one-checkout rule instead of pointing back at the
@@ -1145,9 +1145,9 @@ describe('store command', () => {
     expect(mismatchRegistered.exitCode).toBe(1);
     const mismatchRegisteredStatus = parseJson(mismatchRegistered).status[0];
     expect(mismatchRegisteredStatus.code).toBe('store_metadata_id_mismatch');
-    expect(mismatchRegisteredStatus.fix).toContain('One checkout per store id');
+    expect(mismatchRegisteredStatus.fix).toContain('ストア ID ごとに 1 つの checkout');
     expect(mismatchRegisteredStatus.fix).toContain('unregister team-context');
-    expect(mismatchRegisteredStatus.fix).not.toContain('Use --id team-context or');
+    expect(mismatchRegisteredStatus.fix).not.toContain('--id team-context を使うか');
 
     // Mismatched --id when the metadata id is free: the plain fix applies.
     const freeRoot = mkdir('free-context');
@@ -1160,7 +1160,7 @@ describe('store command', () => {
     expect(mismatchFree.exitCode).toBe(1);
     const mismatchFreeStatus = parseJson(mismatchFree).status[0];
     expect(mismatchFreeStatus.code).toBe('store_metadata_id_mismatch');
-    expect(mismatchFreeStatus.fix).toContain('Use --id free-context');
+    expect(mismatchFreeStatus.fix).toContain('--id free-context を使う');
   });
 
   // Built by concatenation so the vocabulary sweep never matches this file.
@@ -1239,7 +1239,7 @@ describe('store command', () => {
       });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("unknown command 'new' for 'openspec store'");
+      expect(result.stderr).toContain("'openspec store' の不明なコマンド 'new' です");
       expect(result.stderr).toContain(
         'setup, register, unregister, remove, list (ls), doctor'
       );
@@ -1274,7 +1274,7 @@ describe('store command', () => {
       expect(payload.status[0]).toEqual(
         expect.objectContaining({
           code: 'unknown_store_subcommand',
-          message: expect.stringContaining("Unknown command 'bogus'"),
+          message: expect.stringContaining("'openspec store' の不明なコマンド 'bogus'"),
         })
       );
     });
@@ -1287,7 +1287,7 @@ describe('store command', () => {
       expect(payload.status[0]).toEqual(
         expect.objectContaining({
           code: 'unknown_store_subcommand',
-          message: expect.stringContaining('Missing subcommand'),
+          message: expect.stringContaining("'openspec store' のサブコマンドがありません"),
         })
       );
     });
@@ -1303,7 +1303,7 @@ describe('store command', () => {
       const result = await runCLI(['--help'], { cwd: tempDir, env });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Create and manage stores - standalone');
+      expect(result.stdout).toContain('このマシンに登録する独立した OpenSpec リポジトリ');
       expect(result.stdout).not.toContain(RETIRED_GROUP);
     });
   });

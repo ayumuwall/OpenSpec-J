@@ -486,8 +486,8 @@ export function registerConfigCommand(program: Command): void {
         const currentState = resolveCurrentProfileState(config);
 
         console.log(chalk.bold('\n現在の profile 設定'));
-        console.log(`  Delivery: ${currentState.delivery}`);
-        console.log(`  Workflows: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
+        console.log(`  配信方式: ${currentState.delivery}`);
+        console.log(`  ワークフロー: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
         console.log(chalk.dim('  Delivery = ワークフローのインストール先（skills, commands, both）'));
         console.log(chalk.dim('  Workflows = 利用可能な action（propose, explore, apply など）'));
         console.log();

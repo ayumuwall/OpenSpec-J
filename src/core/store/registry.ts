@@ -99,11 +99,11 @@ export function assertNoRegisteredStoreConflict(
 
     if (entry.id === id) {
       throw new StoreError(
-        `Store '${id}' is already registered at ${getStoreRootForBackend(entry.backend)}. One checkout per store id is supported on this machine.`,
+        `ストア '${id}' は既に ${getStoreRootForBackend(entry.backend)} に登録されています。このマシンではストア ID ごとに 1 つの checkout がサポートされます。`,
         'store_id_conflict',
         {
           target: 'store.id',
-          fix: `Use the existing registration, or run openspec store unregister ${id} first to switch this id to a different checkout.`,
+          fix: `既存の登録を使うか、この ID を別の checkout に切り替えるには先に openspec store unregister ${id} を実行してください。`,
         }
       );
     }

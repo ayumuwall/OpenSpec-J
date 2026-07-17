@@ -126,15 +126,15 @@ export class InitCommand {
       if (!hasPlanningShape) {
         if (pointer.malformed) {
           throw new Error(
-            `The store declaration in ${pointer.filePath} is invalid (` +
+            `${pointer.filePath} の store 宣言が不正です (` +
               storePointerProblem(pointer.malformed) +
-              `). Fix or remove the store: line before running openspec init.`
+              `)。openspec init を実行する前に store: 行を修正または削除してください。`
           );
         }
         if (pointer.value !== undefined) {
           throw new Error(
-            `This repo's planning is externalized to store '${pointer.value}' (${pointer.filePath}). ` +
-              `Remove the store: line first to convert this repo to a local OpenSpec root.`
+            `このリポジトリの planning はストア '${pointer.value}' に外部化されています (${pointer.filePath})。` +
+              `このリポジトリをローカル OpenSpec ルートに変換するには、先に store: 行を削除してください。`
           );
         }
       }

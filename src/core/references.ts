@@ -206,21 +206,21 @@ function renderEntryLines(entry: ReferenceIndexEntry): string[] {
       lines.push(specLine(spec));
     }
     if (entry.fetch) {
-      lines.push(`  Fetch: ${entry.fetch}`);
+      lines.push(`  取得: ${entry.fetch}`);
     }
     // Diagnostics on a resolved entry (e.g. truncation) render message
     // AND fix — an orphan fix line would hide that the list is partial.
     for (const diagnostic of entry.status) {
-      lines.push(`  Note: ${diagnostic.message}`);
+      lines.push(`  メモ: ${diagnostic.message}`);
       if (diagnostic.fix) {
-        lines.push(`  Fix: ${diagnostic.fix}`);
+        lines.push(`  修正: ${diagnostic.fix}`);
       }
     }
   } else {
     for (const diagnostic of entry.status) {
-      lines.push(`Store ${entry.store_id}: ${diagnostic.message}`);
+      lines.push(`ストア ${entry.store_id}: ${diagnostic.message}`);
       if (diagnostic.fix) {
-        lines.push(`  Fix: ${diagnostic.fix}`);
+        lines.push(`  修正: ${diagnostic.fix}`);
       }
     }
   }

@@ -260,7 +260,7 @@ async function resolveSetupInput(
 
   if (!id && !interactive) {
     throw new StoreError(
-      'Pass a store name.',
+      'ストア名を指定してください。',
       'store_setup_id_required',
       {
         target: 'store.id',
@@ -271,7 +271,7 @@ async function resolveSetupInput(
 
   if (options.path === undefined && !interactive) {
     throw new StoreError(
-      'Pass --path with the folder where this store should live.',
+      'このストアを配置するフォルダーを --path で指定してください。',
       'store_setup_path_required',
       {
         target: 'store.root',
@@ -308,9 +308,9 @@ async function confirmSetup(
   console.log('');
   console.log('OpenSpec は次の内容を作成します:');
   console.log('');
-  console.log(`  Store: ${prepared.id}`);
-  console.log(`  Location: ${formatPathForHuman(prepared.root)}`);
-  console.log(`  Git: ${initGit ? 'initialized' : 'not initialized'}`);
+  console.log(`  ストア: ${prepared.id}`);
+  console.log(`  場所: ${formatPathForHuman(prepared.root)}`);
+  console.log(`  Git: ${initGit ? '初期化する' : '初期化しない'}`);
   console.log('');
 
   const confirmed = await confirm({
@@ -320,11 +320,11 @@ async function confirmSetup(
 
   if (!confirmed) {
     throw new StoreError(
-      'Store setup cancelled.',
+      'ストア作成をキャンセルしました。',
       'store_setup_cancelled',
       {
         target: 'store.root',
-        fix: 'Rerun setup when you are ready.',
+        fix: '準備ができたら setup を再実行してください。',
       }
     );
   }
@@ -335,7 +335,7 @@ async function confirmRemove(id: string, root: string, options: StoreRemoveOptio
 
   if (options.json || !isInteractive()) {
     throw new StoreError(
-      'Pass --yes to delete store files non-interactively.',
+      '非対話でストアファイルを削除するには --yes を指定してください。',
       'store_remove_confirmation_required',
       {
         target: 'store.root',
@@ -346,17 +346,17 @@ async function confirmRemove(id: string, root: string, options: StoreRemoveOptio
 
   const { confirm } = await import('@inquirer/prompts');
   const confirmed = await confirm({
-    message: `Delete local store folder ${formatPathForHuman(root)}?`,
+    message: `ローカルストアフォルダー ${formatPathForHuman(root)} を削除しますか？`,
     default: false,
   });
 
   if (!confirmed) {
     throw new StoreError(
-      'Store remove cancelled.',
+      'ストア削除をキャンセルしました。',
       'store_remove_cancelled',
       {
         target: 'store.root',
-        fix: 'Run "openspec store unregister <id>" if you only want to forget the local registration.',
+        fix: 'ローカル登録だけを解除したい場合は "openspec store unregister <id>" を実行してください。',
       }
     );
   }
@@ -378,11 +378,11 @@ async function confirmRegisterConversion(error: unknown): Promise<void> {
 
   if (!confirmed) {
     throw new StoreError(
-      'Store register cancelled.',
+      'ストア登録をキャンセルしました。',
       'store_register_cancelled',
       {
         target: 'store.metadata',
-        fix: 'Rerun register when you are ready to create store identity metadata.',
+        fix: 'ストア識別メタデータを作成する準備ができたら register を再実行してください。',
       }
     );
   }
@@ -398,11 +398,11 @@ function printMutationHuman(
   }
 
   console.log(`${title}: ${payload.store.id}`);
-  console.log(`Location: ${formatPathForHuman(payload.store.root)}`);
-  console.log('OpenSpec Root: ready');
-  console.log(`Registry: ${payload.registry.already_registered ? 'already registered' : 'registered'}`);
+  console.log(`場所: ${formatPathForHuman(payload.store.root)}`);
+  console.log('OpenSpec ルート: 準備完了');
+  console.log(`登録状態: ${payload.registry.already_registered ? '登録済み' : '登録しました'}`);
   for (const status of payload.status) {
-    console.log(`${status.severity === 'error' ? 'Issue' : 'Note'}: ${status.message}`);
+    console.log(`${status.severity === 'error' ? '問題' : 'メモ'}: ${status.message}`);
   }
   console.log('');
   console.log('次に、通常の OpenSpec コマンドをこのストアに対して実行します。例:');
@@ -411,8 +411,8 @@ function printMutationHuman(
     const shareRemote = remotes?.canonical ?? remotes?.observed;
     console.log(
       shareRemote
-        ? `Share it: teammates clone ${shareRemote} and run openspec store register <path>.`
-        : 'Share this store by committing and pushing it like any Git repo.'
+        ? `共有方法: チームメイトは ${shareRemote} を clone し、openspec store register <path> を実行します。`
+        : '共有方法: 通常の Git リポジトリと同じように commit / push してください。'
     );
   }
 }
@@ -425,15 +425,15 @@ function printCleanupHuman(title: string, payload: StoreCleanupOutput): void {
   console.log(`${title}: ${payload.store.id}`);
 
   if (payload.files.deleted_path) {
-    console.log(`Deleted: ${formatPathForHuman(payload.files.deleted_path)}`);
+    console.log(`削除しました: ${formatPathForHuman(payload.files.deleted_path)}`);
   } else if (payload.files.left_on_disk) {
-    console.log(`Files kept at: ${formatPathForHuman(payload.files.left_on_disk)}`);
+    console.log(`ファイルは保持しました: ${formatPathForHuman(payload.files.left_on_disk)}`);
   } else if (!payload.files.deleted) {
-    console.log(`Files were already missing: ${formatPathForHuman(payload.store.root)}`);
+    console.log(`ファイルは既にありませんでした: ${formatPathForHuman(payload.store.root)}`);
   }
 
   for (const status of payload.status) {
-    console.log(`${status.severity === 'error' ? 'Issue' : 'Note'}: ${status.message}`);
+    console.log(`${status.severity === 'error' ? '問題' : 'メモ'}: ${status.message}`);
   }
 }
 
@@ -447,9 +447,9 @@ function printListHuman(payload: StoreListOutput): void {
     return;
   }
 
-  console.log(`OpenSpec stores (${payload.stores.length})`);
+  console.log(`OpenSpec ストア (${payload.stores.length})`);
   console.log('');
-  console.log(`${'ID'.padEnd(16)}Location`);
+  console.log(`${'ID'.padEnd(16)}場所`);
   for (const store of payload.stores) {
     console.log(`${store.id.padEnd(16)}${store.root}`);
   }
@@ -457,26 +457,26 @@ function printListHuman(payload: StoreListOutput): void {
 
 function formatMetadataHuman(store: StoreDoctorOutput['stores'][number]): string {
   if (store.metadata.valid) return 'ok';
-  if (store.metadata.present === false) return 'missing';
-  if (store.metadata.present === null) return 'unknown';
-  return 'invalid';
+  if (store.metadata.present === false) return 'なし';
+  if (store.metadata.present === null) return '不明';
+  return '無効';
 }
 
 function formatDoctorGitHuman(store: StoreDoctorOutput['stores'][number]): string {
-  if (store.git.is_repository === null) return 'unknown';
-  if (!store.git.is_repository) return 'not detected';
+  if (store.git.is_repository === null) return '不明';
+  if (!store.git.is_repository) return '未検出';
 
   const fact = (value: boolean | null, yes: string, no: string): string =>
-    value === null ? 'unknown' : value ? yes : no;
+    value === null ? '不明' : value ? yes : no;
 
-  return `repository detected (commits: ${fact(store.git.has_commits, 'yes', 'none')}, uncommitted changes: ${fact(store.git.has_uncommitted_changes, 'yes', 'no')}, remote: ${fact(store.git.has_remote, 'yes', 'none')})`;
+  return `リポジトリ検出済み (コミット: ${fact(store.git.has_commits, 'あり', 'なし')}, 未コミット変更: ${fact(store.git.has_uncommitted_changes, 'あり', 'なし')}, remote: ${fact(store.git.has_remote, 'あり', 'なし')})`;
 }
 
 function formatOpenSpecRootHuman(store: StoreDoctorOutput['stores'][number]): string {
   if (store.openspec_root.healthy) return 'ok';
-  if (store.openspec_root.present === false) return 'missing';
-  if (store.openspec_root.present === null) return 'unknown';
-  return 'incomplete';
+  if (store.openspec_root.present === false) return 'なし';
+  if (store.openspec_root.present === null) return '不明';
+  return '未完了';
 }
 
 function printDoctorHuman(payload: StoreDoctorOutput): void {
@@ -485,16 +485,16 @@ function printDoctorHuman(payload: StoreDoctorOutput): void {
     return;
   }
 
-  console.log('ストアDoctor');
+  console.log('ストア診断');
   for (const store of payload.stores) {
     console.log('');
     console.log(store.id);
-    console.log(`  Location: ${store.root}`);
-    console.log(`  OpenSpec Root: ${formatOpenSpecRootHuman(store)}`);
-    console.log(`  Metadata: ${formatMetadataHuman(store)}`);
+    console.log(`  場所: ${store.root}`);
+    console.log(`  OpenSpec ルート: ${formatOpenSpecRootHuman(store)}`);
+    console.log(`  メタデータ: ${formatMetadataHuman(store)}`);
     const remoteLine = store.metadata.remote ?? store.git.origin_url;
     if (remoteLine) {
-      console.log(`  Remote: ${remoteLine}`);
+      console.log(`  リモート: ${remoteLine}`);
     }
     console.log(`  Git: ${formatDoctorGitHuman(store)}`);
 
@@ -507,7 +507,7 @@ function printDoctorHuman(payload: StoreDoctorOutput): void {
     for (const status of store.status) {
       console.log(`    - ${status.message}`);
       if (status.fix) {
-        console.log(`      Fix: ${status.fix}`);
+        console.log(`      修正: ${status.fix}`);
       }
     }
   }
@@ -530,7 +530,7 @@ class StoreCommand {
         return;
       }
 
-      printMutationHuman('Store ready', payload, result.remotes);
+      printMutationHuman('ストア準備完了', payload, result.remotes);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -569,7 +569,7 @@ class StoreCommand {
         return;
       }
 
-      printMutationHuman('Store registered', payload, result.remotes);
+      printMutationHuman('ストアを登録しました', payload, result.remotes);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -588,7 +588,7 @@ class StoreCommand {
         return;
       }
 
-      printCleanupHuman('Unregistered store', payload);
+      printCleanupHuman('ストアの登録を解除しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -609,7 +609,7 @@ class StoreCommand {
         return;
       }
 
-      printCleanupHuman('Removed store', payload);
+      printCleanupHuman('ストアを削除しました', payload);
     } catch (error) {
       this.handleFailure(
         options.json,
@@ -670,11 +670,11 @@ export function registerStoreCommand(program: Command): void {
   store
     .command('setup [id]')
     .description('ローカルストアを作成して登録')
-    .option('--path <path>', 'Folder where the store should live (for example ~/openspec/<id>)')
-    .option('--init-git', 'Initialize a Git repository with an initial commit (default)')
-    .option('--no-init-git', 'Skip every Git action: no init, no initial commit')
-    .option('--remote <url>', 'Canonical clone source recorded in store.yaml')
-    .option('--json', 'Output as JSON')
+    .option('--path <path>', 'ストアを配置するフォルダー（例: ~/openspec/<id>）')
+    .option('--init-git', 'Git リポジトリを初期化し、初回コミットを作成（デフォルト）')
+    .option('--no-init-git', 'すべての Git 操作を省略（init も初回コミットも行いません）')
+    .option('--remote <url>', 'store.yaml に記録する正規 clone 元')
+    .option('--json', 'JSON として出力')
     .action(async (id: string | undefined, options: StoreSetupOptions) => {
       await storeCommand.setup(id, options);
     });
@@ -682,9 +682,9 @@ export function registerStoreCommand(program: Command): void {
   store
     .command('register [path]')
     .description('既存のローカルストアを登録')
-    .option('--id <id>', 'Store id; defaults to metadata or folder name')
-    .option('--yes', 'Confirm creating store identity metadata for a healthy OpenSpec Root')
-    .option('--json', 'Output as JSON')
+    .option('--id <id>', 'ストア ID（デフォルトはメタデータまたはフォルダー名）')
+    .option('--yes', '正常な OpenSpec ルートにストア識別メタデータを作成することを確認')
+    .option('--json', 'JSON として出力')
     .action(async (inputPath: string | undefined, options: StoreRegisterOptions) => {
       await storeCommand.register(inputPath, options);
     });
@@ -692,7 +692,7 @@ export function registerStoreCommand(program: Command): void {
   store
     .command('unregister <id>')
     .description('ファイルを削除せずにローカルストアの登録を解除')
-    .option('--json', 'Output as JSON')
+    .option('--json', 'JSON として出力')
     .action(async (id: string, options: StoreJsonOptions) => {
       await storeCommand.unregister(id, options);
     });
@@ -700,8 +700,8 @@ export function registerStoreCommand(program: Command): void {
   store
     .command('remove <id>')
     .description('ローカルストアの登録を解除し、ローカルフォルダーを削除')
-    .option('--yes', 'Confirm local store folder deletion')
-    .option('--json', 'Output as JSON')
+    .option('--yes', 'ローカルストアフォルダーの削除を確認')
+    .option('--json', 'JSON として出力')
     .action(async (id: string, options: StoreRemoveOptions) => {
       await storeCommand.remove(id, options);
     });
@@ -710,7 +710,7 @@ export function registerStoreCommand(program: Command): void {
     .command('list')
     .alias('ls')
     .description('ローカルに登録されたストアを一覧表示')
-    .option('--json', 'Output as JSON')
+    .option('--json', 'JSON として出力')
     .action(async (options: StoreJsonOptions) => {
       await storeCommand.list(options);
     });
@@ -718,7 +718,7 @@ export function registerStoreCommand(program: Command): void {
   store
     .command('doctor [id]')
     .description('ローカルストアの登録とメタデータを確認')
-    .option('--json', 'Output as JSON')
+    .option('--json', 'JSON として出力')
     .action(async (id: string | undefined, options: StoreJsonOptions) => {
       await storeCommand.doctor(id, options);
     });
@@ -758,15 +758,15 @@ export function registerStoreCommand(program: Command): void {
     if (operands.includes('--json')) {
       const message =
         attempted.length > 0
-          ? `Unknown command '${attempted[0]}' for 'openspec store'. Store subcommands: ${storeSubcommandsLine}.`
-          : `Missing subcommand for 'openspec store'. Store subcommands: ${storeSubcommandsLine}.`;
+          ? `'openspec store' の不明なコマンド '${attempted[0]}' です。ストアサブコマンド: ${storeSubcommandsLine}。`
+          : `'openspec store' のサブコマンドがありません。ストアサブコマンド: ${storeSubcommandsLine}。`;
       printJson({
         status: [
           {
             severity: 'error',
             code: 'unknown_store_subcommand',
             message,
-            fix: 'Run a store subcommand, or use the lifecycle command with --store <id>.',
+            fix: 'ストアサブコマンドを実行するか、通常のライフサイクルコマンドに --store <id> を指定してください。',
           },
         ],
       });
@@ -784,11 +784,11 @@ export function registerStoreCommand(program: Command): void {
     }
     console.error(
       attempted.length > 0
-        ? `Error: unknown command '${attempted[0]}' for 'openspec store'.`
-        : "Error: missing subcommand for 'openspec store'."
+        ? `エラー: 'openspec store' の不明なコマンド '${attempted[0]}' です。`
+        : "エラー: 'openspec store' のサブコマンドがありません。"
     );
     console.error(
-      `Store subcommands manage store registration: ${storeSubcommandsLine}.`
+      `ストアサブコマンドはストア登録を管理します: ${storeSubcommandsLine}。`
     );
     console.error(
       'ストア内で変更を作成または操作するには、通常のコマンドに --store を指定します。例:'

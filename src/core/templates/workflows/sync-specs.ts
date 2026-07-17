@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-sync-specs',
-    description: 'Sync delta specs from a change to main specs. Use when the user wants to update main specs with changes from a delta spec, without archiving the change.',
+    description: '変更の delta spec を本仕様へ同期します。変更をアーカイブせずに、delta spec の内容で本仕様を更新したいときに使用します。',
     instructions: `変更からメインスペックへのデルタスペックを同期します。
 
 これは**エージェント主導**の操作です。デルタ仕様を読み取り、メイン仕様を直接編集して変更を適用します。これにより、インテリジェントなマージ (要件全体をコピーせずにシナリオを追加するなど) が可能になります。
@@ -92,28 +92,28 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 \`\`\`markdown
 ## ADDED Requirements
 
-### Requirement: New Feature
-The system SHALL do something new.
+### Requirement: 新機能
+システムは新しい処理を行うこと。
 
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
+#### Scenario: 基本ケース
+- **WHEN** ユーザーが X を行う
+- **THEN** システムは Y を行う
 
 ## MODIFIED Requirements
 
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
+### Requirement: 既存機能
+#### Scenario: 追加する新しいシナリオ
+- **WHEN** ユーザーが A を行う
+- **THEN** システムは B を行う
 
 ## REMOVED Requirements
 
-### Requirement: Deprecated Feature
+### Requirement: 非推奨機能
 
 ## RENAMED Requirements
 
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
+- FROM: \`### Requirement: 旧名称\`
+- TO: \`### Requirement: 新名称\`
 \`\`\`
 
 **重要な原則: インテリジェントなマージ**
@@ -126,19 +126,19 @@ The system SHALL do something new.
 **成功時の出力**
 
 \`\`\`
-## Specs Synced: <change-name>
+## 仕様同期完了: <change-name>
 
-Updated main specs:
+更新した本仕様:
 
 **<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
+- 要件を追加: "新機能"
+- 要件を変更: "既存機能" (シナリオ 1 件を追加)
 
 **<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
+- 新しい spec ファイルを作成
+- 要件を追加: "別機能"
 
-Main specs are now updated. The change remains active - archive when implementation is complete.
+本仕様を更新しました。この変更はまだ進行中です。実装が完了したらアーカイブしてください。
 \`\`\`
 
 **ガードレール**
@@ -146,9 +146,9 @@ Main specs are now updated. The change remains active - archive when implementat
 - デルタに記載されていない既存のコンテンツを保持する
 - 不明な点がある場合は、説明を求めます
 - 進行中に何を変更しているかを示す
-- The operation should be idempotent - running twice should give same result`,
+- 操作は冪等であるべきです。2回実行しても同じ結果になるようにしてください`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -156,7 +156,7 @@ Main specs are now updated. The change remains active - archive when implementat
 export function getOpsxSyncCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Sync',
-    description: 'Sync delta specs from a change to main specs',
+    description: '変更の delta spec を本仕様へ同期する',
     category: 'Workflow',
     tags: ['workflow', 'specs', 'experimental'],
     content: `変更からメインスペックへのデルタスペックを同期します。
@@ -240,28 +240,28 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 \`\`\`markdown
 ## ADDED Requirements
 
-### Requirement: New Feature
-The system SHALL do something new.
+### Requirement: 新機能
+システムは新しい処理を行うこと。
 
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
+#### Scenario: 基本ケース
+- **WHEN** ユーザーが X を行う
+- **THEN** システムは Y を行う
 
 ## MODIFIED Requirements
 
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
+### Requirement: 既存機能
+#### Scenario: 追加する新しいシナリオ
+- **WHEN** ユーザーが A を行う
+- **THEN** システムは B を行う
 
 ## REMOVED Requirements
 
-### Requirement: Deprecated Feature
+### Requirement: 非推奨機能
 
 ## RENAMED Requirements
 
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
+- FROM: \`### Requirement: 旧名称\`
+- TO: \`### Requirement: 新名称\`
 \`\`\`
 
 **重要な原則: インテリジェントなマージ**
@@ -274,19 +274,19 @@ The system SHALL do something new.
 **成功時の出力**
 
 \`\`\`
-## Specs Synced: <change-name>
+## 仕様同期完了: <change-name>
 
-Updated main specs:
+更新した本仕様:
 
 **<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
+- 要件を追加: "新機能"
+- 要件を変更: "既存機能" (シナリオ 1 件を追加)
 
 **<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
+- 新しい spec ファイルを作成
+- 要件を追加: "別機能"
 
-Main specs are now updated. The change remains active - archive when implementation is complete.
+本仕様を更新しました。この変更はまだ進行中です。実装が完了したらアーカイブしてください。
 \`\`\`
 
 **ガードレール**
@@ -294,6 +294,6 @@ Main specs are now updated. The change remains active - archive when implementat
 - デルタに記載されていない既存のコンテンツを保持する
 - 不明な点がある場合は、説明を求めます
 - 進行中に何を変更しているかを示す
-- 操作は冪等である必要があります - 2 回実行しても同じ結果が得られるはずです`
+- 操作は冪等であるべきです。2回実行しても同じ結果になるようにしてください`
   };
 }

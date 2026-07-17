@@ -156,11 +156,11 @@ function invalidWorksetsFileError(
   options: WorksetPathOptions
 ): StoreError {
   return new StoreError(
-    `Invalid worksets file: ${message}`,
+    `ワークセットファイルが不正です: ${message}`,
     'invalid_workset_file',
     {
       target: 'workset.file',
-      fix: `Repair or remove ${getWorksetsFilePath(options)}.`,
+      fix: `${getWorksetsFilePath(options)} を修復するか削除してください。`,
     }
   );
 }
@@ -284,14 +284,14 @@ export function worksetNotFoundError(
     a.localeCompare(b)
   );
   return new StoreError(
-    `Workset '${name}' is not saved on this machine.`,
+    `ワークセット '${name}' はこのマシンに保存されていません。`,
     'workset_not_found',
     {
       target: 'workset.name',
       fix:
         savedNames.length > 0
-          ? `Saved worksets: ${savedNames.join(', ')}. See them with: openspec workset list`
-          : `Create it first: openspec workset create ${name}`,
+          ? `保存済みワークセット: ${savedNames.join(', ')}。確認するには: openspec workset list`
+          : `先に作成してください: openspec workset create ${name}`,
     }
   );
 }
@@ -302,11 +302,11 @@ export function withWorkset(
 ): WorksetsState {
   if (state.worksets[workset.name] !== undefined) {
     throw new StoreError(
-      `Workset '${workset.name}' already exists.`,
+      `ワークセット '${workset.name}' は既に存在します。`,
       'workset_exists',
       {
         target: 'workset.name',
-        fix: `Choose another name, or remove it first: openspec workset remove ${workset.name}`,
+        fix: `別の名前を選ぶか、先に削除してください: openspec workset remove ${workset.name}`,
       }
     );
   }

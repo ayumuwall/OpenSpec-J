@@ -50,6 +50,36 @@ describe('skill-generation', () => {
       }
     });
 
+    it('keeps generated skill descriptions localized', () => {
+      const untranslatedDescriptionFragments = [
+        'Use when',
+        'Experimental',
+        'Archive a',
+        'Continue working',
+        'Create a change',
+        'Enter explore',
+        'Fast-forward',
+        'Guided onboarding',
+        'Implement tasks',
+        'Propose a',
+        'Start a',
+        'Sync delta',
+        'Update a',
+        'Verify implementation',
+      ];
+
+      for (const { template, dirName } of getSkillTemplates()) {
+        for (const fragment of untranslatedDescriptionFragments) {
+          expect(template.description, `${dirName} description`).not.toContain(fragment);
+        }
+
+        const content = generateSkillContent(template, 'TEST');
+        for (const fragment of untranslatedDescriptionFragments) {
+          expect(content, `${dirName} SKILL.md`).not.toContain(`description: ${fragment}`);
+        }
+      }
+    });
+
     it('should have unique workflow IDs', () => {
       const templates = getSkillTemplates();
       const ids = templates.map(t => t.workflowId);
@@ -117,6 +147,29 @@ describe('skill-generation', () => {
       expect(ids).toContain('verify');
       expect(ids).toContain('onboard');
       expect(ids).toContain('propose');
+    });
+
+    it('keeps generated command descriptions localized', () => {
+      const untranslatedDescriptionFragments = [
+        'Experimental',
+        'Archive a',
+        'Continue working',
+        'Create a change',
+        'Enter explore',
+        'Guided onboarding',
+        'Implement tasks',
+        'Propose a',
+        'Start a',
+        'Sync delta',
+        'Update a',
+        'Verify implementation',
+      ];
+
+      for (const { template, id } of getCommandTemplates()) {
+        for (const fragment of untranslatedDescriptionFragments) {
+          expect(template.description, `${id} command description`).not.toContain(fragment);
+        }
+      }
     });
 
     it('should filter by workflow IDs when provided', () => {

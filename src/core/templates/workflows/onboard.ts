@@ -10,24 +10,24 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getOnboardSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-onboard',
-    description: 'Guided onboarding for OpenSpec - walk through a complete workflow cycle with narration and real codebase work.',
+    description: 'OpenSpec のガイド付きオンボーディングです。説明を交えながら、実際のコードベース作業を通じて完全なワークフローサイクルを体験します。',
     instructions: getOnboardInstructions(),
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
 
 function getOnboardInstructions(): string {
-  return `Guide the user through their first complete OpenSpec workflow cycle. This is a teaching experience—you'll do real work in their codebase while explaining each step.
+  return `ユーザーを初めての完全な OpenSpec ワークフローサイクルへ案内してください。これは学習体験です。各ステップを説明しながら、実際にユーザーのコードベースで作業します。
 
 ${STORE_SELECTION_GUIDANCE}
 
 ---
 
-## Preflight
+## 事前確認
 
-Before starting, check if the OpenSpec CLI is installed:
+開始前に、OpenSpec CLI がインストールされているか確認します:
 
 \`\`\`bash
 # Unix/macOS
@@ -36,51 +36,51 @@ openspec --version 2>&1 || echo "CLI_NOT_INSTALLED"
 # if (Get-Command openspec -ErrorAction SilentlyContinue) { openspec --version } else { echo "CLI_NOT_INSTALLED" }
 \`\`\`
 
-**If CLI not installed:**
-> OpenSpec CLI is not installed. Install it first, then come back to \`/opsx:onboard\`.
+**CLI が未インストールの場合:**
+> OpenSpec CLI がインストールされていません。先にインストールしてから、\`/opsx:onboard\` に戻ってください。
 
-Stop here if not installed.
-
----
-
-## Phase 1: Welcome
-
-Display:
-
-\`\`\`
-## Welcome to OpenSpec!
-
-I'll walk you through a complete change cycle—from idea to implementation—using a real task in your codebase. Along the way, you'll learn the workflow by doing it.
-
-**What we'll do:**
-1. Pick a small, real task in your codebase
-2. Explore the problem briefly
-3. Create a change (the container for our work)
-4. Build the artifacts: proposal → specs → design → tasks
-5. Implement the tasks
-6. Archive the completed change
-
-**Time:** ~15-20 minutes
-
-Let's start by finding something to work on.
-\`\`\`
+未インストールの場合はここで停止します。
 
 ---
 
-## Phase 2: Task Selection
+## フェーズ 1: ようこそ
 
-### Codebase Analysis
+表示:
 
-Scan the codebase for small improvement opportunities. Look for:
+\`\`\`
+## OpenSpec へようこそ！
 
-1. **TODO/FIXME comments** - Search for \`TODO\`, \`FIXME\`, \`HACK\`, \`XXX\` in code files
-2. **Missing error handling** - \`catch\` blocks that swallow errors, risky operations without try-catch
-3. **Functions without tests** - Cross-reference \`src/\` with test directories
-4. **Type issues** - \`any\` types in TypeScript files (\`: any\`, \`as any\`)
-5. **Debug artifacts** - \`console.log\`, \`console.debug\`, \`debugger\` statements in non-debug code
-6. **Missing validation** - User input handlers without validation
+あなたのコードベースにある実際のタスクを使って、アイデアから実装までの完全な変更サイクルを案内します。実際に手を動かしながらワークフローを学びます。
 
-Also check recent git activity:
+**やること:**
+1. コードベース内の小さな実タスクを選ぶ
+2. 問題を簡単に探索する
+3. change（作業の入れ物）を作成する
+4. アーティファクトを作る: proposal → specs → design → tasks
+5. タスクを実装する
+6. 完了した変更をアーカイブする
+
+**所要時間:** 約15〜20分
+
+まず、取り組む対象を探しましょう。
+\`\`\`
+
+---
+
+## フェーズ 2: タスク選択
+
+### コードベース分析
+
+コードベースをスキャンして、小さな改善機会を探します。見るポイント:
+
+1. **TODO/FIXME コメント** - コード内の \`TODO\`, \`FIXME\`, \`HACK\`, \`XXX\` を検索
+2. **エラーハンドリング不足** - エラーを握りつぶす \`catch\`、try-catch なしの危険な操作
+3. **テストがない関数** - \`src/\` とテストディレクトリを突き合わせる
+4. **型の問題** - TypeScript ファイル内の \`any\` 型（\`: any\`, \`as any\`）
+5. **デバッグの残骸** - 通常コード内の \`console.log\`, \`console.debug\`, \`debugger\`
+6. **バリデーション不足** - バリデーションのないユーザー入力ハンドラー
+
+最近の git 活動も確認します:
 \`\`\`bash
 # Unix/macOS
 git log --oneline -10 2>/dev/null || echo "No git history"
@@ -88,34 +88,34 @@ git log --oneline -10 2>/dev/null || echo "No git history"
 # git log --oneline -10 2>$null; if ($LASTEXITCODE -ne 0) { echo "No git history" }
 \`\`\`
 
-### Present Suggestions
+### 提案を提示
 
-From your analysis, present 3-4 specific suggestions:
+分析結果から、具体的な提案を3〜4件提示します:
 
 \`\`\`
-## Task Suggestions
+## タスク候補
 
-Based on scanning your codebase, here are some good starter tasks:
+コードベースを確認したところ、最初に取り組みやすそうなタスクは次の通りです:
 
-**1. [Most promising task]**
-   Location: \`src/path/to/file.ts:42\`
-   Scope: ~1-2 files, ~20-30 lines
-   Why it's good: [brief reason]
+**1. [最もよさそうなタスク]**
+   場所: \`src/path/to/file.ts:42\`
+   範囲: 約1〜2ファイル、20〜30行程度
+   良い理由: [簡単な理由]
 
-**2. [Second task]**
-   Location: \`src/another/file.ts\`
-   Scope: ~1 file, ~15 lines
-   Why it's good: [brief reason]
+**2. [2つ目のタスク]**
+   場所: \`src/another/file.ts\`
+   範囲: 約1ファイル、15行程度
+   良い理由: [簡単な理由]
 
-**3. [Third task]**
-   Location: [location]
-   Scope: [estimate]
-   Why it's good: [brief reason]
+**3. [3つ目のタスク]**
+   場所: [場所]
+   範囲: [見積もり]
+   良い理由: [簡単な理由]
 
-**4. Something else?**
-   Tell me what you'd like to work on.
+**4. 他のもの**
+   取り組みたい内容を教えてください。
 
-Which task interests you? (Pick a number or describe your own)
+どのタスクに興味がありますか？（番号で選ぶか、独自の内容を説明してください）
 \`\`\`
 
 **見つからない場合:** ユーザーに作りたいものを聞く:
@@ -156,7 +156,7 @@ Which task interests you? (Pick a number or describe your own)
 - 注意点をメモする
 
 \`\`\`
-## Quick Exploration
+## クイック探索
 
 [簡単な分析: 見つけた点、注意点]
 
@@ -169,37 +169,37 @@ explore モード（\`/opsx:explore\`）は、実装前にこうした調査・�
 では、この作業を入れるための change を作成します。
 \`\`\`
 
-**PAUSE** - 続行前にユーザーの了承を待つ。
+**一時停止** - 続行前にユーザーの了承を待つ。
 
 ---
 
 ## フェーズ 4: 変更を作成
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
-## Creating a Change
+## 変更を作成
 
 OpenSpec の "change" は作業のための箱です。\`openspec/changes/<name>/\` に置かれ、proposal/specs/design/tasks などのアーティファクトを含みます。
 
 では、このタスク用に 1 つ作成します。
 \`\`\`
 
-**DO:** kebab-case 名で change を作成:
+**実行:** kebab-case 名で change を作成:
 \`\`\`bash
 openspec new change "<derived-name>"
 \`\`\`
 
-**SHOW:**
+**表示:**
 \`\`\`
-Created: <changeRoot from status JSON>
+作成済み: <status JSON の changeRoot>
 
-The folder structure:
+フォルダー構造:
 \`\`\`
 <changeRoot>/
-├── proposal.md    ← Why we're doing this (empty, we'll fill it)
-├── design.md      ← How we'll build it (empty)
-├── specs/         ← Detailed requirements (empty)
-└── tasks.md       ← Implementation checklist (empty)
+├── proposal.md    ← なぜ行うか（空。これから埋める）
+├── design.md      ← どう作るか（空）
+├── specs/         ← 詳細な要件（空）
+└── tasks.md       ← 実装チェックリスト（空）
 \`\`\`
 
 では最初のアーティファクト、proposal を作りましょう。
@@ -211,97 +211,97 @@ The folder structure:
 
 **EXPLAIN:**
 \`\`\`
-## The Proposal
+## Proposal
 
 proposal は、この変更を **なぜ** するのか、**何を** するのかを大まかにまとめたものです。作業の "エレベーターピッチ" です。
 
 タスク内容に基づいてドラフトします。
 \`\`\`
 
-**DO:** proposal のドラフトを作成（まだ保存しない）:
+**実行:** proposal のドラフトを作成（まだ保存しない）:
 
 \`\`\`
-Here's a draft proposal:
+proposal のドラフトです:
 
 ---
 
 ## Why
 
-[1-2 sentences explaining the problem/opportunity]
+[問題/機会を説明する1〜2文]
 
 ## What Changes
 
-[Bullet points of what will be different]
+[何が変わるかの箇条書き]
 
 ## Capabilities
 
 ### New Capabilities
-- \`<capability-name>\`: [brief description]
+- \`<capability-name>\`: [簡単な説明]
 
 ### Modified Capabilities
-<!-- If modifying existing behavior -->
+<!-- 既存の挙動を変更する場合 -->
 
 ## Impact
 
-- \`src/path/to/file.ts\`: [what changes]
-- [other files if applicable]
+- \`src/path/to/file.ts\`: [変更内容]
+- [該当する場合は他のファイル]
 
 ---
 
-Does this capture the intent? I can adjust before we save it.
+この内容で意図を捉えられていますか？保存前に調整できます。
 \`\`\`
 
-**PAUSE** - Wait for user approval/feedback.
+**一時停止** - ユーザーの承認/フィードバックを待つ。
 
-After approval, save the proposal:
+承認後、proposal を保存:
 \`\`\`bash
 openspec instructions proposal --change "<name>" --json
 \`\`\`
-Then write the content to the \`resolvedOutputPath\` from \`openspec instructions proposal --change "<name>" --json\`.
+次に、\`openspec instructions proposal --change "<name>" --json\` の \`resolvedOutputPath\` に内容を書き込みます。
 
 \`\`\`
-Proposal saved. This is your "why" document—you can always come back and refine it as understanding evolves.
+Proposal を保存しました。これは "why" の文書です。理解が深まったらいつでも戻って洗練できます。
 
-Next up: specs.
+次は specs です。
 \`\`\`
 
 ---
 
-## Phase 6: Specs
+## フェーズ 6: Specs
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
 ## Specs
 
-Specs define **what** we're building in precise, testable terms. They use a requirement/scenario format that makes expected behavior crystal clear.
+Specs は、**何を** 作るかを正確でテスト可能な形で定義します。期待される挙動を明確にするため、requirement/scenario 形式を使います。
 
-For a small task like this, we might only need one spec file.
+このような小さなタスクなら、spec ファイルは1つだけで足りるかもしれません。
 \`\`\`
 
-**DO:** Resolve where the spec file should be created:
+**実行:** spec ファイルの作成先を解決:
 \`\`\`bash
 openspec instructions specs --change "<name>" --json
-# Use resolvedOutputPath from the JSON. If it is a glob, choose the concrete file path using the schema instruction and the change's context.
+# JSON の resolvedOutputPath を使う。glob の場合は、スキーマ指示と変更の文脈から具体的なファイルパスを選ぶ。
 \`\`\`
 
-Draft the spec content:
+spec 内容をドラフト:
 
 \`\`\`
-Here's the spec:
+spec です:
 
 ---
 
 ## ADDED Requirements
 
-### Requirement: <Name>
+### Requirement: <名前>
 
 <システムが行うべきことの説明>
 
-#### Scenario: <Scenario name>
+#### Scenario: <シナリオ名>
 
-- **WHEN** <trigger condition>
-- **THEN** <expected outcome>
-- **AND** <additional outcome if needed>
+- **WHEN** <トリガー条件>
+- **THEN** <期待される結果>
+- **AND** <必要に応じた追加の結果>
 
 ---
 
@@ -314,7 +314,7 @@ Here's the spec:
 
 ## フェーズ 7: Design
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
 ## Design
 
@@ -323,16 +323,16 @@ design は **どう** 作るかを記録します。技術的な意思決定、�
 小さな変更なら簡潔で構いません。すべての変更で詳細な議論は不要です。
 \`\`\`
 
-**DO:** design.md をドラフト:
+**実行:** design.md をドラフト:
 
 \`\`\`
-Here's the design:
+design です:
 
 ---
 
 ## Context
 
-[現状の簡潔な文脈]
+[現在の状況の簡潔な文脈]
 
 ## Goals / Non-Goals
 
@@ -344,7 +344,7 @@ Here's the design:
 
 ## Decisions
 
-### Decision 1: [Key decision]
+### Decision 1: [主要な意思決定]
 
 [アプローチと理由]
 
@@ -359,7 +359,7 @@ Here's the design:
 
 ## フェーズ 8: Tasks
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
 ## Tasks
 
@@ -368,28 +368,28 @@ Here's the design:
 小さく、明確で、順序立てて書くことが重要です。
 \`\`\`
 
-**DO:** specs/design を元に tasks を作成:
+**実行:** specs/design を元に tasks を作成:
 
 \`\`\`
-Here are the implementation tasks:
+実装タスクは次の通りです:
 
 ---
 
-## 1. [Category or file]
+## 1. [カテゴリまたはファイル]
 
-- [ ] 1.1 [Specific task]
-- [ ] 1.2 [Specific task]
+- [ ] 1.1 [具体的なタスク]
+- [ ] 1.2 [具体的なタスク]
 
-## 2. Verify
+## 2. 検証
 
-- [ ] 2.1 [Verification step]
+- [ ] 2.1 [検証手順]
 
 ---
 
 各チェックボックスが apply フェーズの単位作業になります。実装に進めますか？
 \`\`\`
 
-**PAUSE** - 実装に進む準備ができたか確認する。
+**一時停止** - 実装に進む準備ができたか確認する。
 
 \`openspec/changes/<name>/tasks.md\` に保存。
 
@@ -397,16 +397,16 @@ Here are the implementation tasks:
 
 ## フェーズ 9: Apply（実装）
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
 ## 実装
 
 各タスクを実装しながらチェックを付けていきます。タスクごとに宣言し、必要なら specs/design に触れます。
 \`\`\`
 
-**DO:** 各タスクで:
+**実行:** 各タスクで:
 
-1. 「タスク N に取り組み中: [description]」と宣言
+1. 「タスク N に取り組み中: [説明]」と宣言
 2. コードベースに実装
 3. specs/design を自然に参照: 「spec では X とあるので Y を実装」
 4. tasks.md を更新: \`- [ ]\` → \`- [x]\`
@@ -420,8 +420,8 @@ Here are the implementation tasks:
 ## 実装完了
 
 すべてのタスクが完了しました:
-- [x] Task 1
-- [x] Task 2
+- [x] タスク 1
+- [x] タスク 2
 - [x] ...
 
 変更の実装が完了しました。最後にアーカイブします。
@@ -431,7 +431,7 @@ Here are the implementation tasks:
 
 ## フェーズ 10: Archive
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
 ## アーカイブ中
 
@@ -440,134 +440,134 @@ Here are the implementation tasks:
 アーカイブは意思決定の履歴になる。後から「なぜそう作ったか」を参照できる。
 \`\`\`
 
-**DO:**
+**実行:**
 \`\`\`bash
 openspec archive "<name>"
 \`\`\`
 
-**SHOW:**
+**表示:**
 \`\`\`
-Archived to: \`<planningHome.changesDir>/archive/YYYY-MM-DD-<name>/\`
+アーカイブ先: \`<planningHome.changesDir>/archive/YYYY-MM-DD-<name>/\`
 
-The change is now part of your project's history. The code is in your codebase, the decision record is preserved.
+この変更はプロジェクト履歴の一部になりました。コードはコードベースに入り、意思決定の記録も保持されています。
 \`\`\`
 
 ---
 
-## Phase 11: Recap & Next Steps
+## フェーズ 11: 振り返りと次のステップ
 
 \`\`\`
-## Congratulations!
+## 完了しました！
 
-You just completed a full OpenSpec cycle:
+OpenSpec の完全なサイクルを完了しました:
 
-1. **Explore** - Thought through the problem
-2. **New** - Created a change container
-3. **Proposal** - Captured WHY
-4. **Specs** - Defined WHAT in detail
-5. **Design** - Decided HOW
-6. **Tasks** - Broke it into steps
-7. **Apply** - Implemented the work
-8. **Archive** - Preserved the record
+1. **Explore** - 問題を考え抜いた
+2. **New** - change の入れ物を作成した
+3. **Proposal** - WHY を記録した
+4. **Specs** - WHAT を詳しく定義した
+5. **Design** - HOW を決めた
+6. **Tasks** - 手順に分解した
+7. **Apply** - 作業を実装した
+8. **Archive** - 記録を保持した
 
-This same rhythm works for any size change—a small fix or a major feature.
+この同じリズムは、小さな修正から大きな機能まで、あらゆる規模の変更に使えます。
 
 ---
 
-## Command Reference
+## コマンドリファレンス
 
-**Core workflow:**
+**基本ワークフロー:**
 
- | Command           | What it does                               |
+ | コマンド          | 役割                                       |
  |-------------------|--------------------------------------------|
- | \`/opsx:propose\` | Create a change and generate all artifacts |
- | \`/opsx:explore\` | Think through problems before/during work  |
- | \`/opsx:apply\`   | Implement tasks from a change              |
- | \`/opsx:archive\` | Archive a completed change                 |
+ | \`/opsx:propose\` | change を作成し、全アーティファクトを生成 |
+ | \`/opsx:explore\` | 作業前/作業中に問題を考える               |
+ | \`/opsx:apply\`   | change のタスクを実装                     |
+ | \`/opsx:archive\` | 完了した変更をアーカイブ                  |
 
-**Additional commands:**
+**追加コマンド:**
 
- | Command            | What it does                                             |
+ | コマンド           | 役割                                                     |
  |--------------------|----------------------------------------------------------|
- | \`/opsx:new\`      | Start a new change, step through artifacts one at a time |
- | \`/opsx:continue\` | Continue working on an existing change                   |
- | \`/opsx:ff\`       | Fast-forward: create all artifacts at once               |
- | \`/opsx:verify\`   | Verify implementation matches artifacts                  |
+ | \`/opsx:new\`      | 新しい change を始め、アーティファクトを1つずつ進める   |
+ | \`/opsx:continue\` | 既存 change の作業を続ける                              |
+ | \`/opsx:ff\`       | fast-forward: 全アーティファクトを一度に作成             |
+ | \`/opsx:verify\`   | 実装がアーティファクトと一致するか検証                  |
 
 ---
 
-## What's Next?
+## 次にやること
 
-Try \`/opsx:propose\` on something you actually want to build. You've got the rhythm now!
+実際に作りたいものに対して \`/opsx:propose\` を試してください。流れはもう掴めています。
 \`\`\`
 
 ---
 
-## Graceful Exit Handling
+## 穏やかな終了処理
 
-### User wants to stop mid-way
+### ユーザーが途中で止めたい場合
 
-If the user says they need to stop, want to pause, or seem disengaged:
-
-\`\`\`
-No problem! Your change is saved at the \`changeRoot\` reported by \`openspec status --change "<name>" --json\`.
-
-To pick up where we left off later:
-- \`/opsx:continue <name>\` - Resume artifact creation
-- \`/opsx:apply <name>\` - Jump to implementation (if tasks exist)
-
-The work won't be lost. Come back whenever you're ready.
-\`\`\`
-
-Exit gracefully without pressure.
-
-### User just wants command reference
-
-If the user says they just want to see the commands or skip the tutorial:
+ユーザーが止めたい、一時停止したい、または関心が薄れているように見える場合:
 
 \`\`\`
-## OpenSpec Quick Reference
+問題ありません。変更は \`openspec status --change "<name>" --json\` が返す \`changeRoot\` に保存されています。
 
-**Core workflow:**
+後で続きから再開するには:
+- \`/opsx:continue <name>\` - アーティファクト作成を再開
+- \`/opsx:apply <name>\` - 実装へ進む（tasks がある場合）
 
- | Command                  | What it does                               |
+作業は失われません。準備ができたらいつでも戻ってください。
+\`\`\`
+
+圧をかけずに穏やかに終了します。
+
+### ユーザーがコマンドリファレンスだけを求める場合
+
+ユーザーがコマンドだけ見たい、またはチュートリアルをスキップしたいと言った場合:
+
+\`\`\`
+## OpenSpec クイックリファレンス
+
+**基本ワークフロー:**
+
+ | コマンド                 | 役割                                       |
  |--------------------------|--------------------------------------------|
- | \`/opsx:propose <name>\` | Create a change and generate all artifacts |
- | \`/opsx:explore\`        | Think through problems (no code changes)   |
- | \`/opsx:apply <name>\`   | Implement tasks                            |
- | \`/opsx:archive <name>\` | Archive when done                          |
+ | \`/opsx:propose <name>\` | change を作成し、全アーティファクトを生成 |
+ | \`/opsx:explore\`        | 問題を考える（コード変更なし）             |
+ | \`/opsx:apply <name>\`   | タスクを実装                               |
+ | \`/opsx:archive <name>\` | 完了時にアーカイブ                         |
 
-**Additional commands:**
+**追加コマンド:**
 
- | Command                   | What it does                        |
+ | コマンド                  | 役割                                |
  |---------------------------|-------------------------------------|
- | \`/opsx:new <name>\`      | Start a new change, step by step    |
- | \`/opsx:continue <name>\` | Continue an existing change         |
- | \`/opsx:ff <name>\`       | Fast-forward: all artifacts at once |
- | \`/opsx:verify <name>\`   | Verify implementation               |
+ | \`/opsx:new <name>\`      | 新しい change を段階的に開始        |
+ | \`/opsx:continue <name>\` | 既存 change を続行                  |
+ | \`/opsx:ff <name>\`       | fast-forward: 全アーティファクトを一括作成 |
+ | \`/opsx:verify <name>\`   | 実装を検証                          |
 
-Try \`/opsx:propose\` to start your first change.
+\`/opsx:propose\` で最初の change を始めてみてください。
 \`\`\`
 
-Exit gracefully.
+穏やかに終了します。
 
 ---
 
-## Guardrails
+## ガードレール
 
-- **Follow the EXPLAIN → DO → SHOW → PAUSE pattern** at key transitions (after explore, after proposal draft, after tasks, after archive)
-- **Keep narration light** during implementation—teach without lecturing
-- **Don't skip phases** even if the change is small—the goal is teaching the workflow
-- **Pause for acknowledgment** at marked points, but don't over-pause
-- **Handle exits gracefully**—never pressure the user to continue
-- **Use real codebase tasks**—don't simulate or use fake examples
-- **Adjust scope gently**—guide toward smaller tasks but respect user choice`;
+- 重要な遷移では **説明 → 実行 → 表示 → 一時停止** のパターンに従う（explore 後、proposal ドラフト後、tasks 後、archive 後）
+- 実装中の説明は軽く保つ。講義ではなく実践で教える
+- 変更が小さくてもフェーズを飛ばさない。目的はワークフローを教えること
+- 印のある箇所では了承を待つ。ただし止めすぎない
+- 終了は穏やかに扱う。続行を迫らない
+- 実際のコードベースのタスクを使う。シミュレーションや架空例は使わない
+- スコープは穏やかに調整する。小さめへ導くがユーザーの選択を尊重する`;
 }
 
 export function getOpsxOnboardCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Onboard',
-    description: 'Guided onboarding - walk through a complete OpenSpec workflow cycle with narration',
+    description: 'ガイド付きオンボーディングで、説明付きの完全な OpenSpec ワークフローサイクルを体験する',
     category: 'Workflow',
     tags: ['workflow', 'onboarding', 'tutorial', 'learning'],
     content: getOnboardInstructions(),

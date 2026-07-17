@@ -138,11 +138,11 @@ export function launchOpenerCommand(
   return new Promise((resolve, reject) => {
     const launchFailure = (error: unknown): StoreError =>
       new StoreError(
-        `Could not launch ${command.label}: ${asErrorMessage(error)}`,
+        `${command.label} を起動できませんでした: ${asErrorMessage(error)}`,
         'workset_launch_failed',
         {
           target: 'workset.tool',
-          fix: `Check that '${command.executable}' runs from this terminal, or pass --tool with another installed tool.`,
+          fix: `'${command.executable}' がこのターミナルから実行できることを確認するか、--tool で別のインストール済みツールを指定してください。`,
         }
       );
 
@@ -228,7 +228,7 @@ class WorksetCommand {
 
       console.log('');
       console.log(
-        `Saved workset '${workset.name}' (${workset.members.length} member${workset.members.length === 1 ? '' : 's'}) to your machine.`
+        `ワークセット '${workset.name}' をこのマシンに保存しました（メンバー ${workset.members.length} 件）。`
       );
 
       if (interactive && workset.tool !== undefined && table !== undefined) {
@@ -252,7 +252,7 @@ class WorksetCommand {
       }
 
       console.log(
-        `Open it any time with: openspec workset open ${workset.name}`
+        `いつでも次のコマンドで開けます: openspec workset open ${workset.name}`
       );
     } catch (error) {
       emitFailure(options.json, { workset: null, status: [] }, error, 'workset_error');
@@ -264,7 +264,7 @@ class WorksetCommand {
     options: WorksetCreateOptions
   ): Promise<Workset> {
     if (!name) {
-      throw new StoreError('Pass a workset name.', 'workset_name_required', {
+      throw new StoreError('ワークセット名を指定してください。', 'workset_name_required', {
         target: 'workset.name',
         fix: 'openspec workset create <name> --member <path>',
       });
@@ -275,7 +275,7 @@ class WorksetCommand {
     const memberFlags = options.member ?? [];
     if (memberFlags.length === 0) {
       throw new StoreError(
-        'Pass at least one member folder.',
+        '少なくとも 1 つのメンバーフォルダーを指定してください。',
         'workset_members_required',
         {
           target: 'workset.member',
@@ -343,7 +343,7 @@ class WorksetCommand {
           'workset_open_json_unsupported',
           {
             target: 'workset.tool',
-            fix: 'Inspect worksets with: openspec workset list --json',
+            fix: 'ワークセットを確認してください: openspec workset list --json',
           }
         );
       }
@@ -371,11 +371,11 @@ class WorksetCommand {
 
         if (surviving.length === 0) {
           throw new StoreError(
-            `No member folder of workset '${name}' exists on this machine.`,
+            `ワークセット '${name}' のメンバーフォルダーがこのマシンに存在しません。`,
             'workset_no_members_available',
             {
               target: 'workset.member',
-              fix: `Recompose it: openspec workset remove ${name} --yes && openspec workset create ${name} --member <path>`,
+              fix: `再構成してください: openspec workset remove ${name} --yes && openspec workset create ${name} --member <path>`,
             }
           );
         }
@@ -391,13 +391,13 @@ class WorksetCommand {
 
       for (const member of prepared.skipped) {
         console.error(
-          `Skipped '${member.name}' (${member.path} is not available).`
+          `'${member.name}' をスキップしました（${member.path} は利用できません）。`
         );
       }
       if (prepared.workset.members[0] !== prepared.surviving[0]) {
         const primary = prepared.surviving[0];
         console.error(
-          `Using '${primary.name}' (${primary.path}) as the primary for this open.`
+          `今回の open では '${primary.name}' (${primary.path}) をプライマリとして使用します。`
         );
       }
 
@@ -420,7 +420,7 @@ class WorksetCommand {
       } else {
         if (!isInteractive()) {
           throw new StoreError(
-            `Workset '${name}' has no saved tool.`,
+            `ワークセット '${name}' に保存済みツールがありません。`,
             'workset_tool_required',
             {
               target: 'workset.tool',
@@ -450,11 +450,11 @@ class WorksetCommand {
 
       if (opener.style === 'workspace-file') {
         console.log(
-          `Opening '${name}' in ${opener.label} (a window opens; this command returns).`
+          `'${name}' を ${opener.label} で開いています（ウィンドウを開いたらこのコマンドは終了します）。`
         );
       } else {
         console.log(
-          `Handing this terminal to ${opener.label} for '${name}' (the session ends when you exit).`
+          `'${name}' 用にこのターミナルを ${opener.label} に引き渡します（終了するとセッションも終わります）。`
         );
       }
 
@@ -472,7 +472,7 @@ class WorksetCommand {
           if (alternative !== null) {
             throw new StoreError(error.message, 'workset_launch_failed', {
               target: 'workset.tool',
-              fix: `Run: openspec workset open ${name} --tool ${alternative}`,
+              fix: `実行してください: openspec workset open ${name} --tool ${alternative}`,
             });
           }
         }
@@ -495,7 +495,7 @@ class WorksetCommand {
         !isPromptCancellationError(error)
       ) {
         console.error('手動で開く:');
-        console.error(`  Workspace file: ${prepared.codeWorkspacePath}`);
+        console.error(`  ワークスペースファイル: ${prepared.codeWorkspacePath}`);
         console.error('  メンバー:');
         for (const row of formatMemberRows(prepared.surviving)) {
           console.error(`    ${row}`);
@@ -518,7 +518,7 @@ class WorksetCommand {
 
         if (options.json || !isInteractive()) {
           throw new StoreError(
-            'Pass --yes to remove a workset non-interactively.',
+            '非対話でワークセットを削除するには --yes を指定してください。',
             'workset_remove_confirmation_required',
             {
               target: 'workset.name',
@@ -530,11 +530,11 @@ class WorksetCommand {
         const confirmed = await confirmRemoveInteractively(workset);
         if (!confirmed) {
           throw new StoreError(
-            'Workset remove cancelled.',
+            'ワークセットの削除をキャンセルしました。',
             'workset_remove_cancelled',
             {
               target: 'workset.name',
-              fix: 'Rerun remove when you are ready.',
+              fix: '準備ができたら remove を再実行してください。',
             }
           );
         }
@@ -547,7 +547,7 @@ class WorksetCommand {
         return;
       }
 
-      console.log(`Removed workset '${name}'. Member folders were not touched.`);
+      console.log(`ワークセット '${name}' を削除しました。メンバーフォルダーは変更していません。`);
     } catch (error) {
       emitFailure(options.json, { removed: null, status: [] }, error, 'workset_error');
     }
@@ -567,19 +567,19 @@ export function registerWorksetCommand(program: Command): void {
   // Parsed at the group level so `openspec workset --json` keeps the
   // one-JSON-document contract instead of a raw Commander error. The
   // parent option matches anywhere; actions read optsWithGlobals().
-  workset.addOption(new Option('--json', 'Output as JSON').hideHelp());
+  workset.addOption(new Option('--json', 'JSON として出力').hideHelp());
 
   workset
     .command('create [name]')
     .description('選択したフォルダーから名前付きの作業ビューを構成して保存')
     .option(
       '--member <member>',
-      'Member folder as <path> or <name>=<path>; repeatable, first is the primary',
+      'メンバーフォルダーを <path> または <name>=<path> で指定（複数回指定可、最初がプライマリ）',
       collectMember,
       [] as string[]
     )
-    .option('--tool <id>', 'Preferred tool to open this workset with')
-    .option('--json', 'Output as JSON')
+    .option('--tool <id>', 'このワークセットを開く優先ツール')
+    .option('--json', 'JSON として出力')
     .action(async (name: string | undefined, _options: WorksetCreateOptions, command: Command) => {
       await worksetCommand.create(name, command.optsWithGlobals());
     });
@@ -588,7 +588,7 @@ export function registerWorksetCommand(program: Command): void {
     .command('list')
     .alias('ls')
     .description('保存済みワークセットとメンバーを表示')
-    .option('--json', 'Output as JSON')
+    .option('--json', 'JSON として出力')
     .action(async (_options: { json?: boolean }, command: Command) => {
       await worksetCommand.list(command.optsWithGlobals());
     });
@@ -596,12 +596,12 @@ export function registerWorksetCommand(program: Command): void {
   workset
     .command('open <name>')
     .description('保存済みワークセットをツールで開く（エディターウィンドウまたはエージェントセッション）')
-    .option('--tool <id>', 'Open with this tool just this once')
+    .option('--tool <id>', '今回だけこのツールで開く')
     .addOption(
       // Parsed so Commander never owns the error; rejected in the
       // action with one JSON document. Hidden because help should not
       // advertise a mode that only rejects.
-      new Option('--json', 'Not supported for open').hideHelp()
+      new Option('--json', 'open ではサポートされていません').hideHelp()
     )
     .action(async (name: string, _options: WorksetOpenOptions, command: Command) => {
       await worksetCommand.open(name, command.optsWithGlobals());
@@ -610,8 +610,8 @@ export function registerWorksetCommand(program: Command): void {
   workset
     .command('remove <name>')
     .description('保存済みワークセットを削除（メンバーフォルダーは削除しません）')
-    .option('--yes', 'Confirm removal non-interactively')
-    .option('--json', 'Output as JSON')
+    .option('--yes', '非対話で削除を確認')
+    .option('--json', 'JSON として出力')
     .action(async (name: string, _options: WorksetRemoveOptions, command: Command) => {
       await worksetCommand.remove(name, command.optsWithGlobals());
     });
@@ -636,8 +636,8 @@ export function registerWorksetCommand(program: Command): void {
     );
     const message =
       attempted.length > 0
-        ? `Unknown command '${attempted[0]}' for 'openspec workset'. Workset subcommands: ${subcommandsLine}.`
-        : `Missing subcommand for 'openspec workset'. Workset subcommands: ${subcommandsLine}.`;
+        ? `'openspec workset' の不明なコマンド '${attempted[0]}' です。ワークセットサブコマンド: ${subcommandsLine}。`
+        : `'openspec workset' のサブコマンドがありません。ワークセットサブコマンド: ${subcommandsLine}。`;
     if (workset.opts().json) {
       printJson({
         status: [
@@ -645,12 +645,12 @@ export function registerWorksetCommand(program: Command): void {
             severity: 'error',
             code: 'unknown_workset_subcommand',
             message,
-            fix: 'Run one of the workset subcommands.',
+            fix: 'ワークセットサブコマンドのいずれかを実行してください。',
           } satisfies StoreDiagnostic,
         ],
       });
     } else {
-      console.error(`Error: ${message}`);
+      console.error(`エラー: ${message}`);
     }
     process.exitCode = 1;
   });

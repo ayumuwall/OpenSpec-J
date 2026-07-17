@@ -341,8 +341,8 @@ describe('resolveOpenSpecRoot', () => {
       }
 
       expect(warnings).toHaveLength(1);
-      expect(warnings[0]).toContain("declares store 'team-context'");
-      expect(warnings[0]).toContain('the declaration is ignored');
+      expect(warnings[0]).toContain("ストア 'team-context' を宣言しています");
+      expect(warnings[0]).toContain('この宣言は無視します');
     });
 
     it('keeps config-only directories without a pointer as plain roots', async () => {

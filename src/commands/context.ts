@@ -61,9 +61,9 @@ function memberLine(member: WorkingSetMember): string {
 
 function printHumanWorkingSet(workingSet: WorkingSet, declaredReferenceCount: number): void {
   const rootLabel = workingSet.root.store_id ?? path.basename(workingSet.root.path);
-  console.log(`Working context for ${rootLabel} (${workingSet.root.path})`);
+  console.log(`${rootLabel} の作業コンテキスト (${workingSet.root.path})`);
   console.log('');
-  console.log('OpenSpec Root');
+  console.log('OpenSpec ルート');
   console.log(`  ${rootLabel}  ${workingSet.root.path}`);
 
   const availableStores = workingSet.members.filter(
@@ -77,7 +77,7 @@ function printHumanWorkingSet(workingSet: WorkingSet, declaredReferenceCount: nu
     for (const member of availableStores) {
       console.log(memberLine(member));
       if (member.fetch) {
-        console.log(`    Fetch: ${member.fetch}`);
+        console.log(`    取得: ${member.fetch}`);
       }
     }
   }
@@ -88,8 +88,8 @@ function printHumanWorkingSet(workingSet: WorkingSet, declaredReferenceCount: nu
     // emptied-by-omission set must not claim nothing was declared.
     console.log(
       declaredReferenceCount > 0
-        ? 'Declared references all resolve to this root; the working set is this root alone.'
-        : 'No references declared; the working set is this root alone.'
+        ? '宣言済み参照はすべてこのルートに解決されます。作業セットはこのルートのみです。'
+        : '参照は宣言されていません。作業セットはこのルートのみです。'
     );
   }
 
@@ -104,14 +104,14 @@ function printHumanWorkingSet(workingSet: WorkingSet, declaredReferenceCount: nu
       for (const diagnostic of member.status) {
         console.log(`  - ${member.id}: ${diagnostic.message}`);
         if (diagnostic.fix) {
-          console.log(`    Fix: ${diagnostic.fix}`);
+          console.log(`    修正: ${diagnostic.fix}`);
         }
       }
     }
     for (const diagnostic of workingSet.status) {
-      console.log(`  Note: ${diagnostic.message}`);
+      console.log(`  メモ: ${diagnostic.message}`);
       if (diagnostic.fix) {
-        console.log(`  Fix: ${diagnostic.fix}`);
+        console.log(`  修正: ${diagnostic.fix}`);
       }
     }
   }
@@ -125,20 +125,20 @@ function writeCodeWorkspace(
   const resolved = path.resolve(outputPath);
   if (fs.existsSync(resolved) && !force) {
     throw new StoreError(
-      `Refusing to overwrite ${resolved}.`,
+      `${resolved} は上書きしません。`,
       'context_file_exists',
       {
         target: 'context.output',
-        fix: `Pass --force to overwrite, or choose a different path.`,
+        fix: `上書きするには --force を指定するか、別のパスを選んでください。`,
       }
     );
   }
   const parent = path.dirname(resolved);
   if (!fs.existsSync(parent)) {
     throw new StoreError(
-      `Output directory does not exist: ${parent}.`,
+      `出力ディレクトリが存在しません: ${parent}。`,
       'context_output_dir_missing',
-      { target: 'context.output', fix: 'Create the directory first, or choose another path.' }
+      { target: 'context.output', fix: '先にディレクトリを作成するか、別のパスを選んでください。' }
     );
   }
 
@@ -151,8 +151,8 @@ function writeCodeWorkspace(
     .map((member) => member.id);
   const summary =
     skipped.length > 0
-      ? `Wrote ${resolved} (${available + 1} folders; not available: ${skipped.join(', ')})`
-      : `Wrote ${resolved} (${available + 1} folders)`;
+      ? `${resolved} を書き込みました (${available + 1} フォルダー; 利用不可: ${skipped.join(', ')})`
+      : `${resolved} を書き込みました (${available + 1} フォルダー)`;
   // stderr keeps JSON stdout pure; for humans it reads inline.
   console.error(summary);
 }
@@ -167,11 +167,11 @@ export function registerContextCommand(program: Command): void {
     .description(description)
     .option('--store <id>', COMMON_FLAGS.store.description)
     .addOption(
-      new Option('--store-path <path>', 'Removed; register the store and use --store').hideHelp()
+      new Option('--store-path <path>', '削除済みです。ストアを登録して --store を使ってください').hideHelp()
     )
-    .option('--json', 'Output the agent brief as JSON')
-    .option('--code-workspace <path>', 'Also write a VS Code workspace file for the set')
-    .option('--force', 'Overwrite an existing --code-workspace file')
+    .option('--json', 'エージェント向け概要を JSON として出力')
+    .option('--code-workspace <path>', 'このセットの VS Code ワークスペースファイルも書き出す')
+    .option('--force', '既存の --code-workspace ファイルを上書き')
     .action(
       async (options: {
         store?: string;

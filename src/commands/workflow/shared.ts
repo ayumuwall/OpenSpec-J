@@ -151,7 +151,7 @@ export async function validateChangeExists(
   if (!changeName) {
     const available = await getAvailableChanges(projectRoot, changesDir);
     if (available.length === 0) {
-      throw new Error(`No changes found. Create one with: ${newChangeHint}`);
+      throw new Error(`変更が見つかりません。作成するには: ${newChangeHint}`);
     }
     throw new Error(
       `必須オプション --change が指定されていません。利用可能な変更:\n  ${available.join('\n  ')}`
@@ -172,7 +172,7 @@ export async function validateChangeExists(
     const available = await getAvailableChanges(projectRoot, changesDir);
     if (available.length === 0) {
       throw new Error(
-        `Change '${changeName}' not found. No changes exist. Create one with: ${newChangeHint}`
+        `変更 '${changeName}' が見つかりません。変更はまだありません。作成するには: ${newChangeHint}`
       );
     }
     throw new Error(

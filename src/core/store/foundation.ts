@@ -171,20 +171,20 @@ function storeStateDiagnostic(label: string): {
     return {
       code: 'invalid_store_metadata',
       target: 'store.metadata',
-      fix: 'Repair .openspec-store/store.yaml.',
+      fix: '.openspec-store/store.yaml を修復してください。',
     };
   }
 
   return {
     code: 'invalid_store_registry',
     target: 'store.registry',
-    fix: `Repair or remove ${getStoreRegistryPath({})}.`,
+    fix: `${getStoreRegistryPath({})} を修復するか削除してください。`,
   };
 }
 
 function invalidStoreStateError(label: string, message: string): StoreError {
   const diagnostic = storeStateDiagnostic(label);
-  return new StoreError(`Invalid ${label}: ${message}`, diagnostic.code, {
+  return new StoreError(`${label} が不正です: ${message}`, diagnostic.code, {
     target: diagnostic.target,
     fix: diagnostic.fix,
   });

@@ -1,7 +1,7 @@
 /**
  * Shared JSON/failure output plumbing for command groups whose errors
  * carry the StoreDiagnostic envelope. One definition of the failure
- * contract: exit code 1, Error:/Fix: lines in human mode, a status
+ * contract: exit code 1, エラー:/修正: lines in human mode, a status
  * array in JSON mode.
  */
 import { StoreError, type StoreDiagnostic } from '../core/store/errors.js';
@@ -65,9 +65,9 @@ export function emitFailure(
     process.exitCode = 1;
     return;
   }
-  console.error(`Error: ${status.message}`);
+  console.error(`エラー: ${status.message}`);
   if (status.fix) {
-    console.error(`Fix: ${status.fix}`);
+    console.error(`修正: ${status.fix}`);
   }
   process.exitCode = 1;
 }

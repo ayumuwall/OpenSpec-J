@@ -110,7 +110,7 @@ function printDiagnosticLines(prefix: string, status: { message: string; fix?: s
   for (const entry of status) {
     console.log(`${prefix}- ${entry.message}`);
     if (entry.fix) {
-      console.log(`${prefix}  Fix: ${entry.fix}`);
+      console.log(`${prefix}  修正: ${entry.fix}`);
     }
   }
 }
@@ -136,21 +136,21 @@ function printEntrySection<T extends { status: { message: string; fix?: string }
     for (const diagnostic of entry.status) {
       console.log(`  - ${idOf(entry)}: ${diagnostic.message}`);
       if (diagnostic.fix) {
-        console.log(`    Fix: ${diagnostic.fix}`);
+        console.log(`    修正: ${diagnostic.fix}`);
       }
     }
   }
 }
 
 function printHumanHealth(health: RelationshipHealth, declaredReferenceCount: number): void {
-  console.log('Doctor');
+  console.log('診断');
   console.log('');
-  console.log('Root');
-  console.log(`  Location: ${health.root.path}`);
-  console.log(`  OpenSpec Root: ${health.root.healthy ? 'ok' : 'unhealthy'}`);
+  console.log('ルート');
+  console.log(`  場所: ${health.root.path}`);
+  console.log(`  OpenSpec ルート: ${health.root.healthy ? 'ok' : 'unhealthy'}`);
   if (health.store) {
-    const metadataNote = health.store.metadata.valid ? 'metadata ok' : 'metadata invalid';
-    console.log(`  Store: ${health.store.id} (${metadataNote})`);
+    const metadataNote = health.store.metadata.valid ? 'メタデータ ok' : 'メタデータ invalid';
+    console.log(`  ストア: ${health.store.id} (${metadataNote})`);
   }
   printDiagnosticLines('  ', [...health.root.status, ...(health.store?.status ?? [])]);
 
@@ -158,10 +158,10 @@ function printHumanHealth(health: RelationshipHealth, declaredReferenceCount: nu
   // the index, so an emptied-by-omission list gets its own line.
   const referencesEmptyLine =
     health.references.length === 0 && declaredReferenceCount > 0
-      ? '(declared references all resolve to this root)'
-      : '(none declared)';
+      ? '(宣言済み参照はすべてこのルートに解決されます)'
+      : '(宣言なし)';
   printEntrySection(
-    'References',
+    '参照',
     health.references,
     referencesEmptyLine,
     (entry) => `${entry.store_id}: ok${entry.root ? ` (${entry.root})` : ''}`,
@@ -170,9 +170,9 @@ function printHumanHealth(health: RelationshipHealth, declaredReferenceCount: nu
 
   for (const entry of health.status) {
     console.log('');
-    console.log(`Note: ${entry.message}`);
+    console.log(`メモ: ${entry.message}`);
     if (entry.fix) {
-      console.log(`Fix: ${entry.fix}`);
+      console.log(`修正: ${entry.fix}`);
     }
   }
 }
@@ -187,9 +187,9 @@ export function registerDoctorCommand(program: Command): void {
     .description(description)
     .option('--store <id>', COMMON_FLAGS.store.description)
     .addOption(
-      new Option('--store-path <path>', 'Removed; register the store and use --store').hideHelp()
+      new Option('--store-path <path>', '削除済みです。ストアを登録し、--store を使用してください').hideHelp()
     )
-    .option('--json', 'Output as JSON')
+    .option('--json', 'JSON として出力')
     .action(async (options: { store?: string; storePath?: string; json?: boolean }) => {
       try {
         const root = await resolveRootForCommand(

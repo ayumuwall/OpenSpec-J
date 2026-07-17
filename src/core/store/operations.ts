@@ -217,7 +217,7 @@ function alreadyRegisteredDiagnostic(id: string): StoreDiagnostic {
   return makeStoreDiagnostic(
     'info',
     'store_already_registered',
-    `Store '${id}' is already registered at this path.`,
+    `ストア '${id}' は既にこのパスに登録されています。`,
     {
       target: 'store.registry',
     }
@@ -241,11 +241,11 @@ function assertNotConfigOnlyPointerRoot(storeRoot: string): void {
 
   if (pointer.value !== undefined) {
     throw new StoreError(
-      `This repo's planning is externalized to store '${pointer.value}' (${pointer.filePath}); it is not itself a store root.`,
+      `このリポジトリの planning はストア '${pointer.value}' に外部化されています (${pointer.filePath})。このリポジトリ自体はストアルートではありません。`,
       'store_root_pointer_declared',
       {
         target: 'store.pointer',
-        fix: 'Register the checkout for the declared store, or remove the store: line first to convert this repo into a local store root.',
+        fix: '宣言されたストアの checkout を登録するか、このリポジトリをローカルストアルートに変換するには先に store: 行を削除してください。',
       }
     );
   }
@@ -461,9 +461,9 @@ async function prepareSetupPlan(
 ): Promise<StoreSetupPlan> {
   const id = validateStoreId(input.id ?? '');
   if (input.remote !== undefined && input.remote.length === 0) {
-    throw new StoreError('Store remote must not be empty when provided.', 'store_remote_empty', {
+    throw new StoreError('ストアのリモートを指定する場合は空にできません。', 'store_remote_empty', {
       target: 'store.metadata',
-      fix: 'Pass a clone URL: --remote <url>.',
+      fix: 'clone URL を指定してください: --remote <url>。',
     });
   }
   const storeRoot = resolveSetupRoot(id, input.path);
@@ -471,11 +471,11 @@ async function prepareSetupPlan(
 
   if (kind === 'file' || kind === 'other') {
     throw new StoreError(
-      `Store setup path is not a directory: ${storeRoot}`,
+      `ストア作成パスがディレクトリではありません: ${storeRoot}`,
       'store_setup_path_not_directory',
       {
         target: 'store.root',
-        fix: 'Choose an empty directory or an existing healthy OpenSpec root.',
+        fix: '空のディレクトリまたは既存の正常な OpenSpec ルートを選んでください。',
       }
     );
   }
@@ -496,11 +496,11 @@ async function prepareSetupPlan(
     if (metadata) {
       if (metadata.id !== id) {
         throw new StoreError(
-          `Store metadata id '${metadata.id}' does not match requested id '${id}'.`,
+          `ストアメタデータ ID '${metadata.id}' が要求された ID '${id}' と一致しません。`,
           'store_metadata_id_mismatch',
           {
             target: 'store.metadata',
-            fix: `Use id '${metadata.id}' or choose a different setup path.`,
+            fix: `ID '${metadata.id}' を使うか、別の setup パスを選んでください。`,
           }
         );
       }
@@ -514,11 +514,11 @@ async function prepareSetupPlan(
       const safeFreshDirectory = await isDirectoryEmpty(storeRoot) || await isGitOnlyDirectory(storeRoot);
       if (!openspecRoot.healthy && !safeFreshDirectory) {
         throw new StoreError(
-          'Store setup does not support initializing a non-empty folder that is not a healthy OpenSpec root.',
+          '空でなく、正常な OpenSpec ルートでもないフォルダーは store setup で初期化できません。',
           'store_setup_non_empty_directory',
           {
             target: 'store.root',
-            fix: 'Choose an empty folder, a Git-only folder, or an existing healthy OpenSpec root.',
+            fix: '空のフォルダー、Git のみのフォルダー、または既存の正常な OpenSpec ルートを選んでください。',
           }
         );
       }
@@ -595,7 +595,7 @@ export async function setupPreparedStore(
       'store_setup_path_changed',
       {
         target: 'store.root',
-        fix: 'Rerun openspec store setup to re-evaluate the directory.',
+        fix: 'ディレクトリを再評価するには openspec store setup を再実行してください。',
       }
     );
   }
@@ -767,22 +767,22 @@ export async function registerExistingStore(
   if (!openspecRoot.healthy) {
     const problems =
       openspecRoot.diagnostics.map((diagnostic) => diagnostic.message).join(' ') ||
-      'The OpenSpec root is missing or incomplete.';
+      'OpenSpec ルートがないか不完全です。';
     const isEmptyCloneSuspect =
       (await isGitRepositoryAtRoot(storeRoot)) &&
       (await gitHasCommits(storeRoot)) === false;
     const emptyCloneHint = isEmptyCloneSuspect
-      ? ' This folder is a Git repository with no commits — if it is a clone, the origin store needs an initial commit before the clone has any files.'
+      ? ' このフォルダーはコミットのない Git リポジトリです。clone の場合、clone 側にファイルが現れる前に origin 側のストアで初回コミットが必要です。'
       : '';
 
     throw new StoreError(
-      `Store register requires an existing healthy OpenSpec root. ${problems}${emptyCloneHint}`,
+      `store register には既存の正常な OpenSpec ルートが必要です。${problems}${emptyCloneHint}`,
       'store_register_root_unhealthy',
       {
         target: 'openspec.root',
         fix: isEmptyCloneSuspect
-          ? 'If this is a store clone: commit and push the origin store, pull it into this clone, then rerun register.'
-          : 'Run openspec store setup for a new store, or point register at a checkout whose openspec/ files are present.',
+          ? 'これがストア clone の場合: origin 側のストアで commit / push し、この clone に pull してから register を再実行してください。'
+          : '新しいストアには openspec store setup を実行するか、openspec/ ファイルが存在する checkout を register に指定してください。',
       }
     );
   }
@@ -799,13 +799,13 @@ export async function registerExistingStore(
       !isRegisteredAtPath(currentRegistry, metadata.id, storeRoot);
 
     throw new StoreError(
-      `Store metadata id '${metadata.id}' does not match --id '${explicitId}'. The id comes from the store's committed .openspec-store/store.yaml.`,
+      `ストアメタデータ ID '${metadata.id}' が --id '${explicitId}' と一致しません。ID はストアに commit された .openspec-store/store.yaml から取得されます。`,
       'store_metadata_id_mismatch',
       {
         target: 'store.id',
         fix: registeredElsewhere
-          ? `One checkout per store id is supported, and '${metadata.id}' is already registered. Run openspec store unregister ${metadata.id} first to register this checkout instead.`
-          : `Use --id ${metadata.id} or register a different folder.`,
+          ? `ストア ID ごとに 1 つの checkout がサポートされ、'${metadata.id}' は既に登録済みです。この checkout を登録するには、先に openspec store unregister ${metadata.id} を実行してください。`
+          : `--id ${metadata.id} を使うか、別のフォルダーを登録してください。`,
       }
     );
   }
@@ -813,11 +813,11 @@ export async function registerExistingStore(
   const id = metadata?.id ?? explicitId ?? inferStoreIdFromPath(storeRoot);
   if (!metadata && !input.allowCreateIdentity) {
     throw new StoreError(
-      `Turn this OpenSpec root into store '${id}'?`,
+      `この OpenSpec ルートをストア '${id}' に変換しますか？`,
       'store_register_identity_confirmation_required',
       {
         target: 'store.metadata',
-        fix: `Run interactively or pass --yes to create ${getStoreMetadataPath(storeRoot)}.`,
+        fix: `対話モードで実行するか、--yes を指定して ${getStoreMetadataPath(storeRoot)} を作成してください。`,
       }
     );
   }

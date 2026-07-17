@@ -382,7 +382,7 @@ describe('InitCommand', () => {
       const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
       const content = await fs.readFile(skillFile, 'utf-8');
 
-      expect(content).toContain('Enter explore mode');
+      expect(content).toContain('探索モードに入ります');
       expect(content).toContain('思考パートナー');
     });
 

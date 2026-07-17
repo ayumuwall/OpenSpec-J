@@ -125,7 +125,7 @@ describe('openspec workset (7.1)', () => {
         ['workset', 'open', 'platform', '--tool', 'nope'],
         { cwd: tempDir, env }
       );
-      expect(result.stderr).toContain('Known tools: code, cursor');
+      expect(result.stderr).toContain('既知のツール: code, cursor');
       expect(result.stderr).not.toMatch(/claude|codex/);
     });
   });
@@ -172,7 +172,7 @@ describe('openspec workset (7.1)', () => {
       expect(payload.workset).toBeNull();
       expect(payload.status[0].code).toBe('workset_exists');
       expect(payload.status[0].fix).toBe(
-        'Choose another name, or remove it first: openspec workset remove platform'
+        '別の名前を選ぶか、先に削除してください: openspec workset remove platform'
       );
     });
 
@@ -364,7 +364,7 @@ describe('openspec workset (7.1)', () => {
       });
       expect(parseJson(noneSaved).status[0].code).toBe('workset_not_found');
       expect(parseJson(noneSaved).status[0].fix).toBe(
-        'Create it first: openspec workset create ghost'
+        '先に作成してください: openspec workset create ghost'
       );
 
       await createPlatform();
@@ -373,7 +373,7 @@ describe('openspec workset (7.1)', () => {
         env,
       });
       expect(parseJson(someSaved).status[0].fix).toBe(
-        'Saved worksets: platform. See them with: openspec workset list'
+        '保存済みワークセット: platform。確認するには: openspec workset list'
       );
     });
   });
@@ -390,7 +390,7 @@ describe('openspec workset (7.1)', () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain(
-        "Opening 'platform' in VS Code (a window opens; this command returns)."
+        "'platform' を VS Code で開いています（ウィンドウを開いたらこのコマンドは終了します）。"
       );
 
       const generated = getWorksetCodeWorkspacePath('platform', pathOptions());
@@ -419,7 +419,7 @@ describe('openspec workset (7.1)', () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain(
-        "Handing this terminal to Claude Code for 'platform' (the session ends when you exit)."
+        "'platform' 用にこのターミナルを Claude Code に引き渡します（終了するとセッションも終わります）。"
       );
       const launch = readLaunchLog(fakeClaude.logPath);
       expect(launch.args).toEqual([
@@ -479,7 +479,7 @@ describe('openspec workset (7.1)', () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stderr).toContain(
-        `Skipped 'web-app' (${memberB} is not available).`
+        `'web-app' をスキップしました（${memberB} は利用できません）。`
       );
       expect(readLaunchLog(fakeClaude.logPath).args).toEqual([
         '--add-dir',
@@ -502,7 +502,7 @@ describe('openspec workset (7.1)', () => {
       });
       expect(second.exitCode).toBe(0);
       expect(second.stderr).toContain(
-        `Using 'api' (${memberC}) as the primary for this open.`
+        `今回の open では 'api' (${memberC}) をプライマリとして使用します。`
       );
       expect(fs.realpathSync.native(readLaunchLog(fakeClaude.logPath).cwd)).toBe(
         memberC
@@ -516,7 +516,7 @@ describe('openspec workset (7.1)', () => {
       });
       expect(third.exitCode).toBe(1);
       expect(third.stderr).toContain('workset');
-      expect(third.stderr).toContain('No member folder');
+      expect(third.stderr).toContain('メンバーフォルダーがこのマシンに存在しません');
     });
 
     it('overrides the saved tool per open without rewriting the file', async () => {
@@ -547,7 +547,7 @@ describe('openspec workset (7.1)', () => {
       });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("Workset 'platform' has no saved tool.");
+      expect(result.stderr).toContain("ワークセット 'platform' に保存済みツールがありません。");
       expect(result.stderr).toContain(
         'openspec workset open platform --tool <id>'
       );
@@ -564,14 +564,14 @@ describe('openspec workset (7.1)', () => {
 
       expect(unavailable.exitCode).toBe(1);
       expect(unavailable.stderr).toContain(
-        "Error: Cursor ('cursor') is not on PATH."
+        "エラー: Cursor ('cursor') が PATH にありません。"
       );
       expect(unavailable.stderr).toContain(
-        'Fix: Install \'cursor\' or run: openspec workset open platform --tool code'
+        '修正: \'cursor\' をインストールするか、次を実行してください: openspec workset open platform --tool code'
       );
       expect(unavailable.stderr).toContain('手動で開く:');
       const generated = getWorksetCodeWorkspacePath('platform', pathOptions());
-      expect(unavailable.stderr).toContain(`Workspace file: ${generated}`);
+      expect(unavailable.stderr).toContain(`ワークスペースファイル: ${generated}`);
       expect(unavailable.stderr).toContain(memberA);
       // The named file exists with current content.
       expect(JSON.parse(fs.readFileSync(generated, 'utf-8')).folders).toHaveLength(3);
@@ -581,7 +581,7 @@ describe('openspec workset (7.1)', () => {
         { cwd: tempDir, env }
       );
       expect(unknown.exitCode).toBe(1);
-      expect(unknown.stderr).toContain("Unknown tool 'emacs'");
+      expect(unknown.stderr).toContain("不明なツール 'emacs'");
       expect(unknown.stderr).toContain('手動で開く:');
     });
 
@@ -592,7 +592,7 @@ describe('openspec workset (7.1)', () => {
       });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("Workset 'ghost' is not saved");
+      expect(result.stderr).toContain("ワークセット 'ghost' はこのマシンに保存されていません");
     });
 
     it('rejects --json with exactly one JSON document', async () => {
@@ -607,7 +607,7 @@ describe('openspec workset (7.1)', () => {
       const payload = parseJson(result);
       expect(payload.status[0].code).toBe('workset_open_json_unsupported');
       expect(payload.status[0].fix).toBe(
-        'Inspect worksets with: openspec workset list --json'
+        'ワークセットを確認してください: openspec workset list --json'
       );
     });
   });
@@ -685,7 +685,7 @@ describe('openspec workset (7.1)', () => {
         expect(result.exitCode).toBe(1);
         const status = parseJson(result).status[0];
         expect(status.code).toBe('invalid_workset_file');
-        expect(status.fix).toBe(`Repair or remove ${filePath}.`);
+        expect(status.fix).toBe(`${filePath} を修復するか削除してください。`);
       }
 
       // open is human-only; it fails the same way on its stderr leg.
@@ -694,7 +694,7 @@ describe('openspec workset (7.1)', () => {
         env,
       });
       expect(open.exitCode).toBe(1);
-      expect(open.stderr).toContain('Invalid worksets file');
+      expect(open.stderr).toContain('ワークセットファイルが不正です');
 
       expect(fs.readFileSync(filePath, 'utf-8')).toBe('{broken');
     });
@@ -707,11 +707,11 @@ describe('openspec workset (7.1)', () => {
       expect(json.exitCode).toBe(1);
       const payload = parseJson(json);
       expect(payload.status[0].code).toBe('unknown_workset_subcommand');
-      expect(payload.status[0].message).toContain("Unknown command 'bogus'");
+      expect(payload.status[0].message).toContain("'openspec workset' の不明なコマンド 'bogus'");
 
       const human = await runCLI(['workset', 'bogus'], { cwd: tempDir, env });
       expect(human.exitCode).toBe(1);
-      expect(human.stderr).toContain("Unknown command 'bogus'");
+      expect(human.stderr).toContain("'openspec workset' の不明なコマンド 'bogus'");
       expect(human.stderr).toContain('create, list (ls), open, remove');
     });
 
@@ -720,11 +720,11 @@ describe('openspec workset (7.1)', () => {
       expect(json.exitCode).toBe(1);
       const payload = parseJson(json);
       expect(payload.status[0].code).toBe('unknown_workset_subcommand');
-      expect(payload.status[0].message).toContain('Missing subcommand');
+      expect(payload.status[0].message).toContain("'openspec workset' のサブコマンドがありません");
 
       const human = await runCLI(['workset'], { cwd: tempDir, env });
       expect(human.exitCode).toBe(1);
-      expect(human.stderr).toContain('Missing subcommand');
+      expect(human.stderr).toContain("'openspec workset' のサブコマンドがありません");
     });
 
     it('a launch failure carries a pasteable alternative and the manual route', async () => {
@@ -755,9 +755,9 @@ describe('openspec workset (7.1)', () => {
       });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain('Could not launch Claude Code');
+      expect(result.stderr).toContain('Claude Code を起動できませんでした');
       expect(result.stderr).toContain(
-        'Fix: Run: openspec workset open platform --tool code'
+        '修正: 実行してください: openspec workset open platform --tool code'
       );
       expect(result.stderr).toContain('手動で開く:');
     });
@@ -817,7 +817,7 @@ describe('launchOpenerCommand (in-process launch mechanics)', () => {
         code: 'workset_launch_failed',
         target: 'workset.tool',
       },
-      message: 'Could not launch Claude Code: spawn claude ENOENT',
+      message: 'Claude Code を起動できませんでした: spawn claude ENOENT',
     });
   });
 });
@@ -977,7 +977,7 @@ describe('interactive compose cancellation (in-process)', () => {
     expect(fs.readFileSync(yamlPath, 'utf-8')).toContain('platform');
     expect(fs.readFileSync(yamlPath, 'utf-8')).toContain('tool: claude');
     expect(logSpy).toHaveBeenCalledWith(
-      'Open it any time with: openspec workset open platform'
+      'いつでも次のコマンドで開けます: openspec workset open platform'
     );
   });
 
@@ -1006,7 +1006,7 @@ describe('interactive compose cancellation (in-process)', () => {
     );
     expect(errorSpy).not.toHaveBeenCalledWith('キャンセルしました。');
     expect(logSpy).toHaveBeenCalledWith(
-      'Open it any time with: openspec workset open platform'
+      'いつでも次のコマンドで開けます: openspec workset open platform'
     );
     expect(
       fs.existsSync(
@@ -1054,7 +1054,7 @@ describe('interactive compose cancellation (in-process)', () => {
     });
 
     expect(process.exitCode).toBe(1);
-    expect(errorSpy).toHaveBeenCalledWith('Error: Workset remove cancelled.');
+    expect(errorSpy).toHaveBeenCalledWith('エラー: ワークセットの削除をキャンセルしました。');
     expect(
       fs.existsSync(
         path.join(process.env.XDG_DATA_HOME!, 'openspec', 'worksets', 'worksets.yaml')

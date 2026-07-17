@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getOpsxProposeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-propose',
-    description: 'Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.',
+    description: '新しい変更を提案し、すべてのアーティファクトを 1 ステップで生成します。作りたいものを素早く説明し、proposal、design、specs、tasks を実装準備済みの形で揃えたいときに使用します。',
     instructions: `新しい変更を提案します。変更を作成し、すべての成果物を 1 つのステップで生成します。
 
 アーティファクトを使用して変更を作成します。
@@ -112,9 +112,9 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 - 新しい依存関係アーティファクトを作成する前に、必ず依存関係アーティファクトを読み取ります。
 - 文脈が非常に不明確な場合は、ユーザーに尋ねます。ただし、勢いを維持するために合理的な決定を下すことを好みます
 - その名前の変更がすでに存在する場合は、ユーザーがそれを続行するか、それとも新しい変更を作成するかを尋ねます。
-- Verify each artifact file exists after writing before proceeding to next`,
+- 次へ進む前に、書き込み後の各アーティファクトファイルが存在することを確認します`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -122,7 +122,7 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 export function getOpsxProposeCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Propose',
-    description: 'Propose a new change - create it and generate all artifacts in one step',
+    description: '新しい変更を提案し、作成と全アーティファクト生成を 1 ステップで行う',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `新しい変更を提案します。変更を作成し、すべての成果物を 1 つのステップで生成します。
@@ -226,6 +226,6 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 - 新しい依存関係アーティファクトを作成する前に、必ず依存関係アーティファクトを読み取ります。
 - 文脈が非常に不明確な場合は、ユーザーに尋ねます。ただし、勢いを維持するために合理的な決定を下すことを好みます
 - その名前の変更がすでに存在する場合は、ユーザーがそれを続行するか、それとも新しい変更を作成するかを尋ねます。
-- Verify each artifact file exists after writing before proceeding to next`
+- 次へ進む前に、書き込み後の各アーティファクトファイルが存在することを確認します`
   };
 }

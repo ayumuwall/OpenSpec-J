@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getExploreSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-explore',
-    description: 'Enter explore mode - a thinking partner for exploring ideas, investigating problems, and clarifying requirements. Use when the user wants to think through something before or during a change.',
+    description: '探索モードに入ります。アイデアの検討、問題調査、要件明確化のための思考パートナーです。変更前または変更中に考えを整理したいときに使用します。',
     instructions: `探索モードに入ります。深く考えてください。自由に視覚化してください。どこにいても会話を追ってください。
 
 **重要: 探索モードは実装するためのものではなく、考えるためのものです。** ファイルを読んだり、コードを検索したり、コードベースを調査したりすることはできますが、コードを書いたり機能を実装したりすることは絶対に行わないでください。ユーザーが何かを実装するように依頼した場合は、まず探索モードを終了して変更提案を作成するように伝えてください。ユーザーの要求に応じて、OpenSpec 成果物 (提案書、設計書、仕様書) を作成しても構いません。これは実装ではなく思考を捉えることです。
@@ -57,17 +57,17 @@ ${STORE_SELECTION_GUIDANCE}
 **視覚化**
 \`\`\`
 ┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
+│     ASCII 図を積極的に使う              │
 ├─────────────────────────────────────────┤
 │                                         │
 │      ┌────────┐         ┌────────┐      │
-│      │ State  │────────▶│ State  │      │
+│      │ 状態   │────────▶│ 状態   │      │
 │      │   A    │         │   B    │      │
 │      └────────┘         └────────┘      │
 │                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
+│   システム図、状態遷移、データフロー、  │
+│   アーキテクチャスケッチ、依存関係図、  │
+│   比較表                                │
 │                                         │
 └─────────────────────────────────────────┘
 \`\`\`
@@ -150,35 +150,35 @@ openspec list --json
 
 **ユーザーが漠然としたアイデアを持ち込む:**
 \`\`\`
-User: I'm thinking about adding real-time collaboration
+ユーザー: リアルタイム共同編集を追加しようか考えています
 
-You: Real-time collab is a big space. Let me think about this...
+あなた: リアルタイム共同編集はかなり広い領域です。少し整理します...
 
-      COLLABORATION SPECTRUM
+      共同編集のスペクトラム
       ════════════════════════════════════════════
 
-      Awareness          Coordination         Sync
+      状況把握            調整              同期
           │                   │                 │
           ▼                   ▼                 ▼
       ┌────────┐         ┌────────┐        ┌────────┐
       │Presence│         │Cursors │        │  CRDT  │
-      │  "3    │         │ Multi  │        │Conflict│
-      │online" │         │ select │        │  free  │
+      │ "3人   │         │ Multi  │        │競合なし│
+      │online" │         │ select │        │        │
       └────────┘         └────────┘        └────────┘
           │                   │                 │
-       trivial            moderate           complex
+        簡単               中程度              複雑
 
-      Where's your head at?
+      どのあたりを考えていますか？
 \`\`\`
 
 **ユーザーが特定の問題を提起しました:**
 \`\`\`
-User: The auth system is a mess
+ユーザー: 認証システムがごちゃごちゃしています
 
-You: [reads codebase]
+あなた: [コードベースを読む]
 
      ┌─────────────────────────────────────────────┐
-     │              CURRENT AUTH FLOW              │
+     │              現在の認証フロー               │
      └─────────────────────────────────────────────┘
                         │
           ┌─────────────┼─────────────┐
@@ -196,56 +196,56 @@ You: [reads codebase]
                         │
                         ▼
                   ┌───────────┐
-                  │   Perms   │
+                  │   権限    │
                   └───────────┘
 
-     I see three tangles. Which one's burning?
+     絡まっている箇所が 3 つ見えます。今いちばん痛いのはどれですか？
 \`\`\`
 
 **ユーザーが実装の途中でスタックしてしまう:**
 \`\`\`
-User: /opsx:explore add-auth-system
-      The OAuth integration is more complex than expected
+ユーザー: /opsx:explore add-auth-system
+        OAuth 連携が想定より複雑です
 
-You: [reads change artifacts]
+あなた: [変更アーティファクトを読む]
 
-     You're on task 4: "Implement OAuth flow"
+     現在はタスク 4「OAuth フローを実装」にいます
 
-     Let me trace what's involved...
+     関係する要素をたどってみます...
 
-     [draws diagram, explores options, suggests paths]
+     [図を描き、選択肢を探索し、進め方を提案する]
 
-     Want to update the design to reflect this?
-     Or add a spike task to investigate?
+     これを反映するために design.md を更新しますか？
+     それとも調査用のスパイクタスクを追加しますか？
 \`\`\`
 
 **ユーザーはオプションを比較したいと考えています:**
 \`\`\`
-User: Should we use Postgres or SQLite?
+ユーザー: Postgres と SQLite のどちらを使うべきですか？
 
-You: Generic answer is boring. What's the context?
+あなた: 一般論だけでは決められません。文脈は何ですか？
 
-User: A CLI tool that tracks local dev environments
+ユーザー: ローカル開発環境を追跡する CLI ツールです
 
-You: That changes everything.
+あなた: それなら前提が大きく変わります。
 
      ┌─────────────────────────────────────────────────┐
-     │          CLI TOOL DATA STORAGE                  │
+     │          CLI ツールのデータ保存                 │
      └─────────────────────────────────────────────────┘
 
-     Key constraints:
-     • No daemon running
-     • Must work offline
-     • Single user
+     主要な制約:
+     • デーモンを動かさない
+     • オフラインで動く必要がある
+     • 単一ユーザー
 
                   SQLite          Postgres
-     Deployment   embedded ✓      needs server ✗
-     Offline      yes ✓           no ✗
-     Single file  yes ✓           no ✗
+     配布         組み込み ✓      サーバーが必要 ✗
+     オフライン   可 ✓            不可 ✗
+     単一ファイル 可 ✓            不可 ✗
 
-     SQLite. Not even close.
+     SQLite です。かなり明確です。
 
-     Unless... is there a sync component?
+     ただし...同期コンポーネントはありますか？
 \`\`\`
 
 ---
@@ -262,17 +262,17 @@ You: That changes everything.
 物事が具体化しているように感じたら、次のように要約するとよいでしょう。
 
 \`\`\`
-## What We Figured Out
+## 分かったこと
 
-**The problem**: [crystallized understanding]
+**問題**: [結晶化された理解]
 
-**The approach**: [if one emerged]
+**アプローチ**: [見えてきた場合]
 
-**Open questions**: [if any remain]
+**未解決の問い**: [残っている場合]
 
-**Next steps** (if ready):
-- Create a change proposal
-- Keep exploring: just keep talking
+**次のステップ** (準備できている場合):
+- 変更提案を作成する
+- 探索を続ける: このまま話し続ける
 \`\`\`
 
 ただし、この要約はオプションです。場合によっては、思考が価値となることもあります。
@@ -288,9 +288,9 @@ You: That changes everything.
 - **自動キャプチャしないでください** - 単に実行するのではなく、洞察を保存することを提案します
 - **視覚化してください** - 優れた図には多くの段落の価値があります
 - **コードベースを探索してください** - 実際にディスカッションを行う
-- **Do question assumptions** - Including the user's and your own`,
+- **前提を問い直してください** - ユーザーの前提も、自分自身の前提も対象です`,
     license: 'MIT',
-    compatibility: 'Requires openspec CLI.',
+    compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
@@ -298,7 +298,7 @@ You: That changes everything.
 export function getOpsxExploreCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Explore',
-    description: 'Enter explore mode - think through ideas, investigate problems, clarify requirements',
+    description: '探索モードに入り、アイデア検討、問題調査、要件明確化を行う',
     category: 'Workflow',
     tags: ['workflow', 'explore', 'experimental', 'thinking'],
     content: `探索モードに入ります。深く考えてください。自由に視覚化してください。どこにいても会話を追ってください。
@@ -354,17 +354,17 @@ ${STORE_SELECTION_GUIDANCE}
 **視覚化**
 \`\`\`
 ┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
+│     ASCII 図を積極的に使う              │
 ├─────────────────────────────────────────┤
 │                                         │
 │      ┌────────┐         ┌────────┐      │
-│      │ State  │────────▶│ State  │      │
+│      │ 状態   │────────▶│ 状態   │      │
 │      │   A    │         │   B    │      │
 │      └────────┘         └────────┘      │
 │                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
+│   システム図、状態遷移、データフロー、  │
+│   アーキテクチャスケッチ、依存関係図、  │
+│   比較表                                │
 │                                         │
 └─────────────────────────────────────────┘
 \`\`\`
@@ -467,6 +467,6 @@ openspec list --json
 - **自動キャプチャしないでください** - 単に実行するのではなく、洞察を保存することを提案します
 - **視覚化してください** - 優れた図には多くの段落の価値があります
 - **コードベースを探索してください** - 実際にディスカッションを行う
-- **Do question assumptions** - Including the user's and your own`
+- **前提を問い直してください** - ユーザーの前提も、自分自身の前提も対象です`
   };
 }
