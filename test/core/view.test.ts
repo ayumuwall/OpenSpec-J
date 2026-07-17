@@ -53,7 +53,7 @@ describe('ViewCommand', () => {
 
     // Draft section should contain empty and no-tasks changes
     expect(output).toContain('下書きの変更');
-    expect(output).toContain('空にできません-change');
+    expect(output).toContain('empty-change');
     expect(output).toContain('no-tasks-change');
 
     // Completed section should only contain changes with all tasks done
@@ -65,7 +65,7 @@ describe('ViewCommand', () => {
       .map(stripAnsi)
       .filter((line) => line.includes('○'));
     const draftNames = draftLines.map((line) => line.trim().replace('○ ', ''));
-    expect(draftNames).toContain('空にできません-change');
+    expect(draftNames).toContain('empty-change');
     expect(draftNames).toContain('no-tasks-change');
 
     // Verify completed-change is in Completed section (marked with ✓)
@@ -74,7 +74,7 @@ describe('ViewCommand', () => {
       .filter((line) => line.includes('✓'));
     const completedNames = completedLines.map((line) => line.trim().replace('✓ ', ''));
     expect(completedNames).toContain('completed-change');
-    expect(completedNames).not.toContain('空にできません-change');
+    expect(completedNames).not.toContain('empty-change');
     expect(completedNames).not.toContain('no-tasks-change');
   });
 

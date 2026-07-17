@@ -106,7 +106,7 @@ describe('store canonical remote (3.3)', () => {
         { cwd: tempDir, env }
       );
       expect(result.exitCode).toBe(1);
-      expect(fs.既に存在しますSync(storeRoot)).toBe(false);
+      expect(fs.existsSync(storeRoot)).toBe(false);
     });
 
     it('refuses --remote when store.yaml already exists, naming the hand-edit', async () => {
@@ -154,7 +154,7 @@ describe('store canonical remote (3.3)', () => {
       expect(
         fs.readFileSync(path.join(storeRoot, '.openspec-store', 'store.yaml'), 'utf-8')
       ).toContain(`remote: ${TEST_NET_URL}`);
-      expect(fs.既に存在しますSync(path.join(storeRoot, '.git'))).toBe(false);
+      expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(false);
     });
 
     it('prints the canonical remote in the sharing guidance', async () => {

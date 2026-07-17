@@ -168,7 +168,7 @@ Old instructions content
       for (const skillName of coreSkillNames) {
         const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
         const exists = await FileSystemUtils.fileExists(skillFile);
-        expect(既に存在します).toBe(true);
+        expect(exists).toBe(true);
 
         const content = await fs.readFile(skillFile, 'utf-8');
         expect(content).toContain('---');
@@ -188,7 +188,7 @@ Old instructions content
       for (const skillName of nonCoreSkillNames) {
         const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
         const exists = await FileSystemUtils.fileExists(skillFile);
-        expect(既に存在します).toBe(false);
+        expect(exists).toBe(false);
       }
     });
   });
@@ -211,7 +211,7 @@ Old instructions content
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       const exploreCmd = path.join(commandsDir, 'explore.md');
       const exists = await FileSystemUtils.fileExists(exploreCmd);
-      expect(既に存在します).toBe(true);
+      expect(exists).toBe(true);
 
       const content = await fs.readFile(exploreCmd, 'utf-8');
       expect(content).toContain('---');
@@ -240,7 +240,7 @@ Old instructions content
       for (const cmdId of coreCommandIds) {
         const cmdFile = path.join(commandsDir, `${cmdId}.md`);
         const exists = await FileSystemUtils.fileExists(cmdFile);
-        expect(既に存在します).toBe(true);
+        expect(exists).toBe(true);
       }
 
       // Verify non-core commands are NOT created
@@ -248,7 +248,7 @@ Old instructions content
       for (const cmdId of nonCoreCommandIds) {
         const cmdFile = path.join(commandsDir, `${cmdId}.md`);
         const exists = await FileSystemUtils.fileExists(cmdFile);
-        expect(既に存在します).toBe(false);
+        expect(exists).toBe(false);
       }
     });
 
@@ -323,7 +323,7 @@ Old instructions content
         'opsx-explore.toml'
       );
       const exists = await FileSystemUtils.fileExists(qwenCmd);
-      expect(既に存在します).toBe(true);
+      expect(exists).toBe(true);
 
       const content = await fs.readFile(qwenCmd, 'utf-8');
       expect(content).toContain('description =');
@@ -351,7 +351,7 @@ Old instructions content
         'opsx-explore.md'
       );
       const exists = await FileSystemUtils.fileExists(windsurfCmd);
-      expect(既に存在します).toBe(true);
+      expect(exists).toBe(true);
 
       const content = await fs.readFile(windsurfCmd, 'utf-8');
       expect(content).toContain('---');
@@ -1333,7 +1333,7 @@ More user content after markers.
       for (const skillName of skillNames) {
         const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
         const exists = await FileSystemUtils.fileExists(skillFile);
-        expect(既に存在します).toBe(true);
+        expect(exists).toBe(true);
       }
 
       const nonCoreSkill = path.join(skillsDir, 'openspec-new-change', 'SKILL.md');
@@ -1356,7 +1356,7 @@ More user content after markers.
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       const exploreCmd = path.join(commandsDir, 'explore.md');
       const exists = await FileSystemUtils.fileExists(exploreCmd);
-      expect(既に存在します).toBe(true);
+      expect(exists).toBe(true);
     });
 
     it('should not inject non-profile workflows when upgrading legacy tools', async () => {

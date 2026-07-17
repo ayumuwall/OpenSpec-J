@@ -71,7 +71,7 @@ describe('CompletionCommand', () => {
 
       await command.generate({});
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         'エラー: シェルを自動検出できませんでした。明示的にシェルを指定してください。'
       );
       expect(process.exitCode).toBe(1);
@@ -80,7 +80,7 @@ describe('CompletionCommand', () => {
     it('should show error for unsupported shell', async () => {
       await command.generate({ shell: 'tcsh' });
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
@@ -128,7 +128,7 @@ describe('CompletionCommand', () => {
 
       await command.install({});
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         'エラー: シェルを自動検出できませんでした。明示的にシェルを指定してください。'
       );
       expect(process.exitCode).toBe(1);
@@ -137,7 +137,7 @@ describe('CompletionCommand', () => {
     it('should show error for unsupported shell', async () => {
       await command.install({ shell: 'tcsh' });
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
@@ -177,7 +177,7 @@ describe('CompletionCommand', () => {
 
       await command.uninstall({ yes: true });
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         'エラー: シェルを自動検出できませんでした。明示的にシェルを指定してください。'
       );
       expect(process.exitCode).toBe(1);
@@ -186,7 +186,7 @@ describe('CompletionCommand', () => {
     it('should show error for unsupported shell', async () => {
       await command.uninstall({ shell: 'tcsh', yes: true });
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);
@@ -213,7 +213,7 @@ describe('CompletionCommand', () => {
       const cmd = new CompletionCommand();
       await cmd.install({ shell: 'zsh' });
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('Permission denied')
       );
       expect(process.exitCode).toBe(1);
@@ -237,7 +237,7 @@ describe('CompletionCommand', () => {
       const cmd = new CompletionCommand();
       await cmd.uninstall({ shell: 'zsh', yes: true });
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('補完スクリプトはインストールされていません')
       );
       expect(process.exitCode).toBe(1);
@@ -259,7 +259,7 @@ describe('CompletionCommand', () => {
 
       await command.generate({});
 
-      expect(consoleエラーSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         "エラー: シェル 'tcsh' はまだサポートされていません。現在の対応: zsh, bash, fish, powershell"
       );
       expect(process.exitCode).toBe(1);

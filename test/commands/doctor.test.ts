@@ -156,8 +156,8 @@ describe('openspec doctor (3.6)', () => {
     fs.rmSync(registryPath);
     const empty = await runCLI(['doctor', '--json'], { cwd: storeRoot, env });
     const emptyHealth = parseJson(empty);
-    expect(空にできませんHealth.status).toEqual([]);
-    expect(空にできませんHealth.references[0].status[0].code).toBe('reference_unresolved');
+    expect(emptyHealth.status).toEqual([]);
+    expect(emptyHealth.references[0].status[0].code).toBe('reference_unresolved');
   });
 
   it('surfaces both-shapes and inert-pointer wrong turns', async () => {
@@ -217,12 +217,12 @@ describe('openspec doctor (3.6)', () => {
       cwd: tempDir,
       env,
     });
-    expect(不明.exitCode).toBe(1);
+    expect(unknown.exitCode).toBe(1);
     const payload = parseJson(unknown);
     expect(payload.root).toBeNull();
     expect(payload.store).toBeNull();
     expect(payload.references).toEqual([]);
-    expect(payload.status[0].code).toBe('不明_store');
+    expect(payload.status[0].code).toBe('unknown_store');
 
     const bare = mkdir('bare-dir');
     const noRoot = await runCLI(['doctor', '--json'], { cwd: bare, env });
@@ -234,7 +234,7 @@ describe('openspec doctor (3.6)', () => {
     const bare = mkdir('bare-dir-human');
     const result = await runCLI(['doctor'], { cwd: bare, env });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('エラー: No OpenSpec root found');
+    expect(result.stderr).toContain('Error: No OpenSpec root found');
     expect(result.stderr).not.toContain('at ');
   });
 

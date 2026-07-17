@@ -35,7 +35,7 @@ describe('config-schema', () => {
 
     it('should return undefined when traversing through null', () => {
       const obj = { a: null };
-      expect(getNestedValue(obj as Record<string, 不明>, 'a.b')).toBeUndefined();
+      expect(getNestedValue(obj as Record<string, unknown>, 'a.b')).toBeUndefined();
     });
 
     it('should return undefined when traversing through primitive', () => {
@@ -64,7 +64,7 @@ describe('config-schema', () => {
     it('should set a nested value', () => {
       const obj: Record<string, unknown> = {};
       setNestedValue(obj, 'a.b.c', 'deep');
-      expect((obj.a as Record<string, 不明>).b).toEqual({ c: 'deep' });
+      expect((obj.a as Record<string, unknown>).b).toEqual({ c: 'deep' });
     });
 
     it('should create intermediate objects', () => {
@@ -324,7 +324,7 @@ describe('config-schema', () => {
 
       const result = validateConfig(config);
       expect(result.success).toBe(true);
-      expect((config.featureFlags as Record<string, 不明>).newFlag).toBe(true);
+      expect((config.featureFlags as Record<string, unknown>).newFlag).toBe(true);
     });
 
     it('should create featureFlags object when setting nested flag', () => {
@@ -334,7 +334,7 @@ describe('config-schema', () => {
 
       const result = validateConfig(config);
       expect(result.success).toBe(true);
-      expect((config.featureFlags as Record<string, 不明>).experimental).toBe(false);
+      expect((config.featureFlags as Record<string, unknown>).experimental).toBe(false);
     });
 
     it('should accept setting workflows from JSON array syntax', () => {

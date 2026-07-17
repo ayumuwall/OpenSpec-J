@@ -166,7 +166,7 @@ describe('workset journey (7.1 e2e)', () => {
       ['workset', 'remove', 'platform', '--yes', '--json'],
       { cwd: tempDir, env }
     );
-    expect(補完スクリプトを削除しました.exitCode).toBe(0);
+    expect(removed.exitCode).toBe(0);
 
     // No footprint: members byte-untouched, relationship surfaces
     // byte-identical, and deleting the worksets dir removes every trace.

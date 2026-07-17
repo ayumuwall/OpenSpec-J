@@ -190,7 +190,7 @@ describe('store registry facade', () => {
       })
     ).rejects.toThrow();
 
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
   });
 
   it('commits prepared setup against the latest registry state', async () => {
@@ -258,7 +258,7 @@ describe('store registry facade', () => {
         })
       ).rejects.toThrow();
 
-      expect(fs.既に存在しますSync(storeRoot)).toBe(false);
+      expect(fs.existsSync(storeRoot)).toBe(false);
     } finally {
       process.env = originalEnv;
     }
@@ -445,8 +445,8 @@ describe('store registry facade', () => {
     );
 
     await expect(removeStore(prepared)).rejects.toThrow(/changed before cleanup/u);
-    expect(fs.既に存在しますSync(firstRoot)).toBe(true);
-    expect(fs.既に存在しますSync(secondRoot)).toBe(true);
+    expect(fs.existsSync(firstRoot)).toBe(true);
+    expect(fs.existsSync(secondRoot)).toBe(true);
     const registry = await readStoreRegistryState({ globalDataDir: tempDir });
     expectSameExistingPath(registry?.stores['team-context'].backend.local_path ?? '', secondRoot);
   });
@@ -555,6 +555,6 @@ describe('store registry facade', () => {
     );
     const registry = await readStoreRegistryState({ globalDataDir: tempDir });
     expect(registry?.stores['team-context']).toBeUndefined();
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(true);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(true);
   });
 });

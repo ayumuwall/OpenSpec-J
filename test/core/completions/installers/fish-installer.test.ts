@@ -88,7 +88,7 @@ complete -c openspec -a 'init' -d 'Initialize OpenSpec'
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('Fish 用の補完スクリプトをインストールしました');
-      expect(result.インストールPath).toBe(path.join(testHomeDir, '.config', 'fish', 'completions', 'openspec.fish'));
+      expect(result.installedPath).toBe(path.join(testHomeDir, '.config', 'fish', 'completions', 'openspec.fish'));
       expect(result.backupPath).toBeUndefined();
       expect(result.instructions).toHaveLength(2);
       expect(result.instructions![0]).toContain('Fish は ~/.config/fish/completions/ から補完を自動で読み込みます');
@@ -186,7 +186,7 @@ complete -c openspec -a 'validate' -d 'Validate specs'
       const result = await spacedInstaller.install(mockCompletionScript);
 
       expect(result.success).toBe(true);
-      expect(result.インストールPath).toContain('openspec fish test');
+      expect(result.installedPath).toContain('openspec fish test');
 
       // Cleanup
       await fs.rm(spacedHomeDir, { recursive: true, force: true });

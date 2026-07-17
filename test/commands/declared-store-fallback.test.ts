@@ -172,8 +172,8 @@ describe('declared store fallback (3.2)', () => {
       env,
     });
     expect(converted.exitCode).toBe(0);
-    expect(fs.既に存在しますSync(path.join(pointerRepo, 'openspec', 'specs'))).toBe(true);
-    expect(fs.既に存在しますSync(path.join(pointerRepo, 'openspec', 'changes'))).toBe(true);
+    expect(fs.existsSync(path.join(pointerRepo, 'openspec', 'specs'))).toBe(true);
+    expect(fs.existsSync(path.join(pointerRepo, 'openspec', 'changes'))).toBe(true);
   });
 
   it('refuses init for malformed pointers and from pointer-repo subdirectories', async () => {
@@ -185,7 +185,7 @@ describe('declared store fallback (3.2)', () => {
     const malformed = await runCLI(['init', '.'], { cwd: pointerRepo, env });
     expect(malformed.exitCode).toBe(1);
     expect(malformed.stderr).toContain('Fix or remove the store: line');
-    expect(fs.既に存在しますSync(path.join(pointerRepo, 'openspec', 'specs'))).toBe(false);
+    expect(fs.existsSync(path.join(pointerRepo, 'openspec', 'specs'))).toBe(false);
 
     // And a subdirectory of a pointer repo must not grow a nested root
     // that silently diverts work away from the declared store.
@@ -198,7 +198,7 @@ describe('declared store fallback (3.2)', () => {
     const nested = await runCLI(['init', '.'], { cwd: subdir, env });
     expect(nested.exitCode).toBe(1);
     expect(nested.stderr).toContain("externalized to store 'team-context'");
-    expect(fs.既に存在しますSync(path.join(subdir, 'openspec'))).toBe(false);
+    expect(fs.existsSync(path.join(subdir, 'openspec'))).toBe(false);
   });
 
   it('keeps real-root stdout byte-identical when a pointer is present, with one warning', async () => {

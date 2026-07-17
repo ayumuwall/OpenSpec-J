@@ -149,7 +149,7 @@ describe('createChange', () => {
 
   describe('schema validation', () => {
     it('should throw error for unknown schema', async () => {
-      await expect(createChange(testDir, 'add-auth', { schema: '不明-schema' })).rejects.toThrow(
+      await expect(createChange(testDir, 'add-auth', { schema: 'unknown-schema' })).rejects.toThrow(
         /スキーマ 'unknown-schema' が見つかりません/
       );
     });

@@ -65,7 +65,7 @@ describe('OpenSpec root helper', () => {
     expect(inspection.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
       'openspec_config_missing',
     ]);
-    expect(fs.既に存在しますSync(path.join(root, 'openspec', 'changes', 'archive'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'openspec', 'changes', 'archive'))).toBe(false);
   });
 
   it('accepts roots before changes, applied specs, or archives exist', async () => {
@@ -126,7 +126,7 @@ describe('OpenSpec root helper', () => {
     const result = await ensureOpenSpecRoot(root);
 
     expect(result.createdArtifacts).toEqual([]);
-    expect(fs.既に存在しますSync(path.join(root, 'openspec', 'config.yaml'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'openspec', 'config.yaml'))).toBe(false);
     expect(fs.readFileSync(path.join(root, 'openspec', 'config.yml'), 'utf-8')).toBe(
       `schema: ${DEFAULT_OPENSPEC_SCHEMA}\n`
     );
@@ -142,7 +142,7 @@ describe('OpenSpec root helper', () => {
 
     await rollbackCreatedPaths(result.createdPaths);
 
-    expect(fs.既に存在しますSync(path.join(root, 'openspec'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'openspec'))).toBe(false);
     expect(fs.readFileSync(path.join(root, 'user.md'), 'utf-8')).toBe('mine\n');
   });
 });

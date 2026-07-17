@@ -65,7 +65,7 @@ describe('worksets core', () => {
   describe('name and member validation', () => {
     it('accepts kebab names and rejects everything else', () => {
       expect(validateWorksetName('platform-2')).toBe('platform-2');
-      expect(() => validateWorksetName('My Stuff')).toThrowエラー(
+      expect(() => validateWorksetName('My Stuff')).toThrowError(
         /must be kebab-case/
       );
       try {
@@ -80,7 +80,7 @@ describe('worksets core', () => {
     it('rejects empty, dotted, and separator-bearing labels', () => {
       expect(memberLabelProblem('web-app')).toBeNull();
       expect(memberLabelProblem('Web App')).toBeNull();
-      expect(memberLabelProblem('')).toMatch(/must not be 空にできません/);
+      expect(memberLabelProblem('')).toMatch(/must not be empty/);
       expect(memberLabelProblem('.')).toMatch(/must not be '\.'/);
       expect(memberLabelProblem('a/b')).toMatch(/path separators/);
       expect(memberLabelProblem('a\\b')).toMatch(/path separators/);
@@ -88,7 +88,7 @@ describe('worksets core', () => {
 
     it('rejects empty lists, duplicate labels, and relative paths', () => {
       expect(memberListProblem([memberA(), memberB()])).toBeNull();
-      expect(memberListProblem([])).toMatch(/must not be 空にできません/);
+      expect(memberListProblem([])).toMatch(/must not be empty/);
       expect(
         memberListProblem([memberA(), { ...memberB(), name: 'team-context' }])
       ).toMatch(/duplicate member name 'team-context'/);
@@ -188,7 +188,7 @@ describe('worksets core', () => {
       expect(getWorkset(withOne, 'absent')).toBeNull();
 
       const removed = withoutWorkset(withOne, 'platform');
-      expect(listWorksets(補完スクリプトを削除しました)).toEqual([]);
+      expect(listWorksets(removed)).toEqual([]);
     });
 
     it('rejects duplicate names with a remove fix', () => {
@@ -204,7 +204,7 @@ describe('worksets core', () => {
         const diagnostic = (
           error as { diagnostic: { code: string; fix?: string } }
         ).diagnostic;
-        expect(diagnostic.code).toBe('workset_既に存在します');
+        expect(diagnostic.code).toBe('workset_exists');
         expect(diagnostic.fix).toBe(
           'Choose another name, or remove it first: openspec workset remove platform'
         );

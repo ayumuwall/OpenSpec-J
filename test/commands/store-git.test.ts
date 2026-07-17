@@ -119,7 +119,7 @@ describe('store git lifecycle', () => {
     const storeRoot = path.join(tempDir, 'interactive-context');
     const { input, confirm } = await getPromptMocks();
     input.mockImplementation(async (options: { message: string }) => {
-      if (options.message === 'Where should this store live?') return storeRoot;
+      if (options.message === 'ストアの保存先を指定してください。') return storeRoot;
       throw new Error(`Unexpected prompt: ${options.message}`);
     });
     confirm.mockResolvedValue(true);
@@ -127,16 +127,16 @@ describe('store git lifecycle', () => {
     await runStoreCommand(['setup', 'interactive-context']);
 
     // No Git prompt: Git is the default, and the summary reflects it.
-    expect(確定).toHaveBeenCalledTimes(1);
-    expect(確定).toHaveBeenNthCalledWith(1, {
-      message: 'Create this store?',
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm).toHaveBeenNthCalledWith(1, {
+      message: 'このストアを作成しますか？',
       default: true,
     });
     expect(consoleLogSpy).toHaveBeenCalledWith('  Git: initialized');
     expect(consoleLogSpy).toHaveBeenCalledWith(
       'Share this store by committing and pushing it like any Git repo.'
     );
-    expect(fs.既に存在しますSync(path.join(storeRoot, '.git'))).toBe(true);
+    expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(true);
     const committed = execFileSync('git', ['log', '--format=%s'], { cwd: storeRoot })
       .toString()
       .trim();
@@ -191,9 +191,9 @@ describe('store git lifecycle', () => {
       'openspec/changes/archive/.gitkeep',
       '.openspec-store/store.yaml',
     ]) {
-      expect(fs.既に存在しますSync(path.join(cloneRoot, required))).toBe(true);
+      expect(fs.existsSync(path.join(cloneRoot, required))).toBe(true);
     }
-    expect(fs.既に存在しますSync(path.join(cloneRoot, 'workspace.yaml'))).toBe(false);
+    expect(fs.existsSync(path.join(cloneRoot, 'workspace.yaml'))).toBe(false);
   });
 
   it('registers a clone before any changes exist', async () => {
@@ -221,15 +221,15 @@ describe('store git lifecycle', () => {
       env: gitExecEnv,
       stdio: 'ignore',
     });
-    expect(fs.既に存在しますSync(path.join(cloneRoot, 'openspec', 'changes'))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(cloneRoot, 'openspec', 'specs'))).toBe(false);
+    expect(fs.existsSync(path.join(cloneRoot, 'openspec', 'changes'))).toBe(false);
+    expect(fs.existsSync(path.join(cloneRoot, 'openspec', 'specs'))).toBe(false);
 
     const registered = await runCLI(['store', 'register', cloneRoot, '--json'], {
       cwd: tempDir,
       env: teammateEnv,
     });
     expect(registered.exitCode).toBe(0);
-    expect(parseJson(registered).store.id).toBe('空にできません-team-context');
+    expect(parseJson(registered).store.id).toBe('empty-team-context');
   });
 
   it('registers a clone with active changes before specs or archive exist', async () => {
@@ -281,8 +281,8 @@ describe('store git lifecycle', () => {
       env: gitExecEnv,
       stdio: 'ignore',
     });
-    expect(fs.既に存在しますSync(path.join(cloneRoot, 'openspec', 'specs'))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(cloneRoot, 'openspec', 'changes', 'archive'))).toBe(false);
+    expect(fs.existsSync(path.join(cloneRoot, 'openspec', 'specs'))).toBe(false);
+    expect(fs.existsSync(path.join(cloneRoot, 'openspec', 'changes', 'archive'))).toBe(false);
 
     const registered = await runCLI(['store', 'register', cloneRoot, '--json'], {
       cwd: tempDir,

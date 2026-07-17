@@ -138,7 +138,7 @@ describe('artifact-workflow CLI commands', () => {
     it('exits gracefully when no changes exist', async () => {
       const result = await runCLI(['status'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('進行中の変更はありません');
+      expect(result.stdout).toContain('アクティブな変更はありません');
       expect(result.stdout).toContain('openspec new change');
     });
 
@@ -148,7 +148,7 @@ describe('artifact-workflow CLI commands', () => {
 
       const json = JSON.parse(result.stdout);
       expect(json.changes).toEqual([]);
-      expect(json.message).toBe('進行中の変更はありません。');
+      expect(json.message).toBe('アクティブな変更はありません。');
     });
 
     it('errors when --change is missing and lists available changes', async () => {
@@ -189,7 +189,7 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain("スキーマ '不明' が見つかりません");
+      expect(output).toContain("スキーマ 'unknown' が見つかりません");
     });
 
     it('rejects path traversal in change name', async () => {
@@ -287,7 +287,7 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain("スキーマ 'spec-driven' にアーティファクト '不明-artifact' が見つかりません");
+      expect(output).toContain("スキーマ 'spec-driven' にアーティファクト 'unknown-artifact' が見つかりません");
       expect(output).toContain('有効なアーティファクト');
     });
   });
@@ -335,7 +335,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'my-new-feature'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       const output = getOutput(result);
-      expect(output).toContain("変更 'my-new-feature' を openspec/changes/my-new-feature/ に作成しました");
+      expect(output).toContain("Created change 'my-new-feature' at openspec/changes/my-new-feature/");
 
       const changeDir = path.join(changesDir, 'my-new-feature');
       const stat = await fs.stat(changeDir);
@@ -401,7 +401,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'invalid name'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('エラー');
+      expect(output).toContain('Error');
     });
 
     it('errors for duplicate change name', async () => {
@@ -716,7 +716,7 @@ artifacts:
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('無効なツール: 不明-tool');
+      expect(output).toContain('無効なツール: unknown-tool');
     });
 
     it('errors for tool without skillsDir', async () => {

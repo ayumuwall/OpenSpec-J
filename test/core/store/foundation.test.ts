@@ -266,7 +266,7 @@ local_path: /repos/acme
 
       await writeStoreRegistryState(registry, { globalDataDir: tempDir });
 
-      expect(fs.既に存在しますSync(getStoreRegistryPath({ globalDataDir: tempDir }))).toBe(true);
+      expect(fs.existsSync(getStoreRegistryPath({ globalDataDir: tempDir }))).toBe(true);
       await expect(readStoreRegistryState({ globalDataDir: tempDir })).resolves.toEqual(
         registry
       );

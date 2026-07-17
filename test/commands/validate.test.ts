@@ -157,7 +157,7 @@ describe('top-level validate command', () => {
     await fs.writeFile(path.join(deltaDir, 'spec.md'), validDelta, 'utf-8');
 
     const result = await runCLI(['validate', 'scaffolded'], { cwd: testDir });
-    expect(result.stderr).not.toContain('不明 item');
+    expect(result.stderr).not.toContain('unknown item');
     expect(result.exitCode).toBe(0);
   });
 
@@ -168,7 +168,7 @@ describe('top-level validate command', () => {
     await fs.writeFile(path.join(changeDir, '.openspec.yaml'), 'schema: spec-driven\n', 'utf-8');
 
     const result = await runCLI(['validate', 'scaffolded-empty'], { cwd: testDir });
-    expect(result.stderr).not.toContain('不明 item');
+    expect(result.stderr).not.toContain('unknown item');
     expect(result.exitCode).toBe(1);
   });
 

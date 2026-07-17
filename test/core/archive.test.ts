@@ -153,7 +153,7 @@ describe('ArchiveCommand', () => {
 
       // The gate now sees 5 tasks / 2 incomplete across the nested files.
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('2 incomplete task(s) found')
+        expect.stringContaining('未完了タスクが 2 件')
       );
     });
 
@@ -220,7 +220,7 @@ The system SHALL support logo and backgroundColor fields for gift cards.
       
       // Verify warning was logged about REMOVED requirements being ignored
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('gift-card - 新規仕様のため REMOVED の要件 2 件を無視しました')
+        expect.stringContaining('Warning: gift-card - 2 REMOVED requirement(s) ignored')
       );
       
       // Verify spec was created with only ADDED requirements
@@ -265,7 +265,7 @@ Modified content.`;
       
       // Verify error message mentions MODIFIED not allowed for new specs
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('new-capability の delta の検証に失敗しました')
+        expect.stringContaining('new-capability: target spec does not exist')
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
       
@@ -303,7 +303,7 @@ New feature description.
       
       // Verify error message mentions RENAMED not allowed for new specs
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('another-capability の delta の検証に失敗しました')
+        expect.stringContaining('another-capability: target spec does not exist')
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
       
@@ -320,7 +320,7 @@ New feature description.
     it('should throw error if change does not exist', async () => {
       await expect(
         archiveCommand.execute('non-existent-change', { yes: true })
-      ).rejects.toThrow("変更 'non-existent-change' が見つかりません。");
+      ).rejects.toThrow("Change 'non-existent-change' not found");
     });
 
     it('should throw error if archive already exists', async () => {
@@ -336,7 +336,7 @@ New feature description.
       // Try to archive
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(`アーカイブ '${date}-${changeName}' は既に存在します。`);
+      ).rejects.toThrow(`Archive '${date}-${changeName}' already exists`);
     });
 
     it('should handle changes without tasks.md', async () => {
@@ -801,7 +801,7 @@ new body`;
       expect(unchanged).toBe(mainContent);
       // Assert error message format and abort notice
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('delta の検証に失敗しました')
+        expect.stringContaining('delta validation failed')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('中止しました。ファイルは変更されませんでした。')
@@ -907,7 +907,7 @@ E1 updated`);
 
       // Verify aggregated totals line was printed
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('合計: + 1, ~ 1, - 0, → 1')
+        expect.stringContaining('Totals: + 1, ~ 1, - 0, → 1')
       );
     });
   });
@@ -941,7 +941,7 @@ The system will log all events.
 
       expect(process.exitCode).toBe(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Validation failed')
+        expect.stringContaining('検証に失敗しました')
       );
 
       // Change must NOT have been archived
@@ -1045,7 +1045,7 @@ The system SHALL do the thing differently.
         // buildUpdatedSpec ran for real and the spy made its output "invalid"
         expect(specContentSpy).toHaveBeenCalled();
         expect(console.log).toHaveBeenCalledWith(
-          expect.stringContaining('Validation errors in rebuilt spec for rebuilt-capability')
+          expect.stringContaining('再構築した仕様 rebuilt-capability の検証エラー')
         );
         expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
 

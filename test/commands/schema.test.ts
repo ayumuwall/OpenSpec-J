@@ -147,7 +147,7 @@ artifacts:
 
       // Template file doesn't exist, validation should report this
       const templatePath = path.join(schemaDir, 'missing-template.md');
-      expect(fs.既に存在しますSync(templatePath)).toBe(false);
+      expect(fs.existsSync(templatePath)).toBe(false);
     });
 
     it('should detect circular dependencies', async () => {
@@ -173,7 +173,7 @@ artifacts:
       - a
 `;
 
-      expect(() => parseSchema(content)).toThrow(SchemaValidationエラー);
+      expect(() => parseSchema(content)).toThrow(SchemaValidationError);
       expect(() => parseSchema(content)).toThrow(/[Cc]yclic/);
     });
 
@@ -194,7 +194,7 @@ artifacts:
       - nonexistent
 `;
 
-      expect(() => parseSchema(content)).toThrow(SchemaValidationエラー);
+      expect(() => parseSchema(content)).toThrow(SchemaValidationError);
       expect(() => parseSchema(content)).toThrow(/nonexistent/);
     });
   });
@@ -224,7 +224,7 @@ artifacts:
       }
 
       // Verify destination exists
-      expect(fs.既に存在しますSync(path.join(destDir, 'schema.yaml'))).toBe(true);
+      expect(fs.existsSync(path.join(destDir, 'schema.yaml'))).toBe(true);
     });
 
     it('should reject invalid schema names', () => {
@@ -270,8 +270,8 @@ artifacts:
       fs.writeFileSync(path.join(schemaDir, 'proposal.md'), '# Proposal');
 
       // Verify
-      expect(fs.既に存在しますSync(path.join(schemaDir, 'schema.yaml'))).toBe(true);
-      expect(fs.既に存在しますSync(path.join(schemaDir, 'proposal.md'))).toBe(true);
+      expect(fs.existsSync(path.join(schemaDir, 'schema.yaml'))).toBe(true);
+      expect(fs.existsSync(path.join(schemaDir, 'proposal.md'))).toBe(true);
     });
 
     it('should validate schema name format', () => {

@@ -184,7 +184,7 @@ describe('searchable-multi-select keybindings', () => {
 
       pressKey('return');
       expect(getStatus()).toBe('idle');
-      expect(getエラー()).toBe('Select at least one');
+      expect(getError()).toBe('Select at least one');
     });
 
     it('should confirm when validation passes', async () => {

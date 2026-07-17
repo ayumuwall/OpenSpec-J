@@ -199,7 +199,7 @@ describe('command completion registry', () => {
       expect(command(name), `${name} command`).toBeDefined();
     }
 
-    expect(command('set'), 'set command should be 補完スクリプトを削除しました').toBeUndefined();
+    expect(command('set'), 'set command should be removed').toBeUndefined();
 
     const newChange = command('new')?.subcommands?.find((entry) => entry.name === 'change');
     expect(newChange?.flags.map((flag) => flag.name)).toEqual([

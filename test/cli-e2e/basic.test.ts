@@ -121,7 +121,7 @@ describe('openspec CLI e2e basics', () => {
     const projectDir = await prepareFixture('tmp-init');
     const result = await runCLI(['validate', 'does-not-exist'], { cwd: projectDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain("項目 'does-not-exist' が見つかりません");
+    expect(result.stderr).toContain("Unknown item 'does-not-exist'");
   });
 
   describe('init command non-interactive options', () => {

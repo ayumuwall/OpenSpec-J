@@ -92,7 +92,7 @@ describe('capstone persona journeys (6.1)', () => {
       'changes',
       'implement-invoice-immutability'
     );
-    expect(fs.既に存在しますSync(changeDir)).toBe(true);
+    expect(fs.existsSync(changeDir)).toBe(true);
     expect(
       fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'implement-invoice-immutability'))
     ).toBe(false);
@@ -122,7 +122,7 @@ describe('capstone persona journeys (6.1)', () => {
     );
     expect(created.exitCode).toBe(0);
     const changeDir = path.join(storeRoot, 'openspec', 'changes', 'add-rate-limits');
-    expect(fs.既に存在しますSync(changeDir)).toBe(true);
+    expect(fs.existsSync(changeDir)).toBe(true);
 
     const status = await runCLI(['status', '--change', 'add-rate-limits', '--json'], {
       cwd: codeRepo,
@@ -170,7 +170,7 @@ describe('capstone persona journeys (6.1)', () => {
       { cwd: codeRepo, env }
     );
     expect(archived.exitCode).toBe(0);
-    expect(fs.既に存在しますSync(changeDir)).toBe(false);
+    expect(fs.existsSync(changeDir)).toBe(false);
     const archiveDir = path.join(storeRoot, 'openspec', 'changes', 'archive');
     const archivedNames = fs.readdirSync(archiveDir);
     expect(archivedNames.some((name) => name.endsWith('add-rate-limits'))).toBe(true);

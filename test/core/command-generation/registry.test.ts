@@ -64,7 +64,7 @@ describe('command-generation/registry', () => {
     });
 
     it('should return false for unregistered tools', () => {
-      expect(CommandAdapterRegistry.has('不明')).toBe(false);
+      expect(CommandAdapterRegistry.has('unknown')).toBe(false);
       expect(CommandAdapterRegistry.has('')).toBe(false);
     });
   });

@@ -254,7 +254,7 @@ describe('reference index assembly', () => {
       globalDataDir,
       registryEntries: [],
     });
-    expect(空にできません[0].status[0].code).toBe('reference_unresolved');
+    expect(empty[0].status[0].code).toBe('reference_unresolved');
 
     // Injected null: unreadable registry.
     const unreadable = await assembleReferenceIndex({

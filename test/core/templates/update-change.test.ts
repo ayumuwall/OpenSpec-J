@@ -21,7 +21,7 @@ describe('update-change templates', () => {
     expect(skill.name).toBe('openspec-update-change');
     expect(skill.description).toContain('Never edits code');
     expect(skill.license).toBe('MIT');
-    expect(skill.compatibility).toBe('OpenSpec CLI が必要です。');
+    expect(skill.compatibility).toBe('Requires openspec CLI.');
     expect(skill.metadata).toEqual({ author: 'openspec', version: '1.0' });
 
     expect(command.name).toBe('OPSX: Update');
@@ -39,9 +39,9 @@ describe('update-change templates', () => {
 
   it('reads artifact ids from status JSON and never branches on hardcoded artifact names (3.2)', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('do NOT assume them, and do NOT branch on hardcoded artifact names');
-      expect(body, label).toContain('never branch on hardcoded artifact names');
-      expect(body, label).toContain('Custom schemas must work unchanged');
+      expect(body, label).toContain('これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください');
+      expect(body, label).toContain('ハードコードされたアーティファクト名に基づいて分岐することはありません');
+      expect(body, label).toContain('カスタム スキーマは変更せずに機能する必要があります');
       // No literal artifact filenames anywhere: no proposal.md/design.md/tasks.md
       // branching, and no worked example that names them. The only .md literal
       // allowed is the specs/**/*.md glob illustration.
@@ -51,36 +51,36 @@ describe('update-change templates', () => {
 
   it('edits planning artifacts only, hands code off to /opsx:apply, never advances the frontier (3.3)', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('Never edit code');
-      expect(body, label).toContain('NEVER edit implementation code');
-      expect(body, label).toContain('stop and point to `/opsx:apply`');
-      expect(body, label).toContain('Do not advance the build frontier');
-      expect(body, label).toContain('Do NOT create artifacts that don\'t exist yet');
+      expect(body, label).toContain('コードは決して編集しないでください');
+      expect(body, label).toContain('実装コードは決して編集しないでください');
+      expect(body, label).toContain('停止して `/opsx:apply` をポイントします');
+      expect(body, label).toContain('ビルド フロンティアを進めないでください');
+      expect(body, label).toContain('まだ存在しないアーティファクトを作成しないでください');
     }
   });
 
   it('writes to existingOutputPaths, never to a glob resolvedOutputPath (3.4)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('artifactPaths.<id>.existingOutputPaths');
-      expect(body, label).toContain('Do NOT write to `resolvedOutputPath`');
-      expect(body, label).toContain('still the glob pattern, not a real file');
+      expect(body, label).toContain('`resolvedOutputPath` には書き込まないでください');
+      expect(body, label).toContain('依然としてグロブ パターンであり、実際のファイルではありません');
     }
   });
 
   it('ends with next-step guidance and never acts on it (3.5)', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('guidance only - NEVER act on it');
-      expect(body, label).toContain('suggest `/opsx:continue`');
-      expect(body, label).toContain('suggest `/opsx:apply`');
-      expect(body, label).toContain('suggest `/opsx:archive`');
-      expect(body, label).toContain('the code may no longer match the revised plan');
+      expect(body, label).toContain('ガイダンスのみ - 決して行動しないでください');
+      expect(body, label).toContain('`/opsx:continue`');
+      expect(body, label).toContain('`/opsx:apply`');
+      expect(body, label).toContain('`/opsx:archive`');
+      expect(body, label).toContain('コードは改訂された計画と一致しなくなる可能性があります');
     }
   });
 
   it('confirms every edit and redirects intent changes to /opsx:new', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('Write only after the user 確定s');
-      expect(body, label).toContain('If the user rejects a revision, do not write it');
+      expect(body, label).toContain('ユーザーが確認した後にのみ書き込みます');
+      expect(body, label).toContain('ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください');
       expect(body, label).toContain('recommend starting fresh with `/opsx:new`');
       expect(body, label).toContain('Update vs. Start Fresh');
     }

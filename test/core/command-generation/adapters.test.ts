@@ -58,7 +58,7 @@ describe('command-generation/adapters', () => {
 
       expect(output).toContain('---\n');
       expect(output).toContain('name: OpenSpec Explore');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('allowed-tools: Bash(openspec:*)');
       expect(output).toContain('category: Workflow');
       expect(output).toContain('tags: [workflow, explore, experimental]');
@@ -95,7 +95,7 @@ describe('command-generation/adapters', () => {
       expect(output).toContain('name: /opsx-explore');
       expect(output).toContain('id: opsx-explore');
       expect(output).toContain('category: Workflow');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -121,7 +121,7 @@ describe('command-generation/adapters', () => {
 
       expect(output).toContain('---\n');
       expect(output).toContain('name: OpenSpec Explore');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('category: Workflow');
       expect(output).toContain('tags: [workflow, explore, experimental]');
       expect(output).toContain('---\n\n');
@@ -142,7 +142,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description frontmatter', () => {
       const output = amazonQAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -161,7 +161,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description frontmatter', () => {
       const output = antigravityAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -180,7 +180,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description and argument-hint', () => {
       const output = auggieAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('argument-hint: コマンド引数');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
@@ -206,7 +206,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description and argument-hint frontmatter', () => {
       const output = bobAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('argument-hint: コマンド引数');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.\n\nWith multiple lines.');
@@ -265,7 +265,7 @@ describe('command-generation/adapters', () => {
     it('should format file with markdown header (no YAML frontmatter)', () => {
       const output = clineAdapter.formatFile(sampleContent);
       expect(output).toContain('# OpenSpec Explore');
-      expect(output).toContain('explore モードに入る for thinking');
+      expect(output).toContain('Enter explore mode for thinking');
       expect(output).toContain('This is the command body.');
       expect(output).not.toContain('---');
     });
@@ -318,7 +318,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description and argument-hint', () => {
       const output = codexAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('argument-hint: コマンド引数');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
@@ -339,7 +339,7 @@ describe('command-generation/adapters', () => {
       const output = codebuddyAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
       expect(output).toContain('name: OpenSpec Explore');
-      expect(output).toContain('description: "explore モードに入る for thinking"');
+      expect(output).toContain('description: "Enter explore mode for thinking"');
       expect(output).toContain('argument-hint: "[コマンド引数]"');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
@@ -360,7 +360,7 @@ describe('command-generation/adapters', () => {
       const output = continueAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
       expect(output).toContain('name: opsx-explore');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('invokable: true');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
@@ -380,7 +380,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description and argument-hint', () => {
       const output = costrictAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: "explore モードに入る for thinking"');
+      expect(output).toContain('description: "Enter explore mode for thinking"');
       expect(output).toContain('argument-hint: コマンド引数');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
@@ -401,7 +401,7 @@ describe('command-generation/adapters', () => {
       const output = crushAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
       expect(output).toContain('name: OpenSpec Explore');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('category: Workflow');
       expect(output).toContain('tags: [workflow, explore, experimental]');
       expect(output).toContain('---\n\n');
@@ -422,7 +422,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description and argument-hint', () => {
       const output = factoryAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('argument-hint: コマンド引数');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
@@ -441,7 +441,7 @@ describe('command-generation/adapters', () => {
 
     it('should format file in TOML format', () => {
       const output = geminiAdapter.formatFile(sampleContent);
-      expect(output).toContain('description = "explore モードに入る for thinking"');
+      expect(output).toContain('description = "Enter explore mode for thinking"');
       expect(output).toContain('prompt = """');
       expect(output).toContain('This is the command body.');
       expect(output).toContain('"""');
@@ -461,7 +461,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description frontmatter', () => {
       const output = githubCopilotAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -483,7 +483,7 @@ describe('command-generation/adapters', () => {
       expect(output).toContain('name: /opsx-explore');
       expect(output).toContain('id: opsx-explore');
       expect(output).toContain('category: Workflow');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -519,7 +519,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description frontmatter', () => {
       const output = opencodeAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -566,7 +566,7 @@ describe('command-generation/adapters', () => {
       const output = qoderAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
       expect(output).toContain('name: OpenSpec Explore');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('category: Workflow');
       expect(output).toContain('tags: [workflow, explore, experimental]');
       expect(output).toContain('---\n\n');
@@ -586,7 +586,7 @@ describe('command-generation/adapters', () => {
 
     it('should format file in TOML format', () => {
       const output = qwenAdapter.formatFile(sampleContent);
-      expect(output).toContain('description = "explore モードに入る for thinking"');
+      expect(output).toContain('description = "Enter explore mode for thinking"');
       expect(output).toContain('prompt = """');
       expect(output).toContain('This is the command body.');
       expect(output).toContain('"""');
@@ -611,7 +611,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description frontmatter', () => {
       const output = piAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -675,7 +675,7 @@ describe('command-generation/adapters', () => {
     it('should format file with description frontmatter', () => {
       const output = ohMyPiAdapter.formatFile(sampleContent);
       expect(output).toContain('---\n');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.');
     });
@@ -760,7 +760,7 @@ describe('command-generation/adapters', () => {
     it('should format file with markdown header (no YAML frontmatter)', () => {
       const output = roocodeAdapter.formatFile(sampleContent);
       expect(output).toContain('# OpenSpec Explore');
-      expect(output).toContain('explore モードに入る for thinking');
+      expect(output).toContain('Enter explore mode for thinking');
       expect(output).toContain('This is the command body.');
       expect(output).not.toContain('---');
     });
@@ -786,7 +786,7 @@ describe('command-generation/adapters', () => {
 
       expect(output).toContain('---\n');
       expect(output).toContain('name: OpenSpec Explore');
-      expect(output).toContain('description: explore モードに入る for thinking');
+      expect(output).toContain('description: Enter explore mode for thinking');
       expect(output).toContain('---\n\n');
       expect(output).toContain('This is the command body.\n\nWith multiple lines.');
     });

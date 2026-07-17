@@ -533,7 +533,7 @@ The system will log all events.
 
       expect(report.valid).toBe(false);
       expect(report.summary.errors).toBeGreaterThan(0);
-      expect(report.issues.some(i => i.message.includes('SHALL または MUST が必要です'))).toBe(true);
+      expect(report.issues.some(i => i.message.includes('SHALL or MUST'))).toBe(true);
     });
 
     it('should hint the author when ADDED requirement only has SHALL/MUST in the header', async () => {
@@ -560,7 +560,7 @@ Error handling logic goes here.
       const report = await validator.validateChangeDeltaSpecs(changeDir);
 
       expect(report.valid).toBe(false);
-      const shallMessage = report.issues.find(i => i.message.includes('SHALL または MUST が必要です'));
+      const shallMessage = report.issues.find(i => i.message.includes('SHALL or MUST'));
       expect(shallMessage?.message).toContain('ヘッダーだけでなく要件本文に含めてください');
       expect(shallMessage?.message).toContain('### Requirement:');
     });
@@ -589,7 +589,7 @@ Please describe how validation should work here.
       const report = await validator.validateChangeDeltaSpecs(changeDir);
 
       expect(report.valid).toBe(false);
-      const shallMessage = report.issues.find(i => i.message.includes('SHALL または MUST が必要です'));
+      const shallMessage = report.issues.find(i => i.message.includes('SHALL or MUST'));
       expect(shallMessage?.message).toContain('ヘッダーだけでなく要件本文に含めてください');
       expect(shallMessage?.message).toContain('### Requirement:');
     });
@@ -618,7 +618,7 @@ The system will log all events.
       const report = await validator.validateChangeDeltaSpecs(changeDir);
 
       expect(report.valid).toBe(false);
-      const shallMessage = report.issues.find(i => i.message.includes('SHALL または MUST が必要です'));
+      const shallMessage = report.issues.find(i => i.message.includes('SHALL or MUST'));
       expect(shallMessage?.message).not.toContain('ヘッダーだけでなく要件本文に含めてください');
     });
 
@@ -713,7 +713,7 @@ The system MUST support mixed case delta headers.
   // actionable sentence byte-identical to the change-delta path, emitted once.
   describe('main-spec SHALL/MUST body-keyword hint (#1156)', () => {
     const ACTIONABLE_SENTENCE =
-      'must contain SHALL or MUST in the requirement body, not only in the header. Move the SHALL/MUST statement to the line immediately after the "### Requirement: ..." header.';
+      'must contain SHALL or MUST。ヘッダーだけでなく要件本文に含めてください。SHALL/MUST 文は "### Requirement: ..." 見出しの直後の行へ移動してください。';
 
     const buildSpec = (requirementBlock: string): string =>
       [
@@ -1079,7 +1079,7 @@ ${body}`;
       const changeReport = await new Validator(true).validateChangeDeltaSpecs(changeDir);
       expect(changeReport.valid).toBe(false);
       expect(
-        changeReport.issues.some(i => i.message.includes('not only in the header'))
+        changeReport.issues.some(i => i.message.includes('ヘッダーだけでなく要件本文に含めてください'))
       ).toBe(true);
 
       const spec = `# Test Spec
@@ -1094,7 +1094,7 @@ ${body}`;
       const specReport = await new Validator(true).validateSpec(specPath);
       expect(specReport.valid).toBe(false);
       expect(
-        specReport.issues.some(i => i.message.includes('not only in the header'))
+        specReport.issues.some(i => i.message.includes('ヘッダーだけでなく要件本文に含めてください'))
       ).toBe(true);
     });
 

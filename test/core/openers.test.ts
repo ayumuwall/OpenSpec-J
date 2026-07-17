@@ -92,7 +92,7 @@ describe('openers core', () => {
     });
 
     it('rejects malformed rows instead of ignoring them', () => {
-      expect(() => mergeOpenerTable('zed', CONFIG_PATH)).toThrowエラー(
+      expect(() => mergeOpenerTable('zed', CONFIG_PATH)).toThrowError(
         /Invalid openers config/
       );
       expect(() =>
@@ -257,7 +257,7 @@ describe('openers core', () => {
         ['code', false],
         ['cursor', false],
       ]);
-      expect(choices[2].note).toBe('(code 見つかりません on PATH)');
+      expect(choices[2].note).toBe('(code not found on PATH)');
     });
   });
 

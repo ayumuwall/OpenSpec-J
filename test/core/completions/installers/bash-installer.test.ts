@@ -68,7 +68,7 @@ describe('BashInstaller', () => {
       const result = await installer.install(testScript);
 
       expect(result.success).toBe(true);
-      expect(result.インストールPath).toBe(path.join(testHomeDir, '.local', 'share', 'bash-completion', 'completions', 'openspec'));
+      expect(result.installedPath).toBe(path.join(testHomeDir, '.local', 'share', 'bash-completion', 'completions', 'openspec'));
 
       // Verify file was created with correct content
       const content = await fs.readFile(result.installedPath!, 'utf-8');
@@ -249,7 +249,7 @@ describe('BashInstaller', () => {
       // Verify file is gone
       const targetPath = await installer.getInstallationPath();
       const exists = await fs.access(targetPath).then(() => true).catch(() => false);
-      expect(既に存在します).toBe(false);
+      expect(exists).toBe(false);
     });
 
     it('should return failure when not installed', async () => {
@@ -383,7 +383,7 @@ describe('BashInstaller', () => {
 
       const bashrcPath = path.join(testHomeDir, '.bashrc');
       const exists = await fs.access(bashrcPath).then(() => true).catch(() => false);
-      expect(既に存在します).toBe(false);
+      expect(exists).toBe(false);
 
       // Restore env
       if (originalEnv === undefined) {

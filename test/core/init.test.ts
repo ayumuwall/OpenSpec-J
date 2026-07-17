@@ -382,7 +382,7 @@ describe('InitCommand', () => {
       const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
       const content = await fs.readFile(skillFile, 'utf-8');
 
-      expect(content).toContain('explore モードに入る');
+      expect(content).toContain('Enter explore mode');
       expect(content).toContain('思考パートナー');
     });
 
@@ -727,7 +727,7 @@ describe('InitCommand - profile and detection features', () => {
     await initCommand.execute(testDir);
 
     expect(showWelcomeScreenMock).toHaveBeenCalled();
-    expect(確定Mock).not.toHaveBeenCalled();
+    expect(confirmMock).not.toHaveBeenCalled();
 
     const exploreSkill = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
     const newChangeSkill = path.join(testDir, '.claude', 'skills', 'openspec-new-change', 'SKILL.md');

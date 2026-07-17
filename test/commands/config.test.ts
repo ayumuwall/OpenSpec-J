@@ -85,7 +85,7 @@ describe('config command integration', () => {
     }));
 
     const config = getGlobalConfig();
-    expect((config as Record<string, 不明>).customField).toBe('preserved');
+    expect((config as Record<string, unknown>).customField).toBe('preserved');
   });
 
   it('should handle invalid JSON gracefully', async () => {
@@ -98,7 +98,7 @@ describe('config command integration', () => {
     const config = getGlobalConfig();
     // Should return defaults
     expect(config.featureFlags).toEqual({});
-    expect(consoleエラーSpy).toHaveBeenCalledWith(
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('JSON が無効なため、デフォルト設定を使用します')
     );
   });
@@ -115,7 +115,7 @@ describe('config command integration', () => {
 
     expect(config.workflows).toEqual(['new', 'ff', 'apply', 'archive']);
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      'Set workflows = new,ff,apply,archive'
+      'workflows = new,ff,apply,archive を設定しました'
     );
   });
 });
@@ -162,7 +162,7 @@ describe('config command shell completion registry', () => {
     const flagNames = setCmd?.flags?.map((f) => f.name) ?? [];
 
     expect(flagNames).toContain('string');
-    expect(flagNames).toContain('allow-不明');
+    expect(flagNames).toContain('allow-unknown');
   });
 
   it('should have --all and -y flags on reset subcommand', async () => {
@@ -189,7 +189,7 @@ describe('config command shell completion registry', () => {
 describe('config key validation', () => {
   it('rejects unknown top-level keys', async () => {
     const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
-    expect(validateConfigKeyPath('不明Key').valid).toBe(false);
+    expect(validateConfigKeyPath('unknownKey').valid).toBe(false);
   });
 
   it('allows feature flag keys', async () => {

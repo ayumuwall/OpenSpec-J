@@ -97,10 +97,10 @@ describe('store command', () => {
   }
 
   function expectHealthyOpenSpecRoot(root: string): void {
-    expect(fs.既に存在しますSync(path.join(root, 'openspec', 'config.yaml')) || fs.既に存在しますSync(path.join(root, 'openspec', 'config.yml'))).toBe(true);
-    expect(fs.既に存在しますSync(path.join(root, 'openspec', 'specs'))).toBe(true);
-    expect(fs.既に存在しますSync(path.join(root, 'openspec', 'changes'))).toBe(true);
-    expect(fs.既に存在しますSync(path.join(root, 'openspec', 'changes', 'archive'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'openspec', 'config.yaml')) || fs.existsSync(path.join(root, 'openspec', 'config.yml'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'openspec', 'specs'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'openspec', 'changes'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'openspec', 'changes', 'archive'))).toBe(true);
   }
 
   function expectNoGeneratedAgentOrBetaArtifacts(root: string): void {
@@ -113,7 +113,7 @@ describe('store command', () => {
       '.claude',
       '.cursor',
     ]) {
-      expect(fs.既に存在しますSync(path.join(root, artifact))).toBe(false);
+      expect(fs.existsSync(path.join(root, artifact))).toBe(false);
     }
   }
 
@@ -183,7 +183,7 @@ describe('store command', () => {
         },
       },
     });
-    expect(fs.既に存在しますSync(path.join(storeRoot, '.git'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(false);
   });
 
   it('runs guided setup when no args are passed in an interactive terminal', async () => {
@@ -202,8 +202,8 @@ describe('store command', () => {
     const storeRoot = path.join(tempDir, 'guided-context');
     const { input, confirm } = await getPromptMocks();
     input.mockImplementation(async (options: { message: string; default?: string }) => {
-      if (options.message === 'Store name') return 'guided-context';
-      if (options.message === 'Where should this store live?') return storeRoot;
+      if (options.message === 'ストア名') return 'guided-context';
+      if (options.message === 'ストアの保存先を指定してください。') return storeRoot;
       return options.default;
     });
     confirm.mockResolvedValueOnce(true);
@@ -211,21 +211,21 @@ describe('store command', () => {
     await runStoreCommand(['setup', '--no-init-git']);
 
     expect(input).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Store name',
+      message: 'ストア名',
     }));
     // The suggested location is a visible user path, never the XDG data dir.
     expect(input).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Where should this store live?',
+      message: 'ストアの保存先を指定してください。',
       default: '~/openspec/guided-context',
     }));
-    expect(確定).toHaveBeenCalledTimes(1);
-    expect(確定).toHaveBeenNthCalledWith(1, {
-      message: 'Create this store?',
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm).toHaveBeenNthCalledWith(1, {
+      message: 'このストアを作成しますか？',
       default: true,
     });
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(true);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(true);
     expectHealthyOpenSpecRoot(storeRoot);
-    expect(fs.既に存在しますSync(path.join(storeRoot, '.git'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(false);
     expect(process.exitCode).toBeUndefined();
   });
 
@@ -296,7 +296,7 @@ describe('store command', () => {
       'openspec/changes/archive/.gitkeep',
       '.openspec-store/store.yaml',
     ]);
-    expect(fs.既に存在しますSync(path.join(storeRoot, '.git'))).toBe(true);
+    expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(true);
     expectHealthyOpenSpecRoot(storeRoot);
   });
 
@@ -318,7 +318,7 @@ describe('store command', () => {
       'openspec/changes/archive/.gitkeep',
       '.openspec-store/store.yaml',
     ]);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'config.yaml'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec', 'config.yaml'))).toBe(false);
     expect(fs.readFileSync(path.join(storeRoot, 'openspec', 'config.yml'), 'utf-8')).toBe(
       `schema: ${DEFAULT_OPENSPEC_SCHEMA}\n`
     );
@@ -339,8 +339,8 @@ describe('store command', () => {
     );
 
     expect(result.exitCode).toBe(0);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'initiatives'))).toBe(true);
-    expect(fs.既に存在しますSync(path.join(storeRoot, '.codex'))).toBe(true);
+    expect(fs.existsSync(path.join(storeRoot, 'initiatives'))).toBe(true);
+    expect(fs.existsSync(path.join(storeRoot, '.codex'))).toBe(true);
     expect(fs.readFileSync(path.join(storeRoot, 'workspace.yaml'), 'utf-8')).toBe('old: beta\n');
     expect(fs.readFileSync(path.join(storeRoot, 'AGENTS.md'), 'utf-8')).toBe('old beta guidance\n');
   });
@@ -367,7 +367,7 @@ describe('store command', () => {
     expect(parseJson(register).status[0]).toEqual(expect.objectContaining({
       code: 'store_register_root_unhealthy',
     }));
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
   });
 
   it('refuses to convert a config-only store pointer repo into a store', async () => {
@@ -392,9 +392,9 @@ describe('store command', () => {
     expect(parseJson(register).status[0]).toEqual(expect.objectContaining({
       code: 'store_root_pointer_declared',
     }));
-    expect(fs.既に存在しますSync(path.join(pointerRoot, 'openspec', 'specs'))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(pointerRoot, 'openspec', 'changes'))).toBe(false);
-    expect(fs.既に存在しますSync(getStoreMetadataPath(pointerRoot))).toBe(false);
+    expect(fs.existsSync(path.join(pointerRoot, 'openspec', 'specs'))).toBe(false);
+    expect(fs.existsSync(path.join(pointerRoot, 'openspec', 'changes'))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(pointerRoot))).toBe(false);
   });
 
   it('refuses malformed config-only store pointer repos before registering', async () => {
@@ -411,7 +411,7 @@ describe('store command', () => {
     expect(parseJson(result).status[0]).toEqual(expect.objectContaining({
       code: 'invalid_store_pointer',
     }));
-    expect(fs.既に存在しますSync(getStoreMetadataPath(pointerRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(pointerRoot))).toBe(false);
   });
 
   it('rejects explicit setup paths inside an existing Git repo in non-interactive mode', async () => {
@@ -430,8 +430,8 @@ describe('store command', () => {
         code: 'store_setup_inside_git_repo',
       })
     );
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec'))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec'))).toBe(false);
   });
 
   it('rejects setup paths inside git-like parents when git cannot resolve the repo', async () => {
@@ -450,7 +450,7 @@ describe('store command', () => {
         code: 'store_setup_inside_git_repo',
       })
     );
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
   });
 
   it('rejects interactive setup paths inside an existing Git repo without prompting through', async () => {
@@ -474,9 +474,9 @@ describe('store command', () => {
 
     await runStoreCommand(['setup', 'team-context', '--path', storeRoot]);
 
-    expect(確定).not.toHaveBeenCalled();
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec'))).toBe(false);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec'))).toBe(false);
     expect(process.exitCode).toBe(1);
   });
 
@@ -495,7 +495,7 @@ describe('store command', () => {
         code: 'store_setup_non_empty_directory',
       })
     );
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
   });
 
   it('does not prompt before setup validation fails', async () => {
@@ -518,8 +518,8 @@ describe('store command', () => {
 
     await runStoreCommand(['setup', 'team-context', '--path', storeRoot]);
 
-    expect(確定).not.toHaveBeenCalled();
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
     expect(process.exitCode).toBe(1);
   });
 
@@ -537,7 +537,7 @@ describe('store command', () => {
         code: 'store_register_root_unhealthy',
       })
     );
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
   });
 
   it('registers a cloned healthy store without rewriting planning files', async () => {
@@ -577,9 +577,9 @@ describe('store command', () => {
     const payload = parseJson(result);
     expect(payload.store.id).toBe('team-context');
     expect(payload.created_files).toEqual([]);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'changes'))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'specs'))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'changes', 'archive'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec', 'changes'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec', 'specs'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'archive'))).toBe(false);
   });
 
   it('registers a store with active changes before specs or archive exist', async () => {
@@ -604,8 +604,8 @@ describe('store command', () => {
     const payload = parseJson(result);
     expect(payload.store.id).toBe('team-context');
     expect(payload.created_files).toEqual([]);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'specs'))).toBe(false);
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'changes', 'archive'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec', 'specs'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'archive'))).toBe(false);
   });
 
   it('requires confirmation before registering a healthy root without identity', async () => {
@@ -623,15 +623,15 @@ describe('store command', () => {
         code: 'store_register_identity_confirmation_required',
       })
     );
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
 
     const confirmed = await runCLI(
       ['store', 'register', storeRoot, '--yes', '--json'],
       { cwd: tempDir, env }
     );
 
-    expect(確定ed.exitCode).toBe(0);
-    expect(parseJson(確定ed).created_files).toEqual(['.openspec-store/store.yaml']);
+    expect(confirmed.exitCode).toBe(0);
+    expect(parseJson(confirmed).created_files).toEqual(['.openspec-store/store.yaml']);
     await expect(readStoreMetadataState(storeRoot)).resolves.toEqual({
       version: 1,
       id: 'team-context',
@@ -658,11 +658,11 @@ describe('store command', () => {
 
     await runStoreCommand(['register', storeRoot]);
 
-    expect(確定).toHaveBeenCalledWith({
+    expect(confirm).toHaveBeenCalledWith({
       message: "Turn this OpenSpec root into store 'team-context'?",
       default: false,
     });
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(false);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(false);
     await expect(readStoreRegistryState({ globalDataDir })).resolves.toBeNull();
     expect(process.exitCode).toBe(1);
   });
@@ -705,7 +705,7 @@ describe('store command', () => {
       initialized: false,
       committed: false,
     });
-    expect(fs.既に存在しますSync(path.join(storeRoot, '.git'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, '.git'))).toBe(false);
 
     const secondRegister = await runCLI(
       ['store', 'register', storeRoot, '--json'],
@@ -866,7 +866,7 @@ describe('store command', () => {
       version: 1,
       stores: {},
     });
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(true);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(true);
   });
 
   it('requires explicit confirmation before removing files non-interactively', async () => {
@@ -898,7 +898,7 @@ describe('store command', () => {
         code: 'store_remove_confirmation_required',
       })
     );
-    expect(fs.既に存在しますSync(getStoreMetadataPath(storeRoot))).toBe(true);
+    expect(fs.existsSync(getStoreMetadataPath(storeRoot))).toBe(true);
   });
 
   it('removes a store after explicit non-interactive confirmation', async () => {
@@ -943,7 +943,7 @@ describe('store command', () => {
       version: 1,
       stores: {},
     });
-    expect(fs.既に存在しますSync(storeRoot)).toBe(false);
+    expect(fs.existsSync(storeRoot)).toBe(false);
   });
 
   it('refuses to remove files when the folder lacks matching store metadata', async () => {
@@ -975,7 +975,7 @@ describe('store command', () => {
         code: 'store_remove_metadata_missing',
       })
     );
-    expect(fs.既に存在しますSync(storeRoot)).toBe(true);
+    expect(fs.existsSync(storeRoot)).toBe(true);
     await expect(readStoreRegistryState({ globalDataDir })).resolves.toEqual({
       version: 1,
       stores: {
@@ -1177,11 +1177,11 @@ describe('store command', () => {
       );
 
       expect(result.exitCode).toBe(0);
-      expect(fs.既に存在しますSync(path.join(storeRoot, '.openspec-store', 'store.yaml'))).toBe(true);
-      expect(fs.既に存在しますSync(path.join(getStoresDir({ globalDataDir }), 'registry.yaml'))).toBe(
+      expect(fs.existsSync(path.join(storeRoot, '.openspec-store', 'store.yaml'))).toBe(true);
+      expect(fs.existsSync(path.join(getStoresDir({ globalDataDir }), 'registry.yaml'))).toBe(
         true
       );
-      expect(fs.既に存在しますSync(path.join(globalDataDir, OLD_DATA_DIR_NAME))).toBe(false);
+      expect(fs.existsSync(path.join(globalDataDir, OLD_DATA_DIR_NAME))).toBe(false);
     });
 
     it('registers a store repo created before the rename', async () => {
@@ -1239,7 +1239,7 @@ describe('store command', () => {
       });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("不明 command 'new' for 'openspec store'");
+      expect(result.stderr).toContain("unknown command 'new' for 'openspec store'");
       expect(result.stderr).toContain(
         'setup, register, unregister, remove, list (ls), doctor'
       );
@@ -1296,7 +1296,7 @@ describe('store command', () => {
       const result = await runCLI([RETIRED_GROUP, 'list'], { cwd: tempDir, env });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain(`不明 command '${RETIRED_GROUP}'`);
+      expect(result.stderr).toContain(`unknown command '${RETIRED_GROUP}'`);
     });
 
     it('lists store in --help with the locked one-liner and no retired group', async () => {

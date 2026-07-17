@@ -49,14 +49,14 @@ describe('FileSystemUtils', () => {
       await fs.writeFile(filePath, 'test content');
       
       const exists = await FileSystemUtils.fileExists(filePath);
-      expect(既に存在します).toBe(true);
+      expect(exists).toBe(true);
     });
 
     it('should return false for non-existing file', async () => {
       const filePath = path.join(testDir, 'non-existent.txt');
       
       const exists = await FileSystemUtils.fileExists(filePath);
-      expect(既に存在します).toBe(false);
+      expect(exists).toBe(false);
     });
 
     it('should return false for directory path', async () => {
@@ -64,7 +64,7 @@ describe('FileSystemUtils', () => {
       await fs.mkdir(dirPath);
       
       const exists = await FileSystemUtils.fileExists(dirPath);
-      expect(既に存在します).toBe(true); // fs.access doesn't distinguish between files and directories
+      expect(exists).toBe(true); // fs.access doesn't distinguish between files and directories
     });
   });
 
@@ -74,14 +74,14 @@ describe('FileSystemUtils', () => {
       await fs.mkdir(dirPath);
       
       const exists = await FileSystemUtils.directoryExists(dirPath);
-      expect(既に存在します).toBe(true);
+      expect(exists).toBe(true);
     });
 
     it('should return false for non-existing directory', async () => {
       const dirPath = path.join(testDir, 'non-existent-dir');
       
       const exists = await FileSystemUtils.directoryExists(dirPath);
-      expect(既に存在します).toBe(false);
+      expect(exists).toBe(false);
     });
 
     it('should return false for file path', async () => {
@@ -89,7 +89,7 @@ describe('FileSystemUtils', () => {
       await fs.writeFile(filePath, 'content');
       
       const exists = await FileSystemUtils.directoryExists(filePath);
-      expect(既に存在します).toBe(false);
+      expect(exists).toBe(false);
     });
   });
 

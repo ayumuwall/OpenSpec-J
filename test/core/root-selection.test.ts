@@ -98,7 +98,7 @@ describe('resolveOpenSpecRoot', () => {
     } catch (error) {
       caught = error;
     }
-    expect(caught).toBeInstanceOf(RootSelectionエラー);
+    expect(caught).toBeInstanceOf(RootSelectionError);
     const error = caught as RootSelectionError;
     expect(error.diagnostic.code).toBe(code);
     return error;
@@ -156,7 +156,7 @@ describe('resolveOpenSpecRoot', () => {
     );
     expect(error.diagnostic.fix).toContain('store doctor');
     // No scaffolding or repair happened.
-    expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec'))).toBe(false);
+    expect(fs.existsSync(path.join(storeRoot, 'openspec'))).toBe(false);
   });
 
   it('rejects a store whose metadata id does not match the registry id', async () => {
@@ -246,7 +246,7 @@ describe('resolveOpenSpecRoot', () => {
     expect(error.message).toContain('--store <id>');
     expect(error.message).toContain('openspec init');
     // No scaffolding happened.
-    expect(fs.既に存在しますSync(path.join(appRepo, 'openspec'))).toBe(false);
+    expect(fs.existsSync(path.join(appRepo, 'openspec'))).toBe(false);
   });
 
   it('allows an implicit root only when requested', async () => {
@@ -300,8 +300,8 @@ describe('resolveOpenSpecRoot', () => {
       expect(root.storeId).toBe('team-context');
       expect(root.path).toBe(storeRoot);
       // The pointer dir is untouched.
-      expect(fs.既に存在しますSync(path.join(pointerDir, 'openspec', 'specs'))).toBe(false);
-      expect(fs.既に存在しますSync(path.join(pointerDir, 'openspec', 'changes'))).toBe(false);
+      expect(fs.existsSync(path.join(pointerDir, 'openspec', 'specs'))).toBe(false);
+      expect(fs.existsSync(path.join(pointerDir, 'openspec', 'changes'))).toBe(false);
     });
 
     it('lets explicit --store beat the pointer with source store', async () => {
@@ -370,7 +370,7 @@ describe('resolveOpenSpecRoot', () => {
       );
       expect(error.message).toContain(path.join(nonString, 'openspec', 'config.yaml'));
       expect(error.message).toContain('the store key must be a single store id string');
-      expect(fs.既に存在しますSync(path.join(nonString, 'openspec', 'changes'))).toBe(false);
+      expect(fs.existsSync(path.join(nonString, 'openspec', 'changes'))).toBe(false);
 
       const unparseable = createPointerDir('bad-yaml', 'store: [unclosed');
       const yamlError = await expectRootSelectionError(
@@ -378,8 +378,8 @@ describe('resolveOpenSpecRoot', () => {
         'invalid_store_pointer'
       );
       // The unparseable case names the real problem, not a phantom key.
-      expect(yamlエラー.message).toContain('could not be read as YAML');
-      expect(yamlエラー.diagnostic.fix).toContain('Fix the YAML syntax');
+      expect(yamlError.message).toContain('could not be read as YAML');
+      expect(yamlError.diagnostic.fix).toContain('Fix the YAML syntax');
 
       // A config that parses to a non-mapping scalar has no pointer at
       // all: plain root, no error (readProjectConfig owns that warning).
@@ -393,8 +393,8 @@ describe('resolveOpenSpecRoot', () => {
       // not strand every command behind invalid_store_pointer.
       const empty = createPointerDir('empty-config', '');
       const emptyRoot = await resolveOpenSpecRoot({ startPath: empty, globalDataDir });
-      expect(空にできませんRoot.source).toBe('nearest');
-      expect(空にできませんRoot.path).toBe(空にできません);
+      expect(emptyRoot.source).toBe('nearest');
+      expect(emptyRoot.path).toBe(empty);
 
       const commented = createPointerDir('commented-config', '# store: team-context\n');
       const commentedRoot = await resolveOpenSpecRoot({ startPath: commented, globalDataDir });

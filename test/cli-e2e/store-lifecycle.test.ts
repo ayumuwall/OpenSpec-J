@@ -305,7 +305,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineA, cwd: projectDir }
     );
     expect(validated.exitCode).toBe(0);
-    expect(validated.stdout).toContain('is valid');
+    expect(validated.stdout).toContain('有効です');
 
     const listed = await runCLI(
       ['list', '--store', STORE_ID, '--json'],
@@ -430,7 +430,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineB, cwd: base }
     );
     expect(validated.exitCode).toBe(0);
-    expect(validated.stdout).toContain('is valid');
+    expect(validated.stdout).toContain('有効です');
 
     const archived = await runCLI(
       ['archive', changeId, '--store', STORE_ID, '--yes', '--json'],

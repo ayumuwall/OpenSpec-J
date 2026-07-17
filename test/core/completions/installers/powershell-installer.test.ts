@@ -411,7 +411,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('インストール');
-      expect(result.インストールPath).toContain('OpenSpecCompletion.ps1');
+      expect(result.installedPath).toContain('OpenSpecCompletion.ps1');
       expect(result.backupPath).toBeUndefined();
     });
 
@@ -526,7 +526,7 @@ Register-ArgumentCompleter -CommandName openspec -ScriptBlock $openspecCompleter
       const result = await spacedInstaller.install(mockCompletionScript);
 
       expect(result.success).toBe(true);
-      expect(result.インストールPath).toContain('openspec powershell test');
+      expect(result.installedPath).toContain('openspec powershell test');
 
       // Cleanup
       await fs.rm(spacedHomeDir, { recursive: true, force: true });

@@ -160,7 +160,7 @@ describe('openspec workset (7.1)', () => {
         },
         status: [],
       });
-      expect(fs.既に存在しますSync(getWorksetsFilePath(pathOptions()))).toBe(true);
+      expect(fs.existsSync(getWorksetsFilePath(pathOptions()))).toBe(true);
     });
 
     it('rejects a duplicate name with the remove fix and one JSON document', async () => {
@@ -170,7 +170,7 @@ describe('openspec workset (7.1)', () => {
       expect(result.exitCode).toBe(1);
       const payload = parseJson(result);
       expect(payload.workset).toBeNull();
-      expect(payload.status[0].code).toBe('workset_既に存在します');
+      expect(payload.status[0].code).toBe('workset_exists');
       expect(payload.status[0].fix).toBe(
         'Choose another name, or remove it first: openspec workset remove platform'
       );
@@ -209,7 +209,7 @@ describe('openspec workset (7.1)', () => {
       );
       expect(missing.exitCode).toBe(1);
       expect(parseJson(missing).status[0].code).toBe('workset_member_invalid');
-      expect(fs.既に存在しますSync(getWorksetsFilePath(pathOptions()))).toBe(false);
+      expect(fs.existsSync(getWorksetsFilePath(pathOptions()))).toBe(false);
     });
 
     it('rejects grammar-invalid names and duplicate member labels', async () => {
@@ -247,7 +247,7 @@ describe('openspec workset (7.1)', () => {
 
       expect(result.exitCode).toBe(1);
       const status = parseJson(result).status[0];
-      expect(status.code).toBe('workset_tool_不明');
+      expect(status.code).toBe('workset_tool_unknown');
       expect(status.fix).toContain('code, cursor, claude, codex');
     });
 
@@ -292,7 +292,7 @@ describe('openspec workset (7.1)', () => {
     it('says so plainly when nothing is saved', async () => {
       const human = await runCLI(['workset', 'list'], { cwd: tempDir, env });
       expect(human.stdout).toContain(
-        'No worksets saved. Create one with: openspec workset create'
+        '保存済みのワークセットはありません。`openspec workset create` で作成できます。'
       );
 
       const json = await runCLI(['workset', 'list', '--json'], {
@@ -323,12 +323,12 @@ describe('openspec workset (7.1)', () => {
         ['workset', 'remove', 'platform', '--yes', '--json'],
         { cwd: tempDir, env }
       );
-      expect(補完スクリプトを削除しました.exitCode).toBe(0);
-      expect(parseJson(補完スクリプトを削除しました)).toEqual({
+      expect(removed.exitCode).toBe(0);
+      expect(parseJson(removed)).toEqual({
         removed: { name: 'platform' },
         status: [],
       });
-      expect(fs.既に存在しますSync(memberA)).toBe(true);
+      expect(fs.existsSync(memberA)).toBe(true);
     });
 
     it('cleans up a generated file and tolerates its absence', async () => {
@@ -339,14 +339,14 @@ describe('openspec workset (7.1)', () => {
         env: envWithFakeTools(env, [fakeCode]),
       });
       const generated = getWorksetCodeWorkspacePath('platform', pathOptions());
-      expect(fs.既に存在しますSync(generated)).toBe(true);
+      expect(fs.existsSync(generated)).toBe(true);
 
       const removed = await runCLI(
         ['workset', 'remove', 'platform', '--yes', '--json'],
         { cwd: tempDir, env }
       );
-      expect(補完スクリプトを削除しました.exitCode).toBe(0);
-      expect(fs.既に存在しますSync(generated)).toBe(false);
+      expect(removed.exitCode).toBe(0);
+      expect(fs.existsSync(generated)).toBe(false);
 
       // Never opened: no generated file to delete; removal succeeds the same way.
       await createPlatform();
@@ -569,7 +569,7 @@ describe('openspec workset (7.1)', () => {
       expect(unavailable.stderr).toContain(
         'Fix: Install \'cursor\' or run: openspec workset open platform --tool code'
       );
-      expect(unavailable.stderr).toContain('Open manually:');
+      expect(unavailable.stderr).toContain('手動で開く:');
       const generated = getWorksetCodeWorkspacePath('platform', pathOptions());
       expect(unavailable.stderr).toContain(`Workspace file: ${generated}`);
       expect(unavailable.stderr).toContain(memberA);
@@ -580,9 +580,9 @@ describe('openspec workset (7.1)', () => {
         ['workset', 'open', 'platform', '--tool', 'emacs'],
         { cwd: tempDir, env }
       );
-      expect(不明.exitCode).toBe(1);
-      expect(不明.stderr).toContain("不明 tool 'emacs'");
-      expect(不明.stderr).toContain('Open manually:');
+      expect(unknown.exitCode).toBe(1);
+      expect(unknown.stderr).toContain("Unknown tool 'emacs'");
+      expect(unknown.stderr).toContain('手動で開く:');
     });
 
     it('reports an unknown workset name', async () => {
@@ -706,12 +706,12 @@ describe('openspec workset (7.1)', () => {
       });
       expect(json.exitCode).toBe(1);
       const payload = parseJson(json);
-      expect(payload.status[0].code).toBe('不明_workset_subcommand');
-      expect(payload.status[0].message).toContain("不明 command 'bogus'");
+      expect(payload.status[0].code).toBe('unknown_workset_subcommand');
+      expect(payload.status[0].message).toContain("Unknown command 'bogus'");
 
       const human = await runCLI(['workset', 'bogus'], { cwd: tempDir, env });
       expect(human.exitCode).toBe(1);
-      expect(human.stderr).toContain("不明 command 'bogus'");
+      expect(human.stderr).toContain("Unknown command 'bogus'");
       expect(human.stderr).toContain('create, list (ls), open, remove');
     });
 
@@ -719,7 +719,7 @@ describe('openspec workset (7.1)', () => {
       const json = await runCLI(['workset', '--json'], { cwd: tempDir, env });
       expect(json.exitCode).toBe(1);
       const payload = parseJson(json);
-      expect(payload.status[0].code).toBe('不明_workset_subcommand');
+      expect(payload.status[0].code).toBe('unknown_workset_subcommand');
       expect(payload.status[0].message).toContain('Missing subcommand');
 
       const human = await runCLI(['workset'], { cwd: tempDir, env });
@@ -759,7 +759,7 @@ describe('openspec workset (7.1)', () => {
       expect(result.stderr).toContain(
         'Fix: Run: openspec workset open platform --tool code'
       );
-      expect(result.stderr).toContain('Open manually:');
+      expect(result.stderr).toContain('手動で開く:');
     });
   });
 });
@@ -959,7 +959,7 @@ describe('interactive compose cancellation (in-process)', () => {
         return inputCalls === 1 ? 'platform' : memberDir;
       }),
       select: vi.fn(async (config: { message: string }) => {
-        if (config.message.includes('Add another')) return 'finish';
+        if (config.message.includes('Add another') || config.message.includes('別のフォルダー')) return 'finish';
         return 'claude';
       }),
       confirm: vi.fn(async () => false),
@@ -992,7 +992,7 @@ describe('interactive compose cancellation (in-process)', () => {
         return inputCalls === 1 ? 'platform' : memberDir;
       }),
       select: vi.fn(async (config: { message: string }) => {
-        if (config.message.includes('Add another')) return 'finish';
+        if (config.message.includes('Add another') || config.message.includes('別のフォルダー')) return 'finish';
         return 'claude';
       }),
       confirm: vi.fn(async () => {
@@ -1054,7 +1054,7 @@ describe('interactive compose cancellation (in-process)', () => {
     });
 
     expect(process.exitCode).toBe(1);
-    expect(errorSpy).toHaveBeenCalledWith('エラー: Workset remove cancelled.');
+    expect(errorSpy).toHaveBeenCalledWith('Error: Workset remove cancelled.');
     expect(
       fs.existsSync(
         path.join(process.env.XDG_DATA_HOME!, 'openspec', 'worksets', 'worksets.yaml')

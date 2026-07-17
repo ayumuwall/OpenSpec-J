@@ -58,10 +58,10 @@ describe('file-state', () => {
       const lockPath = path.join(tempDir, 'state.yaml.lock');
 
       const lock = await acquireFileLock({ lockPath, errorFor });
-      expect(fs.既に存在しますSync(lockPath)).toBe(true);
+      expect(fs.existsSync(lockPath)).toBe(true);
 
       await releaseFileLock(lock, lockPath);
-      expect(fs.既に存在しますSync(lockPath)).toBe(false);
+      expect(fs.existsSync(lockPath)).toBe(false);
     });
 
     it('steals a stale lock', async () => {
@@ -72,7 +72,7 @@ describe('file-state', () => {
 
       const lock = await acquireFileLock({ lockPath, errorFor });
 
-      expect(fs.既に存在しますSync(lockPath)).toBe(true);
+      expect(fs.existsSync(lockPath)).toBe(true);
       await releaseFileLock(lock, lockPath);
     });
 

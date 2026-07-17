@@ -120,7 +120,7 @@ describe('store root selection for normal commands', () => {
   }
 
   function expectNoLocalOpenSpec(): void {
-    expect(fs.既に存在しますSync(path.join(appRepo, 'openspec'))).toBe(false);
+    expect(fs.existsSync(path.join(appRepo, 'openspec'))).toBe(false);
   }
 
   describe('selecting a registered store by id', () => {
@@ -311,7 +311,7 @@ describe('store root selection for normal commands', () => {
       expect(json.archive.specsUpdated).toBe(true);
       expect(json.root.store_id).toBe('team-context');
 
-      expect(fs.既に存在しますSync(json.archive.path)).toBe(true);
+      expect(fs.existsSync(json.archive.path)).toBe(true);
       expect(
         fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'store-change'))
       ).toBe(false);
@@ -356,7 +356,7 @@ describe('store root selection for normal commands', () => {
       );
       expect(result.exitCode).toBe(0);
       expect(result.stderr).toContain(`Using OpenSpec root: team-context (${storeRoot})`);
-      expect(result.stdout).toContain('Change: store-change');
+      expect(result.stdout).toContain('変更: store-change');
       expect(result.stdout).not.toContain('Using OpenSpec root');
     });
   });
@@ -372,7 +372,7 @@ describe('store root selection for normal commands', () => {
       expect(output).toContain('store register');
       expect(output).toContain('--store <id>');
       expectNoLocalOpenSpec();
-      expect(fs.既に存在しますSync(path.join(storeRoot, 'openspec', 'changes', 'nope'))).toBe(false);
+      expect(fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'nope'))).toBe(false);
     });
 
     it('rejects show --store-path despite allowUnknownOption', async () => {
@@ -409,7 +409,7 @@ describe('store root selection for normal commands', () => {
       expect(result.exitCode).toBe(1);
       expect(result.stdout.trim().startsWith('{')).toBe(true);
       const json = parseJson(result);
-      expect(json.status[0].code).toBe('不明_store');
+      expect(json.status[0].code).toBe('unknown_store');
       expect(json.status[0].message).toContain('team-contxt');
     });
 
@@ -447,7 +447,7 @@ describe('store root selection for normal commands', () => {
       expect(result.exitCode).toBe(1);
       expect(result.stdout + result.stderr).toContain('store doctor');
       // No scaffolding or repair happened.
-      expect(fs.既に存在しますSync(path.join(brokenRoot, 'openspec'))).toBe(false);
+      expect(fs.existsSync(path.join(brokenRoot, 'openspec'))).toBe(false);
     });
   });
 
@@ -598,7 +598,7 @@ describe('store root selection for normal commands', () => {
       // precede or pollute the JSON payload.
       expect(result.stdout.trim().startsWith('{')).toBe(true);
       const json = parseJson(result);
-      expect(json.archive.change).toBe('補完スクリプトを削除しました-change');
+      expect(json.archive.change).toBe('removed-change');
     });
 
     it('writes no spec when any rebuilt spec fails validation', async () => {
@@ -667,7 +667,7 @@ describe('store root selection for normal commands', () => {
       );
       expect(result.exitCode).toBe(1);
       const json = parseJson(result);
-      expect(json.status[0].code).toMatch(/archive_tasks_incomplete|archive_確定ation_required/);
+      expect(json.status[0].code).toMatch(/archive_tasks_incomplete|archive_confirmation_required/);
       expect(
         fs.existsSync(path.join(storeRoot, 'openspec', 'changes', 'wip-change'))
       ).toBe(true);
@@ -708,8 +708,8 @@ describe('store root selection for normal commands', () => {
         { cwd: localRepo, env }
       );
       expect(result.exitCode).not.toBe(0);
-      expect(result.stdout + result.stderr).toContain('不明 command');
-      expect(fs.既に存在しますSync(metadataPath)).toBe(false);
+      expect(result.stdout + result.stderr).toContain('unknown command');
+      expect(fs.existsSync(metadataPath)).toBe(false);
 
       const help = await runCLI(['--help'], { cwd: localRepo, env });
       expect(help.stdout).not.toContain('チェックインされる OpenSpec メタデータを設定');

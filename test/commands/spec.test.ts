@@ -294,7 +294,7 @@ This section has no actual requirements`;
         
         expect(error).toBeDefined();
         expect(error.status).not.toBe(0);
-        expect(error.stderr.toString()).toContain('見つかりません');
+        expect(error.stderr.toString()).toContain('not found');
       } finally {
         process.chdir(originalCwd);
       }

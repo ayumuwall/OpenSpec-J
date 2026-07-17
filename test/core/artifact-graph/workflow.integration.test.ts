@@ -49,7 +49,7 @@ describe('artifact-graph workflow integration', () => {
       expect(completed.size).toBe(0);
       expect(graph.getNextArtifacts(completed)).toEqual(['proposal']);
       expect(graph.isComplete(completed)).toBe(false);
-      expect(normalizeブロック中(graph.getブロック中(completed))).toEqual({
+      expect(normalizeBlocked(graph.getBlocked(completed))).toEqual({
         specs: ['proposal'],
         design: ['proposal'],
         tasks: ['design', 'specs'],
@@ -60,7 +60,7 @@ describe('artifact-graph workflow integration', () => {
       completed = detectCompleted(graph, tempDir);
       expect(completed).toEqual(new Set(['proposal']));
       expect(graph.getNextArtifacts(completed).sort()).toEqual(['design', 'specs']);
-      expect(normalizeブロック中(graph.getブロック中(completed))).toEqual({
+      expect(normalizeBlocked(graph.getBlocked(completed))).toEqual({
         tasks: ['design', 'specs'],
       });
 
@@ -69,7 +69,7 @@ describe('artifact-graph workflow integration', () => {
       completed = detectCompleted(graph, tempDir);
       expect(completed).toEqual(new Set(['proposal', 'design']));
       expect(graph.getNextArtifacts(completed)).toEqual(['specs']);
-      expect(graph.getブロック中(completed)).toEqual({
+      expect(graph.getBlocked(completed)).toEqual({
         tasks: ['specs'],
       });
 
@@ -80,7 +80,7 @@ describe('artifact-graph workflow integration', () => {
       completed = detectCompleted(graph, tempDir);
       expect(completed).toEqual(new Set(['proposal', 'design', 'specs']));
       expect(graph.getNextArtifacts(completed)).toEqual(['tasks']);
-      expect(graph.getブロック中(completed)).toEqual({});
+      expect(graph.getBlocked(completed)).toEqual({});
 
       // 6. Create tasks.md - workflow complete
       fs.writeFileSync(path.join(tempDir, 'tasks.md'), '# Tasks\n\n- [ ] Implement feature');
@@ -88,7 +88,7 @@ describe('artifact-graph workflow integration', () => {
       expect(completed).toEqual(new Set(['proposal', 'design', 'specs', 'tasks']));
       expect(graph.getNextArtifacts(completed)).toEqual([]);
       expect(graph.isComplete(completed)).toBe(true);
-      expect(graph.getブロック中(completed)).toEqual({});
+      expect(graph.getBlocked(completed)).toEqual({});
     });
 
     it('should handle out-of-order file creation', () => {

@@ -90,7 +90,7 @@ describe('openspec context (4.1)', () => {
     expect(human.stdout).toContain(`Working context for team-context (${storeRoot})`);
     expect(human.stdout).toContain(`  upstream-context  ${upstream}`);
     expect(human.stdout).toContain('Fetch: openspec show <spec-id> --type spec --store upstream-context');
-    expect(human.stdout).toContain('Not available on this machine');
+    expect(human.stdout).toContain('このマシンでは利用できません');
     expect(human.stdout).toContain('Fix: git clone --');
 
     // Nearest-root session.
@@ -167,7 +167,7 @@ describe('openspec context (4.1)', () => {
     );
     expect(badDir.exitCode).toBe(1);
     expect(badDir.stderr).toContain('Output directory does not exist');
-    expect(fs.既に存在しますSync(path.dirname(nested))).toBe(false);
+    expect(fs.existsSync(path.dirname(nested))).toBe(false);
 
     // JSON mode: stdout stays the pure brief; confirmation on stderr.
     const jsonOut = path.join(tempDir, 'json.code-workspace');
@@ -188,7 +188,7 @@ describe('openspec context (4.1)', () => {
     expect(jsonRefused.exitCode).toBe(1);
     const failurePayload = JSON.parse(jsonRefused.stdout);
     expect(failurePayload.root).toBeNull();
-    expect(failurePayload.status[0].code).toBe('context_file_既に存在します');
+    expect(failurePayload.status[0].code).toBe('context_file_exists');
 
     const jsonBadDir = await runCLI(
       ['context', '--json', '--store', 'team-context', '--code-workspace', nested],

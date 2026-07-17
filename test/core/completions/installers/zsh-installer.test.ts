@@ -110,7 +110,7 @@ describe('ZshInstaller', () => {
 
       expect(result.success).toBe(true);
       expect(result.isOhMyZsh).toBe(true);
-      expect(result.インストールPath).toBe(path.join(ohMyZshPath, 'custom', 'completions', '_openspec'));
+      expect(result.installedPath).toBe(path.join(ohMyZshPath, 'custom', 'completions', '_openspec'));
       expect(result.message).toContain('Oh My Zsh');
 
       // Verify file was created with correct content
@@ -123,7 +123,7 @@ describe('ZshInstaller', () => {
 
       expect(result.success).toBe(true);
       expect(result.isOhMyZsh).toBe(false);
-      expect(result.インストールPath).toBe(path.join(testHomeDir, '.zsh', 'completions', '_openspec'));
+      expect(result.installedPath).toBe(path.join(testHomeDir, '.zsh', 'completions', '_openspec'));
 
       // Verify file was created
       const content = await fs.readFile(result.installedPath!, 'utf-8');
@@ -263,7 +263,7 @@ describe('ZshInstaller', () => {
         try {
           const zshrcContent = await fs.readFile(zshrcPath, 'utf-8');
           // Verify the path is quoted in fpath
-          expect(zshrcContent).toContain(`fpath=("${path.dirname(result.インストールPath!)}" $fpath)`);
+          expect(zshrcContent).toContain(`fpath=("${path.dirname(result.installedPath!)}" $fpath)`);
         } catch {
           // .zshrc might not exist if auto-config was disabled
         }
@@ -349,7 +349,7 @@ describe('ZshInstaller', () => {
     it('should return not installed when script does not exist', async () => {
       const info = await installer.getInstallationInfo();
 
-      expect(info.インストール).toBe(false);
+      expect(info.installed).toBe(false);
       expect(info.path).toBeUndefined();
       expect(info.isOhMyZsh).toBeUndefined();
     });
@@ -359,7 +359,7 @@ describe('ZshInstaller', () => {
 
       const info = await installer.getInstallationInfo();
 
-      expect(info.インストール).toBe(true);
+      expect(info.installed).toBe(true);
       expect(info.path).toBeDefined();
       expect(info.path).toContain('_openspec');
       expect(info.isOhMyZsh).toBe(false);
@@ -373,7 +373,7 @@ describe('ZshInstaller', () => {
 
       const info = await installer.getInstallationInfo();
 
-      expect(info.インストール).toBe(true);
+      expect(info.installed).toBe(true);
       expect(info.isOhMyZsh).toBe(true);
       expect(info.path).toContain('.oh-my-zsh');
     });
@@ -496,7 +496,7 @@ describe('ZshInstaller', () => {
 
       const zshrcPath = path.join(testHomeDir, '.zshrc');
       const exists = await fs.access(zshrcPath).then(() => true).catch(() => false);
-      expect(既に存在します).toBe(false);
+      expect(exists).toBe(false);
 
       // Restore env
       if (originalEnv === undefined) {

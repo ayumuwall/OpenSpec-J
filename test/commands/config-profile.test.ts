@@ -49,7 +49,7 @@ describe('diffProfileState workflow formatting', () => {
     );
 
     expect(diff.hasChanges).toBe(true);
-    expect(diff.lines).toEqual(['workflows: 補完スクリプトを削除しました sync']);
+    expect(diff.lines).toEqual(['workflows: removed sync']);
   });
 
   it('uses explicit labels when workflows are added and removed', async () => {
@@ -61,7 +61,7 @@ describe('diffProfileState workflow formatting', () => {
     );
 
     expect(diff.hasChanges).toBe(true);
-    expect(diff.lines).toEqual(['workflows: added verify; 補完スクリプトを削除しました sync']);
+    expect(diff.lines).toEqual(['workflows: added verify; removed sync']);
   });
 });
 
@@ -294,7 +294,7 @@ describe('config profile interactive flow', () => {
 
     const afterContent = fs.readFileSync(configPath, 'utf-8');
     expect(afterContent).toBe(beforeContent);
-    expect(確定).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
     expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
   });
 
@@ -338,7 +338,7 @@ describe('config profile interactive flow', () => {
     await runConfigCommand(['profile']);
 
     expect(consoleLogSpy).toHaveBeenCalledWith('設定変更はありません。');
-    expect(確定).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('警告: グローバル設定がこのプロジェクトに反映されていません。'));
   });
 
@@ -371,7 +371,7 @@ describe('config profile interactive flow', () => {
     await runConfigCommand(['profile']);
 
     expect(getGlobalConfig().delivery).toBe('skills');
-    expect(確定).toHaveBeenCalledWith({
+    expect(confirm).toHaveBeenCalledWith({
       message: 'このプロジェクトに今すぐ変更を適用しますか？',
       default: true,
     });
@@ -411,7 +411,7 @@ describe('config profile interactive flow', () => {
     expect(config.workflows).toEqual(['propose', 'explore', 'apply', 'update', 'sync', 'archive']);
     expect(select).not.toHaveBeenCalled();
     expect(checkbox).not.toHaveBeenCalled();
-    expect(確定).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
   });
 
   it('Ctrl+C should cancel without stack trace and set interrupted exit code', async () => {
@@ -426,6 +426,6 @@ describe('config profile interactive flow', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith('config profile をキャンセルしました。');
     expect(process.exitCode).toBe(130);
     expect(checkbox).not.toHaveBeenCalled();
-    expect(確定).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
   });
 });

@@ -109,8 +109,8 @@ describe('legacy repo-local change initiative metadata', () => {
     expect(result.exitCode).toBe(1);
     const json = parseJson(result);
     expect(json.change).toBeNull();
-    expect(json.status[0].code).toBe('initiative_option_補完スクリプトを削除しました');
-    expect(fs.既に存在しますSync(changeDir('linked-change'))).toBe(false);
+    expect(json.status[0].code).toBe('initiative_option_removed');
+    expect(fs.existsSync(changeDir('linked-change'))).toBe(false);
   });
 
   it('no longer provides openspec set change', async () => {
@@ -121,7 +121,7 @@ describe('legacy repo-local change initiative metadata', () => {
       { cwd: tempDir, env }
     );
     expect(result.exitCode).not.toBe(0);
-    expect(result.stdout + result.stderr).toContain('不明 command');
+    expect(result.stdout + result.stderr).toContain('unknown command');
 
     // Metadata untouched.
     expect(readChangeMetadata(changeDir('legacy-change'), tempDir)?.initiative).toEqual({

@@ -69,7 +69,7 @@ describe('legacy command groups are removed', () => {
       const result = await runCLI([group, 'list'], { cwd: tempDir, env });
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain(`不明 command '${group}'`);
+      expect(result.stderr).toContain(`unknown command '${group}'`);
     }
   });
 
@@ -87,7 +87,7 @@ describe('legacy command groups are removed', () => {
     const result = await runCLI(['update'], { cwd: tempDir, env });
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('No OpenSpec directory found');
+    expect(result.stderr).toContain('OpenSpec ディレクトリが見つかりません');
     expect(result.stderr).not.toContain('workspace');
   });
 
