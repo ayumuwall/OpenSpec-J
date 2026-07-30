@@ -159,6 +159,9 @@ git diff upstream-vA.B.C upstream-vX.Y.Z > diffs/upstream-vA.B.C__upstream-vX.Y.
 ```
 
 - 前バージョンの作業用に生成した `diffs/` 配下のファイルは削除してから新規作成する
+- ここで収集するのは **upstream の前回版から今回版までの変更**であり、OpenSpec-J 全体のローカライズ差分ではない。
+  - upstream で変更されていない既存の日本語訳・パッケージ名・リンク・独自ファイルは scope に現れないが、§2.3 の通常マージでそのまま保持される。
+  - scope に現れない既存差分を、パッチ化して再適用したり、本家版から再構築したりしない。
 - `diffs/upstream-vA.B.C__upstream-vX.Y.Z.files.txt` のリストを分類し、`diffs/upstream-vA.B.C__upstream-vX.Y.Z.scope.md` にまとめる（以下の様式）。
   - 各項目の先頭は `- [ ]`（進捗管理用）
   - 末尾に **翻訳対象外** セクションを作る（チェックボックスは付けない）
@@ -211,8 +214,25 @@ M test/...
 
 ```
 git checkout ja-docs
+JA_DOCS_BEFORE_MERGE=$(git rev-parse HEAD)
+
+# 前回 upstream タグが両ブランチの祖先であることを確認する
+git merge-base --is-ancestor upstream-vA.B.C ja-docs
+git merge-base --is-ancestor upstream-vA.B.C main
+
 git merge main
 ```
+
+- **必ず通常の `git merge main` を使う。競合が多くても、それだけを理由に履歴異常と判断しない。**
+  - docs / CLI / OPSX テンプレートを広範囲に翻訳しているため、upstream が同じ周辺を更新すれば、正しい共通祖先でも大量の競合が発生する。
+  - 履歴が疑わしい場合は、競合数から推測せず `git merge-base ja-docs main` と上記 `--is-ancestor` の結果で確認する。
+  - `--is-ancestor` が失敗した場合や、期待する前回 upstream タグが見つからない場合は、独自に履歴を組み替えず作業を止めて利用者へ確認する。
+- 次のような「競合を減らすための合成マージ」は禁止する。
+  - `git merge -s ours` で履歴だけを接続する
+  - `ja-docs` の作業ツリー全体を `main` / upstream タグの内容で置き換える
+  - OpenSpec-J 全体の差分をローカライズパッチとして抽出し、upstream の新ツリーへ再適用する
+  - 通常マージを中止し、rebase / squash / cherry-pick などへ独断で切り替える
+- 通常マージなら、upstream で同じ行が変更されていない既存のOpenSpec-J差分はGitが保持する。競合したファイルだけを§2.4に従って解消する。
 
 ### 2.4 ローカライズ反映（差分を最小に）
 
@@ -228,12 +248,32 @@ git merge main
 実施ポイント:
 - `scope.md` のチェックボックスを進捗の唯一の記録として更新する
   - すべて完了したら次工程へ進む
+- 競合解消では、ファイル全体を一律に upstream 側または日本語版側へ寄せない。次の3点を確認し、変更単位で統合する。
+  ```
+  git diff upstream-vA.B.C upstream-vX.Y.Z -- <file>
+  git show "${JA_DOCS_BEFORE_MERGE}:<file>"
+  git show "main:<file>"
+  ```
+  - upstream の仕様・ロジック・書式変更を取り込む
+  - 人間向け文言は既存の日本語を維持し、新規・変更箇所を自然な日本語へ翻訳する
+  - パッケージ名、リンク、`OPENSPEC-J:NOTE` などOpenSpec-J固有差分を維持する
 - 変更箇所のみ翻訳し、未変更箇所は現行を維持
 - **upstream の書式変更（whitespace / padding / 見出し改名 / 表カラム幅 / ASCII 図の整形など）も追従対象**。翻訳と同時にこれらの整形差分も必ず ja 側へ反映する（本文の内容変更がなく純粋な書式更新だけでも対象）
 - コマンド名・フラグ・ファイルパスは翻訳しない
 - `OPENSPEC-J:NOTE` を維持
 - README_OLD.md は同期対象外
 - 翻訳対象外（/openspec/, /test/ など）は編集しない
+- マージと競合解消の直後に、OpenSpec-J の不変条件を確認する。
+  ```
+  node -p "require('./package.json').name"
+  test -f AGENTS.OpenSpec-J.md
+  test -f LOCALIZATION-NOTES.md
+  git diff --exit-code "$JA_DOCS_BEFORE_MERGE" -- README_OLD.md
+  ```
+  - パッケージ名が `@ayumuwall/openspec` であること
+  - `AGENTS.OpenSpec-J.md` / `LOCALIZATION-NOTES.md` が残っていること
+  - `README_OLD.md` が変更されていないこと
+  - `rg '@fission-ai/openspec|Fission-AI/OpenSpec' package.json scripts src` で、OpenSpec-J用に維持すべき名前・リンクが本家へ戻っていないか目視確認すること（upstream参照として意図した記述は除外）
 - 翻訳が一通り終わったら `LOCALIZATION-NOTES.md` を確認し、**文字列置換では解消できないロジック変更**の有無を点検
   - 新しく見つけた「ロジック変更しないと本来意図どおりに動かない例外」があれば `LOCALIZATION-NOTES.md` に追記する
 
