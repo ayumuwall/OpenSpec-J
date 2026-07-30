@@ -4,6 +4,12 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 
 ## 1.7.0
 
+- **[OpenSpec-J]** OpenSpec v1.7.0 の upstream 変更を取り込み、README・ドキュメント・スキーマ・OPSX ワークフロー・CLI の追加／変更された人間向け文言を日本語化
+- **[OpenSpec-J]** 静的配布される `skills/` を日本語テンプレートから再生成し、scope の全対象ファイルを一件ずつ照合
+- **[OpenSpec-J]** `skip_specs`、archive／sync のルール取得、CLI 自動アップグレード、Devin Desktop・ZCode など v1.7.0 の新しい案内・エラー・進捗表示を日本語化
+- **[OpenSpec-J]** README の同期元バージョンを OpenSpec v1.7.0 に更新
+- **[OpenSpec-J]** 追従用差分を v1.6.0 → v1.7.0 の一式へ整理し、旧 v1.4.1 → v1.6.0 の作業ファイルを削除
+
 ### マイナー変更
 
 - [#1475](https://github.com/Fission-AI/OpenSpec/pull/1475) [`17af60c`](https://github.com/Fission-AI/OpenSpec/commit/17af60c66e4c049e3986fdbafcdc16b202cda59f) [@clay-good](https://github.com/clay-good) に感謝します！ - CodeArts Agent のスキルをサポートしました。`openspec init --tools codeartsagent` でワークフロースキルをインストールできます。
