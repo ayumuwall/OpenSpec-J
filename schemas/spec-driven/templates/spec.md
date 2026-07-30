@@ -1,5 +1,5 @@
 ## Purpose
-<!-- New capabilities only: one or two sentences (50+ characters) on what this capability is for. Delete this section for an existing capability. -->
+<!-- 新しい機能の場合のみ: この機能の目的を1〜2文（50文字以上）で記述します。既存の機能では、このセクションを削除してください。 -->
 
 ## ADDED Requirements
 

@@ -1,184 +1,182 @@
 ---
 name: openspec-apply-change
-description: Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.
+description: OpenSpec 変更のタスクを実装します。実装を開始、継続、またはタスクに沿って進めたいときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Implement tasks from an OpenSpec change.
+OpenSpec の変更からタスクを実装します。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
-**Steps**
+**手順**
 
-1. **Select the change**
+1. **変更を選択**
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
+   名前が指定されていれば使用します。それ以外の場合:
+   - 会話で変更に言及していれば、そのコンテキストから推測する
+   - アクティブな変更が1つだけなら自動選択する
+   - 曖昧なら `openspec list --json` で利用可能な変更を取得し、ユーザーに選択してもらう
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/openspec-apply-change <other>`).
+常に「変​​更の使用: <name>」と上書き方法 (例: `/openspec-apply-change <other>`) をアナウンスします。
 
-2. **Check status to understand the schema**
+2. **ステータスを確認してスキーマを理解します**
    ```bash
    openspec status --change "<name>" --json
    ```
-   Parse the JSON to understand:
-   - `schemaName`: The workflow being used (e.g., "spec-driven")
-   - `planningHome`, `changeRoot`, and `actionContext`: planning scope and edit constraints
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
+JSON を解析して以下を理解します。
+- `schemaName`: 使用されているワークフロー (例: 「仕様主導」)
+- `planningHome`、`changeRoot`、および `actionContext`: 計画範囲と編集制約
+- どのアーティファクトにタスクが含まれているか (通常、仕様主導型の場合は「タスク」、その他の場合はステータスを確認)
 
-3. **Get apply instructions**
+3. **適用手順を取得**
 
    ```bash
    openspec instructions apply --change "<name>" --json
    ```
 
-   This returns:
-   - `contextFiles`: artifact ID -> array of concrete file paths (varies by schema - could be proposal/specs/design/tasks or spec/tests/implementation/docs)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
-   - Optional `context`: current required project instruction input from the selected root
-   - Optional `operationGuidance`: current advisory guidance for apply
+   次が返されます:
+   - `contextFiles`: アーティファクト ID から具体的なファイルパス配列への対応（スキーマにより異なり、proposal/specs/design/tasks や spec/tests/implementation/docs など）
+   - 進捗（合計、完了、残り）
+   - 状態付きのタスクリスト
+   - 現在の状態に応じた動的な指示
+   - 任意の `context`: 選択したルートから得た、現在必須のプロジェクト指示入力
+   - 任意の `operationGuidance`: apply に関する現在の参考ガイダンス
 
-   **Handle states:**
-   - If `state: "blocked"` (missing artifacts): show message, suggest using openspec-continue-change (if it is not installed, run `openspec status --change "<name>" --json` to see the next artifact and `openspec instructions <artifact-id> --change "<name>" --json` for how to create it)
-   - If `state: "all_done"`: congratulate, suggest archive
-   - Otherwise: proceed to implementation
+   **状態ごとの処理:**
+   - `state: "blocked"`（アーティファクト不足）の場合: メッセージを表示し、openspec-continue-change を提案します（未インストールなら、`openspec status --change "<name>" --json` で次のアーティファクトを確認し、`openspec instructions <artifact-id> --change "<name>" --json` で作成方法を確認する）
+   - `state: "all_done"` の場合: 完了を祝い、archive を提案する
+   - それ以外: 実装に進む
 
-   Treat `context` as a required prompt-level input. Read and consider it, and
-   apply relevant project facts, conventions, and constraints while implementing.
-   Treat `operationGuidance` as optional additive advice. Read and consider every
-   entry, and follow entries that are applicable and compatible with the built-in
-   workflow.
+   `context` はプロンプトレベルの必須入力として扱います。読み取って検討し、
+   実装時に関連するプロジェクトの事実、規約、制約を適用します。
+   `operationGuidance` は任意の追加助言として扱います。すべての項目を読み取って
+   検討し、組み込みワークフローに適用可能で互換性のある項目に従います。
 
-   Keep both fields separate from CLI-returned state, missing artifacts, tasks,
-   progress, `contextFiles`, and the built-in `instruction`. They are not
-   evidence of task completion, do not replace the built-in instruction, and do
-   not permit bypassing a blocked state. If context conflicts with the built-in
-   instruction, an explicit user choice, or a CLI-controlled value, report the
-   conflict and preserve the controlling value. If guidance is inapplicable or
-   conflicts with those controlling inputs, do not follow it and explain why.
-   These are prompt-level behavior contracts, not enforceable checks.
+   両フィールドは、CLI が返す状態、不足アーティファクト、タスク、進捗、
+   `contextFiles`、組み込みの `instruction` とは分けて扱います。タスク完了の
+   根拠ではなく、組み込み指示を置き換えず、blocked 状態の迂回も許可しません。
+   context が組み込み指示、ユーザーの明示的な選択、CLI が制御する値と競合する場合は、
+   競合を報告して制御側の値を維持します。ガイダンスが適用不能またはそれらの制御入力と
+   競合する場合は従わず、理由を説明します。これらはプロンプトレベルの振る舞いの契約であり、
+   強制可能な検査ではありません。
 
-4. **Read context files**
+4. **コンテキストファイルを読み取る**
 
-   Read every file path listed under `contextFiles` from the apply instructions output.
-   The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
-   - Other schemas: follow the contextFiles from CLI output
+適用命令の出力から、`contextFiles` の下にリストされているすべてのファイル パスを読み取ります。
+ファイルは使用されているスキーマによって異なります。
+- **仕様主導**: 提案、仕様、設計、タスク
+- その他のスキーマ: CLI 出力の contextFiles に従います。
 
-   Do not copy `context` or `operationGuidance` verbatim into implementation
-   files or planning artifacts unless the user separately asks for that content.
+   ユーザーがその内容を別途求めない限り、`context` や `operationGuidance` を
+   実装ファイルや計画アーティファクトへそのままコピーしないでください。
 
-5. **Show current progress**
+5. **現在の進捗を表示する**
 
-   Display:
-   - Schema being used
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Dynamic instruction from CLI
+画面：
+- 使用されているスキーマ
+- 進行状況: 「N/M 個のタスクが完了しました」
+- 残りのタスクの概要
+- CLIからの動的指示
 
-6. **Implement tasks (loop until done or blocked)**
+6. **タスクを実装します (完了またはブロックされるまでループします)**
 
-   For each pending task:
-   - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in the tasks file: `- [ ]` → `- [x]`
-   - Continue to next task
+保留中のタスクごとに次のようにします。
+- どのタスクが進行中かを表示します
+- 必要なコード変更を行う
+- 変更を最小限に抑え、焦点を絞ったものにします
+- タスク ファイルでタスクを完了としてマークします: `- [ ]` → `- [x]`
+- 次のタスクに進む
 
-   **Pause if:**
-   - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
-   - Error or blocker encountered → report and wait for guidance
-   - User interrupts
+**次の場合は一時停止します**
+- タスクが不明瞭 → 説明を求める
+- 実装により設計上の問題が明らかになった → アーティファクトの更新を提案
+- エラーまたはブロッカーが発生しました → 報告してガイダンスを待ちます
+- ユーザーによる割り込み
 
-7. **On completion or pause, show status**
+7. **完了または一時停止時にステータスを表示**
 
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
-   - If paused: explain why and wait for guidance
+画面：
+- このセッションでタスクが完了しました
+- 全体的な進捗状況: 「N/M 個のタスクが完了しました」
+- すべて完了したら: アーカイブを提案します
+- 一時停止した場合: 理由を説明し、指示を待ちます
 
-**Output During Implementation**
+**実装時の出力**
 
 ```
-## Implementing: <change-name> (schema: <schema-name>)
+## 実装中: <change-name> (schema: <schema-name>)
 
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 3/7 に取り組み中: <タスク説明>
+[...実装中...]
+✓ タスク完了
 
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
+タスク 4/7 に取り組み中: <タスク説明>
+[...実装中...]
+✓ タスク完了
 ```
 
-**Output On Completion**
+**完了時の出力**
 
 ```
-## Implementation Complete
+## 実装完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 7/7 タスク完了 ✓
 
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
+### このセッションで完了
+- [x] タスク 1
+- [x] タスク 2
 ...
 
-All tasks complete! Ready to archive this change.
+すべてのタスクが完了しました。この変更をアーカイブできます。
 ```
 
-**Output On Pause (Issue Encountered)**
+**一時停止時の出力 (問題が発生しました)**
 
 ```
-## Implementation Paused
+## 実装一時停止
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**進捗:** 4/7 タスク完了
 
-### Issue Encountered
-<description of the issue>
+### 発生した問題
+<問題の説明>
 
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
+**選択肢:**
+1. <選択肢 1>
+2. <選択肢 2>
+3. 別のアプローチ
 
-What would you like to do?
+どう進めますか？
 ```
 
-**Guardrails**
-- Keep going through tasks until done or blocked
-- Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
-- Use contextFiles from CLI output, don't assume specific file names
-- Do not use context or operation guidance as proof that a task is complete
-- Apply relevant project context; report conflicts with controlling workflow inputs
-- Consider every guidance entry; explain any inapplicable or conflicting advice
-- Do not copy runtime context or operation guidance into implementation files or planning artifacts
-- Preserve CLI-controlled blocked/ready/all-done behavior and completion criteria
+**ガードレール**
+- 完了またはブロックされるまでタスクを進め続ける
+- 開始前に、apply 指示の出力にあるコンテキストファイルを必ず読み取る
+- タスクが曖昧なら、実装前に一時停止して確認する
+- 実装で問題が判明したら、一時停止してアーティファクトの更新を提案する
+- コード変更を最小限に保ち、各タスクの範囲に限定する
+- 各タスクの完了直後にチェックボックスを更新する
+- エラー、ブロッカー、不明瞭な要件があれば一時停止し、推測しない
+- CLI 出力の `contextFiles` を使用し、特定のファイル名を仮定しない
+- context や operation guidance をタスク完了の根拠にしない
+- 関連するプロジェクトコンテキストを適用し、ワークフローを制御する入力との競合を報告する
+- すべてのガイダンス項目を検討し、適用不能または競合する助言について理由を説明する
+- 実行時の context や operation guidance を実装ファイルや計画アーティファクトへコピーしない
+- CLI が制御する blocked/ready/all-done の振る舞いと完了基準を維持する
 
-**Fluid Workflow Integration**
+**流動的なワークフローの統合**
 
-This skill supports the "actions on a change" model:
+このスキルは、「変更に対するアクション」モデルをサポートします。
 
-- **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
+- **いつでも呼び出すことができます**: すべてのアーティファクトが完了する前 (タスクが存在する場合)、部分的な実装後、他のアクションとインターリーブされます。
+- **アーティファクト更新を許可**: 実装中に設計上の問題が明らかになった場合は、アーティファクト更新を提案してください。フェーズに固定せず、流動的に進めます

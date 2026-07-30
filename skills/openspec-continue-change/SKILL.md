@@ -1,117 +1,117 @@
 ---
 name: openspec-continue-change
-description: Continue working on an OpenSpec change by creating the next artifact. Use when the user wants to progress their change, create the next artifact, or continue their workflow.
+description: 次のアーティファクトを作成して OpenSpec 変更の作業を継続します。変更を進めたい、次のアーティファクトを作成したい、またはワークフローを継続したいときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Continue working on a change by creating the next artifact.
+次の成果物を作成して変更作業を続けます。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
-**Steps**
+**手順**
 
-1. **Select the change**
+1. **変更を選択する**
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes sorted by most recently modified, and ask the user to select one
+   名前が指定されていれば使用します。それ以外の場合:
+   - 会話で変更に言及していれば、そのコンテキストから推測する
+   - アクティブな変更が1つだけなら自動選択する
+   - 曖昧なら `openspec list --json` で最近変更された順の一覧を取得し、ユーザーに選択してもらう
 
-   When prompting, present the top 3-4 most recently modified changes as options, showing:
-   - Change name
-   - Schema (from `schema` field if present, otherwise "spec-driven")
-   - Status (e.g., "0/5 tasks", "complete", "no tasks")
-   - How recently it was modified (from `lastModified` field)
+   選択を求める際は、最近変更された上位3〜4件を候補として表示し、次を示します:
+   - 変更名
+   - スキーマ（`schema` フィールド。なければ "spec-driven"）
+   - 状態（例: "0/5 tasks"、"complete"、"no tasks"）
+   - 最終更新からの経過（`lastModified` フィールド）
 
-   Mark the most recently modified change as "(Recommended)" since it's likely what the user wants to continue.
+ユーザーが続行を望んでいる可能性が高いため、最後に変更された変更を「(推奨)」としてマークします。
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/openspec-continue-change <other>`).
+   必ず「使用する変更: <name>」と、変更方法（例: `/openspec-continue-change <other>`）を伝えます。
 
-2. **Check current status**
+2. **現在のステータスを確認**
    ```bash
    openspec status --change "<name>" --json
    ```
-   Parse the JSON to understand current state. The response includes:
-   - `schemaName`: The workflow schema being used (e.g., "spec-driven")
-   - `artifacts`: Array of artifacts with their status ("done", "skipped", "ready", "blocked")
-   - `isComplete`: Boolean indicating if all artifacts are complete
-   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context. Use these instead of assuming repo-local paths.
+   JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
+   - `schemaName`: 使用中のワークフロースキーマ（例: "spec-driven"）
+   - `artifacts`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
+   - `isComplete`: すべてのアーティファクトが完了しているかを示す真偽値
+   - `planningHome`、`changeRoot`、`artifactPaths`、`actionContext`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
 
-3. **Act based on status**:
-
-   ---
-
-   **If all artifacts are complete (`isComplete: true`)**:
-   - Congratulate the user
-   - Show final status including the schema used
-   - Suggest: "All artifacts created! You can now implement this change or archive it."
-   - STOP
+3. **ステータスに基づいて行動**:
 
    ---
 
-   **If artifacts are ready to create** (status shows artifacts with `status: "ready"`):
-   - Pick the FIRST artifact with `status: "ready"` from the status output
-   - Get its instructions:
+**すべてのアーティファクトが完了している場合 (`isComplete: true`)**:
+- ユーザーに祝福を与える
+- 使用されたスキーマを含む最終ステータスを表示します
+- 提案: 「すべてのアーティファクトが作成されました。この変更を実装するか、アーカイブできます。」
+- 停止
+
+   ---
+
+**アーティファクトを作成する準備ができている場合** (ステータスに `status: "ready"` のアーティファクトが表示されます):
+- ステータス出力から `status: "ready"` の最初のアーティファクトを選択します
+- 手順を確認します。
      ```bash
      openspec instructions <artifact-id> --change "<name>" --json
      ```
-   - Parse the JSON. The key fields are:
-     - `context`: Project background (constraints for you - do NOT include in output)
-     - `rules`: Artifact-specific rules (constraints for you - do NOT include in output)
-     - `template`: The structure to use for your output file
-     - `instruction`: Schema-specific guidance
-     - `resolvedOutputPath`: Resolved path or pattern to write the artifact
-     - `dependencies`: Completed artifacts to read for context (entries with `skipped: true` have no files - do not look for them)
-     - `skipped`/`warning`: present when the change declares skip_specs and this artifact must NOT be created - pick another artifact
-   - **Create the artifact file**:
-     - Read any completed dependency files for context - always re-read them from disk, even if you saw them earlier in the conversation (the user may have edited them)
-     - If the `instruction` field delegates creation to a specific skill or command, invoke it to produce the artifact instead of writing the file yourself, then verify the artifact file exists at `resolvedOutputPath`
-     - Otherwise use `template` as the structure - fill in its sections
-     - Apply `context` and `rules` as constraints when writing - but do NOT copy them into the file
-     - Write to the `resolvedOutputPath` specified in instructions. If it is a glob pattern, choose the concrete file path using the schema instruction and the change's context
-   - Show what was created and what's now unlocked
-   - STOP after creating ONE artifact
+   - JSON を解析します。主なフィールドは次のとおりです:
+     - `context`: プロジェクトの背景（作業上の制約。出力には含めない）
+     - `rules`: アーティファクト固有のルール（作業上の制約。出力には含めない）
+     - `template`: 出力ファイルに使用する構造
+     - `instruction`: スキーマ固有のガイダンス
+     - `resolvedOutputPath`: アーティファクトの書き込み先として解決されたパスまたはパターン
+     - `dependencies`: コンテキストとして読む完了済みアーティファクト（`skipped: true` の項目にはファイルがないため探さない）
+     - `skipped`/`warning`: 変更で skip_specs が宣言され、このアーティファクトを作成してはならない場合に存在する。別のアーティファクトを選ぶ
+   - **アーティファクトファイルを作成する**:
+     - コンテキストとして完了済みの依存ファイルを読みます。以前の会話で確認済みでも、ユーザーが編集している可能性があるため、必ずディスクから読み直します
+     - `instruction` フィールドが特定のスキルまたはコマンドへ作成を委任している場合は、自分で書かずにそれを呼び出し、`resolvedOutputPath` にアーティファクトファイルが存在することを確認します
+     - それ以外は `template` を構造として使用し、各セクションを埋めます
+     - 書き込み時は `context` と `rules` を制約として適用しますが、ファイルへコピーしてはいけません
+     - instructions で指定された `resolvedOutputPath` に書き込みます。グロブパターンの場合は、スキーマの指示と変更のコンテキストを使って具体的なファイルパスを選びます
+   - 作成したものと、新たに作成可能になったものを表示する
+   - アーティファクトを1つ作成したら停止する
 
    ---
 
-   **If no artifacts are ready (all blocked)**:
-   - This shouldn't happen with a valid schema
-   - Show status and suggest checking for issues
+**準備ができているアーティファクトがない場合 (すべてブロックされている場合)**:
+- これは有効なスキーマでは起こらないはずです
+- ステータスを表示し、問題の確認を提案します
 
-4. **After creating an artifact, show progress**
+4. **アーティファクトの作成後、進行状況を表示**
    ```bash
    openspec status --change "<name>"
    ```
 
-**Output**
+**出力**
 
-After each invocation, show:
-- Which artifact was created
-- Schema workflow being used
-- Current progress (N/M complete)
-- What artifacts are now unlocked
-- Prompt: "Want to continue? Just ask me to continue or tell me what to do next."
+各呼び出しの後に、以下を表示します。
+- どのアーティファクトが作成されたか
+- 使用されているスキーマ ワークフロー
+- 現在の進捗状況（N/M完了）
+- 現在ロックが解除されているアーティファクト
+- プロンプト: 「続行しますか? 続行するか、次に何をするかを教えてください。」
 
-**Artifact Creation Guidelines**
+**アーティファクト作成ガイドライン**
 
-The artifact types and their purpose depend on the schema. The `instruction` field from the instructions output is the authoritative guidance for each artifact - follow it even when the artifact has a familiar name (proposal.md, tasks.md, etc.), since custom schemas may define different content or a different process for the same file names.
+アーティファクトの種類と目的はスキーマによって異なります。instructions 出力の `instruction` フィールドが各アーティファクトの正式なガイダンスです。カスタムスキーマでは、同じファイル名でも内容や手順が異なる場合があるため、アーティファクト名が馴染みのあるもの（proposal.md、tasks.md など）でも、その指示に従います。
 
-If the `instruction` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly.
+`instruction` フィールドが特定のスキルまたはコマンドを使った作成を指示している場合は、アーティファクトを直接書かず、それを呼び出します。
 
-**Guardrails**
-- Create ONE artifact per invocation
-- Always read dependency artifacts before creating a new one - re-read from disk, not from conversation memory (files may have changed since you last saw them)
-- Never skip artifacts or create out of order
-- If context is unclear, ask the user before creating
-- Verify the artifact file exists after writing before marking progress
-- Use the schema's artifact sequence, don't assume specific artifact names
-- **IMPORTANT**: `context` and `rules` are constraints for YOU, not content for the file
-  - Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into the artifact
-  - These guide what you write, but should never appear in the output
+**ガードレール**
+- 1回の呼び出しにつき、アーティファクトを1つだけ作成する
+- 新しいアーティファクトの作成前に、依存アーティファクトを必ず読む。以前の確認後にファイルが変更されている可能性があるため、会話の記憶ではなくディスクから読み直す
+- アーティファクトを飛ばしたり、順序を無視して作成したりしない
+- コンテキストが不明瞭なら、作成前にユーザーへ確認する
+- 進捗を完了扱いにする前に、書き込んだアーティファクトファイルが存在することを確認する
+- スキーマのアーティファクト順序に従い、特定のアーティファクト名を仮定しない
+- **重要**: `context` と `rules` は作業上の制約であり、ファイルへ含める内容ではない
+  - `<context>`、`<rules>`、`<project_context>` ブロックをアーティファクトへコピーしない
+  - これらは記述内容の指針だが、出力には決して含めない

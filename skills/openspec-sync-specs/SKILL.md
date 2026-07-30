@@ -1,23 +1,23 @@
 ---
 name: openspec-sync-specs
-description: Sync delta specs from a change to main specs. Use when the user wants to update main specs with changes from a delta spec, without archiving the change.
+description: 変更の delta spec を本仕様へ同期します。変更をアーカイブせずに、delta spec の内容で本仕様を更新したいときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Sync delta specs from a change to main specs.
+変更からメインスペックへのデルタスペックを同期します。
 
-This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
+これは**エージェント主導**の操作です。デルタ仕様を読み取り、メイン仕様を直接編集して変更を適用します。これにより、インテリジェントなマージ (要件全体をコピーせずにシナリオを追加するなど) が可能になります。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
-**Steps**
+**手順**
 
 1. **Select the change**
 
@@ -30,9 +30,9 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 
    Always announce: "Using change: <name>" and how to override (e.g., `/openspec-sync-specs <other>`).
 
-2. **Resolve change context**
+2. **変更コンテキストの解決**
 
-   Run:
+走る：
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -59,15 +59,15 @@ This is an **agent-driven** operation - you will read delta specs and directly e
    empty, report that there is nothing to sync and stop without writing a main
    spec.
 
-   Each delta spec file contains sections like:
-   - `## ADDED Requirements` - New requirements to add
-   - `## MODIFIED Requirements` - Changes to existing requirements
-   - `## REMOVED Requirements` - Requirements to remove
-   - `## RENAMED Requirements` - Requirements to rename (FROM:/TO: format)
+各デルタ仕様ファイルには次のようなセクションが含まれています。
+- `## ADDED Requirements` - 追加する新しい要件
+- `## MODIFIED Requirements` - 既存の要件の変更
+- `## REMOVED Requirements` - 削除の要件
+- `## RENAMED Requirements` - 名前を変更するための要件 (FROM:/TO: 形式)
 
-   If no delta specs found, inform user and stop.
+デルタ仕様が見つからない場合は、ユーザーに通知して停止します。
 
-4. **For each delta spec, apply changes to main specs**
+4. **デルタ仕様ごとに、メイン仕様に変更を適用します**
 
    Before the first main-spec write, obtain one current specs-rule snapshot:
    - If archive invoked this workflow inline and supplied a valid snapshot from
@@ -87,29 +87,29 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 
    For each capability delta spec path selected in step 3 — the full `existingOutputPaths` list, or the narrowed subset when a caller supplied one (these may belong to a selected store, not the repo):
 
-   a. **Read the delta spec** to understand the intended changes
+ａ． **デルタ仕様を読んで**、意図された変更を理解してください
 
    b. **Read the main spec** at `<planningHome.root>/openspec/specs/<capability>/spec.md` (may not exist yet)
 
-   c. **Apply changes intelligently**:
+c. **変更をインテリジェントに適用**:
 
-      **ADDED Requirements:**
-      - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
+**追加要件:**
+- 主要仕様に要件が存在しない場合 → 追加する
+- 要件がすでに存在する場合 → 一致するように更新します (暗黙的な MODIFIED として扱います)
 
-      **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
-        - Adding new scenarios (don't need to copy existing ones)
-        - Modifying existing scenarios
-        - Changing the requirement description
-      - Preserve scenarios/content not mentioned in the delta
+**変更された要件:**
+- 主な仕様で要件を見つける
+- 変更を適用します。これは次のとおりです。
+- 新しいシナリオの追加 (既存のシナリオをコピーする必要はありません)
+- 既存のシナリオの変更
+- 要件の説明の変更
+- デルタに記載されていないシナリオ/コンテンツを保持する
 
-      **REMOVED Requirements:**
-      - Remove the entire requirement block from main spec
+**削除された要件:**
+- 主要仕様から要件ブロック全体を削除します。
 
-      **RENAMED Requirements:**
-      - Find the FROM requirement, rename to TO
+**名前変更された要件:**
+- FROM 要件を見つけて、名前を TO に変更します
 
       **`## Purpose` in the delta:**
       - The main spec already has one and it is authoritative - leave it alone
@@ -122,7 +122,7 @@ This is an **agent-driven** operation - you will read delta specs and directly e
       - Add Requirements section with the ADDED requirements
       - Follow the **Main Spec Format Reference** below
 
-5. **Show summary**
+5. **概要を表示**
 
    After applying all changes, summarize:
    - Which capabilities were updated
@@ -130,7 +130,7 @@ This is an **agent-driven** operation - you will read delta specs and directly e
    - Any new main spec left with a TBD Purpose placeholder, so it gets written
      now rather than lingering
 
-**Delta Spec Format Reference**
+**デルタスペックフォーマットリファレンス**
 
 ```markdown
 ## Purpose
@@ -139,28 +139,28 @@ Only on a delta that introduces a brand-new capability. Seeds the new main spec.
 
 ## ADDED Requirements
 
-### Requirement: New Feature
-The system SHALL do something new.
+### Requirement: 新機能
+システムは新しい処理を行うこと。
 
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
+#### Scenario: 基本ケース
+- **WHEN** ユーザーが X を行う
+- **THEN** システムは Y を行う
 
 ## MODIFIED Requirements
 
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
+### Requirement: 既存機能
+#### Scenario: 追加する新しいシナリオ
+- **WHEN** ユーザーが A を行う
+- **THEN** システムは B を行う
 
 ## REMOVED Requirements
 
-### Requirement: Deprecated Feature
+### Requirement: 非推奨機能
 
 ## RENAMED Requirements
 
-- FROM: `### Requirement: Old Name`
-- TO: `### Requirement: New Name`
+- FROM: `### Requirement: 旧名称`
+- TO: `### Requirement: 新名称`
 ```
 
 **Main Spec Format Reference**
@@ -185,27 +185,27 @@ The system SHALL do something new.
 
 **Key Principle: Intelligent Merging**
 
-Unlike programmatic merging, you can apply **partial updates**:
-- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
-- The delta represents *intent*, not a wholesale replacement
-- Use your judgment to merge changes sensibly
+プログラムによる結合とは異なり、**部分的な更新**を適用できます。
+- シナリオを追加するには、そのシナリオを MODIFIED の下に含めるだけです。既存のシナリオをコピーしないでください。
+- デルタは *意図* を表しており、大規模な置き換えではありません
+- ご自身の判断で変更を賢明にマージしてください
 
-**Output On Success**
+**成功時の出力**
 
 ```markdown
 ## Specs Synced: <change-name>
 
-Updated main specs:
+更新した本仕様:
 
 **<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
+- 要件を追加: "新機能"
+- 要件を変更: "既存機能" (シナリオ 1 件を追加)
 
 **<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
+- 新しい spec ファイルを作成
+- 要件を追加: "別機能"
 
-Main specs are now updated. The change remains active - archive when implementation is complete.
+本仕様を更新しました。この変更はまだ進行中です。実装が完了したらアーカイブしてください。
 ```
 
 **Guardrails**

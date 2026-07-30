@@ -4,10 +4,10 @@
 
 ## docs
 
-- [ ] M CHANGELOG.md
+- [x] M CHANGELOG.md
 - [x] M MAINTAINERS.md
 - [x] M README.md
-- [ ] A SECURITY.md
+- [x] A SECURITY.md
 - [x] M docs/README.md
 - [x] M docs/agent-contract.md
 - [x] M docs/cli.md
@@ -34,12 +34,12 @@
 - [x] M schemas/spec-driven/schema.yaml
 - [x] M schemas/spec-driven/templates/design.md
 - [x] M schemas/spec-driven/templates/proposal.md
-- [ ] M schemas/spec-driven/templates/spec.md
+- [x] M schemas/spec-driven/templates/spec.md
 
 ## OPSX スキル
 
-- [ ] A skills/README.md
-- [ ] A skills/openspec-apply-change/SKILL.md
+- [x] A skills/README.md
+- [x] A skills/openspec-apply-change/SKILL.md
 - [ ] A skills/openspec-archive-change/SKILL.md
 - [ ] A skills/openspec-bulk-archive-change/SKILL.md
 - [ ] A skills/openspec-continue-change/SKILL.md

@@ -1,15 +1,15 @@
 ---
 name: openspec-propose
-description: Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.
+description: 新しい変更を提案し、すべてのアーティファクトを 1 ステップで生成します。作りたいものを素早く説明し、proposal、design、specs、tasks を実装準備済みの形で揃えたいときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Propose a new change - create the change and generate all artifacts in one step.
+新しい変更を提案します。変更を作成し、必要なアーティファクトを 1 ステップで生成します。
 
 I'll create a change with the artifacts your schema defines. With the default spec-driven schema that is:
 - proposal.md (what & why)
@@ -17,32 +17,32 @@ I'll create a change with the artifacts your schema defines. With the default sp
 - design.md (how)
 - tasks.md (implementation steps)
 
-When ready to implement, run /openspec-apply-change
+実装の準備ができたら、`/openspec-apply-change` を実行します。
 
 ---
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
+**入力**: ユーザーのリクエストには、変更名 (kebab-case) または作りたい内容の説明を含める必要があります。
 
-**Steps**
+**手順**
 
-1. **If no clear input provided, ask what they want to build**
+1. **入力が明確でない場合は、作りたい内容を尋ねます**
 
    Ask the user (open-ended, no preset options):
    > "What change do you want to work on? Describe what you want to build or fix."
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
+説明から kebab-case の変更名を導き出します (例: 「ユーザー認証の追加」→ `add-user-auth`)。
 
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+**重要**: ユーザーが何を作りたいのかを理解しないまま先に進まないでください。
 
-2. **Create the change directory**
+2. **変更ディレクトリを作成します**
    ```bash
    openspec new change "<name>"
    ```
-   This creates a scaffolded change in the planning home resolved by the CLI with `.openspec.yaml`.
+これにより、planning home 配下に変更ディレクトリが作成されます。場所は CLI が `.openspec.yaml` を使って解決します。
 
-3. **Get the artifact build order**
+3. **アーティファクトの作成順序を取得**
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -55,10 +55,10 @@ When ready to implement, run /openspec-apply-change
 
    Use a todo list to track progress through the artifacts.
 
-   Loop through artifacts in dependency order (artifacts with no pending dependencies first):
+依存関係の順序でアーティファクトを処理します (未完了の依存関係がないアーティファクトから開始)。
 
-   a. **For each artifact that is `ready` (dependencies satisfied)**:
-      - Get instructions:
+ａ． **`ready` (依存関係が満たされている) の各アーティファクトについて**:
+- 指示を取得します:
         ```bash
         openspec instructions <artifact-id> --change "<name>" --json
         ```
@@ -90,12 +90,12 @@ When ready to implement, run /openspec-apply-change
       - Ask the user to clarify
       - Then continue with creation
 
-5. **Show final status**
+5. **最終ステータスを表示**
    ```bash
    openspec status --change "<name>"
    ```
 
-**Output**
+**出力**
 
 After completing all artifacts, summarize:
 - Change name and location
@@ -103,7 +103,7 @@ After completing all artifacts, summarize:
 - What's ready: "All artifacts needed for implementation are ready."
 - Prompt: "Run `/openspec-apply-change` or ask me to implement to start working on the tasks."
 
-**Artifact Creation Guidelines**
+**アーティファクト作成ガイドライン**
 
 - Follow the `instruction` field from `openspec instructions` for each artifact type - it is the authoritative guidance, even for familiar artifact names
 - If the `instruction` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly

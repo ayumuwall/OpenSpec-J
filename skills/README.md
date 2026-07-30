@@ -1,19 +1,15 @@
-# OpenSpec skills for skills.sh
+# skills.sh向けOpenSpecスキル
 
-Install the OpenSpec workflow skills into any [skills.sh](https://skills.sh)-compatible agent:
-
-```bash
-npx skills add Fission-AI/OpenSpec
-```
-
-Each `openspec-*/SKILL.md` here is the same skill `openspec init` writes into a
-project. The skills drive the `openspec` CLI, so for the full setup (CLI +
-`openspec/` project scaffolding + slash commands) run:
+[skills.sh](https://skills.sh) 対応の任意のエージェントへ、OpenSpecワークフロースキルをインストールできます。
 
 ```bash
-npx openspec@latest init
+npx skills add ayumuwall/OpenSpec-J
 ```
 
-> These files are generated from the skill templates — do not edit by hand. Run
-> `pnpm build && pnpm generate:skills` after changing a template;
-> `skillssh-parity.test.ts` fails if they drift.
+ここにある各 `openspec-*/SKILL.md` は、`openspec init` がプロジェクトへ書き込むものと同じスキルです。スキルは `openspec` CLIを操作します。CLI、`openspec/` プロジェクトの雛形、スラッシュコマンドを含む完全なセットアップを行うには、次を実行してください。
+
+```bash
+npx @ayumuwall/openspec@latest init
+```
+
+> これらのファイルはスキルテンプレートから生成されるため、手動で編集しないでください。テンプレートを変更した後は `pnpm build && pnpm generate:skills` を実行してください。内容に差異があると `skillssh-parity.test.ts` が失敗します。

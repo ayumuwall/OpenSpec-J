@@ -1,21 +1,21 @@
 ---
 name: openspec-archive-change
-description: Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete.
+description: 実験的ワークフローで完了した変更をアーカイブします。実装完了後に変更を確定してアーカイブしたいときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Archive a completed change in the experimental workflow.
+実験的ワークフローで完了した変更をアーカイブします。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
-**Steps**
+**手順**
 
 1. **Select the change**
 
@@ -56,9 +56,9 @@ Archive a completed change in the experimental workflow.
    or archive summaries unless the user separately asks for it. These are
    prompt-level behavior contracts, not enforceable checks.
 
-2. **Check artifact completion status**
+2. **アーティファクトの完了ステータスを確認します**
 
-   Run `openspec status --change "<name>" --json` to check artifact completion.
+`openspec status --change "<name>" --json` を実行して、アーティファクトの完了を確認します。
 
    Parse the JSON to understand:
    - `schemaName`: The workflow being used
@@ -70,20 +70,20 @@ Archive a completed change in the experimental workflow.
    - Ask the user to confirm they want to proceed
    - Proceed if user confirms
 
-3. **Check task completion status**
+3. **タスクの完了ステータスを確認します**
 
-   Read the tasks file (typically `tasks.md`) to check for incomplete tasks.
+タスク ファイル (通常は `tasks.md`) を読んで、不完全なタスクがないか確認します。
 
-   Count tasks marked with `- [ ]` (incomplete) vs `- [x]` (complete).
+`- [ ]` (未完了) と `- [x]` (完了) でマークされたタスクを数えます。
 
    **If incomplete tasks found:**
    - Display warning showing count of incomplete tasks
    - Ask the user to confirm they want to proceed
    - Proceed if user confirms
 
-   **If no tasks file exists:** Proceed without task-related warning.
+**タスク ファイルが存在しない場合:** タスク関連の警告なしで続行します。
 
-4. **Assess delta spec sync state**
+4. **デルタ仕様の同期状態を評価します**
 
    Use `artifactPaths.specs.existingOutputPaths` from status JSON as the only
    delta-spec source. If the `specs` entry is missing or
@@ -95,9 +95,9 @@ Archive a completed change in the experimental workflow.
    - Determine what changes would be applied (adds, modifications, removals, renames)
    - Show a combined summary before prompting
 
-   **Prompt options:**
-   - If changes needed: "Sync now (recommended)", "Archive without syncing"
-   - If already synced: "Archive now", "Sync anyway", "Cancel"
+**プロンプトオプション:**
+- 変更が必要な場合: 「今すぐ同期 (推奨)」、「同期せずにアーカイブ」
+- すでに同期されている場合: 「今すぐアーカイブ」、「とにかく同期」、「キャンセル」
 
    Route on the answer:
    - "Cancel" — stop, do not archive
@@ -124,33 +124,33 @@ Archive a completed change in the experimental workflow.
 
    If the sync failed, or any capability does not match, report what differs and stop — do not archive. Nothing has moved and `changeRoot` is intact, so the user can fix the mismatch or re-run the sync and start the archive again.
 
-5. **Perform the archive**
+5. **アーカイブを実行します**
 
-   Create an `archive` directory under `planningHome.changesDir` if it doesn't exist:
+`archive` ディレクトリが存在しない場合は、`planningHome.changesDir` の下に作成します。
    ```bash
    mkdir -p "<planningHome.changesDir>/archive"
    ```
 
    Generate the target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<change-name>`. Never stack a second date (same rule as `openspec archive`).
 
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move `changeRoot` to the archive directory
+**ターゲットが既に存在するかどうかを確認します:**
+- 「はい」の場合: エラーで失敗します。既存のアーカイブの名前を変更するか、別の日付を使用することを提案します。
+- 「いいえ」の場合: `changeRoot` をアーカイブ ディレクトリに移動します。
 
    ```bash
    mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
    ```
 
-6. **Display summary**
+6. **概要を表示**
 
-   Show archive completion summary including:
-   - Change name
-   - Schema that was used
-   - Archive location
-   - Whether specs were synced (if applicable)
-   - Note about any warnings (incomplete artifacts/tasks)
+以下を含むアーカイブ完了の概要を表示します。
+- 名前の変更
+- 使用されたスキーマ
+- アーカイブの場所
+- 仕様が同期されたかどうか (該当する場合)
+- 警告に関するメモ (不完全な成果物/タスク)
 
-**Output On Success**
+**成功時の出力**
 
 ```markdown
 ## Archive Complete

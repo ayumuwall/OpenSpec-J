@@ -1,38 +1,38 @@
 ---
 name: openspec-bulk-archive-change
-description: Archive multiple completed changes at once. Use when archiving several parallel changes.
+description: 複数の完了済み変更を一括でアーカイブします。並行して進めた複数の変更をまとめてアーカイブするときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Archive multiple completed changes in a single operation.
+複数の完了済み変更を1回の操作でアーカイブします。
 
-This skill allows you to batch-archive changes, handling spec conflicts intelligently by checking the codebase to determine what's actually implemented.
+このスキルでは、複数の変更を一括アーカイブできます。仕様の競合は、コードベースを確認して実際に実装済みの内容を判断しながら扱います。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: None required (prompts for selection)
+**入力**: 不要（選択を促します）
 
-**Steps**
+**手順**
 
-1. **Get active changes**
+1. **進行中の変更を取得**
 
-   Run `openspec list --json` to get all active changes.
+   `openspec list --json` を実行して、進行中の変更をすべて取得します。
 
-   If no active changes exist, inform user and stop.
+   進行中の変更がない場合は、ユーザーに伝えて停止します。
 
-2. **Prompt for change selection**
+2. **変更選択を促す**
 
    Ask the user to choose changes (multi-select):
    - Show each change with its schema
    - Include an option for "All changes"
    - Allow any number of selections (1+ works, 2+ is the typical use case)
 
-   **IMPORTANT**: Do NOT auto-select. Always let the user choose.
+   **重要**: 自動選択しないでください。必ずユーザーに選ばせます。
 
    **Load current archive inputs once for the selected root before batch validation:**
 
@@ -61,15 +61,15 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
 
 3. **Batch validation - gather status for all selected changes**
 
-   For each selected change, collect:
+   選択された各変更について、次を収集します:
 
-   a. **Artifact status** - Run `openspec status --change "<name>" --json`
-      - Parse `schemaName`, `artifacts`, `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`
-      - Note which artifacts are `done` vs other states
+   a. **アーティファクト状態** - `openspec status --change "<name>" --json` を実行
+      - `schemaName`, `artifacts`, `planningHome`, `changeRoot`, `artifactPaths`, `actionContext` を解析
+      - どのアーティファクトが `done` で、どれが他の状態かを記録
 
-   b. **Task completion** - Read `artifactPaths.tasks.existingOutputPaths` from status JSON
-      - Count `- [ ]` (incomplete) vs `- [x]` (complete)
-      - If no tasks file exists, note as "No tasks"
+   b. **タスク完了状況** - status JSON から `artifactPaths.tasks.existingOutputPaths` を読み取る
+      - `- [ ]`（未完了）と `- [x]`（完了）を数える
+      - タスクファイルがない場合は "タスクなし" と記録
 
    c. **Delta specs** - Check `artifactPaths.specs.existingOutputPaths` from status JSON
       - List which capability specs exist
@@ -81,29 +81,29 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
         batches where some schemas have no `specs` artifact.
 4. **Detect spec conflicts**
 
-   Build a map of `capability -> [changes that touch it]`:
+   `capability -> [それを変更する変更]` のマップを作ります:
 
    ```text
    auth -> [change-a, change-b]  <- CONFLICT (2+ changes)
    api  -> [change-c]            <- OK (only 1 change)
    ```
 
-   A conflict exists when 2+ selected changes have delta specs for the same capability.
+   選択された変更のうち2件以上が同じ capability の差分仕様を持つ場合、競合があります。
 
-5. **Resolve conflicts agentically**
+5. **エージェント的に競合を解決**
 
-   **For each conflict**, investigate the codebase:
+   **各競合**について、コードベースを調査します:
 
-   a. **Read the delta specs** from each conflicting change to understand what each claims to add/modify
+   a. 競合する各変更の**差分仕様を読み**、それぞれが何を追加/変更すると主張しているか理解する
 
-   b. **Search the codebase** for implementation evidence:
-      - Look for code implementing requirements from each delta spec
-      - Check for related files, functions, or tests
+   b. 実装の根拠を得るために**コードベースを検索**:
+      - 各差分仕様の要件を実装するコードを探す
+      - 関連ファイル、関数、テストを確認
 
-   c. **Determine resolution**:
-      - If only one change is actually implemented -> sync that one's specs
-      - If both implemented -> apply in chronological order (older first, newer overwrites)
-      - If neither implemented -> skip spec sync, warn user
+   c. **解決方法を決定**:
+      - 実装済みが1件だけの場合 -> その変更の仕様を同期
+      - 両方実装済みの場合 -> 時系列順で適用（古いものを先、新しいものが上書き）
+      - どちらも未実装の場合 -> 仕様同期をスキップし、ユーザーに警告
 
    d. **Record resolution** for each conflict:
       - An inclusion or exclusion decision for every delta spec, keyed by change and capability
@@ -111,17 +111,17 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
       - Which delta specs to exclude from sync because their implementation is missing
       - Rationale (what was found in codebase)
 
-6. **Show consolidated status table**
+6. **統合ステータス表を表示**
 
-   Display a table summarizing all changes:
+   すべての変更を要約する表を表示します:
 
    ```markdown
    | Change              | Artifacts | Tasks | Specs   | Conflicts | Status |
    |---------------------|-----------|-------|---------|-----------|--------|
-   | schema-management   | Done      | 5/5   | 2 delta | None      | Ready  |
-   | project-config      | Done      | 3/3   | 1 delta | None      | Ready  |
-   | add-oauth           | Done      | 4/4   | 1 delta | auth (!)  | Ready* |
-   | add-verify-skill    | 1 left    | 2/5   | None    | None      | Warn   |
+   | schema-management   | 完了      | 5/5   | 2差分   | なし      | 準備完了 |
+   | project-config      | 完了      | 3/3   | 1差分   | なし      | 準備完了 |
+   | add-oauth           | 完了      | 4/4   | 1差分   | auth (!)  | 準備完了* |
+   | add-verify-skill    | 残り1件   | 2/5   | なし    | なし      | 警告   |
    ```
 
    For conflicts, show the resolution:
@@ -136,17 +136,17 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    - add-verify-skill: 1 incomplete artifact, 3 incomplete tasks
    ```
 
-7. **Confirm batch operation**
+7. **一括操作の確認**
 
    Ask the user a single confirmation question:
 
-   - "Archive N changes?" with options based on status
-   - Options might include:
-     - "Archive all N changes"
-     - "Archive only N ready changes (skip incomplete)"
-     - "Cancel"
+   - "N 件の変更をアーカイブしますか？" をステータスに応じて提示
+   - 選択肢の例:
+     - "N 件すべてをアーカイブ"
+     - "準備完了の N 件のみアーカイブ（未完了は除外）"
+     - "キャンセル"
 
-   If there are incomplete changes, make clear they'll be archived with warnings.
+   未完了がある場合は、警告付きでアーカイブされることを明記。
 
    Route on the answer by intent, not by exact label — you wrote these labels,
    so match what the user picked rather than the wording above:
@@ -210,20 +210,20 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
       - Skipped: user chose not to archive (if applicable)
       - Sync skipped: for every delta in `excludedDeltas`, report `sync skipped` with the change, capability, and recorded reason. This is distinct from skipping the archive.
 
-9. **Display summary**
+9. **サマリーを表示**
 
-   Show final results:
+   最終結果を表示:
 
    ```markdown
    ## Bulk Archive Complete
 
-   Archived 3 changes:
+   3 件の変更をアーカイブしました:
    - schema-management-cli -> archive/2026-01-19-schema-management-cli/
    - project-config -> archive/2026-01-19-project-config/
    - add-oauth -> archive/2026-01-19-add-oauth/
 
-   Skipped 1 change:
-   - add-verify-skill (user chose not to archive incomplete)
+   1 件の変更をスキップしました:
+   - add-verify-skill（未完了のためユーザーがアーカイブしないことを選択）
 
    Spec sync summary:
    - 4 delta specs synced to main specs
@@ -237,40 +237,40 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    - some-change: Archive directory already exists
    ```
 
-**Conflict Resolution Examples**
+**競合解決の例**
 
 Example 1: Only one implemented
 ```text
 Conflict: <planningHome.root>/openspec/specs/auth/spec.md touched by [add-oauth, add-jwt]
 
-Checking add-oauth:
-- Delta adds "OAuth Provider Integration" requirement
-- Searching codebase... found src/auth/oauth.ts implementing OAuth flow
+add-oauth を確認:
+- 差分は "OAuth Provider Integration" 要件を追加
+- コードベースを検索... OAuth フローを実装する src/auth/oauth.ts を検出
 
-Checking add-jwt:
-- Delta adds "JWT Token Handling" requirement
-- Searching codebase... no JWT implementation found
+add-jwt を確認:
+- 差分は "JWT Token Handling" 要件を追加
+- コードベースを検索... JWT 実装は見つからず
 
-Resolution: Only add-oauth is implemented. Will sync add-oauth specs only.
+解決: add-oauth のみ実装済みです。add-oauth の仕様だけを同期します。
 ```
 
 Example 2: Both implemented
 ```text
 Conflict: <planningHome.root>/openspec/specs/api/spec.md touched by [add-rest-api, add-graphql]
 
-Checking add-rest-api (created 2026-01-10):
-- Delta adds "REST Endpoints" requirement
-- Searching codebase... found src/api/rest.ts
+add-rest-api を確認（2026-01-10 作成）:
+- 差分は "REST Endpoints" 要件を追加
+- コードベースを検索... src/api/rest.ts を検出
 
-Checking add-graphql (created 2026-01-15):
-- Delta adds "GraphQL Schema" requirement
-- Searching codebase... found src/api/graphql.ts
+add-graphql を確認（2026-01-15 作成）:
+- 差分は "GraphQL Schema" 要件を追加
+- コードベースを検索... src/api/graphql.ts を検出
 
-Resolution: Both implemented. Will apply add-rest-api specs first,
-then add-graphql specs (chronological order, newer takes precedence).
+解決: 両方とも実装済みです。add-rest-api の仕様を先に適用し、
+次に add-graphql の仕様を適用します（時系列順。新しいものを優先）。
 ```
 
-**Output On Success**
+**成功時の出力**
 
 ```markdown
 ## Bulk Archive Complete
@@ -279,12 +279,12 @@ Archived N changes:
 - <change-1> -> archive/<target-name-1>/
 - <change-2> -> archive/<target-name-2>/
 
-Spec sync summary:
-- N delta specs synced to main specs
-- No conflicts (or: M conflicts resolved)
+仕様同期サマリー:
+- N 件の差分仕様をメイン仕様へ同期
+- 競合なし（または: M 件の競合を解決）
 ```
 
-**Output On Partial Success**
+**一部成功時の出力**
 
 ```markdown
 ## Bulk Archive Complete (partial)
@@ -292,19 +292,19 @@ Spec sync summary:
 Archived N changes:
 - <change-1> -> archive/<target-name-1>/
 
-Skipped M changes:
-- <change-2> (user chose not to archive incomplete)
+M 件の変更をスキップしました:
+- <change-2>（未完了のためユーザーがアーカイブしないことを選択）
 
-Failed K changes:
-- <change-3>: Archive directory already exists
+K 件の変更に失敗しました:
+- <change-3>: アーカイブディレクトリが既に存在します
 ```
 
-**Output When No Changes**
+**変更がない場合の出力**
 
 ```markdown
 ## No Changes to Archive
 
-No active changes found. Create a new change to get started.
+進行中の変更はありません。`/openspec-new-change` で新しい変更を作成してください。
 ```
 
 **Guardrails**

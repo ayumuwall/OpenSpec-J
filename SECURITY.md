@@ -1,62 +1,62 @@
-# Security Policy
+# セキュリティポリシー
 
-## Reporting a vulnerability
+## 脆弱性の報告
 
-Report privately through [GitHub Security Advisories](https://github.com/Fission-AI/OpenSpec/security/advisories/new). Please don't open a public issue for a suspected vulnerability.
+[GitHub Security Advisories](https://github.com/ayumuwall/OpenSpec-J/security/advisories/new) から非公開で報告してください。脆弱性の疑いがある場合は、公開Issueを作成しないでください。
 
-Include what you can: affected version, reproduction steps, and the impact you believe it has. We aim to acknowledge within 3 business days and to ship a fix or a decision within 30 days. Valid reports are credited in the advisory unless you'd rather stay anonymous.
+分かる範囲で、影響を受けるバージョン、再現手順、想定される影響を記載してください。3営業日以内の受領確認と、30日以内の修正版または対応方針の提供を目標としています。匿名を希望しない限り、有効な報告者はアドバイザリに記載します。
 
-## Supported versions
+## 対応バージョン
 
-Fixes ship in the latest published version on npm. Older versions are not patched — upgrade to pick up a fix.
+修正はnpmで公開される最新バージョンに含まれます。古いバージョンにはパッチを提供しないため、修正を適用するにはアップグレードしてください。
 
-## Threat model
+## 脅威モデル
 
-OpenSpec is a local command-line tool. It has no server, no network listener, and no privileged daemon. It reads and writes markdown under the directory you run it in, using paths you supply, with your own user permissions. It can offer to upgrade itself during `openspec update`, and only with your say-so. It sends anonymous usage telemetry, which you can disable with `OPENSPEC_TELEMETRY=0`.
+OpenSpecはローカルのコマンドラインツールです。サーバー、ネットワークリスナー、特権デーモンはありません。ユーザー自身の権限で、指定されたパスを使用し、実行したディレクトリ配下のMarkdownを読み書きします。`openspec update` の実行中に自己アップグレードを提案する場合がありますが、ユーザーの同意を得た場合に限ります。匿名の利用状況テレメトリを送信しますが、`OPENSPEC_TELEMETRY=0` で無効にできます。
 
-That shapes what is and isn't a vulnerability here:
+以上を踏まえ、このプロジェクトで脆弱性として扱うものと扱わないものは次のとおりです。
 
-| In scope | Out of scope |
+| 対象 | 対象外 |
 | --- | --- |
-| Code execution triggered by parsing a spec, config, or template file | Reading or writing a file path you passed to the CLI yourself |
-| Escaping the directory OpenSpec was pointed at, via untrusted input | Static-analysis findings on file-path joins with no untrusted input |
-| Leaking credentials or file contents through telemetry or logs | Vulnerabilities in devDependencies that don't ship in the published package |
-| Prototype pollution or injection reachable from a config or spec file | Denial of service against your own machine using your own input |
+| 仕様、設定、テンプレートファイルの解析によって引き起こされるコード実行 | ユーザー自身がCLIへ渡したファイルパスの読み書き |
+| 信頼できない入力を介して、OpenSpecに指定したディレクトリの外へ到達する問題 | 信頼できない入力がないファイルパス結合に対する静的解析の指摘 |
+| テレメトリやログを介した認証情報またはファイル内容の漏洩 | 公開パッケージに含まれないdevDependenciesの脆弱性 |
+| 設定または仕様ファイルから到達可能なプロトタイプ汚染やインジェクション | ユーザー自身の入力による、自身のマシンに対するサービス拒否 |
 
-If you think something sits on the boundary, report it and we'll work it out together.
+境界上にあると思われる問題も報告してください。共に判断します。
 
-## Published package contents
+## 公開パッケージの内容
 
-The `openspec` npm package publishes `dist/`, `bin/`, `schemas/`, and `scripts/postinstall.js`. Build and test tooling (vite, rollup, vitest, eslint, and their transitive dependencies) is not published. Scanners that read `pnpm-lock.yaml` without separating dependency scope will report advisories for packages that never reach an installed copy of OpenSpec.
+`@ayumuwall/openspec` npmパッケージは、`dist/`、`bin/`、`schemas/`、`scripts/postinstall.js` を公開します。ビルド・テスト用ツール（vite、rollup、vitest、eslint、およびそれらの推移的依存関係）は公開されません。依存関係のスコープを区別せずに `pnpm-lock.yaml` を読むスキャナーは、インストールされたOpenSpecには含まれないパッケージのアドバイザリも報告します。
 
-You do not have to take that on trust — install the package and look:
+この説明をそのまま信頼する必要はありません。パッケージをインストールして確認できます。
 
 ```sh
-npm install @fission-ai/openspec
-ls node_modules | grep -E '^(vite|rollup|vitest|eslint|js-yaml|minimatch)$'   # no matches
+npm install @ayumuwall/openspec
+ls node_modules | grep -E '^(vite|rollup|vitest|eslint|js-yaml|minimatch)$'   # 一致なし
 ```
 
-`pnpm audit --prod` in this repository reports the same scope, and CI runs it on every pull request.
+このリポジトリでの `pnpm audit --prod` も同じスコープを報告し、CIはすべてのPull Requestで実行します。
 
-## What the CLI does on your machine
+## CLIがマシン上で行うこと
 
-| Surface | Behavior |
+| 対象 | 動作 |
 | --- | --- |
-| Install script | `scripts/postinstall.js` prints one line suggesting shell completions. It makes no network request, writes no files, and runs no shell. Completions are opt-in via `openspec completion install`. |
-| Running other programs | Every call that goes through a shell uses a fixed literal (`which gh`, `gh auth status`). Anything carrying your input — issue text, editor paths, workset commands, the path passed to `openspec update` — uses an argument array, never string interpolation into a shell. On Windows, `.cmd` shims are launched through `cross-spawn`, which escapes arguments rather than concatenating them. |
-| Installing software | `openspec update` can run `npm install -g @fission-ai/openspec@latest` and then re-run `openspec update` with the upgraded CLI. It does this only after you answer yes to a prompt, only for the OpenSpec package itself, only when npm owns the install, and never in CI or a non-interactive shell. A global install lives outside your project, so it runs with your permissions there and executes whatever lifecycle scripts the published package ships. It then reads the installed binary's version back rather than assuming the upgrade took. Decline and it prints the command for you to run yourself. |
-| Telemetry | Command name, OpenSpec version, and a locally generated random UUID. No file paths, no file contents, no environment, no hostname, and IP capture is explicitly disabled. Opt out with `OPENSPEC_TELEMETRY=0` or `DO_NOT_TRACK=1`; it is off in CI automatically. |
-| Network | Telemetry when enabled, and one npm registry request during `openspec update` to check whether a newer CLI has been published. That request sends no data about you beyond what any HTTP request reveals, runs once per `openspec update` with nothing cached, and is skipped when `CI` is set to anything but an explicit off-value, under `NODE_ENV=test`, or when `OPENSPEC_NO_UPDATE_CHECK`, `DO_NOT_TRACK=1`, or `OPENSPEC_TELEMETRY=0` is set. Reading, writing, and validating specs is entirely local. |
+| インストールスクリプト | `scripts/postinstall.js` はシェル補完を提案する1行を表示します。ネットワークリクエスト、ファイル書き込み、シェル実行は行いません。補完は `openspec completion install` で明示的に導入します。 |
+| 他のプログラムの実行 | シェルを介するすべての呼び出しでは、固定リテラル（`which gh`、`gh auth status`）を使用します。Issue本文、エディターパス、worksetコマンド、`openspec update` へ渡すパスなど、ユーザー入力を含むものは引数配列を使用し、シェル文字列へ埋め込みません。Windowsでは `.cmd` shimを `cross-spawn` で起動し、引数を連結せずエスケープします。 |
+| ソフトウェアのインストール | `openspec update` は `npm install -g @ayumuwall/openspec@latest` を実行し、アップグレード後のCLIで `openspec update` を再実行できます。プロンプトで同意した場合、OpenSpecパッケージ自体のみ、npmがインストールを所有している場合に限って実行し、CIや非対話シェルでは実行しません。グローバルインストール先はプロジェクトの外にあるため、そこでユーザーの権限を使い、公開パッケージに含まれるライフサイクルスクリプトを実行します。アップグレード成功を仮定せず、インストールされたバイナリのバージョンを読み取って確認します。拒否した場合は、ユーザー自身が実行できるコマンドを表示します。 |
+| テレメトリ | コマンド名、OpenSpecのバージョン、ローカルで生成したランダムUUIDを送信します。ファイルパス、ファイル内容、環境、ホスト名は送信せず、IPアドレスの取得も明示的に無効化しています。`OPENSPEC_TELEMETRY=0` または `DO_NOT_TRACK=1` で無効にでき、CIでは自動的に無効になります。 |
+| ネットワーク | 有効な場合のテレメトリと、`openspec update` 中に新しいCLIの公開有無を確認する1回のnpmレジストリリクエストです。このリクエストは通常のHTTPリクエストで明らかになるもの以外のユーザーデータを送信せず、`openspec update` ごとにキャッシュなしで1回実行します。`CI` が明示的な無効値以外に設定されている場合、`NODE_ENV=test` の場合、または `OPENSPEC_NO_UPDATE_CHECK`、`DO_NOT_TRACK=1`、`OPENSPEC_TELEMETRY=0` のいずれかが設定されている場合は省略します。仕様の読み取り、書き込み、検証は完全にローカルで行います。 |
 
-## Automated checks
+## 自動検査
 
-| Tool | Covers |
+| ツール | 対象 |
 | --- | --- |
-| [CodeQL](https://github.com/Fission-AI/OpenSpec/security/code-scanning) | Static analysis on every push and pull request to `main` |
-| [Dependabot](https://github.com/Fission-AI/OpenSpec/security/dependabot) | Dependency advisories plus weekly update pull requests for the CLI, the docs site, and CI actions |
-| Dependency review | Blocks a pull request that introduces a high-severity dependency |
-| Secret scanning | Enabled on the repository, including push protection |
-| `pnpm audit` | Published dependencies are audited on every pull request, on pushes to `main`, and weekly. Advisory on pull requests so an unrelated change is not blocked; failing elsewhere, so a new advisory surfaces even when no dependency changed. Build tooling is always advisory. |
-| Pinned actions | Every GitHub Action runs from a commit SHA, so a moved tag cannot change what CI executes |
+| [CodeQL](https://github.com/ayumuwall/OpenSpec-J/security/code-scanning) | `main` へのすべてのpushおよびPull Requestに対する静的解析 |
+| [Dependabot](https://github.com/ayumuwall/OpenSpec-J/security/dependabot) | 依存関係のアドバイザリ、およびCLI、ドキュメントサイト、CIアクションに対する毎週の更新Pull Request |
+| Dependency review | 重大度が高い依存関係を導入するPull Requestをブロック |
+| Secret scanning | push protectionを含め、リポジトリで有効 |
+| `pnpm audit` | 公開される依存関係を、すべてのPull Request、`main` へのpush、毎週のスケジュールで監査します。無関係な変更をブロックしないようPull Requestでは警告のみとし、それ以外では失敗させるため、依存関係の変更がなくても新しいアドバイザリを検出できます。ビルドツールについては常に警告のみです。 |
+| 固定されたアクション | すべてのGitHub ActionをコミットSHAで実行するため、タグが移動してもCIの実行内容は変わりません。 |
 
-Alerts are triaged against the threat model above, so a finding in build-only tooling is fixed on the normal update cadence rather than treated as an incident.
+アラートは上記の脅威モデルに照らして分類します。ビルド専用ツールの問題はインシデントとして扱わず、通常の更新周期で修正します。

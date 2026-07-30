@@ -1,76 +1,76 @@
 ---
 name: openspec-new-change
-description: Start a new OpenSpec change using the experimental artifact workflow. Use when the user wants to create a new feature, fix, or modification with a structured step-by-step approach.
+description: 実験的アーティファクトワークフローで新しい OpenSpec 変更を開始します。新機能、修正、変更を構造化された手順で作成したいときに使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Start a new change using the experimental artifact-driven approach.
+実験的な成果物主導のアプローチを使用して、新しい変更を開始します。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
+**入力**: ユーザーのリクエストには、変更名 (kebab-case) または構築したい内容の説明を含める必要があります。
 
-**Steps**
+**手順**
 
-1. **If no clear input provided, ask what they want to build**
+1. **明確な入力が提供されない場合は、何を構築したいかを尋ねます**
 
-   Ask the user (open-ended, no preset options):
-   > "What change do you want to work on? Describe what you want to build or fix."
+   ユーザーへ自由回答で質問します（プリセット選択肢なし）。
+   > 「どのような変更に取り組みたいですか？何を構築または修正したいか説明してください。」
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
+説明からケバブケース名を導き出します (例: 「ユーザー認証の追加」→ `add-user-auth`)。
 
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+**重要**: ユーザーが何を構築したいのかを理解せずに先に進まないでください。
 
-2. **Determine the workflow schema**
+2. **ワークフロー スキーマを決定する**
 
-   Use the default schema (omit `--schema`) unless the user explicitly requests a different workflow.
+ユーザーが別のワークフローを明示的に要求しない限り、デフォルトのスキーマ (`--schema` を省略) を使用します。
 
-   **Use a different schema only if the user mentions:**
-   - A specific schema name → use `--schema <name>`
-   - "show workflows" or "what workflows" → run `openspec schemas --json` and let them choose
+**ユーザーが次のことに言及した場合にのみ、別のスキーマを使用します。**
+- 特定のスキーマ名 → `--schema <name>` を使用します
+- 「ワークフローを表示」または「ワークフローの種類」→ `openspec schemas --json` を実行して選択させます
 
-   **Otherwise**: Omit `--schema` to use the default.
+**それ以外の場合**: `--schema` を省略してデフォルトを使用します。
 
-3. **Create the change directory**
+3. **変更ディレクトリを作成します**
    ```bash
    openspec new change "<name>"
    ```
-   Add `--schema <name>` only if the user requested a specific workflow.
-   This creates a scaffolded change in the planning home resolved by the CLI.
+ユーザーが特定のワークフローを要求した場合にのみ、`--schema <name>` を追加します。
+これにより、CLI によって解決される計画ホームに足場の変更が作成されます。
 
-4. **Show the artifact status**
+4. **アーティファクトのステータスを表示**
    ```bash
    openspec status --change "<name>" --json
    ```
-   Use the returned `planningHome`, `changeRoot`, `artifactPaths`, and `nextSteps` instead of assuming repo-local paths.
+リポジトリ ローカル パスを想定する代わりに、返された `planningHome`、`changeRoot`、`artifactPaths`、および `nextSteps` を使用します。
 
-5. **Get instructions for the first artifact**
-   The first artifact depends on the schema (e.g., `proposal` for spec-driven).
-   Check the status output to find the first artifact with status "ready".
+5. **最初のアーティファクトの説明を取得します**
+最初のアーティファクトはスキーマに依存します (たとえば、仕様駆動型の場合は `proposal`)。
+ステータス出力を確認して、ステータスが「準備完了」の最初のアーティファクトを見つけます。
    ```bash
    openspec instructions <first-artifact-id> --change "<name>"
    ```
-   This outputs the template and context for creating the first artifact.
+これにより、最初のアーティファクトを作成するためのテンプレートとコンテキストが出力されます。
 
-6. **STOP and wait for user direction**
+6. **停止してユーザーの指示を待ちます**
 
-**Output**
+**出力**
 
-After completing the steps, summarize:
-- Change name and location
-- Schema/workflow being used and its artifact sequence
-- Current status (0/N artifacts complete)
-- The template for the first artifact
-- Prompt: "Ready to create the first artifact? Just describe what this change is about and I'll draft it, or ask me to continue."
+手順を完了したら、次のようにまとめます。
+- 名前と場所を変更する
+- 使用されているスキーマ/ワークフローとそのアーティファクト シーケンス
+- 現在のステータス (0/N 個の成果物が完了)
+- 最初のアーティファクトのテンプレート
+- プロンプト: 「最初のアーティファクトを作成する準備はできましたか? この変更の内容を説明してください。下書きします。または続行するようお願いします。」
 
-**Guardrails**
-- Do NOT create any artifacts yet - just show the instructions
-- Do NOT advance beyond showing the first artifact template
-- If the name is invalid (not kebab-case), ask for a valid name
-- If a change with that name already exists, suggest continuing that change instead
-- Pass --schema if using a non-default workflow
+**ガードレール**
+- まだアーティファクトを作成しないでください。手順を表示するだけにしてください。
+- 最初の成果物テンプレートの表示以降は進めないでください。
+- 名前が無効な場合 (ケバブケースではない)、有効な名前を尋ねます
+- その名前の変更がすでに存在する場合は、代わりにその変更を続行することを提案します
+- デフォルト以外のワークフローを使う場合は --schema を渡してください

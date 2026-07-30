@@ -1,89 +1,89 @@
 ---
 name: openspec-update-change
-description: Update an OpenSpec change by revising its existing planning artifacts and keeping them coherent with one another. Use when the user wants to revise a change's plan, fold new decisions into it, or reconcile its artifacts after an edit. Never edits code.
+description: 既存の planning アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。コードは編集しません。
 allowed-tools: Bash(openspec:*)
 license: MIT
-compatibility: Requires openspec CLI.
+compatibility: OpenSpec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
 ---
 
-Revise a change's existing planning artifacts and keep them coherent. Never edit code.
+変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
-**Steps**
+**手順**
 
-1. **Select the change**
+1. **変更を選択する**
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes sorted by most recently modified, and ask the user to select one
+   名前が指定されていれば使用します。それ以外の場合:
+   - 会話で変更に言及していれば、そのコンテキストから推測する
+   - アクティブな変更が1つだけなら自動選択する
+   - 曖昧なら `openspec list --json` で最近変更された順の一覧を取得し、ユーザーに選択してもらう
 
-   When prompting, present the top 3-4 most recently modified changes as options, showing:
-   - Change name
-   - Schema (from `schema` field if present, otherwise "spec-driven")
-   - Status (e.g., "0/5 tasks", "complete", "no tasks")
-   - How recently it was modified (from `lastModified` field)
+   選択を求める際は、最近変更された上位3〜4件を候補として表示し、次を示します:
+   - 変更名
+   - スキーマ（`schema` フィールド。なければ "spec-driven"）
+   - 状態（例: "0/5 tasks"、"complete"、"no tasks"）
+   - 最終更新からの経過（`lastModified` フィールド）
 
-   Mark the most recently modified change as "(Recommended)" since it's likely what the user wants to update.
+ユーザーが更新を希望している可能性が高いため、最後に変更された変更を「(推奨)」としてマークします。
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/openspec-update-change <other>`).
+   必ず「使用する変更: <name>」と、変更方法（例: `/openspec-update-change <other>`）を伝えます。
 
-2. **Get the change's artifacts**
+2. **変更の成果物を取得します**
    ```bash
    openspec status --change "<name>" --json
    ```
-   Parse the JSON to understand current state. The response includes:
-   - `schemaName`: The workflow schema being used (e.g., "spec-driven")
-   - `artifacts`: Array of artifacts with their status ("done", "skipped", "ready", "blocked")
-   - `isComplete`: Boolean indicating if all artifacts are complete
-   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context. Use these instead of assuming repo-local paths.
+   JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
+   - `schemaName`: 使用中のワークフロースキーマ（例: "spec-driven"）
+   - `artifacts`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
+   - `isComplete`: すべてのアーティファクトが完了しているかを示す真偽値
+   - `planningHome`、`changeRoot`、`artifactPaths`、`actionContext`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
 
-   The artifact ids and paths come from the active schema - do NOT assume them, and do NOT branch on hardcoded artifact names. Custom schemas must work unchanged.
+アーティファクト ID とパスはアクティブなスキーマから取得されます。これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください。カスタム スキーマは変更せずに機能する必要があります。
 
-   The files to edit are `artifactPaths.<id>.existingOutputPaths` - the concrete files that exist on disk, already glob-expanded for glob artifacts (e.g. `specs/**/*.md`). Do NOT write to `resolvedOutputPath`: for a glob artifact it is still the glob pattern, not a real file.
+編集するファイルは `artifactPaths.<id>.existingOutputPaths` です。ディスク上に存在する具体的なファイルで、グロブ アーティファクト用にすでにグロブ展開されています (例: `specs/**/*.md`)。 `resolvedOutputPath` には書き込まないでください。グロブ アーティファクトの場合、それは依然としてグロブ パターンであり、実際のファイルではありません。
 
-3. **Understand the request**
-   - If the user asked for a specific revision ("the design now uses X"), that is the starting edit.
-   - If they only said "update" / "make this coherent", treat it as a coherence review: read the existing artifacts and check them against each other for contradictions, gaps, and duplication.
+3. **リクエストを理解する**
+- ユーザーが特定のリビジョン (「デザインは現在 X を使用しています」) を要求した場合、それが編集の開始点となります。
+- 「更新」/「これを一貫性のあるものにする」とだけ言われた場合は、それを一貫性のレビューとして扱います。既存の成果物を読み、矛盾、ギャップ、重複がないか相互にチェックします。
 
-4. **Read and reconcile**
-   - Read the artifact(s) the request touches and the change's other existing artifacts.
-   - Apply the requested edit. Then check every other existing artifact against it - in ANY direction: an edit to a later artifact may require revising an earlier one, not only the other way around. Build order is a useful reading order, not a constraint on which artifacts may be revised.
-   - Note everything that is now inconsistent, missing, or contradictory.
-   - Revise only files that already exist (`existingOutputPaths`). Do NOT create artifacts that don't exist yet, and do NOT invent new files under a glob artifact - note them and point the user to `/openspec-continue-change` to create them.
-   - If the change is already coherent, say so and make no edits.
+4. **読んで調整**
+- リクエストが関与するアーティファクトと、変更の他の既存のアーティファクトを読み取ります。
+- 要求された編集を適用します。次に、他のすべての既存のアーティファクトをあらゆる方向にチェックします。後のアーティファクトを編集するには、その逆だけでなく、以前のアーティファクトの修正が必要になる場合があります。ビルド順序は、有用な読み取り順序であり、どのアーティファクトを改訂するかを制約するものではありません。
+- 現在、矛盾していること、欠落していること、または矛盾していることをすべてメモします。
+- すでに存在するファイル (`existingOutputPaths`) のみを修正します。まだ存在しないアーティファクトを作成しないでください。また、glob アーティファクトの下に新しいファイルを作成しないでください。それらをメモし、ユーザーに `/openspec-continue-change` を指定して作成するように指示してください。
+- 変更がすでに一貫している場合は、その旨を伝え、編集は行わないでください。
 
-5. **Confirm and apply, one artifact at a time**
-   - Show each proposed revision and why. Write only after the user confirms.
-   - If the user rejects a revision, do not write it - leave that artifact unchanged.
-   - When a substantial rewrite is needed, get that artifact's rules and template first:
+5. **一度に 1 つのアーティファクトを確認して適用します**
+- それぞれの修正案とその理由を示します。ユーザーが確認した後にのみ書き込みます。
+- ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください。そのアーティファクトは変更しないでください。
+- 大幅な書き換えが必要な場合は、まずそのアーティファクトのルールとテンプレートを取得します。
      ```bash
      openspec instructions <artifact-id> --change "<name>" --json
      ```
 
-6. **Point to the next step (guidance only - NEVER act on it)**
-   - Artifacts still missing -> suggest `/openspec-continue-change` to create them.
-   - Change already implemented (tasks checked off / already applied) -> the code may no longer match the revised plan; suggest `/openspec-apply-change` to carry the delta into code.
-   - Everything done and implemented -> suggest `/openspec-archive-change`.
+6. **次のステップを指示します (ガイダンスのみ - 決して行動しないでください)**
+- アーティファクトがまだ見つかりません -> `/openspec-continue-change` に作成することを提案します。
+- 変更はすでに実装されています (タスクはチェックオフされている/すでに適用されています) -> コードは改訂された計画と一致しなくなる可能性があります。 `/openspec-apply-change` にデルタをコードに組み込むことをお勧めします。
+- すべてが完了し、実装されました -> `/openspec-archive-change` を提案します。
 
-**Output**
+**出力**
 
-After each invocation, show:
-- Which artifacts were revised (and which proposed revisions were rejected)
-- Anything deferred to `/openspec-continue-change` (not-yet-created artifacts or files)
-- Where the change stands and the recommended next command
+各呼び出しの後に、以下を表示します。
+- どの成果物が改訂されたか (そしてどの改訂案が拒否されたか)
+- `/openspec-continue-change` に延期されたもの (未作成のアーティファクトまたはファイル)
+- 変更点と推奨される次のコマンド
 
-**Guardrails**
-- Planning artifacts only - NEVER edit implementation code. If the revised plan implies code changes, stop and point to `/openspec-apply-change`.
-- Use the artifact ids and paths reported by `openspec status`; never branch on hardcoded artifact names.
-- Edit only the concrete files in `existingOutputPaths`; never write to a glob `resolvedOutputPath`.
-- Do not advance the build frontier: no new artifacts, no new files under glob artifacts - that is `/openspec-continue-change`'s job.
-- Confirm every edit with the user before writing.
-- If the request changes the change's *intent* rather than refining it, recommend starting fresh with `/openspec-new-change` (the "Update vs. Start Fresh" heuristic).
-- `/openspec-continue-change` and `/openspec-new-change` may not be installed (core profile). When suggesting one that is unavailable, point to the CLI instead: `openspec status --change "<name>" --json` shows the next artifact and `openspec instructions <artifact-id> --change "<name>" --json` explains how to create it.
+**ガードレール**
+- 計画アーティファクトだけを扱い、実装コードは決して編集しません。改訂後の計画がコード変更を必要とする場合は中止し、`/openspec-apply-change` を案内します。
+- `openspec status` が報告したアーティファクト ID とパスを使用し、ハードコードされたアーティファクト名で分岐しません。
+- `existingOutputPaths` にある具体的なファイルだけを編集し、グロブの `resolvedOutputPath` には決して書き込みません。
+- ビルドの進行地点を先に進めません。新しいアーティファクトや、グロブ アーティファクト配下の新規ファイルを作るのは `/openspec-continue-change` の役目です。
+- 書き込む前に、すべての編集についてユーザーの確認を得ます。
+- リクエストが変更を洗練するのではなく変更の*意図*を変える場合は、`/openspec-new-change` で新しく始めることを推奨します（「更新か、新規開始か」の判断基準）。
+- `/openspec-continue-change` と `/openspec-new-change` はインストールされていない場合があります（core profile）。利用できないものを提案する場合は、代わりに CLI を案内します。次のアーティファクトは `openspec status --change "<name>" --json` で確認でき、作成方法は `openspec instructions <artifact-id> --change "<name>" --json` で確認できます。
