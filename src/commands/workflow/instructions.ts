@@ -625,7 +625,7 @@ export async function archiveInstructionsCommand(
 }
 
 export function printArchiveInstructionsText(instructions: ArchiveInstructions): void {
-  console.log(`## Archive Inputs: ${instructions.changeName}`);
+  console.log(`## アーカイブ入力: ${instructions.changeName}`);
   console.log();
   printOperationInputsText(instructions);
 }
@@ -635,13 +635,13 @@ function printOperationInputsText(inputs: {
   operationGuidance?: string[];
 }): void {
   if (inputs.context) {
-    console.log('### Project Context (required instruction input)');
+    console.log('### プロジェクトコンテキスト（必須の指示入力）');
     console.log(inputs.context);
     console.log();
   }
 
   if (inputs.operationGuidance && inputs.operationGuidance.length > 0) {
-    console.log('### Operation Guidance (advisory)');
+    console.log('### 操作ガイダンス（参考）');
     for (const guidance of inputs.operationGuidance) {
       console.log(`- ${guidance}`);
     }

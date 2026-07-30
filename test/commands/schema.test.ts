@@ -278,7 +278,7 @@ artifacts:
       expect(typeof output).toBe('string');
       expect(JSON.parse(output as string)).toEqual({
         created: false,
-        error: "Unknown artifact 'task'",
+        error: "不明なアーティファクト 'task'",
         valid: ['proposal', 'specs', 'design', 'tasks'],
       });
       expect(fs.readFileSync(schemaPath, 'utf-8')).toBe(existingSchema);

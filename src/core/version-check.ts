@@ -481,7 +481,7 @@ export function buildCliUpdateLines(
   projectPath: string,
   options: { withCommand?: boolean } = {}
 ): string[] {
-  const lines = [`A newer OpenSpec CLI is available (v${OPENSPEC_VERSION} → v${latestVersion}).`];
+  const lines = [`新しい OpenSpec CLI を利用できます（v${OPENSPEC_VERSION} → v${latestVersion}）。`];
 
   // Omitted when we are about to offer to run it — printing a command and then
   // asking to run that same command reads like the user has to do both.
@@ -489,7 +489,7 @@ export function buildCliUpdateLines(
     lines.push(...buildUpgradeCommandLines(installDir, projectPath));
   }
   if (installDir) {
-    lines.push(`  Running from: ${installDir}`);
+    lines.push(`  実行元: ${installDir}`);
   }
 
   return lines;
@@ -513,12 +513,12 @@ export function buildUpgradeCommandLines(
 
   if (isProjectLocalInstall(installDir, projectPath)) {
     // Its package manager owns the lockfile; naming npm could be wrong.
-    lines.push(`  Update the ${PACKAGE_NAME} dependency in this project.`);
+    lines.push(`  このプロジェクトの ${PACKAGE_NAME} 依存関係を更新してください。`);
   } else {
     lines.push(`  ${GLOBAL_UPGRADE_COMMANDS[detectPackageManager(installDir)]}`);
   }
 
-  lines.push('  Then run "openspec update" again to pick up new workflows.');
+  lines.push('  その後、"openspec update" を再実行して新しいワークフローを取り込んでください。');
   return lines;
 }
 

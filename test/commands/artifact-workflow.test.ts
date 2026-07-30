@@ -83,7 +83,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'scaffolded-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('scaffolded-change');
-      expect(result.stdout).toContain('0/4 artifacts complete');
+      expect(result.stdout).toContain('進捗: 0/4 アーティファクト完了');
     });
 
     it('shows status for a change with proposal only', async () => {
@@ -94,7 +94,7 @@ describe('artifact-workflow CLI commands', () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('minimal-change');
       expect(result.stdout).toContain('spec-driven');
-      expect(result.stdout).toContain('1/4 artifacts complete');
+      expect(result.stdout).toContain('進捗: 1/4 アーティファクト完了');
     });
 
     it('shows status for a change with proposal and design', async () => {
@@ -102,7 +102,7 @@ describe('artifact-workflow CLI commands', () => {
 
       const result = await runCLI(['status', '--change', 'partial-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('2/4 artifacts complete');
+      expect(result.stdout).toContain('進捗: 2/4 アーティファクト完了');
       expect(result.stdout).toContain('[x]');
     });
 
@@ -144,14 +144,14 @@ describe('artifact-workflow CLI commands', () => {
 
       const result = await runCLI(['status', '--change', 'complete-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('4/4 artifacts complete');
-      expect(result.stdout).toContain('All artifacts complete!');
+      expect(result.stdout).toContain('進捗: 4/4 アーティファクト完了');
+      expect(result.stdout).toContain('すべてのアーティファクトが完了しました！');
     });
 
     it('exits gracefully when no changes exist', async () => {
       const result = await runCLI(['status'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('No active changes');
+      expect(result.stdout).toContain('アクティブな変更はありません');
       expect(result.stdout).toContain('openspec new change');
     });
 
@@ -161,7 +161,7 @@ describe('artifact-workflow CLI commands', () => {
 
       const json = JSON.parse(result.stdout);
       expect(json.changes).toEqual([]);
-      expect(json.message).toBe('No active changes.');
+      expect(json.message).toBe('アクティブな変更はありません。');
     });
 
     it('errors when --change is missing and lists available changes', async () => {
@@ -170,7 +170,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Missing required option --change');
+      expect(output).toContain('必須オプション --change');
       expect(output).toContain('some-change');
     });
 
@@ -180,7 +180,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'nonexistent'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain("Change 'nonexistent' not found");
+      expect(output).toContain("変更 'nonexistent' が見つかりません");
       expect(output).toContain('existing-change');
     });
 
@@ -202,35 +202,35 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain("Schema 'unknown' not found");
+      expect(output).toContain("スキーマ 'unknown' が見つかりません");
     });
 
     it('rejects path traversal in change name', async () => {
       const result = await runCLI(['status', '--change', '../foo'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid change name');
+      expect(output).toContain('変更名が不正です');
     });
 
     it('rejects absolute path in change name', async () => {
       const result = await runCLI(['status', '--change', '/etc/passwd'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid change name');
+      expect(output).toContain('変更名が不正です');
     });
 
     it('rejects slashes in change name', async () => {
       const result = await runCLI(['status', '--change', 'foo/bar'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid change name');
+      expect(output).toContain('変更名が不正です');
     });
 
     it('rejects hidden directory names', async () => {
       const result = await runCLI(['status', '--change', '.hidden'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid change name');
+      expect(output).toContain('変更名が不正です');
     });
 
     it('rejects the reserved archive directory name', async () => {
@@ -239,7 +239,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'archive'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid change name');
+      expect(output).toContain('変更名が不正です');
     });
 
     it('accepts digit-leading change names that exist on disk (#1308)', async () => {
@@ -250,7 +250,7 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('2026-07-04-voice-copilot-v1');
-      expect(result.stdout).toContain('2/4 artifacts complete');
+      expect(result.stdout).toContain('進捗: 2/4 アーティファクト完了');
     });
   });
 
@@ -315,8 +315,8 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['instructions', '--change', 'test-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Missing required argument <artifact>');
-      expect(output).toContain('Valid artifacts');
+      expect(output).toContain('必須引数 <artifact>');
+      expect(output).toContain('有効なアーティファクト');
     });
 
     it('errors for unknown artifact', async () => {
@@ -327,8 +327,8 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain("Artifact 'unknown-artifact' not found");
-      expect(output).toContain('Valid artifacts');
+      expect(output).toContain("アーティファクト 'unknown-artifact' が見つかりません");
+      expect(output).toContain('有効なアーティファクト');
     });
 
     it('accepts digit-leading change names that exist on disk (#1308)', async () => {
@@ -347,7 +347,7 @@ describe('artifact-workflow CLI commands', () => {
     it('shows template paths for default schema', async () => {
       const result = await runCLI(['templates'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('スキーマ: spec-driven');
       expect(result.stdout).toContain('proposal:');
       expect(result.stdout).toContain('design:');
       expect(result.stdout).toContain('specs:');
@@ -357,7 +357,7 @@ describe('artifact-workflow CLI commands', () => {
     it('shows template paths for specified schema', async () => {
       const result = await runCLI(['templates', '--schema', 'spec-driven'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('スキーマ: spec-driven');
       expect(result.stdout).toContain('proposal:');
       expect(result.stdout).toContain('design:');
     });
@@ -377,7 +377,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['templates', '--schema', 'nonexistent'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain("Schema 'nonexistent' not found");
+      expect(output).toContain("スキーマ 'nonexistent' が見つかりません");
     });
   });
 
@@ -386,7 +386,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'my-new-feature'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       const output = getOutput(result);
-      expect(output).toContain("Created change 'my-new-feature'");
+      expect(output).toContain("変更 'my-new-feature' を作成しました");
 
       const changeDir = path.join(changesDir, 'my-new-feature');
       const stat = await fs.stat(changeDir);
@@ -400,7 +400,7 @@ describe('artifact-workflow CLI commands', () => {
       );
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('--initiative is no longer supported');
+      expect(output).toContain('--initiative はサポート終了です');
       await expect(fs.stat(path.join(changesDir, 'linked-change'))).rejects.toMatchObject({
         code: 'ENOENT',
       });
@@ -412,7 +412,7 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('--areas is no longer supported');
+      expect(output).toContain('--areas はサポート終了です');
       await expect(fs.stat(path.join(changesDir, 'area-change'))).rejects.toMatchObject({
         code: 'ENOENT',
       });
@@ -452,7 +452,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'invalid name'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Error');
+      expect(output).toContain('エラー');
     });
 
     it('errors for duplicate change name', async () => {
@@ -461,7 +461,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['new', 'change', 'existing-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('exists');
+      expect(output).toContain('既に存在します');
     });
 
     it('errors when name argument is missing', async () => {
@@ -478,10 +478,10 @@ describe('artifact-workflow CLI commands', () => {
         cwd: tempDir,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('## Apply: apply-change');
-      expect(result.stdout).toContain('Schema: spec-driven');
-      expect(result.stdout).toContain('### Context Files');
-      expect(result.stdout).toContain('### Instruction');
+      expect(result.stdout).toContain('## 適用: apply-change');
+      expect(result.stdout).toContain('スキーマ: spec-driven');
+      expect(result.stdout).toContain('### コンテキストファイル');
+      expect(result.stdout).toContain('### 指示');
     });
 
     it('shows blocked state when required artifacts are missing', async () => {
@@ -502,10 +502,10 @@ operations:
         cwd: tempDir,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Blocked');
-      expect(result.stdout).toContain('Missing artifacts: tasks');
-      expect(result.stdout).toContain('### Project Context (required instruction input)');
-      expect(result.stdout).toContain('### Operation Guidance (advisory)');
+      expect(result.stdout).toContain('ブロック中');
+      expect(result.stdout).toContain('不足アーティファクト: tasks');
+      expect(result.stdout).toContain('### プロジェクトコンテキスト（必須の指示入力）');
+      expect(result.stdout).toContain('### 操作ガイダンス（参考）');
     });
 
     it('outputs JSON for apply instructions', async () => {
@@ -587,12 +587,12 @@ operations:
       );
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('### Instruction');
-      expect(result.stdout).toContain('### Project Context (required instruction input)');
+      expect(result.stdout).toContain('### 指示');
+      expect(result.stdout).toContain('### プロジェクトコンテキスト（必須の指示入力）');
       expect(result.stdout).toContain('Project background');
-      expect(result.stdout).toContain('### Operation Guidance (advisory)');
+      expect(result.stdout).toContain('### 操作ガイダンス（参考）');
       expect(result.stdout).toContain('- Keep summaries concise');
-      expect(result.stdout).not.toContain('### Project Context (advisory)');
+      expect(result.stdout).not.toContain('### プロジェクトコンテキスト（参考）');
     });
 
     it('omits absent operation inputs without changing apply state behavior', async () => {
@@ -751,7 +751,7 @@ apply:
       });
       expect(result.exitCode).toBe(0);
       // Should show the instruction from spec-driven schema apply block
-      expect(result.stdout).toContain('work through pending tasks');
+      expect(result.stdout).toContain('未完了タスクを進め');
     });
 
     it('shows all_done state when all tasks are complete', async () => {
@@ -781,10 +781,10 @@ operations:
         cwd: tempDir,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('complete ✓');
-      expect(result.stdout).toContain('ready to be archived');
-      expect(result.stdout).toContain('### Project Context (required instruction input)');
-      expect(result.stdout).toContain('### Operation Guidance (advisory)');
+      expect(result.stdout).toContain('完了 ✓');
+      expect(result.stdout).toContain('アーカイブ可能です');
+      expect(result.stdout).toContain('### プロジェクトコンテキスト（必須の指示入力）');
+      expect(result.stdout).toContain('### 操作ガイダンス（参考）');
     });
 
     it('uses spec-driven schema apply configuration', async () => {
@@ -796,7 +796,7 @@ operations:
         { cwd: tempDir }
       );
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('スキーマ: spec-driven');
     });
 
     it('spec-driven schema uses apply block configuration', async () => {
@@ -904,7 +904,7 @@ artifacts:
       // All artifacts exist, should be ready with default instruction
       expect(json.schemaName).toBe('no-apply-full');
       expect(json.state).toBe('ready');
-      expect(json.instruction).toContain('All required artifacts complete');
+      expect(json.instruction).toContain('必要なアーティファクトがすべて完了');
     });
   });
 
@@ -968,10 +968,10 @@ operations:
       );
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('## Archive Inputs: archive-text-inputs');
-      expect(result.stdout).toContain('### Project Context (required instruction input)');
+      expect(result.stdout).toContain('## アーカイブ入力: archive-text-inputs');
+      expect(result.stdout).toContain('### プロジェクトコンテキスト（必須の指示入力）');
       expect(result.stdout).toContain('Archive background');
-      expect(result.stdout).toContain('### Operation Guidance (advisory)');
+      expect(result.stdout).toContain('### 操作ガイダンス（参考）');
       expect(result.stdout).toContain('- Summarize the outcome');
       expect(result.stdout).not.toContain('### Project Context (advisory)');
     });
@@ -998,7 +998,7 @@ operations:
       expect(json.context).toBeUndefined();
       expect(json.operationGuidance).toBeUndefined();
       expect(textResult.stdout).toContain(
-        'No project context or operation guidance configured.'
+        'プロジェクトコンテキストまたは操作ガイダンスは設定されていません。'
       );
     });
 
@@ -1015,11 +1015,11 @@ operations:
 
       expect(missing.exitCode).toBe(1);
       expect(JSON.parse(missing.stdout).status[0].message).toContain(
-        'Missing required option --change'
+        '必須オプション --change'
       );
       expect(invalid.exitCode).toBe(1);
       expect(JSON.parse(invalid.stdout).status[0].message).toContain(
-        "Change 'missing-change' not found"
+        "変更 'missing-change' が見つかりません"
       );
     });
 
@@ -1089,25 +1089,25 @@ operations:
     it('status command help shows description', async () => {
       const result = await runCLI(['status', '--help']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Display artifact completion status');
+      expect(result.stdout).toContain('変更のアーティファクト完了状況を表示');
     });
 
     it('instructions command help shows description', async () => {
       const result = await runCLI(['instructions', '--help']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Output enriched instructions');
+      expect(result.stdout).toContain('補足付き指示を出力');
     });
 
     it('templates command help shows description', async () => {
       const result = await runCLI(['templates', '--help']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Show resolved template paths');
+      expect(result.stdout).toContain('テンプレートパスを表示');
     });
 
     it('new command help shows description', async () => {
       const result = await runCLI(['new', '--help']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Create new items');
+      expect(result.stdout).toContain('新規項目を作成');
     });
   });
 
@@ -1116,7 +1116,7 @@ operations:
       const result = await runCLI(['experimental', '--tool', 'claude'], { cwd: tempDir });
       // May succeed or fail depending on setup, but should show deprecation notice
       const output = getOutput(result);
-      expect(output).toContain('deprecated');
+      expect(output).toContain('非推奨');
     });
 
     it('errors for unknown tool', async () => {
@@ -1125,7 +1125,7 @@ operations:
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid tool(s): unknown-tool');
+      expect(output).toContain('無効なツール: unknown-tool');
     });
 
     it('errors for tool without skillsDir', async () => {
@@ -1135,7 +1135,7 @@ operations:
       });
       expect(result.exitCode).toBe(1);
       const output = getOutput(result);
-      expect(output).toContain('Invalid tool(s): agents');
+      expect(output).toContain('無効なツール: agents');
     });
 
     it('creates skills for Claude tool', async () => {

@@ -22,8 +22,8 @@ describe('explore templates', () => {
   it('loads project context from the OpenSpec config at startup (#696)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('openspec/config.yaml');
-      expect(body, label).toContain('`context`: project background');
-      expect(body, label).toContain('`rules`: keyed by artifact id');
+      expect(body, label).toContain('`context`: 技術スタック、規約、制約などのプロジェクト背景');
+      expect(body, label).toContain('`rules`: アーティファクトIDごとのルール');
     }
   });
 
@@ -41,7 +41,7 @@ describe('explore templates', () => {
   it('accepts config.yml as well as config.yaml (#696)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('config.yml');
-      expect(body, label).toContain('skip this if neither file exists');
+      expect(body, label).toContain('どちらのファイルもなければスキップ');
     }
   });
 
@@ -50,7 +50,7 @@ describe('explore templates', () => {
   it('scopes rules to the artifact they are keyed to (#696)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain(
-        'the entries for an artifact apply only when you write that artifact'
+        '該当するアーティファクトを作成するときだけ適用'
       );
     }
   });
@@ -59,9 +59,9 @@ describe('explore templates', () => {
   // forbids leaking context/rules into the artifact, not just the chat.
   it('treats project context as constraints that must not leak into output (#696)', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('constraints for you to follow');
+      expect(body, label).toContain('従うべき制約');
       expect(body, label).toContain(
-        'do NOT copy them into the conversation or into any artifact you create'
+        '会話や作成するアーティファクトへコピーしない'
       );
     }
   });

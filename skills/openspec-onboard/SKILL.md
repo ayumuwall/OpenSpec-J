@@ -425,7 +425,7 @@ design です:
 ```
 ## アーカイブ中
 
-変更が完了したらアーカイブする。`openspec/changes/` から `openspec/changes/archive/YYYY-MM-DD-<name>/` に移動される。
+変更が完了したらアーカイブする。`openspec/changes/` から `openspec/changes/archive/<target-name>/` に移動される。
 
 アーカイブは意思決定の履歴になる。後から「なぜそう作ったか」を参照できる。
 ```

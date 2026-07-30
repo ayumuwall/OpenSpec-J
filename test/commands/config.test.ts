@@ -123,7 +123,7 @@ describe('config command integration', () => {
 
     const { getGlobalConfig } = await import('../../src/core/global-config.js');
     expect(getGlobalConfig().defaultStore).toBe('team-plans');
-    expect(consoleLogSpy).toHaveBeenCalledWith('Set defaultStore = "team-plans"');
+    expect(consoleLogSpy).toHaveBeenCalledWith('defaultStore = "team-plans" を設定しました');
 
     await runConfigCommand(['get', 'defaultStore']);
     expect(consoleLogSpy).toHaveBeenCalledWith('team-plans');

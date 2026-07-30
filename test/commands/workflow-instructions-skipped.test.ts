@@ -49,7 +49,7 @@ describe('printInstructionsText for skip_specs changes', () => {
     const output = capture('specs');
 
     expect(output).toContain('skip_specs: true');
-    expect(output).toContain('Do not create spec files');
+    expect(output).toContain('spec ファイルを作成しないでください');
     expect(output).toContain('</artifact>');
     expect(output).not.toContain('<task>');
     expect(output).not.toContain('<template>');
@@ -60,7 +60,7 @@ describe('printInstructionsText for skip_specs changes', () => {
     const output = capture('design');
 
     expect(output).toContain('<task>');
-    expect(output).toContain('Create the design artifact for change "my-change".');
+    expect(output).toContain('変更 "my-change" の design アーティファクトを作成してください。');
     expect(output).not.toContain('this artifact is skipped');
   });
 
@@ -69,7 +69,7 @@ describe('printInstructionsText for skip_specs changes', () => {
     const instructions = generateInstructions(context, 'specs');
 
     expect(instructions.skipped).toBe(true);
-    expect(instructions.warning).toContain('Do not create spec files');
+    expect(instructions.warning).toContain('spec ファイルを作成しないでください');
   });
 
   it('marks the specs dependency as skipped instead of done with files to read', () => {
@@ -95,8 +95,8 @@ describe('printInstructionsText for skip_specs changes', () => {
     vi.restoreAllMocks();
     const output = lines.join('\n');
 
-    expect(output).toContain('Progress: 1/3 artifacts complete (1 skipped)');
-    expect(output).toContain('[~] specs (skipped: change declares skip_specs)');
+    expect(output).toContain('進捗: 1/3 アーティファクト完了（1件スキップ）');
+    expect(output).toContain('[~] specs（スキップ: 変更で skip_specs を宣言）');
     expect(output).toContain('[x] proposal');
   });
 });

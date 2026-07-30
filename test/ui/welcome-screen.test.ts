@@ -118,7 +118,7 @@ describe('welcome screen', () => {
 
     const output = writtenOutput();
 
-    expect(output).toContain('Welcome to OpenSpec');
+    expect(output).toContain('OpenSpec へようこそ');
     expect(output).not.toContain('Quick start after setup:');
   });
 
@@ -133,9 +133,9 @@ describe('welcome screen', () => {
 
     const output = writtenOutput();
 
-    expect(output).toContain('Agent Skills for AI tools');
-    expect(output).toContain('Workflow commands, if supported');
-    expect(output).not.toContain('opsx slash commands');
+    expect(output).toContain('AI ツール向けの Agent Skills');
+    expect(output).toContain('対応している場合はワークフローコマンド');
+    expect(output).not.toContain('opsx スラッシュコマンド');
   });
 
   it('flags that the quick-start spelling varies by tool', async () => {
@@ -150,7 +150,7 @@ describe('welcome screen', () => {
     const output = writtenOutput();
 
     expect(output).toContain('/opsx:propose');
-    expect(output).toContain('spelling varies by tool');
+    expect(output).toContain('表記はツールによって異なります');
   });
 
   it('omits the spelling caveat when there is no quick start block', async () => {
@@ -188,8 +188,8 @@ describe('welcome screen', () => {
     // otherwise the keystroke falls through into the tool picker (#1462).
     expect(useKeypressMock).toHaveBeenCalledOnce();
     const output = writtenOutput();
-    expect(output).toContain('Welcome to OpenSpec');
-    expect(output).toContain('Press Enter');
+    expect(output).toContain('OpenSpec へようこそ');
+    expect(output).toContain('Enterでツールを選択');
     // No cursor-up repaints: the frame is drawn exactly once.
     expect(output).not.toMatch(/\x1b\[\d+A/);
   });
@@ -211,7 +211,7 @@ describe('welcome screen', () => {
 
     expect(useKeypressMock).toHaveBeenCalledOnce();
     const output = writtenOutput();
-    expect(output).toContain('Welcome to OpenSpec');
+    expect(output).toContain('OpenSpec へようこそ');
     expect(output).not.toMatch(/\x1b\[\d+A/);
   });
 
@@ -226,7 +226,7 @@ describe('welcome screen', () => {
       await showWelcomeScreen(CORE_WORKFLOWS);
 
       expect(useKeypressMock).toHaveBeenCalledOnce();
-      expect(writtenOutput()).toContain('Welcome to OpenSpec');
+      expect(writtenOutput()).toContain('OpenSpec へようこそ');
     }
   );
 });

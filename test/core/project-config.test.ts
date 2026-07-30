@@ -285,7 +285,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'schema' field")
+          expect.stringContaining("'schema' フィールドが不正")
         );
       });
 
@@ -311,7 +311,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'context' field")
+          expect.stringContaining("'context' フィールドが不正")
         );
       });
 
@@ -333,7 +333,7 @@ rules: ["not", "an", "object"]
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'rules' field")
+          expect.stringContaining("'rules' フィールドが不正")
         );
       });
 
@@ -357,7 +357,7 @@ rules:
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'rules' field")
+          expect.stringContaining("'rules' フィールドが不正")
         );
       });
 
@@ -386,7 +386,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Rules for 'specs' must be an array of strings")
+          expect.stringContaining("'specs' のルールは文字列配列")
         );
       });
 
@@ -414,7 +414,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Some rules for 'proposal' are empty strings")
+          expect.stringContaining("'proposal' のルールに空文字")
         );
       });
 
@@ -470,7 +470,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('not a valid YAML object')
+          expect.stringContaining('有効な YAML オブジェクトではありません')
         );
       });
 
@@ -581,7 +581,7 @@ rules:
 
         expect(config?.context).toBe(smallContext);
         expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-          expect.stringContaining('Context too large')
+          expect.stringContaining('context が大きすぎます')
         );
       });
 
@@ -599,10 +599,10 @@ rules:
         expect(config).toEqual({ schema: 'spec-driven' });
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Context too large (51.0KB, limit: 50KB)')
+          expect.stringContaining('context が大きすぎます (51.0KB, 上限: 50KB)')
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Ignoring context field')
+          expect.stringContaining('context フィールドを無視します')
         );
       });
 
@@ -619,7 +619,7 @@ rules:
 
         expect(config?.context).toBe(exactContext);
         expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-          expect.stringContaining('Context too large')
+          expect.stringContaining('context が大きすぎます')
         );
       });
 
@@ -640,7 +640,7 @@ context: |
 
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Context too large')
+          expect.stringContaining('context が大きすぎます')
         );
       });
     });
@@ -831,9 +831,9 @@ rules:
       const warnings = validateConfigRules(rules, validIds);
 
       expect(warnings).toHaveLength(2);
-      expect(warnings[0]).toContain('Unknown artifact ID in rules: "testplan"');
-      expect(warnings[0]).toContain('Known artifact IDs: design, proposal, specs, tasks');
-      expect(warnings[1]).toContain('Unknown artifact ID in rules: "documentation"');
+      expect(warnings[0]).toContain('rules 内の不明なアーティファクトID: "testplan"');
+      expect(warnings[0]).toContain('既知のアーティファクトID: design, proposal, specs, tasks');
+      expect(warnings[1]).toContain('rules 内の不明なアーティファクトID: "documentation"');
     });
 
     it('should not warn for keys valid in another schema (union across schemas)', () => {
@@ -883,24 +883,24 @@ rules:
     it('should suggest close matches using fuzzy matching', () => {
       const message = suggestSchemas('spec-drven', availableSchemas); // Missing 'i'
 
-      expect(message).toContain("Schema 'spec-drven' not found");
-      expect(message).toContain('Did you mean one of these?');
-      expect(message).toContain('spec-driven (built-in)');
+      expect(message).toContain("スキーマ 'spec-drven' が見つかりません");
+      expect(message).toContain('次のいずれかではありませんか？');
+      expect(message).toContain('spec-driven (組み込み)');
     });
 
     it('should suggest custom-workflow for workflow typo', () => {
       const message = suggestSchemas('custom-workflo', availableSchemas);
 
-      expect(message).toContain('Did you mean one of these?');
+      expect(message).toContain('次のいずれかではありませんか？');
       expect(message).toContain('custom-workflow');
     });
 
     it('should list all available schemas', () => {
       const message = suggestSchemas('nonexistent', availableSchemas);
 
-      expect(message).toContain('Available schemas:');
-      expect(message).toContain('Built-in: spec-driven');
-      expect(message).toContain('Project-local: custom-workflow, team-process');
+      expect(message).toContain('利用可能なスキーマ:');
+      expect(message).toContain('組み込み: spec-driven');
+      expect(message).toContain('プロジェクトローカル: custom-workflow, team-process');
     });
 
     it('should handle case when no project-local schemas exist', () => {
@@ -909,15 +909,15 @@ rules:
       ];
       const message = suggestSchemas('invalid', builtInOnly);
 
-      expect(message).toContain('Built-in: spec-driven');
-      expect(message).toContain('Project-local: (none found)');
+      expect(message).toContain('組み込み: spec-driven');
+      expect(message).toContain('プロジェクトローカル: (見つかりません)');
     });
 
     it('should include fix instruction', () => {
       const message = suggestSchemas('wrong-schema', availableSchemas);
 
       expect(message).toContain(
-        "Fix: Edit openspec/config.yaml and change 'schema: wrong-schema' to a valid schema name"
+        "対処: openspec/config.yaml を編集し、'schema: wrong-schema' を有効なスキーマ名に変更してください"
       );
     });
 
@@ -941,8 +941,8 @@ rules:
       const message = suggestSchemas('abcdefghijk', availableSchemas);
 
       // 'abcdefghijk' has large Levenshtein distance from all schemas
-      expect(message).not.toContain('Did you mean');
-      expect(message).toContain('Available schemas:');
+      expect(message).not.toContain('次のいずれかではありませんか');
+      expect(message).toContain('利用可能なスキーマ:');
     });
   });
 });

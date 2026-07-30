@@ -87,8 +87,8 @@ describe('top-level validate command', () => {
 
     const result = await runCLI(['validate', 'marked-conflict', '--type', 'change'], { cwd: testDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('delete the files under specs/');
-    expect(result.stderr).not.toContain('Ensure change has deltas in specs/');
+    expect(result.stderr).toContain('specs/ 配下のファイルを削除');
+    expect(result.stderr).not.toContain('変更の specs/ にデルタがあることを確認');
   });
 
   it('leads with the metadata fix when the marker is unhonorable and no spec files exist', async () => {
@@ -100,8 +100,8 @@ describe('top-level validate command', () => {
 
     const result = await runCLI(['validate', 'marked-invalid', '--type', 'change'], { cwd: testDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Fix .openspec.yaml so the skip_specs marker can be honored');
-    expect(result.stderr).not.toContain('delete the files under specs/');
+    expect(result.stderr).toContain('skip_specs マーカーを使用できるよう .openspec.yaml を修正');
+    expect(result.stderr).not.toContain('specs/ 配下のファイルを削除');
   });
 
   it('keeps delta-authoring next steps for a plain zero-delta change', async () => {
@@ -112,8 +112,8 @@ describe('top-level validate command', () => {
 
     const result = await runCLI(['validate', 'plain-empty', '--type', 'change'], { cwd: testDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Ensure change has deltas in specs/');
-    expect(result.stderr).not.toContain('delete the files under specs/');
+    expect(result.stderr).toContain('変更に specs/ 配下の差分があることを確認');
+    expect(result.stderr).not.toContain('specs/ 配下のファイルを削除');
   });
 
   it('validates all with --all and outputs JSON summary', async () => {

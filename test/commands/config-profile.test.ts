@@ -386,8 +386,8 @@ describe('config profile interactive flow', () => {
     expect(getGlobalConfig().delivery).toBe('skills');
     expect(process.exitCode).toBeUndefined();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith('No configured tools found.');
-    expect(consoleLogSpy).toHaveBeenCalledWith('Run `openspec update` in your other projects to apply.');
+    expect(consoleLogSpy).toHaveBeenCalledWith('設定済みのツールが見つかりません。');
+    expect(consoleLogSpy).toHaveBeenCalledWith('他のプロジェクトに適用するには、それぞれで `openspec update` を実行してください。');
   });
 
   it('confirmed project apply should report the update failure reason', async () => {
@@ -410,8 +410,8 @@ describe('config profile interactive flow', () => {
       executeSpy.mockRestore();
     }
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('`openspec update` failed: permission denied');
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Please run it manually to apply the profile changes.');
+    expect(consoleErrorSpy).toHaveBeenCalledWith('`openspec update` に失敗しました: permission denied');
+    expect(consoleErrorSpy).toHaveBeenCalledWith('profile 変更を適用するには手動で実行してください。');
     expect(process.exitCode).toBe(1);
   });
 

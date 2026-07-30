@@ -161,7 +161,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.codex');
 
     const message = captureMigrationLogs(projectDir, [requireTool('codex')]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
     expect(message).toBeTruthy();
     expect(message).toContain('$openspec-propose');
@@ -176,7 +176,7 @@ describe('migration', () => {
     await writeManagedCommand(projectDir, 'apply', 'qwen');
 
     const message = captureMigrationLogs(projectDir, [requireTool('qwen')]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
     expect(message).toContain('/opsx-propose');
     expect(message).not.toContain('/opsx:propose');
@@ -189,7 +189,7 @@ describe('migration', () => {
     await writeManagedCommand(projectDir, 'apply', 'amazon-q');
 
     const message = captureMigrationLogs(projectDir, [requireTool('amazon-q')]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
     expect(message).toContain('@opsx-propose');
     expect(message).not.toContain('/opsx:propose');
@@ -205,8 +205,8 @@ describe('migration', () => {
     const message = captureMigrationLogs(projectDir, [
       requireTool('amazon-q'),
       requireTool('qwen'),
-    ]).find((entry) => entry.includes('New in this version'));
-    expect(message).toContain('the openspec-propose skill');
+    ]).find((entry) => entry.includes('このバージョンの新機能'));
+    expect(message).toContain('openspec-propose スキル');
     expect(message).not.toContain('@opsx-propose');
     expect(message).not.toContain('/opsx-propose');
   });
@@ -220,8 +220,8 @@ describe('migration', () => {
     const message = captureMigrationLogs(projectDir, [
       requireTool('claude'),
       requireTool('qwen'),
-    ]).find((entry) => entry.includes('New in this version'));
-    expect(message).toContain('the openspec-propose skill');
+    ]).find((entry) => entry.includes('このバージョンの新機能'));
+    expect(message).toContain('openspec-propose スキル');
     expect(message).not.toContain('/opsx:propose');
     expect(message).not.toContain('/opsx-propose');
   });
@@ -230,7 +230,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.kimi-code');
 
     const message = captureMigrationLogs(projectDir, [requireTool('kimi')]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
     expect(message).toContain('/skill:openspec-propose');
     expect(message).not.toContain('/opsx:propose');
@@ -241,9 +241,9 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.kimi-code');
 
     const message = captureMigrationLogs(projectDir, [requireTool('codex'), requireTool('kimi')]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
-    expect(message).toContain('the openspec-propose skill');
+    expect(message).toContain('openspec-propose スキル');
     expect(message).not.toContain('/skill:');
     expect(message).not.toContain('/opsx:propose');
   });
@@ -255,9 +255,9 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.kimi-code');
 
     const message = captureMigrationLogs(projectDir, [ensureClaudeTool(), requireTool('kimi')]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
-    expect(message).toContain('the openspec-propose skill');
+    expect(message).toContain('openspec-propose スキル');
     expect(message).not.toContain('/opsx:propose');
     expect(message).not.toContain('/skill:');
   });
@@ -272,7 +272,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose');
 
     const message = captureMigrationLogs(projectDir, [ensureClaudeTool()]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
     expect(message).toContain('/openspec-propose');
     expect(message).not.toContain('/opsx:propose');
@@ -282,7 +282,7 @@ describe('migration', () => {
     await writeManagedCommand(projectDir, 'propose');
 
     const message = captureMigrationLogs(projectDir, [ensureClaudeTool()]).find((entry) =>
-      entry.includes('New in this version')
+      entry.includes('このバージョンの新機能')
     );
     expect(message).toContain('/opsx:propose');
   });

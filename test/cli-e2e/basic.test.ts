@@ -54,7 +54,7 @@ describe('openspec CLI e2e basics', () => {
       .join(', ');
     const normalizedOutput = result.stdout.replace(/\s+/g, ' ').trim();
     expect(normalizedOutput).toContain(
-      `対話なしで AI ツールを設定します。"all" / "none" またはカンマ区切りで指定してください: ${expectedTools}`
+      `対話なしでAIツールを設定します。"all"、"none"、または次のIDをカンマ区切りで指定してください: ${expectedTools}`
     );
   });
 
@@ -121,7 +121,7 @@ describe('openspec CLI e2e basics', () => {
     const projectDir = await prepareFixture('tmp-init');
     const result = await runCLI(['validate', 'does-not-exist'], { cwd: projectDir });
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain("Unknown item 'does-not-exist'");
+    expect(result.stderr).toContain("不明な項目 'does-not-exist'");
   });
 
   describe('init command non-interactive options', () => {

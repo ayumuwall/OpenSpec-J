@@ -252,7 +252,7 @@ export class ValidateCommand {
     } else if (type === 'change') {
       bullets.push('- 変更に specs/ 配下の差分があることを確認（## ADDED/MODIFIED/REMOVED/RENAMED Requirements 見出しを使用）');
       bullets.push('- 各 Requirement には少なくとも1つの #### Scenario: ブロックが必要');
-      bullets.push(`- Debug parsed deltas: ${withStoreFlag(root, `openspec show ${id} --json --deltas-only`)}`);
+      bullets.push(`- 解析済みデルタを確認: ${withStoreFlag(root, `openspec show ${id} --json --deltas-only`)}`);
     } else {
       bullets.push('- 仕様に ## Purpose と ## Requirements セクションがあることを確認');
       bullets.push('- 各 Requirement には少なくとも1つの #### Scenario: ブロックが必要');

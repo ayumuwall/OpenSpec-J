@@ -82,7 +82,7 @@ describe('openspec view root resolution', () => {
       });
 
       expect(result.exitCode, result.stderr).toBe(0);
-      expect(result.stdout).toContain('1 specs, 1 requirements');
+      expect(result.stdout).toContain('仕様: 1 件、要件 1 件');
       expect(result.stdout).toContain('billing');
     },
     TIMEOUT_MS
@@ -101,7 +101,7 @@ describe('openspec view root resolution', () => {
       });
 
       expect(result.exitCode, result.stderr).toBe(0);
-      expect(result.stdout).toContain('1 specs, 1 requirements');
+      expect(result.stdout).toContain('仕様: 1 件、要件 1 件');
     },
     TIMEOUT_MS
   );
@@ -138,7 +138,7 @@ describe('openspec view root resolution', () => {
 
       expect(list.exitCode, list.stderr).toBe(0);
       expect(view.exitCode, view.stderr).toBe(0);
-      expect(view.stdout).toContain('OpenSpec Dashboard');
+      expect(view.stdout).toContain('OpenSpec ダッシュボード');
     },
     TIMEOUT_MS
   );

@@ -347,7 +347,7 @@ export class UpdateCommand {
       console.log(chalk.red(`✗ 失敗: ${failedTools.map(f => `${f.name}（${f.error}）`).join(', ')}`));
     }
     if (skillsInvocableCommandSkips.length > 0) {
-      console.log(chalk.dim(`Commands skipped for: ${skillsInvocableCommandSkips.join(', ')} (uses skills)`));
+      console.log(chalk.dim(`コマンド生成をスキップ: ${skillsInvocableCommandSkips.join(', ')}（skills を使用）`));
     }
     if (removedCommandCount > 0) {
       console.log(chalk.dim(`削除: コマンドファイル ${removedCommandCount} 件（delivery: skills）`));
@@ -485,7 +485,7 @@ export class UpdateCommand {
     for (const toolId of toolIds) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (tool?.setupNote) {
-        console.log(chalk.yellow(`Setup required for ${tool.name}: ${tool.setupNote}`));
+        console.log(chalk.yellow(`${tool.name} のセットアップが必要です: ${tool.setupNote}`));
       }
     }
   }

@@ -94,7 +94,7 @@ describe('ChangeCommand.show/validate', () => {
       await fs.mkdir(path.join(tempRoot, 'openspec', 'changes', 'scaffolded'), { recursive: true });
 
       await expect(cmd.show('scaffolded', { json: false })).rejects.toThrow(
-        /Change "scaffolded" has no proposal\.md yet\..*openspec status --change scaffolded/s
+        /変更 "scaffolded" にはまだ proposal\.md がありません。.*openspec status --change scaffolded/s
       );
     });
 
@@ -102,8 +102,8 @@ describe('ChangeCommand.show/validate', () => {
       await fs.writeFile(path.join(tempRoot, 'openspec', 'changes', 'notes.md'), 'not a change', 'utf-8');
 
       // Must stay the plain not-found error: `status --change notes.md` cannot work.
-      await expect(cmd.show('notes.md', { json: false })).rejects.toThrow(/not found at/);
-      await expect(cmd.show('notes.md', { json: false })).rejects.not.toThrow(/has no proposal\.md yet/);
+      await expect(cmd.show('notes.md', { json: false })).rejects.toThrow(/に見つかりません/);
+      await expect(cmd.show('notes.md', { json: false })).rejects.not.toThrow(/にはまだ proposal\.md がありません/);
     });
 
     it('does not read a proposal outside changes/ via a traversing name', async () => {
@@ -112,16 +112,16 @@ describe('ChangeCommand.show/validate', () => {
       await fs.writeFile(path.join(tempRoot, 'proposal.md'), '# Outside the changes directory', 'utf-8');
       const traversal = path.join('..', '..');
 
-      await expect(cmd.show(traversal, { json: false })).rejects.toThrow(/not found at/);
-      await expect(cmd.show(traversal, { json: false })).rejects.not.toThrow(/has no proposal\.md yet/);
+      await expect(cmd.show(traversal, { json: false })).rejects.toThrow(/に見つかりません/);
+      await expect(cmd.show(traversal, { json: false })).rejects.not.toThrow(/にはまだ proposal\.md がありません/);
     });
 
     it('does not treat a nested name as a change', async () => {
       const nested = path.join('sample-change', 'specs');
       await fs.mkdir(path.join(tempRoot, 'openspec', 'changes', 'sample-change', 'specs'), { recursive: true });
 
-      await expect(cmd.show(nested, { json: false })).rejects.toThrow(/not found at/);
-      await expect(cmd.show(nested, { json: false })).rejects.not.toThrow(/has no proposal\.md yet/);
+      await expect(cmd.show(nested, { json: false })).rejects.toThrow(/に見つかりません/);
+      await expect(cmd.show(nested, { json: false })).rejects.not.toThrow(/にはまだ proposal\.md がありません/);
     });
   });
 

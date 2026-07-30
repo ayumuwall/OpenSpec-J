@@ -82,7 +82,7 @@ describe('top-level show command', () => {
       { encoding: 'utf-8', cwd: testDir }
     );
     expect(res.status).toBe(0);
-    expect(res.stderr).toContain('Ignoring flags not applicable to change: scenarios');
+    expect(res.stderr).toContain('change には無効なフラグを無視します: scenarios');
   });
 
   it('auto-detects spec id and supports spec-only flags', () => {
@@ -139,7 +139,7 @@ describe('top-level show command', () => {
       const stderr = err.stderr.toString();
       // Resolved as a change, not rejected as an unknown item.
       expect(stderr).not.toContain('Unknown item');
-      expect(stderr).toContain('has no proposal.md yet');
+      expect(stderr).toContain('にはまだ proposal.md がありません');
       expect(stderr).toContain('openspec status --change scaffolded');
     } finally {
       process.chdir(originalCwd);
@@ -161,7 +161,7 @@ describe('top-level show command', () => {
       } catch (e) { err = e; }
       expect(err).toBeDefined();
       const stderr = err.stderr.toString();
-      expect(stderr).toContain('Available IDs:');
+      expect(stderr).toContain('利用可能な ID:');
       expect(stderr).toContain('scaffolded');
     } finally {
       process.chdir(originalCwd);
@@ -180,11 +180,10 @@ describe('top-level show command', () => {
       expect(err).toBeDefined();
       expect(err.status).not.toBe(0);
       const stderr = err.stderr.toString();
-      expect(stderr).toContain("Unknown item 'unknown-item'");
-      expect(stderr).toContain('Did you mean:');
+      expect(stderr).toContain("不明な項目 'unknown-item'");
+      expect(stderr).toContain('次のいずれかですか:');
     } finally {
       process.chdir(originalCwd);
     }
   });
 });
-

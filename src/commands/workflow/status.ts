@@ -141,7 +141,7 @@ export function printStatusText(status: ChangeStatus): void {
     let line = `${indicator} ${artifact.id}`;
 
     if (artifact.status === 'skipped') {
-      line += color(' (skipped: change declares skip_specs)');
+      line += color('（スキップ: 変更で skip_specs を宣言）');
     }
 
     if (artifact.status === 'blocked' && artifact.missingDeps && artifact.missingDeps.length > 0) {

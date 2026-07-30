@@ -587,11 +587,11 @@ The system SHALL record request metrics.
 
       expect(report.valid).toBe(false);
       expect(
-        report.issues.some(i => i.message.includes('Delta spec found at specs/spec.md'))
+        report.issues.some(i => i.message.includes('specs/spec.md に delta spec が見つかりました'))
       ).toBe(true);
       // The precise error replaces the generic one, which would otherwise say
       // "No deltas found" about a file it just named.
-      expect(report.issues.some(i => i.message.includes('No deltas found'))).toBe(false);
+      expect(report.issues.some(i => i.message.includes('デルタが見つかりません'))).toBe(false);
     });
 
     it('should accept a capability folder that is literally named spec.md', async () => {

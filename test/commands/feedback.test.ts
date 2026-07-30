@@ -100,17 +100,17 @@ describe('FeedbackCommand', () => {
 
       // Should display warning
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('GitHub CLI not found')
+        expect.stringContaining('GitHub CLI が見つかりません')
       );
 
       // Should show formatted feedback
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('--- FORMATTED FEEDBACK ---')
+        expect.stringContaining('--- 整形済みフィードバック ---')
       );
 
       // Should show manual submission URL
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('https://github.com/Fission-AI/OpenSpec/issues/new')
+        expect.stringContaining('https://github.com/ayumuwall/OpenSpec-J/issues/new')
       );
     });
 
@@ -134,17 +134,17 @@ describe('FeedbackCommand', () => {
 
       // Should display warning
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('GitHub authentication required')
+        expect.stringContaining('GitHub の認証が必要です')
       );
 
       // Should show auth instructions
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('To auto-submit in the future: gh auth login')
+        expect.stringContaining('自動送信するには: gh auth login')
       );
 
       // Should show formatted feedback
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('--- FORMATTED FEEDBACK ---')
+        expect.stringContaining('--- 整形済みフィードバック ---')
       );
     });
   });
@@ -175,7 +175,7 @@ describe('FeedbackCommand', () => {
           'issue',
           'create',
           '--repo',
-          'Fission-AI/OpenSpec',
+          'ayumuwall/OpenSpec-J',
           '--title',
           'Feedback: Great tool!',
           '--body',
@@ -191,7 +191,7 @@ describe('FeedbackCommand', () => {
 
       // Should display success message
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Feedback submitted successfully')
+        expect.stringContaining('フィードバックを送信しました')
       );
 
       // Should display issue URL
@@ -349,10 +349,10 @@ describe('FeedbackCommand', () => {
       // fallback (formatted text + pre-filled URL) is shown like the
       // missing-gh and unauthenticated flows.
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Please submit your feedback manually:')
+        expect.stringContaining('フィードバックを手動で送信してください:')
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('github.com/Fission-AI/OpenSpec/issues/new')
+        expect.stringContaining('github.com/ayumuwall/OpenSpec-J/issues/new')
       );
     });
 
@@ -439,13 +439,13 @@ describe('FeedbackCommand', () => {
       // The feedback still lands as an issue, and the user is told the label
       // was not applied
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Feedback submitted successfully')
+        expect.stringContaining('フィードバックを送信しました')
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining(issueUrl)
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining("without the 'feedback' label")
+        expect.stringContaining("'feedback' ラベルがないため、ラベルなし")
       );
     });
 
@@ -533,16 +533,16 @@ describe('FeedbackCommand', () => {
 
       // Verify formatted output structure
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('--- FORMATTED FEEDBACK ---')
+        expect.stringContaining('--- 整形済みフィードバック ---')
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Title: Feedback: Test message')
+        expect.stringContaining('タイトル: Feedback: Test message')
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Labels: feedback')
+        expect.stringContaining('ラベル: feedback')
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('--- END FEEDBACK ---')
+        expect.stringContaining('--- フィードバック終わり ---')
       );
     });
 
@@ -570,7 +570,7 @@ describe('FeedbackCommand', () => {
           const parsed = new URL(found[0]);
           return (
             parsed.origin === 'https://github.com' &&
-            parsed.pathname === '/Fission-AI/OpenSpec/issues/new'
+            parsed.pathname === '/ayumuwall/OpenSpec-J/issues/new'
           );
         } catch {
           return false;

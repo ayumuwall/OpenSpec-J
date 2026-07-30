@@ -27,7 +27,7 @@ export function parseSchema(yamlContent: string): SchemaYaml {
   const result = SchemaYamlSchema.safeParse(parsed);
   if (!result.success) {
     const errors = result.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
-    throw new SchemaValidationError(`Invalid schema: ${errors}`);
+    throw new SchemaValidationError(`不正なスキーマ: ${errors}`);
   }
 
   const schema = result.data;

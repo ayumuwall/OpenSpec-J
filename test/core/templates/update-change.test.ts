@@ -40,7 +40,7 @@ describe('update-change templates', () => {
   it('reads artifact ids from status JSON and never branches on hardcoded artifact names (3.2)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください');
-      expect(body, label).toContain('ハードコードされたアーティファクト名に基づいて分岐することはありません');
+      expect(body, label).toContain('ハードコードされたアーティファクト名で分岐しません');
       expect(body, label).toContain('カスタム スキーマは変更せずに機能する必要があります');
       // No literal artifact filenames anywhere: no proposal.md/design.md/tasks.md
       // branching, and no worked example that names them. The only .md literal
@@ -52,9 +52,9 @@ describe('update-change templates', () => {
   it('edits planning artifacts only, hands code off to /opsx:apply, never advances the frontier (3.3)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('コードは決して編集しないでください');
-      expect(body, label).toContain('実装コードは決して編集しないでください');
-      expect(body, label).toContain('停止して `/opsx:apply` をポイントします');
-      expect(body, label).toContain('ビルド フロンティアを進めないでください');
+      expect(body, label).toContain('実装コードは決して編集しません');
+      expect(body, label).toContain('中止し、`/opsx:apply` を案内します');
+      expect(body, label).toContain('ビルドの進行地点を先に進めません');
       expect(body, label).toContain('まだ存在しないアーティファクトを作成しないでください');
     }
   });
@@ -82,7 +82,7 @@ describe('update-change templates', () => {
       expect(body, label).toContain('ユーザーが確認した後にのみ書き込みます');
       expect(body, label).toContain('ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください');
       expect(body, label).toContain('`/opsx:new` で新しく始めることを推奨します');
-      expect(body, label).toContain('更新 vs 新規開始');
+      expect(body, label).toContain('更新か、新規開始か');
     }
   });
 });

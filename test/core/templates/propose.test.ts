@@ -27,8 +27,8 @@ const defaultSchema = loadSchema(path.join(repoRoot, 'schemas', 'spec-driven', '
 
 /** The opening list that tells the agent which artifacts propose will produce. */
 function artifactPreamble(body: string): string {
-  const start = body.indexOf("I'll create a change with");
-  const end = body.indexOf('When ready to implement');
+  const start = body.indexOf('スキーマで定義されたアーティファクトを含む変更を作成します');
+  const end = body.indexOf('実装の準備ができたら');
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
   return body.slice(start, end);
@@ -57,8 +57,8 @@ describe('artifact loop guards (propose and ff)', () => {
   // with specs never created. That is the #1260 failure chain.
   it('warns that a done applyRequires artifact does not imply its deps exist (#788, #1260)', () => {
     for (const [label, body] of loopBodies) {
-      expect(body, label).toMatch(/file-existence only/i);
-      expect(body, label).toMatch(/does NOT mean its dependencies exist/i);
+      expect(body, label).toContain('ファイルの存在だけを示す');
+      expect(body, label).toContain('依存先が存在するとは限りません');
     }
   });
 
@@ -69,11 +69,11 @@ describe('artifact loop guards (propose and ff)', () => {
     for (const [label, body] of loopBodies) {
       // Names the seed the walk starts from (`from those`) so an agent cannot
       // read it as "every artifact that has requires edges" = the whole list.
-      expect(body, label).toContain('reachable from those by following the `requires` edges');
+      expect(body, label).toContain('`requires` エッジをたどって到達できる全アーティファクト');
       // Points at status --json specifically (instructions calls the edges `dependencies`).
-      expect(body, label).toContain('in `status --json`');
-      expect(body, label).toContain('walk them transitively');
-      expect(body, label).toContain('Leave artifacts outside that set alone');
+      expect(body, label).toContain('`status --json` の `requires` エッジ');
+      expect(body, label).toContain('推移的にたどってください');
+      expect(body, label).toContain('セット外のアーティファクトには手を加えません');
     }
   });
 
@@ -83,9 +83,9 @@ describe('artifact loop guards (propose and ff)', () => {
   it('builds the required set from requires edges, not from status (#1412 review)', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        "Use each artifact's `requires` edges, not its `status`, to build the required set"
+        '必須セットの構築には `status` ではなく各アーティファクトの `requires` エッジを使用'
       );
-      expect(body, label).toContain('a `done` artifact still lists what it depends on');
+      expect(body, label).toContain('done のアーティファクトにも依存先は列挙');
     }
   });
 
@@ -93,15 +93,15 @@ describe('artifact loop guards (propose and ff)', () => {
   it('documents the requires edges in the status JSON it tells the agent to parse', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'each with its `status` and its `requires` edges'
+        '各項目には `status` と `requires` エッジ'
       );
     }
   });
 
   it('creates every missing artifact in the set and re-checks for cascades', () => {
     for (const [label, body] of loopBodies) {
-      expect(body, label).toContain('Create every artifact in the required set that is missing');
-      expect(body, label).toMatch(/re-check - creating one can unblock others/i);
+      expect(body, label).toContain('必須セット内で不足する全アーティファクトを作成');
+      expect(body, label).toContain('1つの作成によって別のものが作成可能');
     }
   });
 
@@ -114,9 +114,9 @@ describe('artifact loop guards (propose and ff)', () => {
   it('permits skipping only artifacts their own instruction marks conditional', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'or when its own `instruction` says it is conditional'
+        '自身の `instruction` が条件付きと示す場合'
       );
-      expect(body, label).toContain('do not reconsider it');
+      expect(body, label).toContain('判断を後で覆さない');
     }
   });
 
@@ -127,7 +127,7 @@ describe('artifact loop guards (propose and ff)', () => {
   it('treats a `skipped` status as satisfied and never creates it (#1399)', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain('status: "skipped"');
-      expect(body, label).toContain('its files must NOT exist');
+      expect(body, label).toContain('そのファイルは存在してはなりません');
     }
   });
 
@@ -137,9 +137,9 @@ describe('artifact loop guards (propose and ff)', () => {
   it('makes the agent fetch and read the instruction field before skipping', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'run `openspec instructions <artifact-id> --change "<name>" --json` and skip only if its `instruction` field marks it optional'
+        '`openspec instructions <artifact-id> --change "<name>" --json` を実行し、`instruction` が任意'
       );
-      expect(body, label).toContain('never by your own judgment');
+      expect(body, label).toContain('自己判断ではスキップできません');
     }
   });
 
@@ -148,7 +148,7 @@ describe('artifact loop guards (propose and ff)', () => {
   it('frames the loop around the required set, not apply.requires alone', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'Continue until every artifact in the required set exists (not just `apply.requires`)'
+        '必須セット内の全アーティファクトが存在するまで続行（`apply.requires` だけではない）'
       );
       expect(body, label).not.toContain(
         'Continue until every artifact the apply phase depends on exists'
@@ -161,7 +161,7 @@ describe('artifact loop guards (propose and ff)', () => {
   // "create ... until apply-ready" invites the exact early-stop this PR kills.
   it('titles the create step around the required set, not "apply-ready"', () => {
     for (const [label, body] of loopBodies) {
-      expect(body, label).toContain('**Create every artifact in the required set**');
+      expect(body, label).toContain('**必須セット内の全アーティファクトを作成**');
       expect(body, label).not.toContain('Create artifacts in sequence until apply-ready');
       expect(body, label).not.toMatch(/^\s*4\.\s.*apply-ready/m);
     }
@@ -172,9 +172,9 @@ describe('artifact loop guards (propose and ff)', () => {
   // docs/concepts.md: "Dependencies are enablers, not gates."
   it('authorizes writing a blocked artifact whose only blocker was skipped', () => {
     for (const [label, body] of loopBodies) {
-      expect(body, label).toContain('Dependencies are enablers, not gates');
+      expect(body, label).toContain('依存関係は作業を可能にするもので、ゲートではありません');
       expect(body, label).toMatch(
-        /still `blocked` only because you skipped a conditional dependency, write it anyway/
+        /条件付き依存先をスキップしたことだけが原因で必須アーティファクトが `blocked` のままなら、それでも作成/
       );
     }
   });
@@ -184,7 +184,7 @@ describe('artifact loop guards (propose and ff)', () => {
   it('stops on the whole required set, not on applyRequires alone', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'Stop when every artifact in the required set is `done`, `skipped`, or was deliberately skipped'
+        '必須セットの全アーティファクトが `done`、`skipped`、または意図的にスキップ済みになったら終了'
       );
       expect(body, label).not.toContain('Stop when all `applyRequires` artifacts are done');
     }
@@ -198,7 +198,7 @@ describe('artifact loop guards (propose and ff)', () => {
         /Create ALL artifacts needed for implementation \(as defined by schema's `apply\.requires`\)/
       );
       expect(body, label).toContain(
-        'Create every artifact the apply phase transitively depends on'
+        'apply フェーズが推移的に依存する全アーティファクトを作成'
       );
     }
   });
@@ -208,7 +208,7 @@ describe('artifact loop guards (propose and ff)', () => {
   it('tells the agent how to resolve a glob output path', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'is a glob, follow `instruction` to choose the concrete file path'
+        'が glob の場合は、`instruction` に従って具体的なファイルパスを選びます'
       );
     }
   });

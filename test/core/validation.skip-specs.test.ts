@@ -38,8 +38,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('Change must have at least one delta');
-    expect(msg).toContain('set "skip_specs: true"');
+    expect(msg).toContain('デルタが見つかりません');
+    expect(msg).toContain('"skip_specs: true" を設定');
   });
 
   it('accepts a zero-delta change that declares skip_specs', async () => {
@@ -71,7 +71,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set in .openspec.yaml but spec files exist under specs/');
+    expect(msg).toContain('.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります');
   });
 
   it('treats skip_specs plus a delta file with no parseable deltas as a conflict, not acceptance', async () => {
@@ -88,7 +88,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const messages = report.issues.map(i => i.message).join('\n');
-    expect(messages).toContain('skip_specs is set in .openspec.yaml but spec files exist under specs/');
+    expect(messages).toContain('.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります');
     expect(report.issues.some(i => i.level === 'INFO')).toBe(false);
   });
 
@@ -105,7 +105,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const messages = report.issues.map(i => i.message).join('\n');
-    expect(messages).toContain('skip_specs is set in .openspec.yaml but spec files exist under specs/');
+    expect(messages).toContain('.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります');
   });
 
   it('treats skip_specs plus a stray non-spec file under specs/ as a conflict', async () => {
@@ -124,7 +124,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const messages = report.issues.map(i => i.message).join('\n');
-    expect(messages).toContain('skip_specs is set in .openspec.yaml but spec files exist under specs/');
+    expect(messages).toContain('.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります');
     expect(report.issues.some(i => i.level === 'INFO')).toBe(false);
   });
 
@@ -139,8 +139,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const messages = report.issues.map(i => i.message).join('\n');
-    expect(messages).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
-    expect(messages).toContain('not valid YAML');
+    expect(messages).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
+    expect(messages).toContain('有効な YAML ではありません');
   });
 
   it('does not honor skip_specs when the metadata fails the shared schema', async () => {
@@ -153,8 +153,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
-    expect(msg).toContain('Change must have at least one delta');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
+    expect(msg).toContain('デルタが見つかりません');
   });
 
   it('does not honor skip_specs when the schema does not resolve', async () => {
@@ -171,9 +171,9 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
-    expect(msg).toContain("unknown schema 'does-not-exist'");
-    expect(msg).toContain('Change must have at least one delta');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
+    expect(msg).toContain("不明なスキーマ 'does-not-exist'");
+    expect(msg).toContain('デルタが見つかりません');
   });
 
   it('honors skip_specs when the marker names a project-local schema', async () => {
@@ -229,7 +229,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
     expect(msg).toContain('schema');
   });
 
@@ -253,7 +253,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
   });
 
   it('rejects a schema name that only resolves via extension normalization', async () => {
@@ -270,7 +270,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain("unknown schema 'spec-driven.yaml'");
+    expect(msg).toContain("不明なスキーマ 'spec-driven.yaml'");
   });
 
   it('an explicit skip_specs: false never drags metadata problems into validation', async () => {
@@ -287,8 +287,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).not.toContain('skip_specs is set');
-    expect(msg).toContain('Change must have at least one delta');
+    expect(msg).not.toContain('skip_specs が設定されています');
+    expect(msg).toContain('デルタが見つかりません');
   });
 
   it('counts a symlinked file under specs/ as marker-conflicting content', async () => {
@@ -313,7 +313,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set in .openspec.yaml but spec files exist under specs/');
+    expect(msg).toContain('.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります');
   });
 
   it('fails closed when the metadata file exists but cannot be read', async () => {
@@ -327,8 +327,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
-    expect(msg).toContain('cannot be read');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
+    expect(msg).toContain('読み込めません');
   });
 
   it('validateChange keeps the no-deltas error when the marker names an unknown schema', async () => {
@@ -343,8 +343,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('Change must have at least one delta');
-    expect(msg).toContain("unknown schema 'does-not-exist'");
+    expect(msg).toContain('デルタが見つかりません');
+    expect(msg).toContain("不明なスキーマ 'does-not-exist'");
   });
 
   it('validateChange keeps the no-deltas error when the marker metadata is invalid', async () => {
@@ -356,9 +356,9 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('Change must have at least one delta');
+    expect(msg).toContain('デルタが見つかりません');
     // Both validate paths explain why the marker was not honored.
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
   });
 
   it('still rejects zero deltas when metadata is malformed', async () => {
@@ -369,7 +369,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('Change must have at least one delta');
+    expect(msg).toContain('デルタが見つかりません');
   });
 
   it('skip_specs must be exactly true - a truthy string is surfaced as unhonorable, not silently ignored', async () => {
@@ -383,7 +383,7 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).toContain('skip_specs is set but .openspec.yaml is not valid change metadata');
+    expect(msg).toContain('skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため');
   });
 
   it('does not crash when specs is a regular file instead of a directory', async () => {
@@ -395,7 +395,7 @@ describe('Validator skip_specs handling', () => {
     const validator = new Validator();
     const unmarked = await validator.validateChangeDeltaSpecs(testDir);
     expect(unmarked.valid).toBe(false);
-    expect(unmarked.issues.map(i => i.message).join('\n')).toContain('Change must have at least one delta');
+    expect(unmarked.issues.map(i => i.message).join('\n')).toContain('デルタが見つかりません');
 
     await fs.writeFile(
       path.join(testDir, '.openspec.yaml'),
@@ -403,7 +403,7 @@ describe('Validator skip_specs handling', () => {
     );
     const marked = await validator.validateChangeDeltaSpecs(testDir);
     expect(marked.valid).toBe(false);
-    expect(marked.issues.map(i => i.message).join('\n')).toContain('skip_specs is set in .openspec.yaml but spec files exist under specs/');
+    expect(marked.issues.map(i => i.message).join('\n')).toContain('.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります');
   });
 
   it('ignores dot-files under specs/ just like every other code path', async () => {
@@ -432,8 +432,8 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(false);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).not.toContain('not valid change metadata');
-    expect(msg).toContain('Change must have at least one delta');
+    expect(msg).not.toContain('有効な変更メタデータではありません');
+    expect(msg).toContain('デルタが見つかりません');
   });
 
   it('validateChange drops the no-deltas error when skip_specs is declared', async () => {
@@ -448,6 +448,6 @@ describe('Validator skip_specs handling', () => {
 
     expect(report.valid).toBe(true);
     const msg = report.issues.map(i => i.message).join('\n');
-    expect(msg).not.toContain('Change must have at least one delta');
+    expect(msg).not.toContain('デルタが見つかりません');
   });
 });

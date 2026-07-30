@@ -248,7 +248,7 @@ export function readSkipSpecsMarker(changeDir: string): SkipSpecsMarker {
       err instanceof Error ? err.message : String(err);
     return {
       declared: false,
-      invalidReason: `the metadata file cannot be read (${message})`,
+      invalidReason: `メタデータファイルを読み込めません (${message})`,
     };
   }
 
@@ -259,7 +259,7 @@ export function readSkipSpecsMarker(changeDir: string): SkipSpecsMarker {
     // Anchored so a comment like "# maybe add skip_specs later" does not
     // claim the marker was set.
     return /^\s*(['"]?)skip_specs\1\s*:/m.test(raw)
-      ? { declared: false, invalidReason: 'the file is not valid YAML' }
+      ? { declared: false, invalidReason: 'ファイルが有効な YAML ではありません' }
       : { declared: false };
   }
 
@@ -280,7 +280,7 @@ export function readSkipSpecsMarker(changeDir: string): SkipSpecsMarker {
       if (!listSchemas(projectRoot).includes(result.data.schema)) {
         return {
           declared: false,
-          invalidReason: `schema: unknown schema '${result.data.schema}'`,
+          invalidReason: `schema: 不明なスキーマ '${result.data.schema}'`,
         };
       }
       resolveSchema(result.data.schema, projectRoot);
