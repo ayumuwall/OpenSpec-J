@@ -46,7 +46,7 @@ export async function initGitRepository(storeRoot: string): Promise<boolean> {
       'store_git_init_failed',
       {
         target: 'store.git',
-        fix: 'Install Git or rerun setup with --no-init-git.',
+        fix: 'Git をインストールするか、--no-init-git を付けて setup を再実行してください。',
       }
     );
   }
@@ -65,21 +65,21 @@ export async function assertGitCommitIdentity(probeCwd: string): Promise<void> {
     } catch (error) {
       if (isSpawnNotFoundError(error)) {
         throw new StoreError(
-          'Git is not available, so setup cannot create the initial store commit.',
+          'Git を利用できないため、setup で store の初回コミットを作成できません。',
           'store_git_init_failed',
           {
             target: 'store.git',
-            fix: 'Install Git or rerun setup with --no-init-git.',
+            fix: 'Git をインストールするか、--no-init-git を付けて setup を再実行してください。',
           }
         );
       }
 
       throw new StoreError(
-        'No usable Git commit identity is configured, so setup cannot create the initial store commit.',
+        '利用可能な Git コミット作成者情報が未設定のため、setup で store の初回コミットを作成できません。',
         'store_git_identity_missing',
         {
           target: 'store.git',
-          fix: 'Run git config --global user.name "Your Name" and git config --global user.email "you@example.com", or rerun setup with --no-init-git.',
+          fix: 'git config --global user.name "Your Name" と git config --global user.email "you@example.com" を実行するか、--no-init-git を付けて setup を再実行してください。',
         }
       );
     }
@@ -119,7 +119,7 @@ export async function commitStoreFiles(
       'store_git_commit_failed',
       {
         target: 'store.git',
-        fix: 'Commit the created files manually, or rerun setup with --no-init-git.',
+        fix: '作成されたファイルを手動でコミットするか、--no-init-git を付けて setup を再実行してください。',
       }
     );
   }

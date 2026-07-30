@@ -33,8 +33,8 @@ export const VALIDATION_MESSAGES = {
   CHANGE_SKIP_SPECS_INVALID_METADATA:
     'skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため使用できません。メタデータを修正してください',
   CHANGE_TOO_MANY_DELTAS: `デルタが ${MAX_DELTAS_PER_CHANGE} 個を超える場合は分割を検討してください`,
-  DELTA_SPEC_EMPTY: 'Spec name cannot be empty',
-  DELTA_DESCRIPTION_EMPTY: 'Delta description cannot be empty',
+  DELTA_SPEC_EMPTY: 'Spec 名を空にすることはできません',
+  DELTA_DESCRIPTION_EMPTY: 'Delta の説明を空にすることはできません',
   
   // Warnings
   PURPOSE_TOO_BRIEF: `Purpose セクションが短すぎます（${MIN_PURPOSE_LENGTH} 文字未満）`,

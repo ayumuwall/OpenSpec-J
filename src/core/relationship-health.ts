@@ -65,7 +65,7 @@ export function inspectRelationships(input: InspectRelationshipsInput): Relation
     status.push(
       warning(
         'relationship_registry_unreadable',
-        'The store registry is unreadable; reference health cannot be checked.',
+        'store レジストリを読み取れないため、reference の健全性を確認できません。',
         'Run: openspec store doctor'
       )
     );

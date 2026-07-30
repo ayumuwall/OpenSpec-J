@@ -27,37 +27,33 @@ metadata:
 
 2. **変更選択を促す**
 
-   Ask the user to choose changes (multi-select):
-   - Show each change with its schema
-   - Include an option for "All changes"
-   - Allow any number of selections (1+ works, 2+ is the typical use case)
+   ユーザーに変更の選択（複数選択）を求めます:
+   - 各変更とそのスキーマを表示する
+   - 「すべての変更」という選択肢を含める
+   - 任意の件数を選択可能にする（1件以上で動作し、通常は2件以上で使用）
 
    **重要**: 自動選択しないでください。必ずユーザーに選ばせます。
 
-   **Load current archive inputs once for the selected root before batch validation:**
+   **一括検証の前に、選択したルートの現在のarchive入力を1回読み込む:**
 
-   Choose one selected change from this root and run
-   `openspec instructions archive --change "<selected-change>" --json` with the
-   same selected-root flags. This lookup is advisory and optional: it only supplies
-   extra prompt inputs, so it must never block the batch. If it fails or returns
-   invalid JSON — for example on an older CLI that does not support this command
-   yet — continue the batch with no context and no operation guidance. Do not
-   report an error and do not stop.
+   このルートから選択済みの変更を1つ選び、同じ選択済みルートのフラグを付けて
+   `openspec instructions archive --change "<selected-change>" --json` を実行します。
+   この検索は参考情報を得る任意の処理で、追加のプロンプト入力を提供するだけなので、
+   一括処理をブロックしてはいけません。このコマンドに未対応の古いCLIなどで失敗するか
+   無効なJSONを返した場合は、contextとoperation guidanceなしで一括処理を続行します。
+   エラーを報告せず、停止もしません。
 
-   A valid response may omit `context` and `operationGuidance`. Treat
-   `context` as a required prompt-level input across the batch: read and consider
-   it, and apply relevant project facts, conventions, and constraints. Treat
-   `operationGuidance` as optional additive advice: read and consider every
-   entry, and follow entries that are applicable and compatible with the built-in
-   batch workflow.
+   有効なレスポンスでも `context` と `operationGuidance` が省略される場合があります。
+   `context` は一括処理全体でプロンプトレベルの必須入力として読み取り、
+   関連するプロジェクトの事実、規約、制約を適用します。`operationGuidance` は任意の追加助言として、
+   すべての項目を読み取って検討し、組み込みの一括ワークフローに適用可能で互換性のあるものに従います。
 
-   Keep both fields separate from conflict analysis, explicit user choices,
-   resolved paths, CLI checks, and command contracts. If context conflicts with one
-   of those controlling inputs, report the conflict and preserve the controlling
-   value. If guidance is inapplicable or conflicts with a controlling input, do not
-   follow it and explain why. Do not infer skipped prompts, replacement paths, or
-   flags from either field, and do not copy their text verbatim into specs, changes,
-   or summaries. These are prompt-level behavior contracts, not enforceable checks.
+   両フィールドは、競合分析、ユーザーの明示的な選択、解決済みパス、CLI検査、
+   コマンドの契約とは分けて扱います。contextがこれらの制御入力と競合する場合は、
+   競合を報告して制御側の値を維持します。ガイダンスが適用不能または制御入力と競合する場合は
+   従わず、理由を説明します。どちらのフィールドからも省略するプロンプト、代替パス、フラグを
+   推測せず、本文を仕様、変更、概要へそのままコピーしません。これらはプロンプトレベルの
+   振る舞いの契約であり、強制可能な検査ではありません。
 
 3. **Batch validation - gather status for all selected changes**
 
@@ -71,15 +67,14 @@ metadata:
       - `- [ ]`（未完了）と `- [x]`（完了）を数える
       - タスクファイルがない場合は "タスクなし" と記録
 
-   c. **Delta specs** - Check `artifactPaths.specs.existingOutputPaths` from status JSON
-      - List which capability specs exist
-      - For each, extract requirement names (lines matching `### Requirement: <name>`)
-      - Treat this list as the only delta-spec source. If the `specs` entry is
-        missing or the list is empty, perform no spec sync or specs-instruction
-        lookup for that change; do not infer deltas from unrelated artifacts.
-      - Evaluate this independently for every change, including mixed-schema
-        batches where some schemas have no `specs` artifact.
-4. **Detect spec conflicts**
+   c. **デルタ仕様** - status JSONの `artifactPaths.specs.existingOutputPaths` を確認
+      - 存在する機能仕様を一覧にする
+      - 各仕様から要件名（`### Requirement: <name>` に一致する行）を抽出する
+      - この一覧だけをデルタ仕様の情報源として扱う。`specs` 項目がない、または一覧が空の場合は、
+        その変更について仕様同期やspecs指示の検索を行わず、無関係なアーティファクトからデルタを推測しない
+      - `specs` アーティファクトを持たないスキーマを含む混在スキーマの一括処理でも、
+        変更ごとに独立して評価する
+4. **仕様の競合を検出**
 
    `capability -> [それを変更する変更]` のマップを作ります:
 
@@ -105,11 +100,11 @@ metadata:
       - 両方実装済みの場合 -> 時系列順で適用（古いものを先、新しいものが上書き）
       - どちらも未実装の場合 -> 仕様同期をスキップし、ユーザーに警告
 
-   d. **Record resolution** for each conflict:
-      - An inclusion or exclusion decision for every delta spec, keyed by change and capability
-      - Which included delta specs to apply and in what order
-      - Which delta specs to exclude from sync because their implementation is missing
-      - Rationale (what was found in codebase)
+   d. 各競合について**解決方法を記録**:
+      - 変更と機能をキーとして、すべてのデルタ仕様を対象に含めるか除外するかの判断
+      - 対象に含めるデルタ仕様と、その適用順序
+      - 実装がないため同期から除外するデルタ仕様
+      - 判断理由（コードベースで見つかったもの）
 
 6. **統合ステータス表を表示**
 
@@ -124,21 +119,21 @@ metadata:
    | add-verify-skill    | 残り1件   | 2/5   | なし    | なし      | 警告   |
    ```
 
-   For conflicts, show the resolution:
+   競合がある場合は、解決方法を表示します:
    ```text
-   * Conflict resolution:
-     - auth spec: Will apply add-oauth then add-jwt (both implemented, chronological order)
+   * 競合の解決:
+     - auth仕様: add-oauth、add-jwtの順に適用（両方とも実装済み、時系列順）
    ```
 
-   For incomplete changes, show warnings:
+   未完了の変更がある場合は、警告を表示します:
    ```text
-   Warnings:
-   - add-verify-skill: 1 incomplete artifact, 3 incomplete tasks
+   警告:
+   - add-verify-skill: 未完了アーティファクト1件、未完了タスク3件
    ```
 
 7. **一括操作の確認**
 
-   Ask the user a single confirmation question:
+   ユーザーへ1つの確認質問を行います:
 
    - "N 件の変更をアーカイブしますか？" をステータスに応じて提示
    - 選択肢の例:
@@ -148,74 +143,82 @@ metadata:
 
    未完了がある場合は、警告付きでアーカイブされることを明記。
 
-   Route on the answer by intent, not by exact label — you wrote these labels,
-   so match what the user picked rather than the wording above:
-   - "Cancel" — stop, do not archive. Report that nothing was archived and skip the remaining steps.
-   - The archive-everything option — proceed with every selected change
-   - The ready-only option — proceed with only the changes the step 6 table marks `Ready` or `Ready*`, and record the rest as Skipped in step 8d. If a `Ready*` change's conflict partner is skipped, re-derive that conflict's resolution using only the changes being archived.
-   - Anything else — ask again rather than archiving
+   表示ラベルの完全一致ではなく、回答の意図に応じて分岐します。ラベルはこちらで作成したものなので、
+   上記の文言ではなくユーザーが選んだ意図を照合します:
+   - 「キャンセル」— 停止してarchiveしない。何もarchiveされなかったと報告し、残りの手順を省略する
+   - すべてarchiveする選択肢 — 選択したすべての変更を処理する
+   - 準備完了のみの選択肢 — 手順6の表で `Ready` または `Ready*` と示した変更だけを処理し、
+     残りは手順8dでスキップとして記録する。`Ready*` の変更と競合する相手がスキップされた場合は、
+     archiveする変更だけを使って競合の解決方法を再導出する
+   - その他 — archiveせず、もう一度質問する
 
-   Before step 8 writes the first main spec or moves any change, fetch every
-   required specs-rule snapshot for the confirmed batch. For each change that will
-   sync concrete `artifactPaths.specs.existingOutputPaths`, run
-   `openspec instructions specs --change "<name>" --json` exactly once with the
-   same selected-root flags. Obtain all snapshots before the first write or move.
-   If any lookup exits non-zero or returns invalid artifact-instruction JSON,
-   identify the affected change, report the error, and stop the whole batch before
-   any main-spec write or change move. Do not treat lookup failure as omitted
-   rules. A valid response without `rules` is the no-rules case.
+   手順8で最初のメイン仕様を書き込む、または変更を移動する前に、確認済みの一括処理に必要な
+   specsルールのスナップショットをすべて取得します。具体的な
+   `artifactPaths.specs.existingOutputPaths` を同期する各変更について、同じ選択済みルートの
+   フラグを付け、`openspec instructions specs --change "<name>" --json` を正確に1回実行します。
+   最初の書き込みや移動前に、すべてのスナップショットを取得します。いずれかの検索が終了コード0以外、
+   または無効なアーティファクト指示JSONを返した場合は、該当する変更を特定してエラーを報告し、
+   メイン仕様の書き込みや変更の移動前に一括処理全体を停止します。検索失敗をrules省略として扱いません。
+   有効なレスポンスに `rules` がなければ、ルールなしとして扱います。
 
-8. **Execute archive for each confirmed change**
+8. **確認済みの各変更をarchiveする**
 
-   Before processing, carry the recorded decisions from step 5 (after any step 7 re-derivation) into two per-delta sets:
-   - `includedDeltas`: all non-conflicting delta specs from confirmed changes plus conflict deltas selected for sync
-   - `excludedDeltas`: conflict deltas from confirmed changes excluded because their implementation is missing
-   - A single change can have both included and excluded delta specs. Keep the decision per delta; do not collapse it into a per-change sync flag.
+   処理前に、手順5で記録した判断（手順7で再導出した場合はその結果）を、デルタごとの2つの集合へ引き継ぎます:
+   - `includedDeltas`: 確認済み変更の競合しない全デルタ仕様と、同期対象として選択した競合デルタ
+   - `excludedDeltas`: 実装がないため、確認済み変更から同期対象外とした競合デルタ
+   - 1つの変更に対象デルタと対象外デルタの両方が存在する場合があります。判断はデルタごとに維持し、変更単位の同期フラグへまとめません。
 
-   Process changes in the determined order (respecting conflict resolution):
+   競合の解決順序を尊重し、決定した順序で変更を処理します:
 
-   a. **Sync included delta specs**:
-      - Run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) only for changes with entries in `includedDeltas`, passing only the included delta paths and explicitly instructing it to ignore that change's `excludedDeltas`. Wait for it to finish.
-      - For conflicts, apply in resolved order.
-      - Pass that change's fetched specs-rule snapshot into inline sync; inline
-        sync must reuse it without fetching instructions again
-      - Apply artifact rules only to main specs produced by that change. They do
-        not change conflict resolution, archive behavior, or CLI contracts, and
-        their text is not copied into an output file
-      - Do not delegate to a background task — step 8c would move `changeRoot` out from under a sync that is still reading it.
-      - If a change has no included delta specs, do not run the sync workflow for it.
+   a. **対象に含めたデルタ仕様を同期**:
+      - `includedDeltas` に項目がある変更だけで `openspec-sync-specs` ワークフローをインライン
+        （エージェントによる知的マージ）実行します。対象に含めたデルタパスだけを渡し、
+        その変更の `excludedDeltas` を無視するよう明示して、完了を待ちます
+      - 競合については解決済みの順序で適用する
+      - その変更用に取得したspecsルールのスナップショットをインライン同期へ渡し、
+        同期側は指示を再取得せず再利用する
+      - アーティファクトルールは、その変更が生成するメイン仕様だけに適用する。競合解決、
+        archiveの動作、CLIの契約は変更せず、ルール本文を出力ファイルへコピーしない
+      - バックグラウンドタスクへ委任しない。手順8cが、まだ同期で読み取っている `changeRoot` を移動するため
+      - 対象に含めたデルタ仕様がない変更では、同期ワークフローを実行しない
 
-   b. **Verify included delta specs before moving changeRoot**:
-      - Re-run the comparison only for delta specs in `includedDeltas` against main spec at `<planningHome.root>/openspec/specs/<capability>/spec.md` (use the store-aware `planningHome.root` from step 3 status JSON, not a hardcoded repo path).
-      - Verify that main specs are updated:
-        - ADDED requirements present
-        - MODIFIED requirements carrying scenario and description changes named in the delta, with their other scenarios intact
-        - REMOVED requirements gone
-        - RENAMED requirements present under the new name and absent under the old one
-      - Do not verify delta specs in `excludedDeltas`; they are intentionally left unsynced.
-      - If sync failed or any capability does not match verification, report what differs and fail/skip moving that change's `changeRoot` — do not archive that change. `changeRoot` remains intact.
+   b. **changeRootの移動前に、対象に含めたデルタ仕様を検証**:
+      - `includedDeltas` のデルタ仕様だけを、`<planningHome.root>/openspec/specs/<capability>/spec.md`
+        のメイン仕様と再比較する（リポジトリパスをハードコードせず、手順3のstatus JSONで得た
+        ストア対応の `planningHome.root` を使用）
+      - メイン仕様の更新を検証する:
+        - ADDED要件が存在する
+        - MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映され、その他のシナリオは維持されている
+        - REMOVED要件が存在しない
+        - RENAMED要件が新しい名前で存在し、古い名前では存在しない
+      - `excludedDeltas` のデルタ仕様は意図的に未同期のため、検証しない
+      - 同期に失敗するか、いずれかの機能が検証結果と一致しない場合は差異を報告し、その変更の
+        `changeRoot` の移動を失敗またはスキップする。その変更をarchiveせず、`changeRoot` を維持する
 
-   c. **Perform the archive**:
+   c. **archiveを実行**:
 
-      Target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<name>` (same rule as `openspec archive`).
+      対象名: 変更名がすでに `YYYY-MM-DD-` で始まる場合はそのまま使用し、
+      それ以外は現在の日付を `YYYY-MM-DD-<name>` として先頭に付ける
+      （`openspec archive` と同じ規則）。
 
       ```bash
       mkdir -p "<planningHome.changesDir>/archive"
       mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
       ```
 
-   d. **Track outcome** for each change:
-      - Success: archived successfully
-      - Failed: error during archive or spec verification (record error)
-      - Skipped: user chose not to archive (if applicable)
-      - Sync skipped: for every delta in `excludedDeltas`, report `sync skipped` with the change, capability, and recorded reason. This is distinct from skipping the archive.
+   d. 各変更の**結果を記録**:
+      - 成功: archiveに成功
+      - 失敗: archiveまたは仕様検証中のエラー（エラーを記録）
+      - スキップ: ユーザーがarchiveしないことを選択（該当する場合）
+      - 同期スキップ: `excludedDeltas` の各デルタについて、変更、機能、記録済みの理由とともに
+        `sync skipped` と報告する。archive自体のスキップとは区別する
 
 9. **サマリーを表示**
 
    最終結果を表示:
 
    ```markdown
-   ## Bulk Archive Complete
+   ## 一括archive完了
 
    3 件の変更をアーカイブしました:
    - schema-management-cli -> archive/2026-01-19-schema-management-cli/
@@ -225,23 +228,23 @@ metadata:
    1 件の変更をスキップしました:
    - add-verify-skill（未完了のためユーザーがアーカイブしないことを選択）
 
-   Spec sync summary:
-   - 4 delta specs synced to main specs
-   - 1 delta spec sync skipped (add-jwt/auth: implementation not found)
-   - 1 conflict resolved (auth: synced add-oauth, skipped add-jwt)
+   仕様同期の概要:
+   - デルタ仕様4件をメイン仕様へ同期
+   - デルタ仕様1件の同期をスキップ（add-jwt/auth: 実装が見つからない）
+   - 競合1件を解決（auth: add-oauthを同期、add-jwtをスキップ）
    ```
 
-   If any failures:
+   失敗がある場合:
    ```text
-   Failed 1 change:
-   - some-change: Archive directory already exists
+   変更1件に失敗:
+   - some-change: archiveディレクトリがすでに存在する
    ```
 
 **競合解決の例**
 
-Example 1: Only one implemented
+例1: 一方だけ実装済み
 ```text
-Conflict: <planningHome.root>/openspec/specs/auth/spec.md touched by [add-oauth, add-jwt]
+競合: <planningHome.root>/openspec/specs/auth/spec.md を [add-oauth, add-jwt] が変更
 
 add-oauth を確認:
 - 差分は "OAuth Provider Integration" 要件を追加
@@ -254,9 +257,9 @@ add-jwt を確認:
 解決: add-oauth のみ実装済みです。add-oauth の仕様だけを同期します。
 ```
 
-Example 2: Both implemented
+例2: 両方とも実装済み
 ```text
-Conflict: <planningHome.root>/openspec/specs/api/spec.md touched by [add-rest-api, add-graphql]
+競合: <planningHome.root>/openspec/specs/api/spec.md を [add-rest-api, add-graphql] が変更
 
 add-rest-api を確認（2026-01-10 作成）:
 - 差分は "REST Endpoints" 要件を追加
@@ -273,9 +276,9 @@ add-graphql を確認（2026-01-15 作成）:
 **成功時の出力**
 
 ```markdown
-## Bulk Archive Complete
+## 一括archive完了
 
-Archived N changes:
+N件の変更をarchive:
 - <change-1> -> archive/<target-name-1>/
 - <change-2> -> archive/<target-name-2>/
 
@@ -287,9 +290,9 @@ Archived N changes:
 **一部成功時の出力**
 
 ```markdown
-## Bulk Archive Complete (partial)
+## 一括archive完了（一部）
 
-Archived N changes:
+N件の変更をarchive:
 - <change-1> -> archive/<target-name-1>/
 
 M 件の変更をスキップしました:
@@ -302,35 +305,39 @@ K 件の変更に失敗しました:
 **変更がない場合の出力**
 
 ```markdown
-## No Changes to Archive
+## archive対象の変更なし
 
 進行中の変更はありません。`/openspec-new-change` で新しい変更を作成してください。
 ```
 
-**Guardrails**
-- Allow any number of changes (1+ is fine, 2+ is the typical use case)
-- Always prompt for selection, never auto-select
-- Detect spec conflicts early and resolve by checking codebase
-- When both changes are implemented, apply specs in chronological order
-- Skip spec sync only when implementation is missing (warn user)
-- Show clear per-change status before confirming
-- Use single confirmation for entire batch
-- Never archive after the user cancels the confirmation — a cancelled batch archives nothing
-- Track and report all outcomes (success/skip/fail)
-- Preserve .openspec.yaml when moving to archive
-- Archive directory target uses current date: YYYY-MM-DD-<name>; a name that already starts with a `YYYY-MM-DD-` prefix is used as-is (never stack a second date)
-- If archive target exists, fail that change but continue with others
-- If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven) for each change with included delta specs
-- Carry the per-delta `includedDeltas` and `excludedDeltas` decisions into execution; sync and verify only included deltas
-- Report every excluded delta as `sync skipped` without treating the archive itself as skipped
-- Never archive a change while a spec sync is still in flight — run the sync inline and verify main specs at `<planningHome.root>/openspec/specs/<capability>/spec.md` before moving `changeRoot`
-- Fetch archive inputs once per selected root before spec inspection or moves
-- Fetch all required specs-rule snapshots before the batch's first main-spec write or move
-- A failed archive-inputs lookup never blocks the batch; it proceeds with no context or guidance
-- A failed specs instruction lookup stops the whole batch atomically
-- Changes without concrete `artifactPaths.specs.existingOutputPaths` continue without spec sync
-- Apply relevant runtime context across the batch and report conflicts
-- Operation guidance remains advisory; consider every entry and explain rejected advice
-- Keep runtime inputs, conflict analysis, CLI-derived values, and artifact rules separate
-- Artifact rules constrain only written specs
-- Never copy runtime input or artifact-rule text verbatim into output files
+**ガードレール**
+- 任意の件数の変更を許可する（1件以上で動作し、通常は2件以上で使用）
+- 必ず選択を求め、自動選択しない
+- 仕様の競合を早期に検出し、コードベースを確認して解決する
+- 両方の変更が実装済みなら、仕様を時系列順で適用する
+- 実装がない場合だけ仕様同期をスキップし、ユーザーへ警告する
+- 確認前に変更ごとの明確な状態を表示する
+- 一括処理全体で1つの確認を使用する
+- ユーザーが確認をキャンセルした後は決してarchiveしない。キャンセルした一括処理では何もarchiveしない
+- すべての結果（成功／スキップ／失敗）を記録して報告する
+- archiveへ移動するときも `.openspec.yaml` を維持する
+- archiveディレクトリの対象名には現在の日付 `YYYY-MM-DD-<name>` を使用する。
+  すでに `YYYY-MM-DD-` で始まる名前はそのまま使い、2つ目の日付を重ねない
+- archive対象が存在する場合はその変更を失敗とし、他の変更は続行する
+- 同期を求められた場合は、対象に含めたデルタ仕様を持つ各変更について
+  `openspec-sync-specs` ワークフローをインライン実行する
+- デルタごとの `includedDeltas` と `excludedDeltas` の判断を実行時まで引き継ぎ、
+  対象に含めたデルタだけを同期・検証する
+- archive自体をスキップ扱いにせず、対象外の各デルタを `sync skipped` として報告する
+- 仕様同期の実行中に変更をarchiveしない。同期をインライン実行し、
+  `changeRoot` の移動前に `<planningHome.root>/openspec/specs/<capability>/spec.md` のメイン仕様を検証する
+- 仕様の調査や移動前に、選択したルートごとにarchive入力を1回取得する
+- 一括処理で最初のメイン仕様を書き込む、または移動する前に、必要なspecsルールのスナップショットをすべて取得する
+- archive入力の検索失敗は一括処理をブロックせず、contextやguidanceなしで続行する
+- specs指示の検索失敗は一括処理全体を原子的に停止する
+- 具体的な `artifactPaths.specs.existingOutputPaths` がない変更は仕様同期なしで続行する
+- 一括処理全体で関連する実行時contextを適用し、競合を報告する
+- operation guidanceは参考情報のままとし、すべての項目を検討して拒否した助言の理由を説明する
+- 実行時入力、競合分析、CLI由来の値、アーティファクトルールを分けて扱う
+- アーティファクトルールは書き込む仕様だけを制約する
+- 実行時入力やアーティファクトルールの本文を出力ファイルへそのままコピーしない

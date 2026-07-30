@@ -203,7 +203,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // validate then rejects as conflicting with the marker.
   if (instructions.skipped) {
     console.log('<warning>');
-    console.log(instructions.warning ?? 'This artifact is skipped (skip_specs is set in .openspec.yaml).');
+    console.log(instructions.warning ?? 'このアーティファクトはスキップされます（.openspec.yaml で skip_specs が設定されています）。');
     console.log('</warning>');
     console.log();
     console.log('</artifact>');
@@ -598,7 +598,7 @@ export async function archiveInstructionsCommand(
     return;
   }
 
-  const spinner = options.json ? undefined : ora('Loading archive inputs...').start();
+  const spinner = options.json ? undefined : ora('アーカイブ入力を読み込んでいます...').start();
 
   try {
     const changeName = await validateChangeExists(
@@ -649,6 +649,6 @@ function printOperationInputsText(inputs: {
   }
 
   if (!inputs.context && !inputs.operationGuidance) {
-    console.log('No project context or operation guidance configured.');
+    console.log('プロジェクトコンテキストまたは操作ガイダンスは設定されていません。');
   }
 }

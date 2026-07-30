@@ -377,7 +377,7 @@ export class InitCommand {
       .filter((prompt) => !removableMatches.some((match) => match.path === prompt.path));
 
     if (blockedMatches.length > 0) {
-      console.log(chalk.yellow('Preserved deferred global prompts without replacement skills:'));
+      console.log(chalk.yellow('代替 skill がないため、保留中のグローバルプロンプトを維持しました:'));
       for (const prompt of blockedMatches) {
         console.log(chalk.dim(`  - ${prompt.toolId}: ${prompt.path}`));
       }
@@ -867,7 +867,7 @@ export class InitCommand {
       console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
     }
     if (results.skillsInvocableCommandSkips.length > 0) {
-      console.log(chalk.dim(`Commands skipped for: ${results.skillsInvocableCommandSkips.join(', ')} (uses skills)`));
+      console.log(chalk.dim(`コマンドをスキップしたツール: ${results.skillsInvocableCommandSkips.join(', ')}（skill を使用）`));
     }
     if (results.removedCommandCount > 0) {
       console.log(chalk.dim(`削除: ${results.removedCommandCount} 個のコマンドファイル（delivery: skills）`));

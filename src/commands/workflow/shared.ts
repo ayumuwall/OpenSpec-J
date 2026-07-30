@@ -160,16 +160,16 @@ export async function getAvailableChanges(
  */
 function validateChangeLookupName(changeName: string): string | undefined {
   if (changeName === '.' || changeName === '..') {
-    return 'Change name cannot be a relative path segment';
+    return '変更名に相対パスのセグメントは使用できません';
   }
   if (changeName.includes('/') || changeName.includes('\\')) {
-    return 'Change name cannot contain path separators';
+    return '変更名にパス区切り文字は使用できません';
   }
   if (changeName.includes('\0')) {
-    return 'Change name cannot contain null characters';
+    return '変更名に null 文字は使用できません';
   }
   if (changeName.startsWith('.')) {
-    return 'Change name cannot start with a dot';
+    return '変更名をドットで始めることはできません';
   }
   if (changeName === 'archive') {
     return "'archive' is reserved for archived changes";

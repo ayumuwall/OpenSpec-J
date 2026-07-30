@@ -148,7 +148,7 @@ function reportGhFailure(error: any, title: string, body: string): void {
   displayFormattedFeedback(title, body);
 
   const manualUrl = generateManualSubmissionUrl(title, body);
-  console.log('Please submit your feedback manually:');
+  console.log('フィードバックを手動で送信してください:');
   console.log(manualUrl);
 
   // Exit with the same code as gh CLI

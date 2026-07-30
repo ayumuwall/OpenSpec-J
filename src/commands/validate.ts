@@ -140,8 +140,8 @@ export class ValidateCommand {
     if (!type) {
       const suggestions = nearestMatches(itemName, [...changes, ...specs]);
       const message = suggestions.length
-        ? `Unknown item '${itemName}'. Did you mean: ${suggestions.join(', ')}?`
-        : `Unknown item '${itemName}'.`;
+        ? `不明な項目 '${itemName}' です。次のいずれかですか: ${suggestions.join(', ')}?`
+        : `不明な項目 '${itemName}' です。`;
       if (opts.json) {
         console.log(
           JSON.stringify(
@@ -166,7 +166,7 @@ export class ValidateCommand {
                 {
                   severity: 'error',
                   code: 'ambiguous_item',
-                  message: `Ambiguous item '${itemName}' matches both a change and a spec.`,
+                  message: `項目 '${itemName}' は変更と spec の両方に一致するため曖昧です。`,
                   fix: '--type change|spec を指定してください。',
                 },
               ],

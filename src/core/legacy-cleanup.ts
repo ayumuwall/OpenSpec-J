@@ -568,7 +568,7 @@ export async function cleanupLegacyArtifacts(
   );
   for (const filePath of detection.globalSlashCommandFiles) {
     if (!getManagedGlobalLegacyPromptMetadata(filePath)) {
-      result.errors.push(`Skipped unmanaged global prompt ${filePath}`);
+      result.errors.push(`管理対象外のグローバルプロンプトをスキップしました: ${filePath}`);
       continue;
     }
 
@@ -580,7 +580,7 @@ export async function cleanupLegacyArtifacts(
         result.deletedFileReplacementLabels![filePath] = promptMatch.replacementLabel;
       }
     } catch (error: any) {
-      result.errors.push(`Failed to delete ${filePath}: ${error.message}`);
+      result.errors.push(`${filePath} の削除に失敗しました: ${error.message}`);
     }
   }
 
@@ -779,8 +779,8 @@ export function formatDeferredGlobalPromptSummary(detection: LegacyDetectionResu
   }
 
   const lines: string[] = [];
-  lines.push(chalk.bold('Deferred global prompts cleanup'));
-  lines.push(chalk.dim('These global prompts will only be removed after matching replacement skills are installed.'));
+  lines.push(chalk.bold('グローバルプロンプトの削除を保留'));
+  lines.push(chalk.dim('これらのグローバルプロンプトは、対応する代替 skill のインストール後にのみ削除されます。'));
   for (const prompt of deferredPrompts) {
     const toolLabel = prompt.toolId ? `${prompt.toolId}: ` : '';
     lines.push(`  • ${toolLabel}${prompt.path}`);

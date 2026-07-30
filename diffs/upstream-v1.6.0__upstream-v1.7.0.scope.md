@@ -40,144 +40,144 @@
 
 - [x] A skills/README.md
 - [x] A skills/openspec-apply-change/SKILL.md
-- [ ] A skills/openspec-archive-change/SKILL.md
-- [ ] A skills/openspec-bulk-archive-change/SKILL.md
-- [ ] A skills/openspec-continue-change/SKILL.md
-- [ ] A skills/openspec-explore/SKILL.md
-- [ ] A skills/openspec-ff-change/SKILL.md
-- [ ] A skills/openspec-new-change/SKILL.md
-- [ ] A skills/openspec-onboard/SKILL.md
-- [ ] A skills/openspec-propose/SKILL.md
-- [ ] A skills/openspec-sync-specs/SKILL.md
-- [ ] A skills/openspec-update-change/SKILL.md
-- [ ] A skills/openspec-verify-change/SKILL.md
+- [x] A skills/openspec-archive-change/SKILL.md
+- [x] A skills/openspec-bulk-archive-change/SKILL.md
+- [x] A skills/openspec-continue-change/SKILL.md
+- [x] A skills/openspec-explore/SKILL.md
+- [x] A skills/openspec-ff-change/SKILL.md
+- [x] A skills/openspec-new-change/SKILL.md
+- [x] A skills/openspec-onboard/SKILL.md
+- [x] A skills/openspec-propose/SKILL.md
+- [x] A skills/openspec-sync-specs/SKILL.md
+- [x] A skills/openspec-update-change/SKILL.md
+- [x] A skills/openspec-verify-change/SKILL.md
 - [x] M src/core/templates/workflows/apply-change.ts
-- [ ] M src/core/templates/workflows/archive-change.ts
-- [ ] M src/core/templates/workflows/bulk-archive-change.ts
+- [x] M src/core/templates/workflows/archive-change.ts
+- [x] M src/core/templates/workflows/bulk-archive-change.ts
 - [x] M src/core/templates/workflows/continue-change.ts
 - [x] M src/core/templates/workflows/explore.ts
-- [ ] M src/core/templates/workflows/ff-change.ts
+- [x] M src/core/templates/workflows/ff-change.ts
 - [x] M src/core/templates/workflows/new-change.ts
 - [x] M src/core/templates/workflows/onboard.ts
-- [ ] M src/core/templates/workflows/propose.ts
+- [x] M src/core/templates/workflows/propose.ts
 - [x] M src/core/templates/workflows/store-selection.ts
-- [ ] M src/core/templates/workflows/sync-specs.ts
+- [x] M src/core/templates/workflows/sync-specs.ts
 - [x] M src/core/templates/workflows/update-change.ts
 - [x] M src/core/templates/workflows/verify-change.ts
 
 ## artifact engine
 
-- [ ] M src/core/artifact-graph/graph.ts
-- [ ] M src/core/artifact-graph/instruction-loader.ts
-- [ ] M src/core/artifact-graph/resolver.ts
+- [x] M src/core/artifact-graph/graph.ts
+- [x] M src/core/artifact-graph/instruction-loader.ts
+- [x] M src/core/artifact-graph/resolver.ts
 
 ## コマンド生成
 
-- [ ] M src/core/command-generation/adapters/amazon-q.ts
-- [ ] M src/core/command-generation/adapters/antigravity.ts
-- [ ] M src/core/command-generation/adapters/auggie.ts
-- [ ] M src/core/command-generation/adapters/bob.ts
-- [ ] M src/core/command-generation/adapters/claude.ts
-- [ ] M src/core/command-generation/adapters/codebuddy.ts
-- [ ] D src/core/command-generation/adapters/codex.ts
-- [ ] M src/core/command-generation/adapters/continue.ts
-- [ ] M src/core/command-generation/adapters/costrict.ts
-- [ ] M src/core/command-generation/adapters/crush.ts
-- [ ] M src/core/command-generation/adapters/cursor.ts
-- [ ] A src/core/command-generation/adapters/devin.ts
-- [ ] M src/core/command-generation/adapters/factory.ts
-- [ ] M src/core/command-generation/adapters/gemini.ts
-- [ ] M src/core/command-generation/adapters/github-copilot.ts
-- [ ] M src/core/command-generation/adapters/iflow.ts
-- [ ] M src/core/command-generation/adapters/index.ts
-- [ ] M src/core/command-generation/adapters/junie.ts
-- [ ] M src/core/command-generation/adapters/kiro.ts
-- [ ] M src/core/command-generation/adapters/lingma.ts
-- [ ] M src/core/command-generation/adapters/oh-my-pi.ts
-- [ ] M src/core/command-generation/adapters/opencode.ts
-- [ ] M src/core/command-generation/adapters/pi.ts
-- [ ] M src/core/command-generation/adapters/qoder.ts
-- [ ] M src/core/command-generation/adapters/qwen.ts
-- [ ] M src/core/command-generation/adapters/roocode.ts
-- [ ] M src/core/command-generation/adapters/trae.ts
-- [ ] D src/core/command-generation/adapters/windsurf.ts
-- [ ] A src/core/command-generation/adapters/zcode.ts
-- [ ] M src/core/command-generation/generator.ts
-- [ ] M src/core/command-generation/index.ts
-- [ ] A src/core/command-generation/invocation.ts
-- [ ] M src/core/command-generation/registry.ts
-- [ ] M src/core/command-generation/types.ts
-- [ ] M src/core/command-generation/yaml.ts
+- [x] M src/core/command-generation/adapters/amazon-q.ts
+- [x] M src/core/command-generation/adapters/antigravity.ts
+- [x] M src/core/command-generation/adapters/auggie.ts
+- [x] M src/core/command-generation/adapters/bob.ts
+- [x] M src/core/command-generation/adapters/claude.ts
+- [x] M src/core/command-generation/adapters/codebuddy.ts
+- [x] D src/core/command-generation/adapters/codex.ts
+- [x] M src/core/command-generation/adapters/continue.ts
+- [x] M src/core/command-generation/adapters/costrict.ts
+- [x] M src/core/command-generation/adapters/crush.ts
+- [x] M src/core/command-generation/adapters/cursor.ts
+- [x] A src/core/command-generation/adapters/devin.ts
+- [x] M src/core/command-generation/adapters/factory.ts
+- [x] M src/core/command-generation/adapters/gemini.ts
+- [x] M src/core/command-generation/adapters/github-copilot.ts
+- [x] M src/core/command-generation/adapters/iflow.ts
+- [x] M src/core/command-generation/adapters/index.ts
+- [x] M src/core/command-generation/adapters/junie.ts
+- [x] M src/core/command-generation/adapters/kiro.ts
+- [x] M src/core/command-generation/adapters/lingma.ts
+- [x] M src/core/command-generation/adapters/oh-my-pi.ts
+- [x] M src/core/command-generation/adapters/opencode.ts
+- [x] M src/core/command-generation/adapters/pi.ts
+- [x] M src/core/command-generation/adapters/qoder.ts
+- [x] M src/core/command-generation/adapters/qwen.ts
+- [x] M src/core/command-generation/adapters/roocode.ts
+- [x] M src/core/command-generation/adapters/trae.ts
+- [x] D src/core/command-generation/adapters/windsurf.ts
+- [x] A src/core/command-generation/adapters/zcode.ts
+- [x] M src/core/command-generation/generator.ts
+- [x] M src/core/command-generation/index.ts
+- [x] A src/core/command-generation/invocation.ts
+- [x] M src/core/command-generation/registry.ts
+- [x] M src/core/command-generation/types.ts
+- [x] M src/core/command-generation/yaml.ts
 
 ## init・オンボーディング
 
-- [ ] M src/core/init.ts
-- [ ] M src/core/legacy-cleanup.ts
-- [ ] A src/core/onboarding-commands.ts
-- [ ] M src/core/shared/tool-detection.ts
-- [ ] M src/prompts/searchable-multi-select.ts
-- [ ] M src/ui/welcome-screen.ts
+- [x] M src/core/init.ts
+- [x] M src/core/legacy-cleanup.ts
+- [x] A src/core/onboarding-commands.ts
+- [x] M src/core/shared/tool-detection.ts
+- [x] M src/prompts/searchable-multi-select.ts
+- [x] M src/ui/welcome-screen.ts
 
 ## CLI
 
-- [ ] M src/cli/index.ts
-- [ ] M src/commands/change.ts
-- [ ] M src/commands/config.ts
-- [ ] M src/commands/doctor.ts
-- [ ] M src/commands/feedback.ts
-- [ ] M src/commands/schema.ts
-- [ ] M src/commands/show.ts
-- [ ] M src/commands/spec.ts
-- [ ] M src/commands/validate.ts
-- [ ] M src/commands/workflow/index.ts
-- [ ] M src/commands/workflow/instructions.ts
-- [ ] M src/commands/workflow/shared.ts
-- [ ] M src/commands/workflow/status.ts
+- [x] M src/cli/index.ts
+- [x] M src/commands/change.ts
+- [x] M src/commands/config.ts
+- [x] M src/commands/doctor.ts
+- [x] M src/commands/feedback.ts
+- [x] M src/commands/schema.ts
+- [x] M src/commands/show.ts
+- [x] M src/commands/spec.ts
+- [x] M src/commands/validate.ts
+- [x] M src/commands/workflow/index.ts
+- [x] M src/commands/workflow/instructions.ts
+- [x] M src/commands/workflow/shared.ts
+- [x] M src/commands/workflow/status.ts
 
 ## その他
 
-- [ ] M package.json
-- [ ] M pnpm-lock.yaml
-- [ ] M src/core/archive.ts
-- [ ] M src/core/change-metadata/schema.ts
-- [ ] M src/core/change-status-policy.ts
-- [ ] A src/core/command-surface.ts
-- [ ] M src/core/completions/command-registry.ts
-- [ ] M src/core/completions/generators/powershell-generator.ts
-- [ ] M src/core/completions/installers/zsh-installer.ts
-- [ ] M src/core/config-prompts.ts
-- [ ] M src/core/config-schema.ts
-- [ ] M src/core/config.ts
-- [ ] M src/core/global-config.ts
-- [ ] M src/core/list.ts
-- [ ] M src/core/migration.ts
-- [ ] M src/core/parsers/change-parser.ts
-- [ ] A src/core/parsers/code-fence.ts
-- [ ] M src/core/parsers/markdown-parser.ts
-- [ ] M src/core/parsers/requirement-blocks.ts
-- [ ] M src/core/parsers/requirement-text.ts
-- [ ] M src/core/parsers/spec-structure.ts
-- [ ] M src/core/profile-sync-drift.ts
-- [ ] M src/core/project-config.ts
-- [ ] M src/core/references.ts
-- [ ] M src/core/relationship-health.ts
-- [ ] M src/core/root-selection.ts
-- [ ] M src/core/specs-apply.ts
-- [ ] M src/core/store/git.ts
-- [ ] M src/core/update.ts
-- [ ] M src/core/validation/constants.ts
-- [ ] M src/core/validation/validator.ts
-- [ ] A src/core/version-check.ts
-- [ ] M src/core/view.ts
-- [ ] M src/telemetry/index.ts
-- [ ] M src/utils/change-metadata.ts
-- [ ] M src/utils/change-utils.ts
-- [ ] M src/utils/command-references.ts
-- [ ] A src/utils/date.ts
-- [ ] M src/utils/index.ts
-- [ ] M src/utils/item-discovery.ts
-- [ ] M src/utils/shell-detection.ts
-- [ ] A src/utils/spec-discovery.ts
+- [x] M package.json
+- [x] M pnpm-lock.yaml
+- [x] M src/core/archive.ts
+- [x] M src/core/change-metadata/schema.ts
+- [x] M src/core/change-status-policy.ts
+- [x] A src/core/command-surface.ts
+- [x] M src/core/completions/command-registry.ts
+- [x] M src/core/completions/generators/powershell-generator.ts
+- [x] M src/core/completions/installers/zsh-installer.ts
+- [x] M src/core/config-prompts.ts
+- [x] M src/core/config-schema.ts
+- [x] M src/core/config.ts
+- [x] M src/core/global-config.ts
+- [x] M src/core/list.ts
+- [x] M src/core/migration.ts
+- [x] M src/core/parsers/change-parser.ts
+- [x] A src/core/parsers/code-fence.ts
+- [x] M src/core/parsers/markdown-parser.ts
+- [x] M src/core/parsers/requirement-blocks.ts
+- [x] M src/core/parsers/requirement-text.ts
+- [x] M src/core/parsers/spec-structure.ts
+- [x] M src/core/profile-sync-drift.ts
+- [x] M src/core/project-config.ts
+- [x] M src/core/references.ts
+- [x] M src/core/relationship-health.ts
+- [x] M src/core/root-selection.ts
+- [x] M src/core/specs-apply.ts
+- [x] M src/core/store/git.ts
+- [x] M src/core/update.ts
+- [x] M src/core/validation/constants.ts
+- [x] M src/core/validation/validator.ts
+- [x] A src/core/version-check.ts
+- [x] M src/core/view.ts
+- [x] M src/telemetry/index.ts
+- [x] M src/utils/change-metadata.ts
+- [x] M src/utils/change-utils.ts
+- [x] M src/utils/command-references.ts
+- [x] A src/utils/date.ts
+- [x] M src/utils/index.ts
+- [x] M src/utils/item-discovery.ts
+- [x] M src/utils/shell-detection.ts
+- [x] A src/utils/spec-discovery.ts
 
 ## 翻訳対象外
 

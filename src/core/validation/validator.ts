@@ -162,7 +162,7 @@ export class Validator {
           level: 'ERROR',
           path: 'spec.md',
           message:
-            'Delta spec found at specs/spec.md. Delta specs must live in a capability folder (e.g. specs/<capability>/spec.md) — a file at the specs/ root is ignored when the change is applied or archived.',
+            'specs/spec.md に delta spec が見つかりました。delta spec は capability フォルダー内（例: specs/<capability>/spec.md）に置く必要があります。specs/ 直下のファイルは変更の適用時やアーカイブ時に無視されます。',
         });
       }
 

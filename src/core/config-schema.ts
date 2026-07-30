@@ -25,7 +25,7 @@ export const GlobalConfigSchema = z
       .string()
       .optional()
       .describe(
-        'Store id used as fallback root when no explicit --store, local root, or project-level store: pointer resolves'
+        '明示的な --store、ローカルルート、プロジェクトレベルの store: ポインターが解決されない場合に代替ルートとして使用する store ID'
       ),
   })
   .passthrough();

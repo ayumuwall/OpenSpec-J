@@ -181,7 +181,7 @@ async function resolveStoreRoot(
       'unknown_store',
       {
         target: 'store.id',
-        fix: 'Pass a registered store id, or run openspec store list.',
+        fix: '登録済み store ID を渡すか、openspec store list を実行してください。',
       }
     );
   }

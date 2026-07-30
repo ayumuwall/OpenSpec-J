@@ -357,7 +357,7 @@ export class ArchiveCommand {
       if (!options.yes) {
         throw new ArchiveBlockedError(
           'archive_confirmation_required',
-          'Skipping validation requires confirmation: rerun with --yes.',
+          '検証をスキップするには確認が必要です。--yes を付けて再実行してください。',
           withStoreFlag(root, 'openspec archive <change-name> --json --no-validate --yes')
         );
       }
@@ -397,7 +397,7 @@ export class ArchiveCommand {
           throw new ArchiveBlockedError(
             'archive_tasks_incomplete',
             `${incompleteTasks} incomplete task(s) found for change '${changeName}'.`,
-            'Complete the tasks or rerun with --yes.'
+            'タスクを完了するか、--yes を付けて再実行してください。'
           );
         }
       } else if (!options.yes) {
@@ -472,7 +472,7 @@ export class ArchiveCommand {
               throw new ArchiveBlockedError(
                 'archive_spec_update_failed',
                 String(err.message || err),
-                'Fix the change delta specs and rerun. No files were changed.'
+                '変更の delta spec を修正して再実行してください。ファイルは変更されていません。'
               );
             }
             console.log(String(err.message || err));

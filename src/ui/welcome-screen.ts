@@ -26,7 +26,7 @@ function getWelcomeText(workflows: readonly string[]): string[] {
 
   if (onboardingCommands.length > 0) {
     const commandWidth = Math.max(...onboardingCommands.map((c) => c.command.length));
-    quickStart.push(chalk.white('Quick start after setup:'));
+    quickStart.push(chalk.white('セットアップ後のクイックスタート:'));
     for (const { command, description } of onboardingCommands) {
       quickStart.push(`  ${chalk.yellow(command.padEnd(commandWidth + 1))} ${chalk.dim(description)}`);
     }
@@ -35,7 +35,7 @@ function getWelcomeText(workflows: readonly string[]): string[] {
     // until tools are picked, one prompt later — so flag it rather than let the
     // canonical form read as the literal thing to type. "Getting started"
     // prints the real spelling once the selection is known.
-    quickStart.push(chalk.dim('  (spelling varies by tool)'));
+    quickStart.push(chalk.dim('  （表記はツールによって異なります）'));
     quickStart.push('');
   }
 

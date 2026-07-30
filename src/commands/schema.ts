@@ -849,12 +849,12 @@ export function registerSchemaCommand(program: Command): void {
 
         // Replace only after all inputs have been collected and validated
         if (schemaExists) {
-          if (spinner) spinner.start(`Removing existing schema '${name}'...`);
+          if (spinner) spinner.start(`既存のスキーマ '${name}' を削除しています...`);
           fs.rmSync(schemaDir, { recursive: true });
         }
 
         // Create schema directory
-        if (spinner) spinner.start(`Creating schema '${name}'...`);
+        if (spinner) spinner.start(`スキーマ '${name}' を作成しています...`);
         fs.mkdirSync(schemaDir, { recursive: true });
 
         fs.writeFileSync(

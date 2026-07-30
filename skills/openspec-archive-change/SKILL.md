@@ -17,58 +17,55 @@ metadata:
 
 **手順**
 
-1. **Select the change**
+1. **変更を選択する**
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
+   名前が指定されていれば使用します。それ以外の場合:
+   - 会話で変更に言及していれば、そのコンテキストから推測する
+   - アクティブな変更が1つだけなら自動選択する
+   - 曖昧なら `openspec list --json` で利用可能な変更を取得し、ユーザーに選択してもらう
 
-   When prompting, show only active changes (not already archived).
-   Include the schema used for each change if available.
+   選択を求める場合は、アーカイブ済みではないアクティブな変更だけを表示します。
+   利用可能であれば、各変更で使用するスキーマも含めます。
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/openspec-archive-change <other>`).
+   必ず「使用する変更: <name>」と、変更方法（例: `/openspec-archive-change <other>`）を伝えます。
 
-   **Load current archive inputs before the existing archive checks:**
+   **既存のarchive検査の前に、現在のarchive入力を読み込む:**
 
-   After resolving the selected change and planning root, run:
+   選択した変更とplanning rootを解決した後、次を実行します:
    ```bash
    openspec instructions archive --change "<name>" --json
    ```
-   Keep the same selected-root flags on this command. This lookup is advisory and
-   optional: it only supplies extra prompt inputs, so it must never block archiving.
-   If it exits non-zero or returns invalid JSON — for example on an older CLI that
-   does not support this command yet — continue the archive workflow with no
-   context and no operation guidance. Do not report an error and do not stop.
+   このコマンドでも、選択したルートのフラグを維持します。この検索は参考情報を得る任意の処理です。
+   追加のプロンプト入力を提供するだけなので、archiveをブロックしてはいけません。
+   このコマンドに未対応の古いCLIなどで、終了コードが0以外または無効なJSONが返された場合は、
+   contextとoperation guidanceなしでarchiveワークフローを続行します。エラーを報告せず、停止もしません。
 
-   A successful response may omit both optional fields. Treat `context` as a
-   required prompt-level input: read and consider it, and apply relevant project
-   facts, conventions, and constraints. Treat `operationGuidance` as optional
-   additive advice: read and consider every entry, and follow entries that are
-   applicable and compatible with the built-in archive workflow.
+   成功したレスポンスでも、2つの任意フィールドが省略される場合があります。`context` は
+   プロンプトレベルの必須入力として読み取り、関連するプロジェクトの事実、規約、制約を適用します。
+   `operationGuidance` は任意の追加助言として扱います。すべての項目を読み取って検討し、
+   組み込みのarchiveワークフローに適用可能で互換性のあるものに従います。
 
-   Keep both fields separate from built-in steps, explicit user choices, resolved
-   paths, CLI checks, and command contracts. If context conflicts with one of those
-   controlling inputs, report the conflict and preserve the controlling value. If
-   guidance is inapplicable or conflicts with a controlling input, do not follow it
-   and explain why. Do not infer replacement paths, skipped prompts, or flags from
-   either field, and do not copy their text verbatim into specs, change artifacts,
-   or archive summaries unless the user separately asks for it. These are
-   prompt-level behavior contracts, not enforceable checks.
+   両フィールドは、組み込み手順、ユーザーの明示的な選択、解決済みパス、CLI検査、
+   コマンドの契約とは分けて扱います。contextがこれらの制御入力と競合する場合は、
+   競合を報告して制御側の値を維持します。ガイダンスが適用不能または制御入力と競合する場合は
+   従わず、理由を説明します。どちらのフィールドからも代替パス、省略するプロンプト、フラグを
+   推測しません。また、ユーザーが別途求めない限り、本文を仕様、変更アーティファクト、
+   archive概要へそのままコピーしません。これらはプロンプトレベルの振る舞いの契約であり、
+   強制可能な検査ではありません。
 
 2. **アーティファクトの完了ステータスを確認します**
 
 `openspec status --change "<name>" --json` を実行して、アーティファクトの完了を確認します。
 
-   Parse the JSON to understand:
-   - `schemaName`: The workflow being used
-   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context
-   - `artifacts`: List of artifacts with their status (`done`, `skipped`, or other)
+   JSONを解析して次を把握します:
+   - `schemaName`: 使用中のワークフロー
+   - `planningHome`、`changeRoot`、`artifactPaths`、`actionContext`: パスとスコープのコンテキスト
+   - `artifacts`: 各アーティファクトとその状態（`done`、`skipped`、その他）の一覧
 
-   **If any artifacts are neither `done` nor `skipped`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
-   - Display warning listing incomplete artifacts
-   - Ask the user to confirm they want to proceed
-   - Proceed if user confirms
+   **`done` でも `skipped` でもないアーティファクトがある場合**（変更がskip_specsを宣言しているため、skippedは要件を満たします）:
+   - 未完了アーティファクトの一覧を警告として表示する
+   - 続行するかユーザーへ確認する
+   - ユーザーが確認した場合は続行する
 
 3. **タスクの完了ステータスを確認します**
 
@@ -76,53 +73,60 @@ metadata:
 
 `- [ ]` (未完了) と `- [x]` (完了) でマークされたタスクを数えます。
 
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Ask the user to confirm they want to proceed
-   - Proceed if user confirms
+   **未完了タスクが見つかった場合:**
+   - 未完了タスク数を警告として表示する
+   - 続行するかユーザーへ確認する
+   - ユーザーが確認した場合は続行する
 
 **タスク ファイルが存在しない場合:** タスク関連の警告なしで続行します。
 
 4. **デルタ仕様の同期状態を評価します**
 
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON as the only
-   delta-spec source. If the `specs` entry is missing or
-   `existingOutputPaths` is empty, proceed without a sync prompt and do not infer
-   delta specs from other artifacts.
+   status JSONの `artifactPaths.specs.existingOutputPaths` だけをデルタ仕様の情報源として使用します。
+   `specs` 項目がない、または `existingOutputPaths` が空の場合は、同期の確認なしで続行し、
+   他のアーティファクトからデルタ仕様を推測しません。
 
-   **If delta specs exist:**
-   - Compare each delta spec with its corresponding main spec at `<planningHome.root>/openspec/specs/<capability>/spec.md` (use the store-aware `planningHome.root` from step 2, not a hardcoded repo path)
-   - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Show a combined summary before prompting
+   **デルタ仕様が存在する場合:**
+   - 各デルタ仕様を、対応する `<planningHome.root>/openspec/specs/<capability>/spec.md` のメイン仕様と比較する（リポジトリパスをハードコードせず、手順2で得たストア対応の `planningHome.root` を使用）
+   - 適用される変更（追加、変更、削除、名前変更）を判定する
+   - 選択を求める前に、統合した概要を表示する
 
 **プロンプトオプション:**
 - 変更が必要な場合: 「今すぐ同期 (推奨)」、「同期せずにアーカイブ」
 - すでに同期されている場合: 「今すぐアーカイブ」、「とにかく同期」、「キャンセル」
 
-   Route on the answer:
-   - "Cancel" — stop, do not archive
-   - "Archive without syncing" or "Archive now" — proceed to archive
-   - "Sync now" or "Sync anyway" — sync, then verify (below)
-   - Anything else — ask again rather than archiving
+   回答に応じて分岐します:
+   - 「キャンセル」— 停止し、archiveしない
+   - 「同期せずにarchive」または「今すぐarchive」— archiveへ進む
+   - 「今すぐ同期」または「とにかく同期」— 同期してから、後述の検証を行う
+   - その他 — archiveせず、もう一度質問する
 
-   Before a selected sync writes any main spec, run
-   `openspec instructions specs --change "<name>" --json` once with the same
-   selected-root flags. Require a zero exit status and valid artifact-instruction
-   JSON. If the lookup fails or returns invalid JSON, report the error and stop
-   before writing any main spec or moving the change. A valid response with omitted
-   `rules` is the no-rules case. Apply returned `rules` only to the content and
-   form of main specs produced by this merge; do not use them as archive guidance,
-   change CLI behavior, or copy the rule text into any output file.
+   選択された同期でメイン仕様へ書き込む前に、同じ選択済みルートのフラグを付けて
+   `openspec instructions specs --change "<name>" --json` を1回実行します。
+   終了コード0と有効なアーティファクト指示JSONを必須とします。検索に失敗するか無効なJSONが
+   返された場合はエラーを報告し、メイン仕様の書き込みや変更の移動前に停止します。
+   有効なレスポンスで `rules` が省略されていれば、ルールなしとして扱います。返された `rules` は、
+   このマージで生成するメイン仕様の内容と形式だけに適用します。archiveのガイダンスとして使ったり、
+   CLIの動作を変えたり、ルール本文を出力ファイルへコピーしたりしません。
 
-   Then run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching `specs` instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
+   次に変更「<name>」について、上記のデルタ仕様分析と取得済みspecsルールのスナップショットを渡し、
+   `openspec-sync-specs` ワークフローをインライン（エージェントによる知的マージ）で実行して完了を待ちます。
+   インライン同期はこのスナップショットを再利用し、`specs` の指示を再取得してはいけません。
+   バックグラウンドタスクへ委任しないでください。手順5が、まだ `changeRoot` を読み取っている同期処理の
+   配下からそれを移動し、変更だけがarchiveされてメイン仕様が更新されない状態になるためです。
+   委任でしか実行できないエージェントでは、同期的に委任して結果を待ちます。
 
-   Then re-run the comparison from the top of this step against every capability that has a delta spec in `artifactPaths.specs.existingOutputPaths` — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
-   - ADDED requirements present
-   - MODIFIED requirements carrying the scenario and description changes named in the delta, with their other scenarios intact
-   - REMOVED requirements gone
-   - RENAMED requirements present under the new name and absent under the old one
+   次に、同期が触れたと報告したものだけでなく、`artifactPaths.specs.existingOutputPaths` に
+   デルタ仕様があるすべての機能について、この手順の先頭から比較を再実行します。同期が成功すれば
+   適用対象は残らないため、各機能が同期済みと判定されなければなりません:
+   - ADDED要件が存在する
+   - MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映され、その他のシナリオは維持されている
+   - REMOVED要件が存在しない
+   - RENAMED要件が新しい名前で存在し、古い名前では存在しない
 
-   If the sync failed, or any capability does not match, report what differs and stop — do not archive. Nothing has moved and `changeRoot` is intact, so the user can fix the mismatch or re-run the sync and start the archive again.
+   同期に失敗した場合や、いずれかの機能が一致しない場合は差異を報告して停止し、archiveしません。
+   何も移動されず `changeRoot` も維持されるため、ユーザーは不一致を修正するか同期を再実行して、
+   archiveを最初からやり直せます。
 
 5. **アーカイブを実行します**
 
@@ -131,7 +135,9 @@ metadata:
    mkdir -p "<planningHome.changesDir>/archive"
    ```
 
-   Generate the target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<change-name>`. Never stack a second date (same rule as `openspec archive`).
+   対象名を生成します。変更名がすでに `YYYY-MM-DD-` で始まる場合はそのまま使用し、
+   それ以外は現在の日付を `YYYY-MM-DD-<change-name>` として先頭に付けます。
+   2つ目の日付を重ねてはいけません（`openspec archive` と同じ規則）。
 
 **ターゲットが既に存在するかどうかを確認します:**
 - 「はい」の場合: エラーで失敗します。既存のアーカイブの名前を変更するか、別の日付を使用することを提案します。
@@ -153,27 +159,27 @@ metadata:
 **成功時の出力**
 
 ```markdown
-## Archive Complete
+## Archive完了
 
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/<target-name>/
-**Specs:** <"✓ Synced to main specs" only if the step 4 verification passed; otherwise "No delta specs" or "Sync skipped">
+**変更:** <change-name>
+**スキーマ:** <schema-name>
+**archive先:** `planningHome.changesDir` から導出したarchiveパス/<target-name>/
+**仕様:** <手順4の検証に成功した場合のみ「✓ メイン仕様へ同期済み」、それ以外は「デルタ仕様なし」または「同期をスキップ」>
 
-<"All artifacts complete. All tasks complete." — or, if archived with warnings, list them instead (e.g. "Archived with 2 incomplete tasks")>
+<「すべてのアーティファクトとタスクが完了」— または警告付きでarchiveした場合は、その一覧（例:「未完了タスク2件を含めてarchive」）>
 ```
 
-**Guardrails**
-- Announce the selected change; prompt for selection when it is ambiguous
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven)
-- Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving `changeRoot`
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting
-- Apply relevant runtime context and report conflicts; operation guidance remains advisory
-- Consider every guidance entry and explain any inapplicable or conflicting advice
-- Existing CLI checks, resolved paths, prompts, and command contracts are unchanged
-- Artifact rules constrain only the specs being written and are never operation guidance
-- Never copy runtime context, operation guidance, or artifact-rule text verbatim into output files
+**ガードレール**
+- 選択した変更を伝え、曖昧な場合は選択を求める
+- 完了検査にはアーティファクトグラフ（`openspec status --json`）を使用する
+- 警告だけでarchiveをブロックせず、内容を伝えて確認する
+- archiveへ移動するときも `.openspec.yaml` を維持する（ディレクトリとともに移動する）
+- 実行内容の明確な概要を表示する
+- 同期を求められた場合は、`openspec-sync-specs` ワークフローをインラインで実行する
+- 仕様同期の実行中にarchiveしない。同期をインライン実行し、`changeRoot` の移動前にメイン仕様を検証する
+- デルタ仕様があれば必ず同期評価を実行し、選択を求める前に統合した概要を表示する
+- 関連する実行時contextを適用して競合を報告する。operation guidanceは参考情報のままとする
+- すべてのガイダンス項目を検討し、適用不能または競合する助言の理由を説明する
+- 既存のCLI検査、解決済みパス、プロンプト、コマンドの契約を変更しない
+- アーティファクトルールは書き込む仕様だけを制約し、operation guidanceとして扱わない
+- 実行時context、operation guidance、アーティファクトルールの本文を出力ファイルへそのままコピーしない

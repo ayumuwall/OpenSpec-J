@@ -32,10 +32,10 @@ export const DESCRIPTION_BUDGET = 17;
  * then implement.
  */
 const ONBOARDING_COMMANDS: readonly OnboardingCommand[] = [
-  { workflow: 'propose', command: '/opsx:propose', description: 'Start a change' },
-  { workflow: 'new', command: '/opsx:new', description: 'Scaffold a change' },
-  { workflow: 'continue', command: '/opsx:continue', description: 'Next artifact' },
-  { workflow: 'apply', command: '/opsx:apply', description: 'Implement tasks' },
+  { workflow: 'propose', command: '/opsx:propose', description: '変更を開始' },
+  { workflow: 'new', command: '/opsx:new', description: '変更のひな形を作成' },
+  { workflow: 'continue', command: '/opsx:continue', description: '次のアーティファクト' },
+  { workflow: 'apply', command: '/opsx:apply', description: 'タスクを実装' },
 ];
 
 /**

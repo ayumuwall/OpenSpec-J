@@ -82,7 +82,7 @@ export class ChangeCommand {
     const proposalPath = path.join(changeDir, 'proposal.md');
 
     if (!isChangeDirectoryName(changesPath, changeDir)) {
-      throw new Error(`Change "${changeName}" not found at ${proposalPath}`);
+      throw new Error(`変更 "${changeName}" が ${proposalPath} に見つかりません`);
     }
 
     try {

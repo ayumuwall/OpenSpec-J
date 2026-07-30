@@ -694,7 +694,7 @@ export async function offerCliUpgrade(latestVersion: string): Promise<UpgradeOut
   let accepted = false;
   try {
     accepted = await confirm({
-      message: `Upgrade to v${latestVersion} now?`,
+      message: `今すぐ v${latestVersion} へアップグレードしますか？`,
       default: true,
     });
   } catch (error) {
@@ -708,8 +708,8 @@ export async function offerCliUpgrade(latestVersion: string): Promise<UpgradeOut
   console.log();
 
   if (!installed) {
-    console.log(chalk.yellow('The upgrade did not complete. A global install may need'));
-    console.log(chalk.yellow('elevated permissions, or a different package manager.'));
+    console.log(chalk.yellow('アップグレードが完了しませんでした。グローバルインストールには'));
+    console.log(chalk.yellow('管理者権限または別のパッケージマネージャーが必要な場合があります。'));
     return 'failed';
   }
 
@@ -717,7 +717,7 @@ export async function offerCliUpgrade(latestVersion: string): Promise<UpgradeOut
   const version = await readCliVersion(binPath ?? 'openspec');
 
   if (!version) {
-    console.log(chalk.yellow('Upgrade finished, but no "openspec" could be run to confirm it.'));
+    console.log(chalk.yellow('アップグレードは完了しましたが、確認のための "openspec" を実行できませんでした。'));
     return 'not-on-path';
   }
   if (compareVersions(version, OPENSPEC_VERSION) <= 0) {
@@ -773,8 +773,8 @@ export async function rerunUpdateWithUpgradedCli(
     child.on('error', () => {
       // Nothing to hand off to: the upgrade landed but the instruction files
       // are still the old ones, so this run did not do what was asked.
-      console.log(chalk.yellow('Instruction files were not regenerated.'));
-      console.log(chalk.dim('  Run "openspec update" to pick up the new workflows.'));
+      console.log(chalk.yellow('指示ファイルは再生成されませんでした。'));
+      console.log(chalk.dim('  新しいワークフローを反映するには "openspec update" を実行してください。'));
       resolve(1);
     });
     // A child killed by a signal reports no code; that is not success.

@@ -25,7 +25,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'no-animation',
-        description: 'Show a static welcome screen instead of the animated one',
+        description: 'アニメーションの代わりに静的なウェルカム画面を表示',
       },
     ],
   },

@@ -34,14 +34,14 @@ export const ProjectConfigSchema = z.object({
   schema: z
     .string()
     .min(1)
-    .describe('The workflow schema to use (e.g., "spec-driven")'),
+    .describe('使用するワークフロースキーマ（例: "spec-driven"）'),
 
   // Optional: project context (injected into all artifact instructions)
   // Max size: 50KB (enforced during parsing)
   context: z
     .string()
     .optional()
-    .describe('Project context injected into all artifact instructions'),
+    .describe('全アーティファクト指示へ注入するプロジェクトコンテキスト'),
 
   // Optional: per-artifact rules (additive to schema's built-in guidance)
   rules: z
@@ -72,7 +72,7 @@ export const ProjectConfigSchema = z.object({
   store: z
     .string()
     .optional()
-    .describe('Store id used as the OpenSpec root when no local planning shape exists'),
+    .describe('ローカルの planning 構造がない場合に OpenSpec ルートとして使用する store ID'),
 });
 
 /** Normalized in-memory shape of a referenced store declaration. */
