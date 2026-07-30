@@ -1,8 +1,10 @@
 # コマンド
 
-これは OpenSpec のスラッシュコマンドのリファレンスです。これらのコマンドは、Claude Code、Cursor、Windsurf などの AI コーディングアシスタントのチャットで実行します。
+これはOpenSpecのスラッシュコマンドのリファレンスです。これらのコマンドは、Claude Code、Cursor、Devin Desktopなど、AIコーディングアシスタントのチャットで実行します。
 
 ワークフローパターンと各コマンドを使うタイミングは [ワークフロー](workflows.md) を参照してください。CLI コマンドについては [CLI](cli.md) を参照してください。
+
+このページでは `/opsx:<command>` を標準表記として使います。ツールによって表記が異なり、CursorとGitHub Copilotは `/opsx-propose`、Codexは `$openspec-propose` を使います。使用ツールの表記は[呼び出し方法](supported-tools.md#how-to-invoke)で確認してください。OpenSpecが生成するファイルでは、すでに正しい形式が使われています。
 
 ## クイックリファレンス
 
@@ -205,7 +207,7 @@ AI:  変更: add-dark-mode
      ✓ proposal    (完了)
      ◆ specs       (準備完了)
      ◆ design      (準備完了)
-     ○ tasks       (ブロック中 - 必要: specs)
+     ○ tasks       (ブロック中 - 必要: specs, design)
 
      specs を作成しています...
 
@@ -213,7 +215,7 @@ AI:  変更: add-dark-mode
 
      ✓ openspec/changes/add-dark-mode/specs/ui/spec.md を作成しました
 
-     次に利用可能: tasks
+     次に利用可能: design
      次のアーティファクトを作成するには /opsx:continue を実行してください。
 ```
 
@@ -665,17 +667,17 @@ AI:  OpenSpec へようこそ！
 
 AI ツールが異なれば、使用するコマンド構文も若干異なります。ツールに一致する形式を使用してください。
 
-|ツール |構文例 |
-|------|----------------|
-| Claude Code | `/opsx:propose`、`/opsx:apply` |
-| Cursor | `/opsx-propose`、`/opsx-apply` |
-| Windsurf | `/opsx-propose`、`/opsx-apply` |
-| Copilot (IDE) | `/opsx-propose`、`/opsx-apply` |
-| Oh My Pi | `/opsx-propose`、`/opsx-apply` |
-| Kimi CLI | `/skill:openspec-propose`、`/skill:openspec-apply-change` などのスキルベースの呼び出し（`opsx-*` コマンドファイルは生成されません） |
-| Trae | `/opsx-propose`、`/opsx-apply` |
+| ツールのコマンドファイル | 構文例 | ツール例 |
+|--------------------------|--------|----------|
+| `.../commands/opsx/<id>.*` | `/opsx:propose`, `/opsx:apply` | Claude Code、Gemini CLI、Crush |
+| `.../opsx-<id>.*` | `/opsx-propose`, `/opsx-apply` | Cursor、Devin Desktop、Copilot (IDE)、Trae、Oh My Pi |
+| なし（スキルのみ） | `/openspec-propose`, `/openspec-apply-change` | CodeArts、ForgeCode、Hermes、Mistral Vibe |
+| なし（Kimi Code） | `/skill:openspec-propose` | Kimi Code |
+| なし（Codex CLI） | `$openspec-propose` | Codex |
 
-目的はどのツールでも同じですが、コマンドの表示方法は統合によって異なる場合があります。
+> **Devin DesktopとDevin Local:** `.devin/workflows/opsx-*.md` により、Devin Desktopでは `/opsx-propose` を使えます。Devin Localにはワークフローがないため、OpenSpecが `.devin/skills/` に作成する `/openspec-propose` などのスキルを使ってください。これらは両方のエージェントで動作します。
+
+目的はどのツールでも同じですが、コマンドの表示方法は連携先によって異なります。[呼び出し方法](supported-tools.md#how-to-invoke)に全対応ツールを掲載し、この表では形式ごとの例だけを示しています。
 
 > **注意:** GitHub Copilot コマンド（`.github/prompts/*.prompt.md`）は、IDE 拡張機能（VS Code、JetBrains、Visual Studio）でのみ使用できます。GitHub Copilot CLI は現在、カスタムプロンプトファイルをサポートしていません。詳細と回避策は [サポートされているツール](supported-tools.md) を参照してください。
 

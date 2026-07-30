@@ -54,7 +54,7 @@ OpenSpec の用語を 1 か所にまとめ、平易な言葉で定義してい�
 
 **コマンドファイル。** ツールごとのスラッシュコマンドファイルです（`.../commands/opsx-*`）。スキルと並んで、従来の配信方式として引き続きサポートされています。通常、直接触る必要はありません。
 
-**プロファイル。** プロジェクトにインストールするスラッシュコマンドのセット。**core**（デフォルト）は `propose`、`explore`、`apply`、`sync`、`archive` を含みます。拡張セットでは `new`、`continue`、`ff`、`verify`、`bulk-archive`、`onboard` も利用できます。変更するには `openspec config profile` を実行します。
+**プロファイル。** プロジェクトにインストールするスラッシュコマンドのセット。**core**（デフォルト）は `propose`、`explore`、`apply`、`update`、`sync`、`archive` を含みます。**expanded** セットでは `new`、`continue`、`ff`、`verify`、`bulk-archive`、`onboard` も利用できます。変更するには `openspec config profile` を実行します。
 
 **配信。** OpenSpec がツールにスキル、コマンドファイル、またはその両方をインストールするかを表す設定です。グローバル設定で管理し、`openspec update` で適用します。
 

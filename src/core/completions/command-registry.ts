@@ -23,6 +23,10 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         takesValue: true,
         values: ['core', 'custom'],
       },
+      {
+        name: 'no-animation',
+        description: 'Show a static welcome screen instead of the animated one',
+      },
     ],
   },
   {
@@ -63,7 +67,9 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   {
     name: 'view',
     description: '仕様と変更の対話型ダッシュボードを表示',
-    flags: [],
+    flags: [
+      COMMON_FLAGS.store,
+    ],
   },
   {
     name: 'validate',
@@ -178,7 +184,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'instructions',
-    description: 'アーティファクト作成またはタスク適用用の補足付き指示を出力',
+    description: 'アーティファクト作成、適用、アーカイブ用の補足付き指示を出力',
     acceptsPositional: true,
     positionals: [{ name: 'artifact', optional: true }],
     flags: [

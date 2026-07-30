@@ -8,7 +8,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 | 項目 | 旧ワークフロー | OPSX |
 |--------|--------|------|
-| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:apply`, `/opsx:sync`, `/opsx:archive`（拡張ワークフローコマンドは任意） |
+| **コマンド** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | 既定: `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:update`, `/opsx:sync`, `/opsx:archive`（拡張ワークフローコマンドは任意） |
 | **進め方** | すべてのアーティファクトを一括作成 | 段階的にも一括でも選べる |
 | **やり直し** | フェーズゲートがあり戻りづらい | いつでもアーティファクトを更新可能 |
 | **カスタマイズ** | 固定構造 | スキーマ駆動で自由に拡張 |
@@ -43,10 +43,11 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 - Claude Code: `.claude/commands/openspec/`
 - Cursor: `.cursor/commands/openspec-*.md`
-- Windsurf: `.windsurf/workflows/openspec-*.md`
+- Devin Desktop, formerly Windsurf: `.windsurf/workflows/openspec-*.md`
 - Cline: `.clinerules/workflows/openspec-*.md`
 - Roo: `.roo/commands/openspec-*.md`
 - GitHub Copilot: `.github/prompts/openspec-*.prompt.md`（IDE 拡張機能のみ。Copilot CLI は非対応）
+- Codex: `.codex/skills/openspec-*`。旧ファイルの削除対象は `$CODEX_HOME/prompts` または `~/.codex/prompts` にあるOpenSpec管理対象の許可済みプロンプト名だけで、代替スキルが存在する場合にのみ削除されます。
 - ほか（Augment, Continue, Amazon Q など）
 
 移行処理は、設定済みツールを検出して旧ファイルを整理します。
@@ -84,7 +85,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 
 `openspec init` と `openspec update` はどちらも旧ファイルを検出し、同じクリーンアップを案内します。用途に合わせて選んでください。
 
-- 新規インストールでは、既定で `core` プロファイル（`propose`, `explore`, `apply`, `sync`, `archive`）が設定されます。
+- 新規インストールでは、既定で `core` プロファイル（`propose`, `explore`, `apply`, `update`, `sync`, `archive`）が設定されます。
 - 既存環境の移行では、必要に応じて `custom` プロファイルを生成し、これまで入っていたワークフロー構成を維持します。
 
 ### `openspec init` を使う
@@ -156,6 +157,8 @@ openspec init --force --tools claude
 ```
 
 `--force` はプロンプトを省略し、クリーンアップを自動承認します。
+
+This includes cleanup of OpenSpec-managed Codex prompt files in the global Codex prompt directory. Cleanup only targets OpenSpec's allowlisted legacy Codex prompt filenames, removes them only after replacement `.codex/skills/openspec-*` skills exist, and preserves all other files.
 
 ---
 
@@ -287,6 +290,8 @@ AI が「必須 vs 削減」の判断を手伝います。
 | `/opsx:propose` | 変更を作成し、計画用アーティファクトを一度に生成する |
 | `/opsx:explore` | 形式なしでアイデアを整理 |
 | `/opsx:apply` | `tasks.md` のタスクを実装 |
+| `/opsx:update` | 変更の計画アーティファクトを更新し、整合性を保つ |
+| `/opsx:sync` | 仕様差分を本仕様へ統合する |
 | `/opsx:archive` | 変更を確定・アーカイブ |
 
 **拡張ワークフロー（追加選択時）:**
@@ -297,7 +302,6 @@ AI が「必須 vs 削減」の判断を手伝います。
 | `/opsx:continue` | 次のアーティファクトを 1 つずつ作る |
 | `/opsx:ff` | 計画アーティファクトを一括生成 |
 | `/opsx:verify` | 実装が仕様に合うか検証 |
-| `/opsx:sync` | 仕様差分を本仕様へ統合する |
 | `/opsx:bulk-archive` | 複数変更を一括アーカイブ |
 | `/opsx:onboard` | 変更の開始から完了までをガイド付きで体験する |
 
@@ -406,6 +410,8 @@ OPSX は新しい **Skills** 標準を使います:
 ```
 
 Skills は複数の AI ツールで認識され、より豊富なメタデータを提供します。
+
+Codex is skills-only in OPSX. OpenSpec no longer generates Codex custom prompt files; use the generated `.codex/skills/openspec-*` directories instead.
 
 ---
 
@@ -561,8 +567,10 @@ project/
 │       ├── openspec-propose/     # 既定の core プロファイル
 │       ├── openspec-explore/
 │       ├── openspec-apply-change/
+│       ├── openspec-update-change/
 │       ├── openspec-sync-specs/
-│       └── ...                   # 拡張プロファイルでは new/continue/ff 等も追加
+│       ├── openspec-archive-change/
+│       └── ...                   # expandedプロファイルではnew/continue/ffなども追加
 ├── CLAUDE.md                     # OpenSpec マーカーを削除、内容は保持
 └── AGENTS.md                     # OpenSpec マーカーを削除、内容は保持
 ```

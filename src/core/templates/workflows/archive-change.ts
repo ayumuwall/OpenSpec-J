@@ -19,28 +19,58 @@ ${STORE_SELECTION_GUIDANCE}
 
 **手順**
 
-1. **変更名が指定されていない場合は、選択を求めるプロンプトが表示されます**
+1. **Select the change**
 
-\`openspec list --json\` を実行して、利用可能な変更を取得します。 **AskUserQuestion ツール**を使用して、ユーザーに選択させます。
+   If a name is provided, use it. Otherwise:
+   - Infer from conversation context if the user mentioned a change
+   - Auto-select if only one active change exists
+   - If ambiguous, run \`openspec list --json\` to get available changes and ask the user to select one
 
-アクティブな変更 (まだアーカイブされていない) のみを表示します。
-可能な場合は、各変更に使用されたスキーマを含めます。
+   When prompting, show only active changes (not already archived).
+   Include the schema used for each change if available.
 
-**重要**: 変更を推測したり自動選択したりしないでください。常にユーザーに選択してもらいます。
+   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:archive <other>\`).
+
+   **Load current archive inputs before the existing archive checks:**
+
+   After resolving the selected change and planning root, run:
+   \`\`\`bash
+   openspec instructions archive --change "<name>" --json
+   \`\`\`
+   Keep the same selected-root flags on this command. This lookup is advisory and
+   optional: it only supplies extra prompt inputs, so it must never block archiving.
+   If it exits non-zero or returns invalid JSON — for example on an older CLI that
+   does not support this command yet — continue the archive workflow with no
+   context and no operation guidance. Do not report an error and do not stop.
+
+   A successful response may omit both optional fields. Treat \`context\` as a
+   required prompt-level input: read and consider it, and apply relevant project
+   facts, conventions, and constraints. Treat \`operationGuidance\` as optional
+   additive advice: read and consider every entry, and follow entries that are
+   applicable and compatible with the built-in archive workflow.
+
+   Keep both fields separate from built-in steps, explicit user choices, resolved
+   paths, CLI checks, and command contracts. If context conflicts with one of those
+   controlling inputs, report the conflict and preserve the controlling value. If
+   guidance is inapplicable or conflicts with a controlling input, do not follow it
+   and explain why. Do not infer replacement paths, skipped prompts, or flags from
+   either field, and do not copy their text verbatim into specs, change artifacts,
+   or archive summaries unless the user separately asks for it. These are
+   prompt-level behavior contracts, not enforceable checks.
 
 2. **アーティファクトの完了ステータスを確認します**
 
 \`openspec status --change "<name>" --json\` を実行して、アーティファクトの完了を確認します。
 
-JSON を解析して以下を理解します。
-- \`schemaName\`: 使用されているワークフロー
-- \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、および \`actionContext\`: パス​​とスコープのコンテキスト
-- \`artifacts\`: アーティファクトとそのステータスのリスト (\`done\` またはその他)
+   Parse the JSON to understand:
+   - \`schemaName\`: The workflow being used
+   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context
+   - \`artifacts\`: List of artifacts with their status (\`done\`, \`skipped\`, or other)
 
-**いずれかのアーティファクトが \`done\` ではない場合:**
-- 不完全なアーティファクトをリストした警告を表示します
-- **AskUserQuestion ツール**を使用して、ユーザーが続行を希望していることを確認します
-- ユーザーが確認したら続行します
+   **If any artifacts are neither \`done\` nor \`skipped\`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
+   - Display warning listing incomplete artifacts
+   - Ask the user to confirm they want to proceed
+   - Proceed if user confirms
 
 3. **タスクの完了ステータスを確認します**
 
@@ -48,27 +78,53 @@ JSON を解析して以下を理解します。
 
 \`- [ ]\` (未完了) と \`- [x]\` (完了) でマークされたタスクを数えます。
 
-**不完全なタスクが見つかった場合:**
-- 未完了のタスクの数を示す警告を表示します
-- **AskUserQuestion ツール**を使用して、ユーザーが続行を希望していることを確認します
-- ユーザーが確認したら続行します
+   **If incomplete tasks found:**
+   - Display warning showing count of incomplete tasks
+   - Ask the user to confirm they want to proceed
+   - Proceed if user confirms
 
 **タスク ファイルが存在しない場合:** タスク関連の警告なしで続行します。
 
 4. **デルタ仕様の同期状態を評価します**
 
-ステータス JSON から \`artifactPaths.specs.existingOutputPaths\` を使用して、デルタ仕様を確認します。存在しない場合は、同期プロンプトを表示せずに続行します。
+   Use \`artifactPaths.specs.existingOutputPaths\` from status JSON as the only
+   delta-spec source. If the \`specs\` entry is missing or
+   \`existingOutputPaths\` is empty, proceed without a sync prompt and do not infer
+   delta specs from other artifacts.
 
-**デルタ仕様が存在する場合:**
-- 各デルタ仕様を \`openspec/specs/<capability>/spec.md\` で対応するメイン仕様と比較します。
-- どのような変更が適用されるかを決定します (追加、変更、削除、名前変更)。
-- プロンプトの前に結合された概要を表示する
+   **If delta specs exist:**
+   - Compare each delta spec with its corresponding main spec at \`<planningHome.root>/openspec/specs/<capability>/spec.md\` (use the store-aware \`planningHome.root\` from step 2, not a hardcoded repo path)
+   - Determine what changes would be applied (adds, modifications, removals, renames)
+   - Show a combined summary before prompting
 
 **プロンプトオプション:**
 - 変更が必要な場合: 「今すぐ同期 (推奨)」、「同期せずにアーカイブ」
 - すでに同期されている場合: 「今すぐアーカイブ」、「とにかく同期」、「キャンセル」
 
-ユーザーが同期を選択した場合は、タスク ツールを使用します (subagent_type: 「汎用」、プロンプト: 「スキル ツールを使用して、'<name>' を変更するために openspec-sync-specs を呼び出します。デルタ仕様分析: <分析されたデルタ仕様の概要を含める>」)。選択に関係なくアーカイブに進みます。
+   Route on the answer:
+   - "Cancel" — stop, do not archive
+   - "Archive without syncing" or "Archive now" — proceed to archive
+   - "Sync now" or "Sync anyway" — sync, then verify (below)
+   - Anything else — ask again rather than archiving
+
+   Before a selected sync writes any main spec, run
+   \`openspec instructions specs --change "<name>" --json\` once with the same
+   selected-root flags. Require a zero exit status and valid artifact-instruction
+   JSON. If the lookup fails or returns invalid JSON, report the error and stop
+   before writing any main spec or moving the change. A valid response with omitted
+   \`rules\` is the no-rules case. Apply returned \`rules\` only to the content and
+   form of main specs produced by this merge; do not use them as archive guidance,
+   change CLI behavior, or copy the rule text into any output file.
+
+   Then run the \`openspec-sync-specs\` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching \`specs\` instructions again. Do not delegate it to a background task — step 5 would move \`changeRoot\` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
+
+   Then re-run the comparison from the top of this step against every capability that has a delta spec in \`artifactPaths.specs.existingOutputPaths\` — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
+   - ADDED requirements present
+   - MODIFIED requirements carrying the scenario and description changes named in the delta, with their other scenarios intact
+   - REMOVED requirements gone
+   - RENAMED requirements present under the new name and absent under the old one
+
+   If the sync failed, or any capability does not match, report what differs and stop — do not archive. Nothing has moved and \`changeRoot\` is intact, so the user can fix the mismatch or re-run the sync and start the archive again.
 
 5. **アーカイブを実行します**
 
@@ -77,14 +133,14 @@ JSON を解析して以下を理解します。
    mkdir -p "<planningHome.changesDir>/archive"
    \`\`\`
 
-現在の日付を使用してターゲット名を生成します: \`YYYY-MM-DD-<change-name>\`
+   Generate the target name: use the change name as-is when it already starts with a \`YYYY-MM-DD-\` prefix; otherwise prepend the current date as \`YYYY-MM-DD-<change-name>\`. Never stack a second date (same rule as \`openspec archive\`).
 
 **ターゲットが既に存在するかどうかを確認します:**
 - 「はい」の場合: エラーで失敗します。既存のアーカイブの名前を変更するか、別の日付を使用することを提案します。
 - 「いいえ」の場合: \`changeRoot\` をアーカイブ ディレクトリに移動します。
 
    \`\`\`bash
-   mv "<changeRoot>" "<planningHome.changesDir>/archive/YYYY-MM-DD-<name>"
+   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
    \`\`\`
 
 6. **概要を表示**
@@ -98,25 +154,31 @@ JSON を解析して以下を理解します。
 
 **成功時の出力**
 
+\`\`\`markdown
+## Archive Complete
+
+**Change:** <change-name>
+**Schema:** <schema-name>
+**Archived to:** the archive path derived from \`planningHome.changesDir\`/<target-name>/
+**Specs:** <"✓ Synced to main specs" only if the step 4 verification passed; otherwise "No delta specs" or "Sync skipped">
+
+<"All artifacts complete. All tasks complete." — or, if archived with warnings, list them instead (e.g. "Archived with 2 incomplete tasks")>
 \`\`\`
-## アーカイブ完了
 
-**変更:** <change-name>
-**スキーマ:** <schema-name>
-**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
-**仕様:** ✓ 本仕様へ同期済み（または「delta spec なし」「同期をスキップ」）
-
-すべてのアーティファクトが完了しています。すべてのタスクが完了しています。
-\`\`\`
-
-**ガードレール**
-- 指定されていない場合は、常に変更の選択を求めるプロンプトが表示されます
-- 完了チェックにアーティファクト グラフ (openspec status --json) を使用する
-- 警告時にアーカイブをブロックしないでください - 通知して確認するだけです
-- アーカイブに移動するときに .openspec.yaml を保持します (ディレクトリと一緒に移動します)。
-- 何が起こったのかを明確に要約する
-- 同期が要求された場合は、openspec-sync-specs アプローチを使用します (エージェント主導)
-- delta spec が存在する場合は、確認前に必ず同期評価を実行し、統合サマリーを表示する`,
+**Guardrails**
+- Announce the selected change; prompt for selection when it is ambiguous
+- Use artifact graph (openspec status --json) for completion checking
+- Don't block archive on warnings - just inform and confirm
+- Preserve .openspec.yaml when moving to archive (it moves with the directory)
+- Show clear summary of what happened
+- If sync is requested, run the \`openspec-sync-specs\` workflow inline (agent-driven)
+- Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving \`changeRoot\`
+- If delta specs exist, always run the sync assessment and show the combined summary before prompting
+- Apply relevant runtime context and report conflicts; operation guidance remains advisory
+- Consider every guidance entry and explain any inapplicable or conflicting advice
+- Existing CLI checks, resolved paths, prompts, and command contracts are unchanged
+- Artifact rules constrain only the specs being written and are never operation guidance
+- Never copy runtime context, operation guidance, or artifact-rule text verbatim into output files`,
     license: 'MIT',
     compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
@@ -137,28 +199,58 @@ ${STORE_SELECTION_GUIDANCE}
 
 **手順**
 
-1. **変更名が指定されていない場合は、選択を求めるプロンプトが表示されます**
+1. **Select the change**
 
-\`openspec list --json\` を実行して、利用可能な変更を取得します。 **AskUserQuestion ツール**を使用して、ユーザーに選択させます。
+   If a name is provided, use it. Otherwise:
+   - Infer from conversation context if the user mentioned a change
+   - Auto-select if only one active change exists
+   - If ambiguous, run \`openspec list --json\` to get available changes and ask the user to select one
 
-アクティブな変更 (まだアーカイブされていない) のみを表示します。
-可能な場合は、各変更に使用されたスキーマを含めます。
+   When prompting, show only active changes (not already archived).
+   Include the schema used for each change if available.
 
-**重要**: 変更を推測したり自動選択したりしないでください。常にユーザーに選択してもらいます。
+   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:archive <other>\`).
+
+   **Load current archive inputs before the existing archive checks:**
+
+   After resolving the selected change and planning root, run:
+   \`\`\`bash
+   openspec instructions archive --change "<name>" --json
+   \`\`\`
+   Keep the same selected-root flags on this command. This lookup is advisory and
+   optional: it only supplies extra prompt inputs, so it must never block archiving.
+   If it exits non-zero or returns invalid JSON — for example on an older CLI that
+   does not support this command yet — continue the archive workflow with no
+   context and no operation guidance. Do not report an error and do not stop.
+
+   A successful response may omit both optional fields. Treat \`context\` as a
+   required prompt-level input: read and consider it, and apply relevant project
+   facts, conventions, and constraints. Treat \`operationGuidance\` as optional
+   additive advice: read and consider every entry, and follow entries that are
+   applicable and compatible with the built-in archive workflow.
+
+   Keep both fields separate from built-in steps, explicit user choices, resolved
+   paths, CLI checks, and command contracts. If context conflicts with one of those
+   controlling inputs, report the conflict and preserve the controlling value. If
+   guidance is inapplicable or conflicts with a controlling input, do not follow it
+   and explain why. Do not infer replacement paths, skipped prompts, or flags from
+   either field, and do not copy their text verbatim into specs, change artifacts,
+   or archive summaries unless the user separately asks for it. These are
+   prompt-level behavior contracts, not enforceable checks.
 
 2. **アーティファクトの完了ステータスを確認します**
 
 \`openspec status --change "<name>" --json\` を実行して、アーティファクトの完了を確認します。
 
-JSON を解析して以下を理解します。
-- \`schemaName\`: 使用されているワークフロー
-- \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、および \`actionContext\`: パス​​とスコープのコンテキスト
-- \`artifacts\`: アーティファクトとそのステータスのリスト (\`done\` またはその他)
+   Parse the JSON to understand:
+   - \`schemaName\`: The workflow being used
+   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context
+   - \`artifacts\`: List of artifacts with their status (\`done\`, \`skipped\`, or other)
 
-**いずれかのアーティファクトが \`done\` ではない場合:**
-- 不完全なアーティファクトをリストした警告を表示します
-- 続行するにはユーザーに確認を求めるプロンプトを表示します
-- ユーザーが確認したら続行します
+   **If any artifacts are neither \`done\` nor \`skipped\`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
+   - Display warning listing incomplete artifacts
+   - Prompt user for confirmation to continue
+   - Proceed if user confirms
 
 3. **タスクの完了ステータスを確認します**
 
@@ -175,18 +267,44 @@ JSON を解析して以下を理解します。
 
 4. **デルタ仕様の同期状態を評価します**
 
-ステータス JSON から \`artifactPaths.specs.existingOutputPaths\` を使用して、デルタ仕様を確認します。存在しない場合は、同期プロンプトを表示せずに続行します。
+   Use \`artifactPaths.specs.existingOutputPaths\` from status JSON as the only
+   delta-spec source. If the \`specs\` entry is missing or
+   \`existingOutputPaths\` is empty, proceed without a sync prompt and do not infer
+   delta specs from other artifacts.
 
-**デルタ仕様が存在する場合:**
-- 各デルタ仕様を \`openspec/specs/<capability>/spec.md\` で対応するメイン仕様と比較します。
-- どのような変更が適用されるかを決定します (追加、変更、削除、名前変更)。
-- プロンプトの前に結合された概要を表示する
+   **If delta specs exist:**
+   - Compare each delta spec with its corresponding main spec at \`<planningHome.root>/openspec/specs/<capability>/spec.md\` (use the store-aware \`planningHome.root\` from step 2, not a hardcoded repo path)
+   - Determine what changes would be applied (adds, modifications, removals, renames)
+   - Show a combined summary before prompting
 
 **プロンプトオプション:**
 - 変更が必要な場合: 「今すぐ同期 (推奨)」、「同期せずにアーカイブ」
 - すでに同期されている場合: 「今すぐアーカイブ」、「とにかく同期」、「キャンセル」
 
-ユーザーが同期を選択した場合は、タスク ツールを使用します (subagent_type: 「汎用」、プロンプト: 「スキル ツールを使用して、'<name>' を変更するために openspec-sync-specs を呼び出します。デルタ仕様分析: <分析されたデルタ仕様の概要を含める>」)。選択に関係なくアーカイブに進みます。
+   Route on the answer:
+   - "Cancel" — stop, do not archive
+   - "Archive without syncing" or "Archive now" — proceed to archive
+   - "Sync now" or "Sync anyway" — sync, then verify (below)
+   - Anything else — ask again rather than archiving
+
+   Before a selected sync writes any main spec, run
+   \`openspec instructions specs --change "<name>" --json\` once with the same
+   selected-root flags. Require a zero exit status and valid artifact-instruction
+   JSON. If the lookup fails or returns invalid JSON, report the error and stop
+   before writing any main spec or moving the change. A valid response with omitted
+   \`rules\` is the no-rules case. Apply returned \`rules\` only to the content and
+   form of main specs produced by this merge; do not use them as archive guidance,
+   change CLI behavior, or copy the rule text into any output file.
+
+   Then run the \`/opsx:sync\` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching \`specs\` instructions again. Do not delegate it to a background task — step 5 would move \`changeRoot\` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
+
+   Then re-run the comparison from the top of this step against every capability that has a delta spec in \`artifactPaths.specs.existingOutputPaths\` — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
+   - ADDED requirements present
+   - MODIFIED requirements carrying the scenario and description changes named in the delta, with their other scenarios intact
+   - REMOVED requirements gone
+   - RENAMED requirements present under the new name and absent under the old one
+
+   If the sync failed, or any capability does not match, report what differs and stop — do not archive. Nothing has moved and \`changeRoot\` is intact, so the user can fix the mismatch or re-run the sync and start the archive again.
 
 5. **アーカイブを実行します**
 
@@ -195,14 +313,14 @@ JSON を解析して以下を理解します。
    mkdir -p "<planningHome.changesDir>/archive"
    \`\`\`
 
-現在の日付を使用してターゲット名を生成します: \`YYYY-MM-DD-<change-name>\`
+   Generate the target name: use the change name as-is when it already starts with a \`YYYY-MM-DD-\` prefix; otherwise prepend the current date as \`YYYY-MM-DD-<change-name>\`. Never stack a second date (same rule as \`openspec archive\`).
 
 **ターゲットが既に存在するかどうかを確認します:**
 - 「はい」の場合: エラーで失敗します。既存のアーカイブの名前を変更するか、別の日付を使用することを提案します。
 - 「いいえ」の場合: \`changeRoot\` をアーカイブ ディレクトリに移動します。
 
    \`\`\`bash
-   mv "<changeRoot>" "<planningHome.changesDir>/archive/YYYY-MM-DD-<name>"
+   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
    \`\`\`
 
 6. **概要を表示**
@@ -216,39 +334,39 @@ JSON を解析して以下を理解します。
 
 **成功時の出力**
 
-\`\`\`
-## アーカイブ完了
+\`\`\`markdown
+## Archive Complete
 
-**変更:** <change-name>
-**スキーマ:** <schema-name>
-**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
-**仕様:** ✓ 本仕様へ同期済み
+**Change:** <change-name>
+**Schema:** <schema-name>
+**Archived to:** the archive path derived from \`planningHome.changesDir\`/<target-name>/
+**Specs:** ✓ Synced to main specs
 
 すべてのアーティファクトが完了しています。すべてのタスクが完了しています。
 \`\`\`
 
 **成功時の出力 (デルタ仕様なし)**
 
-\`\`\`
-## アーカイブ完了
+\`\`\`markdown
+## Archive Complete
 
-**変更:** <change-name>
-**スキーマ:** <schema-name>
-**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
-**仕様:** delta spec なし
+**Change:** <change-name>
+**Schema:** <schema-name>
+**Archived to:** the archive path derived from \`planningHome.changesDir\`/<target-name>/
+**Specs:** No delta specs
 
 すべてのアーティファクトが完了しています。すべてのタスクが完了しています。
 \`\`\`
 
 **成功時の出力と警告**
 
-\`\`\`
-## アーカイブ完了（警告あり）
+\`\`\`markdown
+## Archive Complete (with warnings)
 
-**変更:** <change-name>
-**スキーマ:** <schema-name>
-**アーカイブ先:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
-**仕様:** 同期をスキップ（ユーザーがスキップを選択）
+**Change:** <change-name>
+**Schema:** <schema-name>
+**Archived to:** the archive path derived from \`planningHome.changesDir\`/<target-name>/
+**Specs:** Sync skipped (user chose to skip)
 
 **警告:**
 - 未完了アーティファクト 2 件を含めてアーカイブしました
@@ -260,11 +378,11 @@ JSON を解析して以下を理解します。
 
 **エラー時の出力 (アーカイブが存在する)**
 
-\`\`\`
-## アーカイブ失敗
+\`\`\`markdown
+## Archive Failed
 
-**変更:** <change-name>
-**対象:** \`planningHome.changesDir\` から導出したアーカイブパス / YYYY-MM-DD-<name>/
+**Change:** <change-name>
+**Target:** the archive path derived from \`planningHome.changesDir\`/<target-name>/
 
 対象のアーカイブディレクトリは既に存在します。
 
@@ -274,13 +392,19 @@ JSON を解析して以下を理解します。
 3. 別の日付になるまで待ってアーカイブする
 \`\`\`
 
-**ガードレール**
-- 指定されていない場合は、常に変更の選択を求めるプロンプトが表示されます
-- 完了チェックにアーティファクト グラフ (openspec status --json) を使用する
-- 警告時にアーカイブをブロックしないでください - 通知して確認するだけです
-- アーカイブに移動するときに .openspec.yaml を保持します (ディレクトリと一緒に移動します)。
-- 何が起こったのかを明確に要約する
-- 同期が要求された場合は、スキル ツールを使用して \`openspec-sync-specs\` を呼び出します (エージェント主導)
-- delta spec が存在する場合は、必ず同期評価を実行し、確認前に統合サマリーを表示します`
+**Guardrails**
+- Announce the selected change; prompt for selection when it is ambiguous
+- Use artifact graph (openspec status --json) for completion checking
+- Don't block archive on warnings - just inform and confirm
+- Preserve .openspec.yaml when moving to archive (it moves with the directory)
+- Show clear summary of what happened
+- If sync is requested, run the \`/opsx:sync\` workflow inline (agent-driven)
+- Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving \`changeRoot\`
+- If delta specs exist, always run the sync assessment and show the combined summary before prompting
+- Apply relevant runtime context and report conflicts; operation guidance remains advisory
+- Consider every guidance entry and explain any inapplicable or conflicting advice
+- Existing CLI checks, resolved paths, prompts, and command contracts are unchanged
+- Artifact rules constrain only the specs being written and are never operation guidance
+- Never copy runtime context, operation guidance, or artifact-rule text verbatim into output files`
   };
 }

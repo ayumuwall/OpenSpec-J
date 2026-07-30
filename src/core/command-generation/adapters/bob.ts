@@ -7,13 +7,16 @@
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
-import { transformToHyphenCommands } from '../../../utils/command-references.js';
 import { escapeYamlValue } from '../yaml.js';
 
 /**
  * Bob Shell コマンド生成アダプター。
  * ファイルパス: .bob/commands/opsx-<id>.md
- * フロントマター: description, argument-hint
+ * Frontmatter: description
+ *
+ * Bobはファイル名（.mdを除く）をスラッシュコマンド名として使うため、
+ * opsx-propose.md → /opsx-propose となる。generateCommandはアダプターで
+ * 整形する前に、本文中のコマンド参照をこの形式へ変換する。
  */
 export const bobAdapter: ToolCommandAdapter = {
   toolId: 'bob',
@@ -23,15 +26,12 @@ export const bobAdapter: ToolCommandAdapter = {
   },
 
   formatFile(content: CommandContent): string {
-    // コロン形式のコマンド参照をハイフン形式に変換（Bob 用）
-    const transformedBody = transformToHyphenCommands(content.body);
-
     return `---
 description: ${escapeYamlValue(content.description)}
 argument-hint: コマンド引数
 ---
 
-${transformedBody}
+${content.body}
 `;
   },
 };

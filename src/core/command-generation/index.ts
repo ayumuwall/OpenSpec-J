@@ -30,4 +30,4 @@ export { CommandAdapterRegistry } from './registry.js';
 export { generateCommand, generateCommands } from './generator.js';
 
 // アダプター（直接参照が必要な場合）
-export { claudeAdapter, cursorAdapter, windsurfAdapter } from './adapters/index.js';
+export { claudeAdapter, cursorAdapter, devinAdapter } from './adapters/index.js';

@@ -13,11 +13,12 @@ import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { classifyOpenSpecDir, storePointerProblem } from './project-config.js';
 import { findRepoPlanningRootSync } from './planning-home.js';
-import { transformToHyphenCommands } from '../utils/command-references.js';
+import { getSkillReferenceTransformer, getTransformerForTool } from '../utils/command-references.js';
 import {
   AI_TOOLS,
   OPENSPEC_DIR_NAME,
   AIToolOption,
+  resolveToolIdAlias,
 } from './config.js';
 import { PALETTE } from './styles/palette.js';
 import { isInteractive } from '../utils/interactive.js';
@@ -30,7 +31,11 @@ import {
   detectLegacyArtifacts,
   cleanupLegacyArtifacts,
   formatCleanupSummary,
+  formatDeferredGlobalPromptSummary,
   formatDetectionSummary,
+  getLegacyGlobalPromptMatches,
+  omitGlobalLegacyPromptFiles,
+  pickGlobalLegacyPromptFiles,
   type LegacyDetectionResult,
 } from './legacy-cleanup.js';
 import {
@@ -46,7 +51,15 @@ import {
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
 import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
-import { migrateIfNeeded } from './migration.js';
+import { migrateIfNeeded, migrateLegacyToolDirs, describeLegacyMigration, keptInPlaceNotice, hasMovableContent, scanInstalledWorkflows as scanInstalledWorkflowsShared } from './migration.js';
+import {
+  resolveCommandSurfaceCapability,
+  resolveCommandInvocation,
+  shouldGenerateCommandsForTool,
+  shouldGenerateSkillsForTool,
+  shouldReconcileCommandFilesForTool,
+  shouldRemoveSkillsForTool,
+} from './command-surface.js';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -86,6 +99,16 @@ type InitCommandOptions = {
   force?: boolean;
   interactive?: boolean;
   profile?: string;
+  /** Commander's --no-animation flag: false disables the welcome animation. */
+  animation?: boolean;
+};
+
+/**
+ * Holds the global Codex prompt matches that must wait until replacement skills
+ * are generated before cleanup can continue.
+ */
+type DeferredLegacyCleanup = {
+  detection: LegacyDetectionResult;
 };
 
 // -----------------------------------------------------------------------------
@@ -97,12 +120,14 @@ export class InitCommand {
   private readonly force: boolean;
   private readonly interactiveOption?: boolean;
   private readonly profileOverride?: string;
+  private readonly animation: boolean;
 
   constructor(options: InitCommandOptions = {}) {
     this.toolsArg = options.tools;
     this.force = options.force ?? false;
     this.interactiveOption = options.interactive;
     this.profileOverride = options.profile;
+    this.animation = options.animation ?? true;
   }
 
   async execute(targetPath: string): Promise<void> {
@@ -140,8 +165,11 @@ export class InitCommand {
       }
     }
 
-    // 旧ファイルを検出してクリーンアップを処理する
-    await this.handleLegacyCleanup(projectPath, extendMode);
+    // 旧ファイルを検出し、クリーンアップを処理する
+    const deferredLegacyCleanup = await this.handleLegacyCleanup(projectPath, extendMode);
+
+    // 名称変更前のツールディレクトリに残るOpenSpec管理スキルを検出前に移行する。
+    migrateLegacyToolDirs(projectPath);
 
     // プロジェクトで利用可能なツールを検出する
     const detectedTools = getAvailableTools(projectPath);
@@ -151,16 +179,15 @@ export class InitCommand {
       migrateIfNeeded(projectPath, detectedTools);
     }
 
+    // profile上書きを早期検証し、ツール設定前に無効値を拒否する。
+    this.resolveProfileOverride();
+
     // アニメーション付きウェルカム画面（対話モードのみ）
     const canPrompt = this.canPromptInteractively();
     if (canPrompt) {
       const { showWelcomeScreen } = await import('../ui/welcome-screen.js');
-      await showWelcomeScreen();
+      await showWelcomeScreen(this.getActiveWorkflows(), { animate: this.animation });
     }
-
-    // プロファイルオーバーライドを早期に検証する（ツール設定前に無効な値を弾く）
-    // 解決値はコード生成時に実際に使用される
-    this.resolveProfileOverride();
 
     // 処理前にツール状態を取得
     const toolStates = getToolStates(projectPath);
@@ -171,11 +198,31 @@ export class InitCommand {
     // 選択されたツールを検証
     const validatedTools = this.validateTools(selectedToolIds, toolStates);
 
+    // Selecting a renamed tool is consent to leave its former directory:
+    // init is about to write the current one, and leaving OpenSpec content
+    // behind would give the user two installs of the same tool.
+    for (const migration of migrateLegacyToolDirs(
+      projectPath,
+      validatedTools.map((tool) => tool.value)
+    )) {
+      if (hasMovableContent(migration)) {
+        console.log(chalk.dim(`${describeLegacyMigration(migration)} を移行しました: ${migration.from} → ${migration.to}`));
+      }
+      const kept = keptInPlaceNotice(migration);
+      if (kept) console.log(chalk.dim(kept));
+    }
+
     // ディレクトリ構成と設定を作成
     await this.createDirectoryStructure(openspecPath, extendMode);
 
     // 各ツールのスキル/コマンドを生成
     const results = await this.generateSkillsAndCommands(projectPath, validatedTools);
+
+    // Legacy cleanup was deferred to avoid interfering with skill/command generation;
+    // now that outputs are written, finalize the cleanup (e.g. remove stale files).
+    if (deferredLegacyCleanup) {
+      await this.finalizeDeferredLegacyCleanup(projectPath, deferredLegacyCleanup);
+    }
 
     // 必要なら config.yaml を作成
     const configStatus = await this.createConfig(openspecPath, extendMode);
@@ -219,31 +266,56 @@ export class InitCommand {
     throw new Error(`無効なプロファイル "${this.profileOverride}"。利用可能なプロファイル: core, custom`);
   }
 
+  /**
+   * Resolves the workflows the effective profile installs, so onboarding output
+   * only mentions commands that will actually exist.
+   */
+  private getActiveWorkflows(): string[] {
+    const globalCfg = getGlobalConfig();
+    const activeProfile: Profile = this.resolveProfileOverride() ?? globalCfg.profile ?? 'core';
+    return [...getProfileWorkflows(activeProfile, globalCfg.workflows)];
+  }
+
   // ═══════════════════════════════════════════════════════════
   // 旧ファイルのクリーンアップ
   // ═══════════════════════════════════════════════════════════
 
-  private async handleLegacyCleanup(projectPath: string, extendMode: boolean): Promise<void> {
-    // 旧ファイルを検出
+  /**
+   * リポジトリ内の旧ファイルを直ちに削除し、グローバルCodexプロンプトの削除は
+   * 代替スキルのインストール後まで遅延する。
+   */
+  private async handleLegacyCleanup(projectPath: string, extendMode: boolean): Promise<DeferredLegacyCleanup | null> {
     const detection = await detectLegacyArtifacts(projectPath);
 
     if (!detection.hasLegacyArtifacts) {
-      return; // 旧ファイルが見つからない場合は何もしない
+      return null;
     }
 
+    const immediateDetection = omitGlobalLegacyPromptFiles(detection);
+
     // 検出内容を表示
-    console.log();
-    console.log(formatDetectionSummary(detection));
-    console.log();
+    const immediateSummary = formatDetectionSummary(immediateDetection);
+    if (immediateSummary) {
+      console.log();
+      console.log(immediateSummary);
+      console.log();
+    }
+
+    // 代替スキルの生成後まで削除を遅延するグローバルプロンプトを表示
+    const deferredSummary = formatDeferredGlobalPromptSummary(detection);
+    if (deferredSummary) {
+      console.log(deferredSummary);
+      console.log();
+    }
 
     const canPrompt = this.canPromptInteractively();
 
     if (this.force || !canPrompt) {
-      // --force 指定または非対話モードでは自動クリーンアップで続行する。
-      // 旧スラッシュコマンドは OpenSpec 管理下で、設定ファイルのクリーンアップも
-      // マーカー除去のみなので、自動実行してよい。
-      await this.performLegacyCleanup(projectPath, detection);
-      return;
+      // --force flag or non-interactive mode: proceed with cleanup automatically.
+      // Legacy slash commands are 100% OpenSpec-managed, and config file cleanup
+      // only removes markers (never deletes files), so auto-cleanup is safe.
+      await this.performImmediateLegacyCleanup(projectPath, detection);
+      return detection.globalSlashCommandFiles.length > 0 ? { detection } : null;
     }
 
     // 対話モード: 確認プロンプトを表示
@@ -259,7 +331,71 @@ export class InitCommand {
       process.exit(0);
     }
 
-    await this.performLegacyCleanup(projectPath, detection);
+    await this.performImmediateLegacyCleanup(projectPath, detection);
+    return detection.globalSlashCommandFiles.length > 0 ? { detection } : null;
+  }
+
+  /**
+   * Applies the safe subset of legacy cleanup that does not depend on newly
+   * generated Codex skills.
+   */
+  private async performImmediateLegacyCleanup(
+    projectPath: string,
+    detection: LegacyDetectionResult
+  ): Promise<void> {
+    const immediateDetection = omitGlobalLegacyPromptFiles(detection);
+    if (!immediateDetection.hasLegacyArtifacts) {
+      return;
+    }
+
+    await this.performLegacyCleanup(projectPath, immediateDetection);
+  }
+
+  /**
+   * Removes only the legacy global Codex prompts whose workflows now have
+   * replacement skills in the project.
+   */
+  private async finalizeDeferredLegacyCleanup(
+    projectPath: string,
+    deferredCleanup: DeferredLegacyCleanup
+  ): Promise<void> {
+    const availableCodexWorkflows = await this.getInstalledWorkflowsForTool(projectPath, 'codex');
+    const removableMatches = getLegacyGlobalPromptMatches(deferredCleanup.detection)
+      .filter((prompt) => prompt.workflowIds.every((workflowId) => availableCodexWorkflows.has(workflowId)));
+
+    if (removableMatches.length > 0) {
+      await this.performLegacyCleanup(
+        projectPath,
+        pickGlobalLegacyPromptFiles(
+          deferredCleanup.detection,
+          removableMatches.map((prompt) => prompt.path)
+        )
+      );
+    }
+
+    const blockedMatches = getLegacyGlobalPromptMatches(deferredCleanup.detection)
+      .filter((prompt) => !removableMatches.some((match) => match.path === prompt.path));
+
+    if (blockedMatches.length > 0) {
+      console.log(chalk.yellow('Preserved deferred global prompts without replacement skills:'));
+      for (const prompt of blockedMatches) {
+        console.log(chalk.dim(`  - ${prompt.toolId}: ${prompt.path}`));
+      }
+      console.log();
+    }
+  }
+
+  /**
+   * Reads the currently installed workflow IDs for a single tool from the
+   * generated skill layout on disk.
+   */
+  private async getInstalledWorkflowsForTool(projectPath: string, toolId: string): Promise<Set<string>> {
+    const tool = AI_TOOLS.find((candidate) => candidate.value === toolId);
+    if (!tool) {
+      return new Set<string>();
+    }
+
+    return new Set(scanInstalledWorkflowsShared(projectPath, [tool]));
   }
 
   private async performLegacyCleanup(projectPath: string, detection: LegacyDetectionResult): Promise<void> {
@@ -417,7 +553,9 @@ export class InitCommand {
       );
     }
 
-    const normalizedTokens = tokens.map((token) => token.toLowerCase());
+    // Retired ids resolve to their current tool, so a rebrand does not break
+    // an existing `--tools windsurf` in someone's setup script.
+    const normalizedTokens = tokens.map((token) => resolveToolIdAlias(token.toLowerCase()));
 
     if (normalizedTokens.some((token) => token === 'all' || token === 'none')) {
       throw new Error('予約値 "all" / "none" を特定のツールIDと併用できません。');
@@ -521,6 +659,14 @@ export class InitCommand {
   // スキル/コマンド生成
   // ═══════════════════════════════════════════════════════════
 
+  /**
+   * Generates skill files and slash commands for each selected tool,
+   * honoring the configured delivery mode (skills, commands, or both).
+   *
+   * @param projectPath - Absolute path to the project root
+   * @param tools - Selected tools with their skill directory metadata
+   * @returns Created, refreshed, and failed tools plus removed artifact counts
+   */
   private async generateSkillsAndCommands(
     projectPath: string,
     tools: Array<{ value: string; name: string; skillsDir: string; wasConfigured: boolean }>
@@ -529,6 +675,7 @@ export class InitCommand {
     refreshedTools: typeof tools;
     failedTools: Array<{ name: string; error: Error }>;
     commandsSkipped: string[];
+    skillsInvocableCommandSkips: string[];
     removedCommandCount: number;
     removedSkillCount: number;
   }> {
@@ -536,6 +683,7 @@ export class InitCommand {
     const refreshedTools: typeof tools = [];
     const failedTools: Array<{ name: string; error: Error }> = [];
     const commandsSkipped: string[] = [];
+    const skillsInvocableCommandSkips: string[] = [];
     let removedCommandCount = 0;
     let removedSkillCount = 0;
 
@@ -545,18 +693,20 @@ export class InitCommand {
     const delivery: Delivery = globalConfig.delivery ?? 'both';
     const workflows = getProfileWorkflows(profile, globalConfig.workflows);
 
-    // プロファイルのワークフローでフィルタリングしたスキル/コマンドテンプレートを取得
-    const shouldGenerateSkills = delivery !== 'commands';
-    const shouldGenerateCommands = delivery !== 'skills';
-    const skillTemplates = shouldGenerateSkills ? getSkillTemplates(workflows) : [];
-    const commandContents = shouldGenerateCommands ? getCommandContents(workflows) : [];
+    // Get skill and command templates filtered by profile workflows
+    const deliveryIncludesCommands = delivery !== 'skills';
+    const skillTemplates = getSkillTemplates(workflows);
+    const commandContents = getCommandContents(workflows);
 
     // ツールごとに処理する
     for (const tool of tools) {
       const spinner = ora(`${tool.name} をセットアップ中...`).start();
 
       try {
-        // デリバリーにスキルが含まれる場合はスキルファイルを生成する
+        const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
+        const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
+
+        // deliveryとツール機能で許可される場合にスキルファイルを生成
         if (shouldGenerateSkills) {
           // ツール固有の skillsDir を使う
           const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
@@ -566,16 +716,20 @@ export class InitCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // generatedBy を含む YAML フロントマター付き SKILL.md を生成する。
-            // Use hyphen-based command references for tools where filename === command name (oh-my-pi, opencode, pi)
-            const transformer = (tool.value === 'opencode' || tool.value === 'pi' || tool.value === 'oh-my-pi') ? transformToHyphenCommands : undefined;
+            // generatedByを含むYAMLフロントマター付きSKILL.mdを生成
+            const transformer = getTransformerForTool(
+              tool.value,
+              delivery,
+              resolveCommandSurfaceCapability(tool.value),
+              resolveCommandInvocation(tool.value)
+            );
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
             // スキルファイルを書き込む
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
         }
-        if (!shouldGenerateSkills) {
+        if (shouldRemoveSkillsForTool(tool.value, delivery)) {
           const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
           removedSkillCount += await this.removeSkillDirs(skillsDir);
         }
@@ -590,11 +744,15 @@ export class InitCommand {
               const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
               await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
             }
+          }
+        } else if (deliveryIncludesCommands) {
+          if (resolveCommandSurfaceCapability(tool.value) === 'skills-invocable') {
+            skillsInvocableCommandSkips.push(tool.value);
           } else {
             commandsSkipped.push(tool.value);
           }
         }
-        if (!shouldGenerateCommands) {
+        if (shouldReconcileCommandFilesForTool(tool.value, delivery)) {
           removedCommandCount += await this.removeCommandFiles(projectPath, tool.value);
         }
 
@@ -616,6 +774,7 @@ export class InitCommand {
       refreshedTools,
       failedTools,
       commandsSkipped,
+      skillsInvocableCommandSkips,
       removedCommandCount,
       removedSkillCount,
     };
@@ -657,6 +816,7 @@ export class InitCommand {
       refreshedTools: typeof tools;
       failedTools: Array<{ name: string; error: Error }>;
       commandsSkipped: string[];
+      skillsInvocableCommandSkips: string[];
       removedCommandCount: number;
       removedSkillCount: number;
     },
@@ -682,8 +842,12 @@ export class InitCommand {
       const delivery: Delivery = globalConfig.delivery ?? 'both';
       const workflows = getProfileWorkflows(profile, globalConfig.workflows);
       const toolDirs = [...new Set(successfulTools.map((t) => t.skillsDir))].join(', ');
-      const skillCount = delivery !== 'commands' ? getSkillTemplates(workflows).length : 0;
-      const commandCount = delivery !== 'skills' ? getCommandContents(workflows).length : 0;
+      const skillCount = successfulTools.some((tool) => shouldGenerateSkillsForTool(tool.value, delivery))
+        ? getSkillTemplates(workflows).length
+        : 0;
+      const commandCount = successfulTools.some((tool) => shouldGenerateCommandsForTool(tool.value, delivery))
+        ? getCommandContents(workflows).length
+        : 0;
       if (skillCount > 0 && commandCount > 0) {
         console.log(`${skillCount} 個のスキルと ${commandCount} 個のコマンドを ${toolDirs}/ に生成しました`);
       } else if (skillCount > 0) {
@@ -702,11 +866,22 @@ export class InitCommand {
     if (results.commandsSkipped.length > 0) {
       console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
     }
+    if (results.skillsInvocableCommandSkips.length > 0) {
+      console.log(chalk.dim(`Commands skipped for: ${results.skillsInvocableCommandSkips.join(', ')} (uses skills)`));
+    }
     if (results.removedCommandCount > 0) {
       console.log(chalk.dim(`削除: ${results.removedCommandCount} 個のコマンドファイル（delivery: skills）`));
     }
     if (results.removedSkillCount > 0) {
       console.log(chalk.dim(`削除: ${results.removedSkillCount} 個のスキルディレクトリ（delivery: commands）`));
+    }
+
+    // 追加設定が必要なツールの手動セットアップ案内を表示
+    for (const tool of successfulTools) {
+      const setupNote = AI_TOOLS.find((t) => t.value === tool.value)?.setupNote;
+      if (setupNote) {
+        console.log(chalk.yellow(`${tool.name} のセットアップが必要です: ${setupNote}`));
+      }
     }
 
     // 設定ファイルの状態
@@ -722,17 +897,83 @@ export class InitCommand {
       console.log(chalk.dim('設定: スキップ（非対話モード）'));
     }
 
-    // はじめに（propose がプロファイルに含まれる場合は propose を優先表示）
-    const globalCfg = getGlobalConfig();
-    const activeProfile: Profile = (this.profileOverride as Profile) ?? globalCfg.profile ?? 'core';
-    const activeWorkflows = [...getProfileWorkflows(activeProfile, globalCfg.workflows)];
+    // はじめに（プロファイルに含まれる場合はproposeを優先）
+    const activeWorkflows = this.getActiveWorkflows();
+    // When no tool got /opsx:* commands, point at the skill instead of a
+    // command that does not exist.
+    const activeDelivery: Delivery = getGlobalConfig().delivery ?? 'both';
+    const commandsGenerated = successfulTools.some((tool) => shouldGenerateCommandsForTool(tool.value, activeDelivery));
+    const skillsGenerated = successfulTools.some((tool) => shouldGenerateSkillsForTool(tool.value, activeDelivery));
+    // Each hint line must be a usable instruction for the tool it serves.
+    // Tools that generated commands are told the command name their files
+    // answer to (/opsx:* when namespaced under opsx/, /opsx-* when the
+    // filename is the command); tools that only got skills are told their
+    // documented skill invocation (Kimi Code: /skill:openspec-*; Codex CLI:
+    // $openspec-*; others: /openspec-*). Tools that got no artifacts are
+    // covered by the configuration correction instead. When the selection
+    // disagrees, print one line per distinct instruction, labeled with the
+    // tools it applies to.
+    const startHintLines = (command: string): string[] => {
+      const hintToTools = new Map<string, string[]>();
+      for (const tool of successfulTools) {
+        let hint: string;
+        if (shouldGenerateCommandsForTool(tool.value, activeDelivery)) {
+          const transformer = getTransformerForTool(
+            tool.value,
+            activeDelivery,
+            resolveCommandSurfaceCapability(tool.value),
+            resolveCommandInvocation(tool.value)
+          );
+          hint = `最初の変更を開始: ${transformer ? transformer(command) : command} "あなたのアイデア"`;
+        } else if (shouldGenerateSkillsForTool(tool.value, activeDelivery)) {
+          hint = `最初の変更を開始: ${getSkillReferenceTransformer(tool.value)(command)} "あなたのアイデア"`;
+        } else {
+          continue;
+        }
+        hintToTools.set(hint, [...(hintToTools.get(hint) ?? []), tool.name]);
+      }
+      if (hintToTools.size === 0) {
+        // No successful tools: keep the generic command hint
+        return [`最初の変更を開始: ${command} "あなたのアイデア"`];
+      }
+      if (hintToTools.size === 1) {
+        return [[...hintToTools.keys()][0]];
+      }
+      return [...hintToTools.entries()].map(([hint, toolNames]) => `${hint} (${toolNames.join(', ')})`);
+    };
+    const printStartHints = (command: string): void => {
+      console.log(chalk.bold('はじめに:'));
+      for (const line of startHintLines(command)) {
+        console.log(`  ${line}`);
+      }
+    };
     console.log();
-    if (activeWorkflows.includes('propose')) {
-      console.log(chalk.bold('はじめに:'));
-      console.log('  最初の変更を開始: /opsx:propose "あなたのアイデア"');
+    // delivery=commands with tools that only support skills: those tools get
+    // no artifacts at all, so print a per-tool configuration correction
+    // rather than leave them with a dead (or missing) instruction — even
+    // when other selected tools did get commands or skills.
+    const zeroArtifactTools = successfulTools.filter(
+      (tool) =>
+        !shouldGenerateSkillsForTool(tool.value, activeDelivery) &&
+        !shouldGenerateCommandsForTool(tool.value, activeDelivery)
+    );
+    if (zeroArtifactTools.length > 0) {
+      const names = zeroArtifactTools.map((tool) => tool.name).join(', ');
+      console.log(
+        chalk.yellow(
+          `${names} 向けのスキルまたはコマンドは生成されませんでした。deliveryが 'commands' ですが、` +
+            `対象ツールはスキルだけに対応しています。スキルを生成するには ` +
+            `'openspec config set delivery both' を実行してください。`
+        )
+      );
+    }
+    if (successfulTools.length > 0 && !commandsGenerated && !skillsGenerated) {
+      // Nothing was generated for any tool: the correction above is the
+      // whole story, so don't advertise an invocation that doesn't exist.
+    } else if (activeWorkflows.includes('propose')) {
+      printStartHints('/opsx:propose');
     } else if (activeWorkflows.includes('new')) {
-      console.log(chalk.bold('はじめに:'));
-      console.log('  最初の変更を開始: /opsx:new "あなたのアイデア"');
+      printStartHints('/opsx:new');
     } else {
       console.log("完了。ワークフローを設定するには 'openspec config profile' を実行してください。");
     }
@@ -742,10 +983,20 @@ export class InitCommand {
     console.log(`詳細: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J')}`);
     console.log(`フィードバック: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J/issues')}`);
 
-    // いずれかのツールを設定した場合は再起動案内を表示
-    if (results.createdTools.length > 0 || results.refreshedTools.length > 0) {
+    // Restart instruction if any tools were configured and got a surface
+    // (when nothing was generated there is nothing a restart would pick up);
+    // only mention commands when commands were actually generated. Not "slash
+    // commands": Amazon Q's generated files are prompt-library entries invoked
+    // with @, so a restart line promising slash commands would be wrong for it.
+    if ((results.createdTools.length > 0 || results.refreshedTools.length > 0) && (commandsGenerated || skillsGenerated)) {
       console.log();
-      console.log(chalk.white('スラッシュコマンドを有効にするには IDE を再起動してください。'));
+      console.log(
+        chalk.white(
+          commandsGenerated
+            ? '新しいコマンドを有効にするにはIDEを再起動してください。'
+            : '新しいスキルを有効にするにはIDEを再起動してください。'
+        )
+      );
     }
 
     console.log();

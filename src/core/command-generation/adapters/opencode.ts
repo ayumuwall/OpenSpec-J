@@ -6,7 +6,7 @@
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
-import { transformToHyphenCommands } from '../../../utils/command-references.js';
+import { escapeYamlValue } from '../yaml.js';
 
 /**
  * OpenCode のコマンド生成アダプター。
@@ -21,14 +21,11 @@ export const opencodeAdapter: ToolCommandAdapter = {
   },
 
   formatFile(content: CommandContent): string {
-    // OpenCode 向けにコマンド参照をコロン形式からハイフン形式へ変換する
-    const transformedBody = transformToHyphenCommands(content.body);
-
     return `---
-description: ${content.description}
+description: ${escapeYamlValue(content.description)}
 ---
 
-${transformedBody}
+${content.body}
 `;
   },
 };

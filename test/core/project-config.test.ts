@@ -3,6 +3,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import {
+  loadOperationInputs,
+  OPERATION_IDS,
   readProjectConfig,
   validateConfigRules,
   suggestSchemas,
@@ -68,6 +70,199 @@ rules:
         expect(consoleWarnSpy).not.toHaveBeenCalled();
       });
 
+      it('should parse apply and archive operation guidance independently from rules', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  specs:
+    - Preserve requirement IDs
+operations:
+  apply:
+    guidance:
+      - Keep test summaries concise
+  archive:
+    guidance:
+      - Summarize the archive outcome
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          rules: { specs: ['Preserve requirement IDs'] },
+          operations: {
+            apply: { guidance: ['Keep test summaries concise'] },
+            archive: { guidance: ['Summarize the archive outcome'] },
+          },
+        });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should omit operations when the field is absent', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: spec-driven\n');
+
+        expect(readProjectConfig(tempDir)?.operations).toBeUndefined();
+      });
+
+      it('should preserve a valid operation when another operation is malformed', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Valid context
+operations:
+  apply:
+    guidance:
+      - Run focused tests first
+  archive:
+    guidance: not-an-array
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          context: 'Valid context',
+          operations: {
+            apply: { guidance: ['Run focused tests first'] },
+          },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Guidance for operation 'archive' must be an array of strings")
+        );
+      });
+
+      it('should ignore a non-object operations field without discarding other fields', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+context: Valid context
+operations:
+  - apply
+`
+        );
+
+        expect(readProjectConfig(tempDir)).toEqual({
+          schema: 'spec-driven',
+          context: 'Valid context',
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Invalid 'operations' field")
+        );
+      });
+
+      it('should ignore malformed operation entries independently', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+operations:
+  apply: invalid
+  archive:
+    guidance:
+      - Keep the summary concise
+`
+        );
+
+        expect(readProjectConfig(tempDir)?.operations).toEqual({
+          archive: { guidance: ['Keep the summary concise'] },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Invalid 'operations.apply' field")
+        );
+      });
+
+      it('should warn for unknown operation IDs and fields while preserving valid guidance', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+operations:
+  deploy:
+    guidance:
+      - Deploy carefully
+  apply:
+    guidance:
+      - Run tests
+    replacementInstruction: Skip validation
+`
+        );
+
+        expect(readProjectConfig(tempDir)?.operations).toEqual({
+          apply: { guidance: ['Run tests'] },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Unknown operation ID 'deploy'")
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Unknown field(s) in 'operations.apply': replacementInstruction")
+        );
+      });
+
+      it('should filter empty guidance and omit operations with no non-empty guidance', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+operations:
+  apply:
+    guidance:
+      - ""
+      - Run tests
+      - ""
+  archive:
+    guidance:
+      - ""
+`
+        );
+
+        expect(readProjectConfig(tempDir)?.operations).toEqual({
+          apply: { guidance: ['Run tests'] },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Some guidance for operation 'apply' are empty strings")
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Some guidance for operation 'archive' are empty strings")
+        );
+      });
+
+      it('should preserve multi-line and Markdown guidance without rewriting it', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+operations:
+  apply:
+    guidance:
+      - |-
+        **Verification**
+        - Run focused tests
+        - Preserve \`--store\`
+      - "Keep [links](https://example.com) intact"
+`
+        );
+
+        expect(readProjectConfig(tempDir)?.operations?.apply?.guidance).toEqual([
+          '**Verification**\n- Run focused tests\n- Preserve `--store`',
+          'Keep [links](https://example.com) intact',
+        ]);
+      });
+
       it('should return partial config when schema is invalid', () => {
         const configDir = path.join(tempDir, 'openspec');
         fs.mkdirSync(configDir, { recursive: true });
@@ -90,7 +285,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'schema' フィールドが不正です（空でない文字列が必要）")
+          expect.stringContaining("Invalid 'schema' field")
         );
       });
 
@@ -116,7 +311,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'context' フィールドが不正です（文字列が必要）")
+          expect.stringContaining("Invalid 'context' field")
         );
       });
 
@@ -138,7 +333,7 @@ rules: ["not", "an", "object"]
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'rules' フィールドが不正です（オブジェクトが必要）")
+          expect.stringContaining("Invalid 'rules' field")
         );
       });
 
@@ -162,7 +357,7 @@ rules:
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("config の 'rules' フィールドが不正です（オブジェクトが必要）")
+          expect.stringContaining("Invalid 'rules' field")
         );
       });
 
@@ -191,7 +386,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("'specs' のルールは文字列配列である必要があります。このアーティファクトのルールは無視します")
+          expect.stringContaining("Rules for 'specs' must be an array of strings")
         );
       });
 
@@ -219,7 +414,7 @@ rules:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("'proposal' のルールに空文字があるため無視します")
+          expect.stringContaining("Some rules for 'proposal' are empty strings")
         );
       });
 
@@ -275,7 +470,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('openspec/config.yaml は有効な YAML オブジェクトではありません')
+          expect.stringContaining('not a valid YAML object')
         );
       });
 
@@ -386,7 +581,7 @@ rules:
 
         expect(config?.context).toBe(smallContext);
         expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます')
+          expect.stringContaining('Context too large')
         );
       });
 
@@ -404,10 +599,10 @@ rules:
         expect(config).toEqual({ schema: 'spec-driven' });
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます (51.0KB, 上限: 50KB)')
+          expect.stringContaining('Context too large (51.0KB, limit: 50KB)')
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('context フィールドを無視します')
+          expect.stringContaining('Ignoring context field')
         );
       });
 
@@ -424,7 +619,7 @@ rules:
 
         expect(config?.context).toBe(exactContext);
         expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます')
+          expect.stringContaining('Context too large')
         );
       });
 
@@ -445,7 +640,7 @@ context: |
 
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('context が大きすぎます')
+          expect.stringContaining('Context too large')
         );
       });
     });
@@ -568,6 +763,49 @@ rules:
     });
   });
 
+  describe('loadOperationInputs', () => {
+    it('matches only the requested operation and never exposes artifact rules', () => {
+      const config = {
+        schema: 'spec-driven',
+        context: 'Project background',
+        rules: { specs: ['Artifact-only rule'] },
+        operations: {
+          apply: { guidance: ['Apply guidance'] },
+          archive: { guidance: ['Archive guidance'] },
+        },
+      };
+
+      expect(OPERATION_IDS).toEqual(['apply', 'archive']);
+      expect(loadOperationInputs(config, 'apply')).toEqual({
+        context: 'Project background',
+        operationGuidance: ['Apply guidance'],
+      });
+      expect(loadOperationInputs(config, 'archive')).toEqual({
+        context: 'Project background',
+        operationGuidance: ['Archive guidance'],
+      });
+      expect(JSON.stringify(loadOperationInputs(config, 'apply'))).not.toContain(
+        'Artifact-only rule'
+      );
+    });
+
+    it('omits empty optional inputs', () => {
+      expect(
+        loadOperationInputs(
+          {
+            schema: 'spec-driven',
+            context: '',
+            operations: {
+              apply: {},
+            },
+          },
+          'apply'
+        )
+      ).toEqual({});
+      expect(loadOperationInputs(null, 'archive')).toEqual({});
+    });
+  });
+
   describe('validateConfigRules', () => {
     it('should return no warnings for valid artifact IDs', () => {
       const rules = {
@@ -577,7 +815,7 @@ rules:
       };
       const validIds = new Set(['proposal', 'specs', 'design', 'tasks']);
 
-      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+      const warnings = validateConfigRules(rules, validIds);
 
       expect(warnings).toEqual([]);
     });
@@ -590,12 +828,26 @@ rules:
       };
       const validIds = new Set(['proposal', 'specs', 'design', 'tasks']);
 
-      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+      const warnings = validateConfigRules(rules, validIds);
 
       expect(warnings).toHaveLength(2);
-      expect(warnings[0]).toContain('rules 内の不明なアーティファクトID: "testplan"');
-      expect(warnings[0]).toContain('スキーマ "spec-driven" の有効ID: design, proposal, specs, tasks');
-      expect(warnings[1]).toContain('rules 内の不明なアーティファクトID: "documentation"');
+      expect(warnings[0]).toContain('Unknown artifact ID in rules: "testplan"');
+      expect(warnings[0]).toContain('Known artifact IDs: design, proposal, specs, tasks');
+      expect(warnings[1]).toContain('Unknown artifact ID in rules: "documentation"');
+    });
+
+    it('should not warn for keys valid in another schema (union across schemas)', () => {
+      // `issue` is not a spec-driven artifact but is valid for a lighter
+      // schema; the union set contains it, so it must not warn.
+      const rules = {
+        proposal: ['Rule 1'], // spec-driven
+        issue: ['Rule 2'], // another schema
+      };
+      const unionIds = new Set(['proposal', 'specs', 'design', 'tasks', 'issue']);
+
+      const warnings = validateConfigRules(rules, unionIds);
+
+      expect(warnings).toEqual([]);
     });
 
     it('should return warnings for all unknown artifact IDs', () => {
@@ -606,7 +858,7 @@ rules:
       };
       const validIds = new Set(['proposal', 'specs']);
 
-      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+      const warnings = validateConfigRules(rules, validIds);
 
       expect(warnings).toHaveLength(3);
     });
@@ -615,7 +867,7 @@ rules:
       const rules = {};
       const validIds = new Set(['proposal', 'specs']);
 
-      const warnings = validateConfigRules(rules, validIds, 'spec-driven');
+      const warnings = validateConfigRules(rules, validIds);
 
       expect(warnings).toEqual([]);
     });
@@ -631,24 +883,24 @@ rules:
     it('should suggest close matches using fuzzy matching', () => {
       const message = suggestSchemas('spec-drven', availableSchemas); // Missing 'i'
 
-      expect(message).toContain("スキーマ 'spec-drven' が見つかりません");
-      expect(message).toContain('次のいずれかではありませんか？');
-      expect(message).toContain('spec-driven (組み込み)');
+      expect(message).toContain("Schema 'spec-drven' not found");
+      expect(message).toContain('Did you mean one of these?');
+      expect(message).toContain('spec-driven (built-in)');
     });
 
     it('should suggest custom-workflow for workflow typo', () => {
       const message = suggestSchemas('custom-workflo', availableSchemas);
 
-      expect(message).toContain('次のいずれかではありませんか？');
+      expect(message).toContain('Did you mean one of these?');
       expect(message).toContain('custom-workflow');
     });
 
     it('should list all available schemas', () => {
       const message = suggestSchemas('nonexistent', availableSchemas);
 
-      expect(message).toContain('利用可能なスキーマ:');
-      expect(message).toContain('組み込み: spec-driven');
-      expect(message).toContain('プロジェクトローカル: custom-workflow, team-process');
+      expect(message).toContain('Available schemas:');
+      expect(message).toContain('Built-in: spec-driven');
+      expect(message).toContain('Project-local: custom-workflow, team-process');
     });
 
     it('should handle case when no project-local schemas exist', () => {
@@ -657,15 +909,15 @@ rules:
       ];
       const message = suggestSchemas('invalid', builtInOnly);
 
-      expect(message).toContain('組み込み: spec-driven');
-      expect(message).toContain('プロジェクトローカル: (見つかりません)');
+      expect(message).toContain('Built-in: spec-driven');
+      expect(message).toContain('Project-local: (none found)');
     });
 
     it('should include fix instruction', () => {
       const message = suggestSchemas('wrong-schema', availableSchemas);
 
       expect(message).toContain(
-        "対処: openspec/config.yaml を編集し、'schema: wrong-schema' を有効なスキーマ名に変更してください"
+        "Fix: Edit openspec/config.yaml and change 'schema: wrong-schema' to a valid schema name"
       );
     });
 
@@ -689,8 +941,8 @@ rules:
       const message = suggestSchemas('abcdefghijk', availableSchemas);
 
       // 'abcdefghijk' has large Levenshtein distance from all schemas
-      expect(message).not.toContain('次のいずれかではありませんか？');
-      expect(message).toContain('利用可能なスキーマ:');
+      expect(message).not.toContain('Did you mean');
+      expect(message).toContain('Available schemas:');
     });
   });
 });

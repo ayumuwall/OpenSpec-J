@@ -7,7 +7,6 @@
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
-import { transformToHyphenCommands } from '../../../utils/command-references.js';
 import { escapeYamlValue } from '../yaml.js';
 
 const PI_INPUT_HEADING = /^\*\*Input\*\*:[^\n]*$/m;
@@ -29,8 +28,8 @@ function injectPiArgs(body: string): string {
  * Frontmatter: description
  *
  * Pi はファイル名（.md 除く）をスラッシュコマンド名として使用するため、
- * opsx-propose.md → /opsx-propose となる。本文中のコマンド参照は
- * /opsx: 形式から /opsx- 形式に変換する。
+ * opsx-propose.md → /opsx-propose となる。generateCommandはアダプターで
+ * 整形する前に、本文中のコマンド参照をこの形式へ変換する。
  */
 export const piAdapter: ToolCommandAdapter = {
   toolId: 'pi',
@@ -40,14 +39,11 @@ export const piAdapter: ToolCommandAdapter = {
   },
 
   formatFile(content: CommandContent): string {
-    // /opsx: 参照を /opsx- に変換し、テンプレート引数用 $@ を注入
-    const transformedBody = transformToHyphenCommands(content.body);
-
     return `---
 description: ${escapeYamlValue(content.description)}
 ---
 
-${injectPiArgs(transformedBody)}
+${injectPiArgs(content.body)}
 `;
   },
 };

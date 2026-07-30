@@ -15,4 +15,9 @@ export {
 export { FileSystemUtils, removeMarkerBlock } from './file-system.js';
 
 // コマンド参照のユーティリティ
-export { transformToHyphenCommands } from './command-references.js';
+export {
+  transformCommandInvocations,
+  transformToSkillReferences,
+  getSkillReferenceTransformer,
+  getTransformerForTool,
+} from './command-references.js';

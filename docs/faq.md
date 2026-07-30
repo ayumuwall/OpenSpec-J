@@ -22,7 +22,7 @@ AI アシスタントは、間違っていても自信を持って実装しが�
 
 ### それは 1 つの AI ツールに関連付けられていますか?
 
-いいえ。OpenSpec は Claude Code、Cursor、Windsurf、GitHub Copilot、Gemini CLI、Codex など、25 以上のアシスタントと連携します。完全な一覧とツールごとの詳細は、[サポートされているツール](supported-tools.md) を参照してください。
+いいえ。OpenSpecはClaude Code、Cursor、Devin Desktop、GitHub Copilot、Gemini CLI、Codexなど、30以上のアシスタントと連携します。完全な一覧とツールごとの詳細は、[サポートされているツール](supported-tools.md)を参照してください。
 
 ## コマンドの実行
 
@@ -36,11 +36,11 @@ AI アシスタントは、間違っていても自信を持って実装しが�
 
 ### スラッシュコマンドを入力しましたが、何も起こりませんでした。なぜ？
 
-AI チャットではなくターミナルに入力したか、コマンドがまだインストールされていない可能性があります。プロジェクトで `openspec update` を実行し、アシスタントを再起動してから、チャットで `/opsx` と入力してオートコンプリートを確認します。 [トラブルシューティング](troubleshooting.md#commands-dont-show-up)には完全なチェックリストがあります。
+AIチャットではなくターミナルへ入力した、ツールが認識しない表記を使った、またはコマンドが未インストールの可能性があります。ファイルがない、あるいはツールを未設定の場合は `openspec init` を実行してください。`openspec update` は既存ファイルだけを更新します。その後アシスタントを再起動し、「Getting started」に表示された形式を使ってください。詳しくは[呼び出し方法](supported-tools.md#how-to-invoke)と[トラブルシューティング](troubleshooting.md#commands-dont-show-up)を参照してください。
 
 ### あるツールでは構文 `/opsx:propose` が使用され、別のツールでは `/opsx-propose` が使用されるのはなぜですか?
 
-AI ツールごとに、カスタムコマンドの表示形式が少し異なります。意図は同じで、記号だけが変わります。チャットで `/` を入力すると、そのツールが期待する形式がオートコンプリートに表示されます。ツールごとの表は、[コマンドの仕組み](how-commands-work.md#slash-command-syntax-by-tool) を参照してください。
+AIツールごとにカスタムコマンドの表示形式が異なり、OpenSpecは生成先に合う表記を使います。`opsx-propose.md` というコマンドファイルは `/opsx-propose`、`commands/opsx/` 配下のファイルは `/opsx:propose` と入力します。コマンドではなくスキルを使うツールではスキル名を使い、Codexは `$openspec-propose`、Kimi Codeは `/skill:openspec-propose` です。`openspec init` の「Getting started」には選択したツール向けの形式が表示されます。完全な表は[呼び出し方法](supported-tools.md#how-to-invoke)を参照してください。
 
 ### スキルとコマンドの違いは何ですか?
 
@@ -66,7 +66,7 @@ AI ツールごとに、カスタムコマンドの表示形式が少し異な�
 
 ### `core` および拡張プロファイルとは何ですか?
 
-プロファイルは、どのスラッシュコマンドをインストールするかを決めます。**core**（デフォルト）では `propose`、`explore`、`apply`、`sync`、`archive` が使えます。拡張セットでは、より細かく制御するために `new`、`continue`、`ff`、`verify`、`bulk-archive`、`onboard` が追加されます。`openspec config profile` で切り替え、`openspec update` で適用します。
+プロファイルは、どのスラッシュコマンドをインストールするかを決めます。**core**（デフォルト）では `propose`、`explore`、`apply`、`update`、`sync`、`archive` が使えます。**expanded** セットでは、より細かく制御するために `new`、`continue`、`ff`、`verify`、`bulk-archive`、`onboard` が追加されます。`openspec config profile` で切り替え、`openspec update` で適用します。
 
 ### `/opsx:sync` を実行する必要がありますか?
 

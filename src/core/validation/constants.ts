@@ -26,9 +26,15 @@ export const VALIDATION_MESSAGES = {
   CHANGE_WHY_TOO_LONG: `Why セクションは ${MAX_WHY_SECTION_LENGTH} 文字を超えないでください`,
   CHANGE_WHAT_EMPTY: 'What Changes セクションは必須です',
   CHANGE_NO_DELTAS: '変更には少なくとも 1 つのデルタが必要です',
+  CHANGE_SKIP_SPECS_CONFLICT:
+    '.openspec.yaml に skip_specs が設定されていますが、specs/ 配下に仕様ファイルがあります。skip_specs または仕様差分ファイルを削除してください',
+  CHANGE_SKIP_SPECS_ACCEPTED:
+    '.openspec.yaml に skip_specs が設定されています。仕様レベルの振る舞いを変更しないため、仕様差分0件を受け入れました',
+  CHANGE_SKIP_SPECS_INVALID_METADATA:
+    'skip_specs が設定されていますが、.openspec.yaml が有効な変更メタデータではないため使用できません。メタデータを修正してください',
   CHANGE_TOO_MANY_DELTAS: `デルタが ${MAX_DELTAS_PER_CHANGE} 個を超える場合は分割を検討してください`,
-  DELTA_SPEC_EMPTY: '仕様名を空にはできません',
-  DELTA_DESCRIPTION_EMPTY: 'デルタの説明を空にはできません',
+  DELTA_SPEC_EMPTY: 'Spec name cannot be empty',
+  DELTA_DESCRIPTION_EMPTY: 'Delta description cannot be empty',
   
   // Warnings
   PURPOSE_TOO_BRIEF: `Purpose セクションが短すぎます（${MIN_PURPOSE_LENGTH} 文字未満）`,
@@ -42,7 +48,7 @@ export const VALIDATION_MESSAGES = {
   
   // Guidance snippets (appended to primary messages for remediation)
   GUIDE_NO_DELTAS:
-    'デルタが見つかりません。変更には specs/ ディレクトリ（例: specs/http-server/spec.md）とデルタヘッダー（## ADDED/MODIFIED/REMOVED/RENAMED Requirements）を使う .md ファイルを用意し、各要件に少なくとも 1 つの "#### Scenario:" ブロックを含めてください。ヒント: `openspec change show <change-id> --json --deltas-only` で解析結果を確認できます。',
+    'デルタが見つかりません。変更には specs/ ディレクトリ（例: specs/http-server/spec.md）とデルタヘッダー（## ADDED/MODIFIED/REMOVED/RENAMED Requirements）を使う .md ファイルを用意し、各要件に少なくとも 1 つの "#### Scenario:" ブロックを含めてください。仕様を意図的に変更しない場合（純粋なリファクタリング、ツール、文書）は、変更の .openspec.yaml に "skip_specs: true" を設定してください。ヒント: "openspec change show <change-id> --json --deltas-only" で解析結果を確認できます。',
   GUIDE_MISSING_SPEC_SECTIONS:
     '必須セクションが不足しています。必要な見出し: "## Purpose" と "## Requirements"。例:\n## Purpose\n[簡潔な目的]\n\n## Requirements\n### Requirement: 明確な要件文\nシステムは〜しなければならない。(SHALL)\n\n#### Scenario: シナリオ名\n- **WHEN** ...\n- **THEN** ...',
   GUIDE_MISSING_CHANGE_SECTIONS:

@@ -36,6 +36,7 @@ OPSX（流動的なアクション）:
 - `/opsx:explore`
 - `/opsx:propose`
 - `/opsx:apply`
+- `/opsx:update`
 - `/opsx:sync`
 - `/opsx:archive`
 

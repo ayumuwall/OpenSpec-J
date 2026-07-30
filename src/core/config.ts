@@ -16,6 +16,7 @@ export interface AIToolOption {
   successLabel?: string;
   skillsDir?: string; // 例: '.claude' - Agent Skills 仕様の /skills サフィックスを付与する
   detectionPaths?: string[]; // 自動検出用に skillsDir を上書きするパス群。どれかが存在すれば検出対象とみなす
+  setupNote?: string; // 生成ファイルをツールが認識する前に必要な手動設定。init/update後に表示する
 }
 
 export const AI_TOOLS: AIToolOption[] = [
@@ -25,7 +26,9 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Bob Shell', value: 'bob', available: true, successLabel: 'Bob Shell', skillsDir: '.bob' },
   { name: 'Claude Code', value: 'claude', available: true, successLabel: 'Claude Code', skillsDir: '.claude' },
   { name: 'Cline', value: 'cline', available: true, successLabel: 'Cline', skillsDir: '.cline' },
+  { name: 'CodeArts', value: 'codeartsagent', available: true, successLabel: 'CodeArts', skillsDir: '.codeartsdoer' },
   { name: 'Codex', value: 'codex', available: true, successLabel: 'Codex', skillsDir: '.codex' },
+  { name: 'Devin Desktop (formerly Windsurf)', value: 'devin', available: true, successLabel: 'Devin Desktop', skillsDir: '.devin', detectionPaths: ['.devin', '.windsurf'] },
   { name: 'ForgeCode', value: 'forgecode', available: true, successLabel: 'ForgeCode', skillsDir: '.forge' },
   { name: 'CodeBuddy Code (CLI)', value: 'codebuddy', available: true, successLabel: 'CodeBuddy Code', skillsDir: '.codebuddy' },
   { name: 'Continue', value: 'continue', available: true, successLabel: 'Continue (VS Code / JetBrains / Cli)', skillsDir: '.continue' },
@@ -35,10 +38,11 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Factory Droid', value: 'factory', available: true, successLabel: 'Factory Droid', skillsDir: '.factory' },
   { name: 'Gemini CLI', value: 'gemini', available: true, successLabel: 'Gemini CLI', skillsDir: '.gemini' },
   { name: 'GitHub Copilot', value: 'github-copilot', available: true, successLabel: 'GitHub Copilot', skillsDir: '.github', detectionPaths: ['.github/copilot-instructions.md', '.github/instructions', '.github/workflows/copilot-setup-steps.yml', '.github/prompts', '.github/agents', '.github/skills', '.github/.mcp.json'] },
+  { name: 'Hermes Agent', value: 'hermes', available: true, successLabel: 'Hermes Agent', skillsDir: '.hermes', detectionPaths: ['.hermes', 'HERMES.md', '.hermes.md'], setupNote: "Hermes only loads skills from ~/.hermes/skills by default. Add this project's .hermes/skills directory to skills.external_dirs in ~/.hermes/config.yaml so Hermes picks up the generated OpenSpec skills." },
   { name: 'iFlow', value: 'iflow', available: true, successLabel: 'iFlow', skillsDir: '.iflow' },
   { name: 'Junie', value: 'junie', available: true, successLabel: 'Junie', skillsDir: '.junie' },
   { name: 'Kilo Code', value: 'kilocode', available: true, successLabel: 'Kilo Code', skillsDir: '.kilocode' },
-  { name: 'Kimi CLI', value: 'kimi', available: true, successLabel: 'Kimi CLI', skillsDir: '.kimi' },
+  { name: 'Kimi Code', value: 'kimi', available: true, successLabel: 'Kimi Code', skillsDir: '.kimi-code', detectionPaths: ['.kimi-code', '.kimi'] },
   { name: 'Kiro', value: 'kiro', available: true, successLabel: 'Kiro', skillsDir: '.kiro' },
   { name: 'Lingma', value: 'lingma', available: true, successLabel: 'Lingma', skillsDir: '.lingma' },
   { name: 'Mistral Vibe', value: 'vibe', available: true, successLabel: 'Mistral Vibe', skillsDir: '.vibe' },
@@ -47,8 +51,25 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Pi', value: 'pi', available: true, successLabel: 'Pi', skillsDir: '.pi' },
   { name: 'Qoder', value: 'qoder', available: true, successLabel: 'Qoder', skillsDir: '.qoder' },
   { name: 'Qwen Code', value: 'qwen', available: true, successLabel: 'Qwen Code', skillsDir: '.qwen' },
-  { name: 'RooCode', value: 'roocode', available: true, successLabel: 'RooCode', skillsDir: '.roo' },
+  { name: 'Zoo Code', value: 'roocode', available: true, successLabel: 'Zoo Code', skillsDir: '.roo' },
   { name: 'Trae', value: 'trae', available: true, successLabel: 'Trae', skillsDir: '.trae' },
-  { name: 'Windsurf', value: 'windsurf', available: true, successLabel: 'Windsurf', skillsDir: '.windsurf' },
+  { name: 'ZCode', value: 'zcode', available: true, successLabel: 'ZCode', skillsDir: '.zcode' },
   { name: 'AGENTS.md（Amp / VS Code などに対応）', value: 'agents', available: false, successLabel: 'AGENTS.md 互換のアシスタント' }
 ];
+
+/**
+ * Retired tool ids that still resolve, so a rebrand does not break scripted
+ * `--tools` invocations. Windsurf was rebranded to Devin Desktop on
+ * 2026-06-02 and its config directory moved from `.windsurf/` to `.devin/`;
+ * `--tools windsurf` therefore configures `devin`.
+ */
+export const TOOL_ID_ALIASES: Record<string, string> = {
+  windsurf: 'devin',
+};
+
+/**
+ * Resolves a tool id through TOOL_ID_ALIASES, leaving current ids untouched.
+ */
+export function resolveToolIdAlias(toolId: string): string {
+  return TOOL_ID_ALIASES[toolId] ?? toolId;
+}

@@ -27,17 +27,18 @@
 
 ## 3. ルートの選択と `RootOutput`
 
-すべてのルート解決コマンド (`list`、`show`、`validate`、`status`、`instructions`、`instructions apply`、`new change`、`archive`、`doctor`、`context`) は、1 つの OpenSpec ルートを 1 つの優先順位で解決します。
+すべてのルート解決コマンド（`list`、`show`、`validate`、`status`、`instructions`、`instructions apply`、`instructions archive`、`new change`、`archive`、`doctor`、`context`）は、次の優先順位で1つのOpenSpecルートを解決します。
 
 1. `--store <id>` → 登録ストアのルート (`source: "store"`)。
 2. それ以外の場合、`openspec/` を持つ最も近い祖先: 計画形状 → `source: "nearest"` (`store:` ポインターは無視され、stderr 警告が表示されます)。有効な `store:` ポインターを持つ構成専用ディレクトリ → そのストア、`source: "declared"`。
-3. 最も近いルート + 登録ストアが存在しない → エラー `no_root_with_registered_stores`。
-4. ルートもストアもありません: スキャフォールディング コマンドは cwd を `source: "implicit"` として扱います。診断コマンド (`doctor`、`context`) は代わりに `no_openspec_root` で失敗します。これらは検査を行いますが、スキャフォールディングは行いません。
+3. 最も近いルートがなく、グローバルな `defaultStore` が設定済み（`openspec config set defaultStore <id>`）→ そのstore、`source: "global_default"`。古いIDの場合はstore由来のエラーとなり、`fix` に `openspec config unset defaultStore` が示されます。
+4. 最も近いルートもデフォルトもなく、登録storeが存在する → エラー `no_root_with_registered_stores`。
+5. ルート、デフォルト、storeがすべてない場合、ひな形生成コマンドはcwdを `source: "implicit"` として扱います。診断コマンド（`doctor`、`context`）は `no_openspec_root` で失敗します。診断は検査だけを行い、ひな形を作成しません。
 
 成功した JSON ペイロードにはルートが埋め込まれます。
 
 ```json
-"root": { "path": "/abs/path", "source": "store" | "declared" | "nearest" | "implicit", "store_id": "id (only when store-selected)" }
+"root": { "path": "/abs/path", "source": "store" | "declared" | "global_default" | "nearest" | "implicit", "store_id": "id (only when store-selected)" }
 ```
 
 **ルート障害コントラクト**: JSON モードでは、解決障害が発生すると `{ ...commandNullShape, "status": [diagnostic] }` が標準出力に出力され、1 が終了します。
@@ -54,33 +55,36 @@
 `{ "items": [ { "id", "type": "change"|"spec", "valid", "issues": [ { "level", "path", "message", "line"?, "column"? } ], "durationMs" } ], "summary": { "totals": {items,passed,failed}, "byType": {...} }, "version": "1.0", "root" }`。いずれかの項目が失敗した場合は 1 を終了します。
 
 ### 4.4 `status --json`
-`{ "changeName", "schemaName", "planningHome"?: { "kind", "root", "changesDir", "defaultSchema" }, "changeRoot", "artifactPaths": { "<id>": {outputPath, resolvedOutputPath, existingOutputPaths} }, "nextSteps": ["..."], "actionContext": { "mode": "repo-local", "sourceOfTruth": "repo", "planningArtifacts", "linkedContext", "allowedEditRoots", "requiresAffectedAreaSelection", "constraints" }, "isComplete", "applyRequires", "artifacts": [ {id, outputPath, status: "done"|"ready"|"blocked", missingDeps?} ], "root" }`。アクティブな変更はありません: `{ "changes": [], "message", "root" }`、出口 0。
+`{ "changeName", "schemaName", "planningHome"?: { "kind", "root", "changesDir", "defaultSchema" }, "changeRoot", "artifactPaths": { "<id>": {outputPath, resolvedOutputPath, existingOutputPaths} }, "nextSteps": ["..."], "actionContext": { "mode": "repo-local", "sourceOfTruth": "repo", "planningArtifacts", "linkedContext", "allowedEditRoots", "requiresAffectedAreaSelection", "constraints" }, "isComplete", "applyRequires", "artifacts": [ {id, outputPath, status: "done"|"skipped"|"ready"|"blocked", requires, missingDeps?} ], "root" }`。各アーティファクトの `requires` は直接依存するIDで、すべての状態に存在します。`missingDeps` は `blocked` の場合だけ現れます。`artifacts` は依存順で並び、同時にreadyになった場合はスキーマの宣言順を使います。`"skipped"` は `.openspec.yaml` で `skip_specs: true` が宣言され、`generates` が `specs/` 配下にあるアーティファクトを示します。依存関係は満たしますが、作成してはいけません。アクティブな変更がない場合は `{ "changes": [], "message", "root" }`、終了0です。
 
 ### 4.5 `instructions <artifact> --json`
-`{ "changeName", "artifactId", "schemaName", "changeDir", "planningHome"?, "outputPath", "resolvedOutputPath", "existingOutputPaths", "description", "instruction"?, "context"?, "rules"?, "references"?: ReferenceIndexEntry[], "template", "dependencies": [{id,done,path,description}], "unlocks", "root" }`。
+`{ "changeName", "artifactId", "schemaName", "changeDir", "planningHome"?, "outputPath", "resolvedOutputPath", "existingOutputPaths", "description", "instruction"?, "context"?, "rules"?, "references"?: ReferenceIndexEntry[], "skipped"?, "warning"?, "template", "dependencies": [{id,done,path,description,skipped?}], "unlocks", "root" }`。`unlocks` は、このアーティファクトによりreadyになるものをスキーマ宣言順で示します。変更が `skip_specs: true` を宣言し、このアーティファクトがスキップされる場合は `"warning"` とともに `"skipped": true` が現れます。ファイルを作成してはいけません。`skipped: true` の依存項目はファイルなしで充足済みなので、パスを読まないでください。
 
 `ReferenceIndexEntry`: `{ "store_id", "root"?, "specs"?: [{id,summary}], "fetch"?, "status": [] }` — 解決済みのエントリには `root` / `specs` / `fetch` が含まれます。未解決のエントリは `store_id` と警告ステータスを保持します。インデックスの上限は 50KB (`reference_index_truncated`) です。
 
 ### 4.6 `instructions apply --json`
-`{ "changeName", "changeDir", "schemaName", "contextFiles": { "<artifactId>": ["/abs", ...] }, "progress": {total,complete,remaining}, "tasks": [{id,description,done}], "state": "blocked"|"all_done"|"ready", "missingArtifacts"?, "instruction", "references"?, "root" }`。
+`{ "changeName", "changeDir", "schemaName", "contextFiles": { "<artifactId>": ["/abs", ...] }, "progress": {total,complete,remaining}, "tasks": [{id,description,done}], "state": "blocked"|"all_done"|"ready", "missingArtifacts"?, "instruction", "references"?, "context"?, "operationGuidance"?, "root" }`。2つの任意フィールドは呼び出しごとに選択ルートから読み取ります。`context` は関連するプロジェクト情報・規約・制約を適用する必須のプロンプト入力、`operationGuidance` は組み込みワークフローと両立し、該当する場合だけ従う助言です。どちらも状態、タスク、進捗、コンテキストファイル、組み込み指示とは分離されます。
 
-### 4.7 `new change <name> --json`
-成功: `{ "change": { "id", "path", "metadataPath", "schema" }, "root" }`。失敗: `{ "change": null, "status": [d] }`、出口 1。
+### 4.7 `instructions archive --json`
+`{ "changeName", "context"?, "operationGuidance"?, "root" }`。解決済みのリポジトリ/storeルートに有効な `--change` が必要で、applyと同じ必須コンテキスト・助言ガイダンスの意味を持ちます。読み取り専用の実行時入力であり、静的archiveワークフローの返却、仕様差分の検査・マージ、本仕様への書き込み、変更の移動は行いません。
 
-### 4.8 `archive <name> --json`
-成功: `{ "archive": { "change", "archivedAs": "YYYY-MM-DD-name", "path", "specsUpdated", "totals"? }, "root" }`。失敗: `{ "archive": null, "root"?, "status": [d] }`、終了 1。JSON モードは厳密に非対話型です。すべてのプロンプト ポイントは `archive_*` コードになります。
+### 4.8 `new change <name> --json`
+成功: `{ "change": { "id", "path", "metadataPath", "schema" }, "root" }`。失敗: `{ "change": null, "status": [d] }`、終了1。
 
-### 4.9 `doctor --json`
-`{ "root": { "path", "source", "store_id"?, "healthy", "status": [] }, "store": { "id", "metadata": {present,valid,remote?}, "origin_url"?, "status": [] } | null, "references": [...], "status": [] }`。任意の重大度の正常性所見は出口 0。障害ペイロード: `{ "root": null, "store": null, "references": [], "status": [d] }`、出口 1。
+### 4.9 `archive <name> --json`
+成功: `{ "archive": { "change", "archivedAs": "YYYY-MM-DD-name", "path", "specsUpdated", "totals"?, "warnings"? }, "root" }`。失敗: `{ "archive": null, "root"?, "status": [d] }`、終了1。`specsUpdated` は1つ以上の仕様ファイルを書き込んだ場合だけtrueです。同期済みの変更はtotalsがすべて0となり、スキップ内容を `warnings` に含めてアーカイブします。JSONモードは完全に非対話型で、各プロンプト位置は `archive_*` コードになります。
 
-### 4.10 `context --json`
-`{ "root": { "path", "source", "store_id"?, "role": "openspec_root" }, "members": [ { "role": "referenced_store", "id", "path"?, "remote"?, "fetch"?, "status": [] } ], "status": [] }`。 AVAILABLE = パスが存在し、ステータスが空です。 `--code-workspace <path>` は `{folders:[{name,path}]}` を書き込みます (参照ストアのみが使用可能、接頭辞は `ref:`)。 JSON モードでは、印刷前に書き込みが実行されるため、書き込みが失敗しても stdout には 1 つのドキュメントが保持されます。失敗: `{ "root": null, "members": [], "status": [d] }`、出口 1。
+### 4.10 `doctor --json`
+`{ "root": { "path", "source", "store_id"?, "healthy", "status": [] }, "store": { "id", "metadata": {present,valid,remote?}, "origin_url"?, "drift"?: {ahead,behind}, "status": [] } | null, "references": [...], "status": [] }`. `drift` (present only for a git-backed store checkout that has an upstream tracking ref) is ahead/behind counts against the last-fetched upstream, not the live remote. Health findings of any severity exit 0. Failure payload: `{ "root": null, "store": null, "references": [], "status": [d] }`, exit 1.
 
-### 4.11 `store ... --json`
-セットアップ/登録: `{ "store": {id, root, metadata_path?}, "registry": {path, registered, already_registered}, "git": {is_repository, initialized, committed}, "created_files": [], "status": [] }`。登録解除/削除: `{ "store", "registry": {path, removed}, "files": {deleted, deleted_path, left_on_disk}, "status": [] }`。リスト: `{ "stores": [{id, root}], "status": [] }`。医師: `{ "stores": [ { id, root, metadata_path?, openspec_root: {...healthy, status}, metadata: {present, valid, id?, remote}, git: {is_repository, has_commits, has_uncommitted_changes, has_remote, origin_url}, status } ], "status": [] }` (`null` = 不明/未調査)。健康診断結果出口 0;失敗した場合は、一致する null 形状を持つ exit 1 が発生します。即時キャンセルは 130 で終了します。
+### 4.11 `context --json`
+`{ "root": { "path", "source", "store_id"?, "role": "openspec_root" }, "members": [ { "role": "referenced_store", "id", "path"?, "remote"?, "fetch"?, "status": [] } ], "status": [] }`。AVAILABLEはパスが存在しstatusが空の状態です。`--code-workspace <path>` は利用可能な参照storeだけを使い、`ref:` 接頭辞付きで `{folders:[{name,path}]}` を書き込みます。JSONモードでは表示前に書き込むため、失敗時もstdoutには文書が1つだけ出力されます。失敗: `{ "root": null, "members": [], "status": [d] }`、終了1。
 
-### 4.12 `schemas --json` / `templates --json`
-`schemas`: ルートオブジェクトで包まない配列 `[ {name, description, artifacts, source} ]`。`templates`: キー付きオブジェクト `{ "<artifactId>": {path, source} }`。どちらも cwd ベースで、`root` / `status` キーはありません。
+### 4.12 `store ... --json`
+setup/register: `{ "store": {id, root, metadata_path?}, "registry": {path, registered, already_registered}, "git": {is_repository, initialized, committed}, "created_files": [], "status": [] }`。unregister/remove: `{ "store", "registry": {path, removed}, "files": {deleted, deleted_path, left_on_disk}, "status": [] }`。list: `{ "stores": [{id, root}], "status": [] }`。doctor: `{ "stores": [ { id, root, metadata_path?, openspec_root: {...healthy, status}, metadata: {present, valid, id?, remote}, git: {is_repository, has_commits, has_uncommitted_changes, has_remote, origin_url}, status } ], "status": [] }`（`null`は不明・未検査）。正常性の所見は終了0、失敗は対応するnull形状で終了1、プロンプトのキャンセルは130です。
+
+### 4.13 `schemas --json` / `templates --json`
+`schemas`: ルートオブジェクトで包まない配列 `[ {name, description, artifacts, source} ]`。`templates`: キー付きオブジェクト `{ "<artifactId>": {path, source} }`。どちらもcwd基準で、root/statusキーはありません。
 
 ## 5. 終了コードコントラクト
 
@@ -105,8 +109,8 @@
 ### ストアの設定・登録・削除
 `store_setup_id_required`、`store_setup_path_required`、`store_setup_path_not_directory`、`store_setup_inside_git_repo`、`store_setup_non_empty_directory`、`store_setup_cancelled`、`store_path_required`、`store_path_missing`、`store_path_not_directory`、`store_root_pointer_declared`、`store_register_root_unhealthy`、`store_register_identity_confirmation_required`、`store_register_cancelled`、`store_remote_empty`、 `store_remote_requires_hand_edit`、`store_remove_confirmation_required`、`store_remove_cancelled`、`store_remove_path_not_directory`、`store_remove_metadata_missing`、`store_root_missing` (削除時の警告、ドクターのエラー)、`store_root_not_directory`。
 
-### git を保存する
-`store_git_init_failed`、`store_git_identity_missing`、`store_git_commit_failed`、`store_git_no_commits` (警告)、`store_clone_fragile_directories` (警告)、`store_remote_divergence` (情報、医師)。
+### Storeのgit
+`store_git_init_failed`、`store_git_identity_missing`、`store_git_commit_failed`、`store_git_no_commits`（警告）、`store_clone_fragile_directories`（警告）、`store_remote_divergence`（情報、doctor）、`store_checkout_drift`（情報、doctor）。
 
 ### 参考文献 (警告)
 `reference_invalid_id`、`reference_registry_unreadable`、`reference_unresolved`、`reference_root_unhealthy`、`reference_index_truncated`。

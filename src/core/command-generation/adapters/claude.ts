@@ -1,21 +1,13 @@
 /**
- * Claude Code コマンドアダプター
+ * Claude Code Command Adapter
  *
- * コマンドをツール仕様に合わせて整形する。
+ * Formats commands for Claude Code following its frontmatter specification.
  */
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
-import { escapeYamlValue } from '../yaml.js';
+import { escapeYamlValue, formatTagsArray } from '../yaml.js';
 import { OPENSPEC_CLI_ALLOWED_TOOLS } from '../../shared/allowed-tools.js';
-
-/**
- * Formats a tags array as a YAML array with proper escaping.
- */
-function formatTagsArray(tags: string[]): string {
-  const escapedTags = tags.map((tag) => escapeYamlValue(tag));
-  return `[${escapedTags.join(', ')}]`;
-}
 
 /**
  * Claude Code のコマンド生成アダプター。

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { spawn, execSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
@@ -16,13 +16,15 @@ import {
   coerceValue,
   formatValueYaml,
   validateConfigKeyPath,
+  hasUnsafeKeySegment,
   validateConfig,
   DEFAULT_CONFIG,
 } from '../core/config-schema.js';
 import { CORE_WORKFLOWS, ALL_WORKFLOWS, getProfileWorkflows } from '../core/profiles.js';
 import { OPENSPEC_DIR_NAME } from '../core/config.js';
 import { hasProjectConfigDrift } from '../core/profile-sync-drift.js';
-import { isPromptCancellationError } from './shared-output.js';
+import { UpdateCommand } from '../core/update.js';
+import { asErrorMessage, isPromptCancellationError } from './shared-output.js';
 
 type ProfileAction = 'both' | 'delivery' | 'workflows' | 'keep';
 
@@ -295,11 +297,15 @@ export function registerConfigCommand(program: Command): void {
     .action((key: string, value: string, options: { string?: boolean; allowUnknown?: boolean }) => {
       const allowUnknown = Boolean(options.allowUnknown);
       const keyValidation = validateConfigKeyPath(key);
-      if (!keyValidation.valid && !allowUnknown) {
+      // --allow-unknown relaxes the known-key check, but never the prototype-safety check.
+      const unsafeKey = hasUnsafeKeySegment(key);
+      if (!keyValidation.valid && (!allowUnknown || unsafeKey)) {
         const reason = keyValidation.reason ? ` ${keyValidation.reason}.` : '';
         console.error(`エラー: 無効な設定キー "${key}" です。${reason}`);
         console.error('利用可能なキーを確認するには "openspec config list" を使ってください。');
-        console.error('このチェックを回避するには --allow-unknown を渡してください。');
+        if (!allowUnknown && !unsafeKey) {
+          console.error('このチェックを回避するには --allow-unknown を渡してください。');
+        }
         process.exitCode = 1;
         return;
       }
@@ -621,10 +627,11 @@ export function registerConfigCommand(program: Command): void {
 
           if (applyNow) {
             try {
-              execSync('npx openspec update', { stdio: 'inherit', cwd: projectDir });
+              await new UpdateCommand().execute(projectDir);
               console.log('他のプロジェクトに適用するには、それぞれで `openspec update` を実行してください。');
-            } catch {
-              console.error('`openspec update` に失敗しました。profile 変更を適用するには手動で実行してください。');
+            } catch (error) {
+              console.error(`\`openspec update\` に失敗しました: ${asErrorMessage(error)}`);
+              console.error('profile 変更を適用するには手動で実行してください。');
               process.exitCode = 1;
             }
             return;

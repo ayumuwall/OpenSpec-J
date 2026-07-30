@@ -196,7 +196,7 @@ openspec/changes/add-dark-mode/
 ├── proposal.md           # なぜ、何を
 ├── design.md             # どう実装するか（技術的アプローチ）
 ├── tasks.md              # 実装チェックリスト
-├── .openspec.yaml        # 変更メタデータ（任意）
+├── .openspec.yaml        # 変更メタデータ（任意）: schema、created、skip_specs
 └── specs/                # 仕様差分
     └── ui/
         └── spec.md       # ui/spec.md の変更内容
@@ -403,6 +403,7 @@ Tasks は **実装チェックリスト** です。具体的な手順をチェ�
 | `## ADDED Requirements` | 新しい挙動 | 本仕様に追加 |
 | `## MODIFIED Requirements` | 既存挙動の変更 | 既存要件を置換 |
 | `## REMOVED Requirements` | 廃止された挙動 | 本仕様から削除 |
+| `## Purpose` | 新しい機能の目的 | 作成する本仕様のPurposeとして使用。仕様がすでに存在する場合は無視 |
 
 ### なぜ全文ではなく差分なのか
 

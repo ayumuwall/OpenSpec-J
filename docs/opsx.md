@@ -65,7 +65,7 @@ openspec init
 
 これにより、AI コーディングアシスタントが自動検出するスキルが `.claude/skills/` などに作成されます。
 
-デフォルトでは、OpenSpec は `core` ワークフロープロファイル（`propose`, `explore`, `apply`, `sync`, `archive`）を使います。拡張ワークフローコマンド（`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`）を使いたい場合は、`openspec config profile` で設定し、`openspec update` で適用します。
+デフォルトでは、OpenSpec は `core` ワークフロープロファイル（`propose`, `explore`, `apply`, `update`, `sync`, `archive`）を使います。拡張ワークフローコマンド（`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`）を使いたい場合は、`openspec config profile` で設定し、`openspec update` で適用します。
 
 セットアップ中に **プロジェクト設定**（`openspec/config.yaml`）を作成するか確認されます。これは任意ですが、推奨です。
 
@@ -421,7 +421,7 @@ Git ブランチのように考えてください。
 │                    ▼                                                        │
 │   Skill Files (.claude/skills/openspec-*/SKILL.md)                          │
 │                                                                             │
-│   • Cross-editor compatible (Claude Code, Cursor, Windsurf)                 │
+│   • Cross-editor compatible (Claude Code, Cursor, Devin)                    │
 │   • Skills query CLI for structured data                                    │
 │   • Fully customizable via schema files                                     │
 │                                                                             │
@@ -506,7 +506,8 @@ Git ブランチのように考えてください。
   │  │      {"id": "proposal", "status": "done"},                         │  │
   │  │      {"id": "specs", "status": "ready"},      ◄── 最初に ready     │  │
   │  │      {"id": "design", "status": "ready"},                          │  │
-  │  │      {"id": "tasks", "status": "blocked", "missingDeps": ["specs"]}│  │
+  │  │      {"id": "tasks", "status": "blocked",                          │  │
+  │  │       "missingDeps": ["specs", "design"]}                          │  │
   │  │    ]                                                               │  │
   │  │  }                                                                 │  │
   │  └────────────────────────────────────────────────────────────────────┘  │

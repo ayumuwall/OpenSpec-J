@@ -60,6 +60,10 @@ The system SHALL expire a session after 30 minutes of inactivity.
 
 <a id="right-size-the-change"></a>
 
+もう一つ、知っておきたいセクションがあります。仕様差分で新しい機能を作る場合は、冒頭に `## Purpose` を置き、その機能の目的を1〜2文で説明してください。アーカイブ時には、作成されるメイン仕様の Purpose として使われます。省略すると、手作業で埋めるための `TBD` が入ります。既存仕様にはすでに Purpose があるため、仕様差分側の Purpose は無視されます。変更する場合は `openspec/specs/<capability>/spec.md` を直接編集してください。
+
+## Right-size the change
+
 ## 変更のサイズを適切に調整する
 
 最も一般的なオーサリングの間違いの 1 つは、要件の言葉遣いが悪いことではありません。それは、3 つの変更を加えようとする変更です。

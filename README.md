@@ -82,6 +82,29 @@ AI:  openspec/changes/archive/2025-01-23-add-dark-mode/ にアーカイブしま
 ```
 
 <details>
+<summary><strong>仕様は実際にどのような形式ですか？</strong></summary>
+
+特別な構文を覚える必要はありません。具体的なシナリオを含む要件を、通常のMarkdownで記述します。上で作成した `specs/` フォルダーには、次のような内容が入ります。
+
+```markdown
+## ADDED Requirements
+
+### Requirement: テーマ選択
+アプリは、システム設定をデフォルトとして、
+ライトテーマとダークテーマを切り替えられるものとする（SHALL）。
+
+#### Scenario: ユーザーがダークモードへ切り替える
+- **WHEN** ユーザーがテーマ切り替えをクリックする
+- **THEN** アプリはダークモードへ切り替え、選択を保存する
+```
+
+AIがこれらを作成し、コードを書く前にあなたが計画をレビューします。
+
+OpenSpec自身もOpenSpecを使って開発されています。実際の大規模な例として、このリポジトリの[仕様](openspec/specs)と進行中の[変更](openspec/changes)を参照できます。
+
+</details>
+
+<details>
 <summary><strong>OpenSpec ダッシュボード</strong></summary>
 
 <p align="center">
@@ -121,15 +144,19 @@ cd your-project
 openspec init
 ```
 
-次に AI に話しかけます。
+> **AIに任せたい場合は、** [セットアップ用プロンプト](docs/installation.md#aiアシスタントでインストール)をコーディングアシスタントへ貼り付けてください。CLIのインストール、`openspec init` の実行、結果の確認まで行います。
+
+次にAIへ話しかけます。
 
 - **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、何かを書く前に計画の形へ整理してくれる安全な相談相手です。([探索ガイド](docs/explore.md))
 - **欲しいものはもう決まっていますか?** `/opsx:propose <what-you-want-to-build>` へ直接進んでください。
 
 どちらもデフォルトのプロファイルに含まれています。拡張ワークフロー（`/opsx:new`、`/opsx:continue`、`/opsx:ff`、`/opsx:verify`、`/opsx:bulk-archive`、`/opsx:onboard`）が必要な場合は、`openspec config profile`で選択し、`openspec update`で適用します。
 
+`/opsx:propose` is the canonical name; your tool may spell it `/opsx-propose` (Cursor, GitHub Copilot), `@opsx-propose` (Amazon Q) or `$openspec-propose` (Codex). `openspec init` prints the right form for the tools you picked — see [How To Invoke](docs/supported-tools.md#how-to-invoke).
+
 > [!NOTE]
-> 使用しているツールがサポートされているかどうか不明ですか? [完全なリストを表示](docs/supported-tools.md) – 私たちは 25 以上のツールをサポートしており、さらに増え続けています。
+> 使用しているツールが対応しているか不明ですか？[完全な一覧](docs/supported-tools.md)を参照してください。30以上のツールに対応し、今後も追加していきます。
 >
 > pnpm、yarn、bun、nix でも動作します。 [インストールオプション](docs/installation.md)を参照してください。
 

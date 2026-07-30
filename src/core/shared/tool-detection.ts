@@ -7,6 +7,10 @@
 import path from 'path';
 import * as fs from 'fs';
 import { AI_TOOLS } from '../config.js';
+import { CommandAdapterRegistry, generateCommands } from '../command-generation/index.js';
+import { getCommandContents } from './skill-generation.js';
+import { getGlobalConfig } from '../global-config.js';
+import { getProfileWorkflows, ALL_WORKFLOWS } from '../profiles.js';
 
 /**
  * openspec init で作成されるスキルディレクトリ名。
@@ -68,9 +72,13 @@ export interface ToolVersionStatus {
   toolId: string;
   /** ツール表示名 */
   toolName: string;
-  /** スキルが設定済みか */
+  /** スキルまたはコマンドが設定済みか */
   configured: boolean;
-  /** スキルファイル内の generatedBy バージョン（未検出なら null） */
+  /**
+   * The generatedBy version recorded in the tool's skill files. For a tool that
+   * has commands but no skills, the current version when the command files match
+   * what would be generated now. Null when neither says the files are current.
+   */
   generatedByVersion: string | null;
   /** 更新が必要か（バージョン不一致または未検出） */
   needsUpdate: boolean;
@@ -110,7 +118,101 @@ export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSki
 }
 
 /**
- * skillsDir がある全ツールのスキル状態を取得する。
+ * ツールに生成済みOpenSpecコマンドファイルが1つ以上あるか確認する。
+ */
+export function toolHasAnyConfiguredCommand(projectPath: string, toolId: string): boolean {
+  const adapter = CommandAdapterRegistry.get(toolId);
+  if (!adapter) return false;
+
+  for (const commandId of COMMAND_IDS) {
+    const cmdPath = adapter.getFilePath(commandId);
+    const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
+    if (fs.existsSync(fullPath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * 実際の内容差分ではないcheckout由来のUTF-8 BOMとCRLF改行を正規化する。
+ */
+function normalizeCommandContent(content: string): string {
+  return content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+}
+
+/**
+ * ディスク上のコマンドファイルが現在の生成内容と一致するか確認する。
+ *
+ * Command files carry no version stamp, so content equality is the only available
+ * "is this current?" signal for a commands-only install.
+ */
+export function areCommandFilesUpToDate(
+  projectRoot: string,
+  toolId: string,
+  options?: {
+    workflows?: readonly string[];
+  }
+): boolean {
+  const adapter = CommandAdapterRegistry.get(toolId);
+  if (!adapter) return false;
+
+  let workflows: readonly string[];
+  if (options?.workflows) {
+    workflows = options.workflows;
+  } else {
+    try {
+      const globalCfg = getGlobalConfig();
+      const profile = globalCfg.profile ?? 'core';
+      workflows = getProfileWorkflows(profile, globalCfg.workflows);
+    } catch {
+      workflows = ALL_WORKFLOWS;
+    }
+  }
+
+  const knownWorkflows = workflows.filter((w): w is (typeof ALL_WORKFLOWS)[number] =>
+    (ALL_WORKFLOWS as readonly string[]).includes(w)
+  );
+
+  const commandContents = getCommandContents(knownWorkflows);
+  const generatedCommands = generateCommands(commandContents, adapter);
+
+  if (generatedCommands.length === 0) {
+    return false;
+  }
+
+  for (const cmd of generatedCommands) {
+    const cmdPath = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectRoot, cmd.path);
+    if (!fs.existsSync(cmdPath)) {
+      return false;
+    }
+    try {
+      const existingContent = fs.readFileSync(cmdPath, 'utf-8');
+      if (normalizeCommandContent(existingContent) !== normalizeCommandContent(cmd.fileContent)) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  // Also check no extra command files exist for deselected workflows
+  const desiredWorkflowSet = new Set(knownWorkflows);
+  for (const workflow of ALL_WORKFLOWS) {
+    if (desiredWorkflowSet.has(workflow)) continue;
+    const cmdPath = adapter.getFilePath(workflow);
+    const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectRoot, cmdPath);
+    if (fs.existsSync(fullPath)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * skillsDirが設定された全ツールのスキル状態を取得する。
  */
 export function getToolStates(projectRoot: string): Map<string, ToolSkillStatus> {
   const states = new Map<string, ToolSkillStatus>();
@@ -157,12 +259,16 @@ export function extractGeneratedByVersion(skillFilePath: string): string | null 
 }
 
 /**
- * 最初に見つかったスキルファイルからツールのバージョン状態を取得する。
+ * スキルファイルからツールのバージョン状態を取得する。スキルがなくコマンドだけの
+ * インストールでは、コマンド内容のフィンガープリントへフォールバックする。
  */
 export function getToolVersionStatus(
   projectRoot: string,
   toolId: string,
-  currentVersion: string
+  currentVersion: string,
+  options?: {
+    workflows?: readonly string[];
+  }
 ): ToolVersionStatus {
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool?.skillsDir) {
@@ -178,7 +284,7 @@ export function getToolVersionStatus(
   const skillsDir = path.join(projectRoot, tool.skillsDir, 'skills');
   let generatedByVersion: string | null = null;
 
-  // 存在する最初のスキルファイルからバージョンを読み取る
+  // 1. Find the first skill file that exists and read its version
   for (const skillName of SKILL_NAMES) {
     const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
     if (fs.existsSync(skillFile)) {
@@ -187,7 +293,17 @@ export function getToolVersionStatus(
     }
   }
 
-  const configured = getToolSkillStatus(projectRoot, toolId).configured;
+  const skillConfigured = getToolSkillStatus(projectRoot, toolId).configured;
+  const commandConfigured = toolHasAnyConfiguredCommand(projectRoot, toolId);
+  const configured = skillConfigured || commandConfigured;
+
+  // 2. Commands-only installs have no skill file to read a version from, so fall
+  //    back to comparing the generated command content. Deliberately skipped when
+  //    skill files exist: an unreadable version there must still force a rewrite.
+  if (!skillConfigured && commandConfigured && areCommandFilesUpToDate(projectRoot, toolId, options)) {
+    generatedByVersion = currentVersion;
+  }
+
   const needsUpdate = configured && (generatedByVersion === null || generatedByVersion !== currentVersion);
 
   return {
@@ -200,11 +316,14 @@ export function getToolVersionStatus(
 }
 
 /**
- * プロジェクト内で設定済みのツールを取得する。
+ * プロジェクトで設定済みの全ツール（スキルまたはコマンド）を取得する。
  */
 export function getConfiguredTools(projectRoot: string): string[] {
   return AI_TOOLS
-    .filter((t) => t.skillsDir && getToolSkillStatus(projectRoot, t.value).configured)
+    .filter((t) => {
+      if (!t.skillsDir) return false;
+      return getToolSkillStatus(projectRoot, t.value).configured || toolHasAnyConfiguredCommand(projectRoot, t.value);
+    })
     .map((t) => t.value);
 }
 

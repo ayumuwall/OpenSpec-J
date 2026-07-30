@@ -21,7 +21,7 @@ openspec list        # アクティブな変更を表示
 openspec view        # 対話型ダッシュボードを開く
 ```
 
-**スラッシュコマンド（チャット側）。** `/opsx:propose` や `/opsx:apply` のような短いコマンドです。AI に OpenSpec のワークフローに従うよう指示します。提案を作り、仕様を書き、タスクリストから実装し、完了したらアーカイブします。Claude Code、Cursor、Windsurf、Copilot など、使っている AI アシスタントのチャットに入力します。
+**スラッシュコマンド（チャット側）。** `/opsx:propose` や `/opsx:apply` のような短いコマンドです。AIにOpenSpecのワークフローに従うよう指示します。提案を作り、仕様を書き、タスクリストから実装し、完了したらアーカイブします。Claude Code、Cursor、Devin Desktop、Copilotなど、使用するAIアシスタントのチャットに入力します。
 
 ```text
 /opsx:propose add-dark-mode    (AI チャットに入力)
@@ -51,7 +51,7 @@ OpenSpec 専用モードに入る必要はありません。普段どおり AI �
 
 手順は次のとおりです。
 
-1. プロジェクトで AI コーディングアシスタント（Claude Code、Cursor、Windsurf など）を開く。
+1. プロジェクトでAIコーディングアシスタント（Claude Code、Cursor、Devin Desktopなど）を開く。
 2. 普段リクエストを書くチャット欄に `/opsx:propose` と入力する。
 3. オートコンプリートを確認する。OpenSpec がインストールされていれば、`/opsx:propose`、`/opsx:apply` などが候補に出ます。
 
@@ -61,11 +61,11 @@ OpenSpec 専用モードに入る必要はありません。普段どおり AI �
 
 ## なぜ分かれているのか
 
-この分割を理解すると、OpenSpec が 25 以上の AI ツールで動く理由が分かります。
+この分割を理解すると、OpenSpecが30以上のAIツールで動く理由が分かります。
 
 CLI は **エンジン** です。変更フォルダーの構造、アーティファクト同士の依存関係、仕様差分をソース・オブ・トゥルースへマージする方法などのルールを持っています。この挙動はどの環境でも同じです。
 
-スラッシュコマンドは **ハンドル** です。AI ツールごとに形式が少し違います。Claude Code ではコマンド、Cursor や Windsurf では別形式のコマンド、ツールによってはスキルとして扱われます。`openspec init` を実行すると、OpenSpec は選択したツールに合うファイルを生成します。そのため、どのアシスタントでも同じ `/opsx:propose` の意図で作業できます。
+スラッシュコマンドは**ハンドル**です。AIツールごとに形式が少し違います。Claude Codeではコマンド、CursorやDevin Desktopではそれぞれの形式、ツールによってはスキルとして扱われます。`openspec init` を実行すると、OpenSpecは選択したツールに合うファイルを生成するため、どのアシスタントでも同じ `/opsx:propose` の意図で作業できます。
 
 一度ワークフローを覚えれば、多くのツールで同じ考え方を使えます。トレードオフとして、正確な入力形式はツールごとに少し違う場合があります。
 
@@ -73,25 +73,31 @@ CLI は **エンジン** です。変更フォルダーの構造、アーティ�
 
 ## ツール別のスラッシュコマンド構文
 
-意図は同じですが、記号が違うことがあります。使っているアシスタントに合う形式を使ってください。
+意図はどこでも同じで、表記はツールが読み込むファイル形式に従います。
 
-| ツール | 入力方法 |
-| --- | --- |
-| Claude Code | `/opsx:propose`、`/opsx:apply` |
-| Cursor | `/opsx-propose`、`/opsx-apply` |
-| Windsurf | `/opsx-propose`、`/opsx-apply` |
-| GitHub Copilot (IDE) | `/opsx-propose`、`/opsx-apply` |
-| Oh My Pi | `/opsx-propose`、`/opsx-apply` |
-| Kimi CLI | スキル形式。例: `/skill:openspec-propose` |
-| Trae | `/opsx-propose`、`/opsx-apply` |
+| ツールのコマンドファイル | 入力方法 | ツール例 |
+|--------------------------|----------|----------|
+| `.../commands/opsx/<id>.*` | `/opsx:propose` | Claude Code、Gemini CLI、Crush |
+| `.../opsx-<id>.*` | `/opsx-propose` | Cursor、GitHub Copilot (IDE)、Devin Desktop、Trae、Oh My Pi |
+| `.amazonq/prompts/opsx-<id>.md` | `@opsx-propose` | Amazon Q Developer |
+| なし（スキルのみ） | `/openspec-propose` | CodeArts、ForgeCode、Hermes、Mistral Vibe |
+| なし（Kimi Code） | `/skill:openspec-propose` | Kimi Code |
+| なし（Codex CLI） | `$openspec-propose` | Codex |
 
-多くのツールはコロン形式（`/opsx:propose`）またはダッシュ形式（`/opsx-propose`）を使います。一部のツールでは、OpenSpec がスラッシュコマンドではなく名前付きスキルとして表示されます。ツールごとのファイル配置まで含む完全な一覧は、[サポートされているツール](supported-tools.md) を参照してください。
+Devinは2行にまたがる唯一のツールです。Devin Desktopは `.devin/workflows/` を読むため `/opsx-propose` を使えますが、[Devin Localは対応しません](https://docs.devin.ai/desktop/devin-local)。Devin Localでは `/openspec-propose` スキルを使ってください。OpenSpecが `.devin/skills/` に書くスキルは両方で動作するため、スキル同士はスキル名で参照します。
+
+全ツールの正式な一覧は[呼び出し方法](supported-tools.md#how-to-invoke)にあります。Amazon Qはファイルを `@` で呼び出すプロンプトライブラリへ読み込み、最後の3行はコマンドIDではなく*スキル*名を使います（`/opsx:apply` に対応するスキルは `openspec-apply-change`）。
+
+迷った場合は `openspec init` が表示した「Getting started」を確認してください。選択したツールが登録した形式を使っています。スラッシュコマンドを表示するツールでは、`/` を入力して補完を確認する方法も使えます。
 
 迷ったら、AI チャットで `/` を入力してオートコンプリートを見てください。ツールが期待する形式が表示されます。
 
 ## スキルとコマンドファイル
 
 `openspec init` または `openspec update` を実行すると、AI ツールがワークフローを見つけられるように、OpenSpec は小さなファイルをプロジェクトに書き込みます。ツールと設定に応じて、それらは **スキル**、**コマンドファイル**、またはその両方です。
+
+- **スキル**は `.claude/skills/openspec-*/SKILL.md` などに配置されます。アシスタントが自動検出する指示フォルダーで、ツール横断の新しい標準です。
+- **コマンド**は `.cursor/commands/opsx-<id>.md` や `.claude/commands/opsx/<id>.md` などに配置されます。ツール固有の配置方法によって入力形式が決まる、従来のツール別スラッシュコマンドファイルです。Codexではコマンドファイルを生成せず、`.codex/skills/openspec-*` を使います。
 
 - **スキル**は、`.claude/skills/openspec-*/SKILL.md` のような場所にあります。アシスタントが自動検出する、クロスツール向けの命令フォルダーです。
 - **コマンドファイル**は、`.claude/commands/opsx/<id>.md` のような場所にあります。従来のツール別スラッシュコマンドファイルです。
@@ -104,6 +110,11 @@ CLI は **エンジン** です。変更フォルダーの構造、アーティ�
 
 短い確認手順です。
 
+1. **AIチャットでスラッシュを入力します。** `/opsx` と入力し、補完候補を確認します。表示されれば準備完了です。スキル専用ツール（Codex、Kimi Code、CodeArts、ForgeCode、Hermes、Mistral Vibe）では正常に導入されていても `/opsx` は補完されないため、上表のスキル名を使ってください。
+2. **ファイルを確認します。** Claude Codeでは `.claude/skills/` に `openspec-*` フォルダーがあるか確認します。他ツールは固有のディレクトリを使います（[対応ツール](supported-tools.md)を参照）。
+3. **セットアップを再実行します。** プロジェクトルートで `openspec update` を実行し、設定済みツールのスキルとコマンドファイルを再生成します。
+4. **アシスタントを再起動します。** 多くのツールは起動時にスキルとコマンドを読み込むため、新しいウィンドウで解決することがあります。
+
 1. **AI チャットに `/` を入力する。** `/opsx` と入力し始め、候補が表示されるか確認します。表示されればセットアップ済みです。
 2. **ファイルを確認する。** Claude Code なら `.claude/skills/` に `openspec-*` フォルダーがあるか確認します。他のツールは [サポートされているツール](supported-tools.md) に記載のディレクトリを使います。
 3. **セットアップを再実行する。** プロジェクトルートで `openspec update` を実行します。設定済みツールのスキルファイルとコマンドファイルが再生成されます。
@@ -112,6 +123,13 @@ CLI は **エンジン** です。変更フォルダーの構造、アーティ�
 ## 利用できるコマンド
 
 デフォルトでは、OpenSpec は **core** のスラッシュコマンドをインストールします。
+
+- `/opsx:explore`: 変更へ進む前にAIとアイデアを検討する（迷っている場合の最初の一手）
+- `/opsx:propose`: 変更を作成し、計画アーティファクトをまとめて下書きする
+- `/opsx:apply`: タスクリストを順に処理して変更を実装する
+- `/opsx:update`: 変更の計画アーティファクトを更新し、整合性を保つ
+- `/opsx:sync`: 変更の仕様更新を本仕様へマージする（通常は自動）
+- `/opsx:archive`: 変更を完了してアーカイブする
 
 - `/opsx:explore`: 変更を提案する前に、AI と一緒にアイデアを検討する。迷っているときの最初の一手。
 - `/opsx:propose`: 変更を作成し、計画成果物をまとめて下書きする。

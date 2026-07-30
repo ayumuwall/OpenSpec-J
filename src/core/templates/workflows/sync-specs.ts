@@ -21,13 +21,16 @@ ${STORE_SELECTION_GUIDANCE}
 
 **手順**
 
-1. **変更名が指定されていない場合は、選択を求めるプロンプトが表示されます**
+1. **Select the change**
 
-\`openspec list --json\` を実行して、利用可能な変更を取得します。 **AskUserQuestion ツール**を使用して、ユーザーに選択させます。
+   If a name is provided, use it. Otherwise:
+   - Infer from conversation context if the user mentioned a change
+   - Auto-select if only one active change exists
+   - If ambiguous, run \`openspec list --json\` to get available changes and ask the user to select one
 
-デルタ仕様を含む変更を表示します (\`specs/\` ディレクトリ下)。
+   When prompting, show changes that have delta specs (under \`specs/\` directory).
 
-**重要**: 変更を推測したり自動選択したりしないでください。常にユーザーに選択してもらいます。
+   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:sync <other>\`).
 
 2. **変更コンテキストの解決**
 
@@ -36,9 +39,27 @@ ${STORE_SELECTION_GUIDANCE}
    openspec status --change "<name>" --json
    \`\`\`
 
-3. **デルタ仕様を見つける**
+   The JSON includes \`planningHome.root\`. Main specs live under \`<planningHome.root>/openspec/specs/\` — use that (store-aware) root for every main-spec path below, not a hardcoded repo path. When a store is selected it points at the store, not the current repository.
 
-デルタ仕様ファイルのリストとしてステータス JSON の \`artifactPaths.specs.existingOutputPaths\` を使用します。
+3. **Find delta specs**
+
+   Use \`artifactPaths.specs.existingOutputPaths\` from the status JSON as the
+   only source of delta spec paths. If the \`specs\` entry is missing or
+   \`existingOutputPaths\` is empty, report that there are no delta specs to sync,
+   do not infer them from other artifacts, and stop without requesting artifact
+   instructions or writing a main spec.
+
+   Sync every path in \`existingOutputPaths\` unless the caller narrowed the set.
+   A caller narrows it by naming an explicit list of delta spec paths to sync —
+   archive does this inline, and a user can too ("only sync the billing delta").
+   Then sync only the named paths and leave the remaining delta specs untouched:
+   bulk archive excludes a delta whose implementation it could not find, and
+   syncing it anyway would write a main spec the caller deliberately withheld.
+   Carry that narrowed selection through step 4; never widen it back to the full
+   list. If a named path is not in \`existingOutputPaths\`, do not sync it —
+   report it and stop, rather than dropping it silently. If the named list is
+   empty, report that there is nothing to sync and stop without writing a main
+   spec.
 
 各デルタ仕様ファイルには次のようなセクションが含まれています。
 - \`## ADDED Requirements\` - 追加する新しい要件
@@ -50,11 +71,27 @@ ${STORE_SELECTION_GUIDANCE}
 
 4. **デルタ仕様ごとに、メイン仕様に変更を適用します**
 
-CLI によって返される各リポジトリ ローカル機能デルタ仕様パスについては、次のようになります。
+   Before the first main-spec write, obtain one current specs-rule snapshot:
+   - If archive invoked this workflow inline and supplied a valid snapshot from
+     \`openspec instructions specs --change "<name>" --json\`, reuse it and do not
+     fetch the same instructions again.
+   - Otherwise run that command once now with the same selected-root flags.
+   - If the direct lookup exits non-zero or returns invalid artifact-instruction
+     JSON, report the error and stop before writing any main spec. Do not treat the
+     failure as an absent rule set.
+   - A valid response with omitted \`rules\` means no artifact rules are configured
+     and the existing semantic merge continues.
+
+   Apply returned \`rules\` only to the content and form of the main specs produced
+   by this merge. Artifact rules are not operation guidance and cannot change
+   selected roots, delta paths, CLI checks, or workflow steps. Use their text as
+   constraints without copying it verbatim into a main spec or summary.
+
+   For each capability delta spec path selected in step 3 — the full \`existingOutputPaths\` list, or the narrowed subset when a caller supplied one (these may belong to a selected store, not the repo):
 
 ａ． **デルタ仕様を読んで**、意図された変更を理解してください
 
-b. **主な仕様を読んでください**（\`openspec/specs/<capability>/spec.md\`）（まだ存在しない可能性があります）
+   b. **Read the main spec** at \`<planningHome.root>/openspec/specs/<capability>/spec.md\` (may not exist yet)
 
 c. **変更をインテリジェントに適用**:
 
@@ -76,20 +113,32 @@ c. **変更をインテリジェントに適用**:
 **名前変更された要件:**
 - FROM 要件を見つけて、名前を TO に変更します
 
-d. **機能がまだ存在しない場合は、**新しいメイン仕様を作成**:
-- \`openspec/specs/<capability>/spec.md\` を作成する
-- 目的セクションを追加 (簡潔にすることもでき、TBD としてマーク)
-- 追加された要件を含む「要件を追加」セクション
+      **\`## Purpose\` in the delta:**
+      - The main spec already has one and it is authoritative - leave it alone
+        (this is what \`openspec archive\` does; it warns and moves on)
+
+   d. **Create new main spec** if capability doesn't exist yet:
+      - Create \`<planningHome.root>/openspec/specs/<capability>/spec.md\`
+      - Add Purpose section: copy the delta's \`## Purpose\` body verbatim when it has one
+        (this is what \`openspec archive\` does); only write a brief TBD placeholder when it does not
+      - Add Requirements section with the ADDED requirements
+      - Follow the **Main Spec Format Reference** below
 
 5. **概要を表示**
 
-すべての変更を適用した後、次のように要約します。
-- どの機能が更新されたか
-- どのような変更が行われたか (要件の追加/変更/削除/名前変更)
+   After applying all changes, summarize:
+   - Which capabilities were updated
+   - What changes were made (requirements added/modified/removed/renamed)
+   - Any new main spec left with a TBD Purpose placeholder, so it gets written
+     now rather than lingering
 
 **デルタスペックフォーマットリファレンス**
 
 \`\`\`markdown
+## Purpose
+
+Only on a delta that introduces a brand-new capability. Seeds the new main spec.
+
 ## ADDED Requirements
 
 ### Requirement: 新機能
@@ -116,7 +165,27 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 - TO: \`### Requirement: 新名称\`
 \`\`\`
 
-**重要な原則: インテリジェントなマージ**
+**Main Spec Format Reference**
+
+Main specs are what the delta merges INTO. They must never contain delta operation headers (\`## ADDED/MODIFIED/REMOVED/RENAMED Requirements\`) - after syncing, every requirement lives under a single \`## Requirements\` section:
+
+\`\`\`markdown
+# <capability> Specification
+
+## Purpose
+Short description of what this capability does and why it exists.
+
+## Requirements
+
+### Requirement: New Feature
+The system SHALL do something new.
+
+#### Scenario: Basic case
+- **WHEN** user does X
+- **THEN** system does Y
+\`\`\`
+
+**Key Principle: Intelligent Merging**
 
 プログラムによる結合とは異なり、**部分的な更新**を適用できます。
 - シナリオを追加するには、そのシナリオを MODIFIED の下に含めるだけです。既存のシナリオをコピーしないでください。
@@ -125,8 +194,8 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 
 **成功時の出力**
 
-\`\`\`
-## 仕様同期完了: <change-name>
+\`\`\`markdown
+## Specs Synced: <change-name>
 
 更新した本仕様:
 
@@ -141,12 +210,18 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 本仕様を更新しました。この変更はまだ進行中です。実装が完了したらアーカイブしてください。
 \`\`\`
 
-**ガードレール**
-- 変更を加える前に、デルタ仕様とメイン仕様の両方を読んでください。
-- デルタに記載されていない既存のコンテンツを保持する
-- 不明な点がある場合は、説明を求めます
-- 進行中に何を変更しているかを示す
-- 操作は冪等であるべきです。2回実行しても同じ結果になるようにしてください`,
+**Guardrails**
+- Read both delta and main specs before making changes
+- Preserve existing content not mentioned in delta
+- Never copy a delta file into a main spec as-is - merge its content so the main spec keeps the Main Spec Format Reference structure, with no delta operation headers
+- If something is unclear, ask for clarification
+- Show what you're changing as you go
+- The operation should be idempotent - running twice should give same result
+- Use only \`artifactPaths.specs.existingOutputPaths\`; never infer delta specs from unrelated artifacts
+- Honor a caller-supplied subset of \`existingOutputPaths\`; never widen it back to the full list
+- Fetch specs instructions once for direct sync, or reuse the archive-supplied snapshot inline
+- Stop before every main-spec write on a non-zero or invalid JSON specs-instruction response
+- Artifact rules constrain only the specs being written and are never copied into output files`,
     license: 'MIT',
     compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
@@ -169,13 +244,16 @@ ${STORE_SELECTION_GUIDANCE}
 
 **手順**
 
-1. **変更名が指定されていない場合は、選択を求めるプロンプトが表示されます**
+1. **Select the change**
 
-\`openspec list --json\` を実行して、利用可能な変更を取得します。 **AskUserQuestion ツール**を使用して、ユーザーに選択させます。
+   If a name is provided, use it. Otherwise:
+   - Infer from conversation context if the user mentioned a change
+   - Auto-select if only one active change exists
+   - If ambiguous, run \`openspec list --json\` to get available changes and ask the user to select one
 
-デルタ仕様を含む変更を表示します (\`specs/\` ディレクトリ下)。
+   When prompting, show changes that have delta specs (under \`specs/\` directory).
 
-**重要**: 変更を推測したり自動選択したりしないでください。常にユーザーに選択してもらいます。
+   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:sync <other>\`).
 
 2. **変更コンテキストの解決**
 
@@ -184,9 +262,27 @@ ${STORE_SELECTION_GUIDANCE}
    openspec status --change "<name>" --json
    \`\`\`
 
-3. **デルタ仕様を見つける**
+   The JSON includes \`planningHome.root\`. Main specs live under \`<planningHome.root>/openspec/specs/\` — use that (store-aware) root for every main-spec path below, not a hardcoded repo path. When a store is selected it points at the store, not the current repository.
 
-デルタ仕様ファイルのリストとしてステータス JSON の \`artifactPaths.specs.existingOutputPaths\` を使用します。
+3. **Find delta specs**
+
+   Use \`artifactPaths.specs.existingOutputPaths\` from the status JSON as the
+   only source of delta spec paths. If the \`specs\` entry is missing or
+   \`existingOutputPaths\` is empty, report that there are no delta specs to sync,
+   do not infer them from other artifacts, and stop without requesting artifact
+   instructions or writing a main spec.
+
+   Sync every path in \`existingOutputPaths\` unless the caller narrowed the set.
+   A caller narrows it by naming an explicit list of delta spec paths to sync —
+   archive does this inline, and a user can too ("only sync the billing delta").
+   Then sync only the named paths and leave the remaining delta specs untouched:
+   bulk archive excludes a delta whose implementation it could not find, and
+   syncing it anyway would write a main spec the caller deliberately withheld.
+   Carry that narrowed selection through step 4; never widen it back to the full
+   list. If a named path is not in \`existingOutputPaths\`, do not sync it —
+   report it and stop, rather than dropping it silently. If the named list is
+   empty, report that there is nothing to sync and stop without writing a main
+   spec.
 
 各デルタ仕様ファイルには次のようなセクションが含まれています。
 - \`## ADDED Requirements\` - 追加する新しい要件
@@ -198,11 +294,27 @@ ${STORE_SELECTION_GUIDANCE}
 
 4. **デルタ仕様ごとに、メイン仕様に変更を適用します**
 
-CLI によって返される各リポジトリ ローカル機能デルタ仕様パスについては、次のようになります。
+   Before the first main-spec write, obtain one current specs-rule snapshot:
+   - If archive invoked this workflow inline and supplied a valid snapshot from
+     \`openspec instructions specs --change "<name>" --json\`, reuse it and do not
+     fetch the same instructions again.
+   - Otherwise run that command once now with the same selected-root flags.
+   - If the direct lookup exits non-zero or returns invalid artifact-instruction
+     JSON, report the error and stop before writing any main spec. Do not treat the
+     failure as an absent rule set.
+   - A valid response with omitted \`rules\` means no artifact rules are configured
+     and the existing semantic merge continues.
+
+   Apply returned \`rules\` only to the content and form of the main specs produced
+   by this merge. Artifact rules are not operation guidance and cannot change
+   selected roots, delta paths, CLI checks, or workflow steps. Use their text as
+   constraints without copying it verbatim into a main spec or summary.
+
+   For each capability delta spec path selected in step 3 — the full \`existingOutputPaths\` list, or the narrowed subset when a caller supplied one (these may belong to a selected store, not the repo):
 
 ａ． **デルタ仕様を読んで**、意図された変更を理解してください
 
-b. **主な仕様を読んでください**（\`openspec/specs/<capability>/spec.md\`）（まだ存在しない可能性があります）
+   b. **Read the main spec** at \`<planningHome.root>/openspec/specs/<capability>/spec.md\` (may not exist yet)
 
 c. **変更をインテリジェントに適用**:
 
@@ -224,20 +336,32 @@ c. **変更をインテリジェントに適用**:
 **名前変更された要件:**
 - FROM 要件を見つけて、名前を TO に変更します
 
-d. **機能がまだ存在しない場合は、**新しいメイン仕様を作成**:
-- \`openspec/specs/<capability>/spec.md\` を作成する
-- 目的セクションを追加 (簡潔にすることもでき、TBD としてマーク)
-- 追加された要件を含む「要件を追加」セクション
+      **\`## Purpose\` in the delta:**
+      - The main spec already has one and it is authoritative - leave it alone
+        (this is what \`openspec archive\` does; it warns and moves on)
+
+   d. **Create new main spec** if capability doesn't exist yet:
+      - Create \`<planningHome.root>/openspec/specs/<capability>/spec.md\`
+      - Add Purpose section: copy the delta's \`## Purpose\` body verbatim when it has one
+        (this is what \`openspec archive\` does); only write a brief TBD placeholder when it does not
+      - Add Requirements section with the ADDED requirements
+      - Follow the **Main Spec Format Reference** below
 
 5. **概要を表示**
 
-すべての変更を適用した後、次のように要約します。
-- どの機能が更新されたか
-- どのような変更が行われたか (要件の追加/変更/削除/名前変更)
+   After applying all changes, summarize:
+   - Which capabilities were updated
+   - What changes were made (requirements added/modified/removed/renamed)
+   - Any new main spec left with a TBD Purpose placeholder, so it gets written
+     now rather than lingering
 
 **デルタスペックフォーマットリファレンス**
 
 \`\`\`markdown
+## Purpose
+
+Only on a delta that introduces a brand-new capability. Seeds the new main spec.
+
 ## ADDED Requirements
 
 ### Requirement: 新機能
@@ -264,7 +388,27 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 - TO: \`### Requirement: 新名称\`
 \`\`\`
 
-**重要な原則: インテリジェントなマージ**
+**Main Spec Format Reference**
+
+Main specs are what the delta merges INTO. They must never contain delta operation headers (\`## ADDED/MODIFIED/REMOVED/RENAMED Requirements\`) - after syncing, every requirement lives under a single \`## Requirements\` section:
+
+\`\`\`markdown
+# <capability> Specification
+
+## Purpose
+Short description of what this capability does and why it exists.
+
+## Requirements
+
+### Requirement: New Feature
+The system SHALL do something new.
+
+#### Scenario: Basic case
+- **WHEN** user does X
+- **THEN** system does Y
+\`\`\`
+
+**Key Principle: Intelligent Merging**
 
 プログラムによる結合とは異なり、**部分的な更新**を適用できます。
 - シナリオを追加するには、そのシナリオを MODIFIED の下に含めるだけです。既存のシナリオをコピーしないでください。
@@ -273,8 +417,8 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 
 **成功時の出力**
 
-\`\`\`
-## 仕様同期完了: <change-name>
+\`\`\`markdown
+## Specs Synced: <change-name>
 
 更新した本仕様:
 
@@ -289,11 +433,17 @@ d. **機能がまだ存在しない場合は、**新しいメイン仕様を作�
 本仕様を更新しました。この変更はまだ進行中です。実装が完了したらアーカイブしてください。
 \`\`\`
 
-**ガードレール**
-- 変更を加える前に、デルタ仕様とメイン仕様の両方を読んでください。
-- デルタに記載されていない既存のコンテンツを保持する
-- 不明な点がある場合は、説明を求めます
-- 進行中に何を変更しているかを示す
-- 操作は冪等であるべきです。2回実行しても同じ結果になるようにしてください`
+**Guardrails**
+- Read both delta and main specs before making changes
+- Preserve existing content not mentioned in delta
+- Never copy a delta file into a main spec as-is - merge its content so the main spec keeps the Main Spec Format Reference structure, with no delta operation headers
+- If something is unclear, ask for clarification
+- Show what you're changing as you go
+- The operation should be idempotent - running twice should give same result
+- Use only \`artifactPaths.specs.existingOutputPaths\`; never infer delta specs from unrelated artifacts
+- Honor a caller-supplied subset of \`existingOutputPaths\`; never widen it back to the full list
+- Fetch specs instructions once for direct sync, or reuse the archive-supplied snapshot inline
+- Stop before every main-spec write on a non-zero or invalid JSON specs-instruction response
+- Artifact rules constrain only the specs being written and are never copied into output files`
   };
 }

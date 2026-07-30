@@ -6,6 +6,7 @@
 
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
+import { escapeYamlValue } from '../yaml.js';
 
 /**
  * GitHub Copilot のコマンド生成アダプター。
@@ -21,7 +22,7 @@ export const githubCopilotAdapter: ToolCommandAdapter = {
 
   formatFile(content: CommandContent): string {
     return `---
-description: ${content.description}
+description: ${escapeYamlValue(content.description)}
 ---
 
 ${content.body}

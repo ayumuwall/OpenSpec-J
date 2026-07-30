@@ -4,7 +4,12 @@
  */
 
 import chalk from 'chalk';
+import {
+  execFileSync,
+  type ExecFileSyncOptionsWithStringEncoding,
+} from 'node:child_process';
 import { WELCOME_ANIMATION } from './ascii-patterns.js';
+import { getOnboardingCommands } from '../core/onboarding-commands.js';
 
 // 横並びレイアウトの最小ターミナル幅
 const MIN_WIDTH = 60;
@@ -15,21 +20,35 @@ const ART_COLUMN_WIDTH = 24;
 /**
  * ウェルカム文（右カラム）
  */
-function getWelcomeText(): string[] {
+function getWelcomeText(workflows: readonly string[]): string[] {
+  const onboardingCommands = getOnboardingCommands(workflows);
+  const quickStart: string[] = [];
+
+  if (onboardingCommands.length > 0) {
+    const commandWidth = Math.max(...onboardingCommands.map((c) => c.command.length));
+    quickStart.push(chalk.white('Quick start after setup:'));
+    for (const { command, description } of onboardingCommands) {
+      quickStart.push(`  ${chalk.yellow(command.padEnd(commandWidth + 1))} ${chalk.dim(description)}`);
+    }
+    // These are the canonical names. How each tool spells them differs
+    // (/opsx-propose, @opsx-propose, $openspec-propose ...) and cannot be known
+    // until tools are picked, one prompt later — so flag it rather than let the
+    // canonical form read as the literal thing to type. "Getting started"
+    // prints the real spelling once the selection is known.
+    quickStart.push(chalk.dim('  (spelling varies by tool)'));
+    quickStart.push('');
+  }
+
   return [
     chalk.white.bold('OpenSpec へようこそ'),
     chalk.dim('軽量な仕様駆動フレームワーク'),
     '',
     chalk.white('このセットアップで次を構成します:'),
     chalk.dim('  • AI ツール向けの Agent Skills'),
-    chalk.dim('  • /opsx:* スラッシュコマンド'),
+    chalk.dim('  • 対応している場合はワークフローコマンド'),
     '',
-    chalk.white('セットアップ後のクイックスタート:'),
-    `  ${chalk.yellow('/opsx:new')}      ${chalk.dim('変更を作成')}`,
-    `  ${chalk.yellow('/opsx:continue')} ${chalk.dim('次のアーティファクト')}`,
-    `  ${chalk.yellow('/opsx:apply')}    ${chalk.dim('タスクを実装')}`,
-    '',
-    chalk.cyan('Enter でツールを選択...'),
+    ...quickStart,
+    chalk.cyan('Enterでツールを選択...'),
   ];
 }
 
@@ -57,6 +76,47 @@ function renderFrame(artLines: string[], textLines: string[]): string {
   return lines.join('\n');
 }
 
+const REDUCED_MOTION_EXEC_OPTIONS: ExecFileSyncOptionsWithStringEncoding = {
+  encoding: 'utf8',
+  timeout: 500,
+  // SIGKILL so a wedged lookup can never outlive the timeout and stall init.
+  killSignal: 'SIGKILL',
+  stdio: ['ignore', 'pipe', 'ignore'],
+};
+
+/**
+ * Best-effort check of the OS-level reduced-motion preference (#722).
+ * Any lookup failure (missing binary, unset key, timeout) means
+ * "no preference detected" and animation stays enabled.
+ */
+export function prefersReducedMotion(
+  platform: NodeJS.Platform = process.platform
+): boolean {
+  try {
+    if (platform === 'darwin') {
+      // The key only exists once the user has toggled Reduce Motion; when it
+      // is unset `defaults` exits non-zero and lands in the catch below.
+      const out = execFileSync(
+        'defaults',
+        ['read', 'com.apple.universalaccess', 'reduceMotion'],
+        REDUCED_MOTION_EXEC_OPTIONS
+      );
+      return out.trim() === '1';
+    }
+    if (platform === 'linux') {
+      const out = execFileSync(
+        'gsettings',
+        ['get', 'org.gnome.desktop.interface', 'enable-animations'],
+        REDUCED_MOTION_EXEC_OPTIONS
+      );
+      return out.trim() === 'false';
+    }
+  } catch {
+    // Detection is best-effort only.
+  }
+  return false;
+}
+
 /**
  * ターミナルがアニメーションに対応しているか確認する
  */
@@ -67,9 +127,15 @@ function canAnimate(): boolean {
   // NO_COLOR を尊重
   if (process.env.NO_COLOR) return false;
 
+  // アニメーションを抑えたい利用者向けの手動設定。空値でも存在すれば無効化する。
+  if (process.env.OPENSPEC_NO_ANIMATION !== undefined) return false;
+
   // ターミナル幅を確認
   const columns = process.stdout.columns || 80;
   if (columns < MIN_WIDTH) return false;
+
+  // Last so only interactive terminals pay for the OS lookup
+  if (prefersReducedMotion()) return false;
 
   return true;
 }
@@ -77,54 +143,50 @@ function canAnimate(): boolean {
 /**
  * Enter キーを待つ
  */
-function waitForEnter(): Promise<void> {
-  return new Promise((resolve) => {
-    const { stdin } = process;
+async function waitForEnter(): Promise<void> {
+  if (!process.stdin.isTTY) {
+    return;
+  }
 
-    // 非 TTY はそのまま通す
-    if (!stdin.isTTY) {
-      resolve();
-      return;
-    }
-
-    const wasRaw = stdin.isRaw;
-    stdin.setRawMode(true);
-    stdin.resume();
-
-    const onData = (data: Buffer): void => {
-      const char = data.toString();
-
-      // Enter または Ctrl+C
-      if (char === '\r' || char === '\n' || char === '\u0003') {
-        stdin.removeListener('data', onData);
-        stdin.setRawMode(wasRaw);
-        stdin.pause();
-
-        // Ctrl+C を処理
-        if (char === '\u0003') {
-          process.stdout.write('\n');
-          process.exit(0);
-        }
-
-        resolve();
+  // Keep all interactive input on Inquirer's keypress lifecycle. Mixing a raw
+  // `data` listener between Inquirer prompts breaks arrow/space keys on Windows.
+  const { createPrompt, isEnterKey, useKeypress } = await import('@inquirer/core');
+  const prompt = createPrompt<void, Record<string, never>>((_config, done) => {
+    useKeypress((key) => {
+      if (key.ctrl && key.name === 'c') {
+        process.stdout.write('\n');
+        process.exit(0);
       }
-    };
 
-    stdin.on('data', onData);
+      if (isEnterKey(key)) {
+        done(undefined);
+      }
+    });
+
+    return '';
   });
+
+  await prompt({});
 }
 
 /**
  * アニメーション付きウェルカム画面を表示する。
  * Enter で終了する。
  */
-export async function showWelcomeScreen(): Promise<void> {
-  const textLines = getWelcomeText();
+export async function showWelcomeScreen(
+  workflows: readonly string[],
+  options: { animate?: boolean } = {}
+): Promise<void> {
+  const textLines = getWelcomeText(workflows);
 
-  if (!canAnimate()) {
-    // フォールバック: 静的なウェルカム表示
+  if (options.animate === false || !canAnimate()) {
+    // 静的表示。TTYでのみEnter待ちを表示し、非TTYでは該当行を除外する。
+    const staticLines = process.stdin.isTTY
+      ? textLines
+      : textLines.filter((line) => !line.includes('Enterでツール'));
     const frame = WELCOME_ANIMATION.frames[3]; // Peak frame
-    process.stdout.write('\n' + renderFrame(frame, textLines) + '\n\n');
+    process.stdout.write('\n' + renderFrame(frame, staticLines) + '\n\n');
+    await waitForEnter();
     return;
   }
 

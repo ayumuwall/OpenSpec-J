@@ -36,9 +36,15 @@ export interface ToolCommandAdapter {
    * コマンドのファイルパスを返す。
    * @param commandId - コマンド識別子（例: 'explore'）
    * @returns プロジェクトルートからのパス（例: '.claude/commands/opsx/explore.md'）。
-   *          グローバルなプロンプトを使うツール（例: Codex）は絶対パスになる。
+   *          グローバルスコープのコマンドファイルを使うツールでは絶対パスの場合がある。
    */
   getFilePath(commandId: string): string;
+  /**
+   * コマンド名の前に入力する、既定の `/` 以外の接頭辞。
+   * Amazon Qはこれらのファイルを `@` で呼び出すプロンプトライブラリへ読み込むため、
+   * アダプターでは '@' を設定する。名前自体はgetFilePathから導出する。
+   */
+  invocationPrefix?: string;
   /**
    * フロントマターを含むファイル全体を整形する。
    * @param content - ツール非依存のコマンド内容
@@ -51,7 +57,7 @@ export interface ToolCommandAdapter {
  * コマンドファイル生成結果。
  */
 export interface GeneratedCommand {
-  /** プロジェクトルートからのパス（グローバルなツールは絶対パス） */
+  /** プロジェクトルートからのパス（グローバルスコープのコマンドファイルでは絶対パス） */
   path: string;
   /** 完全なファイル内容（フロントマター + 本文） */
   fileContent: string;

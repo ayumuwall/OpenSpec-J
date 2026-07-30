@@ -1,6 +1,7 @@
 import ora from 'ora';
 import path from 'path';
 import { Validator } from '../core/validation/validator.js';
+import { VALIDATION_MESSAGES } from '../core/validation/constants.js';
 import {
   resolveRootForCommand,
   toRootOutput,
@@ -226,13 +227,29 @@ export class ValidateCommand {
         const prefix = issue.level === 'ERROR' ? '✗' : issue.level === 'WARNING' ? '⚠' : 'ℹ';
         console.error(`${prefix} [${label}] ${issue.path}: ${issue.message}`);
       }
-      this.printNextSteps(type, id, root);
+      this.printNextSteps(type, id, root, report.issues);
     }
   }
 
-  private printNextSteps(type: ItemType, id: string, root: ResolvedOpenSpecRoot): void {
+  private printNextSteps(type: ItemType, id: string, root: ResolvedOpenSpecRoot, issues: Array<{ message: string }> = []): void {
     const bullets: string[] = [];
-    if (type === 'change') {
+    // The delta-authoring bullets contradict a marker-related error ("add
+    // deltas" vs "remove skip_specs or the files"), so branch on the exact
+    // marker messages - the generic no-deltas guidance also mentions
+    // skip_specs, which must not trigger this.
+    const conflictIssue = issues.some(i =>
+      i.message.includes(VALIDATION_MESSAGES.CHANGE_SKIP_SPECS_CONFLICT)
+    );
+    const invalidMarkerIssue = issues.some(i =>
+      i.message.includes(VALIDATION_MESSAGES.CHANGE_SKIP_SPECS_INVALID_METADATA)
+    );
+    if (type === 'change' && conflictIssue) {
+      bullets.push('- この変更は skip_specs（仕様差分なし）を宣言しています。specs/ 配下のファイルを削除するか、要件が変わる場合は .openspec.yaml から skip_specs を削除してください');
+      bullets.push('- skip_specs は .openspec.yaml が有効な変更メタデータの場合のみ使用できます（既知のスキーマを指定する schema: <name> が必要です）');
+    } else if (type === 'change' && invalidMarkerIssue) {
+      bullets.push('- skip_specs マーカーを使用できるよう .openspec.yaml を修正してください（既知のスキーマを指定する schema: <name> が必要です）');
+      bullets.push('- または .openspec.yaml から skip_specs を削除し、仕様差分を追加してください');
+    } else if (type === 'change') {
       bullets.push('- 変更に specs/ 配下の差分があることを確認（## ADDED/MODIFIED/REMOVED/RENAMED Requirements 見出しを使用）');
       bullets.push('- 各 Requirement には少なくとも1つの #### Scenario: ブロックが必要');
       bullets.push(`- Debug parsed deltas: ${withStoreFlag(root, `openspec show ${id} --json --deltas-only`)}`);

@@ -13,7 +13,9 @@ npm install -g @ayumuwall/openspec@latest
 openspec --version
 ```
 
-インストールしても見つからない場合は、グローバル npm bin ディレクトリが `PATH` にない可能性があります。`npm bin -g` を実行してグローバルバイナリの場所を確認し、そのパスがシェルプロファイルに含まれていることを確認します。
+インストール済みでも見つからない場合は、グローバルnpmのbinディレクトリが `PATH` にない可能性があります。`npm prefix -g` でグローバルパッケージの場所を確認してください。macOSとLinuxではそのディレクトリの `bin/`、Windowsではそのディレクトリ自体にバイナリがあります。そのパスが `PATH` に含まれることを確認します（`npm bin -g` はnpm 9で削除されました）。
+
+[AI支援インストール](installation.md#aiアシスタントでインストール)を使った場合、ここで手動作業へ引き継がれるのは正常です。プロンプトはシェルの起動ファイルを直接編集せず、必要な `PATH` 変更を示すよう指示しています。
 
 ### 「Node.js 20.19.0 以降が必要」
 
@@ -43,7 +45,29 @@ openspec init --tools claude,cursor
 
 1. **入力場所が違う可能性があります。** スラッシュコマンドは、ターミナルではなく AI アシスタントのチャットに入力します。シェルに `/opsx:propose` と入力しているなら、それが原因です。[コマンドの仕組み](how-commands-work.md) を参照してください。
 
-2. **ファイルを再生成します。** プロジェクト ルートから:
+2. **ファイルを再生成します。** プロジェクトルートから:
+
+   ```bash
+   openspec update
+   ```
+
+   設定済みの全ツールについて、スキルとコマンドファイルを再生成します。
+
+   指示ファイルは*インストール済み*CLIから生成されるため、CLIが古いと新しいワークフローを書き込まないまま最新と報告されることがあります。`openspec update` は新しいCLIを確認してアップグレードを提案するため、表示された場合は更新してください。
+
+3. **アシスタントを再起動します。** 多くのツールは起動時にスキルとコマンドを読み込みます。新しいウィンドウを開くだけで解決することもあります。
+
+4. **ファイルの存在を確認します。** Claude Codeでは `.claude/skills/` に `openspec-*` フォルダーがあるか確認します。他ツールの配置先は[対応ツール](supported-tools.md)に掲載しています。
+
+5. **このプロジェクトを初期化済みか確認します。** スキルはプロジェクトごとに作成されます。リポジトリをcloneした、またはフォルダーを移動した場合は、そこで `openspec init`（または `openspec update`）を実行します。
+
+6. **ツールがコマンドファイルに対応するか確認します。** Codex、CodeArts、ForgeCode、Hermes、Kimi Code、Mistral Vibeでは `opsx-*` コマンドファイルを生成せず、スキルとして呼び出すため `/opsx` は補完されません。Codexは `$openspec-propose`、Kimi Codeは `/skill:openspec-propose`、その他は `/openspec-propose` と入力します。Amazon Qはコマンドファイルを生成しますが、スラッシュメニューではなくプロンプトライブラリへ読み込むため、`/opsx` ではなく `@opsx-propose` を使います。全ツールの形式は[呼び出し方法](supported-tools.md#how-to-invoke)を参照してください。
+
+## 変更を扱う
+
+### 「変更が見つかりません」
+
+対象の変更を特定できませんでした。変更名を明示するか、存在する変更を確認してください。
 
 ```bash
 openspec update
@@ -150,6 +174,8 @@ CI または非対話型シェルを使用しており、OpenSpec はクリー�
 ```bash
 openspec init --force
 ```
+
+Codexでは、`$CODEX_HOME/prompts` または `~/.codex/prompts` にある旧管理プロンプトをOpenSpecが検出する場合があります。削除対象はOpenSpecが許可リストに登録した旧Codexプロンプト名だけです。非対話の `openspec init` は代替となる `.codex/skills/openspec-*` スキルが存在するファイルだけを削除します。非対話の `openspec update` は、`--force` を渡さない限り旧ファイルを削除しません。
 
 ### 移行後にコマンドが表示されない
 

@@ -5,8 +5,18 @@ import ora from 'ora';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
-import { AI_TOOLS } from '../core/config.js';
+import { AI_TOOLS, TOOL_ID_ALIASES } from '../core/config.js';
 import { UpdateCommand } from '../core/update.js';
+import {
+  getAvailableCliUpdate,
+  displayCliUpdateNote,
+  shouldOfferUpgrade,
+  getInstallDir,
+  offerCliUpgrade,
+  rerunUpdateWithUpgradedCli,
+  displayUpgradeCommand,
+  isSourceCheckout,
+} from '../core/version-check.js';
 import { ListCommand } from '../core/list.js';
 import { ArchiveCommand, type ArchiveOptions } from '../core/archive.js';
 import { ViewCommand } from '../core/view.js';
@@ -27,6 +37,7 @@ import {
   statusCommand,
   instructionsCommand,
   applyInstructionsCommand,
+  archiveInstructionsCommand,
   templatesCommand,
   schemasCommand,
   newChangeCommand,
@@ -39,6 +50,7 @@ import {
 } from '../commands/workflow/index.js';
 import { maybeShowTelemetryNotice, trackCommand, shutdown } from '../telemetry/index.js';
 import { COMMON_FLAGS } from '../core/completions/shared-flags.js';
+import { isInteractive } from '../utils/interactive.js';
 
 const STORE_OPTION_DESCRIPTION = COMMON_FLAGS.store.description;
 
@@ -135,7 +147,10 @@ program.hook('postAction', async () => {
 });
 
 const availableToolIds = AI_TOOLS.filter((tool) => tool.skillsDir).map((tool) => tool.value);
-const toolsOptionDescription = `対話なしで AI ツールを設定します。"all" / "none" またはカンマ区切りで指定してください: ${availableToolIds.join(', ')}`;
+const toolAliasNote = Object.entries(TOOL_ID_ALIASES)
+  .map(([retired, current]) => `${retired}（現在は ${current}）`)
+  .join(', ');
+const toolsOptionDescription = `対話なしでAIツールを設定します。"all"、"none"、または次のIDをカンマ区切りで指定してください: ${availableToolIds.join(', ')}。旧IDも使用できます: ${toolAliasNote}`;
 
 program
   .command('init [path]')
@@ -143,7 +158,8 @@ program
   .option('--tools <tools>', toolsOptionDescription)
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
   .option('--profile <profile>', 'グローバル設定 profile を上書き（core または custom）')
-  .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string }) => {
+  .option('--no-animation', 'アニメーションの代わりに静的なウェルカム画面を表示')
+  .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string; animation?: boolean }) => {
     try {
       // Validate that the path is a valid directory
       const resolvedPath = path.resolve(targetPath);
@@ -169,6 +185,7 @@ program
         tools: options?.tools,
         force: options?.force,
         profile: options?.profile,
+        animation: options?.animation,
       });
       await initCommand.execute(targetPath);
     } catch (error) {
@@ -204,8 +221,59 @@ program
   .option('--force', 'ファイルが最新でも強制更新')
   .action(async (targetPath = '.', options?: { force?: boolean }) => {
     try {
+      const installDir = getInstallDir();
+      // Running from a clone: the version is whatever the branch says, so any
+      // upgrade advice would be noise. Decided before the request, so a
+      // contributor never waits on an answer that gets thrown away.
+      const latestVersion = isSourceCheckout(installDir) ? null : await getAvailableCliUpdate();
+      const announce = latestVersion !== null;
+      // Offer to upgrade first: this process generates files from its own
+      // templates, so upgrading afterwards would leave the old ones on disk.
+      // Both streams must be a terminal — with stdout redirected the question
+      // lands in the file and the user waits at a blank screen forever.
+      const canOffer =
+        announce &&
+        shouldOfferUpgrade({
+          installDir,
+          projectPath: targetPath,
+          interactive: isInteractive(),
+          stdoutIsTty: Boolean(process.stdout.isTTY),
+        });
+
+      let declined = false;
+      if (latestVersion && canOffer) {
+        displayCliUpdateNote(latestVersion, targetPath, { withCommand: false });
+        const outcome = await offerCliUpgrade(latestVersion);
+
+        // Set the code and return rather than process.exit: exiting here would
+        // skip commander's postAction hook, killing the telemetry flush
+        // mid-request.
+        if (outcome === 'cancelled') {
+          // Ctrl-C means stop the command, not fall through to more prompts.
+          process.exitCode = 130;
+          return;
+        }
+        if (outcome === 'upgraded') {
+          process.exitCode = await rerunUpdateWithUpgradedCli(targetPath, {
+            force: options?.force,
+          });
+          return;
+        }
+        // Declined, failed, or upgraded-but-unreachable: fall through to the
+        // update, then leave the command on screen underneath it.
+        declined = true;
+      }
+
       const updateCommand = new UpdateCommand({ force: options?.force });
       await updateCommand.execute(targetPath);
+
+      if (declined) {
+        // The headline was printed before the prompt; only the manual route is
+        // still owed, and it belongs where the user is looking now.
+        displayUpgradeCommand(targetPath);
+      } else if (latestVersion) {
+        displayCliUpdateNote(latestVersion, targetPath);
+      }
     } catch (error) {
       failWithError(error);
       process.exit(1);
@@ -251,10 +319,19 @@ program
 program
   .command('view')
   .description('仕様と変更の対話型ダッシュボードを表示')
-  .action(async () => {
+  .option('--store <id>', STORE_OPTION_DESCRIPTION)
+  .addOption(hiddenStorePathOption())
+  .action(async (options?: { store?: string; storePath?: string }) => {
     try {
+      // Implicit cwd fallback stays enabled so `view` keeps accepting the same
+      // directories as `list`/`status` — notably pre-config.yaml `openspec/`
+      // dirs. ViewCommand still reports a missing openspec/ directory itself.
+      const root = await resolveRootForCommand(options ?? {});
+      if (!root) {
+        return;
+      }
       const viewCommand = new ViewCommand();
-      await viewCommand.execute('.');
+      await viewCommand.execute(root.path);
     } catch (error) {
       failWithError(error);
       process.exit(1);
@@ -504,7 +581,7 @@ program
 // Instructions command
 program
   .command('instructions [artifact]')
-  .description('アーティファクト作成やタスク適用の指示を出力')
+  .description('アーティファクト作成、適用、アーカイブ用の補足付き指示を出力')
   .option('--change <id>', '変更名')
   .option('--schema <name>', 'スキーマを上書き（config.yaml から自動検出）')
   .option('--json', 'JSON で出力')
@@ -512,9 +589,11 @@ program
   .addOption(hiddenStorePathOption())
   .action(async (artifactId: string | undefined, options: InstructionsOptions) => {
     try {
-      // Special case: "apply" is not an artifact, but a command to get apply instructions
+      // Workflow instruction surfaces are reserved command branches, not artifacts.
       if (artifactId === 'apply') {
         await applyInstructionsCommand(options);
+      } else if (artifactId === 'archive') {
+        await archiveInstructionsCommand(options);
       } else {
         await instructionsCommand(artifactId, options);
       }

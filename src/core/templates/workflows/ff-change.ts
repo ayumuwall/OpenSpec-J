@@ -21,8 +21,8 @@ ${STORE_SELECTION_GUIDANCE}
 
 1. **明確な入力が提供されない場合は、何を構築したいかを尋ねます**
 
-**AskUserQuestion ツール** (自由回答、プリセット オプションなし) を使用して、次のことを質問します。
-> 「どのような変更に取り組みたいですか? 何を構築または修正したいのかについて説明してください。」
+   Ask the user (open-ended, no preset options):
+   > "What change do you want to work on? Describe what you want to build or fix."
 
 説明からケバブケース名を導き出します (例: 「ユーザー認証の追加」→ \`add-user-auth\`)。
 
@@ -38,14 +38,14 @@ ${STORE_SELECTION_GUIDANCE}
    \`\`\`bash
    openspec status --change "<name>" --json
    \`\`\`
-JSON を解析して以下を取得します。
-- \`applyRequires\`: 実装前に必要なアーティファクト ID の配列 (例: \`["tasks"]\`)
-- \`artifacts\`: すべてのアーティファクトとそのステータスおよび依存関係のリスト
-- \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、および \`actionContext\`: パス​​とスコープのコンテキスト。リポジトリのローカル パスを想定する代わりに、これらを使用してください。
+   Parse the JSON to get:
+   - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
+   - \`artifacts\`: list of all artifacts, each with its \`status\` and its \`requires\` edges (the artifact IDs it directly depends on)
+   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context. Use these instead of assuming repo-local paths.
 
-4. **適用の準備ができるまでアーティファクトを順番に作成します**
+4. **Create every artifact in the required set**
 
-**TodoWrite ツール**を使用して、アーティファクトの進行状況を追跡します。
+   Use a todo list to track progress through the artifacts.
 
 依存関係の順序でアーティファクトをループします (保留中の依存関係がないアーティファクトが最初)。
 
@@ -54,26 +54,33 @@ JSON を解析して以下を取得します。
         \`\`\`bash
         openspec instructions <artifact-id> --change "<name>" --json
         \`\`\`
-- 指示の JSON には次のものが含まれます。
-- \`context\`: プロジェクトの背景 (あなたのための制約 - 出力には含まれません)
-- \`rules\`: アーティファクト固有のルール (ユーザー向けの制約 - 出力には含まれません)
-- \`template\`: 出力ファイルに使用する構造
-- \`instruction\`: このアーティファクト タイプのスキーマ固有のガイダンス
-- \`resolvedOutputPath\`: アーティファクトを書き込むための解決されたパスまたはパターン
-- \`dependencies\`: コンテキストのために読み取るための完成したアーティファクト
-- 完了した依存関係ファイルを読み取り、コンテキストを確認します。
-- \`template\`を構造として使用してアーティファクトファイルを作成し、\`resolvedOutputPath\`に書き込みます。
-- \`context\` および \`rules\` を制約として適用します。ただし、ファイルにはコピーしないでください。
-- 簡単な進捗状況を表示: 「✓ <artifact-id> を作成しました」
+      - The instructions JSON includes:
+        - \`context\`: Project background (constraints for you - do NOT include in output)
+        - \`rules\`: Artifact-specific rules (constraints for you - do NOT include in output)
+        - \`template\`: The structure to use for your output file
+        - \`instruction\`: Schema-specific guidance for this artifact type
+        - \`skipped\`/\`warning\`: present when the change declares skip_specs and this artifact must NOT be created - stop and pick another artifact
+        - \`resolvedOutputPath\`: Resolved path or pattern to write the artifact
+        - \`dependencies\`: Completed artifacts to read for context
+      - Read any completed dependency files for context - always re-read them from disk, even if you saw them earlier in the conversation (the user may have edited them)
+      - If the \`instruction\` field delegates creation to a specific skill or command, invoke it to produce the artifact instead of writing the file yourself, then verify the artifact file exists at \`resolvedOutputPath\`
+      - Otherwise create the artifact file using \`template\` as the structure and write it to \`resolvedOutputPath\`. If \`resolvedOutputPath\` is a glob, follow \`instruction\` to choose the concrete file path
+      - Apply \`context\` and \`rules\` as constraints - but do NOT copy them into the file
+      - Show brief progress: "✓ Created <artifact-id>"
 
-b. **すべての \`applyRequires\` アーティファクトが完了するまで続行します**
-- 各アーティファクトを作成した後、\`openspec status --change "<name>" --json\` を再実行します。
-- \`applyRequires\` のすべてのアーティファクト ID がアーティファクト配列に \`status: "done"\` を持っているかどうかを確認します
-- すべての \`applyRequires\` アーティファクトが完了したら停止します
+   b. **Continue until every artifact in the required set exists (not just \`apply.requires\`)**
+      - After creating each artifact, re-run \`openspec status --change "<name>" --json\`
+      - The required set is \`applyRequires\` plus every artifact reachable from those by following the \`requires\` edges in \`status --json\` - walk them transitively (spec-driven closes over proposal, specs, design, tasks). Leave artifacts outside that set alone
+      - \`status\` is file-existence only, so an \`applyRequires\` artifact reading \`done\` does NOT mean its dependencies exist - writing \`tasks.md\` early marks \`tasks\` done while \`specs\` was never written. Use each artifact's \`requires\` edges, not its \`status\`, to build the required set: a \`done\` artifact still lists what it depends on
+      - An artifact already reading \`status: "skipped"\` is satisfied: the change declares \`skip_specs\` in \`.openspec.yaml\`, so its files must NOT exist. Never try to create one
+      - Create every artifact in the required set that is missing, then re-check - creating one can unblock others
+      - Skip one only when \`status\` already reports it \`skipped\`, or when its own \`instruction\` says it is conditional: run \`openspec instructions <artifact-id> --change "<name>" --json\` and skip only if its \`instruction\` field marks it optional (e.g. "create only if..."). Spec-driven's \`design.md\` qualifies; \`specs\` qualifies only via the \`skipped\` status above, never by your own judgment. Tell the user, and do not reconsider it
+      - Dependencies are enablers, not gates: if a required artifact is still \`blocked\` only because you skipped a conditional dependency, write it anyway
+      - Stop when every artifact in the required set is \`done\`, \`skipped\`, or was deliberately skipped
 
-c. **アーティファクトにユーザー入力が必要な場合** (コンテキストが不明瞭):
-- **AskUserQuestion ツール**を使用して明確にします
-- その後、作成を続行します
+   c. **If an artifact requires user input** (unclear context):
+      - Ask the user to clarify
+      - Then continue with creation
 
 5. **最終ステータスを表示**
    \`\`\`bash
@@ -82,28 +89,29 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 
 **出力**
 
-すべての成果物を完了したら、次のようにまとめます。
-- 名前と場所を変更する
-- 作成されたアーティファクトのリストと簡単な説明
-- 準備ができているもの: 「すべてのアーティファクトが作成されました。実装の準備ができました。」
-- プロンプト: 「\`/opsx:apply\` を実行するか、タスクの作業を開始するために実装するよう依頼してください。」
+After completing all artifacts, summarize:
+- Change name and location
+- List of artifacts created with brief descriptions, plus any conditional artifact you skipped and why
+- What's ready: "All artifacts needed for implementation are ready."
+- Prompt: "Run \`/opsx:apply\` or ask me to implement to start working on the tasks."
 
 **アーティファクト作成ガイドライン**
 
-- 各アーティファクト タイプの \`openspec instructions\` から \`instruction\` フィールドに従います。
-- スキーマは各アーティファクトに何を含めるべきかを定義します - それに従います
-- 新しいものを作成する前に、コンテキストの依存関係アーティファクトを読み取ります。
-- 出力ファイルの構造として \`template\` を使用します - そのセクションに記入します
-- **重要**: \`context\` と \`rules\` はあなたに対する制約であり、ファイルの内容ではありません
-- \`<context>\`、\`<rules>\`、\`<project_context>\` ブロックをアーティファクトにコピーしないでください
-- これらは作成内容をガイドしますが、出力には決して表示されません。
+- Follow the \`instruction\` field from \`openspec instructions\` for each artifact type - it is the authoritative guidance, even for familiar artifact names
+- If the \`instruction\` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly
+- The schema defines what each artifact should contain - follow it
+- Read dependency artifacts for context before creating new ones
+- Use \`template\` as the structure for your output file - fill in its sections
+- **IMPORTANT**: \`context\` and \`rules\` are constraints for YOU, not content for the file
+  - Do NOT copy \`<context>\`, \`<rules>\`, \`<project_context>\` blocks into the artifact
+  - These guide what you write, but should never appear in the output
 
-**ガードレール**
-- 実装に必要なすべてのアーティファクトを作成します (スキーマの \`apply.requires\` で定義されているように)
-- 新しい依存関係アーティファクトを作成する前に、必ず依存関係アーティファクトを読み取ります。
-- 文脈が非常に不明確な場合は、ユーザーに尋ねます。ただし、勢いを維持するために合理的な決定を下すことを好みます
-- その名前の変更がすでに存在する場合は、代わりにその変更を続行することを提案します
-- 次へ進む前に、書き込み後の各アーティファクトファイルが存在することを確認します`,
+**Guardrails**
+- Create every artifact the apply phase transitively depends on, not just the ids listed in \`apply.requires\`
+- Always read dependency artifacts before creating a new one - re-read from disk, not from conversation memory (files may have changed since you last saw them)
+- If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
+- If a change with that name already exists, suggest continuing that change instead
+- Verify each artifact file exists after writing before proceeding to next`,
     license: 'MIT',
     compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
@@ -126,8 +134,8 @@ ${STORE_SELECTION_GUIDANCE}
 
 1. **入力が提供されなかった場合は、何を構築したいかを尋ねます**
 
-**AskUserQuestion ツール** (自由回答、プリセット オプションなし) を使用して、次のことを質問します。
-> 「どのような変更に取り組みたいですか? 何を構築または修正したいのかについて説明してください。」
+   Ask the user (open-ended, no preset options):
+   > "What change do you want to work on? Describe what you want to build or fix."
 
 説明からケバブケース名を導き出します (例: 「ユーザー認証の追加」→ \`add-user-auth\`)。
 
@@ -143,14 +151,14 @@ ${STORE_SELECTION_GUIDANCE}
    \`\`\`bash
    openspec status --change "<name>" --json
    \`\`\`
-JSON を解析して以下を取得します。
-- \`applyRequires\`: 実装前に必要なアーティファクト ID の配列 (例: \`["tasks"]\`)
-- \`artifacts\`: すべてのアーティファクトとそのステータスおよび依存関係のリスト
-- \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、および \`actionContext\`: パス​​とスコープのコンテキスト。リポジトリのローカル パスを想定する代わりに、これらを使用してください。
+   Parse the JSON to get:
+   - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
+   - \`artifacts\`: list of all artifacts, each with its \`status\` and its \`requires\` edges (the artifact IDs it directly depends on)
+   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context. Use these instead of assuming repo-local paths.
 
-4. **適用の準備ができるまでアーティファクトを順番に作成します**
+4. **Create every artifact in the required set**
 
-**TodoWrite ツール**を使用して、アーティファクトの進行状況を追跡します。
+   Use a todo list to track progress through the artifacts.
 
 依存関係の順序でアーティファクトをループします (保留中の依存関係がないアーティファクトが最初)。
 
@@ -159,26 +167,33 @@ JSON を解析して以下を取得します。
         \`\`\`bash
         openspec instructions <artifact-id> --change "<name>" --json
         \`\`\`
-- 指示の JSON には次のものが含まれます。
-- \`context\`: プロジェクトの背景 (あなたのための制約 - 出力には含まれません)
-- \`rules\`: アーティファクト固有のルール (ユーザー向けの制約 - 出力には含まれません)
-- \`template\`: 出力ファイルに使用する構造
-- \`instruction\`: このアーティファクト タイプのスキーマ固有のガイダンス
-- \`resolvedOutputPath\`: アーティファクトを書き込むための解決されたパスまたはパターン
-- \`dependencies\`: コンテキストのために読み取るための完成したアーティファクト
-- 完了した依存関係ファイルを読み取り、コンテキストを確認します。
-- \`template\`を構造として使用してアーティファクトファイルを作成し、\`resolvedOutputPath\`に書き込みます。
-- \`context\` および \`rules\` を制約として適用します。ただし、ファイルにはコピーしないでください。
-- 簡単な進捗状況を表示: 「✓ <artifact-id> を作成しました」
+      - The instructions JSON includes:
+        - \`context\`: Project background (constraints for you - do NOT include in output)
+        - \`rules\`: Artifact-specific rules (constraints for you - do NOT include in output)
+        - \`template\`: The structure to use for your output file
+        - \`instruction\`: Schema-specific guidance for this artifact type
+        - \`skipped\`/\`warning\`: present when the change declares skip_specs and this artifact must NOT be created - stop and pick another artifact
+        - \`resolvedOutputPath\`: Resolved path or pattern to write the artifact
+        - \`dependencies\`: Completed artifacts to read for context
+      - Read any completed dependency files for context - always re-read them from disk, even if you saw them earlier in the conversation (the user may have edited them)
+      - If the \`instruction\` field delegates creation to a specific skill or command, invoke it to produce the artifact instead of writing the file yourself, then verify the artifact file exists at \`resolvedOutputPath\`
+      - Otherwise create the artifact file using \`template\` as the structure and write it to \`resolvedOutputPath\`. If \`resolvedOutputPath\` is a glob, follow \`instruction\` to choose the concrete file path
+      - Apply \`context\` and \`rules\` as constraints - but do NOT copy them into the file
+      - Show brief progress: "✓ Created <artifact-id>"
 
-b. **すべての \`applyRequires\` アーティファクトが完了するまで続行します**
-- 各アーティファクトを作成した後、\`openspec status --change "<name>" --json\` を再実行します。
-- \`applyRequires\` のすべてのアーティファクト ID がアーティファクト配列に \`status: "done"\` を持っているかどうかを確認します
-- すべての \`applyRequires\` アーティファクトが完了したら停止します
+   b. **Continue until every artifact in the required set exists (not just \`apply.requires\`)**
+      - After creating each artifact, re-run \`openspec status --change "<name>" --json\`
+      - The required set is \`applyRequires\` plus every artifact reachable from those by following the \`requires\` edges in \`status --json\` - walk them transitively (spec-driven closes over proposal, specs, design, tasks). Leave artifacts outside that set alone
+      - \`status\` is file-existence only, so an \`applyRequires\` artifact reading \`done\` does NOT mean its dependencies exist - writing \`tasks.md\` early marks \`tasks\` done while \`specs\` was never written. Use each artifact's \`requires\` edges, not its \`status\`, to build the required set: a \`done\` artifact still lists what it depends on
+      - An artifact already reading \`status: "skipped"\` is satisfied: the change declares \`skip_specs\` in \`.openspec.yaml\`, so its files must NOT exist. Never try to create one
+      - Create every artifact in the required set that is missing, then re-check - creating one can unblock others
+      - Skip one only when \`status\` already reports it \`skipped\`, or when its own \`instruction\` says it is conditional: run \`openspec instructions <artifact-id> --change "<name>" --json\` and skip only if its \`instruction\` field marks it optional (e.g. "create only if..."). Spec-driven's \`design.md\` qualifies; \`specs\` qualifies only via the \`skipped\` status above, never by your own judgment. Tell the user, and do not reconsider it
+      - Dependencies are enablers, not gates: if a required artifact is still \`blocked\` only because you skipped a conditional dependency, write it anyway
+      - Stop when every artifact in the required set is \`done\`, \`skipped\`, or was deliberately skipped
 
-c. **アーティファクトにユーザー入力が必要な場合** (コンテキストが不明瞭):
-- **AskUserQuestion ツール**を使用して明確にします
-- その後、作成を続行します
+   c. **If an artifact requires user input** (unclear context):
+      - Ask the user to clarify
+      - Then continue with creation
 
 5. **最終ステータスを表示**
    \`\`\`bash
@@ -187,27 +202,28 @@ c. **アーティファクトにユーザー入力が必要な場合** (コン�
 
 **出力**
 
-すべての成果物を完了したら、次のようにまとめます。
-- 名前と場所を変更する
-- 作成されたアーティファクトのリストと簡単な説明
-- 準備ができているもの: 「すべてのアーティファクトが作成されました。実装の準備ができました。」
-- プロンプト: 「実装を開始するには、\`/opsx:apply\` を実行してください。」
+After completing all artifacts, summarize:
+- Change name and location
+- List of artifacts created with brief descriptions, plus any conditional artifact you skipped and why
+- What's ready: "All artifacts needed for implementation are ready."
+- Prompt: "Run \`/opsx:apply\` to start implementing."
 
 **アーティファクト作成ガイドライン**
 
-- 各アーティファクト タイプの \`openspec instructions\` から \`instruction\` フィールドに従います。
-- スキーマは各アーティファクトに何を含めるべきかを定義します - それに従います
-- 新しいものを作成する前に、コンテキストの依存関係アーティファクトを読み取ります。
-- 出力ファイルの構造として \`template\` を使用します - そのセクションに記入します
-- **重要**: \`context\` と \`rules\` はあなたに対する制約であり、ファイルの内容ではありません
-- \`<context>\`、\`<rules>\`、\`<project_context>\` ブロックをアーティファクトにコピーしないでください
-- これらは作成内容をガイドしますが、出力には決して表示されません。
+- Follow the \`instruction\` field from \`openspec instructions\` for each artifact type - it is the authoritative guidance, even for familiar artifact names
+- If the \`instruction\` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly
+- The schema defines what each artifact should contain - follow it
+- Read dependency artifacts for context before creating new ones
+- Use \`template\` as the structure for your output file - fill in its sections
+- **IMPORTANT**: \`context\` and \`rules\` are constraints for YOU, not content for the file
+  - Do NOT copy \`<context>\`, \`<rules>\`, \`<project_context>\` blocks into the artifact
+  - These guide what you write, but should never appear in the output
 
-**ガードレール**
-- 実装に必要なすべてのアーティファクトを作成します (スキーマの \`apply.requires\` で定義されているように)
-- 新しい依存関係アーティファクトを作成する前に、必ず依存関係アーティファクトを読み取ります。
-- 文脈が非常に不明確な場合は、ユーザーに尋ねます。ただし、勢いを維持するために合理的な決定を下すことを好みます
-- その名前の変更がすでに存在する場合は、ユーザーがそれを続行するか、それとも新しい変更を作成するかを尋ねます。
-- 次へ進む前に、書き込み後の各アーティファクトファイルが存在することを確認します`
+**Guardrails**
+- Create every artifact the apply phase transitively depends on, not just the ids listed in \`apply.requires\`
+- Always read dependency artifacts before creating a new one - re-read from disk, not from conversation memory (files may have changed since you last saw them)
+- If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
+- If a change with that name already exists, ask if user wants to continue it or create a new one
+- Verify each artifact file exists after writing before proceeding to next`
   };
 }

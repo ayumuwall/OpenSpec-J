@@ -21,6 +21,12 @@ artifacts:
       記入前に既存の仕様を調査すること。
       ここに書いた各 capability には対応する spec ファイルが必要になる。
 
+      すべての変更は、1つ以上の機能（新規または変更）を宣言するか、仕様を明示的に
+      対象外にする必要がある。仕様差分が0件の場合、変更の `.openspec.yaml` に
+      `skip_specs: true` がなければ `openspec validate` は拒否する。
+      `skip_specs: true` は仕様レベルの振る舞いが変わらない場合（純粋な
+      リファクタリング、ツール、文書）だけ使う。検証を通すためだけに要件を作らない。
+
       簡潔に（1〜2 ページ）。「なぜ（why）」に集中し、「どう実装するか」は design.md に書く。
 
       これは土台であり、specs / design / tasks はすべてこれに基づく。
@@ -33,9 +39,29 @@ artifacts:
     instruction: |
       システムが何をするか（WHAT）を定義する仕様ファイルを作成する。
 
+      specは実装計画ではなく、振る舞いの契約である。
+
+      適切な内容:
+      - ユーザーや下流システムが依存する観測可能な振る舞い
+      - 入力、出力、エラー条件
+      - 外部制約（セキュリティ、プライバシー、信頼性、互換性）
+      - テストまたは明示的に検証できるシナリオ
+
+      含めない内容:
+      - 内部のクラス名・関数名
+      - ライブラリやフレームワークの選択
+      - 段階的な実装詳細
+      - 詳細な実行計画（design.mdまたはtasks.mdに書く）
+
+      実装を変えても外部から見える振る舞いが変わらないなら、specには含めない。
+
       proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec ファイルを作成する。
       - New capabilities: proposal にある kebab-case 名を正確に使う（specs/<capability>/spec.md）。
       - Modified capabilities: 既存の spec フォルダ名（openspec/specs/<capability>/）を使い、差分 spec を specs/<capability>/spec.md に作成する。
+
+      `.openspec.yaml` に `skip_specs: true`（仕様レベルの振る舞い変更なし）が
+      設定されていない限り、少なくとも1つのspecファイルが必要である。
+      proposalにcapabilityがなくskip_specsもない場合は、先にproposalを見直す。
 
       差分操作（## 見出しを使用）:
       - **ADDED Requirements**: 新しい機能
@@ -51,6 +77,12 @@ artifacts:
       - **CRITICAL**: シナリオは必ず 4 つのハッシュ（`####`）を使う。3 つや箇条書きにすると静かに失敗する。
       - すべての要件は少なくとも 1 つのシナリオを持つ。
 
+      新しいcapabilityの場合のみ、仕様差分の冒頭に `## Purpose` を置き、
+      目的を1〜2文（50文字以上。短い場合は `openspec validate --strict` が報告）で
+      説明する。archive時に新しい本仕様へコピーされ、省略時は手動更新用のTBDになる。
+      既存capabilityの仕様差分には追加しない。既存のPurposeを変える場合は、
+      `openspec/specs/<capability>/spec.md` を直接編集する。
+
       MODIFIED 要件の手順:
       1. openspec/specs/<capability>/spec.md で既存要件を探す
       2. `### Requirement:` から全シナリオまでを丸ごとコピー
@@ -60,8 +92,12 @@ artifacts:
       よくある落とし穴: MODIFIED で部分的に書くとアーカイブ時に詳細が失われる。
       既存の振る舞いを変えずに追加するなら ADDED を使う。
 
-      例:
+      例（新しいcapabilityなので `## Purpose` から始める）:
       ```
+      ## Purpose
+
+      Lets users take their data out of the product in a portable format.
+
       ## ADDED Requirements
 
       ### Requirement: ユーザーはデータをエクスポートできる
@@ -96,15 +132,18 @@ artifacts:
       - 実装前に技術判断が必要な曖昧さ
 
       セクション:
-      - **Context**: 背景、現状、制約、関係者
-      - **Goals / Non-Goals**: この設計で達成することと明示的に除外すること
+      - **Context**: アプローチの説明に必要な現状と制約だけを書く。動機はproposalを参照する
+      - **Goals / Non-Goals**: 設計レベルの境界だけを書き、proposalのスコープを繰り返さない
       - **Decisions**: 主要な技術判断と理由（なぜ X ではなく Y か）。各判断に代替案の検討も含める。
       - **Risks / Trade-offs**: 既知の制約や失敗しうる点。形式: [Risk] → Mitigation
       - **Migration Plan**: デプロイ手順、ロールバック戦略（該当する場合）
-      - **Open Questions**: 未決事項や解くべき疑問
+      - **Open Questions**: specs、アプローチ、タスク分解を変えず後で安全に回答できる未決事項。なければ省略
+
+      Open Questionsは先送りできる未知事項のためのもので、未判断の代用ではない。
+      specs、アプローチ、タスク分解を変える問いは、推測せず今ユーザーへ確認する。
 
       行ごとの実装詳細ではなく、アーキテクチャと方針に集中する。
-      動機は proposal、要件は specs を参照する。
+      whyとwhatはproposal、howはdesign、要件はspecsを参照し、内容を繰り返さない。
 
       良い設計ドキュメントは技術判断の「なぜ」を説明する。
     requires:
@@ -116,6 +155,9 @@ artifacts:
     template: tasks.md
     instruction: |
       実装作業を分解したタスクリストを作成する。
+
+      tasksを書く前にdesign.mdのOpen Questionsを確認する。実装内容を変える問いがあれば、
+      暗黙の仮定をタスクリストへ入れず、先にユーザーと解決する。
 
       **IMPORTANT: 下記テンプレートに厳密に従う。** apply フェーズは
       チェックボックス形式を解析して進捗を追跡する。`- [ ]` を使わないタスクは追跡されない。
