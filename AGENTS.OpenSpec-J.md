@@ -257,6 +257,7 @@ node bin/openspec.js validate --strict
 - `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
 - `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
 - コミット前に `$session-memo` を実行して `SESSION_MEMO.md` を更新する（Codex利用時）
+- GitHub Release の本文は `CHANGELOG.md` から転載せず、§3.1 の手順で別途作成する
 
 ### 2.7 定期翻訳棚卸し（差分ベース運用の盲点対策）
 
@@ -285,13 +286,32 @@ node bin/openspec.js validate --strict
 
 ### 3.1 リリースタグ付与と GitHub Release 作成
 
+リリース本文は次の順序・内容で作成する。
+
+1. 冒頭に、今回のローカライズで発生した OpenSpec-J 独自の変更を `[OpenSpec-J]` と明記して記載する。
+2. upstream（`Fission-AI/OpenSpec`）の対象バージョンの GitHub Release 本文を取得し、自然な日本語に翻訳して記載する。
+   - GitHub Release 本文を正とし、`CHANGELOG.md` の内容を代用しない。
+   - コマンド名・フラグ・識別子・ファイルパス・リンクなどは翻訳しない。
+3. 前回の OpenSpec-J リリースから今回のリリースまでに、OpenSpec-J ではリリースしなかった upstream バージョンがある場合は、その各バージョンの GitHub Release 本文も取得・翻訳して併記する。
+   - 例: OpenSpec-J の前回リリースが `v1.4.0`、今回が `v1.6.0` で、`v1.5.0` をリリースしていない場合は、upstream の `v1.5.0` と `v1.6.0` の両方を含める。
+   - upstream のバージョンごとに見出しを分け、古いバージョンから順に記載する。
+
+upstream の GitHub Release 本文は、対象となる各バージョンについて次のように取得する。
+
+```
+gh release view vX.Y.Z --repo Fission-AI/OpenSpec --json body --jq '.body'
+```
+
+作成したリリース本文をファイル（例: `/tmp/openspec-j-release-vX.Y.Z.md`）に保存したうえで、タグ付与と GitHub Release 作成を行う。
+
 ```
 git checkout ja-docs
 git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin vX.Y.Z
 
-# GitHub Release 作成（CHANGELOG から該当セクションを抜粋して貼る）
-gh release create vX.Y.Z --title "vX.Y.Z" --notes "<CHANGELOG.md の該当セクション>"
+gh release create vX.Y.Z \
+  --title "vX.Y.Z" \
+  --notes-file /tmp/openspec-j-release-vX.Y.Z.md
 ```
 
 - リリースタグは `vX.Y.Z` 形式を使う（`openspec-j-vX.Y.Z` は使わない）。
