@@ -2,6 +2,113 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.9.0
+
+### マイナー変更
+
+- [#1622](https://github.com/ayumuwall/OpenSpec-J/pull/1622) [`59c16a4`](https://github.com/ayumuwall/OpenSpec-J/commit/59c16a4461254ed984d1d5e29d00af1a5610035a) [@clay-good](https://github.com/clay-good) に感謝します！ - ### 新機能
+
+  - **Command Code のコマンドアダプター** — Command Code をアダプター対応の正式なツールとして追加しました。`openspec init` は `.commandcode/skills/` のスキルとともに `.commandcode/commands/opsx-<id>.md`（`/opsx-<id>` として実行）へ OpenSpec コマンドを生成し、Command Code が文書化しているカスタムスラッシュコマンドの形式に合わせます。
+
+- [#1613](https://github.com/ayumuwall/OpenSpec-J/pull/1613) [`42d7f67`](https://github.com/ayumuwall/OpenSpec-J/commit/42d7f673bc5f13378451267c8a9d0c23f63a2d1a) [@Angelthebestone](https://github.com/Angelthebestone) に感謝します！ - ### 新機能
+
+  - **Command Code 対応** — `openspec init` が、アダプターを使わないスキル専用ツールとして Command Code をサポートします。OpenSpec スキルは `.commandcode/skills/` にインストールされ、Command Code 本来のスキル形式に合わせて `/openspec-*` コマンドとして呼び出せます。
+
+- [#1604](https://github.com/ayumuwall/OpenSpec-J/pull/1604) [`83be9d1`](https://github.com/ayumuwall/OpenSpec-J/commit/83be9d113e8310789c281f7c8a00ed4fad191dd5) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate --archived` を追加しました。`changes/archive/` 配下のすべての変更で `tasks.md` のチェックボックスが完了しているかを任意で検査し、未完了があれば非ゼロ終了します。通常の validate はアクティブな変更だけを見るため、この検査では未完了のままアーカイブされた変更を検出でき、pre-commit または CI フック向けです（[#205](https://github.com/ayumuwall/OpenSpec-J/issues/205)）。これは独立したスコープであり、既存の `validate` の呼び出しを変更せず、適用済み仕様デルタの再検証も行いません。
+
+### パッチ変更
+
+- [#1530](https://github.com/ayumuwall/OpenSpec-J/pull/1530) [`bf5099e`](https://github.com/ayumuwall/OpenSpec-J/commit/bf5099e39fdb5d7bde2adc84f49ea93afd7463e9) [@clay-good](https://github.com/clay-good) に感謝します！ - apply ワークフローが、想定外のスコープを隠さず報告するようエージェントへ案内します。タスクに仕様を超える作業が必要なとき、`/opsx:apply` のスキルとコマンドのガイダンスは、指定された振る舞いを暗黙に狭めたり、延期したり、単純化したりせず、追加スコープを報告するために停止するよう指示します。また、指定された振る舞いを完全に実装した場合にのみタスクを完了にします。 [#1529](https://github.com/ayumuwall/OpenSpec-J/issues/1529) を修正しました。
+
+- [#1603](https://github.com/ayumuwall/OpenSpec-J/pull/1603) [`9ae75c8`](https://github.com/ayumuwall/OpenSpec-J/commit/9ae75c86efe5d326ffa7ca5a3fd64b1f1e7728c2) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec archive` が、リダイレクトまたはキャプチャされた stdout へ端末エスケープコードを書き込まなくなりました。stdout が端末でない場合にも確認プロンプトと引数なし時の変更選択画面が ANSI カーソル移動シーケンスでライブ UI を描画していたため、リダイレクト先のログを汚し、一部の非対話ホストでは出力をディスクが埋まるまで増やし得る無限レンダリングループを起こしていました。stdout または stdin が端末でない場合、archive は確認をプレーンテキストで読み取り、引数なしの場合はメニューを描画せず先に変更名を渡すよう求めます。パイプ入力（`printf 'y\n' | openspec archive …`）と `--yes` の動作、および対話端末の動作は変わりません。 [#1526](https://github.com/ayumuwall/OpenSpec-J/issues/1526) を修正しました。
+
+- [#1528](https://github.com/ayumuwall/OpenSpec-J/pull/1528) [`9425897`](https://github.com/ayumuwall/OpenSpec-J/commit/942589741de35f1b8896b410d7ea70295bb137c0) [@Marzx13](https://github.com/Marzx13) に感謝します！ - 再構築する仕様を、末尾の改行が正確に 1 つとなるよう正規化しました。以前は `## Requirements` セクションが末尾の仕様を再構築すると、末尾に空行（`\n\n`）が残り、sync または archive の後に Markdown の空白検査が失敗していました。Requirements セクション後の内部の間隔と内容は変わりません。
+
+- [#1640](https://github.com/ayumuwall/OpenSpec-J/pull/1640) [`610b78f`](https://github.com/ayumuwall/OpenSpec-J/commit/610b78f6554e8aabfa294df53962428ff85c8b76) [@clay-good](https://github.com/clay-good) に感謝します！ - デルタ同期時に仕様の `## Requirements` 見出しの前後にある空行を保つようにしました。`openspec archive` は `openspec/specs/<capability>/spec.md` を各部分の間に改行だけを入れて再構築していたため、見出しの前後の空行が失われ、生成後のファイルで Markdown の空白検査が失敗していました。再構築後もこの間隔を保持します。 [#1625](https://github.com/ayumuwall/OpenSpec-J/issues/1625) を修正しました。[@jwang513](https://github.com/jwang513) にも感謝します！ （[#1637](https://github.com/ayumuwall/OpenSpec-J/pull/1637)）
+
+- [#1640](https://github.com/ayumuwall/OpenSpec-J/pull/1640) [`610b78f`](https://github.com/ayumuwall/OpenSpec-J/commit/610b78f6554e8aabfa294df53962428ff85c8b76) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate --all` と `openspec list --json` が、OpenSpec プロジェクト外で暗黙に成功しなくなりました。ルートがないディレクトリでは、以前は現在のディレクトリを暗黙のルートとして解決し、終了コード 0 と空の結果を返していたため、CI やエージェントでは誤った成功になっていました。一括検証（`--all`、`--changes`、`--specs`）と `list` は既存ルートを必要とします（旧式プロジェクト向けの `openspec/project.md` フォールバックは維持）。直接検証と、意図的に暗黙ルートを使う他のワークフローは変わりません。 （[#1612](https://github.com/ayumuwall/OpenSpec-J/pull/1612)）
+
+- [#1640](https://github.com/ayumuwall/OpenSpec-J/pull/1640) [`610b78f`](https://github.com/ayumuwall/OpenSpec-J/commit/610b78f6554e8aabfa294df53962428ff85c8b76) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec config` のワークフロー選択画面で `update` ワークフローを表示名付きにしました。12 個のワークフローのうち 11 個には分かりやすいラベルがありましたが、ユーザーが必ず使う 6 つの基本ワークフローの一つである `update` にはなく、生の ID と仮の説明が表示されていました。update-change テンプレートの古い「expanded-profile」という表現も「optional」へ改めました。 [#1627](https://github.com/ayumuwall/OpenSpec-J/issues/1627) を修正しました。 （[#1632](https://github.com/ayumuwall/OpenSpec-J/pull/1632)）
+
+- [#1640](https://github.com/ayumuwall/OpenSpec-J/pull/1640) [`610b78f`](https://github.com/ayumuwall/OpenSpec-J/commit/610b78f6554e8aabfa294df53962428ff85c8b76) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec schema fork` が、元スキーマの YAML 整形を保持するようになりました。fork した `schema.yaml` の名前変更では、解析・再シリアライズによりコメントの削除、ブロックスカラー形式の変更（リテラルの `|` が `>` に変わるなど）、キー順序の変更が起こり、fork が元と一致しなくなっていました。YAML Document API を使って文書をその場で編集するため、コメント、スカラー形式、キー順序を維持します。 （[#1607](https://github.com/ayumuwall/OpenSpec-J/pull/1607)）
+
+- [#1640](https://github.com/ayumuwall/OpenSpec-J/pull/1640) [`610b78f`](https://github.com/ayumuwall/OpenSpec-J/commit/610b78f6554e8aabfa294df53962428ff85c8b76) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec schemas` が、常に現在のディレクトリから読む代わりに、正規の OpenSpec ルート選択優先順位で解決するようになりました。`--store <id>` を受け付け、他のストア対応コマンドと同様に `--store-path` を拒否します。JSON 失敗時は共通の機械可読な診断を返し、成功時の既存の人間向け出力と素の JSON 配列は維持します。[@Patodo](https://github.com/Patodo) にも感謝します！ （[#1616](https://github.com/ayumuwall/OpenSpec-J/pull/1616)）
+
+- [#1640](https://github.com/ayumuwall/OpenSpec-J/pull/1640) [`610b78f`](https://github.com/ayumuwall/OpenSpec-J/commit/610b78f6554e8aabfa294df53962428ff85c8b76) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate` が、`spec-driven` 変更における曖昧なタスク番号を警告します。解決済みタスクファイル間も含め、完全な深さでタスク ID が重複する場合、またはタスクの先頭番号が所属する `## N.` グループと一致しない場合が対象です。番号付きグループ外の数字らしい文字列は無視し、カスタムスキーマは明示的に有効化するまで変わりません。検査は直接・一括・非推奨の変更検証で実行されます。 [#1520](https://github.com/ayumuwall/OpenSpec-J/issues/1520) を完了しました。[@alectimison-maker](https://github.com/alectimison-maker) にも感謝します！ （[#1523](https://github.com/ayumuwall/OpenSpec-J/pull/1523)）
+
+- [#1522](https://github.com/ayumuwall/OpenSpec-J/pull/1522) [`07dea6e`](https://github.com/ayumuwall/OpenSpec-J/commit/07dea6ed2faf71c8b9f4944d64246f2ff39eeffc) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **旧式 Codex のアップグレードがベンダー中立の `agents` ターゲットを乗っ取らないよう修正** — `openspec update` が、残存するグローバル `~/.codex/prompts` だけから Codex を検出した場合に、既存の `.agents` スキルツリーと所有者マーカーを上書きしなくなりました。Codex とベンダー中立の `agents` ターゲットは `.agents/skills` を共有していたため、`agents` ターゲットを使うプロジェクトでは、次の `update --force` で汎用スキルが Codex 固有の構文に静かに書き換えられ、ターゲットが Codex に切り替わる可能性がありました。旧式アップグレード経路は、`openspec init` がすでに適用している共有スキルディレクトリの単一書き込み元規則に合わせ、既存の所有者を尊重します。この理由でアップグレードを省略する場合、置き換えファイルが書かれていないため、ツール固有のリポジトリ内旧式ファイル（例: `.codex/prompts/openspec-*.md`）も削除せず保持します。初回の本来の Codex アップグレード（まだ `.agents` ツリーがない場合）は影響を受けません。
+
+- [#1521](https://github.com/ayumuwall/OpenSpec-J/pull/1521) [`c751b3d`](https://github.com/ayumuwall/OpenSpec-J/commit/c751b3da52a7f06d6662a8673feff4685566cdd4) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **archive 時に名前のないシナリオを黙って削除しないよう修正** — `openspec validate` と `openspec archive` が、要件のすべてのレベル 4（空白に続く `####`）の子を、他で仕様を数える方法と同じくシナリオとして認識します。以前のシナリオ消失ガードは `#### Scenario:` と正確に書かれた見出しだけを認識していたため、別名の子（例: `#### Edge case`）を削除した `MODIFIED` 要件でも検証に通り、archive 時に警告なく永続的に削除されていました。両経路が一致したため、消失は作成時に検出されます。比較時にはシナリオ名を正規化し（任意の `Scenario:` 接頭辞と CommonMark の末尾 `#` を無視）、単なる再ラベル付けを削除と誤認しません。
+
+- [#1610](https://github.com/ayumuwall/OpenSpec-J/pull/1610) [`17581c1`](https://github.com/ayumuwall/OpenSpec-J/commit/17581c11edf6b27ef18be7be1e4dcc06c81a3fff) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - `openspec init` が、Cursor、GitHub Copilot、Continue、Cline など IDE 常駐ツールを設定した場合だけ IDE の再起動を提案するようになりました。Claude Code、Codex、Gemini CLI などの CLI ツールは、ファイル作成直後からコマンドを使えるため、この案内を表示しません。
+
+- [#1609](https://github.com/ayumuwall/OpenSpec-J/pull/1609) [`804427b`](https://github.com/ayumuwall/OpenSpec-J/commit/804427b6ff3f3b35b542365ba8b32e183fce3287) [@clay-good](https://github.com/clay-good) に感謝します！ - `--json` 使用時に初回実行のテレメトリー開示通知を表示しないようにしました。初回実行時にはこの通知が stdout に書き込まれ、`--json` の利用者を壊す可能性がありました。現在は最初の後続する非 JSON 実行まで遅延するため、`--json` 出力を有効に保ちながら開示も保証します。
+
+## 1.8.0
+
+### マイナー変更
+
+- [#1303](https://github.com/ayumuwall/OpenSpec-J/pull/1303) [`1aa0f2a`](https://github.com/ayumuwall/OpenSpec-J/commit/1aa0f2abfc19f2487f5b8566e6eb3bf15f41c20a) [@solanab](https://github.com/solanab) に感謝します！ - ベンダー中立の `agents` ターゲットを追加しました。`openspec init --tools agents` は、AGENTS.md 対応アシスタントが読む共有の配置先 `.agents/skills/openspec-*/SKILL.md` へワークフロースキルをインストールします。スキル専用のためスラッシュコマンドは生成しません。`agents` が正式なターゲットとなったため、`--tools all` にも含まれ、これまで作られなかった `.agents/skills/` も作成されます。
+
+- [#1274](https://github.com/ayumuwall/OpenSpec-J/pull/1274) [`7a4a745`](https://github.com/ayumuwall/OpenSpec-J/commit/7a4a745d803b698c34947eda6d73b5a24aebb58c) [@NicoAvanzDev](https://github.com/NicoAvanzDev) に感謝します！ - `openspec init` 実行時に GitHub Copilot coding agent のセットアップおよびカスタムエージェントファイルを生成し、`openspec update` で同期を維持します。
+
+- [#1214](https://github.com/ayumuwall/OpenSpec-J/pull/1214) [`161f945`](https://github.com/ayumuwall/OpenSpec-J/commit/161f9454a372aab67c495d780928bba89c829f3e) [@showms](https://github.com/showms) に感謝します！ - MiniMax Code をグローバルなスキル専用ツールターゲットとして追加しました。
+
+- [#1518](https://github.com/ayumuwall/OpenSpec-J/pull/1518) [`568e56c`](https://github.com/ayumuwall/OpenSpec-J/commit/568e56c67231dbe2447aca4f0e7995c05ada95a3) [@clay-good](https://github.com/clay-good) に感謝します！ - ### 新機能
+
+  - **Atlassian Rovo Dev CLI** — `openspec init --tools rovodev` が Atlassian Rovo Dev CLI 向けの OpenSpec ワークフロースキルを `.rovodev` にインストールします。スキル専用のため、スラッシュコマンドは生成しません。
+
+  ### バグ修正
+
+  - **Codex スキルを共有の `.agents` ディレクトリへ配置** — `openspec init` と `openspec update` が、アシスタントが読む正規の場所 `.agents/skills/` に Codex スキルをインストールし、既存の `.codex` スキルディレクトリをその場で移行します。カスタマイズしたファイルは上書きせず保持します。
+  - **`openspec status` で計画と実装を分離** — status が `isPlanningComplete`（スキップしていない計画成果物がすべて存在すること。スキップ済みは書かなくても充足扱い）を全体進捗と分けて報告するようになり、実装前の変更を完了と示唆しなくなりました。既存スクリプトとの互換性のため `isComplete` は別名として維持します。
+
+- [#1517](https://github.com/ayumuwall/OpenSpec-J/pull/1517) [`73207a6`](https://github.com/ayumuwall/OpenSpec-J/commit/73207a6f2cd235729ac3fe3cb1e44152b8f63f12) [@clay-good](https://github.com/clay-good) に感謝します！ - GitHub Copilot のクラウド coding-agent ファイルをオプトインにしました。`github-copilot` ツールを選択しても GitHub Actions ワークフローを `.github/` に暗黙で書き込まなくなり、`openspec init` は最初に確認し（既定は No）、選択を `openspec/config.yaml`（`githubCopilot.cloudAgent`）へ記録します。非対話では `--copilot-cloud` / `--no-copilot-cloud` を使います。
+
+  - `openspec update` は確認を行わず、オプトイン済みのプロジェクト（または生成済みクラウドファイルがある既存セットアップ）に対してのみクラウドファイルを更新します。
+  - オプトアウト（`--no-copilot-cloud` または `cloudAgent: false`）では OpenSpec 管理のクラウドファイルを削除します。ユーザーがカスタマイズしたファイルは常に保持し、上書きも削除もしません。
+  - `init` と `update` は、クラウドファイルを作成・スキップ・未変更のどれにしたかを報告します。独自の `copilot-setup-steps.yml` がある場合は、保持したことと OpenSpec のインストール手順を手動追加する必要があることを示します。
+
+- [#1484](https://github.com/ayumuwall/OpenSpec-J/pull/1484) [`521ee33`](https://github.com/ayumuwall/OpenSpec-J/commit/521ee33e6ece269241b45e08017ee60f13fdef08) [@clay-good](https://github.com/clay-good) に感謝します！ - 変更がケイパビリティの最後の要件を削除する場合に、そのケイパビリティを廃止できます。`.openspec.yaml` に `retire_capabilities: true`（必須の `schema:` と併記）を宣言した変更は、REMOVED 項目が最後の要件を取り除く場合でもアーカイブできます。`openspec archive` は「仕様には少なくとも 1 つの要件が必要です」と中止せず、そのケイパビリティのメイン仕様を削除します。マーカーがない場合の動作は従来どおりで、メッセージが回避方法としてマーカーを示す点だけが異なります。実際に空の仕様を書けない場合だけ廃止し、すべてを archive 出力に表示し、呼び出し元のチェックアウトに仕様があれば貼り付け可能な `git checkout` を示します。`--no-validate` では廃止しません。archive は正規要件名が重複するメイン仕様も拒否します。廃止したケイパビリティを変更する進行中の変更は検証には通っても archive 時に拒否されるため、廃止と合わせて完了または作り直してください。
+
+### パッチ変更
+
+- [#1502](https://github.com/ayumuwall/OpenSpec-J/pull/1502) [`ece8660`](https://github.com/ayumuwall/OpenSpec-J/commit/ece8660d44bd19b86440376327752cda3d7b0717) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate` が通常モードでは英語の `SHALL`/`MUST` 規約をガイダンスとして扱うため、他言語で書かれた要件も検証できます。strict モードでは引き続きこの規約を強制します。
+
+- [#1483](https://github.com/ayumuwall/OpenSpec-J/pull/1483) [`2b3d368`](https://github.com/ayumuwall/OpenSpec-J/commit/2b3d368539132be6311e55db58899abbf5306b81) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec archive` が確認できない場合に、必要なフラグを呼び出し元へ示すようにしました。stdin を閉じた AI エージェントやスクリプトでは、プロンプトが `@inquirer` のエラーで拒否され、以前は質問内容も必要なフラグも分からないまま archive が中止されていました（[#1479](https://github.com/ayumuwall/OpenSpec-J/issues/1479)）。各確認は必要な内容と、指定済みフラグを引き継ぐ貼り付け可能な再実行コマンドを示します。変更名なしの `openspec archive` も、何もアーカイブせず終了コード 0 になる代わりに、変更名を求めて終了コード 1 になります。パイプ入力、`--yes`、`--json`、Ctrl-C の動作は変わらず、CI・`OPEN_SPEC_INTERACTIVE=0`・`--no-interactive` でも案内を表示します。オンボーディングの archive 例には `--yes` を使用します。
+
+
+  Progress counting and the apply task list now share one parser, so `list`, `view`, `archive` and `apply` agree about which lines of a tasks file are tasks. A checkbox with no text after it is left out of the apply list, which has nothing to act on, but still counts toward every progress number; a file of nothing but such checkboxes now asks to be rewritten rather than reporting itself done. The shared pattern matches every line the two it replaced matched, and more, so task counts can rise but never fall: no change starts reporting less work than before, and archive's incomplete-task warning can only become stricter. Checkboxes are still counted wherever they appear, including inside a code fence, an HTML comment or an indented block, so a `tasks.md` that shows a checklist as a format example can now count that example as work — remove it from the file, or pass `--yes` to archive.
+- [#1486](https://github.com/ayumuwall/OpenSpec-J/pull/1486) [`427abf4`](https://github.com/ayumuwall/OpenSpec-J/commit/427abf40ac45a9a44f78eb74c81f53f9f4197ccf) [@clay-good](https://github.com/clay-good) に感謝します！ - タスク進捗でインデントしたサブタスクも数えるようにしました。以前は、両方のチェックボックスパーサーが列 0 のチェックボックスだけを扱っていたため、未完了のサブタスクを含む `tasks.md` でも `openspec list` と `openspec view` が `✓ Complete` と表示し、`openspec instructions apply` の一覧からも漏れ、未完了タスク警告なしでアーカイブされていました。
+
+  進捗集計と apply のタスクリストは同じパーサーを共有し、`list`、`view`、`archive`、`apply` がどの行をタスクと扱うか一致します。テキストのないチェックボックスは apply リストに載りませんが進捗には数えます。共有パターンは置き換えた二つのパターンが一致した行をすべて含むため、タスク数は増えることはあっても減りません。チェックボックスはコードフェンス、HTML コメント、インデントブロック内も含め、現れる場所すべてで数えます。形式例のチェックリストも作業として数えられる場合は削除するか、archive に `--yes` を渡してください。
+
+  Progress counting and the apply task list now share one parser, so `list`, `view`, `archive` and `apply` agree about which lines of a tasks file are tasks. A checkbox with no text after it is left out of the apply list, which has nothing to act on, but still counts toward every progress number; a file of nothing but such checkboxes now asks to be rewritten rather than reporting itself done. The shared pattern matches every line the two it replaced matched, and more, so task counts can rise but never fall: no change starts reporting less work than before, and archive's incomplete-task warning can only become stricter. Checkboxes are still counted wherever they appear, including inside a code fence, an HTML comment or an indented block, so a `tasks.md` that shows a checklist as a format example can now count that example as work — remove it from the file, or pass `--yes` to archive.
+
+- [#1500](https://github.com/ayumuwall/OpenSpec-J/pull/1500) [`26bd1d4`](https://github.com/ayumuwall/OpenSpec-J/commit/26bd1d4e5c6c6ba75bd7d6136424019b2bf89ced) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成済みワークフローを選択したストアに保ち、任意ワークフローのフォールバックを安全に処理し、同期した仕様を成功報告前に検証します。
+
+- [#1490](https://github.com/ayumuwall/OpenSpec-J/pull/1490) [`45cca5d`](https://github.com/ayumuwall/OpenSpec-J/commit/45cca5db6137ed209117cc70510eb3e057fb981b) [@clay-good](https://github.com/clay-good) に感謝します！ - 変更をアーカイブすると要件の横に書かれた注記が消える場合、確認前に表示するようにしました。OpenSpec が新しい見出しと認識しない要件配下の内容（例: Markdown で許される 1〜3 個の空白でインデントした注記）は、要件を削除・変更すると静かに一緒に消えていました。`openspec archive` は再構築する仕様から実際に削除される内容と、保持するための移動先を示します。シナリオ内の `#` 行は注記と区別できないため、マージ自体は移動を行わず従来どおりです。
+
+- [#1492](https://github.com/ayumuwall/OpenSpec-J/pull/1492) [`690a27e`](https://github.com/ayumuwall/OpenSpec-J/commit/690a27e649c4a3325daeb0f6667ebe0f82792179) [@mc856](https://github.com/mc856) に感謝します！ - `openspec init` と `openspec update` が、生成直後の CoStrict と Junie のコマンドファイルを削除しなくなりました。旧式クリーンアップの二つのパターンが現行アダプターの出力先も指していたためです。CoStrict では `.cospec/openspec/commands/` ディレクトリ全体を削除しており、ユーザーが残したファイルも含めて毎回消えていました。Junie では `.junie/commands/opsx-*.md` が現行出力まで列挙していました。設定移行の前にクリーンアップが実行されるため、`profile` がない設定では欠落したコマンドファイルをスキル専用として検出し、グローバル設定に永続化する問題もありました。
+
+  CoStrict の対象は、旧 `opsx` 統合が作った 3 コマンド（`openspec-proposal.md`、`openspec-apply.md`、`openspec-archive.md`）に一致するファイルパターン `.cospec/openspec/commands/openspec-*.md` に変更しました。Junie のエントリーは削除しました。既存の OpenSpec バージョンはこの場所に旧式ファイルを作っていないためです。本当に旧式のファイルは引き続き検出・削除し、他ツールのパターンは現行出力と重複しないため変わりません。
+
+- [#1501](https://github.com/ayumuwall/OpenSpec-J/pull/1501) [`0b20ae3`](https://github.com/ayumuwall/OpenSpec-J/commit/0b20ae3964283bdcb4e34ea7380770857f6a339c) [@clay-good](https://github.com/clay-good) に感謝します！ - propose ワークフローを計画に集中させ、変更を作る前に重要な曖昧さを解消し、実装を apply ワークフローへ引き渡します。
+
+- [#1503](https://github.com/ayumuwall/OpenSpec-J/pull/1503) [`8a3850d`](https://github.com/ayumuwall/OpenSpec-J/commit/8a3850da735e241c14ad94935463f879b33f21a9) [@clay-good](https://github.com/clay-good) に感謝します！ - 探索から新しい変更を作る場合、生成される explore ガイダンスが、要求された成果物を書く前に `openspec new change` を実行するようエージェントへ指示します。これにより、手作業で不完全な変更ディレクトリを作るのではなく、必須の `.openspec.yaml` メタデータを保持します。ユーザーがキャプチャを承認した後は、別のワークフローコマンドを要求せず、explore が求められた成果物も作成します。
+
+- [#1513](https://github.com/ayumuwall/OpenSpec-J/pull/1513) [`622c509`](https://github.com/ayumuwall/OpenSpec-J/commit/622c509a1349c3ad9c52cd1a4ee007bd47549204) [@FasterPHP](https://github.com/FasterPHP) に感謝します！ - グローバル設定の `telemetry.enabled` を反映します。`false` で匿名テレメトリーと `openspec update` のバージョン確認を無効にし、未設定ならテレメトリーを有効に保ちます。環境変数または CI によるオプトアウトが引き続き優先されます。
+
+- [#1499](https://github.com/ayumuwall/OpenSpec-J/pull/1499) [`9cd845f`](https://github.com/ayumuwall/OpenSpec-J/commit/9cd845fc459b71486d9f2424c2e1f38e2ca8766e) [@clay-good](https://github.com/clay-good) に感謝します！ - リンクされたモノレポのワークフローを壊さず、生成ファイル、仕様、archive の移動、ローカル状態を意図したセキュリティ境界内に保ちます。
+
+- [#1482](https://github.com/ayumuwall/OpenSpec-J/pull/1482) [`84ebc57`](https://github.com/ayumuwall/OpenSpec-J/commit/84ebc57cb3f0e91b93484484092fdc2f9fcf39e6) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate <change>` が、メイン仕様にまだあるシナリオを省いた MODIFIED 要件を報告するようになりました。archive ではすでに適用を拒否していた消失のため、archive 時ではなく作成時に変更を失敗させます。古い MODIFIED ブロックを含む変更は検証に失敗し、メッセージが戻すべきシナリオを示します。
+
 ## 1.7.0
 
 - **[OpenSpec-J]** OpenSpec v1.7.0 の upstream 変更を取り込み、README・ドキュメント・スキーマ・OPSX ワークフロー・CLI の追加／変更された人間向け文言を日本語化

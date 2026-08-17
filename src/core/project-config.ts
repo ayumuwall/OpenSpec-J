@@ -73,6 +73,16 @@ export const ProjectConfigSchema = z.object({
     .string()
     .optional()
     .describe('ローカルの planning 構造がない場合に OpenSpec ルートとして使用する store ID'),
+
+  // Optional: GitHub Copilot integration preferences. `cloudAgent` is the
+  // opt-in for generating the Copilot cloud coding-agent files (a GitHub
+  // Actions workflow + agent file); absent means "not yet decided".
+  githubCopilot: z
+    .object({
+      cloudAgent: z.boolean().optional(),
+    })
+    .optional()
+    .describe('GitHub Copilot integration preferences'),
 });
 
 /** Normalized in-memory shape of a referenced store declaration. */
@@ -113,7 +123,7 @@ function parseOperations(raw: unknown): OperationsConfig | undefined {
     return undefined;
   }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    console.warn(`Invalid 'operations' field in config (must be object)`);
+    console.warn(`設定内の 'operations' フィールドが無効です（オブジェクトでなければなりません）`);
     return undefined;
   }
 
@@ -123,7 +133,7 @@ function parseOperations(raw: unknown): OperationsConfig | undefined {
   for (const [operationId, value] of Object.entries(raw)) {
     if (!supported.has(operationId)) {
       console.warn(
-        `Unknown operation ID '${operationId}' in config. Supported operation IDs: ${OPERATION_IDS.join(', ')}`
+        `設定内の操作 ID '${operationId}' は不明です。対応する操作 ID: ${OPERATION_IDS.join(', ')}`
       );
       continue;
     }
@@ -185,7 +195,7 @@ function parseDeclarationList(raw: unknown): DeclarationEntry[] | undefined {
     return undefined;
   }
   if (!Array.isArray(raw)) {
-    console.warn(`Invalid '${fieldName}' field in config (must be an array of store ids)`);
+    console.warn(`設定内の '${fieldName}' フィールドが無効です（ストア ID の配列でなければなりません）`);
     return undefined;
   }
 
@@ -223,11 +233,11 @@ function parseDeclarationList(raw: unknown): DeclarationEntry[] | undefined {
   }
 
   if (droppedEntries) {
-    console.warn(`Some '${fieldName}' entries are invalid, ignoring them`);
+    console.warn(`'${fieldName}' の一部の項目が無効なため無視します`);
   }
   if (droppedRemotes) {
     console.warn(
-      `Some '${fieldName}' remotes are not non-empty strings; the ids are kept without a clone source`
+      `'${fieldName}' の一部の remote が空でない文字列ではないため、ID はクローン元なしで保持します`
     );
   }
   return byId.size > 0 ? [...byId.values()] : undefined;
@@ -306,7 +316,11 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
 
       // First check if it's an object structure (guard against null since typeof null === 'object')
       if (typeof raw.rules === 'object' && raw.rules !== null && !Array.isArray(raw.rules)) {
-        const parsedRules: Record<string, string[]> = {};
+        // Artifact ids are intentionally not restricted to the built-in naming
+        // convention, so keys such as "constructor" remain valid for custom
+        // schemas. A null-prototype map preserves those keys as data without
+        // letting "__proto__" mutate the lookup object's prototype.
+        const parsedRules: Record<string, string[]> = Object.create(null);
         let hasValidRules = false;
 
         for (const [artifactId, rules] of Object.entries(raw.rules)) {
@@ -357,8 +371,26 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         config.store = raw.store;
       } else {
         console.warn(
-          `Warning: ignoring invalid store: field in ${configPathForWarnings(projectRoot)} (must be a single store id string).`
+          `警告: ${configPathForWarnings(projectRoot)} 内の無効な store: フィールドを無視します（単一のストア ID 文字列でなければなりません）。`
         );
+      }
+    }
+
+    // Parse githubCopilot preferences (only cloudAgent is recognized today).
+    if (raw.githubCopilot !== undefined) {
+      if (
+        typeof raw.githubCopilot === 'object' &&
+        raw.githubCopilot !== null &&
+        !Array.isArray(raw.githubCopilot)
+      ) {
+        const cloudAgent = (raw.githubCopilot as Record<string, unknown>).cloudAgent;
+        if (typeof cloudAgent === 'boolean') {
+          config.githubCopilot = { cloudAgent };
+        } else if (cloudAgent !== undefined) {
+          console.warn(`設定内の 'githubCopilot.cloudAgent' フィールドが無効です（真偽値でなければなりません）`);
+        }
+      } else {
+        console.warn(`設定内の 'githubCopilot' フィールドが無効です（オブジェクトでなければなりません）`);
       }
     }
 
@@ -366,7 +398,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
     return Object.keys(config).length > 0 ? (config as ProjectConfig) : null;
   } catch (error) {
     console.warn(
-      `Warning: could not parse ${configPathForWarnings(projectRoot)} (${error instanceof Error ? error.message.split('\n')[0] : String(error)}); ignoring it.`
+      `警告: ${configPathForWarnings(projectRoot)} を解析できないため無視します（${error instanceof Error ? error.message.split('\n')[0] : String(error)}）。`
     );
     return null;
   }
@@ -459,7 +491,7 @@ export function suggestSchemas(
     suggestions.forEach((s) => {
       const type = s.isBuiltIn ? '組み込み' : 'プロジェクトローカル';
       message += `  - ${s.name} (${type})\n`;
-    });
+  });
     message += '\n';
   }
 

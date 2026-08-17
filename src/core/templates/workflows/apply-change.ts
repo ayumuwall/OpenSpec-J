@@ -7,194 +7,17 @@
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 
-export function getApplyChangeSkillTemplate(): SkillTemplate {
-  return {
-    name: 'openspec-apply-change',
-    description: 'OpenSpec 変更のタスクを実装します。実装を開始、継続、またはタスクに沿って進めたいときに使用します。',
-    instructions: `OpenSpec の変更からタスクを実装します。
-
-${STORE_SELECTION_GUIDANCE}
-
-**入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
-
-**手順**
-
-1. **変更を選択**
-
-   名前が指定されていれば使用します。それ以外の場合:
-   - 会話で変更に言及していれば、そのコンテキストから推測する
-   - アクティブな変更が1つだけなら自動選択する
-   - 曖昧なら \`openspec list --json\` で利用可能な変更を取得し、ユーザーに選択してもらう
-
-常に「変​​更の使用: <name>」と上書き方法 (例: \`/opsx:apply <other>\`) をアナウンスします。
-
-2. **ステータスを確認してスキーマを理解します**
-   \`\`\`bash
-   openspec status --change "<name>" --json
-   \`\`\`
-JSON を解析して以下を理解します。
-- \`schemaName\`: 使用されているワークフロー (例: 「仕様主導」)
-- \`planningHome\`、\`changeRoot\`、および \`actionContext\`: 計画範囲と編集制約
-- どのアーティファクトにタスクが含まれているか (通常、仕様主導型の場合は「タスク」、その他の場合はステータスを確認)
-
-3. **適用手順を取得**
-
-   \`\`\`bash
-   openspec instructions apply --change "<name>" --json
-   \`\`\`
-
-   次が返されます:
-   - \`contextFiles\`: アーティファクト ID から具体的なファイルパス配列への対応（スキーマにより異なり、proposal/specs/design/tasks や spec/tests/implementation/docs など）
-   - 進捗（合計、完了、残り）
-   - 状態付きのタスクリスト
-   - 現在の状態に応じた動的な指示
-   - 任意の \`context\`: 選択したルートから得た、現在必須のプロジェクト指示入力
-   - 任意の \`operationGuidance\`: apply に関する現在の参考ガイダンス
-
-   **状態ごとの処理:**
-   - \`state: "blocked"\`（アーティファクト不足）の場合: メッセージを表示し、openspec-continue-change を提案します（未インストールなら、\`openspec status --change "<name>" --json\` で次のアーティファクトを確認し、\`openspec instructions <artifact-id> --change "<name>" --json\` で作成方法を確認する）
-   - \`state: "all_done"\` の場合: 完了を祝い、archive を提案する
-   - それ以外: 実装に進む
-
-   \`context\` はプロンプトレベルの必須入力として扱います。読み取って検討し、
-   実装時に関連するプロジェクトの事実、規約、制約を適用します。
-   \`operationGuidance\` は任意の追加助言として扱います。すべての項目を読み取って
-   検討し、組み込みワークフローに適用可能で互換性のある項目に従います。
-
-   両フィールドは、CLI が返す状態、不足アーティファクト、タスク、進捗、
-   \`contextFiles\`、組み込みの \`instruction\` とは分けて扱います。タスク完了の
-   根拠ではなく、組み込み指示を置き換えず、blocked 状態の迂回も許可しません。
-   context が組み込み指示、ユーザーの明示的な選択、CLI が制御する値と競合する場合は、
-   競合を報告して制御側の値を維持します。ガイダンスが適用不能またはそれらの制御入力と
-   競合する場合は従わず、理由を説明します。これらはプロンプトレベルの振る舞いの契約であり、
-   強制可能な検査ではありません。
-
-4. **コンテキストファイルを読み取る**
-
-適用命令の出力から、\`contextFiles\` の下にリストされているすべてのファイル パスを読み取ります。
-ファイルは使用されているスキーマによって異なります。
-- **仕様主導**: 提案、仕様、設計、タスク
-- その他のスキーマ: CLI 出力の contextFiles に従います。
-
-   ユーザーがその内容を別途求めない限り、\`context\` や \`operationGuidance\` を
-   実装ファイルや計画アーティファクトへそのままコピーしないでください。
-
-5. **現在の進捗を表示する**
-
-画面：
-- 使用されているスキーマ
-- 進行状況: 「N/M 個のタスクが完了しました」
-- 残りのタスクの概要
-- CLIからの動的指示
-
-6. **タスクを実装します (完了またはブロックされるまでループします)**
-
-保留中のタスクごとに次のようにします。
-- どのタスクが進行中かを表示します
-- 必要なコード変更を行う
-- 変更を最小限に抑え、焦点を絞ったものにします
-- タスク ファイルでタスクを完了としてマークします: \`- [ ]\` → \`- [x]\`
-- 次のタスクに進む
-
-**次の場合は一時停止します**
-- タスクが不明瞭 → 説明を求める
-- 実装により設計上の問題が明らかになった → アーティファクトの更新を提案
-- エラーまたはブロッカーが発生しました → 報告してガイダンスを待ちます
-- ユーザーによる割り込み
-
-7. **完了または一時停止時にステータスを表示**
-
-画面：
-- このセッションでタスクが完了しました
-- 全体的な進捗状況: 「N/M 個のタスクが完了しました」
-- すべて完了したら: アーカイブを提案します
-- 一時停止した場合: 理由を説明し、指示を待ちます
-
-**実装時の出力**
-
-\`\`\`
-## 実装中: <change-name> (schema: <schema-name>)
-
-タスク 3/7 に取り組み中: <タスク説明>
-[...実装中...]
-✓ タスク完了
-
-タスク 4/7 に取り組み中: <タスク説明>
-[...実装中...]
-✓ タスク完了
-\`\`\`
-
-**完了時の出力**
-
-\`\`\`
-## 実装完了
-
-**変更:** <change-name>
-**スキーマ:** <schema-name>
-**進捗:** 7/7 タスク完了 ✓
-
-### このセッションで完了
-- [x] タスク 1
-- [x] タスク 2
-...
-
-すべてのタスクが完了しました。この変更をアーカイブできます。
-\`\`\`
-
-**一時停止時の出力 (問題が発生しました)**
-
-\`\`\`
-## 実装一時停止
-
-**変更:** <change-name>
-**スキーマ:** <schema-name>
-**進捗:** 4/7 タスク完了
-
-### 発生した問題
-<問題の説明>
-
-**選択肢:**
-1. <選択肢 1>
-2. <選択肢 2>
-3. 別のアプローチ
-
-どう進めますか？
-\`\`\`
-
-**ガードレール**
-- 完了またはブロックされるまでタスクを進め続ける
-- 開始前に、apply 指示の出力にあるコンテキストファイルを必ず読み取る
-- タスクが曖昧なら、実装前に一時停止して確認する
-- 実装で問題が判明したら、一時停止してアーティファクトの更新を提案する
-- コード変更を最小限に保ち、各タスクの範囲に限定する
-- 各タスクの完了直後にチェックボックスを更新する
-- エラー、ブロッカー、不明瞭な要件があれば一時停止し、推測しない
-- CLI 出力の \`contextFiles\` を使用し、特定のファイル名を仮定しない
-- context や operation guidance をタスク完了の根拠にしない
-- 関連するプロジェクトコンテキストを適用し、ワークフローを制御する入力との競合を報告する
-- すべてのガイダンス項目を検討し、適用不能または競合する助言について理由を説明する
-- 実行時の context や operation guidance を実装ファイルや計画アーティファクトへコピーしない
-- CLI が制御する blocked/ready/all-done の振る舞いと完了基準を維持する
-
-**流動的なワークフローの統合**
-
-このスキルは、「変更に対するアクション」モデルをサポートします。
-
-- **いつでも呼び出すことができます**: すべてのアーティファクトが完了する前 (タスクが存在する場合)、部分的な実装後、他のアクションとインターリーブされます。
-- **アーティファクト更新を許可**: 実装中に設計上の問題が明らかになった場合は、アーティファクト更新を提案してください。フェーズに固定せず、流動的に進めます`,
-    license: 'MIT',
-    compatibility: 'OpenSpec CLI が必要です。',
-    metadata: { author: 'openspec', version: '1.0' },
-  };
-}
-
-export function getOpsxApplyCommandTemplate(): CommandTemplate {
-  return {
-    name: 'OPSX: Apply',
-    description: 'OpenSpec 変更のタスクを実装する（実験的）',
-    category: 'Workflow',
-    tags: ['workflow', 'artifacts', 'experimental'],
-    content: `OpenSpec の変更からタスクを実装します。
+/**
+ * The apply workflow instructions, authored once and rendered by both the
+ * skill and command surfaces. The surfaces are intentionally distinct, but
+ * they differ only in how they are invoked — the generation transformers
+ * rewrite the canonical `/opsx:<id>` tokens per surface downstream (see
+ * command-references.ts). The instruction text itself is shared, so the two
+ * cannot silently drift. Should a surface ever need genuinely different
+ * wording, add a parameter here and pass it from that surface's template.
+ */
+export function getApplyInstructions(): string {
+  return `OpenSpec の変更に含まれるタスクを実装します。
 
 ${STORE_SELECTION_GUIDANCE}
 
@@ -226,13 +49,13 @@ JSON を解析して以下を理解します。
    openspec instructions apply --change "<name>" --json
    \`\`\`
 
-   次が返されます:
-   - \`contextFiles\`: アーティファクト ID から具体的なファイルパス配列への対応（スキーマにより異なる）
+   このコマンドは次を返します:
+   - \`contextFiles\`: アーティファクト ID から具体的なファイルパス配列への対応（スキーマにより proposal/specs/design/tasks または spec/tests/implementation/docs など）
    - 進捗（合計、完了、残り）
-   - 状態付きのタスクリスト
+   - 状態付きのタスク一覧
    - 現在の状態に応じた動的な指示
-   - 任意の \`context\`: 選択したルートから得た、現在必須のプロジェクト指示入力
-   - 任意の \`operationGuidance\`: apply に関する現在の参考ガイダンス
+   - 任意の \`context\`: 選択したルートから得る、現在必須のプロジェクト指示入力
+   - 任意の \`operationGuidance\`: apply の現在の助言的ガイダンス
 
    **状態ごとの処理:**
    - \`state: "blocked"\`（アーティファクト不足）の場合: メッセージを表示し、\`/opsx:continue\` を提案します（未インストールなら、\`openspec status --change "<name>" --json\` で次のアーティファクトを確認し、\`openspec instructions <artifact-id> --change "<name>" --json\` で作成方法を確認する）
@@ -279,11 +102,12 @@ JSON を解析して以下を理解します。
 - タスク ファイルでタスクを完了としてマークします: \`- [ ]\` → \`- [x]\`
 - 次のタスクに進む
 
-**次の場合は一時停止します**
-- タスクが不明瞭 → 説明を求める
-- 実装により設計上の問題が明らかになった → アーティファクトの更新を提案
-- エラーまたはブロッカーが発生しました → 報告してガイダンスを待ちます
-- ユーザーによる割り込み
+   **次の場合は一時停止します:**
+   - タスクが不明確 → 明確化を求める
+   - 実装で設計上の問題が判明 → アーティファクトの更新を提案する
+   - タスクに仕様・タスク記載を超える作業が必要、または記載済みの振る舞いを省略・縮小・延期・例外扱いしたくなった → 追加スコープを明示して確認する。黙って取り込まない
+   - エラーまたはブロッカーに遭遇 → 報告して指示を待つ
+   - ユーザーが中断した
 
 7. **完了または一時停止時にステータスを表示**
 
@@ -345,25 +169,47 @@ JSON を解析して以下を理解します。
 \`\`\`
 
 **ガードレール**
-- 完了またはブロックされるまでタスクを進め続ける
-- 開始前に、apply 指示の出力にあるコンテキストファイルを必ず読み取る
+- 完了またはブロックされるまでタスクを進める
+- 開始前に必ずコンテキストファイルを読む（apply 指示の出力に基づく）
 - タスクが曖昧なら、実装前に一時停止して確認する
-- 実装で問題が判明したら、一時停止してアーティファクトの更新を提案する
-- コード変更を最小限に保ち、各タスクの範囲に限定する
+- 実装で問題が判明したら、一時停止してアーティファクト更新を提案する
+- コード変更は最小限にし、各タスクの範囲に絞る
 - 各タスクの完了直後にチェックボックスを更新する
-- エラー、ブロッカー、不明瞭な要件があれば一時停止し、推測しない
-- CLI 出力の \`contextFiles\` を使用し、特定のファイル名を仮定しない
+- エラー、ブロッカー、要件の不明確さがあれば一時停止し、推測しない
+- タスクに仕様を超える作業が必要なら、追加スコープを明示して一時停止する。指定済みの振る舞いを黙って縮小・延期・単純化しない
+- 指定された振る舞いを完全に実装したときだけ、タスクを \`- [x]\` にする。一部完了や延期では完了にしない
+- CLI 出力の contextFiles を使い、特定のファイル名を想定しない
 - context や operation guidance をタスク完了の根拠にしない
 - 関連するプロジェクトコンテキストを適用し、ワークフローを制御する入力との競合を報告する
-- すべてのガイダンス項目を検討し、適用不能または競合する助言について理由を説明する
-- 実行時の context や operation guidance を実装ファイルや計画アーティファクトへコピーしない
+- すべてのガイダンス項目を検討し、適用不能または競合する助言は理由を説明する
+- 実行時コンテキストや operation guidance を実装ファイル・計画アーティファクトへコピーしない
 - CLI が制御する blocked/ready/all-done の振る舞いと完了基準を維持する
 
 **流動的なワークフローの統合**
 
 このスキルは、「変更に対するアクション」モデルをサポートします。
 
-- **いつでも呼び出すことができます**: すべてのアーティファクトが完了する前 (タスクが存在する場合)、部分的な実装後、他のアクションとインターリーブされます。
-- **アーティファクトの更新を許可**: 実装により設計上の問題が明らかになった場合は、アーティファクトの更新を提案します - フェーズロックではなく、流動的に作業します`
+- **いつでも呼び出せる**: タスクがあれば全アーティファクトの完了前、部分実装後、他アクションの合間にも実行可能
+- **アーティファクトを更新できる**: 実装で設計上の問題が判明したら、更新を提案する。フェーズに固定せず、柔軟に進める`;
+}
+
+export function getApplyChangeSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-apply-change',
+    description: 'OpenSpec の変更に含まれるタスクを実装します。実装の開始・継続やタスクの実行を求められた場合に使用します。',
+    instructions: getApplyInstructions(),
+    license: 'MIT',
+    compatibility: 'OpenSpec CLI が必要です。',
+    metadata: { author: 'openspec', version: '1.0' },
+  };
+}
+
+export function getOpsxApplyCommandTemplate(): CommandTemplate {
+  return {
+    name: 'OPSX: Apply',
+    description: 'OpenSpec の変更に含まれるタスクを実装します（実験的）',
+    category: 'Workflow',
+    tags: ['workflow', 'artifacts', 'experimental'],
+    content: getApplyInstructions(),
   };
 }

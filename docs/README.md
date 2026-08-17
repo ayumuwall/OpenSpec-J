@@ -108,7 +108,7 @@ OpenSpec は、あなたと AI コーディングアシスタントが **コー�
 ## 他に助けが必要な場合
 
 - **Discord:** [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC) — 質問、アイデア、相談。
-- **GitHub Issues:** [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues) — バグ報告と機能リクエスト。
+- **GitHub Issues:** [github.com/ayumuwall/OpenSpec-J/issues](https://github.com/ayumuwall/OpenSpec-J/issues) — バグ報告と機能リクエスト。
 - **`openspec feedback "メッセージ"`** — ターミナルから直接フィードバックを送信します（GitHub Issue が作成されます）。
 
 このドキュメントに誤り、古い情報、分かりにくい説明を見つけた場合は、それもバグです。Issue または PR を送ってください。ドキュメント改善は価値の高い貢献です。

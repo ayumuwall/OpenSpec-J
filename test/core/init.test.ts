@@ -35,6 +35,8 @@ describe('InitCommand', () => {
     configTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-config-init-'));
     process.env.XDG_CONFIG_HOME = configTempDir;
     process.env.CODEX_HOME = path.join(testDir, 'codex-home');
+    process.env.HOME = path.join(testDir, 'home');
+    process.env.USERPROFILE = path.join(testDir, 'home');
 
     // Mock console.log to suppress output during tests
     vi.spyOn(console, 'log').mockImplementation(() => { });
@@ -164,6 +166,193 @@ describe('InitCommand', () => {
       }
     });
 
+    it('should not write generated artifacts through a linked tool directory outside the project', async () => {
+      const outsideDir = path.join(configTempDir, 'outside-claude');
+      await fs.mkdir(outsideDir, { recursive: true });
+      await fs.symlink(
+        outsideDir,
+        path.join(testDir, '.claude'),
+        process.platform === 'win32' ? 'junction' : 'dir'
+      );
+
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+      await expect(initCommand.execute(testDir)).rejects.toThrow(
+        'OpenSpec setup failed for: Claude Code'
+      );
+
+      expect(await fs.readdir(outsideDir)).toEqual([]);
+      expect((await fs.lstat(path.join(testDir, '.claude'))).isSymbolicLink()).toBe(true);
+      expect(vi.mocked(console.log).mock.calls.flat().join('\n')).toContain(
+        'OpenSpec のセットアップは未完了です'
+      );
+    });
+
+    it('should not create Copilot cloud files when GitHub Copilot setup fails', async () => {
+      const outsideDir = path.join(configTempDir, 'outside-github');
+      await fs.mkdir(outsideDir, { recursive: true });
+      await fs.symlink(
+        outsideDir,
+        path.join(testDir, '.github'),
+        process.platform === 'win32' ? 'junction' : 'dir'
+      );
+
+      const initCommand = new InitCommand({
+        tools: 'github-copilot',
+        force: true,
+        copilotCloud: true,
+      });
+      await expect(initCommand.execute(testDir)).rejects.toThrow(
+        'OpenSpec setup failed for: GitHub Copilot'
+      );
+
+      expect(await fs.readdir(outsideDir)).toEqual([]);
+      expect((await fs.lstat(path.join(testDir, '.github'))).isSymbolicLink()).toBe(true);
+      expect(vi.mocked(console.log).mock.calls.flat().join('\n')).toContain(
+        'OpenSpec のセットアップは未完了です'
+      );
+    });
+
+    it.skipIf(process.platform === 'win32')('should not overwrite a generated artifact symlink outside the project', async () => {
+      const outsideFile = path.join(configTempDir, 'outside-skill.md');
+      const originalContent = 'keep me\n';
+      await fs.writeFile(outsideFile, originalContent);
+      const skillFile = path.join(
+        testDir,
+        '.claude',
+        'skills',
+        'openspec-propose',
+        'SKILL.md'
+      );
+      await fs.mkdir(path.dirname(skillFile), { recursive: true });
+      await fs.symlink(outsideFile, skillFile, 'file');
+
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+      await expect(initCommand.execute(testDir)).rejects.toThrow(
+        'OpenSpec setup failed for: Claude Code'
+      );
+
+      expect(await fs.readFile(outsideFile, 'utf-8')).toBe(originalContent);
+      expect((await fs.lstat(skillFile)).isSymbolicLink()).toBe(true);
+    });
+
+    it('should not write MiniMax skills through a linked directory outside the global skills root', async () => {
+      const outsideDir = path.join(configTempDir, 'outside-minimax');
+      const skillsRoot = path.join(testDir, 'home', '.minimax', 'skills');
+      const linkedSkillDir = path.join(skillsRoot, 'openspec-propose');
+      await fs.mkdir(outsideDir, { recursive: true });
+      await fs.mkdir(skillsRoot, { recursive: true });
+      await fs.symlink(
+        outsideDir,
+        linkedSkillDir,
+        process.platform === 'win32' ? 'junction' : 'dir'
+      );
+
+      const initCommand = new InitCommand({ tools: 'minimax-code', force: true });
+      await expect(initCommand.execute(testDir)).rejects.toThrow(
+        'OpenSpec setup failed for: MiniMax Code'
+      );
+
+      expect(await fs.readdir(outsideDir)).toEqual([]);
+      expect((await fs.lstat(linkedSkillDir)).isSymbolicLink()).toBe(true);
+      expect(vi.mocked(console.log).mock.calls.flat().join('\n')).toContain(
+        'OpenSpec のセットアップは未完了です'
+      );
+    });
+
+    it('should generate safe Claude workflow guidance (#1493)', async () => {
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+
+      await initCommand.execute(testDir);
+
+      const generatedFiles = [
+        ...[
+          'openspec-propose',
+          'openspec-explore',
+          'openspec-apply-change',
+          'openspec-update-change',
+          'openspec-sync-specs',
+          'openspec-archive-change',
+        ].map((name) => path.join(testDir, '.claude', 'skills', name, 'SKILL.md')),
+        ...['propose', 'explore', 'apply', 'update', 'sync', 'archive'].map((name) =>
+          path.join(testDir, '.claude', 'commands', 'opsx', `${name}.md`)
+        ),
+      ];
+      const generatedContents = await Promise.all(
+        generatedFiles.map((file) => fs.readFile(file, 'utf-8'))
+      );
+
+      for (const content of generatedContents) {
+        expect(content).toContain(
+          'treat `--store <id>` as sticky for the rest of the workflow'
+        );
+        expect(content).toContain(
+          'openspec status --change "<name>" --json --store "<id>"'
+        );
+      }
+
+      const updateVariants: Array<[string, string]> = [
+        [
+          await fs.readFile(
+            path.join(
+              testDir,
+              '.claude',
+              'skills',
+              'openspec-update-change',
+              'SKILL.md'
+            ),
+            'utf-8'
+          ),
+          '`/opsx:continue`',
+        ],
+        [
+          await fs.readFile(
+            path.join(testDir, '.claude', 'commands', 'opsx', 'update.md'),
+            'utf-8'
+          ),
+          '`/opsx:continue`',
+        ],
+      ];
+
+      for (const [content, continueReference] of updateVariants) {
+        const availabilityGuidance = content.indexOf(
+          `${continueReference} is an optional workflow and may not be installed`
+        );
+        const nextReference = content.indexOf(
+          continueReference,
+          availabilityGuidance + continueReference.length
+        );
+
+        expect(availabilityGuidance).toBeGreaterThanOrEqual(0);
+        expect(content.indexOf(continueReference)).toBe(availabilityGuidance);
+        expect(nextReference).toBeGreaterThan(availabilityGuidance);
+        expect(content).toContain('openspec status --change "<name>" --json');
+        expect(content).toContain(
+          'openspec instructions "<artifact-id>" --change "<name>" --json'
+        );
+      }
+
+      const syncFiles = [
+        path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'SKILL.md'),
+        path.join(testDir, '.claude', 'commands', 'opsx', 'sync.md'),
+      ];
+
+      for (const file of syncFiles) {
+        const content = await fs.readFile(file, 'utf-8');
+        const mutationsComplete = content.indexOf(
+          'Follow the **Main Spec Format Reference** below'
+        );
+        const validation = content.indexOf('openspec validate --specs');
+        const summary = content.indexOf('6. **Show summary**');
+
+        expect(mutationsComplete).toBeGreaterThanOrEqual(0);
+        expect(validation).toBeGreaterThan(mutationsComplete);
+        expect(summary).toBeGreaterThan(validation);
+        expect(content).toContain(
+          'If validation fails, report the problems and do not claim the sync succeeded'
+        );
+      }
+    });
+
     it('should create skills in Cursor skills directory', async () => {
       const initCommand = new InitCommand({ tools: 'cursor', force: true });
 
@@ -212,8 +401,95 @@ describe('InitCommand', () => {
       expect(cmdContent).toContain('category:');
       expect(cmdContent).toContain('tags:');
 
-      // .agents is a detection-only root and must never be created during generation
+      // ZCode writes only to its own root; selecting it must never create another
+      // tool's root, including the shared .agents target.
       expect(await directoryExists(path.join(testDir, '.agents'))).toBe(false);
+    });
+
+    it('should support the shared agents target as an adapterless skills-only tool', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'both',
+      });
+
+      const initCommand = new InitCommand({ tools: 'agents', force: true });
+      await initCommand.execute(testDir);
+
+      const skillFile = path.join(testDir, '.agents', 'skills', 'openspec-explore', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+
+      const commandsDir = path.join(testDir, '.agents', 'commands');
+      expect(await directoryExists(commandsDir)).toBe(false);
+
+      const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
+      expect(
+        logCalls.some(
+          (entry) => entry.includes('Commands skipped for: agents') && entry.includes('(no adapter)'),
+        ),
+      ).toBe(true);
+    });
+
+    it('should install MiniMax Code skills only in the user-home target', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'both',
+      });
+
+      const initCommand = new InitCommand({ tools: 'minimax-code', force: true });
+      await initCommand.execute(testDir);
+
+      const skillFile = path.join(
+        testDir,
+        'home',
+        '.minimax',
+        'skills',
+        'openspec-explore',
+        'SKILL.md'
+      );
+      expect(await fileExists(skillFile)).toBe(true);
+      expect(await directoryExists(path.join(testDir, '.minimax'))).toBe(false);
+      expect(await directoryExists(path.join(testDir, '.mavis'))).toBe(false);
+
+      const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls
+        .flat()
+        .map(String);
+      expect(
+        logCalls.some(
+          (entry) =>
+            entry.includes('Commands skipped for: minimax-code') &&
+            entry.includes('(no adapter)')
+        )
+      ).toBe(true);
+      expect(
+        logCalls.some((entry) => entry.includes('commands in') && entry.includes('.minimax'))
+      ).toBe(false);
+    });
+
+    it('should preserve global MiniMax Code skills for commands-only delivery', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+
+      const skillFile = path.join(
+        testDir,
+        'home',
+        '.minimax',
+        'skills',
+        'openspec-explore',
+        'SKILL.md'
+      );
+      await fs.mkdir(path.dirname(skillFile), { recursive: true });
+      await fs.writeFile(skillFile, 'existing global skill');
+
+      const initCommand = new InitCommand({ tools: 'minimax-code', force: true });
+      await initCommand.execute(testDir);
+
+      expect(await fs.readFile(skillFile, 'utf-8')).toBe('existing global skill');
+      expect(await directoryExists(path.join(testDir, '.minimax'))).toBe(false);
     });
 
     it('should support Kimi Code as an adapterless skills-only tool', async () => {
@@ -240,6 +516,49 @@ describe('InitCommand', () => {
       ).toBe(true);
     });
 
+    it('should support Command Code with both skills and generated commands', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'both',
+      });
+
+      const initCommand = new InitCommand({ tools: 'command-code', force: true });
+      await initCommand.execute(testDir);
+
+      // Skills install under .commandcode/skills (Command Code's native skill surface)
+      const skillFile = path.join(testDir, '.commandcode', 'skills', 'openspec-explore', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+
+      // Adapter-backed: Command Code reads custom slash commands from
+      // .commandcode/commands/opsx-<id>.md, invoked as /opsx-<id>.
+      const commandFile = path.join(testDir, '.commandcode', 'commands', 'opsx-explore.md');
+      expect(await fileExists(commandFile)).toBe(true);
+      const commandContent = await fs.readFile(commandFile, 'utf-8');
+      expect(commandContent).toContain('**Provided arguments**: $ARGUMENTS');
+      expect(commandContent).not.toMatch(/^---\n/);
+    });
+
+    it('should generate Command Code commands and skip skills under delivery=commands', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+
+      const initCommand = new InitCommand({ tools: 'command-code', force: true });
+      await initCommand.execute(testDir);
+
+      // commands-only delivery: the adapter still writes commands...
+      const commandFile = path.join(testDir, '.commandcode', 'commands', 'opsx-explore.md');
+      expect(await fileExists(commandFile)).toBe(true);
+      const commandContent = await fs.readFile(commandFile, 'utf-8');
+      expect(commandContent).toContain('**Provided arguments**: $ARGUMENTS');
+
+      // ...but no skills are installed
+      expect(await directoryExists(path.join(testDir, '.commandcode', 'skills'))).toBe(false);
+    });
+
     it('should support CodeArts as an adapterless skills-only tool', async () => {
       saveGlobalConfig({
         featureFlags: {},
@@ -263,6 +582,55 @@ describe('InitCommand', () => {
           (entry) => entry.includes('コマンド生成をスキップ: codeartsagent') && entry.includes('アダプタなし'),
         ),
       ).toBe(true);
+    });
+
+    it('should support Rovo Dev CLI as an adapterless skills-only tool', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'both',
+      });
+
+      const initCommand = new InitCommand({ tools: 'rovodev', force: true });
+      await initCommand.execute(testDir);
+
+      const skillFile = path.join(testDir, '.rovodev', 'skills', 'openspec-explore', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+
+      const commandsDir = path.join(testDir, '.rovodev', 'commands');
+      expect(await directoryExists(commandsDir)).toBe(false);
+
+      // Rovo has no slash-command surface: skills are invoked by natural
+      // language, so no generated skill may tell the user to type a
+      // `/openspec-*` or `/opsx…` command that its CLI never registers.
+      const skillsRoot = path.join(testDir, '.rovodev', 'skills');
+      const skillDirs = await fs.readdir(skillsRoot);
+      expect(skillDirs.length).toBeGreaterThan(0);
+      for (const dir of skillDirs) {
+        const body = await fs.readFile(path.join(skillsRoot, dir, 'SKILL.md'), 'utf-8');
+        expect(body, `${dir}/SKILL.md should not reference /openspec-* commands`).not.toMatch(/\/openspec-/);
+        expect(body, `${dir}/SKILL.md should not reference /opsx commands`).not.toMatch(/\/opsx[:-]/);
+      }
+      // The apply skill hands off to other workflows; confirm the handoff is
+      // spelled as a natural-language skill reference.
+      const applyBody = await fs.readFile(
+        path.join(skillsRoot, 'openspec-apply-change', 'SKILL.md'),
+        'utf-8',
+      );
+      expect(applyBody).toMatch(/the openspec-archive-change skill/);
+
+      const rovoLogCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
+      expect(rovoLogCalls.some((entry) => entry.includes('Created: Rovo Dev CLI'))).toBe(true);
+      expect(
+        rovoLogCalls.some(
+          (entry) => entry.includes('Commands skipped for: rovodev') && entry.includes('(no adapter)'),
+        ),
+      ).toBe(true);
+      // The getting-started hint must not advertise a dead slash command.
+      const hintLine = rovoLogCalls.find((entry) => entry.includes('Start your first change'));
+      expect(hintLine).toBeDefined();
+      expect(hintLine).not.toMatch(/\/openspec-/);
+      expect(hintLine).toContain('openspec-propose スキル');
     });
 
     it('should support Hermes Agent as an adapterless skills-only tool with a setup note', async () => {
@@ -351,13 +719,106 @@ describe('InitCommand', () => {
         const initCommand = new InitCommand({ tools: 'codex', force: true });
         await initCommand.execute(testDir);
 
-        const skillFile = path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md');
+        const skillFile = path.join(testDir, '.agents', 'skills', 'openspec-explore', 'SKILL.md');
         expect(await fileExists(skillFile)).toBe(true);
+        expect(
+          await fileExists(path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md'))
+        ).toBe(false);
 
         const promptFile = path.join(process.env.CODEX_HOME!, 'prompts', 'opsx-explore.md');
         expect(await fileExists(promptFile)).toBe(false);
       }
     );
+
+    it('should reconcile Codex and agents to one tree both consumers can invoke', async () => {
+      const initCommand = new InitCommand({ tools: 'codex,agents', force: true });
+      await initCommand.execute(testDir);
+
+      const skillsDir = path.join(testDir, '.agents', 'skills');
+      const proposeSkill = await fs.readFile(
+        path.join(skillsDir, 'openspec-propose', 'SKILL.md'),
+        'utf-8'
+      );
+      expect(proposeSkill).toContain('$openspec-apply-change');
+      expect(proposeSkill).toContain('/openspec-apply-change');
+      expect(await fs.readFile(path.join(skillsDir, '.openspec-target'), 'utf-8')).toBe('codex\n');
+
+      const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls
+        .flat()
+        .map(String);
+      expect(logCalls.some((entry) => entry.includes('Created: Codex'))).toBe(true);
+      expect(logCalls.some((entry) => entry.includes('Shared .agents skills'))).toBe(false);
+      expect(
+        logCalls.some((entry) => entry.includes('writing one tree with Codex and generic'))
+      ).toBe(true);
+    });
+
+    it('should migrate legacy Codex skills only after init writes their replacements', async () => {
+      await new InitCommand({ tools: 'codex', force: true }).execute(testDir);
+      await fs.rename(path.join(testDir, '.agents'), path.join(testDir, '.codex'));
+      await fs.rm(path.join(testDir, '.codex', 'skills', '.openspec-target'));
+      const customSkill = path.join(testDir, '.codex', 'skills', 'custom', 'SKILL.md');
+      await fs.mkdir(path.dirname(customSkill), { recursive: true });
+      await fs.writeFile(customSkill, 'user skill');
+
+      await new InitCommand({ tools: 'codex', force: true }).execute(testDir);
+
+      expect(
+        await fileExists(path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'))
+      ).toBe(true);
+      expect(
+        await fileExists(path.join(testDir, '.codex', 'skills', 'openspec-propose', 'SKILL.md'))
+      ).toBe(false);
+      expect(await fs.readFile(customSkill, 'utf-8')).toBe('user skill');
+    });
+
+    it('should not suggest an IDE restart for CLI-only tools', async () => {
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(getConsoleOutput()).not.toContain('Restart your IDE');
+    });
+
+    it('should suggest an IDE restart for IDE-resident tools', async () => {
+      const initCommand = new InitCommand({ tools: 'cursor', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(getConsoleOutput()).toContain('Restart your IDE');
+    });
+
+    it('should suggest an IDE restart when a mix of CLI and IDE tools is configured', async () => {
+      // One IDE-resident tool (cursor) among CLI tools (claude) is enough: the
+      // hint targets the tool that needs it, so the gate must not require every
+      // configured tool to be IDE-resident.
+      const initCommand = new InitCommand({ tools: 'claude,cursor', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(getConsoleOutput()).toContain('Restart your IDE');
+    });
+
+    it('should word the restart hint for commands when an IDE tool gets a command surface', async () => {
+      // Default delivery generates commands for an adapter-backed IDE tool, so the
+      // hint must name commands, driven by the IDE tool's own generated surface.
+      const initCommand = new InitCommand({ tools: 'cursor', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(getConsoleOutput()).toContain('新しいコマンドを有効にするにはIDEを再起動してください。');
+    });
+
+    it('should word the restart hint for skills when an IDE tool gets only a skill surface', async () => {
+      // Skills-only delivery generates no commands, so the same IDE tool must be
+      // told about skills, not commands.
+      saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'skills' });
+      const initCommand = new InitCommand({ tools: 'cursor', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(getConsoleOutput()).toContain('新しいスキルを有効にするにはIDEを再起動してください。');
+    });
 
     it('should create skills for multiple tools at once', async () => {
       const initCommand = new InitCommand({ tools: 'claude,cursor', force: true });
@@ -369,6 +830,47 @@ describe('InitCommand', () => {
 
       expect(await fileExists(claudeSkill)).toBe(true);
       expect(await fileExists(cursorSkill)).toBe(true);
+    });
+
+    it('should deliver the propose boundary to tools named in the linked reports', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'both',
+      });
+
+      const initCommand = new InitCommand({
+        tools: 'factory,cursor,kilocode,pi,codex',
+        force: true,
+      });
+      await initCommand.execute(testDir);
+
+      const proposeFiles = [
+        path.join(testDir, '.factory', 'commands', 'opsx-propose.md'),
+        path.join(testDir, '.cursor', 'commands', 'opsx-propose.md'),
+        path.join(testDir, '.kilocode', 'workflows', 'opsx-propose.md'),
+        path.join(testDir, '.pi', 'prompts', 'opsx-propose.md'),
+        path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'),
+      ];
+
+      for (const proposeFile of proposeFiles) {
+        expect(await fileExists(proposeFile), proposeFile).toBe(true);
+        const content = await fs.readFile(proposeFile, 'utf-8');
+        expect(content, proposeFile).toContain('**Planning boundary**');
+        expect(content, proposeFile).toContain(
+          'selected or triggered this workflow authorizes planning only'
+        );
+        expect(content, proposeFile).toContain('ambiguity that would materially affect scope');
+        expect(content, proposeFile).toContain(
+          'ask the user before creating the change'
+        );
+        expect(content, proposeFile).toContain(
+          'Any implementation or apply instruction in that request does not carry forward'
+        );
+        expect(content, proposeFile).toContain(
+          'wait for a new user request to start the apply workflow'
+        );
+      }
     });
 
     it('should select all tools with --tools all option', async () => {
@@ -386,6 +888,13 @@ describe('InitCommand', () => {
       expect(await fileExists(codeArtsSkill)).toBe(true);
       expect(await fileExists(cursorSkill)).toBe(true);
       expect(await fileExists(devinSkill)).toBe(true);
+
+      const sharedPropose = await fs.readFile(
+        path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'),
+        'utf-8'
+      );
+      expect(sharedPropose).toContain('$openspec-apply-change');
+      expect(sharedPropose).toContain('/openspec-apply-change');
     });
 
     it('should skip tool configuration with --tools none option', async () => {
@@ -683,6 +1192,83 @@ describe('InitCommand', () => {
       const cmdFile = path.join(testDir, '.github', 'prompts', 'opsx-explore.prompt.md');
       expect(await fileExists(cmdFile)).toBe(true);
     });
+
+    it('should fail GitHub Copilot setup without partially creating cloud files', async () => {
+      const agentsPath = path.join(testDir, '.github', 'agents');
+      const setupStepsPath = path.join(
+        testDir,
+        '.github',
+        'workflows',
+        'copilot-setup-steps.yml'
+      );
+      await fs.mkdir(path.dirname(agentsPath), { recursive: true });
+      await fs.writeFile(agentsPath, 'blocks the generated agent directory');
+
+      const initCommand = new InitCommand({
+        tools: 'github-copilot',
+        force: true,
+        copilotCloud: true,
+      });
+      await expect(initCommand.execute(testDir)).rejects.toThrow(
+        'OpenSpec setup failed for: GitHub Copilot'
+      );
+
+      await expect(fs.stat(setupStepsPath)).rejects.toMatchObject({ code: 'ENOENT' });
+      expect(vi.mocked(console.log).mock.calls.flat().join('\n')).toContain(
+        'OpenSpec のセットアップは未完了です'
+      );
+    });
+
+    it('does not write cloud files by default (opt-in) but still installs local Copilot files', async () => {
+      const initCommand = new InitCommand({ tools: 'github-copilot', force: true });
+      await initCommand.execute(testDir);
+
+      // Local Copilot command files are unaffected by the cloud opt-in.
+      expect(
+        await fileExists(path.join(testDir, '.github', 'prompts', 'opsx-explore.prompt.md'))
+      ).toBe(true);
+      // Cloud files are NOT written without an explicit opt-in.
+      await expect(
+        fs.stat(path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml'))
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(
+        fs.stat(path.join(testDir, '.github', 'agents', 'openspec.agent.md'))
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      // An undecided run leaves config untouched (no githubCopilot key).
+      const config = await fs.readFile(path.join(testDir, 'openspec', 'config.yaml'), 'utf8');
+      expect(config).not.toContain('githubCopilot');
+    });
+
+    it('writes cloud files and persists the opt-in when --copilot-cloud is passed', async () => {
+      const initCommand = new InitCommand({
+        tools: 'github-copilot',
+        force: true,
+        copilotCloud: true,
+      });
+      await initCommand.execute(testDir);
+
+      await expect(
+        fs.readFile(path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml'), 'utf8')
+      ).resolves.toContain('copilot-setup-steps:');
+      const config = await fs.readFile(path.join(testDir, 'openspec', 'config.yaml'), 'utf8');
+      expect(config).toContain('githubCopilot:');
+      expect(config).toContain('cloudAgent: true');
+    });
+
+    it('persists an explicit opt-out and writes no cloud files with --no-copilot-cloud', async () => {
+      const initCommand = new InitCommand({
+        tools: 'github-copilot',
+        force: true,
+        copilotCloud: false,
+      });
+      await initCommand.execute(testDir);
+
+      await expect(
+        fs.stat(path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml'))
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      const config = await fs.readFile(path.join(testDir, 'openspec', 'config.yaml'), 'utf8');
+      expect(config).toContain('cloudAgent: false');
+    });
   });
 });
 
@@ -698,6 +1284,8 @@ describe('InitCommand - profile and detection features', () => {
     configTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-config-test-'));
     process.env.XDG_CONFIG_HOME = configTempDir;
     process.env.CODEX_HOME = path.join(testDir, 'codex-home');
+    process.env.HOME = path.join(testDir, 'home');
+    process.env.USERPROFILE = path.join(testDir, 'home');
     vi.spyOn(console, 'log').mockImplementation(() => {});
     confirmMock.mockReset();
     confirmMock.mockResolvedValue(true);
@@ -787,8 +1375,24 @@ describe('InitCommand - profile and detection features', () => {
 
     expect(await fileExists(legacyPrompt)).toBe(false);
     expect(await fileExists(
-      path.join(testDir, '.codex', 'skills', 'openspec-apply-change', 'SKILL.md')
+      path.join(testDir, '.agents', 'skills', 'openspec-apply-change', 'SKILL.md')
     )).toBe(true);
+  });
+
+  it('should preserve global Codex prompts when only generic agents skills are installed', async () => {
+    const promptDir = path.join(process.env.CODEX_HOME!, 'prompts');
+    const legacyPrompt = path.join(promptDir, 'opsx-apply.md');
+    await fs.mkdir(promptDir, { recursive: true });
+    await fs.writeFile(legacyPrompt, 'legacy apply prompt');
+
+    const initCommand = new InitCommand({ tools: 'agents' });
+    await initCommand.execute(testDir);
+
+    expect(await fileExists(legacyPrompt)).toBe(true);
+    expect(await fs.readFile(
+      path.join(testDir, '.agents', 'skills', '.openspec-target'),
+      'utf-8'
+    )).toBe('agents\n');
   });
 
   it('should preserve legacy Codex prompts without replacement skills during non-interactive init', async () => {
@@ -802,10 +1406,10 @@ describe('InitCommand - profile and detection features', () => {
 
     expect(await fileExists(legacyPrompt)).toBe(true);
     expect(await fileExists(
-      path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
+      path.join(testDir, '.agents', 'skills', 'openspec-explore', 'SKILL.md')
     )).toBe(true);
     expect(await fileExists(
-      path.join(testDir, '.codex', 'skills', 'openspec-onboard', 'SKILL.md')
+      path.join(testDir, '.agents', 'skills', 'openspec-onboard', 'SKILL.md')
     )).toBe(false);
   });
 
@@ -883,6 +1487,93 @@ describe('InitCommand - profile and detection features', () => {
     const githubCopilot = choices.find((choice) => choice.value === 'github-copilot');
 
     expect(githubCopilot?.preSelected).toBe(true);
+  });
+
+  it('interactive init: confirming the cloud prompt writes files and persists the opt-in', async () => {
+    searchableMultiSelectMock.mockResolvedValue(['github-copilot']);
+    confirmMock.mockImplementation(({ message }: { message: string }) =>
+      Promise.resolve(String(message).includes('Copilot cloud coding-agent'))
+    );
+
+    const initCommand = new InitCommand({});
+    vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
+    await initCommand.execute(testDir);
+
+    expect(
+      await fileExists(path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml'))
+    ).toBe(true);
+    const config = await fs.readFile(path.join(testDir, 'openspec', 'config.yaml'), 'utf8');
+    expect(config).toContain('cloudAgent: true');
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('copilot-setup-steps.yml') })
+    );
+  });
+
+  it('interactive init: declining the cloud prompt writes no cloud files but keeps local ones', async () => {
+    searchableMultiSelectMock.mockResolvedValue(['github-copilot']);
+    confirmMock.mockResolvedValue(false);
+
+    const initCommand = new InitCommand({});
+    vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
+    await initCommand.execute(testDir);
+
+    await expect(
+      fs.stat(path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml'))
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    // Local Copilot prompt files are unaffected by the cloud decision.
+    expect(
+      await fileExists(path.join(testDir, '.github', 'prompts', 'opsx-explore.prompt.md'))
+    ).toBe(true);
+    const config = await fs.readFile(path.join(testDir, 'openspec', 'config.yaml'), 'utf8');
+    expect(config).toContain('cloudAgent: false');
+  });
+
+  it('re-init with --no-copilot-cloud removes previously generated managed cloud files', async () => {
+    const setupStepsPath = path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml');
+    await new InitCommand({ tools: 'github-copilot', force: true, copilotCloud: true }).execute(testDir);
+    expect(await fileExists(setupStepsPath)).toBe(true);
+
+    await new InitCommand({ tools: 'github-copilot', force: true, copilotCloud: false }).execute(testDir);
+
+    expect(await fileExists(setupStepsPath)).toBe(false);
+    const config = await fs.readFile(path.join(testDir, 'openspec', 'config.yaml'), 'utf8');
+    expect(config).toContain('cloudAgent: false');
+  });
+
+  it('re-init without a flag honors the persisted opt-in', async () => {
+    const setupStepsPath = path.join(testDir, '.github', 'workflows', 'copilot-setup-steps.yml');
+    await new InitCommand({ tools: 'github-copilot', force: true, copilotCloud: true }).execute(testDir);
+    await fs.rm(setupStepsPath, { force: true });
+
+    // No flag this run: the persisted cloudAgent: true must drive the write.
+    await new InitCommand({ tools: 'github-copilot', force: true }).execute(testDir);
+
+    expect(await fileExists(setupStepsPath)).toBe(true);
+  });
+
+  it('warns when --copilot-cloud is passed but github-copilot is not selected', async () => {
+    await new InitCommand({ tools: 'claude', force: true, copilotCloud: true }).execute(testDir);
+
+    const out = vi.mocked(console.log).mock.calls.flat().join('\n');
+    expect(out).toContain('was ignored because the github-copilot tool was not selected');
+  });
+
+  it('opting in over a user-owned cloud file never claims that file was written', async () => {
+    const setupRel = path.join('.github', 'workflows', 'copilot-setup-steps.yml');
+    const agentRel = path.join('.github', 'agents', 'openspec.agent.md');
+    const setupStepsPath = path.join(testDir, setupRel);
+    await fs.mkdir(path.dirname(setupStepsPath), { recursive: true });
+    await fs.writeFile(setupStepsPath, 'name: my own workflow\n');
+
+    await new InitCommand({ tools: 'github-copilot', force: true, copilotCloud: true }).execute(testDir);
+
+    const out = vi.mocked(console.log).mock.calls.flat().join('\n');
+    // Only the agent file was actually written; the workflow was left untouched.
+    expect(out).toContain(`GitHub Copilot cloud files: ${agentRel}`);
+    expect(out).not.toContain(`cloud files: ${setupRel}`);
+    expect(out).toContain(`Left your existing ${setupRel} untouched`);
+    // And the user's own file is preserved verbatim.
+    await expect(fs.readFile(setupStepsPath, 'utf8')).resolves.toBe('name: my own workflow\n');
   });
 
   it('should respect custom profile from global config', async () => {
@@ -1079,7 +1770,7 @@ describe('InitCommand - profile and detection features', () => {
     const initCommand = new InitCommand({ tools: 'codex', force: true });
     await initCommand.execute(testDir);
 
-    const skillFile = path.join(testDir, '.codex', 'skills', 'openspec-apply-change', 'SKILL.md');
+    const skillFile = path.join(testDir, '.agents', 'skills', 'openspec-apply-change', 'SKILL.md');
     expect(await fileExists(skillFile)).toBe(true);
     const skillContent = await fs.readFile(skillFile, 'utf-8');
     expect(skillContent).not.toContain('/opsx:');
@@ -1091,10 +1782,9 @@ describe('InitCommand - profile and detection features', () => {
     expect(startHint).not.toContain('/openspec-propose');
     expect(startHint).not.toContain('/opsx:propose');
 
-    // No slash commands were generated, so the restart line must not claim any
-    const restartHint = logCalls.find((entry) => entry.includes('IDEを再起動'));
-    expect(restartHint).toContain('新しいスキルを有効にするにはIDEを再起動してください。');
-    expect(restartHint).not.toContain('slash commands');
+    // Codex は CLI ツールのため、スキル作成後に IDE の再起動は不要です。
+    const restartHint = logCalls.find((entry) => entry.includes('IDE を再起動'));
+    expect(restartHint).toBeUndefined();
   });
 
   it('should print the @-prefixed prompt hint for amazon-q (prompt library, no slash surface)', async () => {
@@ -1205,7 +1895,7 @@ describe('InitCommand - profile and detection features', () => {
 
     // Codex is skills-invocable so its skills are generated even under
     // delivery=commands; kimi (capability none) gets nothing at all
-    expect(await fileExists(path.join(testDir, '.codex', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
+    expect(await fileExists(path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
     expect(await fileExists(path.join(testDir, '.kimi-code'))).toBe(false);
 
     const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
@@ -1368,4 +2058,11 @@ async function directoryExists(dirPath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function getConsoleOutput(): string {
+  return (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls
+    .flat()
+    .map(String)
+    .join('\n');
 }

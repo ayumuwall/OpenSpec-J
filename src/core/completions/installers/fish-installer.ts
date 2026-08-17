@@ -78,7 +78,7 @@ export class FishInstaller {
       }
 
       if (!(await FileSystemUtils.canWriteFile(targetPath))) {
-        throw new Error(`Path is not writable: ${targetPath}`);
+        throw new Error(`パスへ書き込めません: ${targetPath}`);
       }
 
       // Ensure the directory exists
@@ -142,7 +142,7 @@ export class FishInstaller {
 
       const targetDir = path.dirname(targetPath);
       if (!(await FileSystemUtils.canWriteFile(targetDir))) {
-        throw new Error(`Path is not writable: ${targetDir}`);
+        throw new Error(`パスへ書き込めません: ${targetDir}`);
       }
 
       // Remove the completion script

@@ -27,15 +27,16 @@
 
 ## 3. ルートの選択と `RootOutput`
 
-すべてのルート解決コマンド（`list`、`show`、`validate`、`status`、`instructions`、`instructions apply`、`instructions archive`、`new change`、`archive`、`doctor`、`context`）は、次の優先順位で1つのOpenSpecルートを解決します。
+ルートを解決するすべてのコマンド（`list`、`show`、`validate`、`status`、`instructions`、`instructions apply`、`instructions archive`、`new change`、`archive`、`doctor`、`context`、`schemas`）は、同じ優先順位で1つの OpenSpec ルートを解決します:
 
 1. `--store <id>` → 登録ストアのルート (`source: "store"`)。
 2. それ以外の場合、`openspec/` を持つ最も近い祖先: 計画形状 → `source: "nearest"` (`store:` ポインターは無視され、stderr 警告が表示されます)。有効な `store:` ポインターを持つ構成専用ディレクトリ → そのストア、`source: "declared"`。
 3. 最も近いルートがなく、グローバルな `defaultStore` が設定済み（`openspec config set defaultStore <id>`）→ そのstore、`source: "global_default"`。古いIDの場合はstore由来のエラーとなり、`fix` に `openspec config unset defaultStore` が示されます。
 4. 最も近いルートもデフォルトもなく、登録storeが存在する → エラー `no_root_with_registered_stores`。
-5. ルート、デフォルト、storeがすべてない場合、ひな形生成コマンドはcwdを `source: "implicit"` として扱います。診断コマンド（`doctor`、`context`）は `no_openspec_root` で失敗します。診断は検査だけを行い、ひな形を作成しません。
+5. ルート、デフォルト、store がない場合: コマンドは cwd を `source: "implicit"` として扱うことがあります。ただし `doctor`、`context`、`list`、一括 `validate` は `no_openspec_root` で失敗します。`list` は `openspec/project.md` があるレガシープロジェクトに限り、暗黙のフォールバックを維持します。
 
-成功した JSON ペイロードにはルートが埋め込まれます。
+成功した JSON ペイロードには通常ルートが含まれます。ただし、成功した `schemas --json` は
+§4.13 で文書化した互換性のため、意図的に素の配列のままとします:
 
 ```json
 "root": { "path": "/abs/path", "source": "store" | "declared" | "global_default" | "nearest" | "implicit", "store_id": "id (only when store-selected)" }
@@ -55,7 +56,7 @@
 `{ "items": [ { "id", "type": "change"|"spec", "valid", "issues": [ { "level", "path", "message", "line"?, "column"? } ], "durationMs" } ], "summary": { "totals": {items,passed,failed}, "byType": {...} }, "version": "1.0", "root" }`。いずれかの項目が失敗した場合は 1 を終了します。
 
 ### 4.4 `status --json`
-`{ "changeName", "schemaName", "planningHome"?: { "kind", "root", "changesDir", "defaultSchema" }, "changeRoot", "artifactPaths": { "<id>": {outputPath, resolvedOutputPath, existingOutputPaths} }, "nextSteps": ["..."], "actionContext": { "mode": "repo-local", "sourceOfTruth": "repo", "planningArtifacts", "linkedContext", "allowedEditRoots", "requiresAffectedAreaSelection", "constraints" }, "isComplete", "applyRequires", "artifacts": [ {id, outputPath, status: "done"|"skipped"|"ready"|"blocked", requires, missingDeps?} ], "root" }`。各アーティファクトの `requires` は直接依存するIDで、すべての状態に存在します。`missingDeps` は `blocked` の場合だけ現れます。`artifacts` は依存順で並び、同時にreadyになった場合はスキーマの宣言順を使います。`"skipped"` は `.openspec.yaml` で `skip_specs: true` が宣言され、`generates` が `specs/` 配下にあるアーティファクトを示します。依存関係は満たしますが、作成してはいけません。アクティブな変更がない場合は `{ "changes": [], "message", "root" }`、終了0です。
+`{ "changeName", "schemaName", "planningHome"?: { "kind", "root", "changesDir", "defaultSchema" }, "changeRoot", "artifactPaths": { "<id>": {outputPath, resolvedOutputPath, existingOutputPaths} }, "nextSteps": ["..."], "actionContext": { "mode": "repo-local", "sourceOfTruth": "repo", "planningArtifacts", "linkedContext", "allowedEditRoots", "requiresAffectedAreaSelection", "constraints" }, "isPlanningComplete", "isComplete", "applyRequires", "artifacts": [ {id, outputPath, status: "done"|"skipped"|"ready"|"blocked", requires, missingDeps?} ], "root" }`。`isPlanningComplete` は、スキップされていないすべての計画アーティファクトが存在することを示します。スキップ済みアーティファクトは作成せずに充足済みとして扱います。実装タスクが完了したことを意味するものではありません。`isComplete` は同じ値を持つ互換性エイリアスとして維持されます。各アーティファクトの `requires` は直接依存する ID です（すべての status に含まれるため、アーティファクトが `done` であっても推移的な必須セットを算出できます）。`missingDeps` は `blocked` の場合だけ現れます。`artifacts` 配列は依存順です。同時に ready になったアーティファクトは、アルファベット順ではなくスキーマの `artifacts:` 宣言順で並びます。そのため最初の `ready` エントリが次に書き込むアーティファクトであり、`missingDeps` も同じ順序を使います。`"skipped"` は、`.openspec.yaml` が `skip_specs: true` を宣言した変更で、`generates` パスが `specs/` 配下のアーティファクトを示します。依存関係は充足しますが、作成してはいけません。アクティブな変更がない場合は `{ "changes": [], "message", "root" }`、終了コード0です。
 
 ### 4.5 `instructions <artifact> --json`
 `{ "changeName", "artifactId", "schemaName", "changeDir", "planningHome"?, "outputPath", "resolvedOutputPath", "existingOutputPaths", "description", "instruction"?, "context"?, "rules"?, "references"?: ReferenceIndexEntry[], "skipped"?, "warning"?, "template", "dependencies": [{id,done,path,description,skipped?}], "unlocks", "root" }`。`unlocks` は、このアーティファクトによりreadyになるものをスキーマ宣言順で示します。変更が `skip_specs: true` を宣言し、このアーティファクトがスキップされる場合は `"warning"` とともに `"skipped": true` が現れます。ファイルを作成してはいけません。`skipped: true` の依存項目はファイルなしで充足済みなので、パスを読まないでください。
@@ -72,7 +73,7 @@
 成功: `{ "change": { "id", "path", "metadataPath", "schema" }, "root" }`。失敗: `{ "change": null, "status": [d] }`、終了1。
 
 ### 4.9 `archive <name> --json`
-成功: `{ "archive": { "change", "archivedAs": "YYYY-MM-DD-name", "path", "specsUpdated", "totals"?, "warnings"? }, "root" }`。失敗: `{ "archive": null, "root"?, "status": [d] }`、終了1。`specsUpdated` は1つ以上の仕様ファイルを書き込んだ場合だけtrueです。同期済みの変更はtotalsがすべて0となり、スキップ内容を `warnings` に含めてアーカイブします。JSONモードは完全に非対話型で、各プロンプト位置は `archive_*` コードになります。
+成功時: `{ "archive": { "change", "archivedAs": "YYYY-MM-DD-name", "path", "specsUpdated", "totals"?, "warnings"? }, "root" }`。失敗時: `{ "archive": null, "root"?, "status": [d] }`、終了コード1。`specsUpdated` が true になるのは、少なくとも1つの仕様ファイルを書き込むか廃止した場合だけです（変更が最後の要件を削除した capability は仕様を削除します。変更の `.openspec.yaml` に `retire_capabilities: true` が必要です。廃止はすべて `warnings` に示され、仕様が呼出元のチェックアウト内にあった場合だけ、貼り付け可能な Git 復旧コマンドを示します）。すでに同期済みの変更は、全て0の totals と `warnings` に一覧化したスキップ情報を持ってアーカイブします。JSON モードは完全に非対話式であり、確認箇所はすべて `archive_*` コードになります。
 
 ### 4.10 `doctor --json`
 `{ "root": { "path", "source", "store_id"?, "healthy", "status": [] }, "store": { "id", "metadata": {present,valid,remote?}, "origin_url"?, "drift"?: {ahead,behind}, "status": [] } | null, "references": [...], "status": [] }`. `drift` (present only for a git-backed store checkout that has an upstream tracking ref) is ahead/behind counts against the last-fetched upstream, not the live remote. Health findings of any severity exit 0. Failure payload: `{ "root": null, "store": null, "references": [], "status": [d] }`, exit 1.
@@ -84,7 +85,7 @@
 setup/register: `{ "store": {id, root, metadata_path?}, "registry": {path, registered, already_registered}, "git": {is_repository, initialized, committed}, "created_files": [], "status": [] }`。unregister/remove: `{ "store", "registry": {path, removed}, "files": {deleted, deleted_path, left_on_disk}, "status": [] }`。list: `{ "stores": [{id, root}], "status": [] }`。doctor: `{ "stores": [ { id, root, metadata_path?, openspec_root: {...healthy, status}, metadata: {present, valid, id?, remote}, git: {is_repository, has_commits, has_uncommitted_changes, has_remote, origin_url}, status } ], "status": [] }`（`null`は不明・未検査）。正常性の所見は終了0、失敗は対応するnull形状で終了1、プロンプトのキャンセルは130です。
 
 ### 4.13 `schemas --json` / `templates --json`
-`schemas`: ルートオブジェクトで包まない配列 `[ {name, description, artifacts, source} ]`。`templates`: キー付きオブジェクト `{ "<artifactId>": {path, source} }`。どちらもcwd基準で、root/statusキーはありません。
+`schemas`: 成功時は素の配列 `[ {name, description, artifacts, source} ]` のままです。正規のルート選択優先順位で解決し、`--store <id>` を受け付けます。ルート選択に失敗した場合: `{ "schemas": [], "root": null, "status": [d] }`、終了コード1。`templates`: キー付きオブジェクト `{ "<artifactId>": {path, source} }`。引き続き cwd ベースであり、root/status キーはありません。
 
 ## 5. 終了コードコントラクト
 
@@ -119,7 +120,7 @@ setup/register: `{ "store": {id, root, metadata_path?}, "registry": {path, regis
 `relationship_registry_unreadable`、`root_pointer_ignored`、`root_pointer_invalid`、`pointer_declarations_inert`。
 
 ### アーカイブ (JSON モード)
-`archive_change_name_required`、`archive_change_not_found`、`archive_validation_failed`、`archive_confirmation_required`、`archive_tasks_incomplete`、`archive_spec_update_failed`、`archive_spec_validation_failed`、`archive_target_exists`、`archive_error`。
+`archive_change_name_required`、`archive_change_not_found`、`archive_change_symlink`、`archive_validation_failed`、`archive_confirmation_required`、`archive_tasks_incomplete`、`archive_spec_update_failed`、`archive_spec_validation_failed`、`archive_target_exists`、`archive_error`。
 
 ### コンテキストの書き込み
 `context_file_exists`、`context_output_dir_missing`。
@@ -137,5 +138,5 @@ setup/register: `{ "store": {id, root, metadata_path?}, "registry": {path, regis
 4. src には 4 つの並列エンベロープ型宣言が存在します。アーカイブ診断には `target` が含まれることはありません。
 5. `list --json` は、変更ごとに `status` キーを文字列列挙として再利用します。
 6. `validate` 出力だけが `version` フィールドを含みます。
-7. `schemas`/`templates` はルート選択を無視します (CWD ベース、`--store` なし)。
+7. `templates` はルート選択を無視します（cwd ベース、`--store` なし）。
 8. 非推奨の名詞形式 (`change`/`spec` サブコマンド) は、`root`/`status` なしでエンベロープされていないペイロードを出力します。

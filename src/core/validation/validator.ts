@@ -10,7 +10,14 @@ import {
   MAX_REQUIREMENT_TEXT_LENGTH,
   VALIDATION_MESSAGES
 } from './constants.js';
-import { parseDeltaSpec, foldRequirementName, normalizeRequirementName, extractRequirementsSection } from '../parsers/requirement-blocks.js';
+import {
+  parseDeltaSpec,
+  foldRequirementName,
+  normalizeRequirementName,
+  extractRequirementsSection,
+  findMissingCurrentScenarios,
+  type RequirementBlock,
+} from '../parsers/requirement-blocks.js';
 import {
   extractRequirementBody as extractRequirementBodyShared,
   containsShallOrMust as containsShallOrMustShared,
@@ -19,7 +26,14 @@ import {
 import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
 import { discoverSpecFiles, hasAnyFileUnder } from '../../utils/spec-discovery.js';
-import { METADATA_FILENAME, readSkipSpecsMarker } from '../../utils/change-metadata.js';
+import {
+  METADATA_FILENAME,
+  readSkipSpecsMarker,
+  resolveSchemaForChange,
+} from '../../utils/change-metadata.js';
+import { resolveTaskFilesForChange } from '../../utils/task-progress.js';
+import { findTaskNumberingIssues } from './task-numbering.js';
+import { getPackageSchemasDir, getSchemaDir } from '../artifact-graph/index.js';
 
 export class Validator {
   private strictMode: boolean;
@@ -129,12 +143,22 @@ export class Validator {
    * Validate delta-formatted spec files under a change directory.
    * Enforces:
    * - At least one delta across all files
-   * - ADDED/MODIFIED: each requirement has SHALL/MUST and at least one scenario
+   * - ADDED/MODIFIED: each requirement has at least one scenario; missing
+   *   English SHALL/MUST keywords are guidance unless strict mode is enabled
    * - REMOVED: names only; no scenario/description required
    * - RENAMED: pairs well-formed
    * - No duplicates within sections; no cross-section conflicts per spec
+   *
+   * When `options.mainSpecsDir` is given, MODIFIED blocks are also checked
+   * against the current main specs for the scenario loss archive refuses to
+   * apply (#1477). When `options.projectRoot` is given, the schema's tracked
+   * task files are checked for ambiguous numbering (#1520). Omitting either
+   * option keeps existing library and archive callers behaving as before.
    */
-  async validateChangeDeltaSpecs(changeDir: string): Promise<ValidationReport> {
+  async validateChangeDeltaSpecs(
+    changeDir: string,
+    options: { mainSpecsDir?: string; projectRoot?: string } = {}
+  ): Promise<ValidationReport> {
     const issues: ValidationIssue[] = [];
     const specsDir = path.join(changeDir, 'specs');
     let totalDeltas = 0;
@@ -148,7 +172,7 @@ export class Validator {
       // path silently skips (#1385). It finds spec.md at any depth, covering
       // both specs/<capability>/spec.md and the nested multi-area
       // specs/<area>/<capability>/spec.md layout (#1182b).
-      const specFiles = (await discoverSpecFiles(specsDir)).map(spec => spec.specFile);
+      const discoveredSpecs = await discoverSpecFiles(specsDir);
 
       // A spec.md directly at the specs/ root has no capability folder, so the
       // merge path drops it: without this error the change validates clean and
@@ -162,11 +186,11 @@ export class Validator {
           level: 'ERROR',
           path: 'spec.md',
           message:
-            'specs/spec.md に delta spec が見つかりました。delta spec は capability フォルダー内（例: specs/<capability>/spec.md）に置く必要があります。specs/ 直下のファイルは変更の適用時やアーカイブ時に無視されます。',
+            'specs/spec.md に仕様差分があります。仕様差分は機能パス配下（例: specs/<capability-path>/spec.md）に置く必要があります。specs/ 直下のファイルは変更の適用・アーカイブ時に無視されます。',
         });
       }
 
-      for (const specFile of specFiles) {
+      for (const { id: specId, specFile } of discoveredSpecs) {
         let content: string | undefined;
         try {
           content = await fs.readFile(specFile, 'utf-8');
@@ -190,8 +214,8 @@ export class Validator {
             path: entryPath,
             line: stray.line,
             message: nameless
-              ? `Header "### ${stray.header}" in ${stray.section} is missing a requirement name and is ignored by validation. Add a name, e.g. "### Requirement: <name>".`
-              : `Header "### ${stray.header}" in ${stray.section} is not a "### Requirement:" header and is ignored by validation. Use "### Requirement: ${stray.header}" if it should be validated as a requirement.`,
+              ? `${stray.section} 内の見出し "### ${stray.header}" には要件名がないため、検証では無視されます。"### Requirement: <name>" のように名前を追加してください。`
+              : `${stray.section} 内の見出し "### ${stray.header}" は "### Requirement:" 見出しではないため、検証では無視されます。要件として検証する場合は "### Requirement: ${stray.header}" を使用してください。`,
           });
         }
 
@@ -218,7 +242,7 @@ export class Validator {
           const key = normalizeRequirementName(block.name);
           totalDeltas++;
           if (addedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in ADDED: "${block.name}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED 内で要件が重複しています: "${block.name}"` });
           } else {
             addedNames.add(key);
           }
@@ -229,14 +253,22 @@ export class Validator {
               path: entryPath,
               message: this.containsShallOrMust(block.name)
                 ? this.buildMissingShallOrMustMessage(`ADDED "${block.name}"`, block.name)
-                : `ADDED "${block.name}" is missing requirement text`,
+                : `ADDED "${block.name}" に要件本文がありません`,
             });
           } else if (!this.containsShallOrMust(requirementText)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: this.buildMissingShallOrMustMessage(`ADDED "${block.name}"`, block.name) });
+            issues.push({
+              level: 'WARNING',
+              path: entryPath,
+              message: this.buildMissingShallOrMustMessage(
+                `ADDED "${block.name}"`,
+                block.name,
+                true
+              ),
+            });
           }
           const scenarioCount = this.countScenarios(block.raw);
           if (scenarioCount < 1) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" must include at least one scenario` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" には少なくとも1つのシナリオが必要です` });
           }
         }
 
@@ -245,7 +277,7 @@ export class Validator {
           const key = normalizeRequirementName(block.name);
           totalDeltas++;
           if (modifiedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in MODIFIED: "${block.name}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED 内で要件が重複しています: "${block.name}"` });
           } else {
             modifiedNames.add(key);
           }
@@ -256,15 +288,43 @@ export class Validator {
               path: entryPath,
               message: this.containsShallOrMust(block.name)
                 ? this.buildMissingShallOrMustMessage(`MODIFIED "${block.name}"`, block.name)
-                : `MODIFIED "${block.name}" is missing requirement text`,
+                : `MODIFIED "${block.name}" に要件本文がありません`,
             });
           } else if (!this.containsShallOrMust(requirementText)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: this.buildMissingShallOrMustMessage(`MODIFIED "${block.name}"`, block.name) });
+            issues.push({
+              level: 'WARNING',
+              path: entryPath,
+              message: this.buildMissingShallOrMustMessage(
+                `MODIFIED "${block.name}"`,
+                block.name,
+                true
+              ),
+            });
           }
           const scenarioCount = this.countScenarios(block.raw);
           if (scenarioCount < 1) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" must include at least one scenario` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" には少なくとも1つのシナリオが必要です` });
           }
+        }
+
+        // Run archive's scenario-loss check here too, so the change fails at
+        // authoring time instead of days later at archive time (#1477).
+        if (options.mainSpecsDir && plan.modified.length > 0) {
+          const mainSpecFile = path.join(
+            options.mainSpecsDir,
+            ...specId.split('/'),
+            'spec.md'
+          );
+          FileSystemUtils.assertPathWithin(path.dirname(mainSpecFile), mainSpecFile);
+          issues.push(
+            ...(await this.findScenarioLossIssues(
+              plan.modified,
+              plan.renamed,
+              mainSpecFile,
+              entryPath,
+              path.dirname(mainSpecFile)
+            ))
+          );
         }
 
         // Validate REMOVED (names only)
@@ -272,7 +332,7 @@ export class Validator {
           const key = normalizeRequirementName(name);
           totalDeltas++;
           if (removedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in REMOVED: "${name}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `REMOVED 内で要件が重複しています: "${name}"` });
           } else {
             removedNames.add(key);
           }
@@ -284,12 +344,12 @@ export class Validator {
           const toKey = normalizeRequirementName(to);
           totalDeltas++;
           if (renamedFrom.has(fromKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate FROM in RENAMED: "${from}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED 内で FROM が重複しています: "${from}"` });
           } else {
             renamedFrom.add(fromKey);
           }
           if (renamedTo.has(toKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate TO in RENAMED: "${to}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED 内で TO が重複しています: "${to}"` });
           } else {
             renamedTo.add(toKey);
           }
@@ -298,15 +358,15 @@ export class Validator {
         // Cross-section conflicts (within the same spec file)
         for (const n of modifiedNames) {
           if (removedNames.has(n)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Requirement present in both MODIFIED and REMOVED: "${n}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `要件が MODIFIED と REMOVED の両方にあります: "${n}"` });
           }
           if (addedNames.has(n)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Requirement present in both MODIFIED and ADDED: "${n}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `要件が MODIFIED と ADDED の両方にあります: "${n}"` });
           }
         }
         for (const n of addedNames) {
           if (removedNames.has(n)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Requirement present in both ADDED and REMOVED: "${n}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `要件が ADDED と REMOVED の両方にあります: "${n}"` });
           }
         }
         for (const { from, to } of plan.renamed) {
@@ -316,7 +376,7 @@ export class Validator {
             issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED が RENAMED の古い名前を参照しています。"${to}" の新しい見出しを使ってください` });
           }
           if (addedNames.has(toKey)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED TO collides with ADDED for "${to}"` });
+            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED の TO が ADDED と競合しています: "${to}"` });
           }
           // Folded comparison: a case/whitespace variant of the FROM header
           // in REMOVED is the same contradiction, not a different name.
@@ -328,8 +388,8 @@ export class Validator {
               level: 'ERROR',
               path: entryPath,
               message:
-                `Requirement present in both RENAMED and REMOVED: "${from}"` +
-                (removedFoldMatch === fromKey ? '' : ` (REMOVED spells it "${removedFoldMatch}")`),
+                `要件が RENAMED と REMOVED の両方にあります: "${from}"` +
+                (removedFoldMatch === fromKey ? '' : `（REMOVED では "${removedFoldMatch}" と記載）`),
             });
           }
         }
@@ -350,14 +410,14 @@ export class Validator {
       issues.push({
         level: 'ERROR',
         path: specPath,
-        message: `Delta sections ${this.formatSectionList(sections)} が見つかりましたが、requirement エントリを解析できませんでした。各セクションに少なくとも 1 つの "### Requirement:" ブロックを含めてください（REMOVED では箇条書き構文も使えます）。`,
+        message: `仕様差分セクション ${this.formatSectionList(sections)} が見つかりましたが、要件項目を解析できませんでした。各セクションに少なくとも1つの "### Requirement:" ブロックを含めてください（REMOVED では箇条書き構文も使えます）。`,
       });
     }
     for (const path of missingHeaderSpecs) {
       issues.push({
         level: 'ERROR',
         path,
-        message: 'delta section が見つかりません。"## ADDED Requirements" などの見出しを追加するか、delta ではないメモを specs/ の外へ移動してください。',
+        message: '仕様差分セクションが見つかりません。"## ADDED Requirements" などの見出しを追加するか、仕様差分ではないメモを specs/ の外へ移動してください。',
       });
     }
 
@@ -398,7 +458,165 @@ export class Validator {
       }
     }
 
+    if (options.projectRoot) {
+      issues.push(...await this.collectTaskNumberingIssues(changeDir, options.projectRoot));
+    }
+
     return this.createReport(issues);
+  }
+
+  private async collectTaskNumberingIssues(
+    changeDir: string,
+    projectRoot: string
+  ): Promise<ValidationIssue[]> {
+    try {
+      const schemaName = resolveSchemaForChange(changeDir, undefined, projectRoot).replace(
+        /\.ya?ml$/,
+        ''
+      );
+      const schemaDir = getSchemaDir(schemaName, projectRoot);
+      const builtInSchemaDir = path.join(getPackageSchemasDir(), 'spec-driven');
+      if (
+        schemaName !== 'spec-driven' ||
+        schemaDir === null ||
+        FileSystemUtils.canonicalizeExistingPath(schemaDir) !==
+          FileSystemUtils.canonicalizeExistingPath(builtInSchemaDir)
+      ) {
+        return [];
+      }
+    } catch {
+      return [];
+    }
+
+    let taskFiles: string[];
+    try {
+      taskFiles = resolveTaskFilesForChange(changeDir, projectRoot);
+    } catch {
+      return [];
+    }
+    if (taskFiles.length === 0) {
+      taskFiles = [path.join(changeDir, 'tasks.md')];
+    }
+
+    const documents: Array<{ path: string; content: string }> = [];
+    for (const taskFile of taskFiles) {
+      let content: string;
+      try {
+        content = await fs.readFile(taskFile, 'utf-8');
+      } catch {
+        continue;
+      }
+
+      documents.push({
+        path: FileSystemUtils.toPosixPath(path.relative(changeDir, taskFile)),
+        content,
+      });
+    }
+
+    documents.sort((left, right) => left.path.localeCompare(right.path));
+    return findTaskNumberingIssues(documents).map((issue) => ({
+      level: 'WARNING',
+      path: issue.path,
+      line: issue.line,
+      message: issue.message,
+    }));
+  }
+
+  /**
+   * Report MODIFIED requirements whose block omits a scenario the main spec
+   * still carries. Uses the same comparison archive applies, so validate can
+   * only report what archive would refuse.
+   *
+   * Silent when the main spec or the requirement header is absent: applying a
+   * MODIFIED against a base that is not there yet is a different failure (a
+   * sister change still in flight is the legitimate case), and archive is the
+   * gate for it. A spec that exists but cannot be read is not absent, though —
+   * archive aborts on it, so reporting it beats calling the change valid.
+   */
+  private async findScenarioLossIssues(
+    modified: RequirementBlock[],
+    renamed: Array<{ from: string; to: string }>,
+    mainSpecFile: string,
+    entryPath: string,
+    mainSpecRoot: string
+  ): Promise<ValidationIssue[]> {
+    let mainContent: string;
+    FileSystemUtils.assertPathWithin(mainSpecRoot, mainSpecFile);
+    try {
+      mainContent = await fs.readFile(mainSpecFile, 'utf-8');
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException)?.code;
+      // Reported only for the codes that mean the file itself is unusable, and
+      // will be just as unusable when archive reads it. Everything else -
+      // ENOENT/ENOTDIR ("no main spec"), and transient resource errors like
+      // EMFILE that say nothing about the file - stays silent rather than
+      // failing a change that is fine. `validate --all` reads six changes at
+      // once, so a resource error must never become a verdict.
+      const UNUSABLE = new Set(['EACCES', 'EPERM', 'EISDIR', 'ELOOP', 'ENAMETOOLONG']);
+      if (!code || !UNUSABLE.has(code)) return [];
+      return [
+        {
+          level: 'ERROR',
+          path: entryPath,
+          message:
+            `MODIFIED 要件との照合のため ${FileSystemUtils.toPosixPath(mainSpecFile)} を読み取れませんでした` +
+            `（${code}）。アーカイブでも同じファイルを読むため、アーカイブ前に修正してください。`,
+        },
+      ];
+    }
+
+    const currentBlocks = new Map<string, RequirementBlock>();
+    for (const block of extractRequirementsSection(mainContent).bodyBlocks) {
+      currentBlocks.set(normalizeRequirementName(block.name), block);
+    }
+    // Archive applies RENAMED before MODIFIED, so a MODIFIED naming the new
+    // header is compared against the renamed block's scenarios. Fall back to
+    // the old header, or a rename-plus-modify pair would skip the check.
+    const renamedFrom = new Map(
+      renamed.map(({ from, to }) => [normalizeRequirementName(to), normalizeRequirementName(from)])
+    );
+
+    // Walked, not looked up once: renames chain (A→B then B→C leaves C holding
+    // A's block), and the visited set stops a cycle from looping forever. Every
+    // name in a rename cycle is also a rename FROM, so the skip above already
+    // keeps the walk out of one; the guard stays because the cost of being
+    // wrong about that is a hung CLI, not a wrong message.
+    const currentBlockFor = (name: string): RequirementBlock | undefined => {
+      const visited = new Set<string>();
+      let key: string | undefined = name;
+      while (key !== undefined && !visited.has(key)) {
+        const block = currentBlocks.get(key);
+        if (block) return block;
+        visited.add(key);
+        key = renamedFrom.get(key);
+      }
+      return undefined;
+    };
+
+    // A MODIFIED naming a header the same delta renames away is already
+    // reported ("MODIFIED references old name from RENAMED"), and the block it
+    // would land on is not the one it names — so any scenario named here would
+    // send the author after the wrong requirement.
+    const renamedAway = new Set(renamed.map(({ from }) => normalizeRequirementName(from)));
+
+    const issues: ValidationIssue[] = [];
+    for (const block of modified) {
+      const key = normalizeRequirementName(block.name);
+      if (renamedAway.has(key)) continue;
+      const current = currentBlockFor(key);
+      if (!current) continue;
+      const missing = findMissingCurrentScenarios(current, block);
+      if (missing.length === 0) continue;
+      issues.push({
+        level: 'ERROR',
+        path: entryPath,
+        message:
+          `MODIFIED "${block.name}" に、現在の仕様に残っているシナリオがありません: ` +
+          `${missing.map(name => `"${name}"`).join(', ')}。` +
+          'MODIFIED ブロックへコピーしてください（MODIFIED 要件はブロック全体を置き換えるため、アーカイブはシナリオを失う変更を拒否します）。',
+      });
+    }
+    return issues;
   }
 
   private formatInvalidMarkerMessage(invalidReason: string): string {
@@ -416,7 +634,7 @@ export class Validator {
         path: err.path.join('.'),
         message,
       };
-    });
+  });
   }
 
   private applySpecRules(spec: Spec, content: string): ValidationIssue[] {
@@ -455,25 +673,34 @@ export class Validator {
           message: `${VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS}. ${VALIDATION_MESSAGES.GUIDE_SCENARIO_FORMAT}`,
         });
       }
-    });
+  });
 
-    // SHALL/MUST body-keyword enforcement for main specs (#1156). The main-spec
+    // SHALL/MUST body-keyword guidance for main specs (#1156, #243). The main-spec
     // parser collapses the requirement header into `text`, so we recover the
     // header+body pairs here (the same source the delta path trusts) and reuse
-    // the delta detection: a body that omits the keyword errors, with the
-    // targeted "move it to the body line" hint when the keyword is in the header
-    // only and the generic message otherwise. Emitted exactly once per
+    // the delta detection. A non-empty body that omits the English keyword gets
+    // guidance, while a missing body remains an error. Emitted exactly once per
     // requirement (the Zod refine that used to emit a generic error is removed).
     extractRequirementsSection(content).bodyBlocks.forEach((block, index) => {
       const requirementText = this.extractRequirementText(block.raw);
-      if (!requirementText || !this.containsShallOrMust(requirementText)) {
+      if (!requirementText) {
         issues.push({
           level: 'ERROR',
           path: `requirements[${index}]`,
           message: this.buildMissingShallOrMustMessage(`Requirement "${block.name}"`, block.name),
         });
+      } else if (!this.containsShallOrMust(requirementText)) {
+        issues.push({
+          level: 'WARNING',
+          path: `requirements[${index}]`,
+          message: this.buildMissingShallOrMustMessage(
+            `Requirement "${block.name}"`,
+            block.name,
+            true
+          ),
+        });
       }
-    });
+  });
 
     return issues;
   }
@@ -500,7 +727,7 @@ export class Validator {
           message: `${delta.operation} ${VALIDATION_MESSAGES.DELTA_MISSING_REQUIREMENTS}`,
         });
       }
-    });
+  });
     
     return issues;
   }
@@ -588,7 +815,7 @@ export class Validator {
   }
 
   /**
-   * Build an error message for a requirement block whose body lacks SHALL/MUST.
+   * Build a message for a requirement block whose body lacks SHALL/MUST.
    *
    * When the SHALL/MUST keyword already appears in the requirement header (e.g.
    * `### Requirement: The system SHALL ...`) the original generic error
@@ -597,12 +824,17 @@ export class Validator {
    * on the requirement body line (the line right after the header), so we point
    * the author at that exact fix when the keyword is found in the header only.
    */
-  private buildMissingShallOrMustMessage(prefix: string, blockName: string): string {
-    const base = `${prefix} must contain SHALL or MUST`;
+  private buildMissingShallOrMustMessage(
+    prefix: string,
+    blockName: string,
+    guidanceOnly = false
+  ): string {
+    const base = `${prefix} は、要件本文に SHALL または MUST を${guidanceOnly ? '含めることを推奨します' : '含める必要があります'}`;
+    const suffix = guidanceOnly ? '（英語仕様における RFC 2119 のベストプラクティス）' : '';
     if (this.containsShallOrMust(blockName)) {
-      return `${base}。ヘッダーだけでなく要件本文に含めてください。SHALL/MUST 文は "### Requirement: ..." 見出しの直後の行へ移動してください。`;
+      return `${prefix} は、見出しだけでなく要件本文に SHALL または MUST を${guidanceOnly ? '含めることを推奨します' : '含める必要があります'}。SHALL/MUST を含む文を "### Requirement: ..." 見出しの直後の行へ移動してください。${suffix}`;
     }
-    return base;
+    return `${base}${suffix}`;
   }
 
   private countScenarios(blockRaw: string): number {

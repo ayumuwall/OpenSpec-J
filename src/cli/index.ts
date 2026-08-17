@@ -4,7 +4,7 @@ import { createRequire } from 'module';
 import ora from 'ora';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { promises as fs } from 'fs';
+import { existsSync, promises as fs } from 'fs';
 import { AI_TOOLS, TOOL_ID_ALIASES } from '../core/config.js';
 import { UpdateCommand } from '../core/update.js';
 import {
@@ -115,6 +115,27 @@ export function getCommandPath(command: Command): string {
   return names.join(':') || 'openspec';
 }
 
+/**
+ * True when the executing command asked for JSON output — used to suppress the
+ * first-run telemetry notice so stdout stays a single valid JSON document.
+ *
+ * `--json` reaches commands three ways, so a single parsed option is not enough:
+ * - declared on the leaf (`openspec status --json`) → `opts().json`
+ * - declared on a parent group and read via globals (`openspec workset --json list`)
+ *   → `optsWithGlobals().json`
+ * - a residual arg on a permissive group that never declares the option
+ *   (`openspec store --json`, which detects it from `command.args`) → `args`
+ *
+ * Suppressing is always safe: the disclosure is only deferred to the next
+ * non-JSON run, never lost, whereas printing it on a JSON run corrupts stdout.
+ */
+export function isJsonRun(command: Command): boolean {
+  return (
+    command.optsWithGlobals().json === true ||
+    command.args.includes('--json')
+  );
+}
+
 program
   .name('openspec')
   .description('仕様駆動開発のための AI ネイティブシステム')
@@ -133,8 +154,9 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
     process.env.NO_COLOR = '1';
   }
 
-  // Show first-run telemetry notice (if not seen)
-  await maybeShowTelemetryNotice();
+  // Show first-run telemetry notice (if not seen). Suppress it whenever the run
+  // asked for JSON so stdout stays a single valid JSON document (see isJsonRun).
+  await maybeShowTelemetryNotice({ silent: isJsonRun(actionCommand) });
 
   // Track command execution (use actionCommand to get the actual subcommand)
   const commandPath = getCommandPath(actionCommand);
@@ -146,7 +168,9 @@ program.hook('postAction', async () => {
   await shutdown();
 });
 
-const availableToolIds = AI_TOOLS.filter((tool) => tool.skillsDir).map((tool) => tool.value);
+const availableToolIds = AI_TOOLS
+  .filter((tool) => tool.skillsDir || tool.globalSkillsDir)
+  .map((tool) => tool.value);
 const toolAliasNote = Object.entries(TOOL_ID_ALIASES)
   .map(([retired, current]) => `${retired}（現在は ${current}）`)
   .join(', ');
@@ -159,7 +183,9 @@ program
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
   .option('--profile <profile>', 'グローバル設定 profile を上書き（core または custom）')
   .option('--no-animation', 'アニメーションの代わりに静的なウェルカム画面を表示')
-  .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string; animation?: boolean }) => {
+  .option('--copilot-cloud', 'Set up GitHub Copilot cloud coding-agent files without prompting')
+  .option('--no-copilot-cloud', 'Skip GitHub Copilot cloud coding-agent files without prompting')
+  .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string; animation?: boolean; copilotCloud?: boolean }) => {
     try {
       // Validate that the path is a valid directory
       const resolvedPath = path.resolve(targetPath);
@@ -186,6 +212,7 @@ program
         force: options?.force,
         profile: options?.profile,
         animation: options?.animation,
+        copilotCloud: options?.copilotCloud,
       });
       await initCommand.execute(targetPath);
     } catch (error) {
@@ -294,6 +321,9 @@ program
       const root = await resolveRootForCommand(options ?? {}, {
         json: options?.json,
         failurePayload: options?.specs ? { specs: [], root: null } : { changes: [], root: null },
+        // Preserve the cwd fallback for pre-config.yaml projects. The resolver
+        // still lets a registered/default store take precedence over it.
+        allowImplicitRoot: existsSync(path.join(process.cwd(), 'openspec', 'project.md')),
       });
       if (!root) {
         return;
@@ -434,6 +464,7 @@ program
   .option('--all', 'すべての変更と仕様を検証')
   .option('--changes', 'すべての変更を検証')
   .option('--specs', 'すべての仕様を検証')
+  .option('--archived', 'Validate that archived changes have all tasks completed (for pre-commit linting)')
   .option('--type <type>', 'あいまいな場合に項目タイプを指定: change|spec')
   .option('--strict', '厳密検証モードを有効化')
   .option('--json', '検証結果を JSON で出力')
@@ -441,7 +472,7 @@ program
   .option('--no-interactive', '対話プロンプトを無効化')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
-  .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string; store?: string; storePath?: string }) => {
+  .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; archived?: boolean; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string; store?: string; storePath?: string }) => {
     try {
       const validateCommand = new ValidateCommand();
       await validateCommand.execute(itemName, options);
@@ -623,11 +654,17 @@ program
   .command('schemas')
   .description('利用可能なワークフロースキーマを説明付きで一覧表示')
   .option('--json', 'JSON で出力（エージェント向け）')
+  .option('--store <id>', STORE_OPTION_DESCRIPTION)
+  .addOption(hiddenStorePathOption())
   .action(async (options: SchemasOptions) => {
     try {
       await schemasCommand(options);
     } catch (error) {
-      failWithError(error);
+      failWithError(error, {
+        enabled: options.json,
+        payload: { schemas: [], root: null },
+        fallbackCode: 'schemas_error',
+      });
       process.exit(1);
     }
   });

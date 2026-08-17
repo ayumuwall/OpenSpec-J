@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-// Constants
+// 定数
 export const GLOBAL_CONFIG_DIR_NAME = 'openspec';
 export const GLOBAL_CONFIG_FILE_NAME = 'config.json';
 export const GLOBAL_DATA_DIR_NAME = 'openspec';
@@ -10,6 +10,16 @@ export const GLOBAL_DATA_DIR_NAME = 'openspec';
 // TypeScript types
 export type Profile = 'core' | 'custom';
 export type Delivery = 'both' | 'skills' | 'commands';
+
+/** Telemetry section of global config (identity + opt-out). */
+export interface TelemetryConfig {
+  /** When false, telemetry is disabled. Unset means enabled (opt-out model). */
+  enabled?: boolean;
+  /** Anonymous random UUID; no relation to the user. */
+  anonymousId?: string;
+  /** Whether the first-run telemetry notice has been shown. */
+  noticeSeen?: boolean;
+}
 
 // TypeScript interfaces
 export interface GlobalConfig {
@@ -24,6 +34,8 @@ export interface GlobalConfig {
   defaultStore?: string;
   /** Workset opener rows (slice 7.1); hand-edited, validated on use. */
   openers?: unknown;
+  /** Anonymous usage analytics settings and identity. */
+  telemetry?: TelemetryConfig;
 }
 
 const DEFAULT_CONFIG: GlobalConfig = {

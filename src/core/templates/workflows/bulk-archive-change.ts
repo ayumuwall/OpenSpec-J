@@ -17,7 +17,9 @@ export function getBulkArchiveChangeSkillTemplate(): SkillTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
-**入力**: 不要（選択を促します）
+\`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各 delta spec から本仕様を解決するときは、完全なパスを維持します。
+
+**入力**: 指定不要（選択を求めます）
 
 **手順**
 
@@ -57,7 +59,7 @@ ${STORE_SELECTION_GUIDANCE}
    推測せず、本文を仕様、変更、概要へそのままコピーしません。これらはプロンプトレベルの
    振る舞いの契約であり、強制可能な検査ではありません。
 
-3. **Batch validation - gather status for all selected changes**
+3. **一括検証 - 選択したすべての変更の状態を取得**
 
    選択された各変更について、次を収集します:
 
@@ -78,14 +80,14 @@ ${STORE_SELECTION_GUIDANCE}
         変更ごとに独立して評価する
 4. **仕様の競合を検出**
 
-   \`capability -> [それを変更する変更]\` のマップを作ります:
+   \`specs/\` からの正確な相対パスである \`<capability-path>\` をキーにしたマップを作成します:
 
    \`\`\`text
-   auth -> [change-a, change-b]  <- CONFLICT (2+ changes)
-   api  -> [change-c]            <- OK (only 1 change)
+   identity/user-auth -> [change-a, change-b]  <- 競合（2件以上の変更）
+   billing/user-auth  -> [change-c]            <- 問題なし（完全パスが異なる）
    \`\`\`
 
-   選択された変更のうち2件以上が同じ capability の差分仕様を持つ場合、競合があります。
+   選択した変更が2件以上、まったく同じ \`<capability-path>\` の delta spec を持つ場合に競合とします。
 
 5. **エージェント的に競合を解決**
 
@@ -102,29 +104,29 @@ ${STORE_SELECTION_GUIDANCE}
       - 両方実装済みの場合 -> 時系列順で適用（古いものを先、新しいものが上書き）
       - どちらも未実装の場合 -> 仕様同期をスキップし、ユーザーに警告
 
-   d. 各競合について**解決方法を記録**:
-      - 変更と機能をキーとして、すべてのデルタ仕様を対象に含めるか除外するかの判断
-      - 対象に含めるデルタ仕様と、その適用順序
-      - 実装がないため同期から除外するデルタ仕様
-      - 判断理由（コードベースで見つかったもの）
+   d. **競合ごとに解決内容を記録**:
+      - 変更と \`<capability-path>\` をキーに、各 delta spec を含めるか除外するかの判断
+      - 含めた delta spec と適用順序
+      - 実装がないため同期から除外する delta spec
+      - 判断理由（コードベースで確認した内容）
 
 6. **統合ステータス表を表示**
 
    すべての変更を要約する表を表示します:
 
    \`\`\`markdown
-   | Change              | Artifacts | Tasks | Specs   | Conflicts | Status |
+   | 変更                | 成果物    | タスク | 仕様    | 競合      | 状態   |
    |---------------------|-----------|-------|---------|-----------|--------|
-   | schema-management   | 完了      | 5/5   | 2差分   | なし      | 準備完了 |
-   | project-config      | 完了      | 3/3   | 1差分   | なし      | 準備完了 |
-   | add-oauth           | 完了      | 4/4   | 1差分   | auth (!)  | 準備完了* |
+   | schema-management   | 完了      | 5/5   | 2 delta | なし      | 準備完了 |
+   | project-config      | 完了      | 3/3   | 1 delta | なし      | 準備完了 |
+   | add-oauth           | 完了      | 4/4   | 1 delta | identity/user-auth (!) | 準備完了* |
    | add-verify-skill    | 残り1件   | 2/5   | なし    | なし      | 警告   |
    \`\`\`
 
    競合がある場合は、解決方法を表示します:
    \`\`\`text
    * 競合の解決:
-     - auth仕様: add-oauth、add-jwtの順に適用（両方とも実装済み、時系列順）
+     - identity/user-auth 仕様: add-oauth、次に add-jwt を適用します（両方実装済み、時系列順）
    \`\`\`
 
    未完了の変更がある場合は、警告を表示します:
@@ -184,18 +186,15 @@ ${STORE_SELECTION_GUIDANCE}
       - バックグラウンドタスクへ委任しない。手順8cが、まだ同期で読み取っている \`changeRoot\` を移動するため
       - 対象に含めたデルタ仕様がない変更では、同期ワークフローを実行しない
 
-   b. **changeRootの移動前に、対象に含めたデルタ仕様を検証**:
-      - \`includedDeltas\` のデルタ仕様だけを、\`<planningHome.root>/openspec/specs/<capability>/spec.md\`
-        のメイン仕様と再比較する（リポジトリパスをハードコードせず、手順3のstatus JSONで得た
-        ストア対応の \`planningHome.root\` を使用）
-      - メイン仕様の更新を検証する:
-        - ADDED要件が存在する
-        - MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映され、その他のシナリオは維持されている
-        - REMOVED要件が存在しない
-        - RENAMED要件が新しい名前で存在し、古い名前では存在しない
-      - \`excludedDeltas\` のデルタ仕様は意図的に未同期のため、検証しない
-      - 同期に失敗するか、いずれかの機能が検証結果と一致しない場合は差異を報告し、その変更の
-        \`changeRoot\` の移動を失敗またはスキップする。その変更をarchiveせず、\`changeRoot\` を維持する
+   b. **\`changeRoot\` を移動する前に、含めた delta spec を検証**:
+      - \`includedDeltas\` の delta spec だけを \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様と再比較します（リポジトリパスを固定せず、手順3の status JSON にある store 対応 \`planningHome.root\` を使用します）。
+      - 本仕様が次の状態に更新されていることを検証します:
+        - ADDED 要件が存在する
+        - MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映され、その他のシナリオは維持されている
+        - REMOVED 要件が存在しない。さらに、この同期が capability を廃止した場合（最後の要件を削除して \`## Requirements\` が空になる場合）は、本仕様を空のまま残さず削除する。意図的に保持され、その旨が報告された本仕様も一致とみなす
+        - RENAMED 要件は新しい名前で存在し、古い名前では存在しない
+      - \`excludedDeltas\` の delta spec は意図的に未同期のため、検証しません。
+      - 同期に失敗した、またはいずれかの capability が検証結果に一致しない場合は、差異を報告し、その変更の \`changeRoot\` の移動を失敗またはスキップします。その変更はアーカイブしません。\`changeRoot\` はそのまま残ります。
 
    c. **archiveを実行**:
 
@@ -208,12 +207,11 @@ ${STORE_SELECTION_GUIDANCE}
       mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
       \`\`\`
 
-   d. 各変更の**結果を記録**:
-      - 成功: archiveに成功
-      - 失敗: archiveまたは仕様検証中のエラー（エラーを記録）
-      - スキップ: ユーザーがarchiveしないことを選択（該当する場合）
-      - 同期スキップ: \`excludedDeltas\` の各デルタについて、変更、機能、記録済みの理由とともに
-        \`sync skipped\` と報告する。archive自体のスキップとは区別する
+   d. **変更ごとに結果を記録**:
+      - 成功: 正常にアーカイブした
+      - 失敗: アーカイブまたは仕様検証中のエラー（エラーを記録）
+      - スキップ: ユーザーがアーカイブしないことを選んだ（該当時）
+      - 同期スキップ: \`excludedDeltas\` の各 delta について、変更、\`<capability-path>\`、記録した理由とともに \`同期をスキップ\` と報告します。アーカイブ自体のスキップとは区別します。
 
 9. **サマリーを表示**
 
@@ -231,9 +229,9 @@ ${STORE_SELECTION_GUIDANCE}
    - add-verify-skill（未完了のためユーザーがアーカイブしないことを選択）
 
    仕様同期の概要:
-   - デルタ仕様4件をメイン仕様へ同期
-   - デルタ仕様1件の同期をスキップ（add-jwt/auth: 実装が見つからない）
-   - 競合1件を解決（auth: add-oauthを同期、add-jwtをスキップ）
+   - 4 件の delta spec を本仕様へ同期
+   - 1 件の delta spec 同期をスキップ（add-jwt、identity/user-auth: 実装が見つからない）
+   - 1 件の競合を解決（identity/user-auth: add-oauth を同期、add-jwt をスキップ）
    \`\`\`
 
    失敗がある場合:
@@ -313,34 +311,30 @@ K 件の変更に失敗しました:
 \`\`\`
 
 **ガードレール**
-- 任意の件数の変更を許可する（1件以上で動作し、通常は2件以上で使用）
+- 変更は任意の件数を選択可能にする（1件以上で動作し、通常は2件以上で使用）
 - 必ず選択を求め、自動選択しない
 - 仕様の競合を早期に検出し、コードベースを確認して解決する
-- 両方の変更が実装済みなら、仕様を時系列順で適用する
-- 実装がない場合だけ仕様同期をスキップし、ユーザーへ警告する
-- 確認前に変更ごとの明確な状態を表示する
-- 一括処理全体で1つの確認を使用する
-- ユーザーが確認をキャンセルした後は決してarchiveしない。キャンセルした一括処理では何もarchiveしない
-- すべての結果（成功／スキップ／失敗）を記録して報告する
-- archiveへ移動するときも \`.openspec.yaml\` を維持する
-- archiveディレクトリの対象名には現在の日付 \`YYYY-MM-DD-<name>\` を使用する。
-  すでに \`YYYY-MM-DD-\` で始まる名前はそのまま使い、2つ目の日付を重ねない
-- archive対象が存在する場合はその変更を失敗とし、他の変更は続行する
-- 同期を求められた場合は、対象に含めたデルタ仕様を持つ各変更について
-  \`openspec-sync-specs\` ワークフローをインライン実行する
-- デルタごとの \`includedDeltas\` と \`excludedDeltas\` の判断を実行時まで引き継ぎ、
-  対象に含めたデルタだけを同期・検証する
-- archive自体をスキップ扱いにせず、対象外の各デルタを \`sync skipped\` として報告する
-- 仕様同期の実行中に変更をarchiveしない。同期をインライン実行し、
-  \`changeRoot\` の移動前に \`<planningHome.root>/openspec/specs/<capability>/spec.md\` のメイン仕様を検証する
-- 仕様の調査や移動前に、選択したルートごとにarchive入力を1回取得する
-- 一括処理で最初のメイン仕様を書き込む、または移動する前に、必要なspecsルールのスナップショットをすべて取得する
-- archive入力の検索失敗は一括処理をブロックせず、contextやguidanceなしで続行する
-- specs指示の検索失敗は一括処理全体を原子的に停止する
-- 具体的な \`artifactPaths.specs.existingOutputPaths\` がない変更は仕様同期なしで続行する
-- 一括処理全体で関連する実行時contextを適用し、競合を報告する
-- operation guidanceは参考情報のままとし、すべての項目を検討して拒否した助言の理由を説明する
-- 実行時入力、競合分析、CLI由来の値、アーティファクトルールを分けて扱う
+- 両方の変更が実装済みなら、仕様を時系列順に適用する
+- 実装がない場合だけ仕様同期をスキップする（ユーザーに警告）
+- 確認前に変更ごとの状態を明確に表示する
+- 一括処理全体に対して確認は1回だけ行う
+- ユーザーが確認をキャンセルした後は決してアーカイブしない。キャンセルした一括処理では何もアーカイブしない
+- 全結果（成功／スキップ／失敗）を追跡・報告する
+- アーカイブへ移動するときは .openspec.yaml を保持する
+- アーカイブの対象名は当日の日付を使う: YYYY-MM-DD-<name>。すでに \`YYYY-MM-DD-\` 接頭辞がある名前はそのまま使用し、日付を二重に付けない
+- アーカイブ先が存在する場合は、その変更だけ失敗として他を継続する
+- 同期を求められた場合、含めた delta spec がある各変更について \`openspec-sync-specs\` ワークフローをインラインで実行する（エージェント駆動）
+- delta ごとの \`includedDeltas\` と \`excludedDeltas\` の判断を実行へ引き継ぎ、含めた delta だけを同期・検証する
+- 除外した delta はすべて、アーカイブ自体のスキップとして扱わず \`同期をスキップ\` と報告する
+- 仕様同期の実行中にアーカイブしない。同期をインラインで実行し、\`changeRoot\` を移動する前に \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様を検証する
+- 仕様を確認または移動する前に、選択したルートごとに archive 入力を1回取得する
+- 一括処理の最初の本仕様書き込みまたは移動前に、必要な specs ルールのスナップショットをすべて取得する
+- archive 入力の取得失敗は一括処理をブロックせず、context と guidance なしで進める
+- specs 指示の取得失敗は一括処理全体をアトミックに停止する
+- 具体的な \`artifactPaths.specs.existingOutputPaths\` がない変更は、仕様同期なしで継続する
+- 一括処理に関連する実行時 context を適用し、競合を報告する
+- operation guidance は助言のままとし、すべてを検討して採用しない助言の理由を説明する
+- 実行時入力、競合分析、CLI 由来の値、アーティファクトルールを分離して扱う
 - アーティファクトルールは書き込む仕様だけを制約する
 - 実行時入力やアーティファクトルールの本文を出力ファイルへそのままコピーしない`,
     license: 'MIT',
@@ -361,7 +355,9 @@ export function getOpsxBulkArchiveCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
-**入力**: 不要（選択を促します）
+\`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各 delta spec から本仕様を解決するときは、完全なパスを維持します。
+
+**入力**: 指定不要（選択を求めます）
 
 **手順**
 
@@ -401,7 +397,7 @@ ${STORE_SELECTION_GUIDANCE}
    推測せず、本文を仕様、変更、概要へそのままコピーしません。これらはプロンプトレベルの
    振る舞いの契約であり、強制可能な検査ではありません。
 
-3. **Batch validation - gather status for all selected changes**
+3. **一括検証 - 選択したすべての変更の状態を取得**
 
    選択された各変更について、次を収集します:
 
@@ -423,14 +419,14 @@ ${STORE_SELECTION_GUIDANCE}
 
 4. **仕様の競合を検出**
 
-   \`capability -> [それを変更する変更]\` のマップを作ります:
+   \`specs/\` からの正確な相対パスである \`<capability-path>\` をキーにしたマップを作成します:
 
    \`\`\`text
-   auth -> [change-a, change-b]  <- CONFLICT (2+ changes)
-   api  -> [change-c]            <- OK (only 1 change)
+   identity/user-auth -> [change-a, change-b]  <- 競合（2件以上の変更）
+   billing/user-auth  -> [change-c]            <- 問題なし（完全パスが異なる）
    \`\`\`
 
-   選択された変更のうち2件以上が同じ capability の差分仕様を持つ場合、競合があります。
+   選択した変更が2件以上、まったく同じ \`<capability-path>\` の delta spec を持つ場合に競合とします。
 
 5. **エージェント的に競合を解決**
 
@@ -447,29 +443,29 @@ ${STORE_SELECTION_GUIDANCE}
       - 両方実装済みの場合 -> 時系列順で適用（古いものを先、新しいものが上書き）
       - どちらも未実装の場合 -> 仕様同期をスキップし、ユーザーに警告
 
-   d. 各競合について**解決方法を記録**:
-      - 変更と機能をキーとして、すべてのデルタ仕様を対象に含めるか除外するかの判断
-      - 対象に含めるデルタ仕様と、その適用順序
-      - 実装がないため同期から除外するデルタ仕様
-      - 判断理由（コードベースで見つかったもの）
+   d. **競合ごとに解決内容を記録**:
+      - 変更と \`<capability-path>\` をキーに、各 delta spec を含めるか除外するかの判断
+      - 含めた delta spec と適用順序
+      - 実装がないため同期から除外する delta spec
+      - 判断理由（コードベースで確認した内容）
 
 6. **統合ステータス表を表示**
 
    すべての変更を要約する表を表示します:
 
    \`\`\`markdown
-   | Change              | Artifacts | Tasks | Specs   | Conflicts | Status |
+   | 変更                | 成果物    | タスク | 仕様    | 競合      | 状態   |
    |---------------------|-----------|-------|---------|-----------|--------|
-   | schema-management   | 完了      | 5/5   | 2差分   | なし      | 準備完了 |
-   | project-config      | 完了      | 3/3   | 1差分   | なし      | 準備完了 |
-   | add-oauth           | 完了      | 4/4   | 1差分   | auth (!)  | 準備完了* |
+   | schema-management   | 完了      | 5/5   | 2 delta | なし      | 準備完了 |
+   | project-config      | 完了      | 3/3   | 1 delta | なし      | 準備完了 |
+   | add-oauth           | 完了      | 4/4   | 1 delta | identity/user-auth (!) | 準備完了* |
    | add-verify-skill    | 残り1件   | 2/5   | なし    | なし      | 警告   |
    \`\`\`
 
    競合がある場合は、解決方法を表示します:
    \`\`\`text
    * 競合の解決:
-     - auth仕様: add-oauth、add-jwtの順に適用（両方とも実装済み、時系列順）
+     - identity/user-auth 仕様: add-oauth、次に add-jwt を適用します（両方実装済み、時系列順）
    \`\`\`
 
    未完了の変更がある場合は、警告を表示します:
@@ -529,18 +525,15 @@ ${STORE_SELECTION_GUIDANCE}
       - バックグラウンドタスクへ委任しない。手順8cが、まだ同期で読み取っている \`changeRoot\` を移動するため
       - 対象に含めたデルタ仕様がない変更では、同期ワークフローを実行しない
 
-   b. **changeRootの移動前に、対象に含めたデルタ仕様を検証**:
-      - \`includedDeltas\` のデルタ仕様だけを、\`<planningHome.root>/openspec/specs/<capability>/spec.md\`
-        のメイン仕様と再比較する（リポジトリパスをハードコードせず、手順3のstatus JSONで得た
-        ストア対応の \`planningHome.root\` を使用）
-      - メイン仕様の更新を検証する:
-        - ADDED要件が存在する
-        - MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映され、その他のシナリオは維持されている
-        - REMOVED要件が存在しない
-        - RENAMED要件が新しい名前で存在し、古い名前では存在しない
-      - \`excludedDeltas\` のデルタ仕様は意図的に未同期のため、検証しない
-      - 同期に失敗するか、いずれかの機能が検証結果と一致しない場合は差異を報告し、その変更の
-        \`changeRoot\` の移動を失敗またはスキップする。その変更をarchiveせず、\`changeRoot\` を維持する
+   b. **\`changeRoot\` を移動する前に、含めた delta spec を検証**:
+      - \`includedDeltas\` の delta spec だけを \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様と再比較します（リポジトリパスを固定せず、手順3の status JSON にある store 対応 \`planningHome.root\` を使用します）。
+      - 本仕様が次の状態に更新されていることを検証します:
+        - ADDED 要件が存在する
+        - MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映され、その他のシナリオは維持されている
+        - REMOVED 要件が存在しない。さらに、この同期が capability を廃止した場合（最後の要件を削除して \`## Requirements\` が空になる場合）は、本仕様を空のまま残さず削除する。意図的に保持され、その旨が報告された本仕様も一致とみなす
+        - RENAMED 要件は新しい名前で存在し、古い名前では存在しない
+      - \`excludedDeltas\` の delta spec は意図的に未同期のため、検証しません。
+      - 同期に失敗した、またはいずれかの capability が検証結果に一致しない場合は、差異を報告し、その変更の \`changeRoot\` の移動を失敗またはスキップします。その変更はアーカイブしません。\`changeRoot\` はそのまま残ります。
 
    c. **archiveを実行**:
 
@@ -553,12 +546,11 @@ ${STORE_SELECTION_GUIDANCE}
       mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
       \`\`\`
 
-   d. 各変更の**結果を記録**:
-      - 成功: archiveに成功
-      - 失敗: archiveまたは仕様検証中のエラー（エラーを記録）
-      - スキップ: ユーザーがarchiveしないことを選択（該当する場合）
-      - 同期スキップ: \`excludedDeltas\` の各デルタについて、変更、機能、記録済みの理由とともに
-        \`sync skipped\` と報告する。archive自体のスキップとは区別する
+   d. **変更ごとに結果を記録**:
+      - 成功: 正常にアーカイブした
+      - 失敗: アーカイブまたは仕様検証中のエラー（エラーを記録）
+      - スキップ: ユーザーがアーカイブしないことを選んだ（該当時）
+      - 同期スキップ: \`excludedDeltas\` の各 delta について、変更、\`<capability-path>\`、記録した理由とともに \`同期をスキップ\` と報告します。アーカイブ自体のスキップとは区別します。
 
 9. **サマリーを表示**
 
@@ -576,9 +568,9 @@ ${STORE_SELECTION_GUIDANCE}
    - add-verify-skill（未完了のためユーザーがアーカイブしないことを選択）
 
    仕様同期の概要:
-   - デルタ仕様4件をメイン仕様へ同期
-   - デルタ仕様1件の同期をスキップ（add-jwt/auth: 実装が見つからない）
-   - 競合1件を解決（auth: add-oauthを同期、add-jwtをスキップ）
+   - 4 件の delta spec を本仕様へ同期
+   - 1 件の delta spec 同期をスキップ（add-jwt、identity/user-auth: 実装が見つからない）
+   - 1 件の競合を解決（identity/user-auth: add-oauth を同期、add-jwt をスキップ）
    \`\`\`
 
    失敗がある場合:
@@ -658,34 +650,30 @@ K 件の変更に失敗しました:
 \`\`\`
 
 **ガードレール**
-- 任意の件数の変更を許可する（1件以上で動作し、通常は2件以上で使用）
+- 変更は任意の件数を選択可能にする（1件以上で動作し、通常は2件以上で使用）
 - 必ず選択を求め、自動選択しない
 - 仕様の競合を早期に検出し、コードベースを確認して解決する
-- 両方の変更が実装済みなら、仕様を時系列順で適用する
-- 実装がない場合だけ仕様同期をスキップし、ユーザーへ警告する
-- 確認前に変更ごとの明確な状態を表示する
-- 一括処理全体で1つの確認を使用する
-- ユーザーが確認をキャンセルした後は決してarchiveしない。キャンセルした一括処理では何もarchiveしない
-- すべての結果（成功／スキップ／失敗）を記録して報告する
-- archiveへ移動するときも \`.openspec.yaml\` を維持する
-- archiveディレクトリの対象名には現在の日付 \`YYYY-MM-DD-<name>\` を使用する。
-  すでに \`YYYY-MM-DD-\` で始まる名前はそのまま使い、2つ目の日付を重ねない
-- archive対象が存在する場合はその変更を失敗とし、他の変更は続行する
-- 同期を求められた場合は、対象に含めたデルタ仕様を持つ各変更について
-  \`/opsx:sync\` ワークフローをインライン実行する
-- デルタごとの \`includedDeltas\` と \`excludedDeltas\` の判断を実行時まで引き継ぎ、
-  対象に含めたデルタだけを同期・検証する
-- archive自体をスキップ扱いにせず、対象外の各デルタを \`sync skipped\` として報告する
-- 仕様同期の実行中に変更をarchiveしない。同期をインライン実行し、
-  \`changeRoot\` の移動前に \`<planningHome.root>/openspec/specs/<capability>/spec.md\` のメイン仕様を検証する
-- 仕様の調査や移動前に、選択したルートごとにarchive入力を1回取得する
-- 一括処理で最初のメイン仕様を書き込む、または移動する前に、必要なspecsルールのスナップショットをすべて取得する
-- archive入力の検索失敗は一括処理をブロックせず、contextやguidanceなしで続行する
-- specs指示の検索失敗は一括処理全体を原子的に停止する
-- 具体的な \`artifactPaths.specs.existingOutputPaths\` がない変更は仕様同期なしで続行する
-- 一括処理全体で関連する実行時contextを適用し、競合を報告する
-- operation guidanceは参考情報のままとし、すべての項目を検討して拒否した助言の理由を説明する
-- 実行時入力、競合分析、CLI由来の値、アーティファクトルールを分けて扱う
+- 両方の変更が実装済みなら、仕様を時系列順に適用する
+- 実装がない場合だけ仕様同期をスキップする（ユーザーに警告）
+- 確認前に変更ごとの状態を明確に表示する
+- 一括処理全体に対して確認は1回だけ行う
+- ユーザーが確認をキャンセルした後は決してアーカイブしない。キャンセルした一括処理では何もアーカイブしない
+- 全結果（成功／スキップ／失敗）を追跡・報告する
+- アーカイブへ移動するときは .openspec.yaml を保持する
+- アーカイブの対象名は当日の日付を使う: YYYY-MM-DD-<name>。すでに \`YYYY-MM-DD-\` 接頭辞がある名前はそのまま使用し、日付を二重に付けない
+- アーカイブ先が存在する場合は、その変更だけ失敗として他を継続する
+- 同期を求められた場合、含めた delta spec がある各変更について \`/opsx:sync\` ワークフローをインラインで実行する（エージェント駆動）
+- delta ごとの \`includedDeltas\` と \`excludedDeltas\` の判断を実行へ引き継ぎ、含めた delta だけを同期・検証する
+- 除外した delta はすべて、アーカイブ自体のスキップとして扱わず \`同期をスキップ\` と報告する
+- 仕様同期の実行中にアーカイブしない。同期をインラインで実行し、\`changeRoot\` を移動する前に \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様を検証する
+- 仕様を確認または移動する前に、選択したルートごとに archive 入力を1回取得する
+- 一括処理の最初の本仕様書き込みまたは移動前に、必要な specs ルールのスナップショットをすべて取得する
+- archive 入力の取得失敗は一括処理をブロックせず、context と guidance なしで進める
+- specs 指示の取得失敗は一括処理全体をアトミックに停止する
+- 具体的な \`artifactPaths.specs.existingOutputPaths\` がない変更は、仕様同期なしで継続する
+- 一括処理に関連する実行時 context を適用し、競合を報告する
+- operation guidance は助言のままとし、すべてを検討して採用しない助言の理由を説明する
+- 実行時入力、競合分析、CLI 由来の値、アーティファクトルールを分離して扱う
 - アーティファクトルールは書き込む仕様だけを制約する
 - 実行時入力やアーティファクトルールの本文を出力ファイルへそのままコピーしない`
   };

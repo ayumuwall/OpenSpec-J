@@ -183,7 +183,7 @@ export class PowerShellInstaller {
 
         if (!profileExists) {
           if (!(await FileSystemUtils.canWriteFile(profilePath))) {
-            throw new Error(`Path is not writable: ${profilePath}`);
+            throw new Error(`パスへ書き込めません: ${profilePath}`);
           }
           await fs.mkdir(profileDir, { recursive: true });
         }
@@ -224,7 +224,7 @@ export class PowerShellInstaller {
 
         const newContent = profileContent + openspecBlock;
         if (!(await FileSystemUtils.canWriteFile(profilePath))) {
-          throw new Error(`Path is not writable: ${profilePath}`);
+          throw new Error(`パスへ書き込めません: ${profilePath}`);
         }
         await this.writeProfileFile(profilePath, newContent, fileEncoding, fileBom);
         anyConfigured = true;
@@ -289,7 +289,7 @@ export class PowerShellInstaller {
         const newContent = (beforeBlock.trimEnd() + '\n' + afterBlock.trimStart()).trim() + '\n';
 
         if (!(await FileSystemUtils.canWriteFile(profilePath))) {
-          throw new Error(`Path is not writable: ${profilePath}`);
+          throw new Error(`パスへ書き込めません: ${profilePath}`);
         }
         await this.writeProfileFile(profilePath, newContent, fileEncoding, fileBom);
         anyRemoved = true;
@@ -335,7 +335,7 @@ export class PowerShellInstaller {
       }
 
       if (!(await FileSystemUtils.canWriteFile(targetPath))) {
-        throw new Error(`Path is not writable: ${targetPath}`);
+        throw new Error(`パスへ書き込めません: ${targetPath}`);
       }
 
       // Ensure the directory exists
@@ -428,7 +428,7 @@ export class PowerShellInstaller {
 
       const targetDir = path.dirname(targetPath);
       if (!(await FileSystemUtils.canWriteFile(targetDir))) {
-        throw new Error(`Path is not writable: ${targetDir}`);
+        throw new Error(`パスへ書き込めません: ${targetDir}`);
       }
 
       // Remove the completion script

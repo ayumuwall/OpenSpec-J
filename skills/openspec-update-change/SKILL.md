@@ -11,9 +11,11 @@ metadata:
 
 変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
 
-**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
+**ストアの選択:** ユーザーがストア（この端末に登録された独立した OpenSpec リポジトリ）を指定した場合、または作業がストアにある場合は、`openspec store list --json` で登録済みストア ID を調べます。その後、仕様と変更を読み書きするコマンド（`new change`、`status`、`instructions`、`list`、`show`、`validate`、`archive`、`doctor`、`context`、`schemas`、`view`）に `--store <id>` を指定します。一度選んだら、その後のワークフローでは `--store <id>` を維持します。以下にフラグなしで示すコマンド例は省略形なので、実行前にフラグを追加してください。たとえば、フラグなしの例ではなく `openspec status --change "<name>" --json --store "<id>"` を実行します。ほかのコマンドはこのフラグを受け取りません。コマンドが出力するヒントには既にフラグが含まれるため、後続コマンドでも維持してください。ストアを使わない場合、コマンドは最も近いローカルの `openspec/` ルートを対象にします。
 
 **入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
+
+`/openspec-continue-change` は任意のワークフローで、インストールされていない場合があります。以下で提案する前に、利用可能か確認してください。利用できない場合は、`openspec status --change "<name>" --json` で次のアーティファクトを確認し、`openspec instructions "<artifact-id>" --change "<name>" --json` で作成方法を確認します。
 
 **手順**
 
@@ -41,8 +43,8 @@ metadata:
    JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
    - `schemaName`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - `artifacts`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
-   - `isComplete`: すべてのアーティファクトが完了しているかを示す真偽値
-   - `planningHome`、`changeRoot`、`artifactPaths`、`actionContext`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
+   - `isPlanningComplete`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を `isComplete` として公開します。
+   - `planningHome`、`changeRoot`、`artifactPaths`、`actionContext`: パスとスコープのコンテキスト。リポジトリローカルのパスを想定せず、これらを使用します。
 
 アーティファクト ID とパスはアクティブなスキーマから取得されます。これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください。カスタム スキーマは変更せずに機能する必要があります。
 
@@ -64,7 +66,7 @@ metadata:
 - ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください。そのアーティファクトは変更しないでください。
 - 大幅な書き換えが必要な場合は、まずそのアーティファクトのルールとテンプレートを取得します。
      ```bash
-     openspec instructions <artifact-id> --change "<name>" --json
+     openspec instructions "<artifact-id>" --change "<name>" --json
      ```
 
 6. **次のステップを指示します (ガイダンスのみ - 決して行動しないでください)**
@@ -85,5 +87,4 @@ metadata:
 - `existingOutputPaths` にある具体的なファイルだけを編集し、グロブの `resolvedOutputPath` には決して書き込みません。
 - ビルドの進行地点を先に進めません。新しいアーティファクトや、グロブ アーティファクト配下の新規ファイルを作るのは `/openspec-continue-change` の役目です。
 - 書き込む前に、すべての編集についてユーザーの確認を得ます。
-- リクエストが変更を洗練するのではなく変更の*意図*を変える場合は、`/openspec-new-change` で新しく始めることを推奨します（「更新か、新規開始か」の判断基準）。
-- `/openspec-continue-change` と `/openspec-new-change` はインストールされていない場合があります（core profile）。利用できないものを提案する場合は、代わりに CLI を案内します。次のアーティファクトは `openspec status --change "<name>" --json` で確認でき、作成方法は `openspec instructions <artifact-id> --change "<name>" --json` で確認できます。
+- 要求が変更の詳細化ではなく *意図* 自体を変える場合は、まず任意の `/openspec-new-change` ワークフローが利用可能か確認します。利用できるなら `/openspec-new-change` で新しく始めることを提案します（「更新か新規開始か」の判断）。利用できない場合は、未使用で区別できる変更名を確認し、代わりに `openspec new change "<new-change-name>"` を提案します。

@@ -119,7 +119,7 @@ describe('welcome screen', () => {
     const output = writtenOutput();
 
     expect(output).toContain('OpenSpec へようこそ');
-    expect(output).not.toContain('Quick start after setup:');
+    expect(output).not.toContain('セットアップ後のクイックスタート:');
   });
 
   it('does not promise opsx commands in the setup summary', async () => {

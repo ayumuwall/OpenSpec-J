@@ -65,14 +65,16 @@ export function buildActionContext(input: ActionContextInput): ActionContext {
 export function buildNextSteps(input: ChangeNextStepsInput): string[] {
   const readyArtifact = input.artifactStatuses.find((artifact) => artifact.status === 'ready');
   const steps: string[] = [];
+  const storeFlag = input.storeId ? ` --store ${input.storeId}` : '';
 
   if (readyArtifact) {
-    const storeFlag = input.storeId ? ` --store ${input.storeId}` : '';
     steps.push(
-      `Run openspec instructions ${readyArtifact.id} --change "${input.changeName}"${storeFlag} --json before writing that artifact.`
+      `そのアーティファクトを書き始める前に、openspec instructions ${readyArtifact.id} --change "${input.changeName}"${storeFlag} --json を実行してください。`
     );
   } else if (input.allArtifactsComplete) {
-    steps.push('すべての計画アーティファクトが完了しています。実装前に tasks をレビューしてください。');
+    steps.push(
+      `すべての計画アーティファクトが完了しました。実装の進捗を確認するには、openspec instructions apply --change "${input.changeName}"${storeFlag} --json を実行してください。`
+    );
   }
 
   return steps;

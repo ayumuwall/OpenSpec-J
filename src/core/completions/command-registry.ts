@@ -27,6 +27,14 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'no-animation',
         description: 'アニメーションの代わりに静的なウェルカム画面を表示',
       },
+      {
+        name: 'copilot-cloud',
+        description: 'Generate GitHub Copilot cloud coding-agent files (opt-in; default: prompt)',
+      },
+      {
+        name: 'no-copilot-cloud',
+        description: 'Skip generating GitHub Copilot cloud coding-agent files',
+      },
     ],
   },
   {
@@ -89,6 +97,10 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       {
         name: 'specs',
         description: 'すべての仕様を検証',
+      },
+      {
+        name: 'archived',
+        description: 'Validate that archived changes have all tasks completed (for pre-commit linting)',
       },
       COMMON_FLAGS.type,
       COMMON_FLAGS.strict,
@@ -219,6 +231,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     description: '利用可能なワークフロースキーマを説明付きで一覧表示',
     flags: [
       COMMON_FLAGS.json,
+      COMMON_FLAGS.store,
     ],
   },
   {

@@ -61,7 +61,7 @@ openspec init --tools claude,cursor
 
 5. **このプロジェクトを初期化済みか確認します。** スキルはプロジェクトごとに作成されます。リポジトリをcloneした、またはフォルダーを移動した場合は、そこで `openspec init`（または `openspec update`）を実行します。
 
-6. **ツールがコマンドファイルに対応するか確認します。** Codex、CodeArts、ForgeCode、Hermes、Kimi Code、Mistral Vibeでは `opsx-*` コマンドファイルを生成せず、スキルとして呼び出すため `/opsx` は補完されません。Codexは `$openspec-propose`、Kimi Codeは `/skill:openspec-propose`、その他は `/openspec-propose` と入力します。Amazon Qはコマンドファイルを生成しますが、スラッシュメニューではなくプロンプトライブラリへ読み込むため、`/opsx` ではなく `@opsx-propose` を使います。全ツールの形式は[呼び出し方法](supported-tools.md#how-to-invoke)を参照してください。
+6. **ツールがコマンドファイルをサポートするか確認します。** Codex、CodeArts、ForgeCode、Hermes、Kimi Code、Mistral Vibe、共通 `.agents` ターゲットには、生成された `opsx-*` コマンドファイルがありません。代わりにスキルベースの呼び出しを使うため、これらでは `/opsx` が補完されません。Codex では `$openspec-propose`、Kimi Code では `/skill:openspec-propose`、それ以外では `/openspec-propose` を入力します。共通 `.agents` ターゲットはベンダー非依存のため、`/openspec-propose` は共通の形式であって保証された形式ではありません。応答しない場合は、スキルの呼び出し方をアシスタント自身のドキュメントで確認してください。Amazon Q にはコマンドファイルがありますが、スラッシュメニューではなくプロンプトライブラリに読み込みます。`/opsx` ではなく `@opsx-propose` を入力してください。各ツールの形式は[呼び出し方](supported-tools.md#how-to-invoke)にあります。
 
 ## 変更を扱う
 
@@ -111,14 +111,23 @@ openspec status --change <name>
 検証では、構造上の問題がないか仕様と変更をチェックします。メッセージを読みます。ファイルと問題の名前が示されています。
 
 ```bash
-openspec validate <name>           # 1 件を検証
-openspec validate --all            # すべて検証
-openspec validate --all --strict   # より厳密に検証（CI 向け）
+openspec validate <name>           # validate one item
+openspec validate --all            # validate everything
+openspec validate --all --strict   # stricter checks, good for CI
+openspec validate --archived       # アーカイブ済み変更に未チェックのタスクがあれば失敗
 ```
 
 一般的な原因は、必須セクションの欠落（シナリオのない仕様など）または不正なデルタヘッダーです。ファイルを修正して再実行してください。[CLI リファレンス](cli.md#openspec-validate) には出力形式が記載されています。
 
-### AI が不完全または間違ったアーティファクトを作成した
+特に説明が必要なメッセージがあります:
+
+```text
+MODIFIED "<requirement>" omits scenario(s) the current spec still has: "<scenario>"
+```
+
+`MODIFIED` 要件は要件ブロック全体を置き換えるため、編集したシナリオだけでなく、変更後も残るすべてのシナリオを含める必要があります。`openspec/specs/<capability-path>/spec.md` から、メッセージに示されたシナリオを delta へ戻してください。パスにドメインディレクトリがあれば維持します。これは、他の変更が同じ要件にシナリオを追加した後の古い変更で起こりがちです。どちらにしても archive はその変更を拒否しますが、現在は実装前に validation が知らせます。
+
+### The AI created incomplete or wrong artifacts
 
 AI に十分なコンテキストが渡っていなかった可能性があります。次の対策が有効です。
 
@@ -131,7 +140,21 @@ AI に十分なコンテキストが渡っていなかった可能性があり�
 
 アーカイブは未完了のタスクを *ブロック*しませんが、アーカイブは通常、作業が完了したことを意味するため、警告が表示されます。タスクが意図的に残っている場合 (部分的な変更を提出している場合)、続行します。それ以外の場合は、最初にタスクを完了してください。まだ同期していない場合、アーカイブは仕様差分をメイン仕様に同期することも提案します。断る理由がない限り、「はい」と言ってください。
 
-## 構成
+### "User force closed the prompt with 0 null"
+
+AI エージェントがツールから呼び出した、CI ジョブで実行した、stdin を閉じたシェルで実行したなど、質問へ応答できない場所で `openspec archive` が実行されています。archive は最大3回の確認を求めるため、応答できない場合は以前、この生のメッセージで失敗していました。
+
+あらかじめ応答するには `--yes` を渡します:
+
+```bash
+openspec archive <change-name> --yes
+```
+
+すでに渡していたフラグは維持します。`--skip-specs` と `--no-validate` は archive の動作を変えるため、`--yes` だけで再実行すると同じコマンドにはなりません。現在のバージョンは必要なフラグを示し、貼り付けて使える `Fix:` 行を表示します。一覧から選ぼうとしていた場合も、変更名を明示してください。選択画面にも応答が必要です。
+
+出力をファイルへリダイレクトしたりツールがキャプチャしたりする archive に対して、応答をパイプで渡していた場合（`printf 'y\n' | openspec archive …`）、古いバージョンではプロンプト描画中の端末エスケープコードがキャプチャへ書き込まれました。環境によってはファイルが大きく膨らむこともありました。現在のバージョンは、stdout が端末でないとき確認プロンプトをプレーンテキストとして読み取ります。また、引数なしの `openspec archive`（通常は対話的な変更選択画面を表示します）は、メニューをキャプチャへ描画せず、先に変更名を渡すよう求めます。どちらの場合も、リダイレクト実行とエージェント実行はクリーンなままです。変更名とともに `--yes` を渡せば、プロンプト全体をスキップできます。
+
+## Configuration
 
 ### 私の `config.yaml` は適用されません
 
@@ -175,7 +198,7 @@ CI または非対話型シェルを使用しており、OpenSpec はクリー�
 openspec init --force
 ```
 
-Codexでは、`$CODEX_HOME/prompts` または `~/.codex/prompts` にある旧管理プロンプトをOpenSpecが検出する場合があります。削除対象はOpenSpecが許可リストに登録した旧Codexプロンプト名だけです。非対話の `openspec init` は代替となる `.codex/skills/openspec-*` スキルが存在するファイルだけを削除します。非対話の `openspec update` は、`--force` を渡さない限り旧ファイルを削除しません。
+Codex では、OpenSpec が `$CODEX_HOME/prompts` または `~/.codex/prompts` にある古い管理対象プロンプトファイルを検出することがあります。削除対象は OpenSpec の許可リスト済みレガシー Codex プロンプトファイル名だけです。非対話的な `openspec init` は、置換先の `.agents/skills/openspec-*` スキルが存在するファイルだけを削除します。非対話的な `openspec update` は、`--force` を渡さない限りレガシー削除を一切行いません。
 
 ### 移行後にコマンドが表示されない
 
@@ -188,7 +211,7 @@ IDE を再起動します。多くのツールは起動時にスキルを検出�
 ## まだ行き詰まっていますか?
 
 - **Discord:** [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC)
-- **GitHub Issues:** [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues)
+- **GitHub Issues:** [github.com/ayumuwall/OpenSpec-J/issues](https://github.com/ayumuwall/OpenSpec-J/issues)
 - **端末から:** `openspec feedback "問題の内容"` が Issue を作成します。
 
 問題を報告するときは、OpenSpec バージョン（`openspec --version`）、Node バージョン（`node --version`）、AI ツール、実行した正確なコマンドと出力を含めてください。対応が速くなります。

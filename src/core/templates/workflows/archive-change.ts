@@ -15,6 +15,8 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
+\`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各 delta spec から本仕様を解決するときは、完全なパスを維持します。
+
 **入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
 **手順**
@@ -88,10 +90,10 @@ ${STORE_SELECTION_GUIDANCE}
    \`specs\` 項目がない、または \`existingOutputPaths\` が空の場合は、同期の確認なしで続行し、
    他のアーティファクトからデルタ仕様を推測しません。
 
-   **デルタ仕様が存在する場合:**
-   - 各デルタ仕様を、対応する \`<planningHome.root>/openspec/specs/<capability>/spec.md\` のメイン仕様と比較する（リポジトリパスをハードコードせず、手順2で得たストア対応の \`planningHome.root\` を使用）
-   - 適用される変更（追加、変更、削除、名前変更）を判定する
-   - 選択を求める前に、統合した概要を表示する
+   **delta spec がある場合:**
+   - 各 delta spec を、対応する \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様と比較します（リポジトリパスを固定せず、手順2で得た store 対応の \`planningHome.root\` を使用します）
+   - 追加、変更、削除、名称変更として適用される内容を判定します
+   - 確認前に統合した要約を表示します
 
 **プロンプトオプション:**
 - 変更が必要な場合: 「今すぐ同期 (推奨)」、「同期せずにアーカイブ」
@@ -118,13 +120,11 @@ ${STORE_SELECTION_GUIDANCE}
    配下からそれを移動し、変更だけがarchiveされてメイン仕様が更新されない状態になるためです。
    委任でしか実行できないエージェントでは、同期的に委任して結果を待ちます。
 
-   次に、同期が触れたと報告したものだけでなく、\`artifactPaths.specs.existingOutputPaths\` に
-   デルタ仕様があるすべての機能について、この手順の先頭から比較を再実行します。同期が成功すれば
-   適用対象は残らないため、各機能が同期済みと判定されなければなりません:
-   - ADDED要件が存在する
-   - MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映され、その他のシナリオは維持されている
-   - REMOVED要件が存在しない
-   - RENAMED要件が新しい名前で存在し、古い名前では存在しない
+   次に、この手順の先頭から比較をやり直し、\`artifactPaths.specs.existingOutputPaths\` に delta spec があるすべての capability を確認します。同期で更新したと報告されたものだけには限定しません。同期が成功すれば適用すべき内容は残らないため、各 capability は同期済みとして次を満たす必要があります:
+   - ADDED 要件が存在する
+   - MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映され、その他のシナリオは維持されている
+   - REMOVED 要件が存在しない。さらに、この同期が capability を廃止した場合（最後の要件を削除して \`## Requirements\` が空になる場合）は、本仕様を空のまま残さず削除する。意図的に保持され、その旨が報告された本仕様も一致とみなす
+   - RENAMED 要件は新しい名前で存在し、古い名前では存在しない
 
    同期に失敗した場合や、いずれかの機能が一致しない場合は差異を報告して停止し、archiveしません。
    何も移動されず \`changeRoot\` も維持されるため、ユーザーは不一致を修正するか同期を再実行して、
@@ -201,7 +201,9 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
-**入力**: オプションで、\`/opsx:archive\` の後に変更名を指定します (例: \`/opsx:archive add-auth\`)。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
+\`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各 delta spec から本仕様を解決するときは、完全なパスを維持します。
+
+**入力**: \`/opsx:archive\` の後に変更名を任意で指定します（例: \`/opsx:archive add-auth\`）。省略時は会話の文脈から推測可能か確認します。曖昧な場合は、利用可能な変更を必ず提示して選択を求めます。
 
 **手順**
 
@@ -274,10 +276,10 @@ ${STORE_SELECTION_GUIDANCE}
    \`specs\` 項目がない、または \`existingOutputPaths\` が空の場合は、同期の確認なしで続行し、
    他のアーティファクトからデルタ仕様を推測しません。
 
-   **デルタ仕様が存在する場合:**
-   - 各デルタ仕様を、対応する \`<planningHome.root>/openspec/specs/<capability>/spec.md\` のメイン仕様と比較する（リポジトリパスをハードコードせず、手順2で得たストア対応の \`planningHome.root\` を使用）
-   - 適用される変更（追加、変更、削除、名前変更）を判定する
-   - 選択を求める前に、統合した概要を表示する
+   **delta spec がある場合:**
+   - 各 delta spec を、対応する \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様と比較します（リポジトリパスを固定せず、手順2で得た store 対応の \`planningHome.root\` を使用します）
+   - 追加、変更、削除、名称変更として適用される内容を判定します
+   - 確認前に統合した要約を表示します
 
 **プロンプトオプション:**
 - 変更が必要な場合: 「今すぐ同期 (推奨)」、「同期せずにアーカイブ」
@@ -304,13 +306,11 @@ ${STORE_SELECTION_GUIDANCE}
    配下からそれを移動し、変更だけがarchiveされてメイン仕様が更新されない状態になるためです。
    委任でしか実行できないエージェントでは、同期的に委任して結果を待ちます。
 
-   次に、同期が触れたと報告したものだけでなく、\`artifactPaths.specs.existingOutputPaths\` に
-   デルタ仕様があるすべての機能について、この手順の先頭から比較を再実行します。同期が成功すれば
-   適用対象は残らないため、各機能が同期済みと判定されなければなりません:
-   - ADDED要件が存在する
-   - MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映され、その他のシナリオは維持されている
-   - REMOVED要件が存在しない
-   - RENAMED要件が新しい名前で存在し、古い名前では存在しない
+   次に、この手順の先頭から比較をやり直し、\`artifactPaths.specs.existingOutputPaths\` に delta spec があるすべての capability を確認します。同期で更新したと報告されたものだけには限定しません。同期が成功すれば適用すべき内容は残らないため、各 capability は同期済みとして次を満たす必要があります:
+   - ADDED 要件が存在する
+   - MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映され、その他のシナリオは維持されている
+   - REMOVED 要件が存在しない。さらに、この同期が capability を廃止した場合（最後の要件を削除して \`## Requirements\` が空になる場合）は、本仕様を空のまま残さず削除する。意図的に保持され、その旨が報告された本仕様も一致とみなす
+   - RENAMED 要件は新しい名前で存在し、古い名前では存在しない
 
    同期に失敗した場合や、いずれかの機能が一致しない場合は差異を報告して停止し、archiveしません。
    何も移動されず \`changeRoot\` も維持されるため、ユーザーは不一致を修正するか同期を再実行して、

@@ -11,7 +11,7 @@ metadata:
 
 次の成果物を作成して変更作業を続けます。
 
-**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
+**ストアの選択:** ユーザーがストア（この端末に登録された独立した OpenSpec リポジトリ）を指定した場合、または作業がストアにある場合は、`openspec store list --json` で登録済みストア ID を調べます。その後、仕様と変更を読み書きするコマンド（`new change`、`status`、`instructions`、`list`、`show`、`validate`、`archive`、`doctor`、`context`、`schemas`、`view`）に `--store <id>` を指定します。一度選んだら、その後のワークフローでは `--store <id>` を維持します。以下にフラグなしで示すコマンド例は省略形なので、実行前にフラグを追加してください。たとえば、フラグなしの例ではなく `openspec status --change "<name>" --json --store "<id>"` を実行します。ほかのコマンドはこのフラグを受け取りません。コマンドが出力するヒントには既にフラグが含まれるため、後続コマンドでも維持してください。ストアを使わない場合、コマンドは最も近いローカルの `openspec/` ルートを対象にします。
 
 **入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
@@ -41,17 +41,17 @@ metadata:
    JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
    - `schemaName`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - `artifacts`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
-   - `isComplete`: すべてのアーティファクトが完了しているかを示す真偽値
-   - `planningHome`、`changeRoot`、`artifactPaths`、`actionContext`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
+   - `isPlanningComplete`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を `isComplete` として公開します。
+   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context. Use these instead of assuming repo-local paths.
 
 3. **ステータスに基づいて行動**:
 
    ---
 
-**すべてのアーティファクトが完了している場合 (`isComplete: true`)**:
+   **すべての計画アーティファクトが完了している場合（`isPlanningComplete: true`、または旧形式の `isComplete: true`）**:
 - ユーザーに祝福を与える
 - 使用されたスキーマを含む最終ステータスを表示します
-- 提案: 「すべてのアーティファクトが作成されました。この変更を実装するか、アーカイブできます。」
+   - 提案: 「計画が完了しました。この変更を実装できます。実装と追跡対象の作業がすべて完了したらアーカイブしてください。」
 - 停止
 
    ---

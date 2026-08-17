@@ -241,7 +241,7 @@ export class BashInstaller {
       }
 
       if (!(await FileSystemUtils.canWriteFile(targetPath))) {
-        throw new Error(`Path is not writable: ${targetPath}`);
+        throw new Error(`パスへ書き込めません: ${targetPath}`);
       }
 
       // Ensure the directory exists

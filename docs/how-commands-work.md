@@ -80,9 +80,9 @@ CLI は **エンジン** です。変更フォルダーの構造、アーティ�
 | `.../commands/opsx/<id>.*` | `/opsx:propose` | Claude Code、Gemini CLI、Crush |
 | `.../opsx-<id>.*` | `/opsx-propose` | Cursor、GitHub Copilot (IDE)、Devin Desktop、Trae、Oh My Pi |
 | `.amazonq/prompts/opsx-<id>.md` | `@opsx-propose` | Amazon Q Developer |
-| なし（スキルのみ） | `/openspec-propose` | CodeArts、ForgeCode、Hermes、Mistral Vibe |
-| なし（Kimi Code） | `/skill:openspec-propose` | Kimi Code |
-| なし（Codex CLI） | `$openspec-propose` | Codex |
+| なし — スキルのみ | `/openspec-propose` | CodeArts、ForgeCode、Hermes、Mistral Vibe、共通 `.agents` |
+| none — Kimi Code | `/skill:openspec-propose` | Kimi Code |
+| none — Codex CLI | `$openspec-propose` | Codex |
 
 Devinは2行にまたがる唯一のツールです。Devin Desktopは `.devin/workflows/` を読むため `/opsx-propose` を使えますが、[Devin Localは対応しません](https://docs.devin.ai/desktop/devin-local)。Devin Localでは `/openspec-propose` スキルを使ってください。OpenSpecが `.devin/skills/` に書くスキルは両方で動作するため、スキル同士はスキル名で参照します。
 
@@ -94,7 +94,8 @@ Devinは2行にまたがる唯一のツールです。Devin Desktopは `.devin/w
 
 ## スキルとコマンドファイル
 
-`openspec init` または `openspec update` を実行すると、AI ツールがワークフローを見つけられるように、OpenSpec は小さなファイルをプロジェクトに書き込みます。ツールと設定に応じて、それらは **スキル**、**コマンドファイル**、またはその両方です。
+- **Skills** live in places like `.claude/skills/openspec-*/SKILL.md`. They're the emerging cross-tool standard: a folder of instructions your assistant auto-detects.
+- **コマンド**は `.cursor/commands/opsx-<id>.md` や `.claude/commands/opsx/<id>.md` のような場所にあります。配置と呼び出し方はツールが決めます。これは古いツール別スラッシュコマンドファイルです。Codex には生成コマンドファイルがないため、`.agents/skills/openspec-*` を使用します。
 
 - **スキル**は `.claude/skills/openspec-*/SKILL.md` などに配置されます。アシスタントが自動検出する指示フォルダーで、ツール横断の新しい標準です。
 - **コマンド**は `.cursor/commands/opsx-<id>.md` や `.claude/commands/opsx/<id>.md` などに配置されます。ツール固有の配置方法によって入力形式が決まる、従来のツール別スラッシュコマンドファイルです。Codexではコマンドファイルを生成せず、`.codex/skills/openspec-*` を使います。
@@ -106,7 +107,10 @@ Devinは2行にまたがる唯一のツールです。Devin Desktopは `.devin/w
 
 ツールごとの正確なパスは [サポートされているツール](supported-tools.md) を参照してください。コマンドファイル中心の方式からスキル中心の方式へ移る背景は、[移行ガイド](migration-guide.md) にあります。
 
-## インストール確認
+1. **AI チャットでスラッシュを入力します。** `/opsx` と入力し始め、補完候補が出るか確認します。表示されれば準備完了です。スキルのみを使うツール（Codex、Kimi Code、CodeArts、ForgeCode、Hermes、Mistral Vibe、または共通 `.agents` ターゲット）では、正常なインストールでも `/opsx` は補完されません。代わりに上表のスキル名を試してください。
+2. **Look for the files.** For Claude Code, check that `.claude/skills/` contains `openspec-*` folders. Other tools use their own directories ([Supported Tools](supported-tools.md) lists them).
+3. **Re-run setup.** From your project root, run `openspec update`. This regenerates the skill and command files for whatever tools you configured.
+4. **Restart your assistant.** Many tools scan for skills and commands at startup, so a fresh window can be the missing step.
 
 短い確認手順です。
 

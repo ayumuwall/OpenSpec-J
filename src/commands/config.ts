@@ -44,7 +44,7 @@ interface WorkflowPromptMeta {
   description: string;
 }
 
-const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
+export const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
   propose: {
     name: '変更を提案',
     description: 'リクエストから proposal、design、tasks を作成',
@@ -64,6 +64,10 @@ const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
   apply: {
     name: 'タスクを適用',
     description: '現在の変更のタスクを実装',
+  },
+  update: {
+    name: 'Update change',
+    description: 'Revise the planning artifacts of an existing change',
   },
   ff: {
     name: 'Fast-forward',
@@ -218,7 +222,7 @@ export function registerConfigCommand(program: Command): void {
         console.error('エラー: project-local config はまだ実装されていません');
         process.exit(1);
       }
-    });
+  });
 
   // config path
   configCmd
@@ -226,7 +230,7 @@ export function registerConfigCommand(program: Command): void {
     .description('設定ファイルの場所を表示')
     .action(() => {
       console.log(getGlobalConfigPath());
-    });
+  });
 
   // config list
   configCmd
@@ -266,7 +270,7 @@ export function registerConfigCommand(program: Command): void {
           console.log(`  workflows: (none)`);
         }
       }
-    });
+  });
 
   // config get
   configCmd
@@ -286,7 +290,7 @@ export function registerConfigCommand(program: Command): void {
       } else {
         console.log(String(value));
       }
-    });
+  });
 
   // config set
   configCmd
@@ -332,7 +336,7 @@ export function registerConfigCommand(program: Command): void {
       const displayValue =
         typeof coercedValue === 'string' ? `"${coercedValue}"` : String(coercedValue);
       console.log(`${key} = ${displayValue} を設定しました`);
-    });
+  });
 
   // config unset
   configCmd
@@ -348,7 +352,7 @@ export function registerConfigCommand(program: Command): void {
       } else {
         console.log(`キー "${key}" は設定されていません`);
       }
-    });
+  });
 
   // config reset
   configCmd
@@ -389,7 +393,7 @@ export function registerConfigCommand(program: Command): void {
 
       saveGlobalConfig({ ...DEFAULT_CONFIG });
       console.log('設定をデフォルトへリセットしました');
-    });
+  });
 
   // config edit
   configCmd
@@ -452,7 +456,7 @@ export function registerConfigCommand(program: Command): void {
         }
         process.exitCode = 1;
       }
-    });
+  });
 
   // config profile [preset]
   configCmd
@@ -647,5 +651,5 @@ export function registerConfigCommand(program: Command): void {
         }
         throw error;
       }
-    });
+  });
 }

@@ -104,7 +104,7 @@ function fromStoreError(error: unknown): never {
     throw new RootSelectionError(error.message, error.diagnostic.code, {
       ...(error.diagnostic.target ? { target: error.diagnostic.target } : {}),
       ...(error.diagnostic.fix ? { fix: error.diagnostic.fix } : {}),
-    });
+  });
   }
 
   throw error;
@@ -218,7 +218,7 @@ async function resolveStoreRoot(
       // Exhaustiveness guard: a new inspection kind must be handled
       // here explicitly, not fall through to an undefined root.
       const unhandled: never = inspection;
-      throw new Error(`Unhandled store inspection kind: ${JSON.stringify(unhandled)}`);
+      throw new Error(`未処理のストア検査種別です: ${JSON.stringify(unhandled)}`);
     }
   }
 }
@@ -529,7 +529,7 @@ export async function resolveRootForCommand(
   output: {
     json?: boolean;
     failurePayload?: Record<string, unknown>;
-    /** Diagnostic commands inspect what exists; they never scaffold. */
+    /** Commands that require an existing root set this to false. */
     allowImplicitRoot?: boolean;
   } = {}
 ): Promise<ResolvedOpenSpecRoot | null> {
@@ -540,7 +540,7 @@ export async function resolveRootForCommand(
       ...(output.allowImplicitRoot !== undefined
         ? { allowImplicitRoot: output.allowImplicitRoot }
         : {}),
-    });
+  });
 
     // Emitted at resolution time so the banner survives command failures
     // that happen after the root was successfully selected.

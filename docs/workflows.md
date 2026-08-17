@@ -28,6 +28,73 @@ OPSX（流動的なアクション）:
 
 > **カスタマイズ:** OPSX ワークフローは、アーティファクトの順序を定義するスキーマによって動きます。カスタムスキーマの作成については、[カスタマイズ](customization.md) を参照してください。
 
+## ワークフローの全体像
+
+デフォルトのワークフローは引き続き流動的です。探索と検証は任意であり、実装中に新しい事実が分かればいつでも計画アーティファクトを更新できます。
+
+```mermaid
+flowchart TD
+    Idea["アイデアまたは問題"] --> Explore["/opsx:explore<br/>（任意）"]
+    Idea --> Propose["/opsx:propose"]
+    Explore --> Propose
+    Propose --> Review{"計画アーティファクトは<br/>準備完了か？"}
+    Review -->|"洗練"| Update["/opsx:update"]
+    Update --> Review
+    Review -->|"実装"| Apply["/opsx:apply"]
+    Apply -->|"計画が変わった"| Update
+    Apply --> Archive["/opsx:archive"]
+    Apply --> Verify["/opsx:verify<br/>（任意、カスタム選択）"]
+    Apply --> Sync["/opsx:sync<br/>（アーカイブ前に任意）"]
+    Verify --> Verified{"アーカイブの準備完了か？"}
+    Verified -->|"実装を修正"| Apply
+    Verified -->|"計画を改訂"| Update
+    Verified -->|"準備完了"| Sync
+    Verified -->|"準備完了"| Archive
+    Sync --> Archive
+```
+
+AI アシスタントがワークフローを進め、CLI は決定的なスキャフォールド、状態、アーティファクト指示を提供します:
+
+```mermaid
+sequenceDiagram
+    actor Human as ユーザー
+    participant Assistant as AI アシスタント
+    participant CLI as OpenSpec CLI
+    participant Files as 計画・実装ファイル
+
+    Human->>Assistant: /opsx:propose "変更"
+    Assistant->>CLI: openspec new change
+    CLI->>Files: 変更メタデータをスキャフォールド
+    Assistant->>CLI: 状態とアーティファクト指示を要求
+    CLI-->>Assistant: 作成順序、パス、テンプレート
+    Assistant->>Files: スキーマ定義済み計画アーティファクトを書く
+    Assistant-->>Human: アーティファクトをレビューへ提示
+
+    Human->>Assistant: /opsx:apply
+    Assistant->>CLI: apply 指示を要求
+    CLI-->>Assistant: コンテキストファイルとタスク状態
+    Assistant->>Files: タスクを実装し、チェックボックスを更新
+    Assistant-->>Human: 実装状態を報告
+
+    Human->>Assistant: /opsx:archive
+    Assistant->>CLI: archive 入力とアーティファクト状態を要求
+    CLI-->>Assistant: 計画パスとアーティファクト完了状態
+    Assistant->>Files: タスク状態を読み、delta spec を比較
+    opt Delta spec が存在
+        Assistant-->>Human: アーカイブ前に同期するよう提案
+        alt 同期を承認
+            Human->>Assistant: 同期を確認
+            Assistant->>Files: delta spec を本仕様へマージ
+        else 同期をスキップ
+            Human->>Assistant: 同期せずアーカイブ
+        end
+    end
+    Assistant->>Files: 変更をアーカイブへ移動
+    Assistant-->>Human: アーカイブ先と同期結果を報告
+
+    Note over Human,CLI: CLI の代替: openspec archive change-name --yes は確認プロンプトをスキップ。それでも検証し、delta spec を適用してアーカイブします
+```
+
 ## 2 つのモード
 
 ### デフォルトのクイック パス (`core` プロファイル)

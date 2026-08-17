@@ -155,20 +155,20 @@ rules:
 
 ## コマンド
 
-| コマンド | 概要 |
-| --- | --- |
-| `/opsx:propose` | 変更を作成し、計画アーティファクトを 1 ステップで生成する（デフォルトのクイックパス） |
-| `/opsx:explore` | アイデアを検討し、問題を調査し、要件を明確にする |
-| `/opsx:new` | 新しい変更のひな形を作成する（拡張ワークフロー） |
-| `/opsx:continue` | 次のアーティファクトを作成する（拡張ワークフロー） |
-| `/opsx:ff` | 計画アーティファクトを fast-forward で作成する（拡張ワークフロー） |
-| `/opsx:apply` | タスクを実装し、必要に応じてアーティファクトを更新する |
-| `/opsx:update` | 変更の計画アーティファクトを改訂し、一貫性を保つ |
-| `/opsx:verify` | 実装をアーティファクトと照合して検証する（拡張ワークフロー） |
-| `/opsx:sync` | 仕様差分をメイン仕様へ同期する（デフォルトワークフロー、任意） |
-| `/opsx:archive` | 完了した変更をアーカイブする |
-| `/opsx:bulk-archive` | 完了した複数の変更をアーカイブする（拡張ワークフロー） |
-| `/opsx:onboard` | エンドツーエンドの変更をガイド付きで体験する（拡張ワークフロー） |
+| コマンド | できること |
+|---------|------------|
+| `/opsx:propose` | Create a change and generate planning artifacts in one step (default quick path) |
+| `/opsx:explore` | Think through ideas, investigate problems, clarify requirements |
+| `/opsx:new` | Start a new change scaffold (expanded workflow) |
+| `/opsx:continue` | Create the next artifact (expanded workflow) |
+| `/opsx:ff` | Fast-forward planning artifacts (expanded workflow) |
+| `/opsx:apply` | 必要に応じてアーティファクトを更新しつつタスクを実装 |
+| `/opsx:update` | 変更の計画アーティファクトを更新し、整合性を保つ |
+| `/opsx:verify` | Validate implementation against artifacts (expanded workflow) |
+| `/opsx:sync` | delta spec を本仕様へマージする（任意） |
+| `/opsx:archive` | 完了時にアーカイブ |
+| `/opsx:bulk-archive` | Archive multiple completed changes (expanded workflow) |
+| `/opsx:onboard` | Guided walkthrough of an end-to-end change (expanded workflow) |
 
 ## 使い方
 
@@ -215,7 +215,13 @@ rules:
 ```
 既存の計画成果物を改訂し、全体の整合性を保ちます。設計の修正が提案へ戻るように、どの方向にも波及できます。対象は計画成果物だけです。コードは編集せず、存在しない成果物も作りません（それは `/opsx:continue` の役割です）。各編集は、先にユーザーへ確認します。すでに実装済みの変更であれば、改訂後の計画にコードを追従させるため `/opsx:apply` を勧めます。改訂によって変更の *意図* が変わる場合は、新しい変更として始めてください。詳しくは [更新するか、新しく始めるか](#when-to-update-vs-start-fresh) を参照してください。
 
-### 完了する
+### Delta spec を同期
+```text
+/opsx:sync
+```
+現在の変更の delta spec を、アーカイブせずに本 `openspec/specs/` へマージします。変更はアクティブのままです。delta 全体を適用します。`## REMOVED` 配下の要件は本仕様から削除され、名称変更した要件はその場で改題され、delta に記載のない内容は維持されます。同期は任意です。まだ同期していない場合は archive が先に同期するよう確認します。アーカイブ前に本仕様を更新したいとき、並行する変更がこの変更で追加した仕様を基に作業する必要があるとき、またはマージ後の本仕様をアーカイブ前にレビューしたいときに使用してください。
+
+### Finish up
 ```
 /opsx:archive   # 完了したらアーカイブへ移動（必要なら仕様同期を確認）
 ```
@@ -480,7 +486,7 @@ Git ブランチのように考えてください。
   │  • proposal.md を作成                   │
   │  • tasks.md を作成                      │
   │  • design.md を作成                     │
-  │  • specs/<capability>/spec.md を作成    │
+  │  • delta spec ファイルを作成する        │
   │                                         │
   │  既存ファイルやアーティファクト間の      │
   │  依存関係を把握できない                 │
@@ -667,3 +673,8 @@ openspec schema validate my-workflow
 この仕組みはまだ粗い部分があります。それは意図的です。何がうまく機能するかを学んでいる段階です。
 
 バグを見つけた、またはアイデアがある場合は、[Discord](https://discord.gg/YctCnvvshC) に参加するか、[GitHub](https://github.com/ayumuwall/OpenSpec-J/issues) で Issue を開いてください。
+### Delta spec を同期
+```text
+/opsx:sync
+```
+現在の変更の delta spec を、アーカイブせずに本 `openspec/specs/` へマージします。変更はアクティブのままです。delta 全体を適用します。`## REMOVED` 配下の要件は本仕様から削除され、名称変更した要件はその場で改題され、delta に記載のない内容は維持されます。同期は任意です。まだ同期していない場合は archive が先に同期するよう確認します。アーカイブ前に本仕様を更新したいとき、並行する変更がこの変更で追加した仕様を基に作業する必要があるとき、またはマージ後の本仕様をアーカイブ前にレビューしたいときに使用してください。

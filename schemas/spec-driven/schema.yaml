@@ -10,12 +10,12 @@ artifacts:
       この変更がなぜ必要か（WHY）を明確にする提案ドキュメントを作成する。
 
       セクション:
-      - **Why**: 問題や機会を 1〜2 文で説明する。何を解決するのか？なぜ今か？
-      - **What Changes**: 変更点の箇条書き。新しい機能、修正、削除を具体的に書く。破壊的変更は **BREAKING** を付ける。
-      - **Capabilities**: 作成・更新する仕様を特定する:
-        - **New Capabilities**: 追加する機能を列挙。各項目は新しい `specs/<name>/spec.md` になる。kebab-case を使う（例: `user-auth`, `data-export`）。
-        - **Modified Capabilities**: 既存機能の REQUIREMENTS が変わるものを列挙。仕様レベルの振る舞いが変わる場合のみ対象（実装詳細のみの変更は除外）。各項目は差分仕様ファイルが必要。既存の仕様名は `openspec/specs/` を確認。要件変更がない場合は空でよい。
-      - **Impact**: 影響を受けるコード、API、依存関係、システム。
+      - **Why**: 問題または機会を1〜2文で示す。どの問題を、なぜ今解決するのか。
+      - **What Changes**: 変更の箇条書き。新機能、変更、削除を具体的に示す。破壊的変更には **BREAKING** を付ける。
+      - **Capabilities**: 作成または変更する仕様を特定する:
+        - **New Capabilities**: 導入する機能を列挙する。各項目は `specs/<capability-path>/spec.md` になる。新しく導入するパス区切りは kebab-case にし（例: `user-auth` または `identity/user-auth`）、プロジェクトの既存の仕様構成に従う。
+        - **Modified Capabilities**: REQUIREMENTS が変わる既存機能を列挙する。実装詳細だけでなく、仕様レベルの振る舞いが変わる場合に限る。各項目には仕様差分ファイルが必要。`openspec/specs/` 内の既存パスを正確に使い、要件変更がなければ空にする。
+      - **Impact**: 影響するコード、API、依存関係、システム。
 
       重要: Capabilities セクションは必須。proposal と specs フェーズの間の契約になる。
       記入前に既存の仕様を調査すること。
@@ -55,9 +55,11 @@ artifacts:
 
       実装を変えても外部から見える振る舞いが変わらないなら、specには含めない。
 
-      proposal の Capabilities セクションに列挙した各 capability につき 1 つの spec ファイルを作成する。
-      - New capabilities: proposal にある kebab-case 名を正確に使う（specs/<capability>/spec.md）。
-      - Modified capabilities: 既存の spec フォルダ名（openspec/specs/<capability>/）を使い、差分 spec を specs/<capability>/spec.md に作成する。
+      proposal の Capabilities セクションに列挙された機能ごとに、仕様ファイルを1つ作成する。
+      `<capability-path>` は `specs/` からの相対仕様ディレクトリ（例: `user-auth` または
+      `identity/user-auth`）。完全なパスを維持する:
+      - 新機能: proposal の `specs/<capability-path>/spec.md` に記載したパスをそのまま使う。proposal で新設するパス区切りは kebab-case にする。プロジェクトの既存構成に従い、フラットな構成なら新しいドメイン階層を加えない。
+      - 変更機能: `specs/<capability-path>/spec.md` に仕様差分を作成するとき、`openspec/specs/<capability-path>/` の既存パスを正確に使う。機能を移動・改名しない。
 
       `.openspec.yaml` に `skip_specs: true`（仕様レベルの振る舞い変更なし）が
       設定されていない限り、少なくとも1つのspecファイルが必要である。
@@ -77,17 +79,16 @@ artifacts:
       - **CRITICAL**: シナリオは必ず 4 つのハッシュ（`####`）を使う。3 つや箇条書きにすると静かに失敗する。
       - すべての要件は少なくとも 1 つのシナリオを持つ。
 
-      新しいcapabilityの場合のみ、仕様差分の冒頭に `## Purpose` を置き、
-      目的を1〜2文（50文字以上。短い場合は `openspec validate --strict` が報告）で
-      説明する。archive時に新しい本仕様へコピーされ、省略時は手動更新用のTBDになる。
-      既存capabilityの仕様差分には追加しない。既存のPurposeを変える場合は、
-      `openspec/specs/<capability>/spec.md` を直接編集する。
+      新機能の場合だけ、仕様差分を `## Purpose` セクションから始める。機能の目的を1〜2文（50文字以上。
+      `openspec validate --strict` では短すぎると報告される）で説明する。アーカイブ時に作成する本仕様へコピーされる。
+      ない場合は、新しい本仕様に `TBD ... Update Purpose after archive` のプレースホルダーが残り、手動で記入する必要がある。
+      既存機能の仕様差分には `## Purpose` を加えない。その仕様には既に存在し、差分側は無視される。既存機能の Purpose（残った `TBD` プレースホルダーを含む）を変更する場合は、`openspec/specs/<capability-path>/spec.md` を直接編集する。
 
       MODIFIED 要件の手順:
-      1. openspec/specs/<capability>/spec.md で既存要件を探す
-      2. `### Requirement:` から全シナリオまでを丸ごとコピー
-      3. `## MODIFIED Requirements` 配下に貼り付け、振る舞い変更を反映
-      4. 見出しテキストが完全一致していることを確認（空白差は無視）
+      1. openspec/specs/<capability-path>/spec.md から既存の要件を見つける
+      2. 要件ブロック全体（`### Requirement:` からすべてのシナリオまで）をコピーする
+      3. `## MODIFIED Requirements` の下へ貼り付け、新しい振る舞いを反映するよう編集する
+      4. 見出しテキストが正確に一致することを確認する（空白は区別しない）
 
       よくある落とし穴: MODIFIED で部分的に書くとアーカイブ時に詳細が失われる。
       既存の振る舞いを変えずに追加するなら ADDED を使う。
@@ -96,7 +97,7 @@ artifacts:
       ```
       ## Purpose
 
-      Lets users take their data out of the product in a portable format.
+      ユーザーがポータブルな形式で製品からデータを取り出せるようにする。
 
       ## ADDED Requirements
 

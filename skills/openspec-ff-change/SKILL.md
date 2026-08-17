@@ -11,7 +11,7 @@ metadata:
 
 アーティファクトの作成を早送り - 実装を開始するために必要なものをすべて一度に生成します。
 
-**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
+**ストアの選択:** ユーザーがストア（この端末に登録された独立した OpenSpec リポジトリ）を指定した場合、または作業がストアにある場合は、`openspec store list --json` で登録済みストア ID を調べます。その後、仕様と変更を読み書きするコマンド（`new change`、`status`、`instructions`、`list`、`show`、`validate`、`archive`、`doctor`、`context`、`schemas`、`view`）に `--store <id>` を指定します。一度選んだら、その後のワークフローでは `--store <id>` を維持します。以下にフラグなしで示すコマンド例は省略形なので、実行前にフラグを追加してください。たとえば、フラグなしの例ではなく `openspec status --change "<name>" --json --store "<id>"` を実行します。ほかのコマンドはこのフラグを受け取りません。コマンドが出力するヒントには既にフラグが含まれるため、後続コマンドでも維持してください。ストアを使わない場合、コマンドは最も近いローカルの `openspec/` ルートを対象にします。
 
 **入力**: ユーザーのリクエストには、変更名 (kebab-case) または構築したい内容の説明を含める必要があります。
 

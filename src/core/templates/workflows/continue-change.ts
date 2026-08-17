@@ -43,17 +43,17 @@ ${STORE_SELECTION_GUIDANCE}
    JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
    - \`schemaName\`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - \`artifacts\`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
-   - \`isComplete\`: すべてのアーティファクトが完了しているかを示す真偽値
-   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
+   - \`isPlanningComplete\`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を \`isComplete\` として公開します。
+   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context. Use these instead of assuming repo-local paths.
 
 3. **ステータスに基づいて行動**:
 
    ---
 
-**すべてのアーティファクトが完了している場合 (\`isComplete: true\`)**:
+   **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
 - ユーザーに祝福を与える
 - 使用されたスキーマを含む最終ステータスを表示します
-- 提案: 「すべてのアーティファクトが作成されました。この変更を実装するか、アーカイブできます。」
+   - 提案: 「計画が完了しました。この変更を実装できます。実装と追跡対象の作業がすべて完了したらアーカイブしてください。」
 - 停止
 
    ---
@@ -161,17 +161,17 @@ ${STORE_SELECTION_GUIDANCE}
    JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
    - \`schemaName\`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - \`artifacts\`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
-   - \`isComplete\`: すべてのアーティファクトが完了しているかを示す真偽値
-   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
+   - \`isPlanningComplete\`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を \`isComplete\` として公開します。
+   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context. Use these instead of assuming repo-local paths.
 
 3. **ステータスに基づいて行動**:
 
    ---
 
-**すべてのアーティファクトが完了している場合 (\`isComplete: true\`)**:
+   **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
 - ユーザーに祝福を与える
 - 使用されたスキーマを含む最終ステータスを表示します
-- 提案: 「すべてのアーティファクトが作成されました。\`/opsx:apply\` を使用してこの変更を実装するか、\`/opsx:archive\` を使用してアーカイブできます。」
+   - 提案: 「計画が完了しました。\`/opsx:apply\` でこの変更を実装できます。実装と追跡対象の作業がすべて完了したら、\`/opsx:archive\` でアーカイブしてください。」
 - 停止
 
    ---

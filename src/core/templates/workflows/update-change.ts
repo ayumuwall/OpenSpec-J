@@ -17,6 +17,8 @@ ${STORE_SELECTION_GUIDANCE}
 
 **入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
+\`/opsx:continue\` は任意のワークフローで、インストールされていない場合があります。以下で提案する前に、利用可能か確認してください。利用できない場合は、\`openspec status --change "<name>" --json\` で次のアーティファクトを確認し、\`openspec instructions "<artifact-id>" --change "<name>" --json\` で作成方法を確認します。
+
 **手順**
 
 1. **変更を選択する**
@@ -43,8 +45,8 @@ ${STORE_SELECTION_GUIDANCE}
    JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
    - \`schemaName\`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - \`artifacts\`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
-   - \`isComplete\`: すべてのアーティファクトが完了しているかを示す真偽値
-   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
+   - \`isPlanningComplete\`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を \`isComplete\` として公開します。
+   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスとスコープのコンテキスト。リポジトリローカルのパスを想定せず、これらを使用します。
 
 アーティファクト ID とパスはアクティブなスキーマから取得されます。これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください。カスタム スキーマは変更せずに機能する必要があります。
 
@@ -66,7 +68,7 @@ ${STORE_SELECTION_GUIDANCE}
 - ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください。そのアーティファクトは変更しないでください。
 - 大幅な書き換えが必要な場合は、まずそのアーティファクトのルールとテンプレートを取得します。
      \`\`\`bash
-     openspec instructions <artifact-id> --change "<name>" --json
+     openspec instructions "<artifact-id>" --change "<name>" --json
      \`\`\`
 
 6. **次のステップを指示します (ガイダンスのみ - 決して行動しないでください)**
@@ -87,8 +89,7 @@ ${STORE_SELECTION_GUIDANCE}
 - \`existingOutputPaths\` にある具体的なファイルだけを編集し、グロブの \`resolvedOutputPath\` には決して書き込みません。
 - ビルドの進行地点を先に進めません。新しいアーティファクトや、グロブ アーティファクト配下の新規ファイルを作るのは \`/opsx:continue\` の役目です。
 - 書き込む前に、すべての編集についてユーザーの確認を得ます。
-- リクエストが変更を洗練するのではなく変更の*意図*を変える場合は、\`/opsx:new\` で新しく始めることを推奨します（「更新か、新規開始か」の判断基準）。
-- \`/opsx:continue\` と \`/opsx:new\` はインストールされていない場合があります（core profile）。利用できないものを提案する場合は、代わりに CLI を案内します。次のアーティファクトは \`openspec status --change "<name>" --json\` で確認でき、作成方法は \`openspec instructions <artifact-id> --change "<name>" --json\` で確認できます。`,
+- 要求が変更の詳細化ではなく *意図* 自体を変える場合は、まず任意の \`/opsx:new\` ワークフローが利用可能か確認します。利用できるなら \`/opsx:new\` で新しく始めることを提案します（「更新か新規開始か」の判断）。利用できない場合は、未使用で区別できる変更名を確認し、代わりに \`openspec new change "<new-change-name>"\` を提案します。`,
     license: 'MIT',
     compatibility: 'OpenSpec CLI が必要です。',
     metadata: { author: 'openspec', version: '1.0' },
@@ -107,6 +108,8 @@ ${STORE_SELECTION_GUIDANCE}
 
 **入力**: オプションで、\`/opsx:update\` の後に変更名を指定します (例: \`/opsx:update add-auth\`)。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
+\`/opsx:continue\` は任意のワークフローで、インストールされていない場合があります。以下で提案する前に、利用可能か確認してください。利用できない場合は、\`openspec status --change "<name>" --json\` で次のアーティファクトを確認し、\`openspec instructions "<artifact-id>" --change "<name>" --json\` で作成方法を確認します。
+
 **手順**
 
 1. **変更を選択する**
@@ -133,8 +136,8 @@ ${STORE_SELECTION_GUIDANCE}
    JSON を解析して現在の状態を把握します。レスポンスには次が含まれます:
    - \`schemaName\`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - \`artifacts\`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
-   - \`isComplete\`: すべてのアーティファクトが完了しているかを示す真偽値
-   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスとスコープのコンテキスト。リポジトリ内のパスを仮定せず、これらを使用します。
+   - \`isPlanningComplete\`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を \`isComplete\` として公開します。
+   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスとスコープのコンテキスト。リポジトリローカルのパスを想定せず、これらを使用します。
 
 アーティファクト ID とパスはアクティブなスキーマから取得されます。これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください。カスタム スキーマは変更せずに機能する必要があります。
 
@@ -156,7 +159,7 @@ ${STORE_SELECTION_GUIDANCE}
 - ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください。そのアーティファクトは変更しないでください。
 - 大幅な書き換えが必要な場合は、まずそのアーティファクトのルールとテンプレートを取得します。
      \`\`\`bash
-     openspec instructions <artifact-id> --change "<name>" --json
+     openspec instructions "<artifact-id>" --change "<name>" --json
      \`\`\`
 
 6. **次のステップを指示します (ガイダンスのみ - 決して行動しないでください)**
@@ -177,7 +180,6 @@ ${STORE_SELECTION_GUIDANCE}
 - \`existingOutputPaths\` にある具体的なファイルだけを編集し、グロブの \`resolvedOutputPath\` には決して書き込みません。
 - ビルドの進行地点を先に進めません。新しいアーティファクトや、グロブ アーティファクト配下の新規ファイルを作るのは \`/opsx:continue\` の役目です。
 - 書き込む前に、すべての編集についてユーザーの確認を得ます。
-- リクエストが変更を洗練するのではなく変更の*意図*を変える場合は、\`/opsx:new\` で新しく始めることを推奨します（「更新か、新規開始か」の判断基準）。
-- \`/opsx:continue\` と \`/opsx:new\` はインストールされていない場合があります（core profile）。利用できないものを提案する場合は、代わりに CLI を案内します。次のアーティファクトは \`openspec status --change "<name>" --json\` で確認でき、作成方法は \`openspec instructions <artifact-id> --change "<name>" --json\` で確認できます。`
+- 要求が変更の詳細化ではなく *意図* 自体を変える場合は、まず任意の \`/opsx:new\` ワークフローが利用可能か確認します。利用できるなら \`/opsx:new\` で新しく始めることを提案します（「更新か新規開始か」の判断）。利用できない場合は、未使用で区別できる変更名を確認し、代わりに \`openspec new change "<new-change-name>"\` を提案します。`
   };
 }

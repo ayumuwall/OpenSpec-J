@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/Fission-AI/OpenSpec">
+  <a href="https://github.com/ayumuwall/OpenSpec-J">
     <picture>
       <source srcset="assets/openspec_bg.png">
       <img src="assets/openspec_bg.png" alt="OpenSpec ロゴ">
@@ -8,22 +8,22 @@
 </p>
 
 <p align="center">
-<a href="https://github.com/Fission-AI/OpenSpec/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Fission-AI/OpenSpec/actions/workflows/ci.yml/badge.svg" /></a>
+<a href="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ayumuwall/OpenSpec-J/actions/workflows/ci.yml/badge.svg" /></a>
 <a href="https://www.npmjs.com/package/@ayumuwall/openspec"><img alt="npm version" src="https://img.shields.io/npm/v/@ayumuwall/openspec?style=flat-square" /></a>
 <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
 <a href="https://discord.gg/YctCnvvshC"><img alt="Discord" src="https://img.shields.io/discord/1411657095639601154?style=flat-square&logo=discord&logoColor=white&label=Discord&suffix=%20online" /></a>
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.7.0 です。**<br>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.9.0 です。**<br>
 > 生成物だけ日本語にできれば十分な場合は、本家版の [Multi-Language](docs/multi-language.md) を利用できます。
 
 <details>
 <summary><strong>最も愛されている仕様フレームワーク。</strong></summary>
 
-[![Stars](https://img.shields.io/github/stars/Fission-AI/OpenSpec?style=flat-square&label=Stars)](https://github.com/Fission-AI/OpenSpec/stargazers)
+[![Stars](https://img.shields.io/github/stars/ayumuwall/OpenSpec-J?style=flat-square&label=Stars)](https://github.com/ayumuwall/OpenSpec-J/stargazers)
 [![Downloads](https://img.shields.io/npm/dm/@ayumuwall/openspec?style=flat-square&label=Downloads/mo)](https://www.npmjs.com/package/@ayumuwall/openspec)
-[![Contributors](https://img.shields.io/github/contributors/Fission-AI/OpenSpec?style=flat-square&label=Contributors)](https://github.com/Fission-AI/OpenSpec/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/ayumuwall/OpenSpec-J?style=flat-square&label=Contributors)](https://github.com/ayumuwall/OpenSpec-J/graphs/contributors)
 
 </details>
 <p></p>
@@ -255,7 +255,9 @@ OpenSpec は匿名の使用状況統計を収集します。
 
 使用パターンを理解するために、コマンド名とバージョンのみを収集します。引数、パス、コンテンツ、PII はありません。 CI では自動的に無効になります。
 
-**オプトアウト:** `export OPENSPEC_TELEMETRY=0` または `export DO_NOT_TRACK=1`
+**オプトアウト（いずれか一つで有効）:**
+- `openspec config set telemetry.enabled false`（グローバル設定。未設定時は有効）
+- `export OPENSPEC_TELEMETRY=0` または `export DO_NOT_TRACK=1`（環境変数は設定を上書き）
 
 </details>
 

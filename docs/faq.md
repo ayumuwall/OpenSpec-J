@@ -108,7 +108,7 @@ AIツールごとにカスタムコマンドの表示形式が異なり、OpenSp
 
 仕様全体を再説明するのではなく、`ADDED`、`MODIFIED`、`REMOVED` セクションで変更点だけを説明する仕様です。OpenSpec はこの形式により、既存システムへの変更を扱いやすくします。詳しくは [コンセプト](concepts.md#delta-specs) を参照してください。
 
-### アーカイブされた変更はどこに行くのですか?
+すべての変更アーティファクトを保持したまま、`openspec/changes/archive/YYYY-MM-DD-<name>/` へ移動します。変更はアクティブ一覧から外れます。`retire_capabilities: true` を明示した変更は、capability の最後の要件を削除するとき、本仕様も削除できます。
 
 すべてのアーティファクトを保持したまま、`openspec/changes/archive/YYYY-MM-DD-<name>/` に移動します。何も削除されません。アクティブな変更一覧から外れるだけです。
 
@@ -149,7 +149,7 @@ OpenSpec は高度な推論モデルで最もよく機能します。 README で
 ### どこに質問したり、バグを報告したりできますか?
 
 - **Discord:** [discord.gg/YctCnvvshC](https://discord.gg/YctCnvvshC)
-- **GitHub Issues:** [github.com/Fission-AI/OpenSpec/issues](https://github.com/Fission-AI/OpenSpec/issues)
+- **GitHub Issues:** [github.com/ayumuwall/OpenSpec-J/issues](https://github.com/ayumuwall/OpenSpec-J/issues)
 - **端末から:** `openspec feedback "your message"` が GitHub の問題を開きます。
 
 ### これらのドキュメントは間違っているか、わかりにくいです。私は何をしますか？

@@ -4,6 +4,8 @@ import https from 'https';
 import path from 'path';
 import { createRequire } from 'module';
 import chalk from 'chalk';
+import { isCiEnvironment } from '../utils/ci.js';
+import { getGlobalConfig } from './global-config.js';
 
 const require = createRequire(import.meta.url);
 const { name: PACKAGE_NAME, version: OPENSPEC_VERSION } = require('../../package.json');
@@ -13,18 +15,6 @@ const REQUEST_TIMEOUT_MS = 1500;
 const MAX_RESPONSE_BYTES = 256 * 1024;
 const VERSION_PROBE_TIMEOUT_MS = 5000;
 const MAX_REDIRECTS = 3;
-
-/**
- * `CI` set to anything meaningful means CI. Providers use "true", "1", "yes";
- * only an explicit off-value counts as "not CI", so a value we do not know
- * still suppresses the request rather than surprising a build.
- */
-const CI_DISABLED_VALUES = new Set(['', 'false', '0', 'no', 'off']);
-
-function isCiEnvironment(): boolean {
-  const value = process.env.CI;
-  return value !== undefined && !CI_DISABLED_VALUES.has(value.trim().toLowerCase());
-}
 
 /**
  * A version we are willing to print. The registry only ever serves SemVer here,
@@ -38,7 +28,7 @@ const SAFE_VERSION = /^\d{1,10}\.\d{1,10}\.\d{1,10}(?:-[0-9A-Za-z.-]{1,64})?(?:\
  * The check is opt-out and must never get in the way: no network in CI or
  * tests, an explicit escape hatch for anyone offline or air-gapped, and the
  * same privacy signals telemetry already honors — a user who set DO_NOT_TRACK
- * did not agree to a different outbound request.
+ * or telemetry.enabled false did not agree to a different outbound request.
  */
 function isCheckEnabled(): boolean {
   if (process.env.OPENSPEC_NO_UPDATE_CHECK !== undefined) return false;
@@ -46,6 +36,8 @@ function isCheckEnabled(): boolean {
   if (process.env.OPENSPEC_TELEMETRY === '0') return false;
   if (isCiEnvironment()) return false;
   if (process.env.NODE_ENV === 'test') return false;
+  // Same config opt-out as telemetry (env remains the hard override above).
+  if (getGlobalConfig().telemetry?.enabled === false) return false;
   return true;
 }
 
@@ -581,7 +573,7 @@ async function runGlobalUpgrade(): Promise<boolean> {
   return new Promise((resolve) => {
     const child = spawn('npm', ['install', '-g', `${PACKAGE_NAME}@latest`], {
       stdio: 'inherit',
-    });
+  });
     child.on('error', () => resolve(false));
     child.on('close', (code) => resolve(code === 0));
   });
@@ -655,11 +647,11 @@ export function readCliVersion(binPath: string): Promise<string | null> {
 
     child.stdout?.on('data', (chunk: Buffer) => {
       output += chunk.toString();
-    });
+  });
     child.on('error', () => {
       clearTimeout(timer);
       resolve(null);
-    });
+  });
     child.on('close', () => {
       clearTimeout(timer);
       // A line that is only a version, not the first version-shaped token
@@ -671,7 +663,7 @@ export function readCliVersion(binPath: string): Promise<string | null> {
         .filter((line) => SAFE_VERSION.test(line.replace(/^v/, '')))
         .pop();
       resolve(version ? version.replace(/^v/, '') : null);
-    });
+  });
   });
 }
 
@@ -696,7 +688,7 @@ export async function offerCliUpgrade(latestVersion: string): Promise<UpgradeOut
     accepted = await confirm({
       message: `今すぐ v${latestVersion} へアップグレードしますか？`,
       default: true,
-    });
+  });
   } catch (error) {
     // Ctrl-C means stop, not "no thanks, carry on with everything else".
     return isPromptCancellation(error) ? 'cancelled' : 'declined';
@@ -721,7 +713,7 @@ export async function offerCliUpgrade(latestVersion: string): Promise<UpgradeOut
     return 'not-on-path';
   }
   if (compareVersions(version, OPENSPEC_VERSION) <= 0) {
-    console.log(chalk.yellow(`Upgrade finished, but "openspec" still reports v${version}.`));
+    console.log(chalk.yellow(`アップグレードは完了しましたが、"openspec" は依然として v${version} を報告しています。`));
     console.log(
       chalk.dim(
         binPath
@@ -769,14 +761,14 @@ export async function rerunUpdateWithUpgradedCli(
         // parent recorded it; counting it twice would overstate usage.
         OPENSPEC_TELEMETRY: '0',
       },
-    });
+  });
     child.on('error', () => {
       // Nothing to hand off to: the upgrade landed but the instruction files
       // are still the old ones, so this run did not do what was asked.
       console.log(chalk.yellow('指示ファイルは再生成されませんでした。'));
       console.log(chalk.dim('  新しいワークフローを反映するには "openspec update" を実行してください。'));
       resolve(1);
-    });
+  });
     // A child killed by a signal reports no code; that is not success.
     child.on('close', (code) => resolve(code ?? 1));
   });

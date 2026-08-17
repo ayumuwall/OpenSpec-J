@@ -47,7 +47,7 @@ OPSX は、旧来のフェーズ固定ワークフローを、柔軟なアクシ
 - Cline: `.clinerules/workflows/openspec-*.md`
 - Roo: `.roo/commands/openspec-*.md`
 - GitHub Copilot: `.github/prompts/openspec-*.prompt.md`（IDE 拡張機能のみ。Copilot CLI は非対応）
-- Codex: `.codex/skills/openspec-*`。旧ファイルの削除対象は `$CODEX_HOME/prompts` または `~/.codex/prompts` にあるOpenSpec管理対象の許可済みプロンプト名だけで、代替スキルが存在する場合にのみ削除されます。
+- Codex: OpenSpec は現在、正規の `.agents/skills/openspec-*` パスを使用します。旧 `.codex/skills` パス配下の OpenSpec 管理対象 `SKILL.md` は、置換先が存在した後にだけ照合します。カスタムファイルと内容が異なるコピーは残ります。印のない `.agents` ツリーに OpenSpec スキルがすでにある場合、OpenSpec は旧ディレクトリから推測せず、既存の Codex 形式（`$openspec-*`）または汎用形式（`/openspec-*`）を維持します。所有対象を切り替えるには、`openspec init` で明示的に `codex` を選びます。レガシープロンプトの削除対象は引き続き `$CODEX_HOME/prompts` または `~/.codex/prompts` にある、OpenSpec の許可リスト済みファイル名だけです。
 - ほか（Augment, Continue, Amazon Q など）
 
 移行処理は、設定済みツールを検出して旧ファイルを整理します。
@@ -158,7 +158,7 @@ openspec init --force --tools claude
 
 `--force` はプロンプトを省略し、クリーンアップを自動承認します。
 
-This includes cleanup of OpenSpec-managed Codex prompt files in the global Codex prompt directory. Cleanup only targets OpenSpec's allowlisted legacy Codex prompt filenames, removes them only after replacement `.codex/skills/openspec-*` skills exist, and preserves all other files.
+これには、グローバル Codex プロンプトディレクトリの OpenSpec 管理対象プロンプトファイルの削除も含まれます。削除対象は OpenSpec の許可リスト済みレガシー Codex プロンプトファイル名だけであり、置換先の `.agents/skills/openspec-*` スキルが存在した後にのみ削除します。その他のファイルはすべて保持されます。
 
 ---
 
@@ -411,7 +411,7 @@ OPSX は新しい **Skills** 標準を使います:
 
 Skills は複数の AI ツールで認識され、より豊富なメタデータを提供します。
 
-Codex is skills-only in OPSX. OpenSpec no longer generates Codex custom prompt files; use the generated `.codex/skills/openspec-*` directories instead.
+OPSX における Codex はスキル専用です。OpenSpec は Codex カスタムプロンプトファイルを生成しなくなりました。代わりに生成された `.agents/skills/openspec-*` ディレクトリを使用してください。
 
 ---
 

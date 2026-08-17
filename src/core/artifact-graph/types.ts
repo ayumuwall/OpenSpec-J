@@ -1,11 +1,32 @@
+import * as path from 'node:path';
 import { z } from 'zod';
+
+function relativePathSchema(fieldName: string) {
+  return z
+    .string()
+    .min(1, { error: `${fieldName} is required` })
+    .superRefine((value, ctx) => {
+      const segments = value.split(/[\\/]+/u);
+      const isDrivePath = /^[A-Za-z]:/u.test(value);
+      const isAbsolute =
+        path.posix.isAbsolute(value) || path.win32.isAbsolute(value) || isDrivePath;
+      const escapes = segments.includes('..');
+
+      if (isAbsolute || escapes || value.includes('\0')) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `${fieldName} は許可されたディレクトリ内の相対パスでなければなりません`,
+        });
+      }
+  });
+}
 
 // Artifact definition schema
 export const ArtifactSchema = z.object({
   id: z.string().min(1, { error: 'Artifact ID は必須です' }),
-  generates: z.string().min(1, { error: 'generates フィールドは必須です' }),
+  generates: relativePathSchema('generates field'),
   description: z.string(),
-  template: z.string().min(1, { error: 'template フィールドは必須です' }),
+  template: relativePathSchema('template field'),
   instruction: z.string().optional(),
   requires: z.array(z.string()).default([]),
 });
@@ -15,7 +36,7 @@ export const ApplyPhaseSchema = z.object({
   // Artifact IDs that must exist before apply is available
   requires: z.array(z.string()).min(1, { error: '必要なアーティファクトを少なくとも 1 つ指定してください' }),
   // Path to file with checkboxes for progress (relative to change dir), or null if no tracking
-  tracks: z.string().nullable().optional(),
+  tracks: relativePathSchema('apply.tracks').nullable().optional(),
   // Custom guidance for the apply phase
   instruction: z.string().optional(),
 });

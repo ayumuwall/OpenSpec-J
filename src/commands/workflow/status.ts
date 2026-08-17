@@ -28,7 +28,7 @@ import {
 } from './shared.js';
 
 // -----------------------------------------------------------------------------
-// Types
+// 型
 // -----------------------------------------------------------------------------
 
 export interface StatusOptions {
@@ -101,7 +101,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     const context = loadChangeContext(projectRoot, changeName, options.schema, {
       changeDir: getChangeDir(planningHome, changeName),
       planningHome,
-    });
+  });
     const status = formatChangeStatus(
       context,
       isStoreSelectedRoot(root) ? { storeId: root.storeId } : {}
@@ -151,8 +151,8 @@ export function printStatusText(status: ChangeStatus): void {
     console.log(line);
   }
 
-  if (status.isComplete) {
+  if (status.isPlanningComplete) {
     console.log();
-    console.log(chalk.green('すべてのアーティファクトが完了しました！'));
+    console.log(chalk.green('すべての計画アーティファクトが完了しました！'));
   }
 }

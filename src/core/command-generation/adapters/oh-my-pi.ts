@@ -19,7 +19,7 @@ function injectOmpArgs(body: string): string {
 
   return body.replace(
     OMP_INPUT_HEADING,
-    (heading) => `${heading}\n**Provided arguments**: $@`
+    (heading) => `${heading}\n**入力された引数**: $@`
   );
 }
 

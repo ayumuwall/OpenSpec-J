@@ -1,4 +1,4 @@
-// Types
+// 型
 export {
   ArtifactSchema,
   SchemaYamlSchema,
@@ -16,7 +16,12 @@ export { ArtifactGraph } from './graph.js';
 
 // State detection
 export { detectCompleted } from './state.js';
-export { artifactOutputExists, isGlobPattern, resolveArtifactOutputs } from './outputs.js';
+export {
+  artifactOutputExists,
+  isGlobPattern,
+  resolveArtifactOutputPath,
+  resolveArtifactOutputs,
+} from './outputs.js';
 
 // Schema resolution
 export {

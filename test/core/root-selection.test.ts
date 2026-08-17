@@ -160,7 +160,7 @@ describe('resolveOpenSpecRoot', () => {
       resolveOpenSpecRoot({ store: 'Bad/Id', globalDataDir }),
       'invalid_store_id'
     );
-    expect(error.message).toContain('Store id');
+    expect(error.message).toContain('ストア ID');
   });
 
   it('rejects an unhealthy store root without repairing it', async () => {

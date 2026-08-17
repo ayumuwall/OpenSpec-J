@@ -11,7 +11,7 @@ metadata:
 
 ユーザーを初めての完全な OpenSpec ワークフローサイクルへ案内してください。これは学習体験です。各ステップを説明しながら、実際にユーザーのコードベースで作業します。
 
-**Store の選択:** ユーザーが store 名を挙げた場合（store はこのマシンに登録された独立した OpenSpec リポジトリです）、または作業対象が store 内にある場合は、`openspec store list --json` を実行して登録済み store ID を確認し、仕様や変更を読み書きするコマンド（`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `view`）に `--store <id>` を渡します。他のコマンドはこのフラグを取りません。コマンドが出力するヒントには既にこのフラグが含まれるため、後続コマンドでも維持してください。store がない場合、コマンドは最も近いローカルの `openspec/` ルートに作用します。
+**ストアの選択:** ユーザーがストア（この端末に登録された独立した OpenSpec リポジトリ）を指定した場合、または作業がストアにある場合は、`openspec store list --json` で登録済みストア ID を調べます。その後、仕様と変更を読み書きするコマンド（`new change`、`status`、`instructions`、`list`、`show`、`validate`、`archive`、`doctor`、`context`、`schemas`、`view`）に `--store <id>` を指定します。一度選んだら、その後のワークフローでは `--store <id>` を維持します。以下にフラグなしで示すコマンド例は省略形なので、実行前にフラグを追加してください。たとえば、フラグなしの例ではなく `openspec status --change "<name>" --json --store "<id>"` を実行します。ほかのコマンドはこのフラグを受け取りません。コマンドが出力するヒントには既にフラグが含まれるため、後続コマンドでも維持してください。ストアを使わない場合、コマンドは最も近いローカルの `openspec/` ルートを対象にします。
 
 ---
 
@@ -199,7 +199,7 @@ openspec new change "<derived-name>"
 
 ## フェーズ 5: Proposal
 
-**EXPLAIN:**
+**説明:**
 ```
 ## Proposal
 
@@ -209,6 +209,10 @@ proposal は、この変更を **なぜ** するのか、**何を** するのか
 ```
 
 **実行:** proposal のドラフトを作成（まだ保存しない）:
+
+`<capability-path>` は `specs/` からの相対仕様ディレクトリです（例:
+`user-auth` または `identity/user-auth`）。変更する capability には既存の完全なパスを使用します。
+新しい capability は、プロジェクトで確立済みの仕様構成に従います。
 
 ```
 proposal のドラフトです:
@@ -225,11 +229,12 @@ proposal のドラフトです:
 
 ## Capabilities
 
-### New Capabilities
-- `<capability-name>`: [簡単な説明]
+### 新しい能力
+- `<capability-path>`: [内容の簡潔な説明]
 
-### Modified Capabilities
+### 変更する機能
 <!-- 既存の挙動を変更する場合 -->
+- `<existing-capability-path>`: [内容の簡潔な説明]
 
 ## Impact
 
@@ -430,9 +435,9 @@ design です:
 アーカイブは意思決定の履歴になる。後から「なぜそう作ったか」を参照できる。
 ```
 
-**実行:**
+**実行:** 変更をアーカイブします（`--yes` はツール呼び出しからは回答できない確認プロンプトへ応答します）:
 ```bash
-openspec archive "<name>"
+openspec archive "<name>" --yes
 ```
 
 **表示:**

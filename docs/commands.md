@@ -667,13 +667,13 @@ AI:  OpenSpec へようこそ！
 
 AI ツールが異なれば、使用するコマンド構文も若干異なります。ツールに一致する形式を使用してください。
 
-| ツールのコマンドファイル | 構文例 | ツール例 |
-|--------------------------|--------|----------|
-| `.../commands/opsx/<id>.*` | `/opsx:propose`, `/opsx:apply` | Claude Code、Gemini CLI、Crush |
-| `.../opsx-<id>.*` | `/opsx-propose`, `/opsx-apply` | Cursor、Devin Desktop、Copilot (IDE)、Trae、Oh My Pi |
-| なし（スキルのみ） | `/openspec-propose`, `/openspec-apply-change` | CodeArts、ForgeCode、Hermes、Mistral Vibe |
-| なし（Kimi Code） | `/skill:openspec-propose` | Kimi Code |
-| なし（Codex CLI） | `$openspec-propose` | Codex |
+| Your tool's command file | Syntax example | Example tools |
+|--------------------------|----------------|---------------|
+| `.../commands/opsx/<id>.*` | `/opsx:propose`, `/opsx:apply` | Claude Code, Gemini CLI, Crush |
+| `.../opsx-<id>.*` | `/opsx-propose`, `/opsx-apply` | Cursor, Devin Desktop, Copilot (IDE), Trae, Oh My Pi |
+| なし — スキルのみ | `/openspec-propose`, `/openspec-apply-change` | CodeArts、ForgeCode、Hermes、MiniMax Code、Mistral Vibe、共通 `.agents` |
+| none — Kimi Code | `/skill:openspec-propose` | Kimi Code |
+| none — Codex CLI | `$openspec-propose` | Codex |
 
 > **Devin DesktopとDevin Local:** `.devin/workflows/opsx-*.md` により、Devin Desktopでは `/opsx-propose` を使えます。Devin Localにはワークフローがないため、OpenSpecが `.devin/skills/` に作成する `/openspec-propose` などのスキルを使ってください。これらは両方のエージェントで動作します。
 
@@ -688,7 +688,7 @@ AI ツールが異なれば、使用するコマンド構文も若干異なり�
 これらのコマンドは、古い「一括」ワークフローを使います。引き続き動作しますが、OPSX コマンドの使用を推奨します。
 
 |コマンド |何をするのか |
-|---------|--------------|
+|---------|------------|
 | `/openspec:proposal` |すべての成果物 (提案書、仕様書、設計、タスク) を一度に作成 |
 | `/openspec:apply` |変更を実装する |
 | `/openspec:archive` |変更をアーカイブする |

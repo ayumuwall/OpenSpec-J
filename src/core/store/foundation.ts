@@ -386,7 +386,7 @@ export async function resolveGitStoreBackendConfig(
   cwd = process.cwd()
 ): Promise<StoreGitBackendConfig> {
   if (input.localPath.length === 0) {
-    throw new Error('Store local path must not be empty.');
+    throw new Error('ストアのローカルパスは空にできません。');
   }
 
   const resolvedPath = path.isAbsolute(input.localPath)
@@ -394,15 +394,15 @@ export async function resolveGitStoreBackendConfig(
     : path.resolve(cwd, input.localPath);
 
   if (!(await pathIsDirectory(resolvedPath))) {
-    throw new Error(`Store local path does not exist: ${input.localPath}`);
+    throw new Error(`ストアのローカルパスが存在しません: ${input.localPath}`);
   }
 
   if (input.remote !== undefined && input.remote.length === 0) {
-    throw new Error('Store backend remote must not be empty when provided.');
+    throw new Error('ストアのバックエンドリモートを指定する場合は空にできません。');
   }
 
   if (input.branch !== undefined && input.branch.length === 0) {
-    throw new Error('Store branch must not be empty when provided.');
+    throw new Error('ストアのブランチを指定する場合は空にできません。');
   }
 
   return {

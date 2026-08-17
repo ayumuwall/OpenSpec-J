@@ -13,7 +13,7 @@
 The system SHALL expire a session after 30 minutes of inactivity.
 
 #### Scenario: Idle timeout
-- GIVEN an authenticated session
+- GIVEN 認証済みセッション
 - WHEN 30 minutes pass with no activity
 - THEN the session is invalidated and the user must re-authenticate
 ```
@@ -56,11 +56,9 @@ The system SHALL expire a session after 30 minutes of inactivity.
 - **`## MODIFIED Requirements`** — すでに存在し、変更されている動作。完全な新しいバージョンを含めます。変更点に関する短いメモはレビュー担当者に役立ちます。
 - **`## REMOVED Requirements`** — 行動がなくなり、その理由が示されます。
 
-アーカイブでは、ADDED がメイン仕様に追加され、MODIFIED が古いバージョンを置き換え、REMOVED が削除されます。実際の変更を追加としてマークすると、2 つの競合する要件が発生することになります。新しい動作を MODIFIED として説明した場合、置き換えるものは何もありません。疑問がある場合は、現在の仕様を開いて、要件がすでに存在しているかどうかを確認してください。
+アーカイブ時、ADDED は本仕様へ追加され、MODIFIED は旧版を置き換え、REMOVED は本仕様から取り除かれます。capability の最後の要件を削除すると、その capability は廃止されます。中身のない仕様を残す代わりに、archive は `openspec/specs/<capability>/spec.md` を削除します。これはファイルを削除する唯一のアーカイブ処理であるため、明示的な指定が必要です。変更の `.openspec.yaml` に、このファイルで必要な `schema:` と並べて `retire_capabilities: true` を追加してください。指定がなければ archive は中止し、その旨を伝えます。呼出元のチェックアウト内にある仕様では、アーカイブ出力にコミット済みファイルを復元する `git checkout` も表示されます。選択済み store にはチェックアウトの範囲に即した復旧方法を案内します。既存の変更を ADDED として記述すると競合する要件が2つ生じ、新しい振る舞いを MODIFIED として記述すると置き換える対象がありません。迷ったら現在の仕様を開き、要件がすでにあるか確認してください。
 
-<a id="right-size-the-change"></a>
-
-もう一つ、知っておきたいセクションがあります。仕様差分で新しい機能を作る場合は、冒頭に `## Purpose` を置き、その機能の目的を1〜2文で説明してください。アーカイブ時には、作成されるメイン仕様の Purpose として使われます。省略すると、手作業で埋めるための `TBD` が入ります。既存仕様にはすでに Purpose があるため、仕様差分側の Purpose は無視されます。変更する場合は `openspec/specs/<capability>/spec.md` を直接編集してください。
+もう1つ知っておくべきセクションがあります。delta でまだ存在しない capability を作る場合は、capability の目的を1〜2文で書いた `## Purpose` から始めます。archive はこれを作成する本仕様の Purpose として使用します。省略すると手作業で埋める `TBD` プレースホルダーが残ります。既存仕様にはすでに Purpose があるため、delta 側の Purpose は無視されます。変更するには `openspec/specs/<capability-path>/spec.md` を直接編集してください。ここで `<capability-path>` は `specs/` からの相対ディレクトリです。フラットなプロジェクトの `user-auth` や、ドメイン別に構成したプロジェクトの `identity/user-auth` などが該当します。
 
 ## Right-size the change
 

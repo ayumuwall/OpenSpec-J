@@ -257,7 +257,7 @@ async function ensureDefaultConfig(
 
   if (yamlKind === 'file' || ymlKind === 'file') return;
   if (yamlKind !== 'missing' || ymlKind !== 'missing') {
-    throw new Error('OpenSpec config path exists but is not a file.');
+    throw new Error('OpenSpec 設定パスは存在しますが、ファイルではありません。');
   }
 
   await FileSystemUtils.writeFile(
@@ -303,7 +303,7 @@ export async function ensureOpenSpecRoot(
   if (rootKind === 'missing') {
     await fs.mkdir(storeRoot, { recursive: true });
   } else if (rootKind !== 'directory') {
-    throw new Error('Store root is not a directory.');
+    throw new Error('ストアルートはディレクトリではありません。');
   }
 
   await ensureDirectory(storeRoot, OPENSPEC_ROOT_DIR, ledger);

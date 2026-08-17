@@ -14,7 +14,11 @@ OpenSpec には 3 つのカスタマイズレベルがあります。
 
 ## プロジェクト設定
 
-`openspec/config.yaml` はチーム向けに最も手軽にカスタマイズする方法です。次ができます:
+- **Set a default schema** - Skip `--schema` on every command
+- **Inject project context** - AI sees your tech stack, conventions, etc.
+- **Add per-artifact rules** - Custom rules for specific artifacts
+- **Add per-operation guidance** - Advisory preferences for apply and archive work
+- **統合の選択を記録** - 例: [GitHub Copilot クラウドコーディングエージェント](supported-tools.md#github-copilot-cloud-coding-agent)のオプトイン
 
 - **デフォルトスキーマを設定** — 各コマンドでの `--schema` 指定を省略
 - **プロジェクトコンテキストを注入** — 技術スタックや規約などをAIへ提供
@@ -57,7 +61,12 @@ operations:
       - 全テストの前に対象を絞ったテストを実行する
   archive:
     guidance:
-      - 完了時の要約は簡潔にする
+      - Keep the completion summary concise
+
+# GitHub Copilot クラウドコーディングエージェントを選択または拒否したときに
+# `openspec init` が設定します。`init`/`update` がそのファイルを生成するかを制御します。
+githubCopilot:
+  cloudAgent: false
 ```
 
 ### 仕組み
@@ -391,10 +400,11 @@ OpenSpec は、独立したリポジトリで配布されるコミュニティ�
 
 | スキーマ | メンテナー | リポジトリ | 説明 |
 |--------|-----------|-----------|-------------|
-| `superpowers-bridge` | @JiangWay | [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas/tree/main/superpowers-bridge) | OpenSpec のアーティファクト管理と [obra/superpowers](https://github.com/obra/superpowers) の実行スキル（brainstorming, writing-plans, subagent 経由の TDD, code review, finishing）を統合します。Superpowers が標準では扱わない範囲を補う、証拠優先の `retrospective` アーティファクトを追加します。 |
-| `nanopm` | @nmrtn | [nmrtn/nanopm](https://github.com/nmrtn/nanopm/tree/main/openspec-schema) | PM優先のワークフローです。[nanopm](https://github.com/nmrtn/nanopm) の計画パイプライン（audit → strategy → roadmap → PRD）を実装前に実行し、製品計画をOpenSpecの仕様駆動エンジニアリングへ接続します。`.nanopm/` があれば、proposalはaudit、designはstrategy、tasksはPRDの分解結果を参照します。 |
-| `e2e-runbooks` | @Lukk17 | [Lukk17/openspec-schemas](https://github.com/Lukk17/openspec-schemas/tree/master/openspec/schemas/e2e-runbooks) | capability単位のE2Eテストrunbookです。各capabilityに不変のspecとtasks-template、実行ごとにタイムスタンプ付きの記録を作ります。アサーションは観測可能な振る舞い（HTTPステータス、レスポンス本文、永続化状態。ログ部分文字列は対象外）に限定し、開始・終了UTC、所要時間、LLMトークン消費量の推定を記録します。 |
-| `anvil` | @jikkujoyce | [jikkujoyce/openspec-schemas](https://github.com/jikkujoyce/openspec-schemas/tree/main/schemas/anvil) | TDD規律と敵対的レビューを含む仕様駆動ワークフローです。`proposal` → `specs` → `design` → `review` → `test-plan` → `tasks` → `apply` → `verify` の順に進みます。`review` は新しいコンテキストの読み取り専用レビュアー（可能なら別モデル）が作成し、`VERDICT:` 行で `test-plan`、`tasks`、`apply` のゲートを指示します。OpenSpec自身はアーティファクトの存在だけを確認するため、ゲートはCIやhookで強制してください。`test-plan` は各specシナリオを名前付きテストへ対応付け、`verify` が監査するred/green台帳としても機能します。 |
+| `intent-driven` | @harikrishnan83 | [intent-driven-dev/openspec-schemas](https://github.com/intent-driven-dev/openspec-schemas/tree/main/openspec/schemas/intent-driven) | 実装前に変更の意図、観測可能な振る舞い、技術設計、長期にわたり有効なアーキテクチャ判断を記録します。変更ローカルの ADR レビューマニフェストを追加し、条件を満たす長期判断を不変かつ置換可能な ADR として書き込みます。 |
+| `superpowers-bridge` | @JiangWay | [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas/tree/main/superpowers-bridge) | Integrates OpenSpec's artifact governance with [obra/superpowers](https://github.com/obra/superpowers) execution skills (brainstorming, writing-plans, TDD via subagents, code review, finishing). Adds an evidence-first `retrospective` artifact filling a gap Superpowers does not natively cover. |
+| `nanopm` | @nmrtn | [nmrtn/nanopm](https://github.com/nmrtn/nanopm/tree/main/openspec-schema) | PM-first workflow. Runs [nanopm](https://github.com/nmrtn/nanopm)'s planning pipeline (audit → strategy → roadmap → PRD) upstream of implementation. Bridges product planning to OpenSpec's spec-driven engineering workflow. Artifacts read from `.nanopm/` if present — proposal sources the audit, design sources the strategy, and tasks source the PRD breakdown. |
+| `e2e-runbooks` | @Lukk17 | [Lukk17/openspec-schemas](https://github.com/Lukk17/openspec-schemas/tree/master/openspec/schemas/e2e-runbooks) | Capability-level end-to-end test runbooks. Each capability gets an immutable spec, an immutable tasks-template, and one timestamped run record per execution. Assertions are observable behaviour only (HTTP status, response body, persisted state — never log substrings); each run records start/end UTC, duration, and best-estimate LLM token consumption. |
+| `anvil` | @jikkujoyce | [jikkujoyce/openspec-schemas](https://github.com/jikkujoyce/openspec-schemas/tree/main/schemas/anvil) | Spec-driven workflow with TDD discipline and an adversarial review step. Flow: `proposal` → `specs` → `design` → `review` → `test-plan` → `tasks` → `apply` → `verify`. `review` is written by a fresh-context, read-only reviewer (a second model when one is available) and emits a `VERDICT:` line telling the agent to gate `test-plan`, `tasks`, and `apply`; OpenSpec only checks that artifacts exist, so enforce the gate with your own CI or hook. `test-plan` maps every spec scenario to a named test and doubles as a red/green ledger that `verify` audits. |
 
 > コミュニティスキーマを提供したい場合は、リポジトリへのリンクを含む Issue を開くか、この表に行を追加する PR を送ってください。
 

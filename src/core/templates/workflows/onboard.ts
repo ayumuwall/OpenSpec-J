@@ -209,7 +209,7 @@ openspec new change "<derived-name>"
 
 ## フェーズ 5: Proposal
 
-**EXPLAIN:**
+**説明:**
 \`\`\`
 ## Proposal
 
@@ -219,6 +219,10 @@ proposal は、この変更を **なぜ** するのか、**何を** するのか
 \`\`\`
 
 **実行:** proposal のドラフトを作成（まだ保存しない）:
+
+\`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例:
+\`user-auth\` または \`identity/user-auth\`）。変更する capability には既存の完全なパスを使用します。
+新しい capability は、プロジェクトで確立済みの仕様構成に従います。
 
 \`\`\`
 proposal のドラフトです:
@@ -235,11 +239,12 @@ proposal のドラフトです:
 
 ## Capabilities
 
-### New Capabilities
-- \`<capability-name>\`: [簡単な説明]
+### 新しい能力
+- \`<capability-path>\`: [内容の簡潔な説明]
 
-### Modified Capabilities
+### 変更する機能
 <!-- 既存の挙動を変更する場合 -->
+- \`<existing-capability-path>\`: [内容の簡潔な説明]
 
 ## Impact
 
@@ -440,9 +445,9 @@ design です:
 アーカイブは意思決定の履歴になる。後から「なぜそう作ったか」を参照できる。
 \`\`\`
 
-**実行:**
+**実行:** 変更をアーカイブします（\`--yes\` はツール呼び出しからは回答できない確認プロンプトへ応答します）:
 \`\`\`bash
-openspec archive "<name>"
+openspec archive "<name>" --yes
 \`\`\`
 
 **表示:**
