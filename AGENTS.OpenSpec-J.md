@@ -358,7 +358,41 @@ node bin/openspec.js validate --strict
 upstream の GitHub Release 本文は、対象となる各バージョンについて次のように取得する。
 
 ```
-gh release view vX.Y.Z --repo Fission-AI/OpenSpec --json body --jq '.body'
+gh release view vX.Y.Z \
+  --repo Fission-AI/OpenSpec \
+  --json body \
+  --jq '.body' \
+  > /tmp/openspec-upstream-release-vX.Y.Z.md
+```
+
+取得後は、リリース本文を作成する前に次を確認する。
+
+- `/tmp/openspec-upstream-release-vX.Y.Z.md` が空でなく、対象タグの GitHub Release 本文であること。
+- `CHANGELOG.md` の文章を取得元や代替本文として使用していないこと。`CHANGELOG.md` は OpenSpec-J 独自変更の確認にだけ使用する。
+- upstream 本文の導入文、`New` / `Improved` / `Fixed`、新規コントリビューター、謝辞、`Full Changelog` などの全セクションを確認し、日本語版にも同じ順序と対応関係で含めること。
+- PR / Issue 番号、ユーザー名、コマンド名、フラグ、識別子、ファイルパス、比較リンクを省略・改変していないこと。
+- OpenSpec-J で未リリースの upstream バージョンが複数ある場合は、各バージョンの本文を個別ファイルへ取得し、古い順に全件含めること。
+
+リリース本文の作成後は、公開前に次を照合する。
+
+1. 冒頭が `[OpenSpec-J]` 独自変更で始まっている。
+2. その後に対象となる各 upstream バージョンの見出しが古い順で並んでいる。
+3. 各 upstream 本文の箇条書きが日本語版の箇条書きと1対1で対応し、追加・欠落・別バージョンとの混在がない。
+4. upstream の全リンクとクレジットが保持されている。
+5. GitHub Release 本文として読みやすい自然な日本語であり、`CHANGELOG.md` の転載になっていない。
+
+GitHub Release 作成後も保存された本文を再取得し、作成に使用したファイルと一致することを確認する。
+
+```
+gh release view vX.Y.Z \
+  --repo ayumuwall/OpenSpec-J \
+  --json body \
+  --jq '.body' \
+  > /tmp/openspec-j-release-saved-vX.Y.Z.md
+
+diff -u \
+  /tmp/openspec-j-release-vX.Y.Z.md \
+  /tmp/openspec-j-release-saved-vX.Y.Z.md
 ```
 
 作成したリリース本文をファイル（例: `/tmp/openspec-j-release-vX.Y.Z.md`）に保存したうえで、タグ付与と GitHub Release 作成を行う。
