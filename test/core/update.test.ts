@@ -211,7 +211,7 @@ Outside content
         );
 
         await expect(updateCommand.execute(testDir)).rejects.toThrow(
-          'OpenSpec update failed for: MiniMax Code'
+          '次のツールの OpenSpec 更新に失敗しました: MiniMax Code'
         );
 
         expect(await fs.readFile(skillFile, 'utf-8')).toBe(oldSkillContent);
@@ -251,7 +251,7 @@ Outside content
         );
 
         await expect(updateCommand.execute(testDir)).rejects.toThrow(
-          'OpenSpec update failed for: MiniMax Code'
+          '次のツールの OpenSpec 更新に失敗しました: MiniMax Code'
         );
 
         expect(await fs.readFile(skillFile, 'utf-8')).toBe(oldSkillContent);
@@ -288,7 +288,7 @@ Outside content
         );
 
         await expect(updateCommand.execute(testDir)).rejects.toThrow(
-          'OpenSpec update failed for: Claude Code'
+          '次のツールの OpenSpec 更新に失敗しました: Claude Code'
         );
 
         expect(await fs.readFile(skillFile, 'utf-8')).toBe(oldSkillContent);
@@ -329,7 +329,7 @@ metadata:
         );
 
         await expect(updateCommand.execute(testDir)).rejects.toThrow(
-          'OpenSpec update failed for: Claude Code'
+          '次のツールの OpenSpec 更新に失敗しました: Claude Code'
         );
 
         await expect(fs.stat(skillFile)).resolves.toBeDefined();
@@ -523,15 +523,15 @@ metadata:
       expect(await fs.readFile(legacySkill, 'utf-8')).toContain('User edit');
       expect(
         consoleSpy.mock.calls.flat().map(String).some((entry) =>
-          entry.includes('Left 1 file in .codex/')
+          entry.includes('.codex/ に残しました')
         )
       ).toBe(true);
 
       consoleSpy.mockClear();
       await updateCommand.execute(testDir);
       const secondRunLogs = consoleSpy.mock.calls.flat().map(String);
-      expect(secondRunLogs.some((entry) => entry.includes('up to date'))).toBe(true);
-      expect(secondRunLogs.some((entry) => entry.includes('Left 1 file in .codex/'))).toBe(false);
+      expect(secondRunLogs.some((entry) => entry.includes('最新です'))).toBe(true);
+      expect(secondRunLogs.some((entry) => entry.includes('.codex/ に残しました'))).toBe(false);
     });
 
     it('should not restore legacy Codex workflows excluded by the active profile', async () => {
@@ -566,7 +566,7 @@ metadata:
       const consoleSpy = vi.spyOn(console, 'log');
       await updateCommand.execute(testDir);
       expect(
-        consoleSpy.mock.calls.flat().map(String).some((entry) => entry.includes('up to date'))
+        consoleSpy.mock.calls.flat().map(String).some((entry) => entry.includes('最新です'))
       ).toBe(true);
     });
 
@@ -584,7 +584,7 @@ metadata:
       expect(proposeSkill).toContain('/openspec-apply-change');
       expect(
         consoleSpy.mock.calls.flat().map(String).some((entry) =>
-          entry.includes('Force updating 1 tool(s): codex')
+          entry.includes('強制更新: 1 件（codex）')
         )
       ).toBe(true);
     });
@@ -659,8 +659,8 @@ metadata:
       expect(configured).toContain('agents');
       expect(configured).not.toContain('codex');
       // The skip names the established owner so the user understands why.
-      expect(streamOutput).toMatch(/Skipped Codex/);
-      expect(streamOutput).toMatch(/managed by another tool \(Shared \.agents skills\)/);
+      expect(streamOutput).toMatch(/Codex をスキップしました/);
+      expect(streamOutput).toMatch(/別のツール（Shared \.agents skills）が管理しています/);
       // The legacy signal must survive: because Codex was skipped, no
       // replacement skill exists, so the deferred global-prompt cleanup must
       // preserve `~/.codex/prompts` untouched (byte-for-byte) rather than
@@ -872,7 +872,7 @@ metadata:
         );
         expect(
           warningSpy.mock.calls.flat().map(String).some((entry) =>
-            entry.includes('resolves outside this project')
+            entry.includes('プロジェクト外へ解決されるため')
           )
         ).toBe(true);
       } finally {
@@ -907,7 +907,7 @@ metadata:
         );
         expect(
           warningSpy.mock.calls.flat().map(String).some((entry) =>
-            entry.includes('resolves outside this project')
+            entry.includes('プロジェクト外へ解決されるため')
           )
         ).toBe(true);
       } finally {
@@ -1329,7 +1329,7 @@ metadata:
       // Plain Markdown (no frontmatter) with the argument placeholder injected
       const content = await fs.readFile(commandCodeCmd, 'utf-8');
       expect(content).not.toMatch(/^---\n/);
-      expect(content).toContain('**Provided arguments**: $ARGUMENTS');
+      expect(content).toContain('**入力された引数**: $ARGUMENTS');
     });
 
     it('should migrate a legacy .windsurf install to .devin, preserving user files', async () => {
@@ -1435,7 +1435,7 @@ metadata:
       consoleSpy.mockRestore();
 
       // The divergence is surfaced...
-      expect(logCalls.some((entry) => entry.includes('Left 2 files in .windsurf/'))).toBe(true);
+      expect(logCalls.some((entry) => entry.includes('2 件のファイルを .windsurf/ に残しました'))).toBe(true);
       // ...without claiming a migration that did not happen. Matched on the
       // directory arrow rather than the word "Migrated", which also begins the
       // unrelated profile-migration line ("Migrated: custom profile with N
@@ -1585,7 +1585,7 @@ metadata:
       });
 
       await expect(new UpdateCommand({ force: true }).execute(testDir)).rejects.toThrow(
-        'OpenSpec update failed for: Codex'
+        '次のツールの OpenSpec 更新に失敗しました: Codex'
       );
       expect(await fs.readFile(legacySkill, 'utf-8')).toBe(legacyContent);
       expect(await FileSystemUtils.fileExists(prompt)).toBe(true);
@@ -1616,7 +1616,7 @@ metadata:
       const consoleSpy = vi.spyOn(console, 'log');
 
       await expect(updateCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec update failed for: Claude Code'
+        '次のツールの OpenSpec 更新に失敗しました: Claude Code'
       );
 
       // Should report failure
@@ -1662,7 +1662,7 @@ metadata:
       const consoleSpy = vi.spyOn(console, 'log');
 
       await expect(updateCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec update failed for: Claude Code'
+        '次のツールの OpenSpec 更新に失敗しました: Claude Code'
       );
 
       // Cursor should still be updated - check the actual format from ora spinner
@@ -1855,7 +1855,7 @@ metadata:
       await updateCommand.execute(testDir);
 
       await expect(fs.readFile(setupStepsPath, 'utf8')).resolves.toContain('copilot-setup-steps:');
-      await expect(fs.readFile(agentPath, 'utf8')).resolves.toContain('# OpenSpec Agent');
+      await expect(fs.readFile(agentPath, 'utf8')).resolves.toContain('# OpenSpec エージェント');
     });
 
     it('should refresh managed legacy Copilot files and preserve custom files during force update', async () => {
@@ -1953,7 +1953,7 @@ metadata:
       await updateCommand.execute(testDir);
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('failed to sync Copilot cloud agent files')
+        expect.stringContaining('Copilot クラウドエージェント用ファイルの同期に失敗しました')
       );
     });
 
@@ -3287,8 +3287,8 @@ More user content after markers.
       expect(await fs.readFile(skillFile, 'utf-8')).toBe('existing global skill');
       expect(await FileSystemUtils.directoryExists(path.join(testDir, '.minimax'))).toBe(false);
       const output = consoleSpy.mock.calls.flat().join('\n');
-      expect(output).toContain('up to date');
-      expect(output).not.toContain('Updated: MiniMax Code');
+      expect(output).toContain('最新です');
+      expect(output).not.toContain('更新: MiniMax Code');
       consoleSpy.mockRestore();
     });
 
@@ -3323,7 +3323,7 @@ More user content after markers.
       // The tool now has zero OpenSpec artifacts; the removal must not be
       // silent — update prints the same configuration correction init does.
       const logCalls = consoleSpy.mock.calls.flat().map(String);
-      const correction = logCalls.find((entry) => entry.includes('No skills or commands remain'));
+      const correction = logCalls.find((entry) => entry.includes('スキルもコマンドも残っていません'));
       expect(correction).toBeTruthy();
       expect(correction).toContain("openspec config set delivery both");
     });

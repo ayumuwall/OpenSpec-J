@@ -111,7 +111,7 @@ function fromStoreError(error: unknown): never {
 }
 
 function doctorFix(id: string): string {
-  return `Run openspec store doctor ${id} to inspect it.`;
+  return `確認するには openspec store doctor ${id} を実行してください。`;
 }
 
 function makeRoot(
@@ -165,19 +165,19 @@ async function resolveStoreRoot(
   if (!entry) {
     if (entries.length === 0) {
       throw new RootSelectionError(
-        `Unknown store '${id}'. No stores are registered.`,
+        `不明なストア '${id}' です。登録済みのストアはありません。`,
         'no_registered_stores',
         {
           target: 'store.id',
-          fix: `Run openspec store setup ${id} or openspec store register <path> first.`,
+          fix: `先に openspec store setup ${id} または openspec store register <path> を実行してください。`,
         }
       );
     }
 
     throw new RootSelectionError(
-      `Unknown store '${id}'. Registered stores: ${entries
+      `不明なストア '${id}' です。登録済みストア: ${entries
         .map((candidate) => candidate.id)
-        .join(', ')}.`,
+        .join(', ')}。`,
       'unknown_store',
       {
         target: 'store.id',
@@ -321,8 +321,8 @@ async function resolveNearestOrDeclaredRoot(
         target: 'store.pointer',
         fix:
           pointer.malformed === 'unparseable'
-            ? `Fix the YAML syntax in ${pointer.filePath}.`
-            : `Edit ${pointer.filePath} so the store key is a registered store id, or remove it.`,
+            ? `${pointer.filePath} の YAML 構文を修正してください。`
+            : `${pointer.filePath} の store キーを登録済みストア ID に変更するか、キーを削除してください。`,
       }
     );
   }
@@ -340,10 +340,10 @@ async function resolveNearestOrDeclaredRoot(
       // they did not pass --store.
       const declarationFix =
         error.diagnostic.code === 'unknown_store'
-          ? `Register the store (openspec store register <path> --id ${pointer.value}) or edit ${pointer.filePath} to name a registered store.`
+          ? `ストアを登録する（openspec store register <path> --id ${pointer.value}）か、${pointer.filePath} を編集して登録済みストアを指定してください。`
           : error.diagnostic.fix;
       throw new RootSelectionError(
-        `Declared in ${pointer.filePath}: ${error.message}`,
+        `${pointer.filePath} での宣言: ${error.message}`,
         error.diagnostic.code,
         {
           ...(error.diagnostic.target ? { target: error.diagnostic.target } : {}),
@@ -374,10 +374,10 @@ async function resolveDefaultStoreRoot(
       const staleFix =
         error.diagnostic.code === 'unknown_store' ||
         error.diagnostic.code === 'no_registered_stores'
-          ? `Register the store (openspec store register <path> --id ${id}) or clear the stale global default (openspec config unset defaultStore).`
+          ? `ストアを登録する（openspec store register <path> --id ${id}）か、古いグローバル既定値を削除してください（openspec config unset defaultStore）。`
           : error.diagnostic.fix;
       throw new RootSelectionError(
-        `Global defaultStore '${id}': ${error.message}`,
+        `グローバル defaultStore '${id}': ${error.message}`,
         error.diagnostic.code,
         {
           ...(error.diagnostic.target ? { target: error.diagnostic.target } : {}),

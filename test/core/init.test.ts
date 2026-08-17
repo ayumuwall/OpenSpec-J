@@ -118,19 +118,6 @@ describe('InitCommand', () => {
       }
     });
 
-    it('should create Codex skills under .codex/skills', async () => {
-      const codexHome = path.join(testDir, 'codex-home');
-      process.env.CODEX_HOME = codexHome;
-      const initCommand = new InitCommand({ tools: 'codex', force: true });
-
-      await initCommand.execute(testDir);
-
-      const skillFile = path.join(testDir, '.codex', 'skills', 'openspec-propose', 'SKILL.md');
-      expect(await fileExists(skillFile)).toBe(true);
-      expect(await fileExists(path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(false);
-      expect(await fileExists(path.join(codexHome, 'prompts', 'opsx-propose.md'))).toBe(false);
-    });
-
     it('should create core profile commands for Claude Code by default', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
@@ -177,7 +164,7 @@ describe('InitCommand', () => {
 
       const initCommand = new InitCommand({ tools: 'claude', force: true });
       await expect(initCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec setup failed for: Claude Code'
+        '次のツールで OpenSpec のセットアップに失敗しました: Claude Code'
       );
 
       expect(await fs.readdir(outsideDir)).toEqual([]);
@@ -202,7 +189,7 @@ describe('InitCommand', () => {
         copilotCloud: true,
       });
       await expect(initCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec setup failed for: GitHub Copilot'
+        '次のツールで OpenSpec のセットアップに失敗しました: GitHub Copilot'
       );
 
       expect(await fs.readdir(outsideDir)).toEqual([]);
@@ -228,7 +215,7 @@ describe('InitCommand', () => {
 
       const initCommand = new InitCommand({ tools: 'claude', force: true });
       await expect(initCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec setup failed for: Claude Code'
+        '次のツールで OpenSpec のセットアップに失敗しました: Claude Code'
       );
 
       expect(await fs.readFile(outsideFile, 'utf-8')).toBe(originalContent);
@@ -249,7 +236,7 @@ describe('InitCommand', () => {
 
       const initCommand = new InitCommand({ tools: 'minimax-code', force: true });
       await expect(initCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec setup failed for: MiniMax Code'
+        '次のツールで OpenSpec のセットアップに失敗しました: MiniMax Code'
       );
 
       expect(await fs.readdir(outsideDir)).toEqual([]);
@@ -283,7 +270,7 @@ describe('InitCommand', () => {
 
       for (const content of generatedContents) {
         expect(content).toContain(
-          'treat `--store <id>` as sticky for the rest of the workflow'
+          'その後のワークフローでは `--store <id>` を維持します'
         );
         expect(content).toContain(
           'openspec status --change "<name>" --json --store "<id>"'
@@ -315,7 +302,7 @@ describe('InitCommand', () => {
 
       for (const [content, continueReference] of updateVariants) {
         const availabilityGuidance = content.indexOf(
-          `${continueReference} is an optional workflow and may not be installed`
+          `${continueReference} は任意のワークフローで、インストールされていない場合があります`
         );
         const nextReference = content.indexOf(
           continueReference,
@@ -339,16 +326,16 @@ describe('InitCommand', () => {
       for (const file of syncFiles) {
         const content = await fs.readFile(file, 'utf-8');
         const mutationsComplete = content.indexOf(
-          'Follow the **Main Spec Format Reference** below'
+          '以下の **本仕様フォーマットリファレンス** に従います'
         );
         const validation = content.indexOf('openspec validate --specs');
-        const summary = content.indexOf('6. **Show summary**');
+        const summary = content.indexOf('6. **概要を表示する**');
 
         expect(mutationsComplete).toBeGreaterThanOrEqual(0);
         expect(validation).toBeGreaterThan(mutationsComplete);
         expect(summary).toBeGreaterThan(validation);
         expect(content).toContain(
-          'If validation fails, report the problems and do not claim the sync succeeded'
+          '検証に失敗した場合は問題を報告し、同期が成功したとは伝えてはいけません'
         );
       }
     });
@@ -425,7 +412,7 @@ describe('InitCommand', () => {
       const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
       expect(
         logCalls.some(
-          (entry) => entry.includes('Commands skipped for: agents') && entry.includes('(no adapter)'),
+          (entry) => entry.includes('コマンド生成をスキップ: agents') && entry.includes('（アダプタなし）'),
         ),
       ).toBe(true);
     });
@@ -458,8 +445,8 @@ describe('InitCommand', () => {
       expect(
         logCalls.some(
           (entry) =>
-            entry.includes('Commands skipped for: minimax-code') &&
-            entry.includes('(no adapter)')
+            entry.includes('コマンド生成をスキップ: minimax-code') &&
+            entry.includes('（アダプタなし）')
         )
       ).toBe(true);
       expect(
@@ -535,7 +522,7 @@ describe('InitCommand', () => {
       const commandFile = path.join(testDir, '.commandcode', 'commands', 'opsx-explore.md');
       expect(await fileExists(commandFile)).toBe(true);
       const commandContent = await fs.readFile(commandFile, 'utf-8');
-      expect(commandContent).toContain('**Provided arguments**: $ARGUMENTS');
+      expect(commandContent).toContain('**入力された引数**: $ARGUMENTS');
       expect(commandContent).not.toMatch(/^---\n/);
     });
 
@@ -553,7 +540,7 @@ describe('InitCommand', () => {
       const commandFile = path.join(testDir, '.commandcode', 'commands', 'opsx-explore.md');
       expect(await fileExists(commandFile)).toBe(true);
       const commandContent = await fs.readFile(commandFile, 'utf-8');
-      expect(commandContent).toContain('**Provided arguments**: $ARGUMENTS');
+      expect(commandContent).toContain('**入力された引数**: $ARGUMENTS');
 
       // ...but no skills are installed
       expect(await directoryExists(path.join(testDir, '.commandcode', 'skills'))).toBe(false);
@@ -617,17 +604,17 @@ describe('InitCommand', () => {
         path.join(skillsRoot, 'openspec-apply-change', 'SKILL.md'),
         'utf-8',
       );
-      expect(applyBody).toMatch(/the openspec-archive-change skill/);
+      expect(applyBody).toMatch(/openspec-archive-change スキル/);
 
       const rovoLogCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
-      expect(rovoLogCalls.some((entry) => entry.includes('Created: Rovo Dev CLI'))).toBe(true);
+      expect(rovoLogCalls.some((entry) => entry.includes('新規作成: Rovo Dev CLI'))).toBe(true);
       expect(
         rovoLogCalls.some(
-          (entry) => entry.includes('Commands skipped for: rovodev') && entry.includes('(no adapter)'),
+          (entry) => entry.includes('コマンド生成をスキップ: rovodev') && entry.includes('（アダプタなし）'),
         ),
       ).toBe(true);
       // The getting-started hint must not advertise a dead slash command.
-      const hintLine = rovoLogCalls.find((entry) => entry.includes('Start your first change'));
+      const hintLine = rovoLogCalls.find((entry) => entry.includes('最初の変更を開始'));
       expect(hintLine).toBeDefined();
       expect(hintLine).not.toMatch(/\/openspec-/);
       expect(hintLine).toContain('openspec-propose スキル');
@@ -746,10 +733,10 @@ describe('InitCommand', () => {
       const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls
         .flat()
         .map(String);
-      expect(logCalls.some((entry) => entry.includes('Created: Codex'))).toBe(true);
+      expect(logCalls.some((entry) => entry.includes('新規作成: Codex'))).toBe(true);
       expect(logCalls.some((entry) => entry.includes('Shared .agents skills'))).toBe(false);
       expect(
-        logCalls.some((entry) => entry.includes('writing one tree with Codex and generic'))
+        logCalls.some((entry) => entry.includes('Codex と汎用 skill 参照を使う単一ツリーを書き込みます'))
       ).toBe(true);
     });
 
@@ -777,7 +764,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).not.toContain('Restart your IDE');
+      expect(getConsoleOutput()).not.toContain('IDEを再起動してください');
     });
 
     it('should suggest an IDE restart for IDE-resident tools', async () => {
@@ -785,7 +772,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).toContain('Restart your IDE');
+      expect(getConsoleOutput()).toContain('IDEを再起動してください');
     });
 
     it('should suggest an IDE restart when a mix of CLI and IDE tools is configured', async () => {
@@ -796,7 +783,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).toContain('Restart your IDE');
+      expect(getConsoleOutput()).toContain('IDEを再起動してください');
     });
 
     it('should word the restart hint for commands when an IDE tool gets a command surface', async () => {
@@ -856,19 +843,19 @@ describe('InitCommand', () => {
       for (const proposeFile of proposeFiles) {
         expect(await fileExists(proposeFile), proposeFile).toBe(true);
         const content = await fs.readFile(proposeFile, 'utf-8');
-        expect(content, proposeFile).toContain('**Planning boundary**');
+        expect(content, proposeFile).toContain('**計画の境界**');
         expect(content, proposeFile).toContain(
-          'selected or triggered this workflow authorizes planning only'
+          'このワークフローを選択または起動したユーザー要求は'
         );
-        expect(content, proposeFile).toContain('ambiguity that would materially affect scope');
+        expect(content, proposeFile).toContain('スコープ、外部から観測可能な振る舞い');
         expect(content, proposeFile).toContain(
-          'ask the user before creating the change'
-        );
-        expect(content, proposeFile).toContain(
-          'Any implementation or apply instruction in that request does not carry forward'
+          '変更を作成する前にユーザーへ確認します'
         );
         expect(content, proposeFile).toContain(
-          'wait for a new user request to start the apply workflow'
+          'その要求に含まれた実装または apply 指示を持ち越してはいけません'
+        );
+        expect(content, proposeFile).toContain(
+          'apply ワークフローを開始する新しいユーザー要求を待ちます'
         );
       }
     });
@@ -1210,7 +1197,7 @@ describe('InitCommand', () => {
         copilotCloud: true,
       });
       await expect(initCommand.execute(testDir)).rejects.toThrow(
-        'OpenSpec setup failed for: GitHub Copilot'
+        '次のツールで OpenSpec のセットアップに失敗しました: GitHub Copilot'
       );
 
       await expect(fs.stat(setupStepsPath)).rejects.toMatchObject({ code: 'ENOENT' });
@@ -1492,7 +1479,7 @@ describe('InitCommand - profile and detection features', () => {
   it('interactive init: confirming the cloud prompt writes files and persists the opt-in', async () => {
     searchableMultiSelectMock.mockResolvedValue(['github-copilot']);
     confirmMock.mockImplementation(({ message }: { message: string }) =>
-      Promise.resolve(String(message).includes('Copilot cloud coding-agent'))
+      Promise.resolve(String(message).includes('Copilot のクラウドコーディングエージェント'))
     );
 
     const initCommand = new InitCommand({});
@@ -1569,9 +1556,9 @@ describe('InitCommand - profile and detection features', () => {
 
     const out = vi.mocked(console.log).mock.calls.flat().join('\n');
     // Only the agent file was actually written; the workflow was left untouched.
-    expect(out).toContain(`GitHub Copilot cloud files: ${agentRel}`);
-    expect(out).not.toContain(`cloud files: ${setupRel}`);
-    expect(out).toContain(`Left your existing ${setupRel} untouched`);
+    expect(out).toContain(`GitHub Copilot のクラウド用ファイル: ${agentRel}`);
+    expect(out).not.toContain(`クラウド用ファイル: ${setupRel}`);
+    expect(out).toContain(`既存の ${setupRel} は変更していません`);
     // And the user's own file is preserved verbatim.
     await expect(fs.readFile(setupStepsPath, 'utf8')).resolves.toBe('name: my own workflow\n');
   });

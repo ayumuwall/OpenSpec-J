@@ -4,6 +4,11 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 
 ## 1.9.0
 
+- **[OpenSpec-J]** OpenSpec v1.8.0〜v1.9.0 の upstream 変更を取り込み、README・ドキュメント・スキーマ・CLI・OPSX ワークフローの追加／変更された人間向け文言を日本語化
+- **[OpenSpec-J]** `agents`／Command Code のツール対応、GitHub Copilot クラウドエージェント、ストア選択、`validate --archived` などの新機能に伴う案内・エラー・進捗表示を日本語化
+- **[OpenSpec-J]** 日本語テンプレートから静的配布用 `skills/` を再生成し、v1.9.0 の生成内容と parity ハッシュを更新
+- **[OpenSpec-J]** README の同期元バージョンと npm パッケージバージョンを OpenSpec v1.9.0 に更新
+
 ### マイナー変更
 
 - [#1622](https://github.com/ayumuwall/OpenSpec-J/pull/1622) [`59c16a4`](https://github.com/ayumuwall/OpenSpec-J/commit/59c16a4461254ed984d1d5e29d00af1a5610035a) [@clay-good](https://github.com/clay-good) に感謝します！ - ### 新機能
@@ -82,15 +87,9 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 - [#1502](https://github.com/ayumuwall/OpenSpec-J/pull/1502) [`ece8660`](https://github.com/ayumuwall/OpenSpec-J/commit/ece8660d44bd19b86440376327752cda3d7b0717) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate` が通常モードでは英語の `SHALL`/`MUST` 規約をガイダンスとして扱うため、他言語で書かれた要件も検証できます。strict モードでは引き続きこの規約を強制します。
 
 - [#1483](https://github.com/ayumuwall/OpenSpec-J/pull/1483) [`2b3d368`](https://github.com/ayumuwall/OpenSpec-J/commit/2b3d368539132be6311e55db58899abbf5306b81) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec archive` が確認できない場合に、必要なフラグを呼び出し元へ示すようにしました。stdin を閉じた AI エージェントやスクリプトでは、プロンプトが `@inquirer` のエラーで拒否され、以前は質問内容も必要なフラグも分からないまま archive が中止されていました（[#1479](https://github.com/ayumuwall/OpenSpec-J/issues/1479)）。各確認は必要な内容と、指定済みフラグを引き継ぐ貼り付け可能な再実行コマンドを示します。変更名なしの `openspec archive` も、何もアーカイブせず終了コード 0 になる代わりに、変更名を求めて終了コード 1 になります。パイプ入力、`--yes`、`--json`、Ctrl-C の動作は変わらず、CI・`OPEN_SPEC_INTERACTIVE=0`・`--no-interactive` でも案内を表示します。オンボーディングの archive 例には `--yes` を使用します。
-
-
-  Progress counting and the apply task list now share one parser, so `list`, `view`, `archive` and `apply` agree about which lines of a tasks file are tasks. A checkbox with no text after it is left out of the apply list, which has nothing to act on, but still counts toward every progress number; a file of nothing but such checkboxes now asks to be rewritten rather than reporting itself done. The shared pattern matches every line the two it replaced matched, and more, so task counts can rise but never fall: no change starts reporting less work than before, and archive's incomplete-task warning can only become stricter. Checkboxes are still counted wherever they appear, including inside a code fence, an HTML comment or an indented block, so a `tasks.md` that shows a checklist as a format example can now count that example as work — remove it from the file, or pass `--yes` to archive.
 - [#1486](https://github.com/ayumuwall/OpenSpec-J/pull/1486) [`427abf4`](https://github.com/ayumuwall/OpenSpec-J/commit/427abf40ac45a9a44f78eb74c81f53f9f4197ccf) [@clay-good](https://github.com/clay-good) に感謝します！ - タスク進捗でインデントしたサブタスクも数えるようにしました。以前は、両方のチェックボックスパーサーが列 0 のチェックボックスだけを扱っていたため、未完了のサブタスクを含む `tasks.md` でも `openspec list` と `openspec view` が `✓ Complete` と表示し、`openspec instructions apply` の一覧からも漏れ、未完了タスク警告なしでアーカイブされていました。
 
   進捗集計と apply のタスクリストは同じパーサーを共有し、`list`、`view`、`archive`、`apply` がどの行をタスクと扱うか一致します。テキストのないチェックボックスは apply リストに載りませんが進捗には数えます。共有パターンは置き換えた二つのパターンが一致した行をすべて含むため、タスク数は増えることはあっても減りません。チェックボックスはコードフェンス、HTML コメント、インデントブロック内も含め、現れる場所すべてで数えます。形式例のチェックリストも作業として数えられる場合は削除するか、archive に `--yes` を渡してください。
-
-  Progress counting and the apply task list now share one parser, so `list`, `view`, `archive` and `apply` agree about which lines of a tasks file are tasks. A checkbox with no text after it is left out of the apply list, which has nothing to act on, but still counts toward every progress number; a file of nothing but such checkboxes now asks to be rewritten rather than reporting itself done. The shared pattern matches every line the two it replaced matched, and more, so task counts can rise but never fall: no change starts reporting less work than before, and archive's incomplete-task warning can only become stricter. Checkboxes are still counted wherever they appear, including inside a code fence, an HTML comment or an indented block, so a `tasks.md` that shows a checklist as a format example can now count that example as work — remove it from the file, or pass `--yes` to archive.
-
 - [#1500](https://github.com/ayumuwall/OpenSpec-J/pull/1500) [`26bd1d4`](https://github.com/ayumuwall/OpenSpec-J/commit/26bd1d4e5c6c6ba75bd7d6136424019b2bf89ced) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成済みワークフローを選択したストアに保ち、任意ワークフローのフォールバックを安全に処理し、同期した仕様を成功報告前に検証します。
 
 - [#1490](https://github.com/ayumuwall/OpenSpec-J/pull/1490) [`45cca5d`](https://github.com/ayumuwall/OpenSpec-J/commit/45cca5db6137ed209117cc70510eb3e057fb981b) [@clay-good](https://github.com/clay-good) に感謝します！ - 変更をアーカイブすると要件の横に書かれた注記が消える場合、確認前に表示するようにしました。OpenSpec が新しい見出しと認識しない要件配下の内容（例: Markdown で許される 1〜3 個の空白でインデントした注記）は、要件を削除・変更すると静かに一緒に消えていました。`openspec archive` は再構築する仕様から実際に削除される内容と、保持するための移動先を示します。シナリオ内の `#` 行は注記と区別できないため、マージ自体は移動を行わず従来どおりです。

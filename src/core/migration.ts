@@ -180,7 +180,7 @@ function collectLegacyToolMigrations(
         );
       } catch {
         console.warn(
-          `Skipping legacy ${legacy.root}/ migration because the directory resolves outside this project.`
+          `ディレクトリがプロジェクト外へ解決されるため、旧 ${legacy.root}/ の移行をスキップします。`
         );
         continue;
       }
@@ -245,7 +245,7 @@ function migrateSkillDirs(
     if (requireDestination && !fs.existsSync(destinationSkill)) continue;
     if (!areProjectArtifacts(projectPath, sourceSkill, destinationSkill)) {
       console.warn(
-        `Skipping legacy ${legacyRoot}/skills/${dirName} migration because it resolves outside this project.`
+        `プロジェクト外へ解決されるため、旧 ${legacyRoot}/skills/${dirName} の移行をスキップします。`
       );
       continue;
     }
@@ -305,7 +305,7 @@ function migrateCommandFiles(
     const destination = path.join(projectPath, currentPath);
     if (!areProjectArtifacts(projectPath, source, destination)) {
       console.warn(
-        `Skipping legacy ${legacyPath} migration because it resolves outside this project.`
+        `プロジェクト外へ解決されるため、旧 ${legacyPath} の移行をスキップします。`
       );
       continue;
     }
@@ -360,12 +360,7 @@ export function keptInPlaceNotice(migration: LegacyToolMigration): string | unde
   // Deliberately does not claim the difference came from an edit: an older
   // OpenSpec version's output differs too. Either way nothing was overwritten,
   // and the user is the one who decides which copy to keep.
-  return (
-    `Left ${n} file${n === 1 ? '' : 's'} in ${migration.from}/ that ` +
-    `differ${n === 1 ? 's' : ''} from the copy in ${migration.to}/. Nothing was ` +
-    `overwritten — compare the two and delete the ${migration.from}/ copy once ` +
-    `you have kept anything you customized.`
-  );
+  return `${migration.to}/ のコピーと異なる ${n} 件のファイルを ${migration.from}/ に残しました。上書きはしていません。両方を比較し、カスタマイズした内容を保存してから ${migration.from}/ 側のコピーを削除してください。`;
 }
 
 /**
@@ -382,13 +377,9 @@ export function hasMovableContent(migration: LegacyToolMigration): boolean {
  */
 export function legacyMigrationNotice(migration: LegacyToolMigration): string {
   if (migration.toolId === 'devin') {
-    return (
-      `Windsurf is now Devin Desktop, and its config directory moved from ` +
-      `${migration.from}/ to ${migration.to}/. Devin Desktop reads ${migration.from}/ ` +
-      `only as a fallback, and Devin Local does not read it at all.`
-    );
+    return `Windsurf は Devin Desktop に名称変更され、設定ディレクトリも ${migration.from}/ から ${migration.to}/ へ移動しました。Devin Desktop が ${migration.from}/ を読むのはフォールバック時だけで、Devin Local は読みません。`;
   }
-  return `${migration.from}/ is the former location for this tool; ${migration.to}/ is current.`;
+  return `${migration.from}/ はこのツールの旧配置先です。現在の配置先は ${migration.to}/ です。`;
 }
 
 /**

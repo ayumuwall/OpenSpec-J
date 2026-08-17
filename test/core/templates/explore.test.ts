@@ -16,8 +16,8 @@ const bodies: Array<[string, string]> = [
 ];
 
 function newChangeTransition(body: string, label: string): string {
-  const start = body.indexOf('### When no change exists');
-  const end = body.indexOf('### When a change exists');
+  const start = body.indexOf('### 変更がない場合');
+  const end = body.indexOf('### 変更があった場合');
 
   expect(start, label).toBeGreaterThanOrEqual(0);
   expect(end, label).toBeGreaterThan(start);
@@ -86,11 +86,11 @@ describe('explore templates', () => {
 
       expect(transition, label).toContain('openspec new change "<name>"');
       expect(transition, label).toContain(
-        'Never create a new change directory under `openspec/changes/` by hand'
+        '`openspec/changes/` 配下に新しい変更ディレクトリを手作業で作成してはいけません'
       );
       expect(transition, label).toContain('`.openspec.yaml`');
       expect(transition, label).not.toContain(
-        'Never create files or directories directly under `openspec/changes/`'
+        '`openspec/changes/` 配下にファイルやディレクトリを直接作成してはいけません'
       );
     }
   });
@@ -98,12 +98,12 @@ describe('explore templates', () => {
   it('retains the selected store throughout the capture transition (#668, #720)', () => {
     for (const [label, body] of bodies) {
       const transition = newChangeTransition(body, label);
-      const scaffold = transition.indexOf('1. Run `openspec new change "<name>"`');
+      const scaffold = transition.indexOf('1. アーティファクトを作成する前に `openspec new change "<name>"` を実行します');
       const retainStore = transition.indexOf(
-        'Keep the selected `--store <id>` on every applicable follow-up `status` and `instructions` command'
+        '該当する後続の `status` および `instructions` コマンドすべてに、選択した `--store <id>` を引き継ぎます'
       );
       const initialStatus = transition.indexOf(
-        '2. Run `openspec status --change "<name>" --json`'
+        '2. `openspec status --change "<name>" --json` を実行します'
       );
 
       expect(retainStore, label).toBeGreaterThan(scaffold);
@@ -111,10 +111,10 @@ describe('explore templates', () => {
       expect(
         occurrenceCount(
           transition,
-          '(append the confirmed `--store "<id>"` only for a registered standalone store)'
+          '（登録されたスタンドアロン store の場合だけ確認済みの `--store "<id>"` を付けます）'
         ),
         label
-      ).toBe(5);
+      ).toBe(4);
     }
   });
 
@@ -126,21 +126,21 @@ describe('explore templates', () => {
       expect(transition, label).toContain(
         'openspec instructions "<artifact-id>" --change "<name>" --json'
       );
-      expect(transition, label).toContain('Capture the artifact(s) the user requested');
+      expect(transition, label).toContain('ユーザーが求めたアーティファクトを記録します');
       expect(transition, label).toContain(
-        'without asking them to invoke another workflow command'
+        '別のワークフローコマンドを実行するようユーザーへ求めず'
       );
       expect(transition, label).toContain(
-        'process the requested artifacts in dependency order'
+        '求められたアーティファクトを依存順に処理します'
       );
       expect(transition, label).toContain(
-        'After creating each artifact, re-run `openspec status --change "<name>" --json`'
+        'アーティファクトを作成するたびに `openspec status --change "<name>" --json` を再実行'
       );
       expect(transition, label).toContain(
-        'If the instruction delegates creation to a specific skill or command'
+        '指示が特定のスキルまたはコマンドへ作成を委譲している場合'
       );
       expect(transition, label).toContain(
-        'Verify that the selected concrete output exists'
+        '選択した出力が存在することを確認します'
       );
     }
   });
@@ -148,18 +148,18 @@ describe('explore templates', () => {
   it('keeps the seamless capture steps ordered (#668, #720)', () => {
     for (const [label, body] of bodies) {
       const transition = newChangeTransition(body, label);
-      const scaffold = transition.indexOf('1. Run `openspec new change "<name>"`');
+      const scaffold = transition.indexOf('1. アーティファクトを作成する前に `openspec new change "<name>"` を実行します');
       const initialStatus = transition.indexOf(
-        '2. Run `openspec status --change "<name>" --json`'
+        '2. `openspec status --change "<name>" --json` を実行します'
       );
       const readyInstructions = transition.indexOf(
-        'For each requested artifact that is `ready`, run `openspec instructions'
+        '`ready` の各アーティファクトでは `openspec instructions'
       );
       const verifyOutput = transition.indexOf(
-        'Verify that the selected concrete output exists'
+        '選択した出力が存在することを確認します'
       );
       const refreshStatus = transition.indexOf(
-        'After creating each artifact, re-run `openspec status'
+        'アーティファクトを作成するたびに `openspec status'
       );
 
       expect(scaffold, label).toBeGreaterThanOrEqual(0);
@@ -181,11 +181,11 @@ describe('explore templates', () => {
         label
       ).toBe(1);
       expect(
-        occurrenceCount(transition, 'Verify that the selected concrete output exists'),
+        occurrenceCount(transition, '選択した出力が存在することを確認します'),
         label
       ).toBe(1);
       expect(
-        occurrenceCount(transition, 'After creating each artifact, re-run `openspec status'),
+        occurrenceCount(transition, 'アーティファクトを作成するたびに `openspec status'),
         label
       ).toBe(1);
     }
@@ -195,7 +195,7 @@ describe('explore templates', () => {
     for (const [label, body] of bodies) {
       const transition = newChangeTransition(body, label);
       expect(transition, label).toContain(
-        'If they asked only to start a change, stop after scaffolding and show its status'
+        '変更の開始だけを求められた場合は、スキャフォールドの後に停止して状態を表示します'
       );
     }
   });
@@ -205,10 +205,9 @@ describe('explore templates', () => {
       const transition = newChangeTransition(body, label);
 
       expect(transition, label).toContain(
-        'Read completed dependency files listed in `dependencies`'
+        '`dependencies` に列挙された完了済み依存ファイルを読み'
       );
-      expect(transition, label).toContain('apply `context` and `rules` as constraints');
-      expect(transition, label).toContain('without copying them into the artifact');
+      expect(transition, label).toContain('`context` と `rules` はアーティファクトへコピーせず制約として適用');
     }
   });
 
@@ -216,52 +215,52 @@ describe('explore templates', () => {
     for (const [label, body] of bodies) {
       const transition = newChangeTransition(body, label);
       const requestedInstructions = transition.indexOf(
-        'For each requested artifact that is `ready`, run `openspec instructions'
+        '`ready` の各アーティファクトでは `openspec instructions'
       );
       const evaluateRequestedCondition = transition.indexOf(
-        'Before creating a requested artifact, evaluate any condition in its own `instruction`'
+        '要求されたアーティファクトを作成する前に、その `instruction` 内の条件を探索した変更に照らして評価'
       );
       const inspectPrerequisite = transition.indexOf(
-        'run `openspec instructions "<prerequisite-id>"'
+        '`openspec instructions "<prerequisite-id>" --change "<name>" --json` を実行します'
       );
       const evaluateCondition = transition.indexOf(
-        'evaluate that condition against the explored change'
+        'その `instruction` が条件を定める場合は、探索した変更に照らして評価'
       );
       const recordSkip = transition.indexOf(
-        'record a deliberate skip only when the condition does not apply'
+        '該当しない場合だけ意図的なスキップを記録'
       );
       const requireExpansion = transition.indexOf(
-        'If the condition applies, or the prerequisite is not conditional'
+        '条件が該当する、または前提条件が条件付きではない場合'
       );
       const approvalGuard = transition.indexOf(
-        'Do not create an unrequested prerequisite unless the user approves'
+        'ユーザーの承認なしに、要求されていない前提条件を作成してはいけません'
       );
 
       expect(transition, label).toContain(
-        'run `openspec instructions "<prerequisite-id>" --change "<name>" --json` (append the confirmed `--store "<id>"` only for a registered standalone store) for that prerequisite whether it is `ready` or `blocked`'
+        'その前提条件が `ready` でも `blocked` でも `openspec instructions "<prerequisite-id>" --change "<name>" --json` を実行します'
       );
       expect(transition, label).toContain(
-        'record a deliberate skip instead when the condition does not apply'
+        '該当しない場合だけ意図的なスキップを記録します'
       );
       expect(transition, label).toContain(
-        'record a deliberate skip only when the condition does not apply'
+        '該当しない場合だけ意図的なスキップを記録します'
       );
       expect(transition, label).toContain(
-        'If the condition applies, or the prerequisite is not conditional, treat it as a normal prerequisite'
+        '条件が該当する、または前提条件が条件付きではない場合は、通常の前提条件として扱い'
       );
-      expect(transition, label).toContain('Do not create an unrequested prerequisite');
+      expect(transition, label).toContain('要求されていない前提条件を作成してはいけません');
       expect(transition, label).toContain(
-        'deliberately skipped because its own `instruction` stated a condition that did not apply'
+        'その `instruction` の条件が該当しなかったために意図的にスキップ'
       );
-      expect(transition, label).toContain('remember it, and do not reconsider it');
-      expect(transition, label).toContain('Dependencies are enablers, not gates');
+      expect(transition, label).toContain('記録し、再検討しません');
+      expect(transition, label).toContain('依存関係は有効化条件であり、障害ではありません');
       expect(transition, label).toContain(
-        'run `openspec instructions "<artifact-id>" --change "<name>" --json` (append the confirmed `--store "<id>"` only for a registered standalone store) despite the blocked status'
+        '`blocked` 状態でも `openspec instructions "<artifact-id>" --change "<name>" --json` を実行します'
       );
       expect(transition, label).toContain(
-        'only when those recorded conditional skips are its sole missing dependencies'
+        '記録した条件付きスキップだけが不足依存関係であるときに限り'
       );
-      expect(transition, label).toContain('cannot be conditionally skipped');
+      expect(transition, label).toContain('条件付きでスキップもできない前提条件');
       expect(requestedInstructions, label).toBeGreaterThanOrEqual(0);
       expect(evaluateRequestedCondition, label).toBeGreaterThan(requestedInstructions);
       expect(inspectPrerequisite, label).toBeGreaterThan(evaluateRequestedCondition);

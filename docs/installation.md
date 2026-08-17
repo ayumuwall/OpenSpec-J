@@ -87,7 +87,7 @@ pnpm add -g @ayumuwall/openspec@latest
 yarn global add @ayumuwall/openspec@latest
 ```
 
-Yarn 2 and later (Berry) removed the `global` command. On those versions, install OpenSpec with npm, pnpm, or bun instead — a global CLI doesn't need to share your project's package manager.
+Yarn 2 以降（Berry）では `global` コマンドが廃止されました。これらのバージョンでは、代わりに npm、pnpm、bun のいずれかで OpenSpec をインストールしてください。グローバル CLI とプロジェクトで同じパッケージマネージャーを使う必要はありません。
 
 ### deno
 
@@ -98,7 +98,7 @@ Deno では `@latest` タグの解析に問題が起こる場合があります�
 deno install --global \
   --allow-read --allow-write --allow-env --allow-sys=cpus,homedir --allow-net=edge.openspec.dev \
   npm:@ayumuwall/openspec@latest
-# or
+# または
 deno install --global \
   --allow-read --allow-write --allow-env --allow-sys=cpus,homedir --allow-net=edge.openspec.dev \
   npm:@ayumuwall/openspec@^1.3.1

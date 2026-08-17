@@ -94,7 +94,7 @@ export function getStoreMetadataPath(storeRoot: string): string {
 }
 
 export function validateStoreId(id: string): string {
-  const folderProblem = folderStyleNameProblem(id, 'Store id');
+  const folderProblem = folderStyleNameProblem(id, 'ストア ID');
   if (folderProblem !== null) {
     throw new StoreError(folderProblem, 'invalid_store_id', {
       target: 'store.id',
@@ -104,7 +104,7 @@ export function validateStoreId(id: string): string {
 
   if (!isKebabId(id)) {
     throw new StoreError(
-      `Store id ${KEBAB_ID_DESCRIPTION}`,
+      `ストア ID ${KEBAB_ID_DESCRIPTION}`,
       'invalid_store_id',
       {
         target: 'store.id',
@@ -321,8 +321,8 @@ export async function writeStoreRegistryState(
 }
 
 const storeRegistryLockError = makeLockErrorFactory({
-  createSubject: 'the registry lock file',
-  busyMessage: 'Store registry is busy.',
+  createSubject: 'レジストリのロックファイル',
+  busyMessage: 'ストアレジストリは使用中です。',
   code: 'store_registry_busy',
   target: 'store.registry',
 });

@@ -132,7 +132,7 @@ describe('ChangeCommand.show/validate', () => {
         await fs.symlink(outsideProposal, linkedProposal);
 
         await expect(cmd.show('linked-proposal', { json: false })).rejects.toThrow(
-          /outside the allowed directory/u
+          /許可されたディレクトリ外/u
         );
       }
     );
@@ -186,6 +186,6 @@ describe('ChangeCommand.show/validate', () => {
   });
 
   it('validate rejects a traversing change name', async () => {
-    await expect(cmd.validate(path.join('..', '..', 'outside'))).rejects.toThrow(/not found at/u);
+    await expect(cmd.validate(path.join('..', '..', 'outside'))).rejects.toThrow(/見つかりません/u);
   });
 });

@@ -66,8 +66,8 @@ export const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
     description: '現在の変更のタスクを実装',
   },
   update: {
-    name: 'Update change',
-    description: 'Revise the planning artifacts of an existing change',
+    name: '変更を更新',
+    description: '既存の変更にある計画アーティファクトを改訂',
   },
   ff: {
     name: 'Fast-forward',
@@ -173,10 +173,10 @@ export function diffProfileState(before: ProfileState, after: ProfileState): Pro
   if (added.length > 0 || removed.length > 0) {
     const tokens: string[] = [];
     if (added.length > 0) {
-      tokens.push(`added ${added.join(', ')}`);
+      tokens.push(`追加 ${added.join(', ')}`);
     }
     if (removed.length > 0) {
-      tokens.push(`removed ${removed.join(', ')}`);
+      tokens.push(`削除 ${removed.join(', ')}`);
     }
     lines.push(`workflows: ${tokens.join('; ')}`);
   }
@@ -575,7 +575,7 @@ export function registerConfigCommand(program: Command): void {
           const formatWorkflowChoice = (workflow: string) => {
             const metadata = WORKFLOW_PROMPT_META[workflow] ?? {
               name: workflow,
-              description: `Workflow: ${workflow}`,
+              description: `ワークフロー: ${workflow}`,
             };
             return {
               value: workflow,

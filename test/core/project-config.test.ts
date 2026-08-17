@@ -157,7 +157,7 @@ operations:
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Guidance for operation 'archive' must be an array of strings")
+          expect.stringContaining("操作 'archive' の guidance は文字列配列である必要があります")
         );
       });
 
@@ -178,7 +178,7 @@ operations:
           context: 'Valid context',
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'operations' field")
+          expect.stringContaining("'operations' フィールドが無効です")
         );
       });
 
@@ -212,7 +212,7 @@ githubCopilot:
         expect(config?.schema).toBe('spec-driven');
         expect(config?.githubCopilot).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'githubCopilot.cloudAgent' field")
+          expect.stringContaining("'githubCopilot.cloudAgent' フィールドが無効です")
         );
       });
 
@@ -228,7 +228,7 @@ githubCopilot: true
 
         expect(readProjectConfig(tempDir)?.schema).toBe('spec-driven');
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'githubCopilot' field")
+          expect.stringContaining("'githubCopilot' フィールドが無効です")
         );
       });
 
@@ -250,7 +250,7 @@ operations:
           archive: { guidance: ['Keep the summary concise'] },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'operations.apply' field")
+          expect.stringContaining("'operations.apply' フィールドが不正です")
         );
       });
 
@@ -275,10 +275,10 @@ operations:
           apply: { guidance: ['Run tests'] },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Unknown operation ID 'deploy'")
+          expect.stringContaining("操作 ID 'deploy' は不明です")
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Unknown field(s) in 'operations.apply': replacementInstruction")
+          expect.stringContaining("'operations.apply' に不明なフィールドがあります: replacementInstruction")
         );
       });
 
@@ -304,10 +304,10 @@ operations:
           apply: { guidance: ['Run tests'] },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Some guidance for operation 'apply' are empty strings")
+          expect.stringContaining("操作 'apply' の guidance に空文字列")
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Some guidance for operation 'archive' are empty strings")
+          expect.stringContaining("操作 'archive' の guidance に空文字列")
         );
       });
 
@@ -523,7 +523,7 @@ rules:
 
         expect(config).toBeNull();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('could not parse')
+          expect.stringContaining('解析できないため無視します')
         );
         // The warning names the file and never dumps a stack trace.
         const warned = consoleWarnSpy.mock.calls.at(-1)?.[0] as string;
@@ -578,7 +578,7 @@ rules:
           { id: 'other-context' },
         ]);
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Some 'references' entries are invalid")
+          expect.stringContaining("'references' の一部の項目が無効")
         );
       });
 
@@ -622,7 +622,7 @@ rules:
           { id: 'bad-remote-context' },
         ]);
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Some 'references' entries are invalid")
+          expect.stringContaining("'references' の一部の項目が無効")
         );
       });
 
@@ -633,7 +633,7 @@ rules:
         writeConfig('schema: spec-driven\nreferences: not-an-array\n');
         expect(readProjectConfig(tempDir)?.references).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'references' field")
+          expect.stringContaining("'references' フィールドが無効です")
         );
       });
     });

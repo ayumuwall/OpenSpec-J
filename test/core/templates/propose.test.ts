@@ -38,7 +38,7 @@ const defaultSchema = loadSchema(path.join(repoRoot, 'schemas', 'spec-driven', '
 /** The opening list that tells the agent which artifacts propose will produce. */
 function artifactPreamble(body: string): string {
   const start = body.indexOf('スキーマで定義されたアーティファクトを含む変更を作成します');
-  const end = body.indexOf('実装の準備ができたら');
+  const end = body.indexOf('ユーザーが実装する準備ができたら');
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
   return body.slice(start, end);
@@ -64,63 +64,63 @@ describe('propose preamble', () => {
 describe('propose implementation boundary', () => {
   it('makes the planning-only boundary prominent (#232, #258, #262)', () => {
     for (const [label, body] of proposeBodies) {
-      const boundary = body.indexOf('**Planning boundary**');
-      const steps = body.indexOf('**Steps**');
+      const boundary = body.indexOf('**計画の境界**');
+      const steps = body.indexOf('**手順**');
       expect(boundary, `${label} is missing its planning boundary`).toBeGreaterThanOrEqual(0);
       expect(boundary, `${label} boundary should appear before its steps`).toBeLessThan(steps);
       expect(body, label).toContain(
-        'The user request that selected or triggered this workflow authorizes planning only'
+        'このワークフローを選択または起動したユーザー要求は、何かの作成や修正も求めていても、計画だけを許可します'
       );
-      expect(body, label).toContain('Do not edit project code');
+      expect(body, label).toContain('プロジェクトコードを編集してはいけません');
     }
   });
 
   it('ends by requiring a separate apply workflow (#258, #262)', () => {
     for (const [label, body] of proposeBodies) {
       expect(body, label).toContain(
-        'The request that invoked this workflow authorizes planning only'
+        'このワークフローを起動した要求は計画だけを許可します'
       );
-      expect(body, label).toContain('Do NOT implement the change');
-      expect(body, label).toContain('edit project code');
+      expect(body, label).toContain('変更を実装したり');
+      expect(body, label).toContain('プロジェクトコードを編集したりしてはいけません');
       expect(body, label).toContain(
-        'Do not start implementation in the same response'
-      );
-      expect(body, label).toContain(
-        'Any implementation or apply instruction in that request does not carry forward'
+        '同じ応答で実装を始めてはいけません'
       );
       expect(body, label).toContain(
-        'wait for a new user request to start the apply workflow'
+        'その要求に含まれた実装または apply 指示を持ち越してはいけません'
+      );
+      expect(body, label).toContain(
+        'apply ワークフローを開始する新しいユーザー要求を待ちます'
       );
       expect(
-        body.lastIndexOf('After presenting the artifacts, stop'),
+        body.lastIndexOf('アーティファクトを提示したら停止'),
         `${label} should end with its stop guard`
-      ).toBeGreaterThan(body.indexOf('**Output**'));
+      ).toBeGreaterThan(body.indexOf('**出力**'));
     }
   });
 
   it('asks before resolving ambiguity that could change user-visible outcomes (#258)', () => {
     for (const [label, body] of proposeBodies) {
       expect(body, label).toContain(
-        'scope, externally observable behavior, compatibility, or acceptance criteria'
+        'スコープ、外部から観測可能な振る舞い、互換性、受け入れ基準'
       );
-      expect(body, label).toContain('ask the user before creating the change');
+      expect(body, label).toContain('変更を作成する前にユーザーへ確認します');
       expect(body, label).toContain(
-        'For minor details, make a reasonable assumption and record it in the planning artifacts'
+        '細部については妥当な仮定を置き、計画アーティファクトに記録します'
       );
-      expect(body.indexOf('ask the user before creating the change'), label)
-        .toBeLessThan(body.indexOf('**Create the change directory**'));
+      expect(body.indexOf('変更を作成する前にユーザーへ確認します'), label)
+        .toBeLessThan(body.indexOf('**変更ディレクトリを作成します**'));
     }
   });
 
   it('hands command-only tools to apply instead of advertising direct coding (#258)', () => {
-    expect(proposeCommandBody).toContain('When you are ready, run `/opsx:apply`.');
-    expect(proposeCommandBody).not.toContain('ask me to implement');
-    expect(proposeCommandBody).not.toContain('ask me to apply this change');
+    expect(proposeCommandBody).toContain('準備ができたら `/opsx:apply` を実行');
+    expect(proposeCommandBody).not.toContain('実装するよう依頼');
+    expect(proposeCommandBody).not.toContain('この変更の適用を依頼');
 
     expect(proposeSkillBody).toContain(
-      'run `/opsx:apply` or ask me to apply this change'
+      '`/opsx:apply` を実行するか、この変更の適用を依頼してください'
     );
-    expect(proposeSkillBody).not.toContain('ask me to implement');
+    expect(proposeSkillBody).not.toContain('実装するよう依頼');
   });
 
   it('preserves both boundaries through every command adapter', () => {
@@ -134,22 +134,22 @@ describe('propose implementation boundary', () => {
         'apply'
       );
       expect(generated, adapter.toolId).toContain(
-        'selected or triggered this workflow authorizes planning only'
+        'このワークフローを選択または起動したユーザー要求は、何かの作成や修正も求めていても、計画だけを許可します'
       );
-      expect(generated, adapter.toolId).toContain('Do NOT implement the change');
+      expect(generated, adapter.toolId).toContain('変更を実装したり');
       expect(generated, adapter.toolId).toContain(
-        'Do not start implementation in the same response'
-      );
-      expect(generated, adapter.toolId).toContain(
-        'Any implementation or apply instruction in that request does not carry forward'
+        '同じ応答で実装を始めてはいけません'
       );
       expect(generated, adapter.toolId).toContain(
-        'wait for a new user request to start the apply workflow'
+        'その要求に含まれた実装または apply 指示を持ち越してはいけません'
       );
       expect(generated, adapter.toolId).toContain(
-        `When you are ready, run \`${applyInvocation}\`.`
+        'apply ワークフローを開始する新しいユーザー要求を待ちます'
       );
-      expect(generated, adapter.toolId).not.toContain('ask me to implement');
+      expect(generated, adapter.toolId).toContain(
+        `準備ができたら \`${applyInvocation}\` を実行`
+      );
+      expect(generated, adapter.toolId).not.toContain('実装するよう依頼');
     }
   });
 });
@@ -159,9 +159,9 @@ describe('propose schema selection', () => {
   // propose used to discard that request and always create with the default.
   it('shows both concrete creation forms after an explicit schema choice (#770)', () => {
     for (const [label, body] of proposeBodies) {
-      const schemaStep = body.indexOf('**Determine the workflow schema**');
-      const createStep = body.indexOf('**Create the change directory**');
-      const statusStep = body.indexOf('**Get the artifact build order**');
+      const schemaStep = body.indexOf('**ワークフロー スキーマを決定する**');
+      const createStep = body.indexOf('**変更ディレクトリを作成します**');
+      const statusStep = body.indexOf('**アーティファクトの作成順序を取得する**');
 
       expect(schemaStep, `${label} is missing schema selection`).toBeGreaterThanOrEqual(0);
       expect(createStep, `${label} is missing change creation`).toBeGreaterThan(schemaStep);
@@ -173,7 +173,7 @@ describe('propose schema selection', () => {
         /^\s*openspec new change "<name>" --schema "<schema-name>"\s*$/m
       );
       expect(createSection, label).toContain(
-        'If a registered store is selected, append `--store "<store-id>"` to that command and each later OpenSpec command shown below that accepts `--store`'
+        '登録済み store を選んだ場合は、そのコマンドと、以下で `--store` を受け付けるすべての後続 OpenSpec コマンドに `--store "<store-id>"` を付けます'
       );
       expect(createSection, label).not.toContain('every follow-up command');
     }
@@ -181,41 +181,41 @@ describe('propose schema selection', () => {
 
   it('discovers schemas from the authoritative project or store root', () => {
     for (const [label, body] of proposeBodies) {
-      const schemaStep = body.indexOf('**Determine the workflow schema**');
-      const createStep = body.indexOf('**Create the change directory**');
+      const schemaStep = body.indexOf('**ワークフロー スキーマを決定する**');
+      const createStep = body.indexOf('**変更ディレクトリを作成します**');
       const schemaSection = body.slice(schemaStep, createStep);
 
-      expect(schemaSection, label).toContain('Use the configured default schema');
-      expect(schemaSection, label).toContain('Explicitly requests a specific schema by name');
+      expect(schemaSection, label).toContain('設定済みのデフォルトスキーマを使用します');
+      expect(schemaSection, label).toContain('名前を指定して特定のスキーマを明示的に求めた');
       const contextCommand = schemaSection.indexOf('`openspec context --json`');
       const schemasCommand = schemaSection.indexOf('`openspec schemas --json`');
       expect(contextCommand, `${label} is missing root resolution`).toBeGreaterThanOrEqual(0);
       expect(schemasCommand, `${label} lists schemas before resolving the root`).toBeGreaterThan(
         contextCommand
       );
-      expect(schemaSection, label).toContain('from the current working directory');
+      expect(schemaSection, label).toContain('現在の作業ディレクトリから');
       expect(schemaSection, label).toContain(
         '`openspec context --json --store "<store-id>"`'
       );
       expect(schemaSection, label).toContain(
-        'run `openspec schemas --json` with its working directory'
+        '返された `root.path` を作業ディレクトリとして `openspec schemas --json` を実行'
       );
-      expect(schemaSection, label).toContain('returned `root.path`');
-      expect(schemaSection, label).toContain('local `store:` pointer');
-      expect(schemaSection, label).toContain('global `defaultStore`');
+      expect(schemaSection, label).toContain('返された `root.path`');
+      expect(schemaSection, label).toContain('ローカルの `store:` ポインタ');
+      expect(schemaSection, label).toContain('グローバル `defaultStore`');
       expect(schemaSection, label).toContain(
-        'append `--store "<store-id>"` to `openspec schemas --json` as well'
+        '`openspec schemas --json` にも `--store "<store-id>"` を付けます'
       );
       expect(schemaSection, label).not.toContain('`schemas` does not accept `--store`');
-      expect(schemaSection, label).toContain('context reports only `no_openspec_root`');
+      expect(schemaSection, label).toContain('context が `no_openspec_root` だけを報告');
       expect(schemaSection, label).toContain(
-        'run `openspec schemas --json` from the current working directory instead'
+        '代わりに現在の作業ディレクトリから `openspec schemas --json` を実行'
       );
       expect(schemaSection, label).toContain(
-        'Do not use this fallback for invalid or unavailable stores'
+        '無効または利用不可の store にはこのフォールバックを使用しません'
       );
       expect(schemaSection, label).toContain(
-        'Otherwise, omit `--schema` to preserve the configured default'
+        'それ以外では、設定済みのデフォルトを維持するため `--schema` を省略します'
       );
     }
   });
@@ -332,7 +332,7 @@ describe('artifact loop guards (propose and ff)', () => {
   // "create ... until apply-ready" invites the exact early-stop this PR kills.
   it('titles the create step around the required set, not "apply-ready"', () => {
     for (const [label, body] of loopBodies) {
-      expect(body, label).toContain('**必須セット内の全アーティファクトを作成**');
+      expect(body, label).toMatch(/\*\*必須セット内の全アーティファクトを作成(?:する)?\*\*/);
       expect(body, label).not.toContain('Create artifacts in sequence until apply-ready');
       expect(body, label).not.toMatch(/^\s*4\.\s.*apply-ready/m);
     }

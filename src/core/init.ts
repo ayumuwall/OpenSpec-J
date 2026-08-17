@@ -315,7 +315,7 @@ export class InitCommand {
   });
     if (results.failedTools.length > 0) {
       throw new Error(
-        `OpenSpec setup failed for: ${results.failedTools.map((tool) => tool.name).join(', ')}`
+        `次のツールで OpenSpec のセットアップに失敗しました: ${results.failedTools.map((tool) => tool.name).join(', ')}`
       );
     }
   }
@@ -750,7 +750,7 @@ export class InitCommand {
     if (reconciledToolIds.length !== toolIds.length) {
       console.log(
         chalk.dim(
-          'Codex and agents share .agents/skills; writing one tree with Codex and generic skill references.'
+          'Codex と agents は .agents/skills を共有するため、Codex と汎用 skill 参照を使う単一ツリーを書き込みます。'
         )
       );
     }

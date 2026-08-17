@@ -51,7 +51,7 @@ function validateNoDuplicateIds(artifacts: Artifact[]): void {
   const seen = new Set<string>();
   for (const artifact of artifacts) {
     if (seen.has(artifact.id)) {
-      throw new SchemaValidationError(`Duplicate artifact ID: ${artifact.id}`);
+      throw new SchemaValidationError(`アーティファクト ID が重複しています: ${artifact.id}`);
     }
     seen.add(artifact.id);
   }
@@ -67,7 +67,7 @@ function validateRequiresReferences(artifacts: Artifact[]): void {
     for (const req of artifact.requires) {
       if (!validIds.has(req)) {
         throw new SchemaValidationError(
-          `Invalid dependency reference in artifact '${artifact.id}': '${req}' does not exist`
+          `アーティファクト '${artifact.id}' の依存参照が不正です: '${req}' は存在しません`
         );
       }
     }
@@ -117,7 +117,7 @@ function validateNoCycles(artifacts: Artifact[]): void {
     if (!visited.has(artifact.id)) {
       const cycle = dfs(artifact.id);
       if (cycle) {
-        throw new SchemaValidationError(`Cyclic dependency detected: ${cycle}`);
+        throw new SchemaValidationError(`循環依存を検出しました: ${cycle}`);
       }
     }
   }

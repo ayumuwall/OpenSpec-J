@@ -40,27 +40,27 @@ import { STORE_SELECTION_GUIDANCE } from '../../../src/core/templates/workflows/
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: '6fb94b2e7317318c966c18c24f26b61337900c2a9a5da3c254de9c828247616f',
   getNewChangeSkillTemplate: 'db40ed5920852d210cb42122298ec0baca3f11a8b968ab1b5565ab1d3d62f38b',
-  getContinueChangeSkillTemplate: '7c3d55147bf3d1d603ae57054ca0ff9bc34ce69437b88fa0e36694637c24c707',
+  getContinueChangeSkillTemplate: '01977bc5c7c2f6a2bccc0f5666fc03fc148f89c28d15bd26694c82c46a798d24',
   getApplyChangeSkillTemplate: '4904cc847a2873df9c07517f99e373c41b34f22397f223f5c2058c25a9230824',
   getFfChangeSkillTemplate: 'f022877f52dffb438849faf574f27dbc6ed477af08c76f247664cbe0b509023d',
-  getSyncSpecsSkillTemplate: '624461f91f92f7cd29f4eb0f3955def413197374f212df45d6bc6666cba9212b',
-  getOnboardSkillTemplate: '5f88e3d5cb5f3ce81cf9734050acdb18aabff60043b809860e9ae8004146020e',
-  getOpsxExploreCommandTemplate: '59bb4f1511f81029fea7767ed16c12c841cb1cde5b8539a5b5bb94704182e997',
+  getSyncSpecsSkillTemplate: '92ee814e29cdb196b760199b2024323f2e64004cf1e6abee24e1ee4383f774bf',
+  getOnboardSkillTemplate: '4f79dbc514a69ee5d4eb4d9797884007b31b11e21052bef0ac00ee8c0f68bca8',
+  getOpsxExploreCommandTemplate: '5f8e8782c05d34e131957e442bd63692938d5ce383234ca2eedecbe94136d3d5',
   getOpsxNewCommandTemplate: 'f5e553c5052635f6263b78fdcdd31fb9cbe9a6c44ffba3104ee5cd7c7561e025',
-  getOpsxContinueCommandTemplate: '3d61057580f8c5eee4237e499ebe7ed32e5fa4c1be7faef1398e66e612fc6d6c',
+  getOpsxContinueCommandTemplate: 'a1c0c43f5daf566e485b21dc5e09607f66000c9d0cba4865f1e5a1284008074a',
   getOpsxApplyCommandTemplate: '5bf1f27d910106335af8adb91e86c6b62c54b2e75277fc1389d71cdc889cccce',
   getOpsxFfCommandTemplate: 'b31b698ce3811da1b17baa416860c6b5e0e761730e0bcb6f87078c32708de412',
   getArchiveChangeSkillTemplate: 'cb35ba715baab49b627f3c4e14d034671385afec21f14a8685316152b93024ea',
   getBulkArchiveChangeSkillTemplate: '093009cc6d9d3e98dccb1d3f5acd21419434c5c71dbae66607d09ee12904d01f',
-  getOpsxSyncCommandTemplate: 'e63c273bfd2094e2932d1ecf32f541d013ec5f2bb57f621231aface0f09468a7',
+  getOpsxSyncCommandTemplate: '6345933dcae5d33c5d5edb92aff679e66e7d059886c2acc2665a18e31bf0534e',
   getVerifyChangeSkillTemplate: '957ad93c9ca2304af5e8c9e94bb0b334f73e3719468e1c99af2523ac0739b4e5',
   getOpsxArchiveCommandTemplate: '08b1ca070b140c80fad8fa4bee5f777a17376ebbedc7a3f5997b891fe2362091',
-  getOpsxOnboardCommandTemplate: '465b730dea94a760e4307ee2981ffe358fb8669a5f92bce01dbd39e389118023',
+  getOpsxOnboardCommandTemplate: 'a98d44e0c8d63e1d21d795c08cbb4929ff90cad1ecbc230ab6225a8289bdaabd',
   getOpsxBulkArchiveCommandTemplate: '1b7dae7f6382c1a9dcf560a32861f8a852ce17344cdbf1e84f67e63380029104',
   getOpsxVerifyCommandTemplate: '772142e7d3189dafaca2b1810a117957cff0426e30ffa9a0af866d1c0b4d36f4',
   getOpsxProposeSkillTemplate: '8bd87080eaed0b8c2855b43552fc293b1ca3f36119fce8157f7dcbc2096f7c5b',
   getOpsxProposeCommandTemplate: '151a5b55221cfc9a7ca3b89322a7f7fba5123e655bea886f2246dea923a63c1f',
-  getFeedbackSkillTemplate: '959174a5dc6624eef3351ec7909e4523ceb3a9ffaf0c2177ba70c322a36df550',
+  getFeedbackSkillTemplate: '36721601a77cd704398bffad9a24a3f12df0972c4cdcae36d239a3b4dd1c62b8',
   getUpdateChangeSkillTemplate: 'ba4ecadc6530481d557bdce705d0bcf58646d030c636182a95d8c18d581b6603',
   getOpsxUpdateCommandTemplate: 'b6bb8ae8b02f856adeb1489edfd284f3c3aada0a09c04bd8d3bd51c2044cd943',
 };
@@ -68,14 +68,14 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '0351e7e7dfad77b5c8978cb1ded0e4de92a3ecfb27b30a97291be674962cfe36',
   'openspec-new-change': '859af1966a7daf004bc83ef62611c8798df6b070d2f10e90849eccc239a4e9e6',
-  'openspec-continue-change': '8f2a7dd073c0ab48390a9bec293d958ee49ec3c990b071ec3dc67df1a125b56e',
+  'openspec-continue-change': 'cb105a8efdba7b68e7c09c14950e933fc564ed5ddb5fb4b82f6cf647b3ca4077',
   'openspec-apply-change': 'c84253c263e5e9d1d6e4150715743cc935fbcb3615bd0eee60990703a781ebe3',
   'openspec-ff-change': '359028145e312dc1c314b8688ca0dd6cfc0170c3b8905b7bceea2f477adce654',
-  'openspec-sync-specs': '2985fec2108f1c8e92295073e7fc539b873a0036e3b732e1f64d5867a66f066b',
+  'openspec-sync-specs': '8c7d995daefa4a8bf6d66062b7ad5e62f450d194d7c88084b6b4065e37287950',
   'openspec-archive-change': '728ac838ac171aa6b0e44be7fbe80c62de835fdb0277886721492d5fe9fbdb55',
   'openspec-bulk-archive-change': '9ef7507fde7efcdc0c2c19d380b3683ef94d44ccc313404f883932b9d08cbfbf',
   'openspec-verify-change': '01e3d0fa7bf054475cbdeb4386f17d06165f10068d7180f64a838bff06187dac',
-  'openspec-onboard': '2d933d3eecc902d940758dfc533f828eac64fd81415a8ce70e030431a267b9c8',
+  'openspec-onboard': '60a3cd8e08192eedd5bf49f4556db467e1ffd8779133db583cc7378caa6a95cd',
   'openspec-propose': '502d62d3c052ab047e808a0eb4fdaaf49f8098f4fe48928bf66860991ef05dea',
   'openspec-update-change': 'c047557e430c456d36a05518c87e4a1d42621556a42ef63d716c6082032d87e0',
 };
@@ -207,15 +207,15 @@ describe('skill templates split parity', () => {
 
   it('keeps a selected store on every applicable workflow command', () => {
     expect(STORE_SELECTION_GUIDANCE).toContain(
-      'treat `--store <id>` as sticky for the rest of the workflow'
+      '一度選んだら、その後のワークフローでは `--store <id>` を維持します'
     );
     expect(STORE_SELECTION_GUIDANCE).toContain(
-      'Every unscoped example of those commands below is shorthand: before running it, append the flag'
+      '以下にフラグなしで示すコマンド例は省略形なので、実行前にフラグを追加してください'
     );
     expect(STORE_SELECTION_GUIDANCE).toContain(
       'openspec status --change "<name>" --json --store "<id>"'
     );
-    expect(STORE_SELECTION_GUIDANCE).toContain('`context`, `schemas`, `view`');
+    expect(STORE_SELECTION_GUIDANCE).toContain('`context`、`schemas`、`view`');
   });
 
   it('validates synced main specs before reporting success', () => {
@@ -226,96 +226,96 @@ describe('skill templates split parity', () => {
 
     for (const [variant, content] of variants) {
       const mutationsComplete = content.indexOf(
-        'Follow the **Main Spec Format Reference** below'
+        '以下の **本仕様フォーマットリファレンス** に従います'
       );
       const validation = content.indexOf('openspec validate --specs');
-      const summary = content.indexOf('**Show summary**');
+      const summary = content.indexOf('**概要を表示する**');
 
       expect(mutationsComplete, variant).toBeGreaterThanOrEqual(0);
       expect(validation, variant).toBeGreaterThan(mutationsComplete);
       expect(summary, variant).toBeGreaterThan(validation);
-      expect(content, variant).toContain('same selected-root flags');
+      expect(content, variant).toContain('同じ選択済みルート用フラグ');
       expect(content, variant).toContain(
-        'If validation fails, report the problems and do not claim the sync succeeded'
+        '検証に失敗した場合は問題を報告し、同期が成功したとは伝えてはいけません'
       );
     }
   });
 
   it('preserves nested capability paths in spec-aware workflow guidance (#1459)', () => {
     const capabilityPathDefinition =
-      '`<capability-path>` is the spec directory relative to `specs/`';
+      '`<capability-path>` は `specs/` からの相対仕様ディレクトリ';
     const pathAwareTemplates: Array<[string, string, string, string]> = [
       [
         'propose skill',
         generateSkillContent(getOpsxProposeSkillTemplate(), 'PARITY-BASELINE'),
         'specs/<capability-path>/spec.md',
-        "Preserve an existing capability's full path",
+        '既存 capability では完全なパスを維持',
       ],
       [
         'propose command',
         getOpsxProposeCommandTemplate().content,
         'specs/<capability-path>/spec.md',
-        "Preserve an existing capability's full path",
+        '既存 capability では完全なパスを維持',
       ],
       [
         'explore skill',
         generateSkillContent(getExploreSkillTemplate(), 'PARITY-BASELINE'),
         'specs/<capability-path>/spec.md',
-        "Preserve an existing capability's full path",
+        '既存 capability では完全なパスを維持',
       ],
       [
         'explore command',
         getOpsxExploreCommandTemplate().content,
         'specs/<capability-path>/spec.md',
-        "Preserve an existing capability's full path",
+        '既存 capability では完全なパスを維持',
       ],
       [
         'onboard skill',
         generateSkillContent(getOnboardSkillTemplate(), 'PARITY-BASELINE'),
         '<existing-capability-path>',
-        'Use the exact existing path for modified',
+        '変更する capability には既存の完全なパスを使用',
       ],
       [
         'onboard command',
         getOpsxOnboardCommandTemplate().content,
         '<existing-capability-path>',
-        'Use the exact existing path for modified',
+        '変更する capability には既存の完全なパスを使用',
       ],
       [
         'sync skill',
         generateSkillContent(getSyncSpecsSkillTemplate(), 'PARITY-BASELINE'),
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
-        'Preserve the full path from each delta spec',
+        '各 delta spec から本仕様を解決するときは、完全なパスを維持',
       ],
       [
         'sync command',
         getOpsxSyncCommandTemplate().content,
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
-        'Preserve the full path from each delta spec',
+        '各 delta spec から本仕様を解決するときは、完全なパスを維持',
       ],
       [
         'archive skill',
         generateSkillContent(getArchiveChangeSkillTemplate(), 'PARITY-BASELINE'),
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
-        'Preserve the full path from each delta spec',
+        '各 delta spec から本仕様を解決するときは、完全なパスを維持',
       ],
       [
         'archive command',
         getOpsxArchiveCommandTemplate().content,
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
-        'Preserve the full path from each delta spec',
+        '各 delta spec から本仕様を解決するときは、完全なパスを維持',
       ],
       [
         'bulk archive skill',
         generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE'),
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
-        'Preserve the full path from each delta spec',
+        '各 delta spec から本仕様を解決するときは、完全なパスを維持',
       ],
       [
         'bulk archive command',
         getOpsxBulkArchiveCommandTemplate().content,
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
-        'Preserve the full path from each delta spec',
+        '各 delta spec から本仕様を解決するときは、完全なパスを維持',
       ],
     ];
 
@@ -336,7 +336,7 @@ describe('skill templates split parity', () => {
 
     for (const [label, content] of onboardVariants) {
       expect(content, label).toContain(
-        '- `<capability-path>`: [brief description]'
+        '- `<capability-path>`: [内容の簡潔な説明]'
       );
       expect(content, label).not.toContain('<capability-name>');
     }
@@ -351,29 +351,29 @@ describe('skill templates split parity', () => {
 
     for (const [label, content] of bulkArchiveVariants) {
       expect(content, label).toContain(
-        'Build a map keyed by `<capability-path>`, the exact path relative to `specs/`'
+        '`specs/` からの正確な相対パスである `<capability-path>` をキーにしたマップを作成'
       );
       expect(content, label).toContain(
-        'billing/user-auth  -> [change-c]            <- OK (different full path)'
+        'billing/user-auth  -> [change-c]            <- 問題なし（完全パスが異なる）'
       );
       expect(content, label).toContain(
-        'identity/user-auth -> [change-a, change-b]  <- CONFLICT'
+        'identity/user-auth -> [change-a, change-b]  <- 競合（2件以上の変更）'
       );
       expect(content, label).toContain('identity/user-auth (!)');
       expect(content, label).toContain(
-        'the exact same `<capability-path>`'
+        'まったく同じ `<capability-path>`'
       );
       expect(content, label).toContain(
-        'keyed by change and `<capability-path>`'
+        '変更と `<capability-path>` をキーに'
       );
       expect(content, label).toContain(
-        'identity/user-auth spec: Will apply add-oauth then add-jwt'
+        'identity/user-auth 仕様: add-oauth、次に add-jwt を適用します'
       );
       expect(content, label).toContain(
-        'add-jwt, identity/user-auth: implementation not found'
+        'add-jwt、identity/user-auth: 実装が見つからない'
       );
       expect(content, label).toContain(
-        '1 conflict resolved (identity/user-auth: synced add-oauth, skipped add-jwt)'
+        '1 件の競合を解決（identity/user-auth: add-oauth を同期、add-jwt をスキップ）'
       );
       expect(content, label).not.toContain('\n   auth -> [change-a');
       expect(content, label).not.toContain('| auth (!)');
@@ -408,9 +408,9 @@ describe('skill templates split parity', () => {
     ];
 
     for (const [variant, content] of variants) {
-      expect(content, variant).toContain('Planning is complete!');
+      expect(content, variant).toContain('計画が完了しました');
       expect(content, variant).toContain(
-        'Once implementation and any tracked work are complete, archive it'
+        '実装と追跡対象の作業がすべて完了したら'
       );
       expect(content, variant).not.toContain('All artifacts created!');
       expect(content, variant).not.toContain('or archive it');
@@ -435,12 +435,12 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain('仕様同期の実行中にarchiveしない');
 
       // Verification must follow delta semantics.
-      expect(content, variant).toContain('MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映');
-      expect(content, variant).toContain('REMOVED要件が存在しない');
-      expect(content, variant).toContain('RENAMED要件が新しい名前で存在し、古い名前では存在しない');
+      expect(content, variant).toContain('MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映');
+      expect(content, variant).toContain('REMOVED 要件が存在しない');
+      expect(content, variant).toContain('RENAMED 要件は新しい名前で存在し、古い名前では存在しない');
 
       // Verification is bound to the delta specs on disk, not to whatever the sync reports it touched.
-      expect(content, variant).toContain('同期が触れたと報告したものだけでなく');
+      expect(content, variant).toContain('同期で更新したと報告されたものだけには限定しません');
 
       // Main spec paths are store-root aware
       expect(content, variant).toContain('<planningHome.root>/openspec/specs/<capability-path>/spec.md');
@@ -462,13 +462,13 @@ describe('skill templates split parity', () => {
 
     for (const [variant, content] of variants) {
       expect(content, variant).toContain('バックグラウンドタスクへ委任しない');
-      expect(content, variant).toContain('仕様同期の実行中に変更をarchiveしない');
-      expect(content, variant).toContain('対象に含めたデルタだけを同期・検証する');
+      expect(content, variant).toContain('仕様同期の実行中にアーカイブしない');
+      expect(content, variant).toContain('含めた delta だけを同期・検証する');
 
       // Verification must follow delta semantics.
-      expect(content, variant).toContain('MODIFIED要件にデルタで指定されたシナリオと説明の変更が反映');
-      expect(content, variant).toContain('REMOVED要件が存在しない');
-      expect(content, variant).toContain('RENAMED要件が新しい名前で存在し、古い名前では存在しない');
+      expect(content, variant).toContain('MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映');
+      expect(content, variant).toContain('REMOVED 要件が存在しない');
+      expect(content, variant).toContain('RENAMED 要件は新しい名前で存在し、古い名前では存在しない');
 
       // Main spec paths are store-root aware
       expect(content, variant).toContain('<planningHome.root>/openspec/specs/<capability-path>/spec.md');
@@ -486,10 +486,10 @@ describe('skill templates split parity', () => {
 
     for (const [variant, content] of variants) {
       expect(content, variant).toContain(
-        'すべてのデルタ仕様を対象に含めるか除外するかの判断'
+        '各 delta spec を含めるか除外するかの判断'
       );
       expect(content, variant).toContain(
-        '対象に含めるデルタ仕様'
+        '`includedDeltas`'
       );
       expect(content, variant).toContain(
         '`includedDeltas` に項目がある変更だけで'
@@ -498,14 +498,14 @@ describe('skill templates split parity', () => {
         'for each change, passing the delta spec analysis'
       );
       expect(content, variant).toContain(
-        '`includedDeltas` のデルタ仕様だけを'
+        '`includedDeltas` の delta spec だけを'
       );
       expect(content, variant).toContain(
-        '`excludedDeltas` のデルタ仕様は意図的に未同期のため、検証しない'
+        '`excludedDeltas` の delta spec は意図的に未同期のため、検証しません'
       );
-      expect(content, variant).toContain('`sync skipped` と報告する');
+      expect(content, variant).toContain('`同期をスキップ` と報告します');
       expect(content, variant).toContain(
-        'archive自体のスキップとは区別する'
+        'アーカイブ自体のスキップとは区別します'
       );
 
       // These three carried no assertion, so deleting any of them from a
@@ -519,7 +519,7 @@ describe('skill templates split parity', () => {
         '`excludedDeltas`: 実装がないため、確認済み変更から同期対象外とした競合デルタ'
       );
       expect(content, variant).toContain(
-        'デルタごとの `includedDeltas` と `excludedDeltas` の判断を実行時まで引き継ぎ'
+        'delta ごとの `includedDeltas` と `excludedDeltas` の判断を実行へ引き継ぎ'
       );
       // The worked example must show the skip, or the agent has no model of
       // what a partially-synced batch report looks like.
@@ -544,13 +544,13 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain(
         '呼出元が絞る場合は、`existingOutputPaths` から完全なエントリの明示的な一覧を指定します'
       );
-      expect(content, variant).toContain('指定パスだけを同期し、残りには手を加えません');
-      expect(content, variant).toContain('全一覧へ戻さないでください');
+      expect(content, variant).toContain('指定されたパスだけを同期し、残りの delta spec には手を触れません');
+      expect(content, variant).toContain('全一覧へ戻してはいけません');
       expect(content, variant).toContain(
         '呼出元が対象を絞っていない限り、`existingOutputPaths` の全パスを同期します'
       );
       expect(content, variant).toContain('その絶対パスをそのままコピーします');
-      expect(content, variant).toContain('selecting the entry ending');
+      expect(content, variant).toContain('で終わるエントリを選択');
       expect(content, variant).toContain('/specs/billing/invoices/spec.md');
       expect(content, variant).not.toContain('only sync the billing delta');
       expect(content, variant).not.toContain('only sync `specs/billing/invoices/spec.md`');
@@ -568,12 +568,10 @@ describe('skill templates split parity', () => {
 
       // The undefined edges: a named path outside existingOutputPaths, and an
       // empty named list. Both must stop rather than proceed on a guess.
-      expect(content, variant).toContain(
-        '指定パスが `existingOutputPaths` にない場合'
-      );
-      expect(content, variant).toContain(
-        '指定一覧が空なら同期対象がないと報告し'
-      );
+      expect(content, variant).toContain('指定されたパスが');
+      expect(content, variant).toContain('`existingOutputPaths` にない場合');
+      expect(content, variant).toContain('指定一覧が空なら');
+      expect(content, variant).toContain('同期対象がないことを報告し');
     }
   });
 
@@ -716,7 +714,7 @@ describe('skill templates split parity', () => {
       );
       expect(content, variant).toContain('`specs` 項目がない、または一覧が空');
       expect(content, variant).toContain('混在スキーマの一括処理');
-      expect(content, variant).toContain('必要なspecsルールのスナップショットをすべて取得');
+      expect(content, variant).toContain('必要な specs ルールのスナップショットをすべて取得');
       expect(content, variant).toContain(
         '最初の書き込みや移動前に、すべてのスナップショットを取得します'
       );
@@ -736,7 +734,7 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain('競合を報告して制御側の値を維持');
       expect(content, variant).toContain('従わず、理由を説明');
       expect(content, variant).toContain(
-        '実行時入力、競合分析、CLI由来の値、アーティファクトルールを分けて扱う'
+        '実行時入力、競合分析、CLI 由来の値、アーティファクトルールを分離して扱う'
       );
       expect(content, variant).toContain(
         'アーティファクトルールは書き込む仕様だけを制約する'
@@ -881,7 +879,7 @@ describe('skill templates split parity', () => {
 
       // A cancelled batch must archive nothing, reinforced where agents skim.
       expect(content, variant).toContain(
-        'ユーザーが確認をキャンセルした後は決してarchiveしない'
+        'ユーザーが確認をキャンセルした後は決してアーカイブしない'
       );
     }
   });
@@ -932,13 +930,13 @@ describe('skill templates split parity', () => {
     ] as const;
     for (const [variant, text] of variants) {
       expect(text, variant).toContain('retire_capabilities: true');
-      expect(text, variant).toContain('every other nonblank line in the whole file is accounted for');
-      expect(text, variant).toContain('resolves inside the real specs root');
-      expect(text, variant).toContain('checkout-scoped recovery guidance');
-      expect(text, variant).toContain('do not modify the main spec');
-      expect(text, variant).toMatch(/Stop\s+the sync for that capability/);
+      expect(text, variant).toContain('ファイル全体の他の空でない行は');
+      expect(text, variant).toContain('実際の specs ルート内へ解決される');
+      expect(text, variant).toContain('チェックアウトの範囲に即した復旧方法');
+      expect(text, variant).toContain('本仕様を変更してはいけません');
+      expect(text, variant).toContain('その capability の同期を停止');
       expect(text, variant).toContain(
-        'Never write or leave an empty `## Requirements` section'
+        '空の `## Requirements` セクションを作成または残してはいけません'
       );
       expect(text, variant).not.toContain('any other sections');
       expect(text, variant).not.toContain('Loose prose left under `## Requirements` does NOT block');

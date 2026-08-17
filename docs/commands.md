@@ -667,7 +667,7 @@ AI:  OpenSpec へようこそ！
 
 AI ツールが異なれば、使用するコマンド構文も若干異なります。ツールに一致する形式を使用してください。
 
-| Your tool's command file | Syntax example | Example tools |
+| ツールのコマンドファイル | 構文例 | ツール例 |
 |--------------------------|----------------|---------------|
 | `.../commands/opsx/<id>.*` | `/opsx:propose`, `/opsx:apply` | Claude Code, Gemini CLI, Crush |
 | `.../opsx-<id>.*` | `/opsx-propose`, `/opsx-apply` | Cursor, Devin Desktop, Copilot (IDE), Trae, Oh My Pi |

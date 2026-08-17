@@ -50,7 +50,7 @@ export const ProjectConfigSchema = z.object({
       z.array(z.string()) // list of rules
     )
     .optional()
-    .describe('Per-artifact rules, keyed by artifact ID'),
+    .describe('artifact ID をキーとするアーティファクト別ルール'),
 
   // Optional: per-operation advisory guidance, kept separate from artifact rules.
   operations: z
@@ -59,7 +59,7 @@ export const ProjectConfigSchema = z.object({
       archive: OperationConfigSchema.optional(),
     })
     .optional()
-    .describe('Per-operation advisory guidance'),
+    .describe('操作別の補足ガイダンス'),
 
   // Note: the `references` field (id strings or {id, remote} maps) is
   // deliberately absent here — readProjectConfig parses and normalizes
@@ -82,7 +82,7 @@ export const ProjectConfigSchema = z.object({
       cloudAgent: z.boolean().optional(),
     })
     .optional()
-    .describe('GitHub Copilot integration preferences'),
+    .describe('GitHub Copilot 連携設定'),
 });
 
 /** Normalized in-memory shape of a referenced store declaration. */
@@ -141,7 +141,7 @@ function parseOperations(raw: unknown): OperationsConfig | undefined {
     const typedOperationId = operationId as OperationId;
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       console.warn(
-        `Invalid 'operations.${operationId}' field in config (must be object), ignoring this operation`
+        `設定の 'operations.${operationId}' フィールドが不正です（オブジェクトである必要があります）。この操作を無視します`
       );
       continue;
     }
@@ -150,7 +150,7 @@ function parseOperations(raw: unknown): OperationsConfig | undefined {
     const unknownFields = Object.keys(operation).filter((field) => field !== 'guidance');
     if (unknownFields.length > 0) {
       console.warn(
-        `Unknown field(s) in 'operations.${operationId}': ${unknownFields.join(', ')}. Supported fields: guidance`
+        `'operations.${operationId}' に不明なフィールドがあります: ${unknownFields.join(', ')}。対応フィールド: guidance`
       );
     }
 
@@ -161,7 +161,7 @@ function parseOperations(raw: unknown): OperationsConfig | undefined {
     const guidanceResult = z.array(z.string()).safeParse(operation.guidance);
     if (!guidanceResult.success) {
       console.warn(
-        `Guidance for operation '${operationId}' must be an array of strings, ignoring this operation's guidance`
+        `操作 '${operationId}' の guidance は文字列配列である必要があります。この操作の guidance を無視します`
       );
       continue;
     }
@@ -169,7 +169,7 @@ function parseOperations(raw: unknown): OperationsConfig | undefined {
     const guidance = guidanceResult.data.filter((entry) => entry.length > 0);
     if (guidance.length < guidanceResult.data.length) {
       console.warn(
-        `Some guidance for operation '${operationId}' are empty strings, ignoring them`
+        `操作 '${operationId}' の guidance に空文字列が含まれているため、それらを無視します`
       );
     }
     if (guidance.length > 0) {
@@ -572,8 +572,8 @@ export function resolveConfigFilePath(projectRoot: string): string | null {
 /** Human rendering of a malformed pointer reason, shared by every surface. */
 export function storePointerProblem(reason: 'unparseable' | 'non_string'): string {
   return reason === 'unparseable'
-    ? 'the config file could not be read as YAML'
-    : 'the store key must be a single store id string';
+    ? '設定ファイルを YAML として読み取れませんでした'
+    : 'store キーは単一のストア ID 文字列である必要があります';
 }
 
 export interface OpenSpecDirClassification {

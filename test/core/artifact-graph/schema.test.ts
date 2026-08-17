@@ -95,7 +95,7 @@ artifacts:
     template: templates/other.md
 `;
       expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(yaml)).toThrow(/Duplicate artifact ID: proposal/);
+      expect(() => parseSchema(yaml)).toThrow(/アーティファクト ID が重複しています: proposal/);
     });
 
     it('should throw on invalid requires reference', () => {
@@ -111,7 +111,7 @@ artifacts:
       - nonexistent
 `;
       expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(yaml)).toThrow(/Invalid dependency reference.*nonexistent/);
+      expect(() => parseSchema(yaml)).toThrow(/依存参照が不正です.*nonexistent/);
     });
 
     it('should detect self-referencing cycle', () => {
@@ -127,7 +127,7 @@ artifacts:
       - A
 `;
       expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(yaml)).toThrow(/Cyclic dependency detected/);
+      expect(() => parseSchema(yaml)).toThrow(/循環依存を検出しました/);
     });
 
     it('should detect simple A → B → A cycle', () => {
@@ -149,7 +149,7 @@ artifacts:
       - A
 `;
       expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(yaml)).toThrow(/Cyclic dependency detected/);
+      expect(() => parseSchema(yaml)).toThrow(/循環依存を検出しました/);
       expect(() => parseSchema(yaml)).toThrow(/→/);
     });
 
@@ -178,7 +178,7 @@ artifacts:
       - B
 `;
       expect(() => parseSchema(yaml)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(yaml)).toThrow(/Cyclic dependency detected/);
+      expect(() => parseSchema(yaml)).toThrow(/循環依存を検出しました/);
       // Should contain all three in the cycle path
       const error = (() => {
         try {
@@ -222,7 +222,7 @@ artifacts:
     template: ${field === 'template' ? JSON.stringify(unsafePath) : 'proposal.md'}
 `;
 
-      expect(() => parseSchema(yaml)).toThrow(/relative path inside/u);
+      expect(() => parseSchema(yaml)).toThrow(/許可されたディレクトリ内の相対パス/u);
     });
 
     it('should reject an apply tracking path outside the change', () => {
@@ -239,7 +239,7 @@ apply:
   tracks: ../../outside.md
 `;
 
-      expect(() => parseSchema(yaml)).toThrow(/relative path inside/u);
+      expect(() => parseSchema(yaml)).toThrow(/許可されたディレクトリ内の相対パス/u);
     });
   });
 });

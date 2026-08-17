@@ -29,11 +29,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'copilot-cloud',
-        description: 'Generate GitHub Copilot cloud coding-agent files (opt-in; default: prompt)',
+        description: 'GitHub Copilot クラウドコーディングエージェント用ファイルを生成（明示的な有効化。既定では確認）',
       },
       {
         name: 'no-copilot-cloud',
-        description: 'Skip generating GitHub Copilot cloud coding-agent files',
+        description: 'GitHub Copilot クラウドコーディングエージェント用ファイルの生成をスキップ',
       },
     ],
   },
@@ -100,7 +100,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'archived',
-        description: 'Validate that archived changes have all tasks completed (for pre-commit linting)',
+        description: 'アーカイブ済みの変更ですべてのタスクが完了しているか検証（pre-commit lint 向け）',
       },
       COMMON_FLAGS.type,
       COMMON_FLAGS.strict,

@@ -424,7 +424,7 @@ operations:
 
     it('reports unknown stores with the same message across commands', async () => {
       const expected =
-        "Unknown store 'team-contxt'. Registered stores: team-context.";
+        "不明なストア 'team-contxt' です。登録済みストア: team-context。";
 
       const status = await runCLI(['status', '--store', 'team-contxt'], { cwd: appRepo, env });
       const list = await runCLI(['list', '--store', 'team-contxt'], { cwd: appRepo, env });
@@ -598,10 +598,10 @@ operations:
         expect(result.exitCode).toBe(1);
         expect(result.stdout).toBe('');
         expect(result.stderr).toContain(
-          'Error: No OpenSpec root found from the current directory.'
+          'エラー: 現在のディレクトリから OpenSpec ルートが見つかりません。'
         );
-        expect(result.stderr).not.toContain('No items found to validate.');
-        expect(result.stderr).not.toContain('No active changes found.');
+        expect(result.stderr).not.toContain('検証する項目が見つかりません。');
+        expect(result.stderr).not.toContain('アクティブな変更が見つかりません。');
         expect(result.stderr).not.toContain('仕様が見つかりません。');
       }
     });
@@ -674,8 +674,8 @@ operations:
         env: isolatedEnv,
       });
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("Unknown item 'missing'.");
-      expect(result.stderr).not.toContain('No OpenSpec root found');
+      expect(result.stderr).toContain("不明な項目 'missing' です。");
+      expect(result.stderr).not.toContain('OpenSpec ルートが見つかりません');
     });
   });
 
@@ -721,7 +721,7 @@ operations:
       expect(json.archive).toBeNull();
       expect(json.status[0]).toEqual(expect.objectContaining({
         code: 'archive_change_not_found',
-        message: "Change 'missing-change' not found. No active changes exist in this root.",
+        message: "変更 'missing-change' が見つかりません。このルートにはアクティブな変更がありません。",
       }));
     });
 

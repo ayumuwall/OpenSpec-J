@@ -179,7 +179,7 @@ describe('openspec CLI e2e basics', () => {
 
       const result = await runCLI(['init', '--tools', 'agents'], { cwd: emptyProjectDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('OpenSpec Setup Complete');
+      expect(result.stdout).toContain('OpenSpec のセットアップが完了しました');
 
       const skillPath = path.join(emptyProjectDir, '.agents', 'skills', 'openspec-explore', 'SKILL.md');
       expect(await fileExists(skillPath)).toBe(true);
@@ -255,7 +255,7 @@ describe('openspec CLI e2e basics', () => {
       const output = `${result.stdout}${result.stderr}`;
       expect(result.exitCode).toBe(1);
       expect(output).not.toContain('force closed the prompt');
-      expect(output).toContain('no answer could be read from stdin');
+      expect(output).toContain('標準入力から回答を読み取れませんでした');
       expect(output).toContain('openspec archive add-greeting --yes');
 
       // The change is untouched: nothing was archived or merged.
@@ -270,7 +270,7 @@ describe('openspec CLI e2e basics', () => {
       const output = `${result.stdout}${result.stderr}`;
       expect(result.exitCode).toBe(1);
       expect(output).not.toContain('force closed the prompt');
-      expect(output).toContain('1 incomplete task(s) found');
+      expect(output).toContain('1件の未完了タスクがあります');
       expect(output).toContain('openspec archive add-greeting --yes');
     });
 
@@ -292,7 +292,7 @@ describe('openspec CLI e2e basics', () => {
       const output = `${result.stdout}${result.stderr}`;
       expect(result.exitCode).toBe(1);
       expect(output).not.toContain('force closed the prompt');
-      expect(output).toContain('Skipping validation requires confirmation');
+      expect(output).toContain('検証を省略するには確認が必要');
       expect(output).toContain('openspec archive add-greeting --no-validate --yes');
     });
 
@@ -310,7 +310,7 @@ describe('openspec CLI e2e basics', () => {
 
       const output = `${result.stdout}${result.stderr}`;
       expect(result.exitCode).toBe(1);
-      expect(output).toContain('A change name is required');
+      expect(output).toContain('変更名が必要です');
       expect(await fileExists(path.join(projectDir, 'openspec', 'changes', 'add-greeting', 'proposal.md'))).toBe(true);
     });
 

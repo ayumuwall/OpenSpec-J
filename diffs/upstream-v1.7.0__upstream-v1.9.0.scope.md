@@ -4,23 +4,23 @@
 
 ## docs
 
-- [ ] CHANGELOG.md
+- [x] CHANGELOG.md
 - [x] README.md
-- [ ] docs/agent-contract.md
-- [ ] docs/cli.md
-- [ ] docs/commands.md
-- [ ] docs/concepts.md
-- [ ] docs/customization.md
-- [ ] docs/faq.md
-- [ ] docs/how-commands-work.md
-- [ ] docs/installation.md
-- [ ] docs/migration-guide.md
-- [ ] docs/opsx.md
-- [ ] docs/stores-beta/user-guide.md
-- [ ] docs/supported-tools.md
-- [ ] docs/troubleshooting.md
-- [ ] docs/workflows.md
-- [ ] docs/writing-specs.md
+- [x] docs/agent-contract.md
+- [x] docs/cli.md
+- [x] docs/commands.md
+- [x] docs/concepts.md
+- [x] docs/customization.md
+- [x] docs/faq.md
+- [x] docs/how-commands-work.md
+- [x] docs/installation.md
+- [x] docs/migration-guide.md
+- [x] docs/opsx.md
+- [x] docs/stores-beta/user-guide.md
+- [x] docs/supported-tools.md
+- [x] docs/troubleshooting.md
+- [x] docs/workflows.md
+- [x] docs/writing-specs.md
 
 ## schemas
 
@@ -29,105 +29,105 @@
 
 ## OPSX スキル
 
-- [ ] skills/openspec-apply-change/SKILL.md
-- [ ] skills/openspec-archive-change/SKILL.md
-- [ ] skills/openspec-bulk-archive-change/SKILL.md
-- [ ] skills/openspec-continue-change/SKILL.md
-- [ ] skills/openspec-explore/SKILL.md
-- [ ] skills/openspec-ff-change/SKILL.md
-- [ ] skills/openspec-new-change/SKILL.md
-- [ ] skills/openspec-onboard/SKILL.md
-- [ ] skills/openspec-propose/SKILL.md
-- [ ] skills/openspec-sync-specs/SKILL.md
-- [ ] skills/openspec-update-change/SKILL.md
-- [ ] skills/openspec-verify-change/SKILL.md
-- [ ] src/core/templates/skill-templates.ts
+- [x] skills/openspec-apply-change/SKILL.md
+- [x] skills/openspec-archive-change/SKILL.md
+- [x] skills/openspec-bulk-archive-change/SKILL.md
+- [x] skills/openspec-continue-change/SKILL.md
+- [x] skills/openspec-explore/SKILL.md
+- [x] skills/openspec-ff-change/SKILL.md
+- [x] skills/openspec-new-change/SKILL.md
+- [x] skills/openspec-onboard/SKILL.md
+- [x] skills/openspec-propose/SKILL.md
+- [x] skills/openspec-sync-specs/SKILL.md
+- [x] skills/openspec-update-change/SKILL.md
+- [x] skills/openspec-verify-change/SKILL.md
+- [x] src/core/templates/skill-templates.ts
 
 ## artifact engine
 
-- [ ] src/core/archive.ts
-- [ ] src/core/artifact-graph/index.ts
-- [ ] src/core/artifact-graph/instruction-loader.ts
-- [ ] src/core/artifact-graph/outputs.ts
-- [ ] src/core/artifact-graph/resolver.ts
-- [ ] src/core/artifact-graph/types.ts
-- [ ] src/core/specs-apply.ts
-- [ ] src/core/validation/task-numbering.ts
-- [ ] src/core/validation/validator.ts
+- [x] src/core/archive.ts
+- [x] src/core/artifact-graph/index.ts
+- [x] src/core/artifact-graph/instruction-loader.ts
+- [x] src/core/artifact-graph/outputs.ts
+- [x] src/core/artifact-graph/resolver.ts
+- [x] src/core/artifact-graph/types.ts
+- [x] src/core/specs-apply.ts
+- [x] src/core/validation/task-numbering.ts
+- [x] src/core/validation/validator.ts
 
 ## コマンド生成
 
-- [ ] src/core/command-generation/adapters/command-code.ts
-- [ ] src/core/command-generation/adapters/index.ts
-- [ ] src/core/command-generation/registry.ts
+- [x] src/core/command-generation/adapters/command-code.ts
+- [x] src/core/command-generation/adapters/index.ts
+- [x] src/core/command-generation/registry.ts
 
 ## init・オンボーディング
 
-- [ ] src/core/available-tools.ts
-- [ ] src/core/config.ts
-- [ ] src/core/global-config.ts
-- [ ] src/core/init.ts
-- [ ] src/core/legacy-cleanup.ts
-- [ ] src/core/migration.ts
-- [ ] src/core/profile-sync-drift.ts
-- [ ] src/core/project-config.ts
-- [ ] src/core/root-selection.ts
-- [ ] src/core/shared-skill-target.ts
-- [ ] src/core/shared/index.ts
-- [ ] src/core/shared/skill-content-equivalence.ts
-- [ ] src/core/shared/skill-paths.ts
-- [ ] src/core/shared/tool-detection.ts
-- [ ] src/core/update.ts
+- [x] src/core/available-tools.ts
+- [x] src/core/config.ts
+- [x] src/core/global-config.ts
+- [x] src/core/init.ts
+- [x] src/core/legacy-cleanup.ts
+- [x] src/core/migration.ts
+- [x] src/core/profile-sync-drift.ts
+- [x] src/core/project-config.ts
+- [x] src/core/root-selection.ts
+- [x] src/core/shared-skill-target.ts
+- [x] src/core/shared/index.ts
+- [x] src/core/shared/skill-content-equivalence.ts
+- [x] src/core/shared/skill-paths.ts
+- [x] src/core/shared/tool-detection.ts
+- [x] src/core/update.ts
 
 ## CLI
 
-- [ ] src/cli/index.ts
-- [ ] src/commands/change.ts
-- [ ] src/commands/config.ts
-- [ ] src/commands/schema.ts
-- [ ] src/commands/spec.ts
-- [ ] src/commands/validate.ts
-- [ ] src/commands/workflow/instructions.ts
-- [ ] src/commands/workflow/schemas.ts
-- [ ] src/commands/workflow/status.ts
-- [ ] src/commands/workflow/templates.ts
-- [ ] src/telemetry/index.ts
+- [x] src/cli/index.ts
+- [x] src/commands/change.ts
+- [x] src/commands/config.ts
+- [x] src/commands/schema.ts
+- [x] src/commands/spec.ts
+- [x] src/commands/validate.ts
+- [x] src/commands/workflow/instructions.ts
+- [x] src/commands/workflow/schemas.ts
+- [x] src/commands/workflow/status.ts
+- [x] src/commands/workflow/templates.ts
+- [x] src/telemetry/index.ts
 
 ## その他
 
-- [ ] .github/dependabot.yml
-- [ ] .github/workflows/ci.yml
-- [ ] .github/workflows/release-prepare.yml
-- [ ] .github/workflows/security.yml
-- [ ] flake.nix
-- [ ] package.json
-- [ ] pnpm-lock.yaml
-- [ ] pnpm-workspace.yaml
-- [ ] src/core/change-metadata/schema.ts
-- [ ] src/core/change-status-policy.ts
-- [ ] src/core/completions/command-registry.ts
-- [ ] src/core/config-schema.ts
-- [ ] src/core/file-state.ts
-- [ ] src/core/github-copilot/cloud-agent.ts
-- [ ] src/core/parsers/requirement-blocks.ts
-- [ ] src/core/parsers/requirement-text.ts
-- [ ] src/core/parsers/spec-structure.ts
-- [ ] src/telemetry/config.ts
-- [ ] src/utils/change-metadata.ts
-- [ ] src/utils/ci.ts
-- [ ] src/utils/command-references.ts
-- [ ] src/utils/file-system.ts
-- [ ] src/utils/interactive.ts
-- [ ] src/utils/spec-discovery.ts
-- [ ] src/utils/task-progress.ts
-- [ ] website/components/mdx.tsx
-- [ ] website/components/mermaid.tsx
-- [ ] website/components/search.tsx
-- [ ] website/lib/source.ts
-- [ ] website/package.json
-- [ ] website/pnpm-lock.yaml
-- [ ] website/pnpm-workspace.yaml
-- [ ] website/source.config.ts
+- [x] .github/dependabot.yml
+- [x] .github/workflows/ci.yml
+- [x] .github/workflows/release-prepare.yml
+- [x] .github/workflows/security.yml
+- [x] flake.nix
+- [x] package.json
+- [x] pnpm-lock.yaml
+- [x] pnpm-workspace.yaml
+- [x] src/core/change-metadata/schema.ts
+- [x] src/core/change-status-policy.ts
+- [x] src/core/completions/command-registry.ts
+- [x] src/core/config-schema.ts
+- [x] src/core/file-state.ts
+- [x] src/core/github-copilot/cloud-agent.ts
+- [x] src/core/parsers/requirement-blocks.ts
+- [x] src/core/parsers/requirement-text.ts
+- [x] src/core/parsers/spec-structure.ts
+- [x] src/telemetry/config.ts
+- [x] src/utils/change-metadata.ts
+- [x] src/utils/ci.ts
+- [x] src/utils/command-references.ts
+- [x] src/utils/file-system.ts
+- [x] src/utils/interactive.ts
+- [x] src/utils/spec-discovery.ts
+- [x] src/utils/task-progress.ts
+- [x] website/components/mdx.tsx
+- [x] website/components/mermaid.tsx
+- [x] website/components/search.tsx
+- [x] website/lib/source.ts
+- [x] website/package.json
+- [x] website/pnpm-lock.yaml
+- [x] website/pnpm-workspace.yaml
+- [x] website/source.config.ts
 
 ## 翻訳対象外
 

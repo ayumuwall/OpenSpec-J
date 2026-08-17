@@ -172,7 +172,7 @@ describe('store registry facade', () => {
         remote: '',
         globalDataDir: tempDir,
       })
-    ).rejects.toThrow(/remote must not be empty/u);
+    ).rejects.toThrow(/リモートを指定する場合は空にできません/u);
 
     await expect(readStoreRegistryState({ globalDataDir: tempDir })).resolves.toBeNull();
   });

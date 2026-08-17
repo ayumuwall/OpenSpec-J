@@ -200,7 +200,7 @@ export async function buildUpdatedSpec(
     const name = normalizeRequirementName(add.name);
     if (addedNames.has(name)) {
       throw new Error(
-        `${specName} validation failed - duplicate requirement in ADDED for header "### Requirement: ${add.name}"`
+        `${specName} の検証に失敗しました - ADDED 内で要件が重複しています: "### Requirement: ${add.name}"`
       );
     }
     addedNames.add(name);
@@ -210,7 +210,7 @@ export async function buildUpdatedSpec(
     const name = normalizeRequirementName(mod.name);
     if (modifiedNames.has(name)) {
       throw new Error(
-        `${specName} validation failed - duplicate requirement in MODIFIED for header "### Requirement: ${mod.name}"`
+        `${specName} の検証に失敗しました - MODIFIED 内で要件が重複しています: "### Requirement: ${mod.name}"`
       );
     }
     modifiedNames.add(name);
@@ -220,7 +220,7 @@ export async function buildUpdatedSpec(
     const name = normalizeRequirementName(rem);
     if (removedNamesSet.has(name)) {
       throw new Error(
-        `${specName} validation failed - duplicate requirement in REMOVED for header "### Requirement: ${rem}"`
+        `${specName} の検証に失敗しました - REMOVED 内で要件が重複しています: "### Requirement: ${rem}"`
       );
     }
     removedNamesSet.add(name);
@@ -232,12 +232,12 @@ export async function buildUpdatedSpec(
     const toNorm = normalizeRequirementName(to);
     if (renamedFromSet.has(fromNorm)) {
       throw new Error(
-        `${specName} validation failed - duplicate FROM in RENAMED for header "### Requirement: ${from}"`
+        `${specName} の検証に失敗しました - RENAMED 内で FROM が重複しています: "### Requirement: ${from}"`
       );
     }
     if (renamedToSet.has(toNorm)) {
       throw new Error(
-        `${specName} validation failed - duplicate TO in RENAMED for header "### Requirement: ${to}"`
+        `${specName} の検証に失敗しました - RENAMED 内で TO が重複しています: "### Requirement: ${to}"`
       );
     }
     renamedFromSet.add(fromNorm);
@@ -268,33 +268,33 @@ export async function buildUpdatedSpec(
     );
     if (removedFoldMatch !== undefined) {
       throw new Error(
-        `${specName} validation failed - requirement present in multiple sections (RENAMED and REMOVED) for header "### Requirement: ${from}"` +
-          (removedFoldMatch === fromNorm ? '' : ` (REMOVED spells it "${removedFoldMatch}")`)
+        `${specName} の検証に失敗しました - 要件が複数のセクション（RENAMED と REMOVED）に存在します: "### Requirement: ${from}"` +
+          (removedFoldMatch === fromNorm ? '' : `（REMOVED では "${removedFoldMatch}" と記載）`)
       );
     }
     if (modifiedNames.has(fromNorm)) {
       throw new Error(
-        `${specName} validation failed - when a rename exists, MODIFIED must reference the NEW header "### Requirement: ${to}"`
+        `${specName} の検証に失敗しました - 名前変更がある場合、MODIFIED は新しい見出し "### Requirement: ${to}" を参照しなければなりません`
       );
     }
     // Detect ADDED colliding with a RENAMED TO
     if (addedNames.has(toNorm)) {
       throw new Error(
-        `${specName} validation failed - RENAMED TO header collides with ADDED for "### Requirement: ${to}"`
+        `${specName} の検証に失敗しました - RENAMED の TO 見出しが ADDED と競合しています: "### Requirement: ${to}"`
       );
     }
   }
   if (conflicts.length > 0) {
     const c = conflicts[0];
     throw new Error(
-      `${specName} validation failed - requirement present in multiple sections (${c.a} and ${c.b}) for header "### Requirement: ${c.name}"`
+      `${specName} の検証に失敗しました - 要件が複数のセクション（${c.a} と ${c.b}）に存在します: "### Requirement: ${c.name}"`
     );
   }
   const hasAnyDelta = plan.added.length + plan.modified.length + plan.removed.length + plan.renamed.length > 0;
   if (!hasAnyDelta) {
     throw new Error(
-      `Delta parsing found no operations for ${update.id}. ` +
-        `Provide ADDED/MODIFIED/REMOVED/RENAMED sections in change spec.`
+      `${update.id} の delta 解析で操作が見つかりませんでした。` +
+        `変更仕様に ADDED/MODIFIED/REMOVED/RENAMED セクションを記述してください。`
     );
   }
 
@@ -315,8 +315,8 @@ export async function buildUpdatedSpec(
       const existingPurpose = extractPurposeSection(targetContent);
       if (existingPurpose && existingPurpose !== deltaPurpose) {
         warn(
-          `${specName} - delta Purpose ignored; ${specName} already has one. ` +
-            `Edit ${update.target} directly to change it.`
+          `${specName} - delta の Purpose を無視しました。${specName} には既に Purpose があります。` +
+            `変更するには ${update.target} を直接編集してください。`
         );
       }
     }
@@ -325,13 +325,13 @@ export async function buildUpdatedSpec(
     // REMOVED will be ignored with a warning since there's nothing to remove
     if (plan.modified.length > 0 || plan.renamed.length > 0) {
       throw new Error(
-        `${specName}: target spec does not exist; only ADDED requirements are allowed for new specs. MODIFIED and RENAMED operations require an existing spec.`
+        `${specName}: 対象仕様が存在しません。新しい仕様で使用できるのは ADDED 要件だけです。MODIFIED と RENAMED の操作には既存の仕様が必要です。`
       );
     }
     // Warn about REMOVED requirements being ignored for new specs
     if (plan.removed.length > 0) {
       warn(
-        `${specName} - ${plan.removed.length} REMOVED requirement(s) ignored for new spec (nothing to remove).`
+        `${specName} - 新しい仕様では削除対象がないため、REMOVED 要件 ${plan.removed.length} 件を無視しました。`
       );
     }
     isNewSpec = true;
@@ -342,15 +342,15 @@ export async function buildUpdatedSpec(
       // deltas archived cleanly before the Purpose carry-over existed.
       targetContent = buildSpecSkeleton(specName, changeName);
       warn(
-        `${specName} - delta Purpose ignored (it would leave the new spec unreadable); wrote the placeholder Purpose instead.`
+        `${specName} - delta の Purpose を無視しました（新しい仕様が読めなくなるため）。代わりに Purpose のプレースホルダーを書き込みました。`
       );
     } else if (overview && overview.length < MIN_PURPOSE_LENGTH) {
       // The placeholder always cleared this threshold, so a carried Purpose is
       // the first way archive can leave a spec that `validate --strict` fails.
       // Measured on the parsed overview, which is what the validator reads.
       warn(
-        `${specName} - carried Purpose is under ${MIN_PURPOSE_LENGTH} characters; ` +
-          `openspec validate --strict reports it as too brief.`
+        `${specName} - 引き継いだ Purpose は ${MIN_PURPOSE_LENGTH} 文字未満です。` +
+          `openspec validate --strict では短すぎると報告されます。`
       );
     }
   }
@@ -361,7 +361,7 @@ export async function buildUpdatedSpec(
       .map(issue => `line ${issue.line}: ${issue.message}`)
       .join('\n');
     throw new Error(
-      `${specName}: target spec is structurally invalid and cannot be updated until fixed:\n${details}`
+      `${specName}: 対象仕様の構造が無効です。修正するまで更新できません:\n${details}`
     );
   }
 
@@ -392,15 +392,15 @@ export async function buildUpdatedSpec(
         );
         if (nearMiss !== undefined) {
           throw new Error(
-            `${specName} RENAMED failed for header "### Requirement: ${r.from}" - source not found, but "### Requirement: ${nameToBlock.get(nearMiss)!.name}" exists; fix the header to match it exactly`
+            `${specName} の RENAMED に失敗しました: "### Requirement: ${r.from}" - 変更元が見つかりませんが、"### Requirement: ${nameToBlock.get(nearMiss)!.name}" が存在します。見出しを完全に一致させてください`
           );
         }
         continue;
       }
-      throw new Error(`${specName} RENAMED failed for header "### Requirement: ${r.from}" - source not found`);
+      throw new Error(`${specName} の RENAMED に失敗しました: "### Requirement: ${r.from}" - 変更元が見つかりません`);
     }
     if (nameToBlock.has(to)) {
-      throw new Error(`${specName} RENAMED failed for header "### Requirement: ${r.to}" - target already exists`);
+      throw new Error(`${specName} の RENAMED に失敗しました: "### Requirement: ${r.to}" - 変更先が既に存在します`);
     }
     const block = nameToBlock.get(from)!;
     const newHeader = `### Requirement: ${to}`;
@@ -432,11 +432,11 @@ export async function buildUpdatedSpec(
         const nearMiss = [...nameToBlock.keys()].find((k) => foldRequirementName(k) === foldRequirementName(key));
         if (nearMiss !== undefined) {
           throw new Error(
-            `${specName} REMOVED failed for header "### Requirement: ${name}" - not found, but "### Requirement: ${nameToBlock.get(nearMiss)!.name}" exists; fix the header to match it exactly`
+            `${specName} の REMOVED に失敗しました: "### Requirement: ${name}" - 見つかりませんが、"### Requirement: ${nameToBlock.get(nearMiss)!.name}" が存在します。見出しを完全に一致させてください`
           );
         }
         warn(
-          `${specName} - REMOVED requirement "${name}" is not in the current spec; treating it as already removed.`
+          `${specName} - REMOVED 要件 "${name}" は現在の仕様にありません。既に削除済みとして扱います。`
         );
       }
       continue;
@@ -451,19 +451,19 @@ export async function buildUpdatedSpec(
     const key = normalizeRequirementName(mod.name);
     const currentBlock = nameToBlock.get(key);
     if (!currentBlock) {
-      throw new Error(`${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - not found`);
+      throw new Error(`${specName} の MODIFIED に失敗しました: "### Requirement: ${mod.name}" - 見つかりません`);
     }
     // Replace block with provided raw (ensure header line matches key)
     const modHeaderMatch = mod.raw.split('\n')[0].match(/^###\s*Requirement:\s*(.+)\s*$/i);
     if (!modHeaderMatch || normalizeRequirementName(modHeaderMatch[1]) !== key) {
       throw new Error(
-        `${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - header mismatch in content`
+        `${specName} の MODIFIED に失敗しました: "### Requirement: ${mod.name}" - 内容内の見出しが一致しません`
       );
     }
     const missingScenarios = findMissingCurrentScenarios(currentBlock, mod);
     if (missingScenarios.length > 0) {
       throw new Error(
-        `${specName} MODIFIED failed for header "### Requirement: ${mod.name}" - current spec contains scenario(s) not present in the modified block: ${missingScenarios.map(name => `"${name}"`).join(', ')}. Refresh the change spec before archiving to avoid dropping scenarios.`
+        `${specName} の MODIFIED に失敗しました: "### Requirement: ${mod.name}" - 現在の仕様にあり、変更後のブロックにないシナリオがあります: ${missingScenarios.map(name => `"${name}"`).join(', ')}。シナリオの欠落を防ぐため、アーカイブ前に変更仕様を更新してください。`
       );
     }
     // Identical content means the modification was already synced to the
@@ -488,7 +488,7 @@ export async function buildUpdatedSpec(
       if (normalizeBlockRaw(existing.raw) === normalizeBlockRaw(add.raw)) {
         continue;
       }
-      throw new Error(`${specName} ADDED failed for header "### Requirement: ${add.name}" - already exists`);
+      throw new Error(`${specName} の ADDED に失敗しました: "### Requirement: ${add.name}" - 既に存在します`);
     }
     nameToBlock.set(key, add);
     addedApplied++;
@@ -526,8 +526,8 @@ export async function buildUpdatedSpec(
           countOccurrences(normalizeBlockRaw(block.raw), normalizedForeign);
       if (foreign && !keepsForeignTail) {
         warn(
-          `${specName} - "${foreign.heading}" sits inside requirement "${block.name}" and goes with it. ` +
-            'Move it under its own requirement, or above `## Requirements`, to keep it.'
+          `${specName} - "${foreign.heading}" は要件 "${block.name}" の内部にあるため、要件とともに扱われます。` +
+            '保持するには、独立した要件の配下または `## Requirements` より前へ移動してください。'
         );
       }
     }
@@ -841,7 +841,7 @@ export async function retireSpec(
         try {
           await fs.lstat(update.target);
           throw new Error(
-            `A concurrent file appeared at ${update.target} while archive was retiring it.`
+            `アーカイブが廃止処理中に ${update.target} へ別のファイルが作成されました。`
           );
         } catch (targetError) {
           if ((targetError as NodeJS.ErrnoException).code !== 'ENOENT') throw targetError;
@@ -852,7 +852,7 @@ export async function retireSpec(
           await fs.lstat(update.target);
           throw new Error(
             `${error instanceof Error ? error.message : String(error)} ` +
-              `A concurrent file now occupies ${update.target}; the displaced spec was retained at ${displaced}.`
+              `現在 ${update.target} には別のファイルがあります。退避した仕様は ${displaced} に保持されています。`
           );
         } catch (targetError) {
           if ((targetError as NodeJS.ErrnoException).code !== 'ENOENT') throw targetError;
@@ -1088,6 +1088,6 @@ function readableOverview(skeleton: string, specName: string): string | null {
 export function buildSpecSkeleton(specFolderName: string, changeName: string, purpose?: string): string {
   const titleBase = specFolderName;
   const purposeBody =
-    purpose?.trim() || `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`;
+    purpose?.trim() || `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`;
   return `# ${titleBase} Specification\n\n## Purpose\n${purposeBody}\n\n## Requirements\n`;
 }

@@ -186,7 +186,7 @@ artifacts:
         issues: [
           {
             path: 'artifacts.proposal.template',
-            message: expect.stringContaining('outside the schema templates directory'),
+            message: expect.stringContaining('スキーマの templates ディレクトリ外'),
           },
         ],
       });
@@ -216,7 +216,7 @@ artifacts:
 `;
 
       expect(() => parseSchema(content)).toThrow(SchemaValidationError);
-      expect(() => parseSchema(content)).toThrow(/[Cc]yclic/);
+      expect(() => parseSchema(content)).toThrow(/循環依存/);
     });
 
     it('should detect unknown dependency reference', async () => {
@@ -313,9 +313,9 @@ artifacts:
       expect(fs.existsSync(destinationDir)).toBe(false);
       const output = consoleLogSpy.mock.calls.at(-1)?.[0];
       expect(JSON.parse(output as string).error).toContain(
-        'Cannot fork schema with linked or unsupported entry'
+        'リンク先またはサポートされないエントリを含むスキーマは複製できません'
       );
-      expect(JSON.parse(output as string).error).toContain('Path is outside the allowed directory');
+      expect(JSON.parse(output as string).error).toContain('パスが許可されたディレクトリ外にあります');
     });
 
     it('should dereference a confined template link into an independent fork', async () => {

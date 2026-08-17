@@ -9,7 +9,7 @@ import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 import { escapeYamlValue } from '../yaml.js';
 
-const PI_INPUT_HEADING = /^\*\*Input\*\*:[^\n]*$/m;
+const PI_INPUT_HEADING = /^\*\*(?:Input|入力)\*\*:[^\n]*$/m;
 
 function injectPiArgs(body: string): string {
   if (body.includes('$@') || body.includes('$ARGUMENTS')) {

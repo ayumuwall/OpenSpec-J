@@ -83,9 +83,9 @@ openspec --version 2>&1 || echo "CLI_NOT_INSTALLED"
 最近の git 活動も確認します:
 \`\`\`bash
 # Unix/macOS
-git log --oneline -10 2>/dev/null || echo "No git history"
+git log --oneline -10 2>/dev/null || echo "Git 履歴なし"
 # Windows (PowerShell)
-# git log --oneline -10 2>$null; if ($LASTEXITCODE -ne 0) { echo "No git history" }
+# git log --oneline -10 2>$null; if ($LASTEXITCODE -ne 0) { echo "Git 履歴なし" }
 \`\`\`
 
 ### 提案を提示
@@ -313,7 +313,7 @@ spec です:
 この WHEN/THEN/AND 形式により、要件をそのままテストケースとして読めます。
 \`\`\`
 
-\`openspec/changes/<name>/specs/<capability>/spec.md\` に保存。
+\`openspec/changes/<name>/specs/<capability-path>/spec.md\` に保存。
 
 ---
 

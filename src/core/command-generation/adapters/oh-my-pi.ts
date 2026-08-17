@@ -10,7 +10,7 @@ import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 import { escapeYamlValue } from '../yaml.js';
 
-const OMP_INPUT_HEADING = /^\*\*Input\*\*:[^\n]*$/m;
+const OMP_INPUT_HEADING = /^\*\*(?:Input|入力)\*\*:[^\n]*$/m;
 
 function injectOmpArgs(body: string): string {
   if (body.includes('$@') || body.includes('$ARGUMENTS')) {

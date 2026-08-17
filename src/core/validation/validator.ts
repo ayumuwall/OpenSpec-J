@@ -687,14 +687,14 @@ export class Validator {
         issues.push({
           level: 'ERROR',
           path: `requirements[${index}]`,
-          message: this.buildMissingShallOrMustMessage(`Requirement "${block.name}"`, block.name),
+          message: this.buildMissingShallOrMustMessage(`要件 "${block.name}"`, block.name),
         });
       } else if (!this.containsShallOrMust(requirementText)) {
         issues.push({
           level: 'WARNING',
           path: `requirements[${index}]`,
           message: this.buildMissingShallOrMustMessage(
-            `Requirement "${block.name}"`,
+            `要件 "${block.name}"`,
             block.name,
             true
           ),

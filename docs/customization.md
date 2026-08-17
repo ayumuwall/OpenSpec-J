@@ -61,7 +61,7 @@ operations:
       - 全テストの前に対象を絞ったテストを実行する
   archive:
     guidance:
-      - Keep the completion summary concise
+      - 完了時の要約は簡潔にする
 
 # GitHub Copilot クラウドコーディングエージェントを選択または拒否したときに
 # `openspec init` が設定します。`init`/`update` がそのファイルを生成するかを制御します。

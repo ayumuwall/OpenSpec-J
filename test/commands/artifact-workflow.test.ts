@@ -146,7 +146,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'complete-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('進捗: 4/4 アーティファクト完了');
-      expect(result.stdout).toContain('すべてのアーティファクトが完了しました！');
+      expect(result.stdout).toContain('すべての計画アーティファクトが完了しました！');
       expect(result.stdout).not.toContain('すべてのアーティファクトが完了しました！');
     });
 
@@ -733,7 +733,7 @@ operations:
 
       expect(result.exitCode).toBe(0);
       const matches = result.stderr.match(
-        /Guidance for operation 'apply' must be an array of strings/g
+        /操作 'apply' の guidance は文字列配列である必要があります/g
       );
       expect(matches).toHaveLength(1);
       expect(JSON.parse(result.stdout).operationGuidance).toBeUndefined();

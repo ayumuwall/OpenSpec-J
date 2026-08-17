@@ -162,13 +162,13 @@ describe('file-state', () => {
             globalDataDir,
           })
         ).rejects.toMatchObject({
-          message: 'Store registry is busy.',
+          message: 'ストアレジストリは使用中です。',
           diagnostic: {
             severity: 'error',
             code: 'store_registry_busy',
-            message: 'Store registry is busy.',
+            message: 'ストアレジストリは使用中です。',
             target: 'store.registry',
-            fix: `Retry shortly; if this persists, delete the stale lock file ${lockPath}.`,
+            fix: `しばらくして再試行してください。解消しない場合は、古いロックファイル ${lockPath} を削除してください。`,
           },
         });
         expect(Date.now() - started).toBeGreaterThanOrEqual(4900);
@@ -191,11 +191,11 @@ describe('file-state', () => {
             globalDataDir,
           })
         ).rejects.toMatchObject({
-          message: `Cannot create the registry lock file ${lockPath} (EACCES).`,
+          message: `レジストリのロックファイル ${lockPath} を作成できません（EACCES）。`,
           diagnostic: {
             code: 'store_registry_busy',
             target: 'store.registry',
-            fix: `Check permissions on ${path.dirname(lockPath)}.`,
+            fix: `${path.dirname(lockPath)} の権限を確認してください。`,
           },
         });
       } finally {

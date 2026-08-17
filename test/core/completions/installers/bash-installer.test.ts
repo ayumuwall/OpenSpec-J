@@ -164,7 +164,7 @@ describe('BashInstaller', () => {
 
       expect(result?.success).toBe(false);
       expect(result?.message).toContain('補完スクリプトのインストールに失敗しました');
-      expect(result?.message).toContain(`Path is not writable: ${targetPath}`);
+      expect(result?.message).toContain(`パスへ書き込めません: ${targetPath}`);
     });
 
     it('should detect already-installed completion with identical content', async () => {

@@ -55,7 +55,7 @@ describe('openspec validate reports scenarios a MODIFIED block would drop (#1477
     const result = await runCLI(['validate', '--type', 'change', 'drops-a-scenario'], { cwd: projectDir });
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('MODIFIED "Widget state" omits scenario(s)');
+    expect(result.stderr).toContain('MODIFIED "Widget state" に、現在の仕様に残っているシナリオがありません');
     expect(result.stderr).toContain('"Second scenario"');
   });
 
@@ -68,7 +68,7 @@ describe('openspec validate reports scenarios a MODIFIED block would drop (#1477
     expect(result.exitCode).toBe(1);
     const report = JSON.parse(result.stdout);
     const issue = report.items[0].issues.find((i: { message: string }) =>
-      i.message.includes('omits scenario(s)')
+      i.message.includes('現在の仕様に残っているシナリオがありません')
     );
     expect(issue.level).toBe('ERROR');
     expect(issue.path).toBe('widgets/spec.md');
@@ -90,7 +90,7 @@ describe('openspec validate reports scenarios a MODIFIED block would drop (#1477
     const result = await runCLI(['change', 'validate', 'drops-a-scenario'], { cwd: projectDir });
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('omits scenario(s)');
+    expect(result.stderr).toContain('現在の仕様に残っているシナリオがありません');
   });
 
   it('leaves a change that carries every scenario over passing', async () => {
@@ -99,6 +99,6 @@ describe('openspec validate reports scenarios a MODIFIED block would drop (#1477
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("Change 'keeps-every-scenario' is valid");
+    expect(result.stdout).toContain("変更 'keeps-every-scenario' は有効です");
   });
 });

@@ -471,7 +471,7 @@ Then result`;
 
       expect(report.valid).toBe(false);
       const msg = report.issues.map((i) => i.message).join('\n');
-      expect(msg).toContain('Requirement present in both RENAMED and REMOVED: "Old name"');
+      expect(msg).toContain('要件が RENAMED と REMOVED の両方にあります: "Old name"');
     });
 
     it('rejects a case/whitespace variant of the renamed FROM header in REMOVED', async () => {
@@ -499,8 +499,8 @@ Then result`;
 
       expect(report.valid).toBe(false);
       const msg = report.issues.map((i) => i.message).join('\n');
-      expect(msg).toContain('Requirement present in both RENAMED and REMOVED: "Old Name"');
-      expect(msg).toContain('(REMOVED spells it "old   name")');
+      expect(msg).toContain('要件が RENAMED と REMOVED の両方にあります: "Old Name"');
+      expect(msg).toContain('（REMOVED では "old   name" と記載）');
     });
 
     it('should validate requirement with metadata before SHALL/MUST text', async () => {
@@ -895,7 +895,7 @@ The system SHALL render a delta example in its output.
       expect(report.valid).toBe(false);
       expect(report.summary.errors).toBeGreaterThan(0);
       expect(
-        report.issues.some(i => i.message.includes('must include at least one scenario'))
+        report.issues.some(i => i.message.includes('少なくとも1つのシナリオが必要です'))
       ).toBe(true);
     });
 
@@ -1008,7 +1008,7 @@ The system MUST support mixed case delta headers.
       // Same actionable sentence; only the leading prefix differs.
       expect(specMsg.endsWith(ACTIONABLE_SENTENCE)).toBe(true);
       expect(deltaMsg.endsWith(ACTIONABLE_SENTENCE)).toBe(true);
-      expect(specMsg.startsWith('Requirement "The system SHALL log"')).toBe(true);
+      expect(specMsg.startsWith('要件 "The system SHALL log"')).toBe(true);
       expect(deltaMsg.startsWith('ADDED "The system SHALL log"')).toBe(true);
     });
 
@@ -1027,7 +1027,7 @@ The system MUST support mixed case delta headers.
         '### Requirement: 事件记录\n系统必须记录应用程序中的重要事件。\n\n#### Scenario: 事件发生\n- **WHEN** 应用程序生成重要事件\n- **THEN** 系统保存该事件'
       );
       const report = await new Validator().validateSpecContent('demo', content);
-      const issues = report.issues.filter(i => i.message.includes('SHALL or MUST'));
+      const issues = report.issues.filter(i => i.message.includes('SHALL または MUST'));
 
       expect(report.valid).toBe(true);
       expect(report.summary.errors).toBe(0);
@@ -1203,7 +1203,7 @@ The system SHALL do something real.
       // and must fail — the same verdict validate <spec> already gives.
       expect(changeReport.valid).toBe(false);
       expect(
-        changeReport.issues.some(i => i.message.includes('must include at least one scenario'))
+        changeReport.issues.some(i => i.message.includes('少なくとも1つのシナリオが必要です'))
       ).toBe(true);
     });
 
@@ -1304,7 +1304,7 @@ ${body}`;
       // the missing keyword, not missing text.
       expect(
         report.issues.some(
-          i => i.level === 'WARNING' && i.message.includes('should contain SHALL or MUST')
+          i => i.level === 'WARNING' && i.message.includes('SHALL または MUST を含める')
         )
       ).toBe(true);
     });
@@ -1349,7 +1349,7 @@ ${body}`;
       const changeReport = await new Validator(true).validateChangeDeltaSpecs(changeDir);
       expect(changeReport.valid).toBe(false);
       expect(
-        changeReport.issues.some(i => i.message.includes('ヘッダーだけでなく要件本文に含めてください'))
+        changeReport.issues.some(i => i.message.includes('見出しだけでなく要件本文に SHALL または MUST を含める必要があります'))
       ).toBe(true);
 
       const spec = `# Test Spec
@@ -1364,7 +1364,7 @@ ${body}`;
       const specReport = await new Validator(true).validateSpec(specPath);
       expect(specReport.valid).toBe(false);
       expect(
-        specReport.issues.some(i => i.message.includes('ヘッダーだけでなく要件本文に含めてください'))
+        specReport.issues.some(i => i.message.includes('見出しだけでなく要件本文に SHALL または MUST を含める必要があります'))
       ).toBe(true);
     });
 
@@ -1393,7 +1393,7 @@ These notes explain that the system MUST NOT be read as requirement text.
       expect(report.valid).toBe(false);
       expect(
         report.issues.some(
-          i => i.level === 'WARNING' && i.message.includes('should contain SHALL or MUST')
+          i => i.level === 'WARNING' && i.message.includes('SHALL または MUST を含める')
         )
       ).toBe(true);
       expect(
@@ -1421,7 +1421,7 @@ The system SHALL do the real thing.
 
       expect(report.valid).toBe(true);
       const info = report.issues.find(
-        i => i.level === 'INFO' && i.message.includes('missing a requirement name')
+        i => i.level === 'INFO' && i.message.includes('要件名がないため')
       );
       expect(info).toBeDefined();
       expect(info!.message).not.toContain('Requirement: Requirement:');

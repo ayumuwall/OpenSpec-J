@@ -19,7 +19,7 @@ describe('findTaskNumberingIssues', () => {
     expect(issues).toEqual([
       {
         line: 4,
-        message: 'Task ID "3.2.1" is duplicated; it was first declared on line 2.',
+        message: 'タスク ID "3.2.1" が重複しています。最初の宣言は 2 行目です。',
       },
     ]);
   });
@@ -84,7 +84,7 @@ describe('findTaskNumberingIssues', () => {
         path: 'frontend/tasks.md',
         line: 2,
         message:
-          'Task ID "2.1" is duplicated; it was first declared in backend/tasks.md on line 2.',
+          'タスク ID "2.1" が重複しています。最初の宣言は backend/tasks.md の 2 行目です。',
       },
     ]);
   });

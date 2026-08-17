@@ -14,8 +14,8 @@ const KebabIdentifierSchema = (label: string): z.ZodString =>
   });
 
 export const InitiativeLinkSchema = z.object({
-  store: KebabIdentifierSchema('Store id'),
-  id: KebabIdentifierSchema('Initiative id'),
+  store: KebabIdentifierSchema('Store ID'),
+  id: KebabIdentifierSchema('Initiative ID'),
 }).strict();
 
 export type InitiativeLink = z.infer<typeof InitiativeLinkSchema>;

@@ -262,7 +262,7 @@ describe('command completion registry', () => {
 
     const remove = store?.subcommands?.find((entry) => entry.name === 'remove');
     expect(remove?.flags.map((flag) => flag.name)).toEqual([
-      'あり',
+      'yes',
       'json',
     ]);
   });

@@ -27,7 +27,7 @@ describe('SpecCommand path boundaries', () => {
 
     await expect(
       new SpecCommand().show(path.join('..', '..', 'outside'))
-    ).rejects.toThrow('Path is outside the allowed directory');
+    ).rejects.toThrow('パスが許可されたディレクトリ外にあります');
   });
 
   it.skipIf(process.platform === 'win32')(
@@ -40,7 +40,7 @@ describe('SpecCommand path boundaries', () => {
       await fs.symlink(outsideSpec, linkedSpec);
 
       await expect(new SpecCommand().show('linked')).rejects.toThrow(
-        'Path is outside the allowed directory'
+        'パスが許可されたディレクトリ外にあります'
       );
     }
   );

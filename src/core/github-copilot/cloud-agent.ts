@@ -414,7 +414,7 @@ async function classifyCopilotAgentReconciliation(
   }
 
   throw new Error(
-    `Conflicting Copilot agent profiles: preserve either ${COPILOT_AGENT_ALTERNATE_FILE} or ${COPILOT_CLOUD_FILES.agent}`
+    `Copilot エージェントプロファイルが競合しています。${COPILOT_AGENT_ALTERNATE_FILE} または ${COPILOT_CLOUD_FILES.agent} のどちらかを残してください。`
   );
 }
 

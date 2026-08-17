@@ -139,7 +139,7 @@ describe('command-generation/adapters', () => {
         body: '# OpenSpec command\n\n**Input**: A change name or description.\n\nRun the workflow.',
       });
       expect(output).toContain(
-        '**Input**: A change name or description.\n**Provided arguments**: $ARGUMENTS'
+        '**Input**: A change name or description.\n**入力された引数**: $ARGUMENTS'
       );
     });
 
@@ -150,7 +150,7 @@ describe('command-generation/adapters', () => {
           ...sampleContent,
           body: `**Input**: A change name.\n**Provided arguments**: ${placeholder}`,
         });
-        expect(output.match(/\*\*Provided arguments\*\*:/g)).toHaveLength(1);
+        expect(output.match(/\*\*(?:Provided arguments|入力された引数)\*\*:/g)).toHaveLength(1);
       }
     );
 
@@ -158,7 +158,7 @@ describe('command-generation/adapters', () => {
       const commandsWithoutArguments = getCommandContents()
         .filter((content) => {
           const output = generateCommand(content, commandCodeAdapter).fileContent;
-          return !output.includes('**Provided arguments**: $ARGUMENTS');
+          return !output.includes('**入力された引数**: $ARGUMENTS');
         })
         .map((content) => content.id);
 
@@ -739,7 +739,7 @@ describe('command-generation/adapters', () => {
       };
 
       const output = piAdapter.formatFile(contentWithInput);
-      expect(output).toContain('**Provided arguments**: $@');
+      expect(output).toContain('**入力された引数**: $@');
     });
 
     it('should escape YAML special characters in description', () => {
@@ -819,7 +819,7 @@ describe('command-generation/adapters', () => {
         body: '**Input**: The argument is the change name.\n\nDo the work.',
       };
       const output = ohMyPiAdapter.formatFile(contentWithInput);
-      expect(output).toContain('**Input**: The argument is the change name.\n**Provided arguments**: $@');
+      expect(output).toContain('**Input**: The argument is the change name.\n**入力された引数**: $@');
     });
 
     it('injects $@ alongside generateCommand\'s hyphen rewrite', () => {
@@ -828,7 +828,7 @@ describe('command-generation/adapters', () => {
         body: '**Input**: The argument is the change name.\n\nRun /opsx:apply.',
       };
       const output = generateCommand(contentWithInput, ohMyPiAdapter).fileContent;
-      expect(output).toContain('**Provided arguments**: $@');
+      expect(output).toContain('**入力された引数**: $@');
       expect(output).toContain('/opsx-apply');
     });
 

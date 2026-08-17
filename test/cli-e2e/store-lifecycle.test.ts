@@ -423,7 +423,7 @@ describe('standalone store lifecycle journey', () => {
       { env: machineB, cwd: base }
     );
     expect(status.exitCode).toBe(0);
-    expect(status.stdout).toContain('すべてのアーティファクトが完了しました！');
+    expect(status.stdout).toContain('すべての計画アーティファクトが完了しました！');
 
     const statusJson = await runCLI(
       ['status', '--change', changeId, '--store', STORE_ID, '--json'],

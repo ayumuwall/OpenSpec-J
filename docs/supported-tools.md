@@ -6,8 +6,8 @@ OpenSpec は多くの AI コーディングアシスタントに対応してい�
 
 選択した各ツールに対して、OpenSpec は次をインストールできます。
 
-1. **Skills**（delivery に skills が含まれる場合）: `.../skills/openspec-*/SKILL.md`
-2. **Commands**（delivery に commands が含まれる場合）: ツール固有の `opsx-*` コマンドファイル
+1. **スキル**（delivery に skills が含まれる場合）: `.../skills/openspec-*/SKILL.md`
+2. **コマンド**（delivery に commands が含まれる場合）: ツール固有の `opsx-*` コマンドファイル
 
 Codex はスキル専用です。OpenSpec は delivery を `commands` に設定していても Codex 用に `.agents/skills/openspec-*/SKILL.md` を導入し、Codex カスタムプロンプトファイルは生成しません。レガシー `.codex/skills` パスにある OpenSpec 管理対象スキルは、置換先を書き込んだ後に照合します。カスタムファイルと内容が異なるファイルは保持されます。
 
@@ -25,15 +25,15 @@ Codex はスキル専用です。OpenSpec は delivery を `commands` に設定�
 
 このドキュメントでは `/opsx:propose` を標準名として使いますが、各ツールではOpenSpecが書き込んだファイルの読み込み方法に応じた表記を使います。下の[ツール別ディレクトリリファレンス](#ツール別ディレクトリリファレンス)でコマンドパスを確認し、その形式を次の表に当てはめてください。
 
-| Command file OpenSpec writes | You type | Tools |
+| OpenSpec が書き込むコマンドファイル | 入力方法 | ツール |
 |------------------------------|----------|-------|
-| `.../commands/opsx/<id>.*` — an `opsx/` folder namespaces it | `/opsx:<id>` | Claude Code, CodeBuddy, Crush, Gemini CLI, Lingma, Qoder, ZCode |
-| `.../opsx-<id>.*` — the filename is the command | `/opsx-<id>` | Every other tool with generated command files, except Amazon Q and Devin |
-| `.devin/workflows/opsx-<id>.md` — read by only one of Devin's two agents | `/opsx-<id>` on Devin Desktop, `/openspec-<skill>` on Devin Local | Devin Desktop\*\*\*\* |
-| `.amazonq/prompts/opsx-<id>.md` — a prompt, not a command | `@opsx-<id>` | Amazon Q Developer |
+| `.../commands/opsx/<id>.*` — `opsx/` フォルダーを名前空間として使用 | `/opsx:<id>` | Claude Code、CodeBuddy、Crush、Gemini CLI、Lingma、Qoder、ZCode |
+| `.../opsx-<id>.*` — ファイル名がコマンド名 | `/opsx-<id>` | Amazon Q と Devin を除く、コマンドファイル生成対応ツール |
+| `.devin/workflows/opsx-<id>.md` — Devin の 2 エージェントのうち一方だけが読み込み | Devin Desktop は `/opsx-<id>`、Devin Local は `/openspec-<skill>` | Devin Desktop\*\*\*\* |
+| `.amazonq/prompts/opsx-<id>.md` — コマンドではなくプロンプト | `@opsx-<id>` | Amazon Q Developer |
 | なし — スキルのみ | `/openspec-<skill>` | CodeArts、ForgeCode、Hermes、MiniMax Code、Mistral Vibe、共通 `.agents` |
-| none — Kimi Code | `/skill:openspec-<skill>` | Kimi Code |
-| none — Codex CLI | `$openspec-<skill>` | Codex ([`/openspec-<skill>` is not recognized](https://github.com/openai/codex/issues/11817)) |
+| なし — Kimi Code | `/skill:openspec-<skill>` | Kimi Code |
+| なし — Codex CLI | `$openspec-<skill>` | Codex（[`/openspec-<skill>` は認識されません](https://github.com/openai/codex/issues/11817)） |
 
 つまり `/opsx:propose` は、Cursorでは `/opsx-propose`、Amazon Qでは `@opsx-propose`、Codexでは `$openspec-propose` です。
 

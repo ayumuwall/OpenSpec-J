@@ -385,7 +385,7 @@ describe('resolveOpenSpecRoot', () => {
         'invalid_store_pointer'
       );
       expect(error.message).toContain(path.join(nonString, 'openspec', 'config.yaml'));
-      expect(error.message).toContain('the store key must be a single store id string');
+      expect(error.message).toContain('store キーは単一のストア ID 文字列である必要があります');
       expect(fs.existsSync(path.join(nonString, 'openspec', 'changes'))).toBe(false);
 
       const unparseable = createPointerDir('bad-yaml', 'store: [unclosed');
@@ -394,8 +394,8 @@ describe('resolveOpenSpecRoot', () => {
         'invalid_store_pointer'
       );
       // The unparseable case names the real problem, not a phantom key.
-      expect(yamlError.message).toContain('could not be read as YAML');
-      expect(yamlError.diagnostic.fix).toContain('Fix the YAML syntax');
+      expect(yamlError.message).toContain('YAML として読み取れませんでした');
+      expect(yamlError.diagnostic.fix).toContain('YAML 構文を修正');
 
       // A config that parses to a non-mapping scalar has no pointer at
       // all: plain root, no error (readProjectConfig owns that warning).
@@ -454,8 +454,8 @@ describe('resolveOpenSpecRoot', () => {
 
       for (const [code, origin, run] of cases) {
         const error = await expectRootSelectionError(run(), code);
-        expect(error.message).toContain(`Declared in ${origin}: `);
-        expect(error.diagnostic.fix).not.toContain('Declared in');
+        expect(error.message).toContain(`${origin} での宣言: `);
+        expect(error.diagnostic.fix).not.toContain('での宣言');
       }
     });
 
@@ -466,7 +466,7 @@ describe('resolveOpenSpecRoot', () => {
         resolveOpenSpecRoot({ startPath: pointerDir, globalDataDir }),
         'no_registered_stores'
       );
-      expect(error.message).toContain('Declared in ');
+      expect(error.message).toContain('での宣言:');
     });
 
     it('resolves one hop only - a store with its own pointer is the destination', async () => {
@@ -593,7 +593,7 @@ describe('resolveOpenSpecRoot', () => {
         resolveOpenSpecRoot({ startPath: scratch, globalDataDir }),
         'unknown_store'
       );
-      expect(error.message).toContain("Global defaultStore 'ghost-plans'");
+      expect(error.message).toContain("グローバル defaultStore 'ghost-plans'");
       expect(error.diagnostic.fix).toContain('openspec config unset defaultStore');
     });
 

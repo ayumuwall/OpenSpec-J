@@ -209,15 +209,7 @@ yes と答えると `npm install -g @ayumuwall/openspec@latest` を実行し、�
 
 npm が `npm_config_registry` を公開している場合はそのレジストリへ、そうでなければ `https://registry.npmjs.org` へ問い合わせます。`.npmrc` は読み取りません。ファイル内容で外部リクエスト先を決められるようにするのは避けるべきであり、プロジェクトの `.npmrc` はリポジトリとともに配布されるためです。プライベートミラーでは `npm_config_registry` を export するか、`OPENSPEC_NO_UPDATE_CHECK` を設定して検査を完全に省略してください。`CI` が明示的なオフ値（`false`、`0`、`no`、`off`、空）以外、`NODE_ENV=test`、または `OPENSPEC_NO_UPDATE_CHECK`（任意の値）、`DO_NOT_TRACK=1`、`OPENSPEC_TELEMETRY=0` が設定されているときは検査を行いません。検査は update 前に実行され、最大 1.5 秒だけ待ちます。ネットワークが黙ってパケットを落としてもそこで中断し、レジストリに到達できない場合は何も表示しません。
 
-**How "up to date" is decided:** skill files record the version that generated
-them, so OpenSpec compares that against the installed CLI. Command files carry no
-version stamp, so for a tool that has commands but no skills (delivery
-`commands`), OpenSpec compares the file contents against what it would generate
-now — edits to those files count as drift and are overwritten. With delivery
-`skills` or `both`, only the recorded version is checked, so a hand-edited file
-whose version still matches is left alone; use `--force` to rewrite it. Either
-way, generated files are OpenSpec's to own — keep your own instructions
-elsewhere.
+**「最新」の判定方法:** スキルファイルには生成時のバージョンが記録されるため、OpenSpec はインストール済み CLI と比較します。コマンドファイルにはバージョン情報がないため、スキルを持たない commands-only のツール（delivery が `commands`）では、現在生成される内容とファイル内容を比較します。編集による差異も drift とみなし、上書きします。delivery が `skills` または `both` の場合は記録済みバージョンだけを確認するため、手編集したファイルでもバージョンが一致すればそのまま残ります。書き直すには `--force` を使ってください。いずれの場合も生成ファイルは OpenSpec の管理対象です。独自の指示は別の場所に保管してください。
 
 ---
 
@@ -757,11 +749,7 @@ openspec status --change add-dark-mode --json
 
 `isPlanningComplete` は、スキップされていないすべての計画アーティファクトが存在するかを示します。スキップ済みアーティファクトは作成せずに充足済みとして扱います。実装タスクが完了しているかは示しません。`isComplete` は同じ値を持つ互換性エイリアスとして維持されます。
 
-Artifacts are listed in dependency order - a dependency never appears after
-something that requires it - and artifacts that become ready at the same time
-(spec-driven's `specs` and `design` both need only `proposal`) keep the order the
-schema declares them rather than an alphabetical one. So the first `ready` entry
-is the artifact to write next.
+アーティファクトは依存順に並び、依存先がそれを必要とするアーティファクトより後に現れることはありません。同時に作成可能になるアーティファクト（spec-driven の `specs` と `design` はどちらも `proposal` だけを必要とします）は、アルファベット順ではなくスキーマの宣言順を維持します。したがって、最初の `ready` 項目が次に作成するアーティファクトです。
 
 ---
 

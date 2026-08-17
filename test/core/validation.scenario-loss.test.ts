@@ -39,7 +39,7 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
 
   /** The scenario-loss issue, so assertions cannot pass on an unrelated error. */
   const lossIssue = (report: { issues: Array<{ level: string; path: string; message: string }> }) =>
-    report.issues.find((i) => i.message.includes('omits scenario(s)'));
+    report.issues.find((i) => i.message.includes('現在の仕様に残っているシナリオがありません'));
 
   const validate = (changeDir: string) =>
     new Validator(true).validateChangeDeltaSpecs(changeDir, { mainSpecsDir });
@@ -88,7 +88,7 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
     const report = await validate(changeDir);
 
     expect(report.valid).toBe(false);
-    const issue = report.issues.find((i) => i.message.includes('omits scenario(s)'));
+    const issue = report.issues.find((i) => i.message.includes('現在の仕様に残っているシナリオがありません'));
     expect(issue?.level).toBe('ERROR');
     expect(issue?.path).toBe('widgets/spec.md');
     expect(issue?.message).toContain('MODIFIED "Widget state"');
@@ -201,7 +201,7 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
     const report = await validate(changeDir);
 
     expect(report.valid).toBe(false);
-    const issue = report.issues.find((i) => i.message.includes('omits scenario(s)'));
+    const issue = report.issues.find((i) => i.message.includes('現在の仕様に残っているシナリオがありません'));
     expect(issue?.path).toBe('platform/session/spec.md');
     expect(issue?.message).toContain('"Resumed"');
   });
@@ -344,7 +344,7 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
     const report = await validate(changeDir);
 
     expect(report.valid).toBe(false);
-    const issue = report.issues.find((i) => i.message.includes('Could not read'));
+    const issue = report.issues.find((i) => i.message.includes('読み取れませんでした'));
     expect(issue?.level).toBe('ERROR');
     expect(issue?.message).toContain('widgets/spec.md');
     expect(issue?.message).toContain('EISDIR');
@@ -371,7 +371,7 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
     try {
       const report = await validate(changeDir);
       expect(spy.mock.calls.some(([file]) => String(file) === mainSpecFile)).toBe(true);
-      expect(report.issues.some((i) => i.message.includes('Could not read'))).toBe(false);
+      expect(report.issues.some((i) => i.message.includes('読み取れませんでした'))).toBe(false);
     } finally {
       spy.mockRestore();
     }
@@ -444,6 +444,6 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
 
     expect(report.valid).toBe(false);
     expect(lossIssue(report)).toBeUndefined();
-    expect(report.issues.map((i) => i.message).join('\n')).toContain('MODIFIED references old name from RENAMED');
+    expect(report.issues.map((i) => i.message).join('\n')).toContain('MODIFIED が RENAMED の古い名前を参照しています');
   });
 });

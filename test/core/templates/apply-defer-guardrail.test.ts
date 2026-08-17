@@ -12,24 +12,24 @@ describe('apply instructions surface deferred scope (#1529)', () => {
   const instructions = getApplyInstructions();
 
   it('tells the agent to surface added scope rather than defer or simplify', () => {
-    expect(instructions).toContain('surface the added scope');
-    expect(instructions).toContain('beyond what the spec describes');
-    expect(instructions).toMatch(/never silently narrow, defer/);
+    expect(instructions).toContain('追加スコープを明示');
+    expect(instructions).toContain('仕様・タスク記載を超える作業');
+    expect(instructions).toMatch(/黙って縮小・延期・単純化しない/);
   });
 
   it('requires pausing, not just reporting and continuing', () => {
     // The agent must hand control back, not surface the scope and press on.
-    expect(instructions).toContain('surface the added scope and pause');
+    expect(instructions).toContain('追加スコープを明示して一時停止');
   });
 
   it('forbids marking a task complete when it is only partially done', () => {
     expect(instructions).toMatch(
-      /Only mark a task .* when its specified behavior is fully implemented/
+      /指定された振る舞いを完全に実装したときだけ、タスクを/
     );
   });
 
   it('carries the same guidance on both the skill and command surfaces', () => {
-    const needle = 'surface the added scope';
+    const needle = '追加スコープを明示';
     expect(getApplyChangeSkillTemplate().instructions).toContain(needle);
     expect(getOpsxApplyCommandTemplate().content).toContain(needle);
   });

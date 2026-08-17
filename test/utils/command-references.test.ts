@@ -238,7 +238,7 @@ describe('getSkillReferenceTransformer', () => {
     const transformer = getSkillReferenceTransformer('rovodev');
     expect(transformer('/opsx:propose')).toBe('openspec-propose スキル');
     expect(transformer('Run `/opsx:apply` then /opsx:archive')).toBe(
-      'Run `the openspec-apply-change skill` then the openspec-archive-change skill'
+      'Run `openspec-apply-change スキル` then openspec-archive-change スキル'
     );
     // No `/openspec-*` or other slash-command form is ever emitted.
     expect(transformer('/opsx:propose')).not.toMatch(/\/openspec-/);
@@ -343,10 +343,10 @@ describe('apply skill template generates valid per-target invocations', () => {
 
   it('authors invocation references as transformable /opsx:* tokens', () => {
     expect(skill).toContain('/opsx:apply add-auth');
-    expect(skill).toContain('suggest using `/opsx:continue`');
-    expect(skill).toContain('archive this change with `/opsx:archive`');
+    expect(skill).toContain('`/opsx:continue` を提案します');
+    expect(skill).toContain('`/opsx:archive` でこの変更をアーカイブできます');
     // No bare, non-transformable skill-name prose remains.
-    expect(skill).not.toContain('suggest using openspec-continue-change');
+    expect(skill).not.toContain('openspec-continue-change を提案');
   });
 
   const cases = [

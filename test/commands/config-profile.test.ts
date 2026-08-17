@@ -40,7 +40,7 @@ describe('diffProfileState workflow formatting', () => {
     );
 
     expect(diff.hasChanges).toBe(true);
-    expect(diff.lines).toEqual(['workflows: removed sync']);
+    expect(diff.lines).toEqual(['workflows: 削除 sync']);
   });
 
   it('uses explicit labels when workflows are added and removed', async () => {
@@ -52,7 +52,7 @@ describe('diffProfileState workflow formatting', () => {
     );
 
     expect(diff.hasChanges).toBe(true);
-    expect(diff.lines).toEqual(['workflows: added verify; removed sync']);
+    expect(diff.lines).toEqual(['workflows: 追加 verify; 削除 sync']);
   });
 });
 

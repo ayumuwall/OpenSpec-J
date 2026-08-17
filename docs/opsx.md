@@ -144,12 +144,12 @@ rules:
 - アーティファクト ID がスキーマと一致しているか確認してください（上の一覧を参照）
 - `openspec schemas --json` を実行すると、各スキーマのアーティファクト ID を確認できます
 
-**Config not being applied:**
+**設定が適用されない場合:**
 - ファイルが `openspec/config.yaml` にあることを確認してください（`.yml` ではありません）
 - YAML 構文をバリデーターで確認してください
 - 設定変更は即時反映されます（再起動不要）
 
-**Context too large:**
+**コンテキストが大きすぎる場合:**
 - コンテキストは 50KB に制限されています
 - 要約するか、代わりに外部ドキュメントへリンクしてください
 
@@ -157,18 +157,18 @@ rules:
 
 | コマンド | できること |
 |---------|------------|
-| `/opsx:propose` | Create a change and generate planning artifacts in one step (default quick path) |
-| `/opsx:explore` | Think through ideas, investigate problems, clarify requirements |
-| `/opsx:new` | Start a new change scaffold (expanded workflow) |
-| `/opsx:continue` | Create the next artifact (expanded workflow) |
-| `/opsx:ff` | Fast-forward planning artifacts (expanded workflow) |
+| `/opsx:propose` | 変更を作成し、計画アーティファクトを一括生成（デフォルトの短縮経路） |
+| `/opsx:explore` | アイデアの検討、問題の調査、要件の明確化 |
+| `/opsx:new` | 新しい変更のひな形を作成（拡張ワークフロー） |
+| `/opsx:continue` | 次のアーティファクトを作成（拡張ワークフロー） |
+| `/opsx:ff` | 計画アーティファクトを一括作成（拡張ワークフロー） |
 | `/opsx:apply` | 必要に応じてアーティファクトを更新しつつタスクを実装 |
 | `/opsx:update` | 変更の計画アーティファクトを更新し、整合性を保つ |
-| `/opsx:verify` | Validate implementation against artifacts (expanded workflow) |
+| `/opsx:verify` | 実装とアーティファクトの整合性を検証（拡張ワークフロー） |
 | `/opsx:sync` | delta spec を本仕様へマージする（任意） |
 | `/opsx:archive` | 完了時にアーカイブ |
-| `/opsx:bulk-archive` | Archive multiple completed changes (expanded workflow) |
-| `/opsx:onboard` | Guided walkthrough of an end-to-end change (expanded workflow) |
+| `/opsx:bulk-archive` | 完了した複数の変更を一括アーカイブ（拡張ワークフロー） |
+| `/opsx:onboard` | 変更全体のガイド付き walkthrough（拡張ワークフロー） |
 
 ## 使い方
 
@@ -211,7 +211,7 @@ rules:
 
 ### 変更を更新する
 ```
-/opsx:update add-dark-mode - we're storing the theme in a cookie now
+/opsx:update add-dark-mode - テーマは今後 Cookie に保存します
 ```
 既存の計画成果物を改訂し、全体の整合性を保ちます。設計の修正が提案へ戻るように、どの方向にも波及できます。対象は計画成果物だけです。コードは編集せず、存在しない成果物も作りません（それは `/opsx:continue` の役割です）。各編集は、先にユーザーへ確認します。すでに実装済みの変更であれば、改訂後の計画にコードを追従させるため `/opsx:apply` を勧めます。改訂によって変更の *意図* が変わる場合は、新しい変更として始めてください。詳しくは [更新するか、新しく始めるか](#when-to-update-vs-start-fresh) を参照してください。
 
@@ -221,7 +221,7 @@ rules:
 ```
 現在の変更の delta spec を、アーカイブせずに本 `openspec/specs/` へマージします。変更はアクティブのままです。delta 全体を適用します。`## REMOVED` 配下の要件は本仕様から削除され、名称変更した要件はその場で改題され、delta に記載のない内容は維持されます。同期は任意です。まだ同期していない場合は archive が先に同期するよう確認します。アーカイブ前に本仕様を更新したいとき、並行する変更がこの変更で追加した仕様を基に作業する必要があるとき、またはマージ後の本仕様をアーカイブ前にレビューしたいときに使用してください。
 
-### Finish up
+### 完了する
 ```
 /opsx:archive   # 完了したらアーカイブへ移動（必要なら仕様同期を確認）
 ```
@@ -608,13 +608,13 @@ openspec/schemas/research-first/
 ```yaml
 name: research-first
 artifacts:
-  - id: research        # Added before proposal
+  - id: research        # proposal より前に追加
     generates: research.md
     requires: []
 
   - id: proposal
     generates: proposal.md
-    requires: [research]  # Now depends on research
+    requires: [research]  # research に依存するよう変更
 
   - id: tasks
     generates: tasks.md
@@ -673,7 +673,6 @@ openspec schema validate my-workflow
 この仕組みはまだ粗い部分があります。それは意図的です。何がうまく機能するかを学んでいる段階です。
 
 バグを見つけた、またはアイデアがある場合は、[Discord](https://discord.gg/YctCnvvshC) に参加するか、[GitHub](https://github.com/ayumuwall/OpenSpec-J/issues) で Issue を開いてください。
-### Delta spec を同期
 ```text
 /opsx:sync
 ```

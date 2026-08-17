@@ -240,7 +240,7 @@ describe('schema fork fidelity (PR #1130)', () => {
       .map((call) => String(call[0]))
       .join('\n');
     expect(output).toContain('"forked": false');
-    expect(output).toMatch(/Invalid schema/i);
+    expect(output).toMatch(/不正なスキーマ/);
 
     // Hardening: a failed fork must not litter a partial destination. The
     // freshly-copied dir is removed, so a corrected retry is not blocked by a
@@ -259,8 +259,8 @@ describe('schema fork fidelity (PR #1130)', () => {
     consoleLogSpy.mockClear();
     await runSchemaCommand(['fork', 'invalid-schema', 'forked-invalid', '--json']);
     const retry = consoleLogSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(retry).toMatch(/Invalid schema/i);
-    expect(retry).not.toMatch(/already exists/i);
+    expect(retry).toMatch(/不正なスキーマ/);
+    expect(retry).not.toMatch(/既に存在/);
   });
 
   it('never removes a pre-existing destination when --force is absent', async () => {
@@ -277,7 +277,7 @@ describe('schema fork fidelity (PR #1130)', () => {
 
     const output = consoleLogSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(process.exitCode).toBeTruthy();
-    expect(output).toMatch(/already exists/i);
+    expect(output).toMatch(/既に存在/);
     // The pre-existing directory and its contents survive intact.
     expect(fs.existsSync(sentinel)).toBe(true);
     expect(fs.readFileSync(sentinel, 'utf-8')).toBe('do not delete me');
@@ -317,7 +317,7 @@ describe('schema fork fidelity (PR #1130)', () => {
     const output = consoleLogSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(process.exitCode).toBeTruthy();
     expect(output).toContain('"forked": false');
-    expect(output).toMatch(/Invalid schema/i);
+    expect(output).toMatch(/不正なスキーマ/);
     // The valid destination was NOT destroyed by the --force removal.
     expect(fs.existsSync(existing)).toBe(true);
     expect(fs.readFileSync(existing, 'utf-8')).toBe(existingContent);
@@ -334,7 +334,7 @@ describe('schema fork fidelity (PR #1130)', () => {
     const output = consoleLogSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(process.exitCode).toBeTruthy();
     expect(output).toContain('"forked": false');
-    expect(output).toMatch(/onto itself/i);
+    expect(output).toMatch(/自身へ複製/);
 
     // The source survives untouched, comments and block scalars included.
     const srcPath = path.join(
@@ -468,8 +468,8 @@ describe('schema fork fidelity (PR #1130)', () => {
     // The destination loss is surfaced, not silent: the error names a
     // `.fork-backup-` directory and how to restore it.
     expect(output).toMatch(/\.fork-backup-/);
-    expect(output).toMatch(/preserved at/i);
-    expect(output).toMatch(/could not restore/i);
+    expect(output).toMatch(/保存されています/);
+    expect(output).toMatch(/復元できませんでした/);
 
     // The original content really is still on disk in the backup dir the error
     // points at (recovery is genuinely possible).
@@ -547,7 +547,7 @@ describe('schema fork fidelity (PR #1130)', () => {
     const output = consoleLogSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(process.exitCode).toBeTruthy();
     expect(output).toContain('"forked": false');
-    expect(output).toMatch(/changed on disk|concurrent|aborted/i);
+    expect(output).toMatch(/ディスク上で変更|同時変更|中止/);
 
     // The concurrent edit is preserved — NOT overwritten by the fork. The
     // destination still has the concurrent content, and is not the fork's copy
@@ -589,7 +589,7 @@ describe('schema fork fidelity (PR #1130)', () => {
     expect(fs.readFileSync(existing, 'utf-8')).toMatch(/^name: keep-me$/m);
 
     // The changed backup was NOT deleted, and its location is surfaced.
-    expect(errOutput).toMatch(/was NOT deleted/i);
+    expect(errOutput).toMatch(/削除しませんでした/);
     expect(errOutput).toMatch(/\.fork-backup-/);
     const backupDir = fs
       .readdirSync(path.join(tempDir, 'openspec', 'schemas'))
@@ -644,7 +644,7 @@ describe('schema fork fidelity (PR #1130)', () => {
     const output = consoleLogSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(process.exitCode).toBeTruthy();
     expect(output).toContain('"forked": false');
-    expect(output).toMatch(/not a valid schema|aborted/i);
+    expect(output).toMatch(/有効なスキーマではありません|中止/);
 
     // The valid destination is preserved byte-identical — never overwritten by
     // the invalid staged fork nor deleted for it.

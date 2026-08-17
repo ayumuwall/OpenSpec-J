@@ -20,7 +20,7 @@ describe('instruction-loader', () => {
       expect(template).toContain('## What Changes');
       expect(template).toContain('specs/<capability-path>/spec.md');
       expect(template).toContain('<existing-capability-path>');
-      expect(template).toContain('exact existing path under openspec/specs/');
+      expect(template).toContain('openspec/specs/ 内の既存パスを正確に使用');
     });
 
     it('should throw TemplateLoadError for non-existent template', () => {
@@ -59,7 +59,7 @@ describe('instruction-loader', () => {
 
       try {
         expect(() => loadTemplate('custom', 'proposal.md', tempDir)).toThrow(
-          /outside the allowed directory/u
+          /許可されたディレクトリ外/u
         );
       } finally {
         fs.rmSync(tempDir, { recursive: true, force: true });

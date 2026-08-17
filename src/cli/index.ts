@@ -183,8 +183,8 @@ program
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
   .option('--profile <profile>', 'グローバル設定 profile を上書き（core または custom）')
   .option('--no-animation', 'アニメーションの代わりに静的なウェルカム画面を表示')
-  .option('--copilot-cloud', 'Set up GitHub Copilot cloud coding-agent files without prompting')
-  .option('--no-copilot-cloud', 'Skip GitHub Copilot cloud coding-agent files without prompting')
+  .option('--copilot-cloud', '確認なしで GitHub Copilot クラウドコーディングエージェント用ファイルをセットアップ')
+  .option('--no-copilot-cloud', 'GitHub Copilot クラウドコーディングエージェント用ファイルの生成をスキップ')
   .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string; animation?: boolean; copilotCloud?: boolean }) => {
     try {
       // Validate that the path is a valid directory
@@ -464,7 +464,7 @@ program
   .option('--all', 'すべての変更と仕様を検証')
   .option('--changes', 'すべての変更を検証')
   .option('--specs', 'すべての仕様を検証')
-  .option('--archived', 'Validate that archived changes have all tasks completed (for pre-commit linting)')
+  .option('--archived', 'アーカイブ済みの変更ですべてのタスクが完了しているか検証（pre-commit lint 向け）')
   .option('--type <type>', 'あいまいな場合に項目タイプを指定: change|spec')
   .option('--strict', '厳密検証モードを有効化')
   .option('--json', '検証結果を JSON で出力')

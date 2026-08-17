@@ -44,18 +44,18 @@ export function makeLockErrorFactory(
     if (kind === 'create-failed') {
       // A permission or filesystem problem, not contention - say so.
       return new StoreError(
-        `Cannot create ${data.createSubject} ${info.lockPath} (${(info.cause as NodeJS.ErrnoException)?.code ?? info.cause}).`,
+        `${data.createSubject} ${info.lockPath} を作成できません（${(info.cause as NodeJS.ErrnoException)?.code ?? info.cause}）。`,
         data.code,
         {
           target: data.target,
-          fix: `Check permissions on ${path.dirname(info.lockPath)}.`,
+          fix: `${path.dirname(info.lockPath)} の権限を確認してください。`,
         }
       );
     }
 
     return new StoreError(data.busyMessage, data.code, {
       target: data.target,
-      fix: `Retry shortly; if this persists, delete the stale lock file ${info.lockPath}.`,
+      fix: `しばらくして再試行してください。解消しない場合は、古いロックファイル ${info.lockPath} を削除してください。`,
   });
   };
 }

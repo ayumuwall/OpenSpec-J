@@ -87,8 +87,8 @@ c. **変更をインテリジェントに適用**:
 - 要件がすでに存在する場合 → 一致するように更新します (暗黙的な MODIFIED として扱います)
 
       **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
+      - 本仕様から要件を探します
+      - 次のいずれかの方法で変更を適用します:
         - 本仕様にまだない新しいシナリオを追加する
         - 既存のシナリオを変更する
         - 要件の説明を変更する
@@ -120,7 +120,7 @@ c. **変更をインテリジェントに適用**:
 
 5. **更新した本仕様を検証する**
 
-   Run `openspec validate --specs` with the same selected-root flags used earlier.
+   前の手順と同じ選択済みルート用フラグを付けて `openspec validate --specs` を実行します。
    検証に失敗した場合は問題を報告し、同期が成功したとは伝えてはいけません。
 
 6. **概要を表示する**
@@ -200,7 +200,7 @@ c. **変更をインテリジェントに適用**:
 **成功時の出力**
 
 ```markdown
-## Specs Synced: <change-name>
+## 仕様を同期しました: <change-name>
 
 更新した本仕様:
 

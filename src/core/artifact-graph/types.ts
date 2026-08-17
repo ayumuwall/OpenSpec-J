@@ -24,9 +24,9 @@ function relativePathSchema(fieldName: string) {
 // Artifact definition schema
 export const ArtifactSchema = z.object({
   id: z.string().min(1, { error: 'Artifact ID は必須です' }),
-  generates: relativePathSchema('generates field'),
+  generates: relativePathSchema('generates フィールド'),
   description: z.string(),
-  template: relativePathSchema('template field'),
+  template: relativePathSchema('template フィールド'),
   instruction: z.string().optional(),
   requires: z.array(z.string()).default([]),
 });

@@ -157,7 +157,7 @@ describe('ArchiveCommand', () => {
 
       await expect(
         archiveCommand.execute(changeName, { yes: true, skipSpecs: true })
-      ).rejects.toThrow(/complete destination was retained for recovery/);
+      ).rejects.toThrow(/完全なコピー先は復旧用に保持されています/);
 
       const archived = path.join(
         tempDir,
@@ -208,7 +208,7 @@ describe('ArchiveCommand', () => {
 
       await expect(
         archiveCommand.execute(changeName, { yes: true, skipSpecs: true })
-      ).rejects.toThrow(/changed during the fallback copy/);
+      ).rejects.toThrow(/フォールバックコピー中に、変更ディレクトリの内容が変わりました/);
 
       expect(edited).toBe(true);
       await expect(fs.readFile(tasksPath, 'utf-8')).resolves.toContain('Concurrent task');
@@ -263,7 +263,7 @@ describe('ArchiveCommand', () => {
 
         await expect(
           archiveCommand.execute(changeName, { yes: true, skipSpecs: true })
-        ).rejects.toThrow(/changed during the fallback copy/);
+        ).rejects.toThrow(/フォールバックコピー中に、変更ディレクトリの内容が変わりました/);
 
         expect(changed).toBe(true);
         expect((await fs.stat(toolPath)).mode & 0o777).toBe(0o755);
@@ -494,7 +494,7 @@ describe('ArchiveCommand', () => {
           noValidate: true,
           skipSpecs: true,
         })
-      ).rejects.toThrow(/must not contain path separators/u);
+      ).rejects.toThrow(/パス区切り文字を含めることはできません/u);
       await expect(fs.access(outsideDir)).resolves.not.toThrow();
     });
 
@@ -517,7 +517,7 @@ describe('ArchiveCommand', () => {
           noValidate: true,
           skipSpecs: true,
         })
-      ).rejects.toThrow(/outside the OpenSpec root/u);
+      ).rejects.toThrow(/OpenSpec ルート外/u);
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       await expect(fs.readdir(outsideDir)).resolves.toEqual([]);
     });
@@ -728,7 +728,7 @@ Then expected result happens`;
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain('# test-capability Specification');
       expect(updatedContent).toContain('## Purpose');
-      expect(updatedContent).toContain(`change ${changeName} をアーカイブして作成されました`);
+      expect(updatedContent).toContain(`変更 ${changeName} のアーカイブ時に作成されました`);
       expect(updatedContent).toContain('## Requirements');
       expect(updatedContent).toContain('### Requirement: The system SHALL provide test capability');
       expect(updatedContent).toContain('#### Scenario: Basic test');
@@ -790,7 +790,7 @@ Then expected result happens`;
 
       // Genuine conflict: archive aborts, nothing moves, main spec untouched
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('ADDED failed for header "### Requirement: The system SHALL provide a core abstraction layer" - already exists')
+        expect.stringContaining('ADDED に失敗しました: "### Requirement: The system SHALL provide a core abstraction layer" - 既に存在します')
       );
       expect(process.exitCode).toBe(1);
       await expect(fs.access(changeDir)).resolves.toBeUndefined();
@@ -849,7 +849,7 @@ Then expected result happens`;
       await archiveCommand.execute(changeName, { yes: true, noValidate: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('RENAMED failed for header "### Requirement: A requirement that never existed" - source not found')
+        expect.stringContaining('RENAMED に失敗しました: "### Requirement: A requirement that never existed" - 変更元が見つかりません')
       );
       expect(process.exitCode).toBe(1);
       await expect(fs.access(changeDir)).resolves.toBeUndefined();
@@ -881,7 +881,7 @@ Then expected result happens`;
       await archiveCommand.execute(changeName, { yes: true, noValidate: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('requirement present in multiple sections (RENAMED and REMOVED) for header "### Requirement: Old name"')
+        expect.stringContaining('要件が複数のセクション（RENAMED と REMOVED）に存在します: "### Requirement: Old name"')
       );
       expect(process.exitCode).toBe(1);
       const untouched = await fs.readFile(path.join(mainSpecDir, 'spec.md'), 'utf-8');
@@ -907,7 +907,7 @@ Then expected result happens`;
       await archiveCommand.execute(changeName, { yes: true, noValidate: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('requirement present in multiple sections (RENAMED and REMOVED) for header "### Requirement: Old Name" (REMOVED spells it "old name")')
+        expect.stringContaining('要件が複数のセクション（RENAMED と REMOVED）に存在します: "### Requirement: Old Name"（REMOVED では "old name" と記載）')
       );
       expect(process.exitCode).toBe(1);
       await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -937,7 +937,7 @@ Then expected result happens`;
 
       // Archive succeeds with a warning instead of aborting
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('REMOVED requirement "The system SHALL provide a legacy layer" is not in the current spec')
+        expect.stringContaining('REMOVED 要件 "The system SHALL provide a legacy layer" は現在の仕様にありません')
       );
       // The skipped removal is not reported as applied
       expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('- 1 removed'));
@@ -1007,7 +1007,7 @@ Then expected result happens`;
       await archiveCommand.execute(changeName, { yes: true, noValidate: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('RENAMED failed for header "### Requirement: cache policy" - source not found, but "### Requirement: Cache Policy" exists')
+        expect.stringContaining('RENAMED に失敗しました: "### Requirement: cache policy" - 変更元が見つかりませんが、"### Requirement: Cache Policy" が存在します')
       );
       expect(process.exitCode).toBe(1);
       await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -1036,7 +1036,7 @@ Then expected result happens`;
       await archiveCommand.execute(changeName, { yes: true, noValidate: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('REMOVED failed for header "### Requirement: legacy layer" - not found, but "### Requirement: Legacy Layer" exists')
+        expect.stringContaining('REMOVED に失敗しました: "### Requirement: legacy layer" - 見つかりませんが、"### Requirement: Legacy Layer" が存在します')
       );
       expect(process.exitCode).toBe(1);
       await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -1076,7 +1076,7 @@ Then expected result happens`;
       // The silent path must not swallow the skip: agents reading JSON get
       // the same signal humans get on stdout.
       expect(parsed.archive.warnings).toEqual([
-        expect.stringContaining('REMOVED requirement "The system SHALL provide a legacy layer" is not in the current spec'),
+        expect.stringContaining('REMOVED 要件 "The system SHALL provide a legacy layer" は現在の仕様にありません'),
       ]);
     });
 
@@ -1158,11 +1158,11 @@ The system SHALL support logo and backgroundColor fields for gift cards.
       
       // Verify warning was logged about REMOVED requirements being ignored
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Warning: gift-card - 2 REMOVED requirement(s) ignored')
+        expect.stringContaining('警告: gift-card - 新しい仕様では削除対象がないため、REMOVED 要件 2 件を無視しました')
       );
 
       // The ignored removals are not reported as applied
-      expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('- 2 removed'));
+      expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('- 削除 2 件'));
       
       // Verify spec was created with only ADDED requirements
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'gift-card', 'spec.md');
@@ -1266,7 +1266,7 @@ The system SHALL send a referral invite.
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'referrals', 'spec.md');
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
     });
 
@@ -1296,7 +1296,7 @@ Illustration only - not this capability's purpose.
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'payouts', 'spec.md');
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
       expect(updatedContent).not.toContain("Illustration only - not this capability's purpose.\n## Requirements");
     });
@@ -1324,7 +1324,7 @@ The system SHALL send a notification.
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'notifications', 'spec.md');
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
     });
 
@@ -1358,12 +1358,12 @@ The system SHALL handle widgets.
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'widgets', 'spec.md');
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
       expect(updatedContent).not.toContain('### Requirement: Stray header');
       expect(updatedContent).toContain('### Requirement: Real Requirement');
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Warning: widgets - delta Purpose ignored (it would leave the new spec unreadable)')
+        expect.stringContaining('警告: widgets - delta の Purpose を無視しました（新しい仕様が読めなくなるため）')
       );
 
       // The archive still completed rather than aborting.
@@ -1401,11 +1401,11 @@ The system SHALL handle gadgets.
         'utf-8'
       );
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
       expect(updatedContent).not.toContain('# Not a spec title');
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('gadgets - delta Purpose ignored')
+        expect.stringContaining('gadgets - delta の Purpose を無視しました')
       );
       // The rebuilt spec must still satisfy the validator archive itself runs.
       const report = await new Validator().validateSpecContent('gadgets', updatedContent);
@@ -1444,12 +1444,12 @@ retries: 3
         'utf-8'
       );
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
       // Exactly one Requirements section, and the requirement is still visible.
       expect(updatedContent.match(/^## Requirements$/gm)).toHaveLength(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('mesh-config - delta Purpose ignored')
+        expect.stringContaining('mesh-config - delta の Purpose を無視しました')
       );
       const report = await new Validator().validateSpecContent('mesh-config', updatedContent);
       expect(report.issues.filter(i => i.level === 'ERROR')).toHaveLength(0);
@@ -1566,11 +1566,11 @@ The system SHALL track widgets.
         // lands in the file, where it can hide the headers the parsers rely on
         // and blank the document out in a markdown renderer.
         expect(updatedContent).toContain(
-          `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+          `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
         );
         expect(updatedContent).not.toContain('<!--');
         expect(console.log).toHaveBeenCalledWith(
-          expect.stringContaining(`${specFolder} - delta Purpose ignored`)
+          expect.stringContaining(`${specFolder} - delta の Purpose を無視しました`)
         );
         expect(updatedContent.match(/^## Requirements$/gm)).toHaveLength(1);
         const report = await new Validator().validateSpecContent(specFolder, updatedContent);
@@ -1617,7 +1617,7 @@ The system SHALL route events.
           'utf-8'
         );
         expect(updatedContent).toContain(
-          `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+          `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
         );
         expect(updatedContent).not.toContain('Old abandoned purpose text');
         const report = await new Validator().validateSpecContent(`co-${label}`, updatedContent);
@@ -1688,7 +1688,7 @@ The system SHALL retry failed requests.
         'utf-8'
       );
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
       expect(updatedContent).not.toContain('retries: 3');
     });
@@ -1763,7 +1763,7 @@ The system SHALL do the thing.
         'utf-8'
       );
       expect(updatedContent).toContain(
-        `TBD - change ${changeName} をアーカイブして作成されました。アーカイブ後に Purpose を更新してください。`
+        `TBD - 変更 ${changeName} のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。`
       );
       expect(updatedContent).not.toContain('New capabilities only');
     });
@@ -1798,7 +1798,7 @@ The system SHALL track points.
       // failure is not a surprise later.
       expect(updatedContent).toContain('Tracks loyalty points.');
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('carried Purpose is under 50 characters')
+        expect.stringContaining('引き継いだ Purpose は 50 文字未満です')
       );
     });
 
@@ -1852,7 +1852,7 @@ The system SHALL refund the card on file.
       expect(updatedContent).toContain('### Requirement: Refund Card');
       // Dropping it silently would be indistinguishable from it having worked.
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('billing - delta Purpose ignored; billing already has one')
+        expect.stringContaining('billing - delta の Purpose を無視しました。billing には既に Purpose があります')
       );
     });
 
@@ -1951,7 +1951,7 @@ Modified content.`;
       
       // Verify error message mentions MODIFIED not allowed for new specs
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('new-capability: target spec does not exist')
+        expect.stringContaining('new-capability: 対象仕様が存在しません')
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
       
@@ -1989,7 +1989,7 @@ New feature description.
       
       // Verify error message mentions RENAMED not allowed for new specs
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('another-capability: target spec does not exist')
+        expect.stringContaining('another-capability: 対象仕様が存在しません')
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
       
@@ -2006,7 +2006,7 @@ New feature description.
     it('should throw error if change does not exist', async () => {
       await expect(
         archiveCommand.execute('non-existent-change', { yes: true })
-      ).rejects.toThrow("Change 'non-existent-change' not found");
+      ).rejects.toThrow("変更 'non-existent-change' が見つかりません");
     });
 
     it('should throw error if archive already exists', async () => {
@@ -2042,7 +2042,7 @@ New feature description.
 
         await expect(
           archiveCommand.execute(changeName, { yes: true, skipSpecs: true })
-        ).rejects.toThrow(/already exists/);
+        ).rejects.toThrow(/既に存在します/);
 
         expect((await fs.lstat(archivePath)).isSymbolicLink()).toBe(true);
         await expect(fs.readlink(archivePath)).resolves.toBe('missing-target');
@@ -2077,7 +2077,7 @@ New feature description.
 
         await expect(
           archiveCommand.execute(changeName, { yes: true, skipSpecs: true })
-        ).rejects.toThrow(/symbolic link/);
+        ).rejects.toThrow(/シンボリックリンク/);
 
         expect((await fs.lstat(changeDir)).isSymbolicLink()).toBe(true);
         await expect(fs.access(realChange)).resolves.not.toThrow();
@@ -2124,7 +2124,7 @@ New feature description.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/remove the stale claim at .*\.openspec-archive\.lock/);
+      ).rejects.toThrow(/古いロックを削除して再実行してください/);
 
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       await expect(fs.access(claimPath)).resolves.not.toThrow();
@@ -2140,7 +2140,7 @@ New feature description.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/already being created/);
+      ).rejects.toThrow(/既に作成中です/);
 
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       await expect(fs.access(claimPath)).resolves.not.toThrow();
@@ -2416,7 +2416,7 @@ Then expected result happens`;
       
       // Verify user was prompted about specs
       expect(mockConfirm).toHaveBeenCalledWith({
-        message: '仕様更新を実行しますか？',
+        message: '仕様の更新を続行しますか？',
         default: true
       });
       
@@ -2485,7 +2485,7 @@ The system SHALL survive.
       mockConfirm.mockReset();
       mockConfirm.mockImplementationOnce(async () => {
         expect(console.log).toHaveBeenCalledWith(
-          expect.stringContaining('"### Notes" sits inside requirement "Target"')
+          expect.stringContaining('"### Notes" は要件 "Target" の内部にあるため')
         );
         return false;
       });
@@ -2493,7 +2493,7 @@ The system SHALL survive.
       await archiveCommand.execute(changeName);
 
       expect(mockConfirm).toHaveBeenCalledWith({
-        message: 'Proceed with spec updates?',
+        message: '仕様の更新を続行しますか？',
         default: true,
       });
       await expect(fs.readFile(path.join(mainSpecDir, 'spec.md'), 'utf-8')).resolves.toBe(mainSpec);
@@ -2560,7 +2560,7 @@ The system SHALL preserve legacy behavior.
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       expect(process.exitCode).toBe(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("Spec inputs for 'legacy-layer' changed")
+        expect.stringContaining("'legacy-layer' の仕様入力が変更されました")
       );
     });
 
@@ -2626,7 +2626,7 @@ The system SHALL preserve legacy behavior.
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       expect(process.exitCode).toBe(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('retirement authorization changed')
+        expect.stringContaining('機能廃止許可が変更されました')
       );
     });
 
@@ -2681,9 +2681,9 @@ The system SHALL survive.
         console.log as unknown as { mock: { calls: unknown[][] } }
       ).mock.calls.flat().map(String);
       const warningIndex = output.findIndex((line) =>
-        line.includes('"### Notes" sits inside requirement "Target"')
+        line.includes('"### Notes" は要件 "Target" の内部にあるため')
       );
-      const successIndex = output.indexOf('Specs updated successfully.');
+      const successIndex = output.indexOf('仕様の更新が完了しました。');
       expect(warningIndex).toBeGreaterThanOrEqual(0);
       expect(successIndex).toBeGreaterThan(warningIndex);
       await expect(fs.readFile(path.join(mainSpecDir, 'spec.md'), 'utf-8')).resolves.not.toContain(
@@ -2880,7 +2880,7 @@ The system SHALL support the shared rule.
       expect(updated).not.toContain('#### Scenario: Behavior from B');
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining(
-          'stale-modified MODIFIED failed for header "### Requirement: Shared Rule" - current spec contains scenario(s) not present in the modified block: "Behavior from A"'
+          'stale-modified の MODIFIED に失敗しました: "### Requirement: Shared Rule" - 現在の仕様にあり、変更後のブロックにないシナリオがあります: "Behavior from A"'
         )
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
@@ -2946,7 +2946,7 @@ The system SHALL authenticate.
       expect(updated).toContain('malformed');
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining(
-          'dup-scenario MODIFIED failed for header "### Requirement: Login" - current spec contains scenario(s) not present in the modified block: "Validate"'
+          'dup-scenario の MODIFIED に失敗しました: "### Requirement: Login" - 現在の仕様にあり、変更後のブロックにないシナリオがあります: "Validate"'
         )
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
@@ -3073,7 +3073,7 @@ The system SHALL log access, for example:
       expect(updated).not.toContain('Trace');
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining(
-          'fenced-incoming MODIFIED failed for header "### Requirement: Access log" - current spec contains scenario(s) not present in the modified block: "Audit"'
+          'fenced-incoming の MODIFIED に失敗しました: "### Requirement: Access log" - 現在の仕様にあり、変更後のブロックにないシナリオがあります: "Audit"'
         )
       );
       expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
@@ -3129,7 +3129,7 @@ The system SHALL do B differently.
       await archiveCommand.execute(changeName, { yes: true, noValidate: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('delta-target: target spec is structurally invalid and cannot be updated until fixed:')
+        expect.stringContaining('delta-target: 対象仕様の構造が無効です。修正するまで更新できません:')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('要件ヘッダー "### Requirement: B" がメインの ## Requirements セクション外にあります。')
@@ -3181,7 +3181,7 @@ new body`;
       expect(unchanged).toBe(mainContent);
       // Assert error message format and abort notice
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('delta validation failed')
+        expect.stringContaining('delta の検証に失敗しました')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('中止しました。ファイルは変更されませんでした。')
@@ -3288,7 +3288,7 @@ missing body`);
 
       // Verify aggregated totals line was printed
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Totals: + 1, ~ 1, - 0, → 1')
+        expect.stringContaining('合計: + 1, ~ 1, - 0, → 1')
       );
     });
   });
@@ -3319,7 +3319,7 @@ The system SHALL log all events.`;
 
       expect(process.exitCode).toBe(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('must include at least one scenario')
+        expect.stringContaining('少なくとも1つのシナリオが必要です')
       );
       await expect(fs.access(changeDir)).resolves.not.toThrow();
     });
@@ -3553,7 +3553,7 @@ The system SHALL do the thing differently.
       
       await expect(
         archiveCommand.execute('any-change', { yes: true })
-      ).rejects.toThrow("Change 'any-change' not found. No active changes exist in this root.");
+      ).rejects.toThrow("変更 'any-change' が見つかりません。このルートにはアクティブな変更がありません。");
     });
   });
 
@@ -3620,7 +3620,7 @@ The system SHALL do the thing differently.
       
       // Verify confirm was called
       expect(mockConfirm).toHaveBeenCalledWith({
-        message: '警告: 未完了タスクが 1 件あります。続行しますか？',
+        message: '警告: 1件の未完了タスクがあります。続行しますか？',
         default: false
       });
     });
@@ -3677,10 +3677,10 @@ The system SHALL do the thing differently.
       await archiveCommand.execute(changeName, { noValidate: true });
 
       expect(mockConfirm).toHaveBeenCalledWith({
-        message: 'Warning: 1 incomplete task(s) found. Continue?',
+        message: '警告: 1件の未完了タスクがあります。続行しますか？',
         default: false,
       });
-      expect(console.log).toHaveBeenCalledWith('Archive cancelled.');
+      expect(console.log).toHaveBeenCalledWith('アーカイブをキャンセルしました。');
       await expect(fs.access(changeDir)).resolves.not.toThrow();
     });
   });
@@ -3783,7 +3783,7 @@ The system SHALL do the thing differently.
         );
         // ...but the dead end now comes with its own way out.
         expect(console.log).toHaveBeenCalledWith(
-          expect.stringContaining('add `retire_capabilities: true`')
+          expect.stringContaining('`retire_capabilities: true` を追加')
         );
         // Nothing touched: not the spec, not the change.
         await expect(fs.readFile(target, 'utf-8')).resolves.toBe(original);
@@ -3805,7 +3805,7 @@ The system SHALL do the thing differently.
 
         expect(process.exitCode).toBe(1);
         expect(console.log).toHaveBeenCalledWith(
-          expect.stringContaining('cannot be honored')
+          expect.stringContaining('現在のマーカーは適用できません')
         );
         await expect(fs.access(target)).resolves.not.toThrow();
       });
@@ -3858,7 +3858,7 @@ The system SHALL do the thing differently.
 
         expect(process.exitCode).toBe(1);
         expect(console.log).not.toHaveBeenCalledWith(
-          expect.stringContaining('add `retire_capabilities: true`')
+          expect.stringContaining('`retire_capabilities: true` を追加')
         );
       });
     });
@@ -3963,7 +3963,7 @@ The system SHALL do the thing differently.
 
       expect(process.exitCode).toBe(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('duplicates the requirement declared')
+        expect.stringContaining('要件と重複')
       );
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(original);
       await expect(
@@ -4001,7 +4001,7 @@ The system SHALL do the thing differently.
         fs.access(path.join(tempDir, 'openspec', 'changes', changeName))
       ).resolves.not.toThrow();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('content the merge cannot safely account for')
+        expect.stringContaining('マージが安全に扱えない内容')
       );
     });
 
@@ -4061,7 +4061,7 @@ The system SHALL do the thing differently.
       );
       // And the author is told why their marker was refused.
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('content the merge cannot safely account for')
+        expect.stringContaining('マージが安全に扱えない内容')
       );
     });
 
@@ -4313,7 +4313,7 @@ The system SHALL do the thing differently.
 
       expect(process.exitCode).toBe(1);
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('add `retire_capabilities: true`')
+        expect.stringContaining('`retire_capabilities: true` を追加')
       );
     });
 
@@ -4335,7 +4335,7 @@ The system SHALL do the thing differently.
 
         await expect(
           archiveCommand.execute(changeName, { yes: true })
-        ).rejects.toThrow(/resolves outside/);
+        ).rejects.toThrow(/外部へ解決されます/);
         await expect(fs.access(path.join(outside, 'spec.md'))).resolves.not.toThrow();
       }
     );
@@ -4354,9 +4354,9 @@ The system SHALL do the thing differently.
 
       const notes = JSON.parse(lastJsonPayload()).archive.warnings.join('\n');
       expect(notes).toContain(
-        'If it was committed, restore it with: git checkout HEAD -- ":(top)openspec/specs/legacy-layer/spec.md"'
+        'コミット済みなら、次のコマンドで復元できます: git checkout HEAD -- ":(top)openspec/specs/legacy-layer/spec.md"'
       );
-      expect(notes).not.toContain('Recover with: git checkout');
+      expect(notes).not.toContain('復元: git checkout');
     });
 
     it('refuses a marker sitting in unparseable YAML', async () => {
@@ -4408,7 +4408,7 @@ The system SHALL do the thing differently.
           path.join(tempDir, 'openspec', 'specs'),
           { silent: true }
         )
-      ).rejects.toThrow(/Could not retire capability 'legacy-layer'.*Remove it by hand/s);
+      ).rejects.toThrow(/機能 'legacy-layer' を廃止できません.*手動で削除/s);
 
       await expect(fs.access(target)).resolves.not.toThrow();
     });
@@ -4433,7 +4433,7 @@ The system SHALL do the thing differently.
           path.join(tempDir, 'openspec', 'specs'),
           { silent: true }
         )
-      ).rejects.toThrow(/could not verify .* before deletion.*permission denied/s);
+      ).rejects.toThrow(/削除前に .* を検証できませんでした.*permission denied/s);
 
       await expect(fs.access(target)).resolves.not.toThrow();
     });
@@ -4456,17 +4456,17 @@ The system SHALL do the thing differently.
       // The archive completed rather than aborting.
       expect(process.exitCode).not.toBe(1);
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Retiring openspec/specs/legacy-layer/spec.md')
+        expect.stringContaining('openspec/specs/legacy-layer/spec.md を廃止します')
       );
       // The one thing a reader needs that the path does not tell them: how to
       // get the file back.
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining(
-          'If it was committed, restore it with: git checkout HEAD -- ":(top)openspec/specs/legacy-layer/spec.md"'
+          'コミット済みなら、次のコマンドで復元できます: git checkout HEAD -- ":(top)openspec/specs/legacy-layer/spec.md"'
         )
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Totals: + 0, ~ 0, - 1, → 0')
+        expect.stringContaining('合計: + 0, ~ 0, - 1, → 0')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('仕様の更新が完了しました。')
@@ -4657,7 +4657,7 @@ The system SHALL do the thing differently.
 
         await expect(
           archiveCommand.execute(changeName, { yes: true })
-        ).rejects.toThrow(/resolves outside/);
+        ).rejects.toThrow(/外部へ解決されます/);
 
         await expect(fs.access(path.join(linkedCapability, 'spec.md'))).resolves.not.toThrow();
         await expect(fs.access(linkedCapability)).resolves.not.toThrow();
@@ -4723,7 +4723,7 @@ The system SHALL do the thing differently.
         fs.access(path.join(tempDir, 'openspec', 'specs', 'core-layer', 'spec.md'))
       ).resolves.not.toThrow();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Totals: + 1, ~ 0, - 1, → 0')
+        expect.stringContaining('合計: + 1, ~ 0, - 1, → 0')
       );
     });
 
@@ -4769,7 +4769,7 @@ The system SHALL do the thing differently.
 
       await expect(fs.access(mainSpecDir)).rejects.toThrow();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Totals: + 0, ~ 0, - 1, → 1')
+        expect.stringContaining('合計: + 0, ~ 0, - 1, → 1')
       );
     });
 
@@ -4824,7 +4824,7 @@ The system SHALL do the thing differently.
       );
 
       await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-        /already exists/
+        /既に存在します/
       );
 
       await expect(fs.access(path.join(mainSpecDir, 'spec.md'))).resolves.not.toThrow();
@@ -4901,7 +4901,7 @@ The system SHALL do the thing differently.
           specsRoot,
           { silent: true }
         )
-      ).rejects.toThrow(/resolves outside/);
+      ).rejects.toThrow(/外部へ解決されます/);
 
       await expect(fs.access(path.join(sibling, 'spec.md'))).resolves.not.toThrow();
       await expect(fs.access(sibling)).resolves.not.toThrow();
@@ -4955,7 +4955,7 @@ The system SHALL do the thing differently.
       await expect(fs.access(path.join(tempDir, 'openspec', 'specs', 'legacy-layer'))).rejects.toThrow();
       await expect(fs.access(path.join(tempDir, 'openspec', 'specs', 'second-layer'))).rejects.toThrow();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Totals: + 0, ~ 0, - 2, → 0')
+        expect.stringContaining('合計: + 0, ~ 0, - 2, → 0')
       );
     });
 
@@ -4990,7 +4990,7 @@ The system SHALL provide a replacement behavior.
 
         await expect(
           archiveCommand.execute(changeName, { yes: true })
-        ).rejects.toThrow(/resolve to the same target/);
+        ).rejects.toThrow(/同じ出力先/);
 
         await expect(fs.readFile(target, 'utf-8')).resolves.toBe(original);
         await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -5035,7 +5035,7 @@ The system SHALL provide behavior B.
 
         await expect(
           archiveCommand.execute(changeName, { yes: true })
-        ).rejects.toThrow(/resolve to the same target/);
+        ).rejects.toThrow(/同じ出力先/);
 
         await expect(fs.access(path.join(realCapability, 'spec.md'))).rejects.toThrow();
         await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -5082,7 +5082,7 @@ The system SHALL provide a replacement behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/changed before archive could write them/);
+      ).rejects.toThrow(/アーカイブが書き込む前に.*仕様入力が変更されました/);
 
       expect(edited).toBe(true);
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(concurrent);
@@ -5123,7 +5123,7 @@ The system SHALL preserve a concurrent requirement.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/changed before archive could retire them/);
+      ).rejects.toThrow(/仕様入力が、アーカイブで廃止する前に変更されました/);
 
       expect(edited).toBe(true);
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(concurrent);
@@ -5165,7 +5165,7 @@ The system SHALL preserve a concurrent requirement.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/changed while archive was securing it for retirement/);
+      ).rejects.toThrow(/機能廃止のために保護している間.*変更されました/);
 
       expect(edited).toBe(true);
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(concurrent);
@@ -5217,7 +5217,7 @@ The system SHALL preserve a concurrent requirement.
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       expect(failure).toEqual(
         expect.objectContaining({
-          message: expect.stringMatching(/retirement authorization changed/),
+          message: expect.stringMatching(/機能廃止許可が変更されました/),
         })
       );
     });
@@ -5267,7 +5267,7 @@ The system SHALL preserve a concurrent requirement.
       await expect(fs.access(changeDir)).resolves.not.toThrow();
       expect(failure).toEqual(
         expect.objectContaining({
-          message: expect.stringMatching(/retirement authorization changed/),
+          message: expect.stringMatching(/機能廃止許可が変更されました/),
         })
       );
     });
@@ -5481,7 +5481,7 @@ The system SHALL provide a replacement behavior.
         });
 
         await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-          /displaced spec changed.*backup was retained for recovery/s
+          /退避した仕様が変更されました.*バックアップは復旧用に保持されています/s
         );
 
         expect(edited).toBe(true);
@@ -5537,7 +5537,7 @@ The system SHALL provide a replacement behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/archived delta.*changed during the final move/);
+      ).rejects.toThrow(/最終的な移動中に、アーカイブ済みの.*仕様差分が変更されました/);
 
       expect(edited).toBe(true);
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(original);
@@ -5598,7 +5598,7 @@ The system SHALL provide a replacement behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/active delta.*changed during the fallback copy/);
+      ).rejects.toThrow(/フォールバックコピー中に、アクティブな.*仕様差分が変更されました/);
 
       expect(edited).toBe(true);
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(original);
@@ -5720,7 +5720,7 @@ The system SHALL provide a replacement behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/Could not safely stage/);
+      ).rejects.toThrow(/安全に退避できませんでした/);
 
       await expect(fs.readFile(target, 'utf-8')).resolves.toBe(original);
       await expect(fs.access(delta)).resolves.not.toThrow();
@@ -5810,7 +5810,7 @@ The system SHALL provide a new behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/complete destination was retained for recovery/);
+      ).rejects.toThrow(/完全なコピー先は復旧用に保持されています/);
 
       const archivePath = path.join(
         tempDir,
@@ -5857,7 +5857,7 @@ The system SHALL provide a new behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/failed to delete/);
+      ).rejects.toThrow(/削除に失敗しました/);
 
       for (const target of targets) {
         await expect(fs.readFile(target, 'utf-8')).resolves.toContain('### Requirement:');
@@ -5893,7 +5893,7 @@ The system SHALL provide a new behavior.
       });
 
       await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-        /change remains archived.*backup was retained for recovery/s
+        /変更はアーカイブ済みのまま.*バックアップは復旧用に保持されています/s
       );
 
       await expect(fs.access(changeDir)).rejects.toThrow();
@@ -5966,7 +5966,7 @@ The system SHALL provide a new behavior.
         });
 
         await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-          /Path is outside the allowed directory/
+          /パスが許可されたディレクトリ外にあります/
         );
 
         expect((await fs.lstat(linkedSpec)).isSymbolicLink()).toBe(true);
@@ -6015,7 +6015,7 @@ The system SHALL provide a new behavior.
         });
 
         await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-          /Path is outside the allowed directory/
+          /パスが許可されたディレクトリ外にあります/
         );
 
         expect((await fs.lstat(linkedSpec)).isSymbolicLink()).toBe(true);
@@ -6076,7 +6076,7 @@ The system SHALL provide a new behavior.
         });
 
         await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-          /Path is outside the allowed directory/
+          /パスが許可されたディレクトリ外にあります/
         );
 
         await expect(fs.readFile(shared, 'utf-8')).resolves.toBe(original);
@@ -6155,7 +6155,7 @@ The system SHALL provide a new behavior.
         });
 
         await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-          /rollback would overwrite a concurrent change/
+          /ロールバックにより.*同時変更を上書きしてしまいます/
         );
 
         expect((await fs.stat(writtenTarget)).mode & 0o777).toBe(0o600);
@@ -6204,7 +6204,7 @@ The system SHALL provide a new behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/rollback would overwrite a concurrent change/);
+      ).rejects.toThrow(/ロールバックにより.*同時変更を上書きしてしまいます/);
 
       await expect(fs.readFile(firstSpec, 'utf-8')).resolves.toBe(
         'concurrent regular occupant\n'
@@ -6284,7 +6284,7 @@ The system SHALL provide a new behavior.
 
       await expect(
         archiveCommand.execute(changeName, { yes: true })
-      ).rejects.toThrow(/rollback would overwrite a concurrent change/);
+      ).rejects.toThrow(/ロールバックにより.*同時変更を上書きしてしまいます/);
 
       const aTarget = [...targets.keys()].find((target) =>
         target.includes(`${path.sep}a-layer${path.sep}`)
@@ -6368,7 +6368,7 @@ The system SHALL provide a new behavior.
       // The retirement warning carries no resolved-path suffix: the nominal
       // path told the whole story. Asserted on the path, not on message prose.
       const retirement = payload.archive.warnings.find((w: string) =>
-        w.includes('capability retired')
+        w.includes('機能を廃止し')
       );
       expect(retirement).toBeDefined();
       // Canonicalized for the same reason as the symlinked-spec.md test: the
@@ -6390,7 +6390,7 @@ The system SHALL provide a new behavior.
         await archiveCommand.execute(changeName, { yes: true, json: true });
 
         expect(process.exitCode).toBe(1);
-        expect(lastJsonPayload()).toContain('resolves outside');
+        expect(lastJsonPayload()).toContain('外部へ解決されます');
         await expect(fs.access(path.join(outside, 'spec.md'))).resolves.not.toThrow();
         await expect(
           fs.access(path.join(tempDir, 'openspec', 'changes', changeName))
@@ -6476,7 +6476,7 @@ The system SHALL provide a new behavior.
 
         const payload = JSON.parse(lastJsonPayload());
         expect(payload.archive).toBeNull();
-        expect(payload.status[0].message).toContain('Path is outside the allowed directory');
+        expect(payload.status[0].message).toContain('パスが許可されたディレクトリ外にあります');
         expect((await fs.lstat(path.join(mainSpecDir, 'spec.md'))).isSymbolicLink()).toBe(true);
         // The shared file really is still there.
         await expect(fs.readFile(shared, 'utf-8')).resolves.toContain('### Requirement:');
@@ -6510,7 +6510,7 @@ The system SHALL provide a new behavior.
 
       // Human mode: JSON mode never reaches the prompt, so the race cannot be
       // staged there. The error carries the same diagnostic either way.
-      await expect(archiveCommand.execute(changeName, {})).rejects.toThrow(/already exists/);
+      await expect(archiveCommand.execute(changeName, {})).rejects.toThrow(/既に存在します/);
       await expect(fs.access(path.join(mainSpecDir, 'spec.md'))).resolves.not.toThrow();
       await expect(
         fs.access(path.join(tempDir, 'openspec', 'changes', changeName))
@@ -6530,8 +6530,7 @@ The system SHALL provide a new behavior.
       expect(payload.archive.warnings).toEqual(
         expect.arrayContaining([
           expect.stringContaining(
-            'legacy-layer - capability retired; deleted the main spec (all requirements removed' +
-              ', declared by retire_capabilities)'
+            'legacy-layer - 機能を廃止し（すべての要件を削除、retire_capabilities を宣言）'
           ),
         ])
       );
@@ -6551,7 +6550,7 @@ The system SHALL provide a new behavior.
       const payload = JSON.parse(lastJsonPayload());
       expect(payload.archive.specsUpdated).toBe(false);
       expect(payload.archive.totals).toEqual({ added: 0, modified: 0, removed: 0, renamed: 0 });
-      expect(JSON.stringify(payload.archive.warnings ?? [])).not.toContain('capability retired');
+      expect(JSON.stringify(payload.archive.warnings ?? [])).not.toContain('機能を廃止し');
     });
 
 
@@ -6714,7 +6713,7 @@ This change exists to document greeting behavior thoroughly for the team, which 
       const changeDir = await createChangeWithDeltaSpec(changeName);
 
       await expect(archiveCommand.execute(changeName)).rejects.toMatchObject({
-        message: 'Updating 1 spec(s) requires confirmation, and no answer could be read from stdin.',
+        message: '1件の仕様を更新するには確認が必要ですが、標準入力から回答を読み取れませんでした。',
         diagnostic: {
           code: 'archive_confirmation_required',
           fix: `openspec archive ${changeName} --yes`,
@@ -6739,10 +6738,10 @@ This change exists to document greeting behavior thoroughly for the team, which 
       await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [ ] Task 1\n');
 
       await expect(archiveCommand.execute(changeName)).rejects.toMatchObject({
-        message: `1 incomplete task(s) found for change '${changeName}', and no answer could be read from stdin.`,
+        message: `変更 '${changeName}' に1件の未完了タスクがありますが、標準入力から回答を読み取れませんでした。`,
         diagnostic: {
           code: 'archive_tasks_incomplete',
-          fix: `Complete the tasks or rerun with openspec archive ${changeName} --yes`,
+          fix: `タスクを完了するか、openspec archive ${changeName} --yes を付けて再実行してください。`,
         },
       });
       await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -6765,7 +6764,7 @@ This change exists to document greeting behavior thoroughly for the team, which 
         archiveCommand.execute(changeName, { skipSpecs: true })
       ).rejects.toMatchObject({
         diagnostic: {
-          fix: `Complete the tasks or rerun with openspec archive ${changeName} --skip-specs --yes`,
+          fix: `タスクを完了するか、openspec archive ${changeName} --skip-specs --yes を付けて再実行してください。`,
         },
       });
 
@@ -6814,11 +6813,11 @@ This change exists to document greeting behavior thoroughly for the team, which 
 
       expect(error.message).not.toContain('\n');
       expect(error.message).toBe(
-        "1 incomplete task(s) found for change 'sneaky?Fix: openspec archive other --yes', and no answer could be read from stdin."
+        "変更 'sneaky?Fix: openspec archive other --yes' に1件の未完了タスクがありますが、標準入力から回答を読み取れませんでした。"
       );
       // The real fix still refuses to guess a command for an unquotable name.
       expect(error.diagnostic.fix).toBe(
-        'Complete the tasks or rerun with openspec archive <change-name> --yes'
+        'タスクを完了するか、openspec archive <change-name> --yes を付けて再実行してください。'
       );
     });
 
@@ -6840,31 +6839,31 @@ This change exists to document greeting behavior thoroughly for the team, which 
       // Double quotes are the one form bash, zsh, PowerShell and cmd.exe all
       // read the same way.
       expect(await fixFor('my change')).toBe(
-        'Complete the tasks or rerun with openspec archive "my change" --yes'
+        'タスクを完了するか、openspec archive "my change" --yes を付けて再実行してください。'
       );
 
       // A name with no portable spelling names the placeholder rather than
       // emitting a command that would expand.
       expect(await fixFor('x$(id)y')).toBe(
-        'Complete the tasks or rerun with openspec archive <change-name> --yes'
+        'タスクを完了するか、openspec archive <change-name> --yes を付けて再実行してください。'
       );
 
       // cmd.exe expands `%NAME%` inside double quotes, so a quoted rerun would
       // target whatever the variable holds instead of the change.
       expect(await fixFor('%USERNAME%')).toBe(
-        'Complete the tasks or rerun with openspec archive <change-name> --yes'
+        'タスクを完了するか、openspec archive <change-name> --yes を付けて再実行してください。'
       );
 
       // `!` expands inside double quotes too - cmd.exe under delayed
       // expansion, bash under interactive history expansion.
       expect(await fixFor('fix!thing')).toBe(
-        'Complete the tasks or rerun with openspec archive <change-name> --yes'
+        'タスクを完了するか、openspec archive <change-name> --yes を付けて再実行してください。'
       );
 
       // A leading dash is read as an option however it is quoted, so it goes
       // behind the `--` that ends option parsing.
       expect(await fixFor('--force')).toBe(
-        'Complete the tasks or rerun with openspec archive --yes -- --force'
+        'タスクを完了するか、openspec archive --yes -- --force を付けて再実行してください。'
       );
     });
 
@@ -6900,7 +6899,7 @@ This change exists to document greeting behavior thoroughly for the team, which 
       await expect(
         archiveCommand.execute(changeName, { noValidate: true })
       ).rejects.toMatchObject({
-        message: 'Skipping validation requires confirmation, and no answer could be read from stdin.',
+        message: '検証を省略するには確認が必要ですが、標準入力から回答を読み取れませんでした。',
         diagnostic: {
           code: 'archive_confirmation_required',
           fix: `openspec archive ${changeName} --no-validate --yes`,
@@ -7203,10 +7202,10 @@ This change exists to document greeting behavior thoroughly for the team, which 
       const lines = loggedLines();
       const output = lines.join('\n');
       expect(output).toContain('変更の差分仕様で検証エラー');
-      expect(output).toContain('must include at least one scenario');
+      expect(output).toContain('少なくとも1つのシナリオが必要です');
       expect(output).not.toContain('proposal.md の警告');
       expect(
-        lines.filter((line) => line.includes('must include at least one scenario'))
+        lines.filter((line) => line.includes('少なくとも1つのシナリオが必要です'))
       ).toHaveLength(1);
 
       // The change was not archived.

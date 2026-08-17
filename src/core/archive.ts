@@ -1117,7 +1117,7 @@ export class ArchiveCommand {
       changeName = selectedChange;
     }
 
-    const changeNameProblem = folderStyleNameProblem(changeName, 'Change name');
+    const changeNameProblem = folderStyleNameProblem(changeName, '変更名');
     if (changeNameProblem) {
       throw new ArchiveBlockedError('archive_change_name_invalid', changeNameProblem);
     }
@@ -1245,8 +1245,8 @@ export class ArchiveCommand {
         if (json) {
           throw new ArchiveBlockedError(
             'archive_validation_failed',
-            `Validation failed for change '${changeName}'.`,
-            `Run ${withStoreFlag(root, `openspec validate ${changeName}`)} for details, fix the errors, or rerun with --no-validate.`
+            `変更 '${changeName}' の検証に失敗しました。`,
+            `詳細は ${withStoreFlag(root, `openspec validate ${changeName}`)} で確認してください。エラーを修正するか、--no-validate を付けて再実行できます。`
           );
         }
         console.log(chalk.red('\n検証に失敗しました。アーカイブ前にエラーを修正してください。'));
@@ -1448,7 +1448,7 @@ export class ArchiveCommand {
           if (json) {
             throw new ArchiveBlockedError(
               'archive_confirmation_required',
-              `Updating ${specUpdates.length} spec(s) requires confirmation: rerun with --yes.`,
+              `${specUpdates.length} 件の仕様を更新するには確認が必要です。--yes を付けて再実行してください。`,
               withStoreFlag(root, 'openspec archive <change-name> --json --yes')
             );
           }
@@ -1594,10 +1594,10 @@ export class ArchiveCommand {
                 if (json) {
                   throw new ArchiveBlockedError(
                     'archive_spec_validation_failed',
-                    `Rebuilt spec for '${specName}' failed validation. No files were changed.`,
+                    `'${specName}' の再構築した仕様は検証に失敗しました。ファイルは変更されていません。`,
                     refusalReason ??
                       retirementHint ??
-                      `Run ${withStoreFlag(root, `openspec validate ${specName}`)} after fixing the change deltas.`
+                      `変更 delta を修正した後、${withStoreFlag(root, `openspec validate ${specName}`)} を実行してください。`
                   );
                 }
                 console.log(chalk.red(`\n再構築した仕様 ${specName} の検証エラー（変更は書き込みません）:`));

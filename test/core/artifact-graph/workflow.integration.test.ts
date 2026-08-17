@@ -40,15 +40,15 @@ describe('artifact-graph workflow integration', () => {
       const proposal = schema.artifacts.find(artifact => artifact.id === 'proposal');
       const specs = schema.artifacts.find(artifact => artifact.id === 'specs');
 
-      expect(proposal?.instruction).toContain('`user-auth` or `identity/user-auth`');
-      expect(proposal?.instruction).toContain('follow the project\'s existing spec organization');
+      expect(proposal?.instruction).toContain('`user-auth` または `identity/user-auth`');
+      expect(proposal?.instruction).toContain('プロジェクトの既存の仕様構成に従う');
       expect(specs?.instruction).toContain(
-        '`<capability-path>` is the spec directory relative to `specs/`'
+        '`<capability-path>` は `specs/` からの相対仕様ディレクトリ'
       );
       expect(specs?.instruction).toContain(
-        'do not add a new domain level when the project uses a flat layout'
+        'フラットな構成なら新しいドメイン階層を加えない'
       );
-      expect(specs?.instruction).toContain('Do not move or rename the capability');
+      expect(specs?.instruction).toContain('機能を移動・改名しない');
     });
 
     it('should progress through complete workflow', () => {

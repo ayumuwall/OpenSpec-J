@@ -129,7 +129,7 @@ describe('artifact-graph/outputs', () => {
 
     try {
       expect(() => resolveArtifactOutputs(tempDir, 'proposal.md')).toThrow(
-        /outside the allowed directory/u
+        /許可されたディレクトリ外/u
       );
     } finally {
       fs.rmSync(outsideFile, { force: true });
@@ -147,7 +147,7 @@ describe('artifact-graph/outputs', () => {
 
     try {
       expect(() => resolveArtifactOutputs(tempDir, 'specs/*.md')).toThrow(
-        /outside the allowed directory/u
+        /許可されたディレクトリ外/u
       );
     } finally {
       fs.rmSync(outsideDir, { recursive: true, force: true });
@@ -169,7 +169,7 @@ describe('artifact-graph/outputs', () => {
 
     try {
       expect(() => resolveArtifactOutputs(tempDir, 'specs/**/*.md')).toThrow(
-        /outside the allowed directory/u
+        /許可されたディレクトリ外/u
       );
     } finally {
       fs.rmSync(outsideDir, { recursive: true, force: true });
@@ -238,7 +238,7 @@ describe('artifact-graph/outputs', () => {
     );
 
     expect(() => resolveArtifactOutputs(tempDir, 'specs/**/*.md')).toThrow(
-      /linked directory cycle/u
+      /リンク先ディレクトリの循環/u
     );
   });
 

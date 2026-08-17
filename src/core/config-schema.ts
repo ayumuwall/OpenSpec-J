@@ -90,7 +90,7 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
 
   const unsafeKey = rawKeys.find((key) => UNSAFE_KEY_SEGMENTS.has(key));
   if (unsafeKey) {
-    return { valid: false, reason: `Key segment "${unsafeKey}" is not allowed` };
+    return { valid: false, reason: `キー要素 "${unsafeKey}" は使用できません` };
   }
 
   const rootKey = rawKeys[0];
@@ -107,12 +107,12 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
 
   if (rootKey === 'telemetry') {
     if (rawKeys.length === 1) {
-      return { valid: false, reason: 'Set nested keys under telemetry (e.g. telemetry.enabled)' };
+      return { valid: false, reason: 'telemetry 配下のネストしたキーを設定してください（例: telemetry.enabled）' };
     }
     if (rawKeys.length !== 2 || !TELEMETRY_SETTABLE_KEYS.has(rawKeys[1])) {
       return {
         valid: false,
-        reason: `Unknown telemetry key "${rawKeys.slice(1).join('.')}" (allowed: enabled)`,
+        reason: `不明な telemetry キー "${rawKeys.slice(1).join('.')}" です（使用可能: enabled）`,
       };
     }
     return { valid: true };

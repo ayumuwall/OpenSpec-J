@@ -400,7 +400,7 @@ export class ValidateCommand {
       if (firstFailure) {
         const storeFlag = isStoreSelectedRoot(root) ? ` --store ${root.storeId}` : '';
         console.log(
-          `Details: openspec validate ${firstFailure.id} --type ${firstFailure.type}${storeFlag}`
+          `詳細: openspec validate ${firstFailure.id} --type ${firstFailure.type}${storeFlag}`
         );
       }
     }

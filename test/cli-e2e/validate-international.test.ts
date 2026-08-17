@@ -76,7 +76,7 @@ describe('non-English validation (#243)', () => {
     );
     expect(normal.exitCode).toBe(0);
     expect(normal.stdout).toContain('仕様');
-    expect(normal.stdout).toContain('is valid');
+    expect(normal.stdout).toContain('は有効です');
 
     const normalJson = await runCLI(
       ['validate', '日志记录', '--type', 'spec', '--json', '--no-interactive'],
@@ -89,7 +89,7 @@ describe('non-English validation (#243)', () => {
     expect(report.items[0].issues).toContainEqual(
       expect.objectContaining({
         level: 'WARNING',
-        message: expect.stringContaining('should contain SHALL or MUST'),
+        message: expect.stringContaining('SHALL または MUST を含めることを推奨します'),
       })
     );
 
@@ -99,8 +99,8 @@ describe('non-English validation (#243)', () => {
     );
     expect(strict.exitCode).toBe(1);
     const strictOutput = `${strict.stdout}${strict.stderr}`;
-    expect(strictOutput).toContain('should contain SHALL or MUST');
-    expect(strictOutput).toContain('has issues');
+    expect(strictOutput).toContain('SHALL または MUST を含めることを推奨します');
+    expect(strictOutput).toContain('問題があります');
   });
 
   it('validates a non-English change delta normally but not in strict mode', async () => {
@@ -121,7 +121,7 @@ describe('non-English validation (#243)', () => {
     expect(normalReport.items[0].issues).toContainEqual(
       expect.objectContaining({
         level: 'WARNING',
-        message: expect.stringContaining('should contain SHALL or MUST'),
+        message: expect.stringContaining('SHALL または MUST を含めることを推奨します'),
       })
     );
 
@@ -136,7 +136,7 @@ describe('non-English validation (#243)', () => {
     expect(strictReport.items[0].issues).toContainEqual(
       expect.objectContaining({
         level: 'WARNING',
-        message: expect.stringContaining('should contain SHALL or MUST'),
+        message: expect.stringContaining('SHALL または MUST を含めることを推奨します'),
       })
     );
   });

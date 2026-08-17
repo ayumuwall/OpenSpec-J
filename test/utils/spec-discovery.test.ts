@@ -143,7 +143,7 @@ describe('discoverSpecFiles', () => {
       await fs.symlink(target, path.join(dir, 'auth', 'spec.md'), 'file');
 
       await expect(discoverSpecFiles(dir)).rejects.toThrow(
-        'Path is outside the allowed directory'
+        'パスが許可されたディレクトリ外にあります'
       );
       await fs.rm(target, { force: true });
     });

@@ -89,8 +89,8 @@ c. **変更をインテリジェントに適用**:
 - 要件がすでに存在する場合 → 一致するように更新します (暗黙的な MODIFIED として扱います)
 
       **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
+      - 本仕様から要件を探します
+      - 次のいずれかの方法で変更を適用します:
         - 本仕様にまだない新しいシナリオを追加する
         - 既存のシナリオを変更する
         - 要件の説明を変更する
@@ -122,7 +122,7 @@ c. **変更をインテリジェントに適用**:
 
 5. **更新した本仕様を検証する**
 
-   Run \`openspec validate --specs\` with the same selected-root flags used earlier.
+   前の手順と同じ選択済みルート用フラグを付けて \`openspec validate --specs\` を実行します。
    検証に失敗した場合は問題を報告し、同期が成功したとは伝えてはいけません。
 
 6. **概要を表示する**
@@ -202,7 +202,7 @@ c. **変更をインテリジェントに適用**:
 **成功時の出力**
 
 \`\`\`markdown
-## Specs Synced: <change-name>
+## 仕様を同期しました: <change-name>
 
 更新した本仕様:
 
@@ -249,7 +249,7 @@ ${STORE_SELECTION_GUIDANCE}
 
 \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各 delta spec から本仕様を解決するときは、完全なパスを維持します。
 
-**Input**: Optionally specify a change name after \`/opsx:sync\` (e.g., \`/opsx:sync add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**入力**: \`/opsx:sync\` の後に変更名を任意で指定できます（例: \`/opsx:sync add-auth\`）。省略した場合は会話のコンテキストから推測できるか確認します。判断できない場合や曖昧な場合は、利用可能な変更を提示して必ず選択を求めます。
 
 **手順**
 
@@ -319,8 +319,8 @@ c. **変更をインテリジェントに適用**:
 - 要件がすでに存在する場合 → 一致するように更新します (暗黙的な MODIFIED として扱います)
 
       **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
+      - 本仕様から要件を探します
+      - 次のいずれかの方法で変更を適用します:
         - 本仕様にまだない新しいシナリオを追加する
         - 既存のシナリオを変更する
         - 要件の説明を変更する
@@ -352,7 +352,7 @@ c. **変更をインテリジェントに適用**:
 
 5. **更新した本仕様を検証する**
 
-   Run \`openspec validate --specs\` with the same selected-root flags used earlier.
+   前の手順と同じ選択済みルート用フラグを付けて \`openspec validate --specs\` を実行します。
    検証に失敗した場合は問題を報告し、同期が成功したとは伝えてはいけません。
 
 6. **概要を表示する**
@@ -432,7 +432,7 @@ c. **変更をインテリジェントに適用**:
 **成功時の出力**
 
 \`\`\`markdown
-## Specs Synced: <change-name>
+## 仕様を同期しました: <change-name>
 
 更新した本仕様:
 

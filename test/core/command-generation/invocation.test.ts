@@ -102,8 +102,8 @@ describe('command-generation/invocation', () => {
           expectedInvocation(adapter.toolId)
         );
       }
-      expect(resolveCommandInvocation('cursor')).toEqual({ style: 'flat', prefix: '/ に生成しました' });
-      expect(resolveCommandInvocation('claude')).toEqual({ style: 'namespaced', prefix: '/ に生成しました' });
+      expect(resolveCommandInvocation('cursor')).toEqual({ style: 'flat', prefix: '/' });
+      expect(resolveCommandInvocation('claude')).toEqual({ style: 'namespaced', prefix: '/' });
       expect(resolveCommandInvocation('amazon-q')).toEqual({ style: 'flat', prefix: '@' });
     });
 

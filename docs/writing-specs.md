@@ -9,13 +9,13 @@
 仕様には、システムがどのように構築されているかではなく、誰でも確認できる観点から、システムが「何をする」のかが記載されています。これは、**要件** (行動の記述) と **シナリオ** (それを証明する具体的な例) で構成されます。
 
 ```markdown
-### Requirement: Session Timeout
-The system SHALL expire a session after 30 minutes of inactivity.
+### Requirement: セッションタイムアウト
+システムは 30 分間操作がなければセッションを期限切れにしなければならない（SHALL）。
 
-#### Scenario: Idle timeout
+#### Scenario: アイドルタイムアウト
 - GIVEN 認証済みセッション
-- WHEN 30 minutes pass with no activity
-- THEN the session is invalidated and the user must re-authenticate
+- WHEN 操作のない状態が 30 分続く
+- THEN セッションが無効化され、ユーザーに再認証を求める
 ```
 
 *方法* (キュー、ライブラリ、テーブル スキーマ) を `design.md` またはコードに保持します。動作と実装が 1 つの要件に混在すると、その要件はテストできなくなり、コードが変更された瞬間から古くなり始めます。
@@ -59,8 +59,6 @@ The system SHALL expire a session after 30 minutes of inactivity.
 アーカイブ時、ADDED は本仕様へ追加され、MODIFIED は旧版を置き換え、REMOVED は本仕様から取り除かれます。capability の最後の要件を削除すると、その capability は廃止されます。中身のない仕様を残す代わりに、archive は `openspec/specs/<capability>/spec.md` を削除します。これはファイルを削除する唯一のアーカイブ処理であるため、明示的な指定が必要です。変更の `.openspec.yaml` に、このファイルで必要な `schema:` と並べて `retire_capabilities: true` を追加してください。指定がなければ archive は中止し、その旨を伝えます。呼出元のチェックアウト内にある仕様では、アーカイブ出力にコミット済みファイルを復元する `git checkout` も表示されます。選択済み store にはチェックアウトの範囲に即した復旧方法を案内します。既存の変更を ADDED として記述すると競合する要件が2つ生じ、新しい振る舞いを MODIFIED として記述すると置き換える対象がありません。迷ったら現在の仕様を開き、要件がすでにあるか確認してください。
 
 もう1つ知っておくべきセクションがあります。delta でまだ存在しない capability を作る場合は、capability の目的を1〜2文で書いた `## Purpose` から始めます。archive はこれを作成する本仕様の Purpose として使用します。省略すると手作業で埋める `TBD` プレースホルダーが残ります。既存仕様にはすでに Purpose があるため、delta 側の Purpose は無視されます。変更するには `openspec/specs/<capability-path>/spec.md` を直接編集してください。ここで `<capability-path>` は `specs/` からの相対ディレクトリです。フラットなプロジェクトの `user-auth` や、ドメイン別に構成したプロジェクトの `identity/user-auth` などが該当します。
-
-## Right-size the change
 
 ## 変更のサイズを適切に調整する
 

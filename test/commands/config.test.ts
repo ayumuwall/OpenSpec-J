@@ -147,7 +147,7 @@ describe('config command integration', () => {
     );
 
     await runConfigCommand(['set', 'telemetry.enabled', 'false']);
-    expect(consoleLogSpy).toHaveBeenCalledWith('Set telemetry.enabled = false');
+    expect(consoleLogSpy).toHaveBeenCalledWith('telemetry.enabled = false を設定しました');
     expect(getGlobalConfig().telemetry).toEqual({
       anonymousId: 'keep-id',
       noticeSeen: true,
@@ -172,7 +172,7 @@ describe('config command integration', () => {
       await runConfigCommand(['set', 'telemetry.anonymousId', 'x']);
       expect(process.exitCode).toBe(1);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid configuration key "telemetry.anonymousId"')
+        expect.stringContaining('無効な設定キー "telemetry.anonymousId"')
       );
     } finally {
       process.exitCode = previousExitCode;
@@ -233,7 +233,7 @@ describe('config command shell completion registry', () => {
     const flagNames = resetCmd?.flags?.map((f) => f.name) ?? [];
 
     expect(flagNames).toContain('all');
-    expect(flagNames).toContain('あり');
+    expect(flagNames).toContain('yes');
   });
 
   it('should have --scope flag on config command', async () => {

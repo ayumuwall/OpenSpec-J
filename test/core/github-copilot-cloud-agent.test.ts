@@ -277,7 +277,7 @@ describe('GitHub Copilot Cloud Agent', () => {
       await fs.writeFile(generatedAgentPath, 'custom generated-path agent\n');
 
       await expect(writeCopilotCloudFiles(tempDir)).rejects.toThrow(
-        'Conflicting Copilot agent profiles'
+        'Copilot エージェントプロファイルが競合しています'
       );
 
       await expect(fs.stat(setupStepsPath)).rejects.toMatchObject({ code: 'ENOENT' });

@@ -135,7 +135,7 @@ artifacts:
       );
 
       expect(getSchemaDir('../escape', tempDir)).toBeNull();
-      expect(() => resolveSchema('../escape', tempDir)).toThrow(/not found/u);
+      expect(() => resolveSchema('../escape', tempDir)).toThrow(/見つかりません/u);
     });
 
     it('should reject a schema file symlink that escapes its schema directory', () => {
@@ -148,7 +148,7 @@ artifacts:
       fs.symlinkSync(outsideSchema, path.join(schemaDir, 'schema.yaml'));
 
       expect(getSchemaDir('linked-file', tempDir)).toBeNull();
-      expect(() => resolveSchema('linked-file', tempDir)).toThrow(/not found/u);
+      expect(() => resolveSchema('linked-file', tempDir)).toThrow(/見つかりません/u);
     });
 
     it('should validate user override and throw on invalid schema', () => {
@@ -217,7 +217,7 @@ artifacts:
 `;
       fs.writeFileSync(path.join(userSchemaDir, 'schema.yaml'), cyclicSchema);
 
-      expect(() => resolveSchema('spec-driven')).toThrow(/Cyclic dependency/);
+      expect(() => resolveSchema('spec-driven')).toThrow(/循環依存/);
     });
 
     it('should detect invalid requires references in user override schemas', () => {
@@ -238,7 +238,7 @@ artifacts:
 `;
       fs.writeFileSync(path.join(userSchemaDir, 'schema.yaml'), invalidRefSchema);
 
-      expect(() => resolveSchema('spec-driven')).toThrow(/does not exist/);
+      expect(() => resolveSchema('spec-driven')).toThrow(/存在しません/);
     });
 
     it('should throw SchemaLoadError on YAML syntax errors', () => {

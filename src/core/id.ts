@@ -10,11 +10,11 @@ export function isKebabId(value: string): boolean {
 
 /** Human rendering of the grammar, shared so the wording never forks. */
 export const KEBAB_ID_DESCRIPTION =
-  'must be kebab-case with lowercase letters, numbers, and single hyphen separators';
+  'は小文字、数字、単一のハイフン区切りによる kebab-case でなければなりません';
 
 /** The fix-line twin of KEBAB_ID_DESCRIPTION, shared for the same reason. */
 export const KEBAB_ID_FIX =
-  'Use kebab-case with lowercase letters, numbers, and single hyphen separators.';
+  '小文字、数字、単一のハイフン区切りによる kebab-case を使用してください。';
 
 /**
  * The folder-safe-name grammar (store ids layer the kebab grammar on
@@ -26,15 +26,15 @@ export function folderStyleNameProblem(
   label: string
 ): string | null {
   if (value.length === 0) {
-    return `${label} must not be empty`;
+    return `${label}を空にすることはできません`;
   }
 
   if (value === '.' || value === '..') {
-    return `${label} must not be '${value}'`;
+    return `${label}に '${value}' は使用できません`;
   }
 
   if (/[\\/]/u.test(value)) {
-    return `${label} must not contain path separators`;
+    return `${label}にパス区切り文字を含めることはできません`;
   }
 
   return null;

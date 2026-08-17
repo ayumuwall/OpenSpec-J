@@ -83,12 +83,12 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
   ])('warns that $what goes with the requirement it sits in', async ({ line }) => {
     const { warnings } = await build(SPEC([line, 'Kept by hand.']), REMOVE);
     expect(warnings.join('\n')).toContain(line.trim());
-    expect(warnings.join('\n')).toContain('goes with it');
+    expect(warnings.join('\n')).toContain('要件とともに扱われます');
   });
 
   it('says nothing when a requirement holds only its own content', async () => {
     const { warnings } = await build(SPEC([]), REMOVE);
-    expect(warnings.join('\n')).not.toContain('goes with it');
+    expect(warnings.join('\n')).not.toContain('要件とともに扱われます');
   });
 
   it('does not warn about a requirement left untouched', async () => {
@@ -106,7 +106,7 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
       '- **THEN** b',
       '',
     ]);
-    expect(warnings.join('\n')).not.toContain('goes with it');
+    expect(warnings.join('\n')).not.toContain('要件とともに扱われます');
   });
 
   it('ignores a heading inside a fenced example', async () => {
@@ -114,7 +114,7 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
       SPEC(['```markdown', '### Requirement: Example', '```']),
       REMOVE
     );
-    expect(warnings.join('\n')).not.toContain('goes with it');
+    expect(warnings.join('\n')).not.toContain('要件とともに扱われます');
   });
 
   it("leaves a requirement's own scenarios alone", async () => {
@@ -138,7 +138,7 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
 
     expect(rebuilt).toContain(tail.join('\n'));
     expect(counts.renamed).toBe(1);
-    expect(warnings.join('\n')).not.toContain('goes with it');
+    expect(warnings.join('\n')).not.toContain('要件とともに扱われます');
   });
 
   it('does not warn when MODIFIED carries the full absorbed tail forward', async () => {
@@ -156,7 +156,7 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
 
     expect(rebuilt).toContain(tail.join('\n'));
     expect(counts.modified).toBe(0);
-    expect(warnings.join('\n')).not.toContain('goes with it');
+    expect(warnings.join('\n')).not.toContain('要件とともに扱われます');
   });
 
   it('warns when MODIFIED keeps the heading but drops part of the absorbed tail', async () => {
@@ -174,7 +174,7 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
 
     expect(rebuilt).not.toContain(tail[1]);
     expect(warnings.join('\n')).toContain(tail[0].trim());
-    expect(warnings.join('\n')).toContain('goes with it');
+    expect(warnings.join('\n')).toContain('要件とともに扱われます');
   });
 
   it('does not let an identical earlier copy mask loss of the absorbed tail', async () => {
@@ -222,7 +222,7 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
 
     expect(rebuilt).toContain(repeated.join('\n'));
     expect(warnings.join('\n')).toContain(repeated[0].trim());
-    expect(warnings.join('\n')).toContain('goes with it');
+    expect(warnings.join('\n')).toContain('要件とともに扱われます');
   });
 
   it('rewrites the spec exactly as before - nothing is moved', async () => {

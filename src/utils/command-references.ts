@@ -99,7 +99,7 @@ export function usesNaturalLanguageSkillReferences(toolId: string): boolean {
 function replaceCommandsWithNaturalLanguageSkillReferences(text: string): string {
   return text.replace(/\/opsx:([a-z-]+)/g, (match, commandId: string) => {
     const skillName = COMMAND_TO_SKILL_NAME[commandId];
-    return skillName === undefined ? match : `the ${skillName} skill`;
+    return skillName === undefined ? match : `${skillName} スキル`;
   });
 }
 

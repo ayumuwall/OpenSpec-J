@@ -44,7 +44,7 @@ ${STORE_SELECTION_GUIDANCE}
    - \`schemaName\`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - \`artifacts\`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
    - \`isPlanningComplete\`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を \`isComplete\` として公開します。
-   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context. Use these instead of assuming repo-local paths.
+   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスと対象範囲のコンテキスト。リポジトリ内の固定パスを仮定せず、これらを使用します。
 
 3. **ステータスに基づいて行動**:
 
@@ -162,7 +162,7 @@ ${STORE_SELECTION_GUIDANCE}
    - \`schemaName\`: 使用中のワークフロースキーマ（例: "spec-driven"）
    - \`artifacts\`: 各アーティファクトとその状態（"done"、"skipped"、"ready"、"blocked"）の配列
    - \`isPlanningComplete\`: すべての計画アーティファクトが完了したかを示す真偽値。旧版の CLI では同じ値を \`isComplete\` として公開します。
-   - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context. Use these instead of assuming repo-local paths.
+   - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスと対象範囲のコンテキスト。リポジトリ内の固定パスを仮定せず、これらを使用します。
 
 3. **ステータスに基づいて行動**:
 

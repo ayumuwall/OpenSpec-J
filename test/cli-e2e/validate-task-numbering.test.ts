@@ -140,7 +140,7 @@ describe('openspec validate checks task numbering (#1520)', () => {
       expect.objectContaining({
         level: 'WARNING',
         line: 11,
-        message: expect.stringMatching(/11\.1.*duplicate/i),
+        message: expect.stringMatching(/11\.1.*重複/),
       }),
     ]);
   });
@@ -166,7 +166,7 @@ describe('openspec validate checks task numbering (#1520)', () => {
     );
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("Change 'valid-numbering' is valid");
+    expect(result.stdout).toContain("変更 'valid-numbering' は有効です");
   });
 
   it('applies the same warnings to bulk validation', async () => {
@@ -205,7 +205,7 @@ describe('openspec validate checks task numbering (#1520)', () => {
     );
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Task "10.7" is under group 11');
-    expect(result.stderr).toContain('Task ID "11.1" is duplicated');
+    expect(result.stderr).toContain('タスク "10.7" はグループ 11 にあります');
+    expect(result.stderr).toContain('タスク ID "11.1" が重複しています');
   });
 });

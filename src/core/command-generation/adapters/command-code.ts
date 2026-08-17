@@ -10,10 +10,10 @@
 import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
-const COMMAND_CODE_INPUT_HEADING = /^\*\*Input\*\*:[^\n]*$/m;
+const COMMAND_CODE_INPUT_HEADING = /^\*\*(?:Input|入力)\*\*:[^\n]*$/m;
 
 function injectCommandCodeArgs(body: string): string {
-  if (/^\*\*入力された引数\*\*:\s*(?:\$(?:ARGUMENTS|@)|\$\{(?:ARGUMENTS|@)\})\s*$/m.test(body)) {
+  if (/^\*\*(?:Provided arguments|入力された引数)\*\*:\s*(?:\$(?:ARGUMENTS|@)|\$\{(?:ARGUMENTS|@)\})\s*$/m.test(body)) {
     return body;
   }
 

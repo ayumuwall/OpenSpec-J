@@ -49,34 +49,34 @@ export function getFeedbackSkillTemplate(): SkillTemplate {
 **ドラフト例**
 
 \`\`\`
-Title: アーティファクトワークフローのエラーハンドリング改善
+タイトル: アーティファクトワークフローのエラーハンドリング改善
 
-Body:
+本文:
 新しい変更を作成している途中で、アーティファクトワークフローに関する問題に遭遇しました。
 proposal 作成後に続行しようとした際、先に specs を完了する必要があることが
 システムから明確に示されませんでした。
 
-Suggestion: アーティファクトワークフロー内の依存関係を説明する、
+提案: アーティファクトワークフロー内の依存関係を説明する、
 より明確なエラーメッセージを追加してください。例えば
 "specs が完了していないため design.md を作成できません（0/2 完了）" のような内容です。
 
-Context: <path>/my-project で spec-driven スキーマを使用
+コンテキスト: <path>/my-project で spec-driven スキーマを使用
 \`\`\`
 
 **匿名化の例**
 
 変更前:
 \`\`\`
-Working on /Users/john/mycompany/auth-service/src/oauth.ts
-Failed with API key: sk_live_abc123xyz
-Working at Acme Corp
+作業対象: /Users/john/mycompany/auth-service/src/oauth.ts
+API キーによる失敗: sk_live_abc123xyz
+勤務先: Acme Corp
 \`\`\`
 
 変更後:
 \`\`\`
-Working on <path>/oauth.ts
-Failed with API key: <redacted>
-Working at <company>
+作業対象: <path>/oauth.ts
+API キーによる失敗: <redacted>
+勤務先: <company>
 \`\`\`
 
 **ガードレール**
@@ -95,9 +95,9 @@ Working at <company>
 \`\`\`
 以下のフィードバック案を作成しました:
 
-Title: [title]
+タイトル: [title]
 
-Body:
+本文:
 [body]
 
 この内容で問題ないですか？必要なら修正しますし、このまま送信もできます。

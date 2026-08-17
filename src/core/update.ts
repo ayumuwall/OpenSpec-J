@@ -404,7 +404,7 @@ export class UpdateCommand {
       const names = zeroArtifactTools.join(', ');
       console.log(
         chalk.yellow(
-          `No skills or commands remain for ${names}: delivery is set to 'commands' but ` +
+          `${names} にスキルもコマンドも残っていません。delivery が 'commands' に設定されていますが、` +
             `対象ツールはスキルだけに対応しています。スキルを生成するには ` +
             `'openspec config set delivery both' を実行してください。`
         )
@@ -1144,7 +1144,7 @@ export class UpdateCommand {
           const ownerName =
             AI_TOOLS.find((candidate) => candidate.value === sharedOwner)?.name ?? sharedOwner;
           spinner.info(
-            `Skipped ${tool.name}: ${tool.skillsDir}/skills is already managed by another tool (${ownerName}).`
+            `${tool.name} をスキップしました: ${tool.skillsDir}/skills は別のツール（${ownerName}）が管理しています。`
           );
           skippedSharedSkillTools.push(tool.value);
           continue;

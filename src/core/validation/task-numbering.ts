@@ -68,7 +68,7 @@ export function findTaskNumberingIssues(
         issues.push({
           path: document.path,
           line: lineNumber,
-          message: `タスク ID "${id}" が重複しています。最初の宣言は ${firstDeclaration} です。`,
+          message: `タスク ID "${id}" が重複しています。最初の宣言は ${firstDeclaration}です。`,
         });
       } else {
         firstLocationById.set(id, { path: document.path, line: lineNumber });
