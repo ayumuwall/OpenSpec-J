@@ -13,9 +13,17 @@
 - 追加確認（v1.6.0 追従後）: `CHANGE_WHY_TOO_SHORT` のように「必須」ではなく「短すぎる」系の日本語メッセージでも、変更ファイルの必須セクションガイドが付く必要がある。`enrichTopLevelError` の条件を見直すときは、`CHANGE_WHAT_EMPTY` だけでなく `CHANGE_WHY_TOO_SHORT` と `Why セクション` 系メッセージも確認する。
 - フォローアップ: upstream でメッセージ文言が増減した場合は、英語/日本語両方のトリガーを見直す。英語/日本語のガイド付与を直接確認するユニットテストを追加すると安全。
 
+### コマンド生成: 入力見出しの検出が英語ラベル依存
+- ファイル: `src/core/command-generation/adapters/command-code.ts`, `src/core/command-generation/adapters/oh-my-pi.ts`, `src/core/command-generation/adapters/pi.ts`
+- 症状: upstream のコマンド生成アダプターは `**Input**:` 見出しを正規表現で検出し、その直後へ `$ARGUMENTS` または `$@` を挿入する。見出しを `**入力**:` へ翻訳するだけでは検出されず、生成コマンドへ呼び出し引数が渡らなくなる。
+- 対応（v1.9.0）: 見出し検出を `Input` / `入力` の両方に対応させる。Command Code では再生成時の重複挿入を防ぐため、既存の引数行も `Provided arguments` / `入力された引数` の両方を認識する。
+- 互換性: 英語版または過去バージョンが生成したファイルを日本語版で更新する場合があるため、日本語だけに限定せず英語ラベルも維持する。
+- フォローアップ: 入力見出しや引数行の文言を変更するときは、3アダプターの検出正規表現と `test/core/command-generation/adapters.test.ts` の挿入・重複防止テストを同時に更新する。
+
 ### 単数/複数の表記を日本語で統一する扱い
 - 仕様: 日本語では単数・複数の揺れを避け、カウントは「件」や「タスク」など固定表記に寄せる。
 - 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は常に「タスク」表記、`src/core/view.ts` と `src/core/list.ts` は `件` を用いた固定表記に統一。
+- 追加実例（v1.9.0）: `src/core/migration.ts` の `keptInPlaceNotice` は、英語の `file` / `files` と `differ` / `differs` の分岐を廃止し、件数にかかわらず「N 件のファイル」に統一。
 - 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。`ADDED` / `MODIFIED` だけでなく、`REMOVED` / `RENAMED` の `description` もユーザー向け表示に出る可能性があるため、upstream 追従時に英語へ戻っていないか確認する。
 
 ### CLI 結合テスト: 固定一時ディレクトリは並列実行で衝突する

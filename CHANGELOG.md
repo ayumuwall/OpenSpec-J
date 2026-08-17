@@ -6,6 +6,7 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 
 - **[OpenSpec-J]** OpenSpec v1.8.0〜v1.9.0 の upstream 変更を取り込み、README・ドキュメント・スキーマ・CLI・OPSX ワークフローの追加／変更された人間向け文言を日本語化
 - **[OpenSpec-J]** `agents`／Command Code のツール対応、GitHub Copilot クラウドエージェント、ストア選択、`validate --archived` などの新機能に伴う案内・エラー・進捗表示を日本語化
+- **[OpenSpec-J]** Command Code／Oh My Pi／Pi の入力見出し検出を `Input`／`入力` の両方に対応させ、日本語テンプレートでも引数プレースホルダーの挿入と再生成時の重複防止を維持
 - **[OpenSpec-J]** 日本語テンプレートから静的配布用 `skills/` を再生成し、v1.9.0 の生成内容と parity ハッシュを更新
 - **[OpenSpec-J]** README の同期元バージョンと npm パッケージバージョンを OpenSpec v1.9.0 に更新
 
