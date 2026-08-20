@@ -397,17 +397,30 @@ diff -u \
 
 作成したリリース本文をファイル（例: `/tmp/openspec-j-release-vX.Y.Z.md`）に保存したうえで、タグ付与と GitHub Release 作成を行う。
 
+GitHub Release のタイトルは、バージョン番号だけにせず、次の形式で対象リリースの主題を添える。
+
+```
+vX.Y.Z - <リリース内容を表す短い日本語の概要>
+```
+
+- `<概要>` は upstream GitHub Release のタイトル・導入文・主要項目を基に、今回の特徴が分かる自然な日本語で作成する。
+- `CHANGELOG.md` の見出しを機械的に転記せず、GitHub Release 本文と対応する内容にする。
+- コマンド名、ツール名、製品名、識別子は原表記を維持する。
+- 過去の OpenSpec-J Release の命名粒度も参考にし、長すぎる列挙や抽象的な「更新」「改善」だけのタイトルを避ける。
+- 例: `v1.10.0 - Zed、言語指定、安全なインストール`
+
 ```
 git checkout ja-docs
 git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin vX.Y.Z
 
 gh release create vX.Y.Z \
-  --title "vX.Y.Z" \
+  --title "vX.Y.Z - <リリース内容を表す短い日本語の概要>" \
   --notes-file /tmp/openspec-j-release-vX.Y.Z.md
 ```
 
 - リリースタグは `vX.Y.Z` 形式を使う（`openspec-j-vX.Y.Z` は使わない）。
+- 作成後に `gh release view vX.Y.Z --repo ayumuwall/OpenSpec-J --json name,tagName,url` を実行し、保存されたタイトルが `vX.Y.Z - <概要>` 形式で意図した文言と一致することを確認する。
 
 ### 3.2 npm 公開
 
