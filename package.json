@@ -12,7 +12,7 @@
   "homepage": "https://github.com/ayumuwall/OpenSpec-J",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ayumuwall/OpenSpec-J"
+    "url": "git+https://github.com/ayumuwall/OpenSpec-J.git"
   },
   "license": "MIT",
   "author": "OpenSpec Contributors",
@@ -28,7 +28,7 @@
     }
   },
   "bin": {
-    "openspec": "./bin/openspec.js"
+    "openspec": "bin/openspec.js"
   },
   "files": [
     "dist",
