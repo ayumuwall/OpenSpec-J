@@ -14,9 +14,10 @@
 - フォローアップ: upstream でメッセージ文言が増減した場合は、英語/日本語両方のトリガーを見直す。英語/日本語のガイド付与を直接確認するユニットテストを追加すると安全。
 
 ### コマンド生成: 入力見出しの検出が英語ラベル依存
-- ファイル: `src/core/command-generation/adapters/command-code.ts`, `src/core/command-generation/adapters/oh-my-pi.ts`, `src/core/command-generation/adapters/pi.ts`
+- ファイル: `src/core/command-generation/adapters/command-code.ts`, `src/core/command-generation/adapters/oh-my-pi.ts`, `src/core/command-generation/adapters/opencode.ts`, `src/core/command-generation/adapters/pi.ts`
 - 症状: upstream のコマンド生成アダプターは `**Input**:` 見出しを正規表現で検出し、その直後へ `$ARGUMENTS` または `$@` を挿入する。見出しを `**入力**:` へ翻訳するだけでは検出されず、生成コマンドへ呼び出し引数が渡らなくなる。
 - 対応（v1.9.0）: 見出し検出を `Input` / `入力` の両方に対応させる。Command Code では再生成時の重複挿入を防ぐため、既存の引数行も `Provided arguments` / `入力された引数` の両方を認識する。
+- 追加対応（v1.10.0）: OpenCode に追加された `$ARGUMENTS` 挿入処理も `Input` / `入力` と `None required` / `不要` の両方を認識し、日本語テンプレートでは `指定された引数` を生成する。
 - 互換性: 英語版または過去バージョンが生成したファイルを日本語版で更新する場合があるため、日本語だけに限定せず英語ラベルも維持する。
 - フォローアップ: 入力見出しや引数行の文言を変更するときは、3アダプターの検出正規表現と `test/core/command-generation/adapters.test.ts` の挿入・重複防止テストを同時に更新する。
 

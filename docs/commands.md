@@ -671,7 +671,7 @@ AI ツールが異なれば、使用するコマンド構文も若干異なり�
 |--------------------------|----------------|---------------|
 | `.../commands/opsx/<id>.*` | `/opsx:propose`, `/opsx:apply` | Claude Code, Gemini CLI, Crush |
 | `.../opsx-<id>.*` | `/opsx-propose`, `/opsx-apply` | Cursor, Devin Desktop, Copilot (IDE), Trae, Oh My Pi |
-| なし — スキルのみ | `/openspec-propose`, `/openspec-apply-change` | CodeArts、ForgeCode、Hermes、MiniMax Code、Mistral Vibe、共通 `.agents` |
+| なし — スキルのみ | `/openspec-propose`, `/openspec-apply-change` | CodeArts、ForgeCode、Hermes、MiniMax Code、Mistral Vibe、Zed Agent、共通 `.agents` |
 | none — Kimi Code | `/skill:openspec-propose` | Kimi Code |
 | none — Codex CLI | `$openspec-propose` | Codex |
 

@@ -74,6 +74,16 @@ The update command SHALL refresh existing slash command files for configured ada
 - **AND** it SHALL treat those files as legacy cleanup candidates
 - **AND** it SHALL preserve unmanaged files by deleting only exact allowlisted OpenSpec-owned filenames under the resolved global Codex prompt directory after replacement skills exist
 
+#### Scenario: Updating slash commands for Codex
+- **WHEN** a user runs `openspec update` with Codex configured
+- **THEN** Codex SHALL be updated through generated skills instead of slash command files
+- **AND** legacy managed Codex prompt files SHALL be treated as cleanup candidates
+
+#### Scenario: Legacy OpenCode command path cleanup
+- **WHEN** a project still has command files under the legacy singular path `.opencode/command/`
+- **THEN** legacy cleanup SHALL remove those files and generate replacements under `.opencode/commands/`
+- **AND** `openspec update` SHALL NOT refresh files that remain only under `.opencode/command/`
+
 #### Scenario: Updating slash commands for GitHub Copilot
 - **WHEN** `.github/prompts/` contains `openspec-proposal.prompt.md`, `openspec-apply.prompt.md`, and `openspec-archive.prompt.md`
 - **THEN** refresh each file using shared templates while preserving the YAML frontmatter

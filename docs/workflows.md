@@ -92,7 +92,7 @@ sequenceDiagram
     Assistant->>Files: 変更をアーカイブへ移動
     Assistant-->>Human: アーカイブ先と同期結果を報告
 
-    Note over Human,CLI: CLI の代替: openspec archive change-name --yes は確認プロンプトをスキップ。それでも検証し、delta spec を適用してアーカイブします
+    Note over Human,CLI: CLI の代替: openspec archive change-name --yes は確認プロンプトをスキップします。検証、delta spec の適用、アーカイブは引き続き実行します
 ```
 
 ## 2 つのモード

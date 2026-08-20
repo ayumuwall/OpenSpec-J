@@ -13,6 +13,13 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push(`schema: ${config.schema}`);
   lines.push('');
 
+  if (config.context !== undefined) {
+    lines.push('context: |');
+    for (const line of config.context.split('\n')) {
+      lines.push(`  ${line}`);
+    }
+    lines.push('');
+  } else {
   // Context section with comments
   lines.push('# プロジェクトの文脈（任意）');
   lines.push('# アーティファクト作成時に AI に提示されます。');
@@ -33,6 +40,7 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('#     - "API", "REST", "GraphQL" などの技術用語は英語のまま');
   lines.push('#     - 必要なら日本語訳する用語を明示');
   lines.push('');
+  }
 
   // Rules section with comments
   lines.push('# アーティファクト別ルール（任意）');

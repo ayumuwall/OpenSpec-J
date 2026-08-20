@@ -44,7 +44,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getApplyChangeSkillTemplate: '4904cc847a2873df9c07517f99e373c41b34f22397f223f5c2058c25a9230824',
   getFfChangeSkillTemplate: 'f022877f52dffb438849faf574f27dbc6ed477af08c76f247664cbe0b509023d',
   getSyncSpecsSkillTemplate: '92ee814e29cdb196b760199b2024323f2e64004cf1e6abee24e1ee4383f774bf',
-  getOnboardSkillTemplate: '4f79dbc514a69ee5d4eb4d9797884007b31b11e21052bef0ac00ee8c0f68bca8',
+  getOnboardSkillTemplate: '88a6aae94c0899fd386b153da37b05a4a35ebbb018e0e9fba14351d4190581d8',
   getOpsxExploreCommandTemplate: '5f8e8782c05d34e131957e442bd63692938d5ce383234ca2eedecbe94136d3d5',
   getOpsxNewCommandTemplate: 'f5e553c5052635f6263b78fdcdd31fb9cbe9a6c44ffba3104ee5cd7c7561e025',
   getOpsxContinueCommandTemplate: 'a1c0c43f5daf566e485b21dc5e09607f66000c9d0cba4865f1e5a1284008074a',
@@ -55,12 +55,12 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxSyncCommandTemplate: '6345933dcae5d33c5d5edb92aff679e66e7d059886c2acc2665a18e31bf0534e',
   getVerifyChangeSkillTemplate: '957ad93c9ca2304af5e8c9e94bb0b334f73e3719468e1c99af2523ac0739b4e5',
   getOpsxArchiveCommandTemplate: '08b1ca070b140c80fad8fa4bee5f777a17376ebbedc7a3f5997b891fe2362091',
-  getOpsxOnboardCommandTemplate: 'a98d44e0c8d63e1d21d795c08cbb4929ff90cad1ecbc230ab6225a8289bdaabd',
+  getOpsxOnboardCommandTemplate: 'ac9a4c82b004e298723705482c4a04c4972c6511903e34580b7bd1e94f730734',
   getOpsxBulkArchiveCommandTemplate: '1b7dae7f6382c1a9dcf560a32861f8a852ce17344cdbf1e84f67e63380029104',
   getOpsxVerifyCommandTemplate: '772142e7d3189dafaca2b1810a117957cff0426e30ffa9a0af866d1c0b4d36f4',
   getOpsxProposeSkillTemplate: '8bd87080eaed0b8c2855b43552fc293b1ca3f36119fce8157f7dcbc2096f7c5b',
   getOpsxProposeCommandTemplate: '151a5b55221cfc9a7ca3b89322a7f7fba5123e655bea886f2246dea923a63c1f',
-  getFeedbackSkillTemplate: '36721601a77cd704398bffad9a24a3f12df0972c4cdcae36d239a3b4dd1c62b8',
+  getFeedbackSkillTemplate: 'b30b6cf2cd5705c906078d3831fe7fffed8739652da757938ad84f82755a58fd',
   getUpdateChangeSkillTemplate: 'ba4ecadc6530481d557bdce705d0bcf58646d030c636182a95d8c18d581b6603',
   getOpsxUpdateCommandTemplate: 'b6bb8ae8b02f856adeb1489edfd284f3c3aada0a09c04bd8d3bd51c2044cd943',
 };
@@ -75,7 +75,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-archive-change': '728ac838ac171aa6b0e44be7fbe80c62de835fdb0277886721492d5fe9fbdb55',
   'openspec-bulk-archive-change': '9ef7507fde7efcdc0c2c19d380b3683ef94d44ccc313404f883932b9d08cbfbf',
   'openspec-verify-change': '01e3d0fa7bf054475cbdeb4386f17d06165f10068d7180f64a838bff06187dac',
-  'openspec-onboard': '60a3cd8e08192eedd5bf49f4556db467e1ffd8779133db583cc7378caa6a95cd',
+  'openspec-onboard': 'fce24ec467e3e64658226af5fb73a4f434dd7aa64ecae13064aba1e2213ea541',
   'openspec-propose': '502d62d3c052ab047e808a0eb4fdaaf49f8098f4fe48928bf66860991ef05dea',
   'openspec-update-change': 'c047557e430c456d36a05518c87e4a1d42621556a42ef63d716c6082032d87e0',
 };
@@ -379,6 +379,40 @@ describe('skill templates split parity', () => {
       expect(content, label).not.toContain('| auth (!)');
       expect(content, label).not.toContain('(auth: synced');
       expect(content, label).not.toContain('add-jwt/auth:');
+    }
+  });
+
+  it('keeps onboarding task examples aligned with concrete verification guidance (#345)', () => {
+    const variants: Array<[string, string]> = [
+      ['onboard skill', generateSkillContent(getOnboardSkillTemplate(), 'PARITY-BASELINE')],
+      ['onboard command', getOpsxOnboardCommandTemplate().content],
+    ];
+
+    for (const [label, content] of variants) {
+      const taskBlock = content.match(
+        /実装タスクは次の通りです:([\s\S]*?)各チェックボックスが apply フェーズの単位作業/
+      )?.[1];
+      expect(taskBlock, label).toBeDefined();
+      const checkboxes = taskBlock!
+        .split('\n')
+        .filter(line => /^- \[ \] \d+\.\d+ /.test(line));
+      expect(checkboxes, label).toHaveLength(3);
+      expect(
+        checkboxes.every(
+          line =>
+            line.endsWith(
+              '[具体的なタスク] — 検証: [テスト、コマンド、観察可能な振る舞い、または納品物]'
+            ) || /を\[エンドツーエンドテストまたは観察可能な結果\]で検証$/.test(line)
+        ),
+        label
+      ).toBe(true);
+      expect(content, label).toContain(
+        '[具体的なタスク] — 検証: [テスト、コマンド、観察可能な振る舞い、または納品物]'
+      );
+      expect(content, label).toContain(
+        '[より広範な統合またはシステム動作]を[エンドツーエンドテストまたは観察可能な結果]で検証'
+      );
+      expect(content, label).not.toContain('[検証手順]');
     }
   });
 

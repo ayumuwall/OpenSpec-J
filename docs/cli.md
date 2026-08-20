@@ -88,6 +88,8 @@ OpenSpec CLI（`openspec`）は、プロジェクトのセットアップ、検�
 openspec init [path] [options]
 ```
 
+新規プロジェクトでは `--language <language>` を指定すると、言語に関する指示を `openspec/config.yaml` に追加できます。既存プロジェクトでは、プロジェクト固有の指示をOpenSpecが上書きしないよう、設定の `context` フィールドを直接編集してください。
+
 **引数:**
 
 | 引数 | 必須 | 説明 |
@@ -99,6 +101,7 @@ openspec init [path] [options]
 | オプション | 説明 |
 |--------|-------------|
 | `--tools <list>` | 対話なしで AI ツールを設定。`all`, `none` またはカンマ区切りの一覧 |
+| `--language <language>` | 新しい設定を作成するときに、アーティファクトの記述言語を指定 |
 | `--force` | 旧ファイルを確認なしで自動クリーンアップ |
 | `--profile <profile>` | 今回の `init` 実行に限ってプロファイルを上書き（`core` または `custom`） |
 | `--no-animation` | アニメーションの代わりに静的なウェルカム画面を表示 |
@@ -109,7 +112,7 @@ openspec init [path] [options]
 
 ウェルカムアニメーションは、`OPENSPEC_NO_ANIMATION` 環境変数が設定されている場合（空値を含む）、`NO_COLOR` に空でない値が設定されている場合、またはOSで視差効果を減らす設定が有効な場合（macOSの「視差効果を減らす」、GNOMEのアニメーション無効化）にも省略されます。
 
-**対応ツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `zcode`, `agents`
+**対応ツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `zed`, `zcode`, `agents`
 
 > この一覧は `src/core/config.ts` の `AI_TOOLS` と対応しています。各ツールのスキルパスとコマンドパスは [サポートされているツール](supported-tools.md) を参照してください。
 
@@ -1158,13 +1161,13 @@ openspec feedback <message> [options]
 
 | 引数 | 必須 | 説明 |
 |----------|----------|-------------|
-| `message` | はい | フィードバック内容 |
+| `message` | はい | フィードバックの概要。長い文章はIssueタイトルでは短縮し、本文には完全な形で保持 |
 
 **オプション:**
 
 | オプション | 説明 |
 |--------|-------------|
-| `--body <text>` | 詳細説明 |
+| `--body <text>` | 概要の後に追加する詳細 |
 
 **要件:** GitHub CLI（`gh`）がインストールされ、認証済みである必要があります。
 
@@ -1211,6 +1214,8 @@ openspec completion generate bash > ~/.bash_completion.d/openspec
 openspec completion uninstall
 ```
 
+補完は明示的に有効化する方式です。対話端末で初めてコマンドを実行したとき、CLIが標準エラーへ一度だけ案内を表示します。補完がすでにインストール済みの場合は表示しません。案内を完全に抑止するには `OPENSPEC_NO_COMPLETIONS=1` を設定します。
+
 ---
 
 ## 終了コード
@@ -1232,6 +1237,7 @@ openspec completion uninstall
 | `EDITOR` または `VISUAL` | `openspec config edit` のエディタ指定 |
 | `NO_COLOR` | 設定時に色付き出力を無効化 |
 | `OPENSPEC_NO_ANIMATION` | 設定時に `openspec init` のウェルカムアニメーションを無効化 |
+| `OPENSPEC_NO_COMPLETIONS` | `1` を設定するとシェル補完の初回案内を抑止 |
 | `OPENSPEC_NO_UPDATE_CHECK` | 設定時（空値を含む）に `openspec update` の新しい公開CLI確認を無効化。`CI` が有効（`false` / `0` / `no` / `off` 以外）または `NODE_ENV=test` の場合も省略 |
 | `npm_config_registry` | `openspec update` のバージョン確認先。`http(s)` URLでなければ `https://registry.npmjs.org` を使用し、`.npmrc` は読み込まない |
 

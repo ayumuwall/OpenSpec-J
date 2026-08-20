@@ -31,7 +31,7 @@ Codex はスキル専用です。OpenSpec は delivery を `commands` に設定�
 | `.../opsx-<id>.*` — ファイル名がコマンド名 | `/opsx-<id>` | Amazon Q と Devin を除く、コマンドファイル生成対応ツール |
 | `.devin/workflows/opsx-<id>.md` — Devin の 2 エージェントのうち一方だけが読み込み | Devin Desktop は `/opsx-<id>`、Devin Local は `/openspec-<skill>` | Devin Desktop\*\*\*\* |
 | `.amazonq/prompts/opsx-<id>.md` — コマンドではなくプロンプト | `@opsx-<id>` | Amazon Q Developer |
-| なし — スキルのみ | `/openspec-<skill>` | CodeArts、ForgeCode、Hermes、MiniMax Code、Mistral Vibe、共通 `.agents` |
+| なし — スキルのみ | `/openspec-<skill>` | CodeArts、ForgeCode、Hermes、MiniMax Code、Mistral Vibe、Zed Agent、共通 `.agents` |
 | なし — Kimi Code | `/skill:openspec-<skill>` | Kimi Code |
 | なし — Codex CLI | `$openspec-<skill>` | Codex（[`/openspec-<skill>` は認識されません](https://github.com/openai/codex/issues/11817)） |
 
@@ -86,6 +86,7 @@ OpenSpecが生成するファイルとセットアップ後の「Getting started
 | [Rovo Dev CLI](https://support.atlassian.com/rovo/docs/use-rovo-dev-cli/) (`rovodev`) | `.rovodev/skills/openspec-*/SKILL.md` | 生成なし。Rovo にスラッシュコマンド機能はなく、スキルを自動またはプロンプト（例: "use the openspec-propose skill"）で照合します。`/skills` はスキル管理のみを行います。生成コンテンツは `/openspec-*` コマンドとしてではなく、名前でスキルを参照します。 |
 | [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code) (`roocode`) | `.roo/skills/openspec-*/SKILL.md` | `.roo/commands/opsx-<id>.md` |
 | Trae (`trae`) | `.trae/skills/openspec-*/SKILL.md` | `.trae/commands/opsx-<id>.md` |
+| [Zed Agent](https://zed.dev/docs/ai/skills) (`zed`) | `.agents/skills/openspec-*/SKILL.md` | 生成なし（スキル専用。`/openspec-*` または `@openspec-*` を使用） |
 | ZCode (`zcode`) | `.zcode/skills/openspec-*/SKILL.md` | `.zcode/commands/opsx/<id>.md` |
 | 共通 `.agents` スキル (`agents`) | `.agents/skills/openspec-*/SKILL.md` | 生成なし（コマンドアダプターなし。スキルベースの `/openspec-*` 呼び出しを使用） |
 
@@ -129,14 +130,16 @@ GitHub の [Copilot coding agent](https://docs.github.com/en/copilot/using-githu
 | 1つのリポジトリで複数エージェントが `.agents/skills` を読む | `agents`。ツールごとではなく1つのスキルツリーを使います |
 | 使用ツールは未掲載だが `.agents/skills` を読む | `agents` |
 
-ツール固有 ID と同時に選んでも問題ありません。通常はそれぞれ固有のルートへ書き込みます。Codex は同じ正規 `.agents` ルートを使うため例外です。`codex` と `agents` の両方を選んだ場合、OpenSpec は Codex 主導のツリーを1つだけ維持します。引き継ぎには Codex 用の `$openspec-*` と他エージェント用の `/openspec-*` の両方を示すため、`--tools all` と既存のマルチエージェント構成でも2つの書き込み元が同じファイルを上書きせず動作します。プロジェクトに `.agents/skills/` ディレクトリがあれば OpenSpec は自動的にこの選択肢も提示します。ツールはこのルートをルールやサブエージェント定義にも使うため、空の `.agents/` だけでは十分ではありません。`.agents` と `.agent` は別物であり、単数形のディレクトリは Antigravity 用です。
+ツール固有 ID と同時に選んでも問題ありません。通常はそれぞれ固有のルートへ書き込みます。Codex と Zed Agent は同じ正規 `.agents` ルートを使うため例外です。Codex を Zed または `agents` と同時に選んだ場合、OpenSpec は Codex 主導のツリーを1つだけ維持します。引き継ぎには Codex 用の `$openspec-*` と他エージェント用の `/openspec-*` の両方を示すため、`--tools all` と既存のマルチエージェント構成でも2つの書き込み元が同じファイルを上書きせず動作します。プロジェクトに `.agents/skills/` ディレクトリがあれば OpenSpec は自動的にこの選択肢も提示します。ツールはこのルートをルールやサブエージェント定義にも使うため、空の `.agents/` だけでは十分ではありません。`.agents` と `.agent` は別物であり、単数形のディレクトリは Antigravity 用です。
 
 知っておくべき点は2つあります:
 
 - **スキルのみ。** コマンドアダプターがないため `opsx-*` コマンドファイルは書き込まれません。commands を含む delivery モードでは、`openspec init` が `Commands skipped for: … (no adapter)` に `agents` を表示します。ワークフローはスキル名で呼び出します。`.agents/skills` を読むアシスタントの多くは、OpenSpec のセットアップヒントが表示する `/openspec-propose` 形式を使います。ターゲットはベンダー非依存のため、別形式を使う場合はアシスタント自身のドキュメントを確認してください。
 - **`AGENTS.md` は作成・編集しません。** 対象は `.agents/` ディレクトリです。ルート `AGENTS.md` に古い OpenSpec のマーカーブロックが残っている場合は、`openspec update` が取り除きます。[移行ガイド](migration-guide.md)を参照してください。
 
-`.agents/skills/` は共有されるため、OpenSpec がそこで管理する範囲を知っておく必要があります。選択したワークフローの `openspec-*` スキルディレクトリと、共有ツリーを Codex とベンダー非依存ターゲットのどちらが描画したかを記録する `.openspec-target` マーカーだけを書き込み、更新し、削除します。そのディレクトリ内のその他のものには触れません。`openspec-*` 名とマーカーは OpenSpec 管理対象として扱ってください。中を編集しても、他ツールと同様に次回の `openspec update` で置き換えられます。
+`Zed` の対応対象は組み込みの Zed Agent です。Agent Skills には [Zed v1.4.2](https://github.com/zed-industries/zed/releases/tag/v1.4.2) 以降が必要で、信頼されていない worktree では [信頼を許可](https://zed.dev/docs/worktree-trust)するまでプロジェクトローカルのスキルを利用できません。
+
+`.agents/skills/` は Codex、Zed Agent、ベンダー非依存ターゲットで共有されるため、OpenSpec がそこで管理する範囲を知っておく必要があります。選択したワークフローの `openspec-*` スキルディレクトリと、共有ツリーを Codex、Zed Agent、ベンダー非依存ターゲットのどれが描画したかを記録する `.openspec-target` マーカーだけを書き込み、更新し、削除します。そのディレクトリ内のその他のものには触れません。`openspec-*` 名とマーカーは OpenSpec 管理対象として扱ってください。中を編集しても、他ツールと同様に次回の `openspec update` で置き換えられます。
 
 マーカー以前のプロジェクトでは、OpenSpec は管理対象スキルの参照から所有者を推測します。`$openspec-*` は Codex、`/openspec-*` はベンダー非依存ターゲットを意味します。汎用の正規ツリーとレガシー `.codex/skills` が並んでいる場合は、古い二重ターゲット導入として扱い、互換性のある共有ツリーへ統合します。
 
@@ -160,7 +163,7 @@ openspec init --tools none
 openspec init --profile core
 ```
 
-**利用可能なツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `zcode`, `agents`
+**利用可能なツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `zed`, `zcode`, `agents`
 
 ## ワークフロー依存のインストール
 

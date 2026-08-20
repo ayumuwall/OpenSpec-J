@@ -2,6 +2,31 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.10.0
+
+- **[OpenSpec-J]** OpenSpec v1.10.0 の upstream 変更を取り込み、ドキュメント、スキーマ、CLI、OPSXワークフローの追加・変更された人間向け文言を日本語化
+- **[OpenSpec-J]** `openspec init --language`、Zed Agent、初回シェル補完案内、仕様廃止時の安全な診断、条件付きIDE再起動に対応
+- **[OpenSpec-J]** OpenCodeの引数挿入を英語・日本語の入力見出しに対応させ、日本語テンプレートでも `$ARGUMENTS` を確実に渡す互換処理を追加
+- **[OpenSpec-J]** 静的配布スキルを再生成し、テンプレートparityハッシュと日本語版テスト期待値を更新
+
+### マイナー変更
+
+- [#1685](https://github.com/Fission-AI/OpenSpec/pull/1685) [`c747ed1`](https://github.com/Fission-AI/OpenSpec/commit/c747ed1f34459ca6bc15d43ad9f68dfdf7750875) [@clay-good](https://github.com/clay-good) に感謝します！ - 新規プロジェクトのアーティファクト記述言語を設定する `openspec init --language <language>` を追加しました。
+
+### パッチ変更
+
+- [#1704](https://github.com/Fission-AI/OpenSpec/pull/1704) [`7276c6c`](https://github.com/Fission-AI/OpenSpec/commit/7276c6c26832f699a63544302d38b1af8ddb9844) [@clay-good](https://github.com/clay-good) に感謝します！ - npm の `postinstall` スクリプトを廃止しました。シェル補完の案内は、対話端末でのCLI初回実行時に標準エラーへ一度だけ表示し、補完が導入済みなら表示しません。公開パッケージは `preinstall` / `install` / `postinstall` を宣言しないため、レジストリからのインストール時にOpenSpecのコードは実行されません。案内は `OPENSPEC_NO_COMPLETIONS=1` で抑止できます。
+
+- [#1656](https://github.com/Fission-AI/OpenSpec/pull/1656) [`a72a74d`](https://github.com/Fission-AI/OpenSpec/commit/a72a74de6571c26fd79a193bb33fa3b8e1a767fb) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - `openspec update` はIDE内で動作するツールを更新した場合だけ、IDEの再起動を案内します。Claude Code、Codex、Gemini CLIなどのCLIツールでは不要な再起動案内を表示しません。
+
+- [#1703](https://github.com/Fission-AI/OpenSpec/pull/1703) [`9643888`](https://github.com/Fission-AI/OpenSpec/commit/9643888a7525467c7a076bfec9bb075910e78bb8) [@clay-good](https://github.com/clay-good) に感謝します！ - spec-driven の `specs` 指示で、本仕様の読み取りと編集にストア対応ルートを使うよう修正しました。MODIFIED手順と残った `TBD` Purposeの修正先に `<planningHome.root>/openspec/specs/...` を使うため、`--store`、プロジェクトの `store:` ポインター、グローバル既定ストアのいずれでも正しい仕様を参照します。[#1702](https://github.com/Fission-AI/OpenSpec/issues/1702) を修正しました。
+
+- [#1699](https://github.com/Fission-AI/OpenSpec/pull/1699) [`18688c8`](https://github.com/Fission-AI/OpenSpec/commit/18688c8b27820da3435a47a7f11e90073724b728) [@clay-good](https://github.com/clay-good) に感謝します！ - archiveで最後の要件を削除した仕様に、マージで安全に扱えない内容が残る場合の案内を追加しました。中止時に妨げとなる行と、適用できない `retire_capabilities` マーカーを報告します。端末へ表示するユーザー記述内容から制御文字を除去し、長さも制限します。
+
+- [#1660](https://github.com/Fission-AI/OpenSpec/pull/1660) [`7da3f34`](https://github.com/Fission-AI/OpenSpec/commit/7da3f34fb66d602bd987caa7dddcf3d6621e7d44) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成する各タスクに、完了を検証する方法の記載を必須としました。
+
 ## 1.9.0
 
 - **[OpenSpec-J]** OpenSpec v1.8.0〜v1.9.0 の upstream 変更を取り込み、README・ドキュメント・スキーマ・CLI・OPSX ワークフローの追加／変更された人間向け文言を日本語化

@@ -61,6 +61,34 @@ describe('propose preamble', () => {
   });
 });
 
+describe('default task guidance', () => {
+  it('requires a concrete verification method in each task (#345)', () => {
+    const tasks = defaultSchema.artifacts.find(artifact => artifact.id === 'tasks');
+    expect(tasks).toBeDefined();
+    expect(tasks!.instruction).toContain('各タスクのチェックボックス説明には、完了を確認する方法');
+    expect(tasks!.instruction).toMatch(
+      /テスト、コマンド、観察可能な振る舞い、納品物/
+    );
+    expect(tasks!.instruction).toMatch(
+      /チェックボックス説明には、完了を確認する方法/
+    );
+    expect(tasks!.instruction).toMatch(
+      /複数の実装タスクにまたがる統合・システム動作を確認する場合だけ、独立した検証タスクを使う/
+    );
+
+    const example = tasks!.instruction.match(/```\s*([\s\S]*?)```/)?.[1];
+    expect(example).toBeDefined();
+    const numberedTasks = example!.split('\n').filter(line => /^- \[ \] \d+\.\d+ /.test(line));
+    expect(numberedTasks).toHaveLength(4);
+    expect(numberedTasks.every(line => /確認/.test(line))).toBe(true);
+    expect(numberedTasks[0]).toContain('期待するファイルが存在');
+    expect(numberedTasks[1]).toContain('パッケージのインストールが成功');
+    expect(numberedTasks[2]).toContain('エクスポートテストの成功');
+    expect(numberedTasks[3]).toContain('引用符と区切り文字');
+    expect(example).not.toMatch(/^- \[ \] \d+\.\d+ 検証\b/im);
+  });
+});
+
 describe('propose implementation boundary', () => {
   it('makes the planning-only boundary prominent (#232, #258, #262)', () => {
     for (const [label, body] of proposeBodies) {

@@ -61,7 +61,7 @@ openspec init --tools claude,cursor
 
 5. **このプロジェクトを初期化済みか確認します。** スキルはプロジェクトごとに作成されます。リポジトリをcloneした、またはフォルダーを移動した場合は、そこで `openspec init`（または `openspec update`）を実行します。
 
-6. **ツールがコマンドファイルをサポートするか確認します。** Codex、CodeArts、ForgeCode、Hermes、Kimi Code、Mistral Vibe、共通 `.agents` ターゲットには、生成された `opsx-*` コマンドファイルがありません。代わりにスキルベースの呼び出しを使うため、これらでは `/opsx` が補完されません。Codex では `$openspec-propose`、Kimi Code では `/skill:openspec-propose`、それ以外では `/openspec-propose` を入力します。共通 `.agents` ターゲットはベンダー非依存のため、`/openspec-propose` は共通の形式であって保証された形式ではありません。応答しない場合は、スキルの呼び出し方をアシスタント自身のドキュメントで確認してください。Amazon Q にはコマンドファイルがありますが、スラッシュメニューではなくプロンプトライブラリに読み込みます。`/opsx` ではなく `@opsx-propose` を入力してください。各ツールの形式は[呼び出し方](supported-tools.md#how-to-invoke)にあります。
+6. **ツールがコマンドファイルをサポートするか確認します。** Codex、CodeArts、ForgeCode、Hermes、Kimi Code、Mistral Vibe、Zed Agent、共通 `.agents` ターゲットには、生成された `opsx-*` コマンドファイルがありません。代わりにスキルベースの呼び出しを使うため、これらでは `/opsx` が補完されません。Codex では `$openspec-propose`、Kimi Code では `/skill:openspec-propose`、それ以外では `/openspec-propose` を入力します。共通 `.agents` ターゲットはベンダー非依存のため、`/openspec-propose` は共通の形式であって保証された形式ではありません。応答しない場合は、スキルの呼び出し方をアシスタント自身のドキュメントで確認してください。Amazon Q にはコマンドファイルがありますが、スラッシュメニューではなくプロンプトライブラリに読み込みます。`/opsx` ではなく `@opsx-propose` を入力してください。各ツールの形式は[呼び出し方](supported-tools.md#how-to-invoke)にあります。
 
 ## 変更を扱う
 

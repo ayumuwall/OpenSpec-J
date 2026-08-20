@@ -80,7 +80,7 @@ CLI は **エンジン** です。変更フォルダーの構造、アーティ�
 | `.../commands/opsx/<id>.*` | `/opsx:propose` | Claude Code、Gemini CLI、Crush |
 | `.../opsx-<id>.*` | `/opsx-propose` | Cursor、GitHub Copilot (IDE)、Devin Desktop、Trae、Oh My Pi |
 | `.amazonq/prompts/opsx-<id>.md` | `@opsx-propose` | Amazon Q Developer |
-| なし — スキルのみ | `/openspec-propose` | CodeArts、ForgeCode、Hermes、Mistral Vibe、共通 `.agents` |
+| なし — スキルのみ | `/openspec-propose` | CodeArts、ForgeCode、Hermes、Mistral Vibe、Zed Agent、共通 `.agents` |
 | none — Kimi Code | `/skill:openspec-propose` | Kimi Code |
 | none — Codex CLI | `$openspec-propose` | Codex |
 
@@ -107,7 +107,7 @@ Devinは2行にまたがる唯一のツールです。Devin Desktopは `.devin/w
 
 短い確認手順です。
 
-1. **AI チャットでスラッシュを入力します。** `/opsx` と入力し始め、補完候補を確認します。表示されれば準備完了です。スキル専用ツール（Codex、Kimi Code、CodeArts、ForgeCode、Hermes、Mistral Vibe、共通 `.agents` ターゲット）では、正常な導入でも `/opsx` は補完されないため、上表のスキル名を使ってください。
+1. **AI チャットでスラッシュを入力します。** `/opsx` と入力し始め、補完候補を確認します。表示されれば準備完了です。スキル専用ツール（Codex、Kimi Code、CodeArts、ForgeCode、Hermes、Mistral Vibe、Zed Agent、共通 `.agents` ターゲット）では、正常な導入でも `/opsx` は補完されないため、上表のスキル名を使ってください。
 2. **ファイルを確認します。** Claude Code では `.claude/skills/` に `openspec-*` フォルダーがあるか確認します。他のツールは固有のディレクトリを使います（[対応ツール](supported-tools.md)を参照）。
 3. **セットアップを再実行します。** プロジェクトルートで `openspec update` を実行し、設定済みツールのスキルとコマンドファイルを再生成します。
 4. **アシスタントを再起動します。** 多くのツールは起動時にスキルとコマンドを読み込むため、新しいウィンドウで解決することがあります。

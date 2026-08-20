@@ -27,7 +27,7 @@ OpenSpecはローカルのコマンドラインツールです。サーバー、
 
 ## 公開パッケージの内容
 
-`@ayumuwall/openspec` npmパッケージは、`dist/`、`bin/`、`schemas/`、`scripts/postinstall.js` を公開します。ビルド・テスト用ツール（vite、rollup、vitest、eslint、およびそれらの推移的依存関係）は公開されません。依存関係のスコープを区別せずに `pnpm-lock.yaml` を読むスキャナーは、インストールされたOpenSpecには含まれないパッケージのアドバイザリも報告します。
+`@ayumuwall/openspec` npmパッケージは、`dist/`、`bin/`、`schemas/` を公開します。ビルド・テスト用ツール（vite、rollup、vitest、eslint、およびそれらの推移的依存関係）は公開されません。依存関係のスコープを区別せずに `pnpm-lock.yaml` を読むスキャナーは、インストールされたOpenSpecには含まれないパッケージのアドバイザリも報告します。
 
 この説明をそのまま信頼する必要はありません。パッケージをインストールして確認できます。
 
@@ -42,7 +42,7 @@ ls node_modules | grep -E '^(vite|rollup|vitest|eslint|js-yaml|minimatch)$'   # 
 
 | 対象 | 動作 |
 | --- | --- |
-| インストールスクリプト | `scripts/postinstall.js` はシェル補完を提案する1行を表示します。ネットワークリクエスト、ファイル書き込み、シェル実行は行いません。補完は `openspec completion install` で明示的に導入します。 |
+| インストールスクリプト | パッケージには `preinstall`、`install`、`postinstall` がないため、npmレジストリからのインストール時にOpenSpecのコードは実行されません（`prepare` はGitまたはローカルディレクトリからのインストール時に限り、ソースをビルドするために実行されます）。シェル補完は明示的に導入する方式で、CLIが初回実行時に1行の案内を表示します。 |
 | 他のプログラムの実行 | シェルを介するすべての呼び出しでは、固定リテラル（`which gh`、`gh auth status`）を使用します。Issue本文、エディターパス、worksetコマンド、`openspec update` へ渡すパスなど、ユーザー入力を含むものは引数配列を使用し、シェル文字列へ埋め込みません。Windowsでは `.cmd` shimを `cross-spawn` で起動し、引数を連結せずエスケープします。 |
 | ソフトウェアのインストール | `openspec update` は `npm install -g @ayumuwall/openspec@latest` を実行し、アップグレード後のCLIで `openspec update` を再実行できます。プロンプトで同意した場合、OpenSpecパッケージ自体のみ、npmがインストールを所有している場合に限って実行し、CIや非対話シェルでは実行しません。グローバルインストール先はプロジェクトの外にあるため、そこでユーザーの権限を使い、公開パッケージに含まれるライフサイクルスクリプトを実行します。アップグレード成功を仮定せず、インストールされたバイナリのバージョンを読み取って確認します。拒否した場合は、ユーザー自身が実行できるコマンドを表示します。 |
 | テレメトリ | コマンド名、OpenSpecのバージョン、ローカルで生成したランダムUUIDを送信します。ファイルパス、ファイル内容、環境、ホスト名は送信せず、IPアドレスの取得も明示的に無効化しています。`OPENSPEC_TELEMETRY=0` または `DO_NOT_TRACK=1` で無効にでき、CIでは自動的に無効になります。 |

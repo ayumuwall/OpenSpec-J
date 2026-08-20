@@ -69,6 +69,35 @@ export async function isRetirableSpec(specName: string, rebuilt: string): Promis
 }
 
 /**
+ * How much of one blocking line the abort is willing to show. A line long
+ * enough to fill the screen would push the way out of the abort off it.
+ */
+const UNACCOUNTED_LINE_MAX = 200;
+
+/**
+ * The first few lines a retirement would delete without being able to name
+ * them, quoted, with a count for the rest. Capped so a long tail cannot bury
+ * the rest of the abort.
+ *
+ * The lines are authored spec content printed verbatim to a terminal, so they
+ * get the same treatment as a change directory name (`describeChangeName`): a
+ * raw CR could forge a line of its own, and an ESC could redraw the screen.
+ * Truncation counts code points so a cut never leaves half a surrogate pair.
+ */
+function describeUnaccountedContent(lines: string[]): string {
+  const shown = lines
+    .slice(0, 3)
+    .map((line) => {
+      const safe = [...line.replace(/[\u0000-\u001f\u007f]/g, '?')];
+      const clipped = safe.slice(0, UNACCOUNTED_LINE_MAX).join('');
+      return `"${safe.length > UNACCOUNTED_LINE_MAX ? `${clipped}\u2026` : clipped}"`;
+    })
+    .join(', ');
+  const rest = lines.length > 3 ? `、ほか${lines.length - 3}行` : '';
+  return `${shown}${rest}`;
+}
+
+/**
  * What this run should do with a rebuilt spec: write it as usual, retire the
  * capability because the delta removed its last requirement (#1302), or do
  * nothing because there is no spec to write and none to retire.
@@ -1557,18 +1586,26 @@ export class ArchiveCommand {
               const specName = p.update.id;
               const report = await new Validator().validateSpecContent(specName, p.rebuilt);
               if (!report.valid) {
+                // This run is what emptied the capability, and "no
+                // requirements" is the only thing wrong with the spec that
+                // would be written - so retiring it is what archive would do,
+                // and what stands in the way of that is worth saying. Not
+                // always the *only* fix: a live requirement can be hiding in a
+                // second `## Requirements` section the validator never reaches,
+                // and merging the sections fixes that spec without a deletion.
+                const emptiedByThisRun =
+                  p.update.exists &&
+                  p.counts.removed > 0 &&
+                  p.noRequirementBlocks &&
+                  (await isRetirableSpec(specName, p.rebuilt));
                 // The dead end #1302 describes: the rebuilt spec is unwritable
                 // for exactly one reason, and retiring the capability is the
                 // fix - but only the author can authorise deleting the spec, so
                 // the abort names the marker instead of just rejecting. Says so
                 // only when the marker is the ONLY thing missing, so it never
                 // sends someone after a marker that would not have helped.
-                const retirementWouldFix =
-                  !retirementDeclared &&
-                  p.update.exists &&
-                  p.counts.removed > 0 &&
-                  (await isRetirementCandidate(p.update, p, false));
-                const retirementHint = retirementWouldFix
+                const retirementHint =
+                  !retirementDeclared && emptiedByThisRun && p.unaccountedContent.length === 0
                   ? `この変更により '${specName}' の最後の要件が削除されます。機能を廃止して仕様を削除するには、` +
                     `変更の ${METADATA_FILENAME} に \`retire_capabilities: true\` を追加し（そのファイルで必須の \`schema:\` と併記）、` +
                     `再実行してください。` +
@@ -1576,6 +1613,16 @@ export class ArchiveCommand {
                       ? ` 現在のマーカーは適用できません（${retirementMarker.invalidReason}）。`
                       : '')
                   : undefined;
+                const blockedRetirementHint =
+                  !retirementDeclared && emptiedByThisRun && p.unaccountedContent.length > 0
+                    ? `この変更により '${specName}' の最後の要件が削除されるため、再構築後の仕様には要件がなく、書き込めません。` +
+                      `代わりに機能を廃止しますが、仕様にはマージで安全に扱えず、ファイル削除時に失われる内容があります: ` +
+                      `${describeUnaccountedContent(p.unaccountedContent)}。` +
+                      '`## Purpose` または正規の要件へ移動するか、仕様を手動で削除してから再実行してください。' +
+                      (retirementMarker.invalidReason
+                        ? ` 現在のマーカーは適用できません（${retirementMarker.invalidReason}）。`
+                        : '')
+                    : undefined;
                 // The marker was set and retirement was still refused. Saying
                 // nothing left the author who did exactly what the docs asked
                 // back in the original dead end with no signal that their
@@ -1597,6 +1644,7 @@ export class ArchiveCommand {
                     `'${specName}' の再構築した仕様は検証に失敗しました。ファイルは変更されていません。`,
                     refusalReason ??
                       retirementHint ??
+                      blockedRetirementHint ??
                       `変更 delta を修正した後、${withStoreFlag(root, `openspec validate ${specName}`)} を実行してください。`
                   );
                 }
@@ -1606,6 +1654,7 @@ export class ArchiveCommand {
                   else if (issue.level === 'WARNING') console.log(chalk.yellow(`  ⚠ ${issue.message}`));
                 }
                 if (retirementHint) console.log(chalk.yellow(`  → ${retirementHint}`));
+                if (blockedRetirementHint) console.log(chalk.yellow(`  → ${blockedRetirementHint}`));
                 if (refusalReason) console.log(chalk.yellow(`  → ${refusalReason}`));
                 console.log('中止しました。ファイルは変更されませんでした。');
                 process.exitCode = 1;

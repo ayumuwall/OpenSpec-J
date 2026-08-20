@@ -44,6 +44,7 @@ export function getFeedbackSkillTemplate(): SkillTemplate {
 5. **承認後に送信**
    - \`openspec feedback\` コマンドを使って送信する
    - 形式: \`openspec feedback "title" --body "body content"\`
+   - コマンドはタイトルの文面をIssue本文に保持し、長いGitHub Issueタイトルは短縮する
    - コマンドがメタデータ（バージョン/プラットフォーム/タイムスタンプ）を自動付与する
 
 **ドラフト例**
