@@ -17,7 +17,7 @@ const bodies: Array<[string, string]> = [
 
 function newChangeTransition(body: string, label: string): string {
   const start = body.indexOf('### 変更がない場合');
-  const end = body.indexOf('### 変更があった場合');
+  const end = body.indexOf('### 変更が存在する場合');
 
   expect(start, label).toBeGreaterThanOrEqual(0);
   expect(end, label).toBeGreaterThan(start);
@@ -29,7 +29,7 @@ function occurrenceCount(body: string, value: string): number {
   return body.split(value).length - 1;
 }
 
-const NON_ASCII = /[^\x00-\x7F]/;
+const UNICODE_DIAGRAM_CHARACTER = /[\u2190-\u21ff\u2500-\u259f\u25a0-\u25ff]/;
 
 function fencedBlockLines(body: string): Array<[number, string]> {
   const lines: Array<[number, string]> = [];
@@ -56,7 +56,7 @@ describe('explore templates', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('openspec/config.yaml');
       expect(body, label).toContain('`context`: 技術スタック、規約、制約などのプロジェクト背景');
-      expect(body, label).toContain('`rules`: アーティファクトIDごとのルール');
+      expect(body, label).toContain('`rules`: アーティファクト ID ごとのルール');
     }
   });
 
@@ -102,17 +102,17 @@ describe('explore templates', () => {
   it('requires separate confirmation before any file-writing action (#1715)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain(
-        'Before the first write-capable action'
+        '書き込み可能な操作を初めて行う前に'
       );
-      expect(body, label).toContain('name the artifacts or files you would change');
-      expect(body, label).toContain('ask a direct yes/no question');
-      expect(body, label).toContain("wait for the user's confirmation in a separate message");
+      expect(body, label).toContain('変更するアーティファクトまたはファイルと、行う内容を示し');
+      expect(body, label).toContain('はいまたはいいえで答えられる質問で確認');
+      expect(body, label).toContain('ユーザーから別のメッセージで確認を得るまで待ちます');
       expect(body, label).toContain(
-        'Answering design or clarifying questions is never consent to write'
+        '設計や確認に関する質問への回答は、書き込みへの同意にはなりません'
       );
-      expect(body, label).toContain('run read-only commands or tools without confirmation');
+      expect(body, label).toContain('読み取り専用のコマンドやツールの実行は、確認なしで行えます');
       expect(body, label).toContain(
-        'Confirmation covers only the scope you described; ask again before expanding it'
+        '確認は説明した範囲だけを対象とします。範囲を広げる前に、もう一度確認してください'
       );
     }
   });
@@ -120,13 +120,13 @@ describe('explore templates', () => {
   it('treats workflow configuration and write-capable commands as changes (#1715)', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain(
-        'creating or editing schemas, templates, or `openspec/config.yaml` is a change'
+        'スキーマ、テンプレート、`openspec/config.yaml` の作成や編集は思考ではなく変更です'
       );
       expect(body, label).toContain(
-        'including `openspec new change` or another command that writes files'
+        '`openspec new change` など、ファイルへ書き込むコマンド'
       );
       expect(body, label).toContain(
-        'Creating or updating OpenSpec change artifacts within the confirmed scope is fine, writing anything else is not'
+        '確認済みの範囲内で OpenSpec の変更アーティファクトを作成または更新することはできますが、それ以外には書き込まないでください'
       );
     }
   });
@@ -162,7 +162,7 @@ describe('explore templates', () => {
       expect(
         occurrenceCount(
           transition,
-          '（登録されたスタンドアロン store の場合だけ確認済みの `--store "<id>"` を付けます）'
+          '（登録された独立ストアの場合だけ確認済みの `--store "<id>"` を付けます）'
         ),
         label
       ).toBe(4);
@@ -246,21 +246,21 @@ describe('explore templates', () => {
   // Unicode box-drawing, arrow, and marker glyphs. Agents copy those
   // examples verbatim, and on terminals that render the glyphs
   // double-width the right border of every padded box drifted loose.
-  it('draws every fenced example with plain ASCII only (#983)', () => {
+  it('uses no Unicode diagram characters in fenced examples (#983)', () => {
     for (const [label, body] of bodies) {
       const offenders = fencedBlockLines(body)
-        .filter(([, line]) => NON_ASCII.test(line))
+        .filter(([, line]) => UNICODE_DIAGRAM_CHARACTER.test(line))
         .map(([lineNumber, line]) => `${lineNumber}: ${line}`);
 
-      expect(offenders, `${label} fenced examples must be pure ASCII`).toEqual([]);
+      expect(offenders, `${label} のコードフェンス内に Unicode 図形文字を含めない`).toEqual([]);
     }
   });
 
   it('tells the agent to draw with ASCII and says why (#983)', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('**Draw with plain ASCII only**');
-      expect(body, label).toContain('render at different widths');
-      expect(body, label).toContain('Keep every diagram character ASCII');
+      expect(body, label).toContain('**図にはプレーン ASCII だけを使う**');
+      expect(body, label).toContain('異なる幅で表示される');
+      expect(body, label).toContain('図に使う文字はすべて ASCII にしてください');
     }
   });
 
@@ -303,7 +303,7 @@ describe('explore templates', () => {
         '該当しない場合だけ意図的なスキップを記録'
       );
       const requireExpansion = transition.indexOf(
-        '条件が該当する、または前提条件が条件付きではない場合'
+        '条件が該当する場合、または前提条件が条件付きでない場合'
       );
       const approvalGuard = transition.indexOf(
         'ユーザーの承認なしに、要求されていない前提条件を作成してはいけません'
@@ -319,16 +319,16 @@ describe('explore templates', () => {
         '該当しない場合だけ意図的なスキップを記録します'
       );
       expect(transition, label).toContain(
-        '条件が該当する、または前提条件が条件付きではない場合は、通常の前提条件として扱い'
+        '条件が該当する場合、または前提条件が条件付きでない場合は、通常の前提条件として扱い'
       );
       expect(transition, label).toContain('要求されていない前提条件を作成してはいけません');
       expect(transition, label).toContain(
         'その `instruction` の条件が該当しなかったために意図的にスキップ'
       );
       expect(transition, label).toContain('記録し、再検討しません');
-      expect(transition, label).toContain('依存関係は有効化条件であり、障害ではありません');
+      expect(transition, label).toContain('依存関係は作成を可能にするためのものであり、進行を拒む関門ではありません');
       expect(transition, label).toContain(
-        '`blocked` 状態でも `openspec instructions "<artifact-id>" --change "<name>" --json` を実行します'
+        'ブロック状態でも `openspec instructions "<artifact-id>" --change "<name>" --json` を実行します'
       );
       expect(transition, label).toContain(
         '記録した条件付きスキップだけが不足依存関係であるときに限り'

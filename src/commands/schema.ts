@@ -379,7 +379,7 @@ interface PreparedConfigUpdate {
   originalMode: number | null;
 }
 
-/** @internal File-operation seam for transactional failure tests. */
+/** @internal トランザクション失敗テストで差し替えるファイル操作。 */
 export const schemaInitFileOperations = {
   renameSync: fs.renameSync,
 };
@@ -397,12 +397,12 @@ async function prepareDefaultConfigUpdate(
     const stats = fs.lstatSync(configPath);
     if (stats.isSymbolicLink()) {
       throw new Error(
-        `Cannot set the default schema: ${path.basename(configPath)} must be a regular file, not a symbolic link`
+        `デフォルトスキーマを設定できません: ${path.basename(configPath)} は通常ファイルである必要があり、シンボリックリンクは使用できません`
       );
     }
     if (!stats.isFile()) {
       throw new Error(
-        `Cannot set the default schema: ${path.basename(configPath)} must be a regular file`
+        `デフォルトスキーマを設定できません: ${path.basename(configPath)} は通常ファイルである必要があります`
       );
     }
     if (
@@ -410,7 +410,7 @@ async function prepareDefaultConfigUpdate(
       !(await FileSystemUtils.canWriteFile(path.dirname(configPath)))
     ) {
       throw new Error(
-        `Cannot set the default schema: ${path.basename(configPath)} is not writable`
+        `デフォルトスキーマを設定できません: ${path.basename(configPath)} に書き込みできません`
       );
     }
 
@@ -418,12 +418,12 @@ async function prepareDefaultConfigUpdate(
     const config = parseDocument(originalContent.toString('utf-8'));
     if (config.errors.length > 0) {
       throw new Error(
-        `Cannot set the default schema: ${path.basename(configPath)} is invalid YAML`
+        `デフォルトスキーマを設定できません: ${path.basename(configPath)} は有効な YAML ではありません`
       );
     }
     if (config.contents !== null && !isMap(config.contents)) {
       throw new Error(
-        `Cannot set the default schema: ${path.basename(configPath)} must contain a YAML object`
+        `デフォルトスキーマを設定できません: ${path.basename(configPath)} には YAML オブジェクトを記述してください`
       );
     }
     config.set('schema', schemaName);
@@ -439,7 +439,7 @@ async function prepareDefaultConfigUpdate(
 
   if (!(await FileSystemUtils.canWriteFile(configPath))) {
     throw new Error(
-      `Cannot set the default schema: ${path.dirname(configPath)} is not writable`
+      `デフォルトスキーマを設定できません: ${path.dirname(configPath)} に書き込みできません`
     );
   }
 
@@ -1234,7 +1234,7 @@ export function registerSchemaCommand(program: Command): void {
           const validation = validateSchema(schemaStagingDir);
           if (!validation.valid) {
             throw new Error(
-              `Generated schema failed validation: ${validation.issues
+              `生成したスキーマの検証に失敗しました: ${validation.issues
                 .map((issue) => issue.message)
                 .join('; ')}`
             );
@@ -1255,8 +1255,8 @@ export function registerSchemaCommand(program: Command): void {
             }
           }
 
-          // Re-resolve both destinations immediately before the first move so
-          // a parent symlink swap during staging cannot redirect the commit.
+          // 最初の移動直前に両方の書き込み先を再解決し、ステージング中に親の
+          // シンボリックリンクが差し替えられてもコミット先が変わらないようにする。
           FileSystemUtils.assertProjectArtifactPath(projectRoot, schemaDir);
           if (preparedConfig) {
             FileSystemUtils.assertProjectArtifactPath(projectRoot, preparedConfig.path);
@@ -1267,14 +1267,14 @@ export function registerSchemaCommand(program: Command): void {
             : null;
           if (currentSchemaFingerprint !== authorizedSchemaFingerprint) {
             throw new Error(
-              `Schema '${name}' changed on disk while initialization was being prepared. ` +
-                'Aborted to preserve those concurrent changes.'
+              `スキーマ '${name}' は初期化の準備中にディスク上で変更されました。` +
+                '同時に行われた変更を保護するため、中止しました。'
             );
           }
           if (preparedConfig && !configMatchesPreparedState(preparedConfig)) {
             throw new Error(
-              `${path.basename(preparedConfig.path)} changed on disk while initialization was being prepared. ` +
-                'Aborted to preserve those concurrent changes.'
+              `${path.basename(preparedConfig.path)} は初期化の準備中にディスク上で変更されました。` +
+                '同時に行われた変更を保護するため、中止しました。'
             );
           }
 
@@ -1314,7 +1314,7 @@ export function registerSchemaCommand(program: Command): void {
                 schemaInitFileOperations.renameSync(configBackup, preparedConfig.path);
               }
             } catch (rollbackError) {
-              rollbackErrors.push(`config: ${(rollbackError as Error).message}`);
+              rollbackErrors.push(`設定: ${(rollbackError as Error).message}`);
             }
             try {
               if (schemaInstalled) {
@@ -1324,22 +1324,21 @@ export function registerSchemaCommand(program: Command): void {
                 schemaInitFileOperations.renameSync(schemaBackup, schemaDir);
               }
             } catch (rollbackError) {
-              rollbackErrors.push(`schema: ${(rollbackError as Error).message}`);
+              rollbackErrors.push(`スキーマ: ${(rollbackError as Error).message}`);
             }
 
             if (rollbackErrors.length > 0) {
               throw new Error(
-                `Schema initialization failed and rollback was incomplete (${rollbackErrors.join(', ')}). ` +
-                  `Recovery backups may remain beside ${schemaDir} and ${preparedConfig?.path ?? 'the config file'}.`,
+                `スキーマの初期化に失敗し、ロールバックも完了できませんでした（${rollbackErrors.join(', ')}）。` +
+                  `復旧用バックアップが ${schemaDir} と ${preparedConfig?.path ?? '設定ファイル'} の近くに残っている可能性があります。`,
                 { cause: installError }
               );
             }
             throw installError;
           }
 
-          // The transaction is committed. Cleanup cannot turn success into a
-          // false failure, so leave a recoverable backup and warn if removal is
-          // blocked instead of reporting that initialization failed.
+          // トランザクションはコミット済み。クリーンアップの失敗によって初期化まで
+          // 失敗したように見せず、削除できない場合は復旧可能なバックアップを残して警告する。
           for (const backup of [
             schemaBackedUp ? schemaBackup : null,
             configBackedUp ? configBackup : null,
@@ -1349,7 +1348,7 @@ export function registerSchemaCommand(program: Command): void {
               fs.rmSync(backup, { recursive: true, force: true });
             } catch (cleanupError) {
               console.error(
-                `Warning: initialization succeeded, but the backup at ${backup} could not be removed: ${(cleanupError as Error).message}`
+                `警告: 初期化は成功しましたが、${backup} のバックアップを削除できませんでした: ${(cleanupError as Error).message}`
               );
             }
           }
@@ -1357,7 +1356,7 @@ export function registerSchemaCommand(program: Command): void {
           try {
             fs.rmSync(schemaStagingDir, { recursive: true, force: true });
           } catch {
-            // Best-effort cleanup must not hide the operation's real error.
+            // ベストエフォートのクリーンアップで、本来のエラーを隠さない。
           }
           throw error;
         } finally {
@@ -1365,7 +1364,7 @@ export function registerSchemaCommand(program: Command): void {
             try {
               fs.rmSync(configStagingDir, { recursive: true, force: true });
             } catch {
-              // Best-effort cleanup. A committed config has already moved out.
+              // ベストエフォートでクリーンアップする。コミット済みの設定は移動済み。
             }
           }
         }

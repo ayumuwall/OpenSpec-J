@@ -152,9 +152,9 @@ function printHumanHealth(health: RelationshipHealth, declaredReferenceCount: nu
   console.log('');
   console.log('ルート');
   console.log(`  場所: ${health.root.path}`);
-  console.log(`  OpenSpec ルート: ${health.root.healthy ? 'ok' : 'unhealthy'}`);
+  console.log(`  OpenSpec ルート: ${health.root.healthy ? '正常' : '異常'}`);
   if (health.store) {
-    const metadataNote = health.store.metadata.valid ? 'メタデータ ok' : 'メタデータ invalid';
+    const metadataNote = health.store.metadata.valid ? 'メタデータ正常' : 'メタデータ無効';
     console.log(`  ストア: ${health.store.id} (${metadataNote})`);
   }
   printDiagnosticLines('  ', [...health.root.status, ...(health.store?.status ?? [])]);

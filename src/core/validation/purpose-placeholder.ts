@@ -2,50 +2,34 @@ import { buildCodeFenceMask } from '../parsers/code-fence.js';
 import { PURPOSE_PLACEHOLDER_PREFIX, PURPOSE_PLACEHOLDER_SUFFIX } from './constants.js';
 
 /**
- * Detects a `## Purpose` that is still a placeholder, rather than one somebody
- * wrote.
+ * 誰かが記述した内容ではなく、プレースホルダーのまま残っている
+ * `## Purpose` を検出する。
  *
- * When a delta introduces a capability with no usable `## Purpose`, archive
- * stamps the placeholder into the new main spec. That text is over
- * `MIN_PURPOSE_LENGTH`, so the brevity check cannot reach it: the one rule that
- * exists to catch a Purpose nobody wrote is satisfied by the exact string
- * meaning nobody wrote one. Nothing else reads it afterwards, so the capability
- * keeps a to-do in it while every command reports success.
+ * デルタに利用可能な `## Purpose` がない場合、archiveは新規のメイン仕様へ
+ * プレースホルダーを書き込む。この文は `MIN_PURPOSE_LENGTH` を超えるため、
+ * 文字数の検査だけでは未記入のPurposeを検出できない。
  *
- * Two things count, and deliberately nothing else:
+ * 次の2種類だけをプレースホルダーとして扱う。
  *
- * - the placeholder this tool generates, recognised through the same constants
- *   the writer composes it from, wherever it sits in the Purpose - nobody types
- *   that sentence by accident;
- * - a `TBD` or `TODO` **opening** the Purpose, which is the marker left behind
- *   when someone is told to leave "a brief TBD placeholder" and never comes
- *   back. Which of the two words got typed says nothing about whether the
- *   Purpose was written, so both are read the same way.
+ * - このツールが生成した文。生成側と同じ定数を使い、Purpose内の位置を問わず検出する。
+ * - Purposeの先頭にある `TBD` または `TODO`。どちらも未記入を示すマーカーとして扱う。
  *
- * A marker inside a sentence is left alone. "The retry budget is TBD pending
- * benchmarks" is a real Purpose with an open question in it, and reporting it
- * would teach people to ignore the warning - which costs more than the findings
- * it would add.
+ * 文中にあるマーカーは検出しない。たとえば、未決事項を含む記述済みのPurposeまで
+ * 警告すると、利用者が警告を無視する原因になる。
  *
- * Fenced code inside the Purpose is quoted material rather than the Purpose
- * speaking, so it is read out first. Without that, a Purpose documenting the
- * sentence archive writes is reported as being that sentence: a document about
- * the placeholder, failing for carrying one.
+ * Purpose内のコードフェンスは引用として除外する。これにより、archiveが生成する文を
+ * 説明しただけのPurposeをプレースホルダーと誤判定しない。
  */
 
 export interface PurposePlaceholderIssue {
-  /** 1-based line of the placeholder text, when it can be located. */
+  /** プレースホルダーを特定できた場合の1始まりの行番号。 */
   line?: number;
 }
 
 /**
- * A `TBD` or `TODO` opening the Purpose. The lookahead keeps it off a longer
- * word that merely begins with those letters, like "TBDs" or "TODOs", while
- * still allowing the punctuation a marker is usually written with: `TODO:`,
- * `TBD -`. It rejects any letter, digit or combining mark rather than only the
- * ASCII ones `\b` knows about, because a Purpose is prose and prose is not
- * always written in Latin script - `TBD` followed by an Arabic-Indic digit is
- * as much a longer word as `TBDs` is.
+ * Purposeの先頭にある `TBD` または `TODO`。先読みで `TBDs` や `TODOs` のような
+ * 長い単語を除外し、`TODO:` や `TBD -` の句読点は許可する。Purposeはラテン文字以外も
+ * 含むため、ASCIIの `\b` だけでなく文字、数字、結合文字をすべて除外対象にする。
  */
 const LEADING_MARKER = /^(?:TBD|TODO)(?![\p{L}\p{N}\p{M}_])/iu;
 
@@ -53,13 +37,8 @@ const PURPOSE_HEADER = /^ {0,3}##(?!#)[ \t]+Purpose[ \t]*$/i;
 const TOP_LEVEL_HEADER = /^ {0,3}#{1,2}(?!#)[ \t]+/;
 
 /**
- * The lines of `text` that sit outside a fenced code block, with line endings
- * normalised first.
- *
- * `buildCodeFenceMask` is the masker the requirement and structure parsers
- * already share, and its own reason for existing is that a second, private
- * notion of what a fence is drifts from the first. This check reads Markdown
- * for the same purpose they do, so it reads fences the same way they do.
+ * 改行を正規化し、`text` からコードフェンス外の行だけを返す。
+ * 要件・構造パーサーと同じ `buildCodeFenceMask` を使い、フェンスの解釈を統一する。
  */
 function unfencedLines(text: string): string[] {
   const lines = text.replace(/\r\n?/g, '\n').split('\n');
@@ -68,17 +47,14 @@ function unfencedLines(text: string): string[] {
 }
 
 /**
- * True when the text carries the sentence archive writes. Matched as its two
- * fixed halves in order, because the change name between them varies - so the
- * check follows the writer's own definition instead of a second copy of it.
+ * archiveが生成する文の開始位置を返す。間に変更名が入るため、生成側と共有する
+ * 前半・後半の定数を順番に照合する。
  */
 function generatedPlaceholderPrefixIndex(text: string): number | undefined {
   let suffixAt = text.indexOf(PURPOSE_PLACEHOLDER_SUFFIX);
   while (suffixAt !== -1) {
-    // Use the closest prefix before this suffix. An authored explanation can
-    // mention the prefix above the real placeholder; choosing the first prefix
-    // would then point the diagnostic at the explanation instead of the text
-    // the user needs to replace.
+    // この後半に最も近い前半を使う。記述済みの説明が先に前半部分へ言及していても、
+    // 診断位置を説明文ではなく、実際に置き換えるプレースホルダーへ合わせる。
     const prefixAt = text.lastIndexOf(PURPOSE_PLACEHOLDER_PREFIX, suffixAt);
     if (prefixAt !== -1) return prefixAt;
     suffixAt = text.indexOf(PURPOSE_PLACEHOLDER_SUFFIX, suffixAt + 1);
@@ -87,51 +63,33 @@ function generatedPlaceholderPrefixIndex(text: string): number | undefined {
 }
 
 /**
- * Reports the Purpose of a main spec as an unwritten placeholder, or null when
- * it reads as authored content.
- *
- * An empty Purpose is not reported here - `SPEC_PURPOSE_EMPTY` already covers
- * it, and reporting both would put two findings on one line. That falls out of
- * the two rules rather than needing a case of its own.
+ * メイン仕様のPurposeが未記入のプレースホルダーなら問題を返し、
+ * 記述済みならnullを返す。空のPurposeは `SPEC_PURPOSE_EMPTY` が扱うため、ここでは報告しない。
  */
 export function findPurposePlaceholderIssue(
   overview: string,
   content?: string
 ): PurposePlaceholderIssue | null {
-  // An empty Purpose needs no branch of its own: neither rule matches empty
-  // text, so it falls through to null on the line below. An early return for it
-  // would be a guard no test could hold, which is worse than none. A Purpose
-  // that is nothing but a fenced block reduces to the same empty text here, and
-  // is left to the brevity and empty-Purpose rules for the same reason.
+  // 空のPurposeはどちらの規則にも一致せず、nullになる。コードフェンスだけの
+  // Purposeも同様に、文字数または空Purposeの規則へ任せる。
   const prose = unfencedLines(overview).join('\n').trim();
   const leading = LEADING_MARKER.test(prose);
   if (!leading && generatedPlaceholderPrefixIndex(prose) === undefined) return null;
-  // Which rule matched decides where the placeholder is, so the locator is told.
-  // When both match the leading marker wins: it sits at or above the generated
-  // sentence, and the earliest marker is the one a reader scanning down meets.
+  // どの規則に一致したかで位置が変わる。両方に一致した場合は、読者が先に目にする
+  // 先頭マーカーの位置を優先する。
   return { line: content === undefined ? undefined : findPlaceholderLine(content, leading) };
 }
 
 /**
- * The line inside the `## Purpose` section carrying the placeholder, so the
- * warning points at the text to replace rather than at the file.
+ * 警告がファイル全体ではなく置換対象の文を指すよう、`## Purpose` 内の
+ * プレースホルダー行を返す。
  *
- * Which line that is depends on the rule that matched. A leading marker is the
- * section's first non-blank line by definition. The generated sentence is not:
- * it can follow prose somebody wrote, and naming the first non-blank line then
- * points at that prose - a line the reader can see is fine, which reads as the
- * check being wrong rather than the Purpose being unwritten.
+ * 先頭マーカーなら、セクション内の最初の空でない行を返す。生成文は記述済みの文に
+ * 続く場合があるため、定数の一致位置から行を求める。コードフェンス内の行は除外し、
+ * フェンス内の `## Requirements` でPurposeセクションを終了しない。
  *
- * Fenced lines are skipped on the way, for the reason detection skips them, and
- * so a `## Requirements` quoted inside a fence cannot end the section early.
- *
- * Undefined when the placeholder cannot be located - no section header, or a
- * generated sentence no single line carries. The caller then reports the finding
- * without a line rather than with a guessed one, since a wrong line number is
- * worse than none.
- *
- * Line endings are normalised first, so the same spec reports the same line
- * whether it was saved on Windows or on macOS/Linux.
+ * セクション見出しがない場合や生成文が複数行にまたがる場合は、推測せずundefinedを返す。
+ * 改行を先に正規化し、WindowsとmacOS/Linuxで同じ行番号を報告する。
  */
 function findPlaceholderLine(content: string, leading: boolean): number | undefined {
   const lines = content.replace(/\r\n?/g, '\n').split('\n');

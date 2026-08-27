@@ -19,7 +19,7 @@ metadata:
 - design.md（どのように）
 - tasks.md（実装手順）
 
-`<capability-path>` は `specs/` からの相対仕様ディレクトリです（例: `user-auth` または `identity/user-auth`）。既存 capability では完全なパスを維持し、新しい capability はプロジェクトで確立済みの構成に従います。
+`<capability-path>` は `specs/` からの相対仕様ディレクトリです（例: `user-auth` または `identity/user-auth`）。既存の capability では完全なパスを維持し、新しい capability はプロジェクトで確立済みの構成に従います。
 
 ユーザーが実装する準備ができたら、明示的に apply ワークフローを開始する必要があります。
 

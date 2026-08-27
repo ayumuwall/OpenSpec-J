@@ -1,9 +1,9 @@
-// Turns GitHub-style blockquote alerts (`> [!NOTE]`) into Fumadocs Callout
-// elements, the same mdxJsxFlowElement injection remarkMdxMermaid uses, so
-// docs keep GitHub-native syntax while the site renders styled callouts.
+// GitHub形式の引用アラート（`> [!NOTE]`）をFumadocsのCallout要素へ変換する。
+// remarkMdxMermaidと同じmdxJsxFlowElement挿入方式を使い、文書はGitHub標準の
+// 構文を維持したまま、サイトではスタイル付きCalloutとして表示する。
 //
-// Marker-to-Callout mapping is bijective so getLLMText (lib/source.ts) can
-// round-trip a Callout placeholder back to the original blockquote syntax.
+// getLLMText（lib/source.ts）がCalloutプレースホルダーを元の引用構文へ戻せるよう、
+// マーカーとCallout種別は1対1で対応させる。
 
 const MARKER_TO_TYPE: Record<string, string> = {
   NOTE: 'info',

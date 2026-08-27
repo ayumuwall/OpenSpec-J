@@ -102,7 +102,7 @@ describe('openspec doctor (3.6)', () => {
     expect(human.exitCode).toBe(0);
     expect(human.stderr).toContain('OpenSpec ルートを使用: team-context');
     expect(human.stdout).toContain('ルート');
-    expect(human.stdout).toContain('  ストア: team-context (メタデータ ok)');
+    expect(human.stdout).toContain('  ストア: team-context (メタデータ正常)');
     expect(human.stdout).toContain(`  - upstream-context: ok (${upstream})`);
 
     // Nearest-root session.

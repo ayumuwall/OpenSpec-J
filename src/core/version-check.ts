@@ -717,15 +717,15 @@ export async function offerCliUpgrade(latestVersion: string): Promise<UpgradeOut
     console.log(
       chalk.dim(
         binPath
-          ? // We asked the installed copy directly, so PATH is not the story.
-            `  npm reported success, but ${binPath} did not change.`
-          : '  Another install earlier on your PATH is answering first.'
+          ? // インストール済みの実体を直接確認しているため、PATH の問題ではない。
+            `  npm は成功を報告しましたが、${binPath} は更新されていません。`
+          : '  PATH 上で先に見つかる別のインストールが実行されています。'
       )
     );
     return 'not-on-path';
   }
 
-  console.log(chalk.green(`✓ Upgraded to v${version}.`));
+  console.log(chalk.green(`✓ v${version} にアップグレードしました。`));
   return 'upgraded';
 }
 

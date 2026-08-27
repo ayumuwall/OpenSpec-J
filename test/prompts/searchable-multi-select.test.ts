@@ -236,7 +236,7 @@ describe('searchable-multi-select keybindings', () => {
   describe('hint text', () => {
     it('should include Space toggle and Enter confirm in rendered output', async () => {
       await setup();
-      expect(renderOutput).toContain('Space');
+      expect(renderOutput).toContain('スペース');
       expect(renderOutput).toContain('選択');
       expect(renderOutput).toContain('Enter');
       expect(renderOutput).toContain('確定');

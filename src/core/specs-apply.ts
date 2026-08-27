@@ -375,8 +375,8 @@ export async function buildUpdatedSpec(
   for (const block of parts.bodyBlocks) {
     nameToBlock.set(normalizeRequirementName(block.name), block);
   }
-  // Keep source blocks immutable for loss attribution. This parallel key list
-  // carries only positional identity as renames change lookup keys.
+  // 内容消失の原因を追跡できるよう、変更元ブロックは変更しない。
+  // 名前変更で検索キーが変わるため、並列リストには位置を示すキーだけを保持する。
   const orderedKeys = parts.bodyBlocks.map((block) => normalizeRequirementName(block.name));
 
   // Apply operations in order: RENAMED → REMOVED → MODIFIED → ADDED
@@ -419,8 +419,8 @@ export async function buildUpdatedSpec(
     };
     nameToBlock.delete(from);
     nameToBlock.set(to, renamedBlock);
-    // A Map delete+set moves the renamed block to insertion-order tail. Carry
-    // its new key in the source slot instead; chained renames update it again.
+    // Mapでdelete後にsetすると、名前変更したブロックが挿入順の末尾へ移動する。
+    // 代わりに元の位置のキーを更新する。連続した名前変更でも同じ位置を更新する。
     const orderIndex = orderedKeys.indexOf(from);
     if (orderIndex >= 0) {
       orderedKeys[orderIndex] = to;

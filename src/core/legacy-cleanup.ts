@@ -628,7 +628,7 @@ export function formatCleanupSummary(result: CleanupResult): string {
       const replacementLabel = result.deletedFileReplacementLabels?.[file]
         ?? getManagedGlobalLegacyPromptMetadata(file)?.replacementLabel;
       const replacement = replacementLabel
-        ? `（${replacementLabel} に置き換え）`
+        ? `（${replacementLabel}に置き換え）`
         : '';
       lines.push(`  ✓ ${file} を削除${replacement}`);
     }

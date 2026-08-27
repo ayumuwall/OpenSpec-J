@@ -1,19 +1,19 @@
 #!/usr/bin/env node
-// Generate the Fumadocs content set (`content/docs/**`) as a mechanical mirror
-// of the repository's `docs-lab/**/*.md` files.
-// Runs as the first step of `build`/`dev`, and on a cadence in CI.
+// リポジトリの `docs-lab/**/*.md` を機械的に複製し、Fumadocsの
+// コンテンツ一式（`content/docs/**`）を生成する。
+// `build` / `dev` の最初と、CIの定期処理で実行する。
 //
-// For each published doc (see docs.sync.config.mjs) it:
-//   - derives the page title from the leading `# H1` (and strips that H1),
-//   - lifts the leading `> ...` blockquote into the frontmatter description,
-//   - injects Fumadocs frontmatter (title / description / githubSource),
-//   - rewrites internal `*.md` links to their `/docs/...` routes,
-//   - writes the result as a `.md` file (Fumadocs parses `.md` as plain
-//     Markdown, so `<placeholders>` and `{braces}` in the docs stay literal),
-//   - and emits `meta.json` sidebar ordering.
+// 公開する各文書（docs.sync.config.mjsを参照）について次を行う。
+//   - 先頭の `# H1` からページタイトルを取得し、H1を本文から削除する
+//   - 先頭の `> ...` 引用をfrontmatterのdescriptionへ移す
+//   - Fumadocsのfrontmatter（title / description / githubSource）を追加する
+//   - 内部の `*.md` リンクを `/docs/...` ルートへ書き換える
+//   - 結果を `.md` として書き込む（Fumadocsが通常のMarkdownとして解析するため、
+//     `<placeholders>` と `{braces}` はリテラルのまま維持される）
+//   - サイドバー順序を示す `meta.json` を出力する
 //
-// Generated files live under content/docs/ and are git-ignored — never edit
-// them by hand; edit ../docs-lab instead.
+// 生成ファイルはcontent/docs/配下にあり、Gitの管理対象外。直接編集せず、
+// ../docs-labを編集する。
 
 import {
   copyFileSync,
@@ -31,27 +31,25 @@ import { docsDir, pages, sections } from '../docs.sync.config.mjs';
 const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outRoot = join(websiteRoot, 'content', 'docs');
 const sourceRoot = resolve(websiteRoot, docsDir);
-// The source directory's path from the repo root (e.g. `docs-lab`), for
-// GitHub links.
+// GitHubリンクに使う、リポジトリルートから見たソースディレクトリのパス（例: `docs-lab`）。
 const repoDocsDir = posix.normalize(docsDir).replace(/^\.\.\//, '');
-const gitBranch = 'main';
-const gitBlobBase = 'https://github.com/Fission-AI/OpenSpec/blob';
+const gitBranch = 'ja-docs';
+const gitBlobBase = 'https://github.com/ayumuwall/OpenSpec-J/blob';
 
-// Map every source file -> its /docs route, so cross-doc Markdown links
-// resolve.
+// 文書間のMarkdownリンクを解決するため、各ソースファイルを/docsルートへ対応付ける。
 const routeBySource = new Map();
 for (const page of pages) {
   const key = posix.normalize(page.source);
   if (!routeBySource.has(key)) {
-    // An `index` slug (root or `<folder>/index`) serves its parent path.
+    // ルートまたは `<folder>/index` の `index` slugは親パスで配信する。
     const route = page.slug === 'index' ? '' : `/${page.slug.replace(/\/index$/, '')}`;
     routeBySource.set(key, `/docs${route}`);
   }
 }
 
-// Every output file goes through here. Skipping identical writes keeps mtimes
-// stable so the fumadocs-mdx dev watcher only rebuilds pages that changed;
-// `written` records the full expected output set for stale-file cleanup.
+// すべての出力ファイルをここで処理する。同じ内容の書き込みを省いてmtimeを維持し、
+// fumadocs-mdxの開発用watcherが変更ページだけを再ビルドできるようにする。
+// `written` には古いファイルを削除するため、期待する出力一式を記録する。
 const written = new Set();
 function writeOutputFile(path, content) {
   written.add(path);
@@ -59,7 +57,7 @@ function writeOutputFile(path, content) {
   try {
     current = readFileSync(path, 'utf8');
   } catch {
-    // Missing (or unreadable) file: write it.
+    // ファイルがない、または読み込めない場合は書き込む。
   }
   if (current === content) return;
   mkdirSync(dirname(path), { recursive: true });
@@ -83,7 +81,7 @@ function yamlQuote(value) {
   return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
-// Pull the first `# Heading` out of the body; return { title, rest }.
+// 本文から最初の `# Heading` を取り出し、{ title, rest } を返す。
 function extractTitle(markdown, fallback) {
   const lines = markdown.split('\n');
   for (let i = 0; i < lines.length; i++) {
@@ -92,15 +90,14 @@ function extractTitle(markdown, fallback) {
       lines.splice(0, i + 1);
       return { title: match[1].trim(), rest: lines.join('\n').replace(/^\n+/, '') };
     }
-    if (lines[i].trim() !== '') break; // content before any H1 — leave as-is
+    if (lines[i].trim() !== '') break; // H1より前に内容があれば、そのまま維持する
   }
   return { title: fallback, rest: markdown };
 }
 
-// Authoring convention: a `> ...` blockquote directly after the H1 is the
-// page's one-line description. Lift it into frontmatter and strip it from
-// the body so the sentence doesn't render twice (Fumadocs already shows the
-// description under the title).
+// 執筆規則として、H1直後の `> ...` 引用をページの1行説明として扱う。
+// frontmatterへ移して本文から削除し、タイトル下にも説明を表示するFumadocsで
+// 同じ文が重複しないようにする。
 function extractLeadingQuote(markdown) {
   const lines = markdown.split('\n');
   let i = 0;
@@ -115,7 +112,7 @@ function extractLeadingQuote(markdown) {
   return { quote, rest: lines.slice(i).join('\n').replace(/^\n+/, '') };
 }
 
-// First real paragraph, flattened to a one-line meta description.
+// 最初の通常段落を、1行のメタ説明へ変換する。
 function extractDescription(markdown) {
   const lines = markdown.split('\n');
   const buffer = [];
@@ -123,7 +120,7 @@ function extractDescription(markdown) {
     const trimmed = line.trim();
     if (buffer.length === 0) {
       if (trimmed === '') continue;
-      // Skip non-paragraph openers (headings, quotes, lists, tables, fences).
+      // 見出し、引用、リスト、表、フェンスなど段落以外で始まる場合はスキップする。
       if (/^(#|>|[-*+]\s|\d+\.\s|\||```|:::)/.test(trimmed)) return '';
       buffer.push(trimmed);
     } else {
@@ -144,12 +141,12 @@ function extractDescription(markdown) {
   return text;
 }
 
-// Rewrite internal Markdown links that point at other docs.
-// `sourceRel` is the current doc's path relative to the source directory.
+// 他の文書を指す内部Markdownリンクを書き換える。
+// `sourceRel` はソースディレクトリから見た現在の文書パス。
 function rewriteLinks(markdown, sourceRel) {
   const sourceFileDir = posix.dirname(sourceRel);
   return markdown.replace(/\]\(([^)]+)\)/g, (whole, target) => {
-    // Leave external, anchor-only, and non-.md links untouched.
+    // 外部リンク、アンカーだけのリンク、.md以外のリンクは変更しない。
     if (/^(https?:|mailto:|#|\/)/.test(target)) return whole;
     const [rawPath, hash] = target.split('#');
     if (!/\.md$/i.test(rawPath)) return whole;
@@ -157,8 +154,8 @@ function rewriteLinks(markdown, sourceRel) {
     const route = routeBySource.get(resolved);
     const suffix = hash ? `#${hash}` : '';
     if (route) return `](${route}${suffix})`;
-    // A link we don't publish (e.g. the repo-root README) — fall back to the
-    // source on GitHub, normalizing any `../` that escapes the source folder.
+    // 公開しない文書へのリンクはGitHub上のソースへフォールバックする。
+    // ソースフォルダ外へ出る `../` も正規化する。
     const repoPath = posix.join(repoDocsDir, resolved);
     return `](${gitBlobBase}/${gitBranch}/${repoPath}${suffix})`;
   });
@@ -175,7 +172,7 @@ function generatePage(page) {
   const repoSource = posix.join(repoDocsDir, posix.normalize(page.source));
   const srcPath = join(sourceRoot, page.source);
   if (!existsSync(srcPath)) {
-    throw new Error(`Missing source doc: ${repoSource} (referenced by slug "${page.slug}")`);
+    throw new Error(`参照元ドキュメントが見つかりません: ${repoSource}（slug "${page.slug}" から参照）`);
   }
   const raw = readFileSync(srcPath, 'utf8');
   const fallbackTitle = page.slug.split('/').pop().replace(/-/g, ' ');
@@ -195,23 +192,22 @@ function generatePage(page) {
   return outPath;
 }
 
-// meta.json for the docs root: labeled section separators + page slugs. A
-// folder entry contributes its folder name; the folder's own meta.json
-// (written below) labels it and orders its pages.
+// ドキュメントルートのmeta.jsonには、ラベル付きセクション区切りとページslugを記録する。
+// フォルダ項目にはフォルダ名を使い、下で生成する各フォルダのmeta.jsonで
+// ラベルとページ順序を指定する。
 function writeRootMeta() {
   const items = [];
   for (const section of sections) {
     items.push(`---${section.label}---`);
     for (const entry of section.pages) items.push(entry.folder ?? entry.slug);
   }
-  const meta = { title: 'Documentation', root: true, pages: items };
+  const meta = { title: 'ドキュメント', root: true, pages: items };
   writeOutputFile(join(outRoot, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`);
 }
 
-// meta.json for each folder entry: the sidebar renders it as a collapsible
-// group (collapsed by default) labeled with the entry's `label`. Folder
-// entries nest, so recurse into each folder's pages; a nested folder shows up
-// in its parent's `pages` list by its base name.
+// 各フォルダ項目のmeta.jsonを生成する。サイドバーでは項目の `label` を使った、
+// 既定で閉じた折りたたみグループとして表示する。フォルダは入れ子にできるため、
+// 配下のページを再帰的に処理する。親の `pages` 一覧には子フォルダのベース名を記録する。
 function writeFolderMetasFor(entries) {
   for (const entry of entries) {
     if (!entry.folder) continue;
@@ -232,8 +228,8 @@ function writeFolderMetas() {
   for (const section of sections) writeFolderMetasFor(section.pages);
 }
 
-// Diagram images: docs-lab/diagrams/*.png|svg is copied to public/diagrams/
-// so the markdown can embed them as /diagrams/<name>.png.
+// Markdownから `/diagrams/<name>.png` として埋め込めるよう、
+// docs-lab/diagrams/*.png|svgをpublic/diagrams/へコピーする。
 function copyDiagramAssets() {
   const srcDir = join(sourceRoot, 'diagrams');
   if (!existsSync(srcDir)) return 0;
@@ -258,14 +254,13 @@ function main() {
   }
   writeRootMeta();
   writeFolderMetas();
-  // Removed/renamed docs must not leave stale pages behind. Deleting only the
-  // leftovers (rather than starting from an empty dir) keeps the untouched
-  // files' mtimes stable for the dev watcher.
+  // 削除・名前変更した文書の古いページを残さない。空ディレクトリから作り直さず
+  // 不要なファイルだけを削除し、未変更ファイルのmtimeを開発用watcher向けに維持する。
   removeStaleOutputs(outRoot);
   const assets = copyDiagramAssets();
 
   const rel = relative(process.cwd(), outRoot);
-  console.log(`sync-docs: generated ${count} pages into ${rel}/ (${assets} diagram assets)`);
+  console.log(`sync-docs: ${count}ページと図${assets}件を${rel}/へ生成しました`);
 }
 
 main();

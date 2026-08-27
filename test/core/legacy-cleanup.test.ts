@@ -1098,7 +1098,7 @@ ${OPENSPEC_MARKERS.end}`);
 
       const summary = formatDeferredGlobalPromptSummary(detection);
       expect(summary).toContain('グローバルプロンプトの削除を保留');
-      expect(summary).toContain('対応する代替 skill のインストール後にのみ削除');
+      expect(summary).toContain('対応する代替スキルのインストール後にのみ削除');
       expect(summary).toContain(`codex: ${globalPrompt}`);
       expect(summary).toContain(globalPrompt);
     });

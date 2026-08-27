@@ -8,8 +8,8 @@ import path from 'path';
 import type { CommandContent, ToolCommandAdapter } from '../types.js';
 import { escapeYamlValue } from '../yaml.js';
 
-const OPENCODE_INPUT_BLOCK = /^\*\*(?:Input|入力)\*\*:[^\r\n]*(?:\r?\n(?!\r?\n)[^\r\n]*)*/m;
-const OPENCODE_NO_INPUT = /^\*\*(?:Input|入力)\*\*:\s*(?:None required|不要)\b/im;
+const OPENCODE_INPUT_BLOCK = /^\*\*(?:Input|入力)\*\*[：:][^\r\n]*(?:\r?\n(?!\r?\n)[^\r\n]*)*/m;
+const OPENCODE_NO_INPUT = /^\*\*(?:Input|入力)\*\*[：:]\s*(?:None required|不要)\b/im;
 const OPENCODE_ARGUMENT_PLACEHOLDER = /\$(?:ARGUMENTS\b|[1-9]\d*\b)/;
 
 function injectOpenCodeArgs(body: string): string {

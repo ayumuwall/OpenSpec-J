@@ -2,12 +2,11 @@
 
 import { useId, useMemo, useRef, useState } from 'react';
 
-// Renders a `file-steps` fence (see lib/remark-file-steps.ts) as a
-// click-through stepper: numbered steps, a note explaining the step, and an
-// annotated file tree. Added lines (`+ ` gutter) carry the accent; removed
-// lines (`- `) are struck. Inline annotations are anything after 3+ spaces.
-// All steps render stacked in one grid cell so the tallest step fixes the
-// height; arrow keys (plus Home/End) step through once the figure has focus.
+// `file-steps` フェンス（lib/remark-file-steps.tsを参照）を、番号付き手順、
+// 説明、注釈付きファイルツリーからなるステッパーとして表示する。
+// `+ ` で始まる追加行にはアクセントを付け、`- ` で始まる削除行には取り消し線を引く。
+// 3文字以上の空白より後ろを行内注釈として扱う。最も高い手順に高さを合わせるため、
+// すべての手順を1つのグリッドセルへ重ねる。フォーカス後は矢印キーとHome / Endで移動できる。
 
 interface StepLine {
   marker: '+' | '-' | ' ';
@@ -74,7 +73,7 @@ export function FileSteps({ content }: { content: string }) {
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'PRE') return; // leave keyboard scrolling of the tree alone
+    if (target.tagName === 'PRE') return; // ツリー内ではキーボードによるスクロールを維持する
     let next: number | null = null;
     if (e.key === 'ArrowLeft') next = index - 1;
     else if (e.key === 'ArrowRight') next = index + 1;
@@ -89,11 +88,11 @@ export function FileSteps({ content }: { content: string }) {
     <figure
       tabIndex={0}
       onKeyDown={onKeyDown}
-      aria-label="File steps, use arrow keys to change step"
+      aria-label="ファイル手順。矢印キーで手順を切り替えられます"
       className="my-6 rounded-none border border-fd-border font-mono focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#A64F2C] dark:focus-visible:outline-[#D89074]"
     >
       <div className="flex items-center justify-between gap-4 border-b border-fd-border px-4 py-2">
-        <div className="flex items-center gap-1 text-xs" role="tablist" aria-label="Steps">
+        <div className="flex items-center gap-1 text-xs" role="tablist" aria-label="手順">
           {steps.map((s, i) => (
             <span key={i} className="flex items-center">
               {i > 0 && <span aria-hidden="true" className="px-1 text-fd-muted-foreground">/</span>}
@@ -103,7 +102,7 @@ export function FileSteps({ content }: { content: string }) {
                 id={`${id}-tab-${i}`}
                 aria-controls={`${id}-panel-${i}`}
                 aria-selected={i === index}
-                aria-label={`Step ${i + 1}: ${s.title}`}
+                aria-label={`手順 ${i + 1}: ${s.title}`}
                 tabIndex={i === index ? 0 : -1}
                 ref={(el) => {
                   tabRefs.current[i] = el;
@@ -125,7 +124,7 @@ export function FileSteps({ content }: { content: string }) {
             disabled={index === 0}
             className="rounded-none border border-fd-border px-2 py-0.5 text-fd-muted-foreground hover:text-fd-foreground disabled:cursor-default disabled:opacity-40"
           >
-            Prev
+            前へ
           </button>
           <button
             type="button"
@@ -133,7 +132,7 @@ export function FileSteps({ content }: { content: string }) {
             disabled={index === steps.length - 1}
             className="rounded-none border border-fd-border px-2 py-0.5 text-fd-muted-foreground hover:text-fd-foreground disabled:cursor-default disabled:opacity-40"
           >
-            Next
+            次へ
           </button>
         </div>
       </div>
@@ -149,7 +148,7 @@ export function FileSteps({ content }: { content: string }) {
             className={`col-start-1 row-start-1 px-4 py-3 ${i === index ? '' : 'invisible'}`}
           >
             <div className="text-[0.7rem] font-semibold uppercase tracking-[0.18em]">
-              <span className={ACCENT}>Step {i + 1}</span>
+              <span className={ACCENT}>手順 {i + 1}</span>
               <span aria-hidden="true" className="px-2 text-fd-muted-foreground">·</span>
               <span className="text-fd-foreground">{step.title}</span>
             </div>

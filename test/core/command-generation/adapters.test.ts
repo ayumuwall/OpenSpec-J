@@ -665,7 +665,7 @@ describe('command-generation/adapters', () => {
     it('should preserve exactly one argument placeholder for each workflow that accepts input', () => {
       for (const content of getCommandContents()) {
         const output = generateCommand(content, opencodeAdapter).fileContent;
-        const acceptsInput = /^\*\*(?:Input|入力)\*\*:(?!\s*(?:None required|不要)\b)/im.test(content.body);
+        const acceptsInput = /^\*\*(?:Input|入力)\*\*[：:](?!\s*(?:None required|不要)\b)/im.test(content.body);
         expect(output.match(/\$ARGUMENTS/g) ?? [], content.id).toHaveLength(acceptsInput ? 1 : 0);
       }
     });

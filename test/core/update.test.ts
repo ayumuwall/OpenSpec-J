@@ -2443,7 +2443,7 @@ ${OPENSPEC_MARKERS.end}
         expect.stringContaining(`codex: ${managedPrompt}`)
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(`${managedPrompt} を削除（Codex skills に置き換え）`)
+        expect.stringContaining(`${managedPrompt} を削除（Codex スキルに置き換え）`)
       );
       expect(await FileSystemUtils.fileExists(managedPrompt)).toBe(false);
       expect(await FileSystemUtils.fileExists(legacyPrompt)).toBe(true);
@@ -3252,7 +3252,7 @@ More user content after markers.
         call.map(arg => String(arg)).join(' ')
       );
       expect(calls.some(call =>
-        call.includes('custom profileにcoreワークフローが1件不足しています: update')
+        call.includes('カスタムプロファイルに core ワークフローが 1 件不足しています: update')
       )).toBe(true);
       expect(calls.some(call =>
         call.includes('openspec config profile core')
@@ -3288,7 +3288,7 @@ More user content after markers.
         call.map(arg => String(arg)).join(' ')
       );
       expect(calls.some(call =>
-        call.includes('custom profileにcoreワークフローが1件不足しています: update')
+        call.includes('カスタムプロファイルに core ワークフローが 1 件不足しています: update')
       )).toBe(true);
       expect(calls.some(call =>
         call.includes('追加するには')
@@ -3463,7 +3463,7 @@ More user content after markers.
         expect.stringContaining('更新: Codex')
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('コマンド生成をスキップ: codex（skills を使用）')
+        expect.stringContaining('コマンド生成をスキップ: codex（スキルを使用）')
       );
 
       consoleSpy.mockRestore();

@@ -5,16 +5,16 @@ import { loader } from 'fumadocs-core/source';
 import { TYPE_TO_MARKER } from './remark-gfm-alert';
 import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
 
-// See https://fumadocs.dev/docs/headless/source-api for more info
+// 詳細: https://fumadocs.dev/docs/headless/source-api
 export const source = loader({
   baseUrl: docsRoute,
   source: docs.toFumadocsSource(),
   plugins: [],
 });
 
-// The synced content is flat (meta.json separators, flat /docs/* URLs), which
-// renders sections as fixed labels. Regroup each separator's pages into a
-// folder node so the sidebar sections collapse, without changing any URLs.
+// 同期済みコンテンツはフラットな構造（meta.jsonの区切りとフラットな/docs/* URL）なので、
+// セクションが固定ラベルとして表示される。URLを変えず、各区切りのページを
+// フォルダノードへまとめ直して、サイドバーのセクションを折りたためるようにする。
 export function getSidebarTree(): PageTree.Root {
   const tree = source.getPageTree();
   const children: PageTree.Node[] = [];
@@ -50,14 +50,13 @@ function firstPage(nodes: PageTree.Node[]): PageTree.Item | undefined {
   }
 }
 
-// Split the sidebar into two layout tabs ("Documentation" and "Guides") by
-// wrapping the sections in `root: true` folders. Fumadocs derives the tab bar
-// from root folders and shows only the active root's subtree in the sidebar;
-// URLs are unaffected. `index` is required for a root folder without direct
-// page children — it becomes the tab's link target.
+// セクションを `root: true` のフォルダで囲み、サイドバーを「ドキュメント」と
+// 「ガイド」の2つのレイアウトタブへ分ける。Fumadocsはルートフォルダからタブバーを
+// 生成し、選択中ルートのサブツリーだけをサイドバーへ表示する。URLは変わらない。
+// 直下にページがないルートフォルダでは、タブのリンク先になる `index` が必要。
 function splitIntoTabs(sections: PageTree.Node[]): PageTree.Node[] {
   const guides = sections.find(
-    (node): node is PageTree.Folder => node.type === 'folder' && node.name === 'Guides'
+    (node): node is PageTree.Folder => node.type === 'folder' && node.name === 'ガイド'
   );
   if (!guides) return sections;
 
@@ -65,7 +64,7 @@ function splitIntoTabs(sections: PageTree.Node[]): PageTree.Node[] {
   const docsTab: PageTree.Folder = {
     $id: 'tab-documentation',
     type: 'folder',
-    name: 'Documentation',
+    name: 'ドキュメント',
     root: true,
     index: firstPage(rest),
     children: rest,

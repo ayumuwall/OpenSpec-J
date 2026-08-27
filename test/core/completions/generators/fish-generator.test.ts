@@ -61,7 +61,7 @@ describe('FishGenerator', () => {
 
       expect(script).toContain('function __fish_openspec_using_command_path');
       expect(script).toContain('function __fish_openspec_no_subcommand');
-      expect(script).toContain("complete -c openspec -l no-color -f -d 'Disable color output'");
+      expect(script).toContain("complete -c openspec -l no-color -f -d '色付き出力を無効化'");
       expect(script).toContain('function __fish_openspec_completing_option_value');
       expect(script).toContain('function __fish_openspec_complete_attached_short_path');
       expect(script).toContain('string match -q -- "$option=*" "$current"');

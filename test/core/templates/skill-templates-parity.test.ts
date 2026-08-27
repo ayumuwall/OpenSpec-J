@@ -38,14 +38,14 @@ import {
 import { STORE_SELECTION_GUIDANCE } from '../../../src/core/templates/workflows/store-selection.js';
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
-  getExploreSkillTemplate: '6fb94b2e7317318c966c18c24f26b61337900c2a9a5da3c254de9c828247616f',
+  getExploreSkillTemplate: '0fc8d3d055ef566527cb6d062c3a97054dbab553afccb5ae3e448b19392049da',
   getNewChangeSkillTemplate: 'db40ed5920852d210cb42122298ec0baca3f11a8b968ab1b5565ab1d3d62f38b',
   getContinueChangeSkillTemplate: '01977bc5c7c2f6a2bccc0f5666fc03fc148f89c28d15bd26694c82c46a798d24',
   getApplyChangeSkillTemplate: '4904cc847a2873df9c07517f99e373c41b34f22397f223f5c2058c25a9230824',
   getFfChangeSkillTemplate: 'f022877f52dffb438849faf574f27dbc6ed477af08c76f247664cbe0b509023d',
   getSyncSpecsSkillTemplate: '92ee814e29cdb196b760199b2024323f2e64004cf1e6abee24e1ee4383f774bf',
   getOnboardSkillTemplate: '88a6aae94c0899fd386b153da37b05a4a35ebbb018e0e9fba14351d4190581d8',
-  getOpsxExploreCommandTemplate: '5f8e8782c05d34e131957e442bd63692938d5ce383234ca2eedecbe94136d3d5',
+  getOpsxExploreCommandTemplate: '93f57a9a8061338be97f0b4024c939f739abe066575736f6064ffd9bbe1108b7',
   getOpsxNewCommandTemplate: 'f5e553c5052635f6263b78fdcdd31fb9cbe9a6c44ffba3104ee5cd7c7561e025',
   getOpsxContinueCommandTemplate: 'a1c0c43f5daf566e485b21dc5e09607f66000c9d0cba4865f1e5a1284008074a',
   getOpsxApplyCommandTemplate: '5bf1f27d910106335af8adb91e86c6b62c54b2e75277fc1389d71cdc889cccce',
@@ -58,15 +58,15 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxOnboardCommandTemplate: 'ac9a4c82b004e298723705482c4a04c4972c6511903e34580b7bd1e94f730734',
   getOpsxBulkArchiveCommandTemplate: '1b7dae7f6382c1a9dcf560a32861f8a852ce17344cdbf1e84f67e63380029104',
   getOpsxVerifyCommandTemplate: '772142e7d3189dafaca2b1810a117957cff0426e30ffa9a0af866d1c0b4d36f4',
-  getOpsxProposeSkillTemplate: '8bd87080eaed0b8c2855b43552fc293b1ca3f36119fce8157f7dcbc2096f7c5b',
-  getOpsxProposeCommandTemplate: '151a5b55221cfc9a7ca3b89322a7f7fba5123e655bea886f2246dea923a63c1f',
+  getOpsxProposeSkillTemplate: 'd29e0072005dc386523a466a7838e47a1abe9160e395ce0fb454e1f3b3dba4b7',
+  getOpsxProposeCommandTemplate: 'f7bd9849de82609d704e05bfe9fc09f5b7cad1d207987482835c327efcaaf876',
   getFeedbackSkillTemplate: 'b30b6cf2cd5705c906078d3831fe7fffed8739652da757938ad84f82755a58fd',
   getUpdateChangeSkillTemplate: 'ba4ecadc6530481d557bdce705d0bcf58646d030c636182a95d8c18d581b6603',
   getOpsxUpdateCommandTemplate: 'b6bb8ae8b02f856adeb1489edfd284f3c3aada0a09c04bd8d3bd51c2044cd943',
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': '0351e7e7dfad77b5c8978cb1ded0e4de92a3ecfb27b30a97291be674962cfe36',
+  'openspec-explore': 'f9deb6c3d54d238add70d383e40a16ccebeab1af33100b6f818948d927628d0e',
   'openspec-new-change': '859af1966a7daf004bc83ef62611c8798df6b070d2f10e90849eccc239a4e9e6',
   'openspec-continue-change': 'cb105a8efdba7b68e7c09c14950e933fc564ed5ddb5fb4b82f6cf647b3ca4077',
   'openspec-apply-change': 'c84253c263e5e9d1d6e4150715743cc935fbcb3615bd0eee60990703a781ebe3',
@@ -76,7 +76,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-bulk-archive-change': '9ef7507fde7efcdc0c2c19d380b3683ef94d44ccc313404f883932b9d08cbfbf',
   'openspec-verify-change': '01e3d0fa7bf054475cbdeb4386f17d06165f10068d7180f64a838bff06187dac',
   'openspec-onboard': 'fce24ec467e3e64658226af5fb73a4f434dd7aa64ecae13064aba1e2213ea541',
-  'openspec-propose': '502d62d3c052ab047e808a0eb4fdaaf49f8098f4fe48928bf66860991ef05dea',
+  'openspec-propose': 'f316c1eef451138e0acd9dcb84bf2f36073826f33e89d8b3b43a8ff92df42e86',
   'openspec-update-change': 'c047557e430c456d36a05518c87e4a1d42621556a42ef63d716c6082032d87e0',
 };
 
@@ -249,25 +249,25 @@ describe('skill templates split parity', () => {
         'propose skill',
         generateSkillContent(getOpsxProposeSkillTemplate(), 'PARITY-BASELINE'),
         'specs/<capability-path>/spec.md',
-        '既存 capability では完全なパスを維持',
+        '既存の capability では完全なパスを維持',
       ],
       [
         'propose command',
         getOpsxProposeCommandTemplate().content,
         'specs/<capability-path>/spec.md',
-        '既存 capability では完全なパスを維持',
+        '既存の capability では完全なパスを維持',
       ],
       [
         'explore skill',
         generateSkillContent(getExploreSkillTemplate(), 'PARITY-BASELINE'),
         'specs/<capability-path>/spec.md',
-        '既存 capability では完全なパスを維持',
+        '既存の capability では完全なパスを維持',
       ],
       [
         'explore command',
         getOpsxExploreCommandTemplate().content,
         'specs/<capability-path>/spec.md',
-        '既存 capability では完全なパスを維持',
+        '既存の capability では完全なパスを維持',
       ],
       [
         'onboard skill',

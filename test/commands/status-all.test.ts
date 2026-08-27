@@ -78,7 +78,7 @@ describe('status --all', () => {
 
     const json = JSON.parse(result.stdout);
     expect(json.changes).toEqual([]);
-    expect(json.message).toBe('No active changes.');
+    expect(json.message).toBe('アクティブな変更はありません。');
     expect(json.root).toBeDefined();
   });
 
@@ -117,7 +117,7 @@ describe('status --all', () => {
       cwd: tempDir,
     });
     expect(result.exitCode).toBe(1);
-    expect(getOutput(result)).toContain('mutually exclusive');
+    expect(getOutput(result)).toContain('--all と --change は同時に指定できません');
   });
 
   it('offers --all when neither --change nor --all is given', async () => {
@@ -158,7 +158,7 @@ describe('status --all', () => {
     expect(json.root).toBeNull();
     expect(Array.isArray(json.status)).toBe(true);
     expect(json.status[0].severity).toBe('error');
-    expect(json.status[0].message).toContain('mutually exclusive');
+    expect(json.status[0].message).toContain('--all と --change は同時に指定できません');
   });
 
   it('keeps sweeping when one change fails to load', async () => {
@@ -197,10 +197,10 @@ describe('status --all', () => {
 
     const result = await runCLI(['status', '--all'], { cwd: tempDir });
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Change: first-change');
-    expect(result.stdout).toContain('Change: second-change');
-    expect(result.stdout).toContain('1/4 artifacts complete');
-    expect(result.stdout).toContain('2/4 artifacts complete');
+    expect(result.stdout).toContain('変更: first-change');
+    expect(result.stdout).toContain('変更: second-change');
+    expect(result.stdout).toContain('1/4 アーティファクト完了');
+    expect(result.stdout).toContain('2/4 アーティファクト完了');
   });
 
   it('exits 1 in text mode when a change fails to load, still printing the others', async () => {
@@ -214,8 +214,8 @@ describe('status --all', () => {
     const result = await runCLI(['status', '--all'], { cwd: tempDir });
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain('✗ broken-change:');
-    expect(result.stdout).toContain('Change: good-change');
-    expect(result.stdout).toContain('2/4 artifacts complete');
+    expect(result.stdout).toContain('変更: good-change');
+    expect(result.stdout).toContain('2/4 アーティファクト完了');
   });
 
   describe('--schema interaction', () => {
@@ -253,7 +253,7 @@ describe('status --all', () => {
       expect(json.root).toBeNull();
       expect(Array.isArray(json.status)).toBe(true);
       expect(json.status[0].severity).toBe('error');
-      expect(json.status[0].message).toContain("'no-such-schema' not found");
+      expect(json.status[0].message).toContain("スキーマ 'no-such-schema' が見つかりません");
     });
 
     it('rejects an unknown --schema even when no changes exist', async () => {
@@ -266,7 +266,7 @@ describe('status --all', () => {
       const json = JSON.parse(result.stdout);
       expect(json.changes).toEqual([]);
       expect(json.root).toBeNull();
-      expect(json.status[0].message).toContain("'no-such-schema' not found");
+      expect(json.status[0].message).toContain("スキーマ 'no-such-schema' が見つかりません");
     });
 
     it('applies a valid --schema override to every change', async () => {

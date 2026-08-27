@@ -166,9 +166,9 @@ describe('buildUpdatedSpec (content absorbed into a requirement)', () => {
     expect(rebuilt).not.toContain(tail.join('\n'));
     expect(counts).toMatchObject({ modified: 1, renamed: 1 });
     expect(warnings.join('\n')).toContain(
-      '"### Notes" sits inside requirement "Target" and goes with it'
+      '"### Notes" は要件 "Target" の内部にあるため、要件とともに扱われます'
     );
-    expect(warnings.join('\n')).not.toContain('requirement "Renamed"');
+    expect(warnings.join('\n')).not.toContain('要件 "Renamed"');
   });
 
   it('does not warn when MODIFIED carries the full absorbed tail forward', async () => {

@@ -80,7 +80,7 @@ describe('printInstructionsText for skip_specs changes', () => {
 
     const output = capture('tasks');
     expect(output).toContain('<dependency id="specs" status="skipped">');
-    expect(output).toContain('no files to read');
+    expect(output).toContain('読み取るファイルがありません');
     // The skipped dependency must not point the agent at spec file paths.
     expect(output).not.toContain('specs/**/*.md</path>');
   });

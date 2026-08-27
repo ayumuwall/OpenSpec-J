@@ -56,7 +56,7 @@ describe('openspec CLI e2e basics', () => {
       .join(', ');
     const normalizedOutput = result.stdout.replace(/\s+/g, ' ').trim();
     expect(normalizedOutput).toContain(
-      `対話なしでAIツールを設定します。"all"、"none"、または次のIDをカンマ区切りで指定してください: ${expectedTools}`
+      `対話なしで AI ツールを設定します。"all"、"none"、または次の ID をカンマ区切りで指定してください: ${expectedTools}`
     );
     expect(normalizedOutput).toContain('--language <language>');
   });

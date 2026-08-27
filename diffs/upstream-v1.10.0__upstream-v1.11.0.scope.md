@@ -86,46 +86,46 @@
 
 - [x] M	src/cli/index.ts
 - [x] M	src/commands/change.ts
-- [ ] M	src/commands/schema.ts
-- [ ] M	src/commands/show.ts
-- [ ] M	src/commands/workflow/index.ts
-- [ ] M	src/commands/workflow/status.ts
-- [ ] M	src/core/parsers/requirement-blocks.ts
-- [ ] M	src/core/shared/tool-detection.ts
-- [ ] M	src/core/specs-apply.ts
-- [ ] M	src/core/validation/constants.ts
-- [ ] A	src/core/validation/purpose-placeholder.ts
-- [ ] M	src/core/validation/validator.ts
-- [ ] A	src/utils/requirement-diff.ts
+- [x] M	src/commands/schema.ts
+- [x] M	src/commands/show.ts
+- [x] M	src/commands/workflow/index.ts
+- [x] M	src/commands/workflow/status.ts
+- [x] M	src/core/parsers/requirement-blocks.ts
+- [x] M	src/core/shared/tool-detection.ts
+- [x] M	src/core/specs-apply.ts
+- [x] M	src/core/validation/constants.ts
+- [x] A	src/core/validation/purpose-placeholder.ts
+- [x] M	src/core/validation/validator.ts
+- [x] A	src/utils/requirement-diff.ts
 
 ## その他
 
-- [ ] M	flake.nix
-- [ ] M	package.json
-- [ ] M	pnpm-lock.yaml
-- [ ] D	website/app/(home)/layout.tsx
-- [ ] D	website/app/(home)/page.tsx
-- [ ] M	website/app/docs/[[...slug]]/page.tsx
-- [ ] M	website/app/docs/layout.tsx
-- [ ] M	website/app/global.css
-- [ ] M	website/app/layout.tsx
-- [ ] A	website/app/page.tsx
-- [ ] M	website/app/sitemap.ts
-- [ ] A	website/components/file-steps.tsx
-- [ ] M	website/components/mdx.tsx
-- [ ] M	website/docs.sync.config.mjs
-- [ ] M	website/lib/layout.shared.tsx
-- [ ] A	website/lib/remark-faq.ts
-- [ ] A	website/lib/remark-file-steps.ts
-- [ ] A	website/lib/remark-gfm-alert.ts
-- [ ] M	website/lib/source.ts
-- [ ] M	website/next.config.mjs
-- [ ] M	website/package.json
-- [ ] M	website/pnpm-lock.yaml
-- [ ] A	website/public/_redirects
-- [ ] A	website/public/openspec-pixel.svg
-- [ ] M	website/scripts/sync-docs.mjs
-- [ ] M	website/source.config.ts
+- [x] M	flake.nix
+- [x] M	package.json
+- [x] M	pnpm-lock.yaml
+- [x] D	website/app/(home)/layout.tsx
+- [x] D	website/app/(home)/page.tsx
+- [x] M	website/app/docs/[[...slug]]/page.tsx
+- [x] M	website/app/docs/layout.tsx
+- [x] M	website/app/global.css
+- [x] M	website/app/layout.tsx
+- [x] A	website/app/page.tsx
+- [x] M	website/app/sitemap.ts
+- [x] A	website/components/file-steps.tsx
+- [x] M	website/components/mdx.tsx
+- [x] M	website/docs.sync.config.mjs
+- [x] M	website/lib/layout.shared.tsx
+- [x] A	website/lib/remark-faq.ts
+- [x] A	website/lib/remark-file-steps.ts
+- [x] A	website/lib/remark-gfm-alert.ts
+- [x] M	website/lib/source.ts
+- [x] M	website/next.config.mjs
+- [x] M	website/package.json
+- [x] M	website/pnpm-lock.yaml
+- [x] A	website/public/_redirects
+- [x] A	website/public/openspec-pixel.svg
+- [x] M	website/scripts/sync-docs.mjs
+- [x] M	website/source.config.ts
 
 ## 翻訳対象外
 

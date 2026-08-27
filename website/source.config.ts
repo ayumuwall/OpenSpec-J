@@ -6,14 +6,14 @@ import { remarkFileSteps } from './lib/remark-file-steps';
 import { remarkFaq } from './lib/remark-faq';
 import { z } from 'zod';
 
-// You can customize Zod schemas for frontmatter and `meta.json` here
-// see https://fumadocs.dev/docs/mdx/collections
+// frontmatterと `meta.json` のZodスキーマはここでカスタマイズできる。
+// 詳細: https://fumadocs.dev/docs/mdx/collections
 export const docs = defineDocs({
   dir: 'content/docs',
   docs: {
-    // `githubSource` is injected by scripts/sync-docs.mjs and points at the
-    // canonical `docs/*.md` this page was generated from, so the "edit this
-    // page" link opens the real source rather than the generated mirror.
+    // `githubSource` はscripts/sync-docs.mjsが追加し、ページの生成元となる
+    // 正式な `docs-lab/**/*.md` を指す。「このページを編集」リンクから、
+    // 生成済みの複製ではなく実際のソースを開けるようにする。
     schema: pageSchema.extend({ githubSource: z.string().optional() }),
     postprocess: {
       includeProcessedMarkdown: {
@@ -28,9 +28,15 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
-    // `npm`-language fences become package-manager tabs (npm/pnpm/yarn/bun) with
-    // per-tab copy buttons; persist remembers the reader's choice across blocks.
-    // `remarkGfmAlert` renders GitHub-style `> [!NOTE]` blockquotes as callouts.
-    remarkPlugins: [remarkMdxMermaid, remarkGfmAlert, remarkFileSteps, remarkFaq, [remarkNpm, { persist: { id: 'package-manager' } }]],
+    // 言語が `npm` のフェンスを、コピー操作付きのパッケージマネージャータブ
+    //（npm / pnpm / yarn / bun）へ変換する。persistはブロック間で読者の選択を維持する。
+    // `remarkGfmAlert` はGitHub形式の `> [!NOTE]` 引用をCalloutとして表示する。
+    remarkPlugins: [
+      remarkMdxMermaid,
+      remarkGfmAlert,
+      remarkFileSteps,
+      remarkFaq,
+      [remarkNpm, { persist: { id: 'package-manager' } }],
+    ],
   },
 });

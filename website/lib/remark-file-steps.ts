@@ -1,9 +1,8 @@
-// Turns `file-steps` fences into the interactive <FileSteps> stepper, the
-// same mdxJsxFlowElement injection remarkMdxMermaid and remarkGfmAlert use.
-// The fence body stays readable on GitHub: `## ` lines start a step, `> `
-// lines are the step's caption, and the remaining lines are a file tree
-// whose two-character gutter (`+ ` added, `- ` removed, `  ` unchanged)
-// reads like a diff.
+// `file-steps` フェンスを対話型の<FileSteps>ステッパーへ変換する。
+// remarkMdxMermaidやremarkGfmAlertと同じmdxJsxFlowElement挿入方式を使う。
+// フェンス本文はGitHubでも読める形式を維持する。`## ` 行は手順の開始、`> ` 行は説明、
+// 残りの行は2文字のガター（追加は `+ `、削除は `- `、変更なしは `  `）を持つ
+// diff形式のファイルツリーとして扱う。
 
 interface Node {
   type: string;

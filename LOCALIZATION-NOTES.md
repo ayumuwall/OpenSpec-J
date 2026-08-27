@@ -17,6 +17,7 @@
 - ファイル: `src/core/command-generation/adapters/command-code.ts`, `src/core/command-generation/adapters/oh-my-pi.ts`, `src/core/command-generation/adapters/opencode.ts`, `src/core/command-generation/adapters/pi.ts`
 - 症状: upstream のコマンド生成アダプターは `**Input**:` 見出しを正規表現で検出し、その直後へ `$ARGUMENTS` または `$@` を挿入する。見出しを `**入力**:` へ翻訳するだけでは検出されず、生成コマンドへ呼び出し引数が渡らなくなる。
 - 対応（v1.9.0）: 見出し検出を `Input` / `入力` の両方に対応させる。Command Code では再生成時の重複挿入を防ぐため、既存の引数行も `Provided arguments` / `入力された引数` の両方を認識する。
+- 追加対応（v1.11.0）: 日本語の見出しで全角コロン（`**入力**：`）が使われても引数を挿入できるよう、Command Code と OpenCode の検出を半角・全角コロンの両方に対応させる。
 - 追加対応（v1.10.0）: OpenCode に追加された `$ARGUMENTS` 挿入処理も `Input` / `入力` と `None required` / `不要` の両方を認識し、日本語テンプレートでは `指定された引数` を生成する。
 - 互換性: 英語版または過去バージョンが生成したファイルを日本語版で更新する場合があるため、日本語だけに限定せず英語ラベルも維持する。
 - フォローアップ: 入力見出しや引数行の文言を変更するときは、4アダプターの検出正規表現と `test/core/command-generation/adapters.test.ts` の挿入・重複防止テストを同時に更新する。
@@ -39,6 +40,12 @@
 - 症状: リポジトリ直下の固定一時ディレクトリ名を使うと、`pnpm test` の並列実行時に別テストと競合し、`spec not found` などの不安定な失敗が出る。
 - 対応: `os.tmpdir()` と `randomUUID()` を使って毎回ユニークな一時ディレクトリを生成する。
 - 補足: 本体ロジックではなくテスト安定化のための差分。フルテスト前提で upstream 同期時に戻してしまわないよう注意。
+
+### ドキュメントサイト: FAQ アンカー生成を日本語見出しに対応
+- ファイル: `website/lib/remark-faq.ts`
+- 症状: upstream のスラッグ生成は ASCII 英数字だけを残すため、日本語だけの FAQ 見出しから空の `id` が生成される。
+- 対応（v1.11.0）: Unicode プロパティエスケープを使い、すべての言語の文字と数字を保持してアンカーを生成する。
+- フォローアップ: upstream のスラッグ生成ロジックを取り込むときは、日本語見出しの `id` が空にならず、同じ見出しから安定して同じアンカーが生成されることを確認する。
 
 ## テスト期待値の更新が必要だった事例
 

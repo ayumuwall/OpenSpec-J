@@ -2893,7 +2893,7 @@ content D`;
 
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining(
-          'RENAMED failed for header "### Requirement: C" - target already exists'
+          'RENAMED に失敗しました: "### Requirement: C" - 変更先が既に存在します'
         )
       );
       expect(process.exitCode).toBe(1);

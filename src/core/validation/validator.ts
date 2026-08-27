@@ -650,11 +650,9 @@ export class Validator {
       });
     }
     
-    // The placeholder is longer than MIN_PURPOSE_LENGTH, so the brevity check
-    // below cannot reach it; it is reported on its own terms instead. Checked
-    // first because a hand-written "TBD" is both a placeholder and too brief,
-    // and only one of those two tells the author what to do. (A "TODO" opening
-    // the Purpose reads the same way, so it is the same finding.)
+    // プレースホルダーはMIN_PURPOSE_LENGTHより長いため、文字数検査とは別に報告する。
+    // 手書きの「TBD」はプレースホルダーかつ短すぎるが、対応方法を示せる前者だけを
+    // 報告するため先に検査する。先頭の「TODO」も同じ問題として扱う。
     const placeholder = findPurposePlaceholderIssue(spec.overview, content);
     if (placeholder) {
       issues.push({

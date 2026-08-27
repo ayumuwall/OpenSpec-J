@@ -1,12 +1,12 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { appName, links } from './shared';
 
-/** Shared layout options for the docs layout. */
+/** ドキュメントレイアウトの共通オプション。 */
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
-      // The site is documentation-only, so the logo links to the docs index
-      // rather than `/` (which just redirects there).
+      // ドキュメント専用サイトなので、ロゴはリダイレクト元の `/` ではなく
+      // ドキュメント索引へリンクする。
       url: '/docs',
       title: (
         <img
@@ -16,7 +16,7 @@ export function baseOptions(): BaseLayoutProps {
         />
       ),
     },
-    // No "Documentation" link here: the navbar layout tabs already cover it.
+    // ナビバーのレイアウトタブから移動できるため、ここに「ドキュメント」リンクは置かない。
     links: [
       {
         text: 'Discord',

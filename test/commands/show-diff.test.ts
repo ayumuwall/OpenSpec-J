@@ -133,7 +133,7 @@ describe('openspec show --diff', () => {
     // Proposal should appear first
     expect(output).toContain('Improve auth.');
     expect(output.indexOf('Improve auth.')).toBeLessThan(
-      output.indexOf('Specifications Changed (diffs)')
+      output.indexOf('変更された仕様（差分）')
     );
 
     // MODIFIED should show unified diff with changes
@@ -157,7 +157,7 @@ describe('openspec show --diff', () => {
     // `show <change>` stays a raw proposal passthrough: --diff is additive, so
     // anything already parsing this output keeps seeing exactly what it saw.
     expect(output.trimEnd()).toBe(proposal.trimEnd());
-    expect(output).not.toContain('Specifications Changed');
+    expect(output).not.toContain('変更された仕様');
   });
 
   // Task 5.7: MODIFIED with no matching base
@@ -192,7 +192,7 @@ describe('openspec show --diff', () => {
 
     const output = run(['show', 'no-match', '--type', 'change', '--diff']);
     expect(output).toContain('MODIFIED: Nonexistent base');
-    expect(output).toContain('No matching main requirement found');
+    expect(output).toContain('本仕様に "Nonexistent base" と一致する要件が見つかりません');
   });
 
   // Task 5.3: no delta specs — say so rather than printing an empty heading
@@ -207,8 +207,8 @@ describe('openspec show --diff', () => {
 
     const output = run(['show', 'empty-change', '--type', 'change', '--diff']);
     expect(output).toContain('Test reason.');
-    expect(output).toContain('No delta specs to diff for change "empty-change".');
-    expect(output).not.toContain('Specifications Changed');
+    expect(output).toContain('変更 "empty-change" には比較対象の仕様差分がありません。');
+    expect(output).not.toContain('変更された仕様');
   });
 
   it('text mode: keeps the Reason and Migration text of a REMOVED requirement', async () => {
@@ -267,13 +267,13 @@ describe('openspec show --diff', () => {
     // The diff the author meant is still shown...
     expect(output).toContain('+The system SHALL allow users to log in with a passkey.');
     // ...along with the mismatch archive would reject.
-    expect(output).toContain('only in case or spacing');
+    expect(output).toContain('大文字・小文字または空白だけが異なります');
     expect(output).toContain('"User login"');
 
     const json = JSON.parse(run(['show', 'near-miss', '--type', 'change', '--diff', '--json']));
     const modified = json.deltas.find((delta: any) => delta.operation === 'MODIFIED');
     expect(modified.diff).toContain('+The system SHALL allow users to log in with a passkey.');
-    expect(modified.warning).toContain('only in case or spacing');
+    expect(modified.warning).toContain('大文字・小文字または空白だけが異なります');
   });
 
   it('propagates delta discovery failures instead of reporting no delta specs', async () => {
@@ -289,7 +289,7 @@ describe('openspec show --diff', () => {
     const result = runWithStderr(['show', 'broken-discovery', '--type', 'change', '--diff']);
     expect(result.status).toBe(1);
     expect(result.stderr).not.toBe('');
-    expect(result.stdout).not.toContain('No delta specs to diff');
+    expect(result.stdout).not.toContain('比較対象の仕様差分がありません');
   });
 
   it('propagates main-spec read failures instead of reporting the spec missing', async () => {
@@ -300,7 +300,7 @@ describe('openspec show --diff', () => {
     const result = runWithStderr(['show', 'auth-update', '--type', 'change', '--diff']);
     expect(result.status).toBe(1);
     expect(result.stderr).not.toBe('');
-    expect(result.stdout).not.toContain('No main spec at');
+    expect(result.stdout).not.toContain('本仕様がないため');
   });
 
   it('warns instead of inventing a diff when a MODIFIED spec has no main spec', async () => {
@@ -330,7 +330,7 @@ describe('openspec show --diff', () => {
 
     const output = run(['show', 'no-main-spec', '--type', 'change', '--diff']);
     expect(output).toContain('MODIFIED: Billing');
-    expect(output).toContain('No main spec at openspec/specs/billing/spec.md');
+    expect(output).toContain('openspec/specs/billing/spec.md に本仕様がないため');
     // The requirement text is still shown, but not dressed up as a diff.
     expect(output).toContain('The system SHALL bill monthly.');
     expect(output).not.toContain('+The system SHALL bill monthly.');
@@ -338,7 +338,7 @@ describe('openspec show --diff', () => {
     const json = JSON.parse(run(['show', 'no-main-spec', '--type', 'change', '--diff', '--json']));
     const modified = json.deltas.find((d: any) => d.operation === 'MODIFIED');
     expect(modified.diff).toBeUndefined();
-    expect(modified.warning).toContain('No main spec at openspec/specs/billing/spec.md');
+    expect(modified.warning).toContain('openspec/specs/billing/spec.md に本仕様がないため');
   });
 
   it('diffs a nested capability (specs/<area>/<id>/spec.md)', async () => {
@@ -402,10 +402,10 @@ describe('openspec show --diff', () => {
 
   it('warns and ignores --diff when the item is a spec', async () => {
     const { stdout, stderr } = runWithStderr(['show', 'auth', '--type', 'spec', '--diff']);
-    expect(stderr).toContain('Ignoring flags not applicable to spec');
+    expect(stderr).toContain('spec には無効なフラグを無視します');
     expect(stderr).toContain('diff');
     expect(stdout).toContain('### Requirement: User login');
-    expect(stdout).not.toContain('Specifications Changed');
+    expect(stdout).not.toContain('変更された仕様');
   });
 
   // Task 6.2: JSON mode includes diff on MODIFIED only
@@ -507,7 +507,7 @@ describe('openspec show --diff', () => {
 
     const output = run(['show', 'unchanged-modification', '--type', 'change', '--diff']);
     expect(output).toContain('MODIFIED: Session management');
-    expect(output).toContain('(no textual changes)');
+    expect(output).toContain('（テキストの変更なし）');
 
     const json = JSON.parse(
       run(['show', 'unchanged-modification', '--type', 'change', '--diff', '--json'])
@@ -574,7 +574,7 @@ describe('openspec show --diff', () => {
     // Proposal shown first
     expect(output).toContain('Rename.');
     expect(output.indexOf('Rename.')).toBeLessThan(
-      output.indexOf('Specifications Changed (diffs)')
+      output.indexOf('変更された仕様（差分）')
     );
 
     // RENAMED should appear
@@ -673,6 +673,6 @@ describe('openspec show --diff', () => {
     const output = run(['show', 'rename-chain', '--type', 'change', '--diff']);
     expect(output).toContain('-The system SHALL manage user sessions.');
     expect(output).toContain('+The system SHALL manage sessions with a configurable timeout.');
-    expect(output).not.toContain('No matching main requirement found');
+    expect(output).not.toContain('本仕様に一致する要件が見つかりません');
   });
 });

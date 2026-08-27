@@ -1,12 +1,11 @@
-// Turns the FAQ page's `##` question sections into Fumadocs Accordion
-// elements, the same mdxJsxFlowElement injection remarkGfmAlert and
-// remarkFileSteps use, so the doc stays plain headings on GitHub while the
-// site renders a collapsible FAQ.
+// FAQページの `##` 質問セクションをFumadocsのAccordion要素へ変換する。
+// remarkGfmAlertやremarkFileStepsと同じmdxJsxFlowElement挿入方式を使い、
+// GitHubでは通常の見出し、サイトでは折りたたみ可能なFAQとして表示する。
 //
-// Applies only to files named `faq` (the synced content/docs/faq.md); every
-// other page keeps its headings. Each accordion gets a GitHub-style slug id so
-// existing `#heading-anchor` deep links still open the right question.
-// getLLMText (lib/source.ts) round-trips the accordions back to `##` headings.
+// `faq` という名前のファイル（同期後のcontent/docs/faq.md）だけに適用し、
+// ほかのページの見出しは維持する。既存の `#heading-anchor` が同じ質問を開くよう、
+// 各AccordionへGitHub形式のslug IDを付ける。getLLMText（lib/source.ts）は
+// Accordionを `##` 見出しへ戻す。
 
 interface Node {
   type: string;
@@ -21,12 +20,11 @@ function toText(node: Node): string {
   return (node.children ?? []).map(toText).join('');
 }
 
-// Matches github-slugger for plain-text titles, which is what the sync'd
-// heading anchors used.
+// 同期済みの見出しアンカーと同じ、プレーンテキスト用github-slugger形式に合わせる。
 function slugify(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/[^\p{L}\p{N} -]/gu, '')
     .trim()
     .replace(/\s+/g, '-');
 }

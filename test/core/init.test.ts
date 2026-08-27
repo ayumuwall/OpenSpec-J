@@ -900,9 +900,9 @@ describe('InitCommand', () => {
         .map(String);
       expect(logCalls.some((entry) => entry.includes('新規作成: Codex'))).toBe(true);
       expect(logCalls.some((entry) => entry.includes('Zed Agent'))).toBe(true);
-      expect(logCalls.some((entry) => entry.includes('Shared .agents skills'))).toBe(false);
+      expect(logCalls.some((entry) => entry.includes('Shared .agents skills'))).toBe(true);
       expect(
-        logCalls.some((entry) => entry.includes('Codex、Zed、agents は .agents/skills を共有'))
+        logCalls.some((entry) => entry.includes('Codex, Zed Agent, Shared .agents skills は .agents/skills を共有するため、codex 用の単一ツリーを書き込みます'))
       ).toBe(true);
     });
 
@@ -1719,7 +1719,7 @@ describe('InitCommand - profile and detection features', () => {
       .join('\n');
 
     expect(logsBeforeSelection).toContain('グローバルプロンプトの削除を保留');
-    expect(logsBeforeSelection).toContain('対応する代替 skill のインストール後にのみ削除');
+    expect(logsBeforeSelection).toContain('対応する代替スキルのインストール後にのみ削除');
     expect(logsBeforeSelection).toContain(`codex: ${legacyPrompt}`);
     expect(await fileExists(legacyPrompt)).toBe(false);
   });

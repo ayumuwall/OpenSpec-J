@@ -46,13 +46,12 @@ export interface StatusOptions {
 // Command Implementation
 // -----------------------------------------------------------------------------
 
-// A batch entry is either a fully loaded status or, for a change that failed
-// to load, the change name plus the diagnostic — the sweep never aborts.
+// バッチの各要素には、読み込み済みのステータス、または読み込みに失敗した
+// 変更名と診断情報を格納する。1件の失敗で一括処理全体を中止しない。
 type BatchStatusEntry = ChangeStatus | { changeName: string; status: StoreDiagnostic[] };
 
-// The --all --json failure null-shape. Root-selection failures (handled in
-// resolveRootForCommand) and thrown errors (caught by the CLI wrapper) must
-// emit the same shape, so both call sites reference this one constant.
+// --all --json の失敗時に返す空の構造。ルート選択の失敗と例外のどちらでも
+// 同じ形式を出力するため、両方の呼び出し元でこの定数を共有する。
 export const BATCH_STATUS_FAILURE_PAYLOAD: Record<string, unknown> = {
   changes: [],
   root: null,
@@ -60,12 +59,11 @@ export const BATCH_STATUS_FAILURE_PAYLOAD: Record<string, unknown> = {
 
 export async function statusCommand(options: StatusOptions): Promise<void> {
   if (options.all && options.change) {
-    throw new Error('The --all and --change options are mutually exclusive.');
+    throw new Error('--all と --change は同時に指定できません。');
   }
 
-  // The root resolves (and the store banner prints) before the spinner starts
-  // so the two do not fight over stderr. The batch null-shape rides along so
-  // a root-selection failure under --all --json still carries `changes: []`.
+  // スピナーより先にルートを解決してストア案内を表示し、stderr上で競合しないようにする。
+  // --all --json でルート選択に失敗した場合も `changes: []` を含める。
   const root = await resolveRootForCommand(options, {
     json: options.json,
     failurePayload: options.all ? BATCH_STATUS_FAILURE_PAYLOAD : undefined,
@@ -82,8 +80,8 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     const rootOutput = toRootOutput(root);
     const newChangeHint = withStoreFlag(root, 'openspec new change <name>');
 
-    // Single definition of "load one change's status" so the batch and
-    // single-change payloads can never drift apart.
+    // 1件の変更ステータスを読み込む処理を共通化し、バッチと単一変更の
+    // ペイロードが食い違わないようにする。
     const loadStatus = (changeName: string): ChangeStatus =>
       formatChangeStatus(
         loadChangeContext(projectRoot, changeName, options.schema, {
@@ -96,8 +94,8 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     // Handle no-changes case gracefully — status is informational,
     // so "no changes" is a valid state, not an error.
     if (!options.change) {
-      // Validate before the no-changes early return so a bogus --schema
-      // fails the same way whether or not any change exists yet.
+      // 変更なしで早期returnする前に検証し、変更の有無にかかわらず
+      // 不正な --schema を同じ方法でエラーにする。
       if (options.all && options.schema) {
         validateSchemaExists(options.schema, projectRoot);
       }
@@ -120,16 +118,15 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
       }
 
       if (options.all) {
-        // readdir order is platform-dependent; sort for deterministic output,
-        // with the same comparator validate --all uses so the two batch
-        // commands order a given change set identically.
+        // readdirの順序はプラットフォーム依存のため、validate --all と同じ
+        // 比較方法で並べ替え、同じ変更集合を常に同じ順序で出力する。
         const entries: BatchStatusEntry[] = [];
         for (const changeName of available.sort((a, b) => a.localeCompare(b))) {
           try {
             entries.push(loadStatus(changeName));
           } catch (error) {
-            // One malformed change must not blank the sweep; carry its
-            // diagnostic in place and keep going.
+            // 不正な変更が1件あっても一括結果全体を失わず、その位置に
+            // 診断情報を格納して処理を続ける。
             entries.push({ changeName, status: [asStatus(error, 'change_error')] });
           }
         }
@@ -155,18 +152,16 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
             console.log(chalk.red(`✗ ${entry.changeName}: ${entry.status[0]?.message}`));
           }
         });
-        // A partial load is still a failed command in both output modes;
-        // JSON callers can parse the complete envelope independently of
-        // the process exit code.
+        // 一部を読み込めなかった場合は、どちらの出力形式でもコマンドを失敗扱いにする。
+        // JSON利用側は終了コードとは別に、完全なペイロードを解析できる。
         if (failed) {
           process.exitCode = 1;
         }
         return;
       }
 
-      // Changes exist but neither --change nor --all provided. Name --all
-      // here too: it is the other way to answer this prompt, and a caller
-      // who wants every change should not have to find it in --help.
+      // 変更が存在するのに --change も --all も指定されていない。
+      // 全件を対象にできることがヘルプを開かなくても分かるよう、--all も案内する。
       spinner?.stop();
       throw new Error(
         `必須オプション --change が指定されていません（すべての有効な変更を対象にする場合は --all）。有効な変更:\n  ${available.join('\n  ')}`

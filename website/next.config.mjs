@@ -4,14 +4,14 @@ const withMDX = createMDX();
 
 /** @type {import('next').NextConfig} */
 const config = {
-  // Static HTML export — the `out/` directory deploys directly to Cloudflare Pages.
+  // 静的HTMLとしてエクスポートし、`out/` ディレクトリをCloudflare Pagesへ直接デプロイする。
   output: 'export',
-  // Static export has no Image Optimization API; serve images as-is. Required
-  // for the diagram images the docs pipeline embeds via next/image.
+  // 静的エクスポートでは画像最適化APIを使用できないため、画像をそのまま配信する。
+  // ドキュメント処理がnext/imageで埋め込む図に必要。
   images: { unoptimized: true },
   reactStrictMode: true,
-  // This site has its own lockfile and lives inside the OpenSpec monorepo, so
-  // pin the workspace root to silence Next's multi-lockfile inference warning.
+  // このサイトは専用のロックファイルを持ち、OpenSpecモノレポ内に置かれている。
+  // Next.jsの複数ロックファイル推論警告を抑えるため、ワークスペースルートを固定する。
   turbopack: {
     root: import.meta.dirname,
   },

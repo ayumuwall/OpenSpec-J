@@ -130,9 +130,9 @@ export interface DeltaPlan {
   added: RequirementBlock[];
   modified: RequirementBlock[];
   removed: string[]; // requirement names
-  // Raw `### Requirement:` blocks from the REMOVED section, when the delta used
-  // the header form. Names alone drop the authored Reason/Migration text that a
-  // reader of the removal needs. Empty for the bullet-list form, which has none.
+  // デルタが見出し形式を使用した場合の、REMOVEDセクション内の
+  // `### Requirement:` ブロック。名前だけでは、削除理由を読むために必要な
+  // Reason / Migration が失われる。これらを持たない箇条書き形式では空になる。
   removedBlocks: RequirementBlock[];
   renamed: Array<{ from: string; to: string }>;
   skippedHeaders: SkippedHeader[]; // non-canonical ### headers the reader skipped

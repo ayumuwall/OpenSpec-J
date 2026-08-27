@@ -196,13 +196,13 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     unlocks,
   } = instructions;
 
-  // Opening tag
+  // 開始タグ
   console.log(`<artifact id="${artifactId}" change="${changeName}" schema="${schemaName}">`);
   console.log();
 
-  // Artifacts skipped via skip_specs get no creation directive: emitting the
-  // task/template anyway would prompt an agent to write spec files that
-  // validate then rejects as conflicting with the marker.
+  // skip_specs でスキップしたアーティファクトには作成指示を出さない。
+  // task/template を出すと、エージェントが spec ファイルを作成し、
+  // 検証時にマーカーとの競合として拒否されるため。
   if (instructions.skipped) {
     console.log('<warning>');
     console.log(instructions.warning ?? 'このアーティファクトはスキップされます（.openspec.yaml で skip_specs が設定されています）。');
@@ -212,7 +212,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     return;
   }
 
-  // Warning for blocked artifacts
+  // ブロック中のアーティファクトに対する警告
   if (isBlocked) {
     const missing = dependencies.filter((d) => !d.done).map((d) => d.id);
     console.log('<warning>');
@@ -222,14 +222,14 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log();
   }
 
-  // Task directive
+  // タスク指示
   console.log('<task>');
   console.log(`変更 "${changeName}" の ${artifactId} アーティファクトを作成してください。`);
   console.log(description);
   console.log('</task>');
   console.log();
 
-  // Project context (AI constraint - do not include in output)
+  // プロジェクトコンテキスト（AI 向け制約。出力には含めない）
   if (context) {
     console.log('<project_context>');
     console.log('<!-- これは背景情報です。出力には含めないでください。 -->');
@@ -238,13 +238,13 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log();
   }
 
-  // Referenced-store index (read-only upstream context)
+  // 参照ストアの索引（読み取り専用の上流コンテキスト）
   if (instructions.references && instructions.references.length > 0) {
     console.log(renderReferencedStoresBlock(instructions.references));
     console.log();
   }
 
-  // Rules (AI constraint - do not include in output)
+  // ルール（AI 向け制約。出力には含めない）
   if (rules && rules.length > 0) {
     console.log('<rules>');
     console.log('<!-- これは従うべき制約です。出力には含めないでください。 -->');
@@ -255,18 +255,18 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log();
   }
 
-  // Dependencies (files to read for context)
+  // 依存関係（コンテキストとして読むファイル）
   if (dependencies.length > 0) {
     console.log('<dependencies>');
     console.log('このアーティファクトを作成する前に、以下のファイルの現在の内容を読んでください（以前に確認済みでも、編集されている可能性があるためディスクから再読み込みしてください）:');
     console.log();
     for (const dep of dependencies) {
-      // A dependency satisfied via skip_specs has no files by design: telling
-      // the agent to read them (or calling them "done") would send it hunting
-      // for spec files that must not exist.
+      // skip_specs で満たした依存関係には、設計上ファイルがない。
+      // 読むよう指示したり「完了」と呼んだりすると、存在してはならない
+      // spec ファイルをエージェントが探してしまう。
       if (dep.skipped) {
         console.log(`<dependency id="${dep.id}" status="skipped">`);
-        console.log(`  <description>Skipped: the change declares skip_specs, so this artifact has no files to read.</description>`);
+        console.log(`  <description>スキップ: 変更で skip_specs が宣言されているため、このアーティファクトには読み取るファイルがありません。</description>`);
         console.log('</dependency>');
         continue;
       }
@@ -281,13 +281,13 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log();
   }
 
-  // Output location
+  // 出力先
   console.log('<output>');
   console.log(`書き込み先: ${resolvedOutputPath}`);
   console.log('</output>');
   console.log();
 
-  // Instruction (guidance)
+  // 指示（ガイダンス）
   if (instruction) {
     console.log('<instruction>');
     console.log(instruction.trim());
@@ -295,20 +295,20 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log();
   }
 
-  // Template
+  // テンプレート
   console.log('<template>');
   console.log('<!-- 出力ファイルの構成として使い、各セクションを埋めてください。 -->');
   console.log(template.trim());
   console.log('</template>');
   console.log();
 
-  // Success criteria placeholder
+  // 成功基準のプレースホルダー
   console.log('<success_criteria>');
   console.log('<!-- スキーマ検証ルールで定義予定 -->');
   console.log('</success_criteria>');
   console.log();
 
-  // Unlocks
+  // 完了後に利用可能になるアーティファクト
   if (unlocks.length > 0) {
     console.log('<unlocks>');
     console.log(`このアーティファクトを完了すると有効になります: ${unlocks.join(', ')}`);
@@ -316,7 +316,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log();
   }
 
-  // Closing tag
+  // 終了タグ
   console.log('</artifact>');
 }
 

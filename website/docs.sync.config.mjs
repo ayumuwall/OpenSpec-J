@@ -1,65 +1,58 @@
-// Single source of truth for the documentation site's content.
+// ドキュメントサイトのコンテンツを管理する唯一の情報源。
 //
-// The pages under `content/docs/` are NOT authored by hand. They are generated
-// from the repository's `docs-lab/**/*.md` files by `scripts/sync-docs.mjs`
-// (which runs as the first step of `npm run build` / `npm run dev`). Edit the
-// docs in `../docs-lab`, and the site mirrors them automatically, both locally
-// and in CI.
+// `content/docs/` 配下のページは手作業で編集しない。`npm run build` / `npm run dev` の
+// 最初に実行される `scripts/sync-docs.mjs` が、リポジトリの `docs-lab/**/*.md` から生成する。
+// `../docs-lab` の文書を編集すると、ローカル環境とCIの両方でサイトへ自動反映される。
 //
-// This manifest is the only place that decides which docs are published, their
-// slug/URL, and their sidebar section and order.
+// 公開する文書、slug / URL、サイドバーのセクションと順序は、このマニフェストだけで決める。
 //
-// `source` is a path relative to the repo root's `docs-lab/` directory.
-// `slug`   is the page path under `/docs/`.
+// `source` はリポジトリルートの `docs-lab/` からの相対パス。
+// `slug` は `/docs/` 配下のページパス。
 //
-// A section's `pages` list may also hold a folder entry
-// (`{ folder, label, pages }`): its pages publish under `<folder>/...` slugs
-// and the sidebar shows them as a collapsible group inside the section. A page
-// with slug `<folder>/index` is the folder's landing page (served at
-// `/docs/<folder>`). Folder entries may nest: a folder's `pages` list may hold
-// another folder entry (`folder` is always the full path, e.g.
-// `schemas/spec-driven`), rendered as a collapsible group inside the group.
+// セクションの `pages` にはフォルダ項目（`{ folder, label, pages }`）も指定できる。
+// 配下のページは `<folder>/...` のslugで公開され、サイドバーでは折りたたみ可能な
+// グループとして表示される。`<folder>/index` は `/docs/<folder>` で配信する
+// フォルダのランディングページ。フォルダは入れ子にでき、`folder` には
+// `schemas/spec-driven` のようなフルパスを指定する。
 //
-// Page descriptions come from each page's leading `> ...` blockquote, lifted
-// into frontmatter by sync-docs.mjs. Don't duplicate them here.
+// ページ説明は各ページ先頭の `> ...` 引用からsync-docs.mjsがfrontmatterへ移す。
+// ここには重複して記載しない。
 export const docsDir = '../docs-lab';
 
-/** Ordered sections; each becomes a labeled group in the sidebar. */
+/** サイドバーのラベル付きグループとして表示するセクション（記載順）。 */
 export const sections = [
   {
-    label: 'Start',
+    label: 'はじめに',
     pages: [
-      // TEMPORARY (2026-08-21): the Overview page is pulled from the site while
-      // docs-lab/start/overview.md is rewritten from scratch (it's a TODO stub).
-      // Until it returns, /docs redirects to Installation: see public/_redirects
-      // (Cloudflare) and the empty-slug fallback in app/docs/[[...slug]]/page.tsx
-      // (local dev and static export). To restore: uncomment the line below and
-      // remove both redirects. The `index` slug is a router requirement (it
-      // serves /docs); the authored source file is overview.md.
+      // 一時対応（2026-08-21）: docs-lab/start/overview.mdは書き直し中のTODOだけの
+      // ページなので、サイトから除外している。復帰まではpublic/_redirects（Cloudflare）と
+      // app/docs/[[...slug]]/page.tsxの空slugフォールバック（ローカル開発・静的エクスポート）で、
+      // /docsをInstallationへリダイレクトする。復帰時は下の行を有効にして両方の
+      // リダイレクトを削除する。`index` slugは/docsを配信するためのルーター要件で、
+      // 執筆元ファイルはoverview.md。
       // { source: 'start/overview.md', slug: 'index' },
       { source: 'start/installation.md', slug: 'installation' },
       { source: 'start/setup.md', slug: 'setup' },
       { source: 'start/quickstart.md', slug: 'quickstart' },
     ],
   },
-  // Guides are held back until the pages are drafted. Re-publish one by moving
-  // its entry out of this comment, keeping its folder wrapper so the slug stays
-  // `<folder>/<name>`. Links to a held-back guide fall back to its source on
-  // GitHub (see rewriteLinks in scripts/sync-docs.mjs). The Guides navbar tab
-  // returns on its own once this section exists again (lib/source.ts).
+  // ガイドは執筆完了まで公開しない。公開時はフォルダ構造を維持したまま項目を
+  // コメント外へ移し、slugを `<folder>/<name>` のまま保つ。非公開ガイドへのリンクは
+  // GitHub上のソースへフォールバックする（scripts/sync-docs.mjsのrewriteLinksを参照）。
+  // このセクションを戻すと、ナビバーのガイドタブも自動で復帰する（lib/source.ts）。
   /*
   {
-    label: 'Guides',
+    label: 'ガイド',
     pages: [
       {
         folder: 'understanding',
-        label: 'Understanding OpenSpec',
+        label: 'OpenSpecを理解する',
         defaultOpen: true,
         pages: [{ source: 'guides/concepts.md', slug: 'understanding/concepts' }],
       },
       {
         folder: 'using',
-        label: 'Using OpenSpec',
+        label: 'OpenSpecを使う',
         defaultOpen: true,
         pages: [
           { source: 'guides/explore.md', slug: 'using/explore' },
@@ -70,7 +63,7 @@ export const sections = [
       },
       {
         folder: 'adopting',
-        label: 'Adopting OpenSpec',
+        label: 'OpenSpecを導入する',
         defaultOpen: true,
         pages: [
           { source: 'guides/existing-codebases.md', slug: 'adopting/existing-codebases' },
@@ -81,7 +74,7 @@ export const sections = [
   },
   */
   {
-    label: 'Customize',
+    label: 'カスタマイズ',
     pages: [
       { source: 'customize/overview.md', slug: 'customize' },
       { source: 'customize/profiles.md', slug: 'profiles' },
@@ -90,20 +83,20 @@ export const sections = [
     ],
   },
   {
-    label: 'Multi-repo (beta)',
+    label: 'マルチリポジトリ（ベータ）',
     pages: [
       { source: 'multi-repo/stores.md', slug: 'stores' },
       { source: 'multi-repo/worksets.md', slug: 'worksets' },
     ],
   },
   {
-    label: 'Reference',
+    label: 'リファレンス',
     pages: [
       { source: 'reference/skills.md', slug: 'skills' },
       { source: 'reference/cli.md', slug: 'cli' },
       {
         folder: 'schemas',
-        label: 'Schemas',
+        label: 'スキーマ',
         pages: [
           { source: 'reference/schemas/index.md', slug: 'schemas/index' },
           { source: 'reference/schemas/schema-yaml.md', slug: 'schemas/schema-yaml' },
@@ -112,32 +105,30 @@ export const sections = [
       },
       {
         folder: 'configuration',
-        label: 'Configuration',
+        label: '設定',
         pages: [
           { source: 'reference/configuration/index.md', slug: 'configuration/index' },
           { source: 'reference/configuration/config-yaml.md', slug: 'configuration/config-yaml' },
           { source: 'reference/configuration/change-metadata.md', slug: 'configuration/change-metadata' },
           { source: 'reference/configuration/config-json.md', slug: 'configuration/config-json' },
-          // TODO (held back 2026-08-21): Environment variables and Stores are
-          // headings only, so they stay out of the nav until written. The
-          // markdown stays in docs-lab/reference/configuration/. Links to them
-          // from published pages fall back to their GitHub source. Re-publish
-          // by moving the lines out of this comment.
+          // TODO（2026-08-21から非公開）: Environment variablesとStoresは見出しだけなので、
+          // 執筆完了までナビゲーションへ表示しない。Markdownは
+          // docs-lab/reference/configuration/に残す。公開済みページからのリンクは
+          // GitHub上のソースへフォールバックする。公開時は項目をコメント外へ移す。
           // { source: 'reference/configuration/environment-variables.md', slug: 'configuration/environment-variables' },
           // { source: 'reference/configuration/stores.md', slug: 'configuration/stores' },
         ],
       },
       { source: 'reference/supported-tools.md', slug: 'supported-tools' },
       { source: 'reference/glossary.md', slug: 'glossary' },
-      // TODO (held back 2026-08-21): Architecture is not written yet (all three
-      // pages are headings only), so the group is hidden until we get to it.
-      // The markdown stays in docs-lab/reference/architecture/. Links to these
-      // pages from published pages fall back to their GitHub source. Re-publish
-      // by moving the folder entry out of this comment.
+      // TODO（2026-08-21から非公開）: Architectureの3ページは見出しだけなので、
+      // 執筆完了までグループを非表示にする。Markdownは
+      // docs-lab/reference/architecture/に残し、公開済みページからのリンクは
+      // GitHub上のソースへフォールバックする。公開時はフォルダ項目をコメント外へ移す。
       /*
       {
         folder: 'architecture',
-        label: 'Architecture',
+        label: 'アーキテクチャ',
         pages: [
           { source: 'reference/architecture/index.md', slug: 'architecture/index' },
           { source: 'reference/architecture/workflow-runs.md', slug: 'architecture/workflow-runs' },
@@ -147,27 +138,26 @@ export const sections = [
       */
     ],
   },
-  // TODO (held back 2026-08-21): Help and Legacy are not written yet (FAQ has one
-  // answer, Troubleshooting and Migration are headings only), so both sections
-  // are hidden from the site until we get to them. The markdown stays in
-  // docs-lab/help/. Links to these pages from published pages fall back to
-  // their GitHub source (rewriteLinks in scripts/sync-docs.mjs). Re-publish by
-  // moving the entries out of this comment, same as Guides above.
+  // TODO（2026-08-21から非公開）: HelpとLegacyは未完成（FAQは回答1件、
+  // TroubleshootingとMigrationは見出しだけ）のため、執筆完了まで非表示にする。
+  // Markdownはdocs-lab/help/に残し、公開済みページからのリンクはGitHub上のソースへ
+  // フォールバックする（scripts/sync-docs.mjsのrewriteLinksを参照）。公開時はガイドと
+  // 同様に項目をコメント外へ移す。
   /*
   {
-    label: 'Help',
+    label: 'ヘルプ',
     pages: [
       { source: 'help/faq.md', slug: 'faq' },
       { source: 'help/troubleshooting.md', slug: 'troubleshooting' },
     ],
   },
   {
-    label: 'Legacy',
+    label: '旧機能',
     pages: [{ source: 'help/legacy/migration.md', slug: 'migration' }],
   },
   */
 ];
 
-/** Flat list of every published route (folder entries expanded recursively). */
+/** フォルダ項目を再帰的に展開した、全公開ルートのフラットな一覧。 */
 const expandEntry = (entry) => (entry.folder ? entry.pages.flatMap(expandEntry) : [entry]);
 export const pages = sections.flatMap((section) => section.pages.flatMap(expandEntry));

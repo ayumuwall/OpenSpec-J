@@ -13,12 +13,11 @@ import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { gitConfig } from '@/lib/shared';
 
-// TEMPORARY (2026-08-21): the Overview page (the docs index, served at /docs)
-// is pulled from docs.sync.config.mjs while it's rewritten, so there is no
-// index page. Cloudflare redirects /docs via public/_redirects; this
-// meta-refresh page is the fallback for local dev and the static export (which
-// can't issue HTTP redirects), mirroring app/page.tsx. Remove this constant,
-// the two uses below, and the `{ slug: [] }` param once the Overview is back.
+// 一時対応（2026-08-21）: Overviewページ（/docsで配信するドキュメント索引）は
+// 書き直し中のためdocs.sync.config.mjsの同期対象から除外されている。
+// Cloudflareはpublic/_redirectsで/docsをリダイレクトする。このmeta refreshは、
+// HTTPリダイレクトを返せないローカル開発環境と静的エクスポート向けのフォールバック。
+// Overviewを戻したら、この定数、下の2か所の使用箇所、`{ slug: [] }` を削除する。
 const TEMP_DOCS_INDEX_REDIRECT = '/docs/installation';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
@@ -30,7 +29,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
         <>
           <meta httpEquiv="refresh" content={`0; url=${TEMP_DOCS_INDEX_REDIRECT}`} />
           <p>
-            Redirecting to <a href={TEMP_DOCS_INDEX_REDIRECT}>installation</a>…
+            <a href={TEMP_DOCS_INDEX_REDIRECT}>インストール</a>へ移動しています…
           </p>
         </>
       );
@@ -72,8 +71,8 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
 export async function generateStaticParams() {
   const params: { slug: string[] }[] = source.generateParams();
-  // TEMPORARY: emit /docs even without an index page so the static export
-  // carries the meta-refresh fallback above.
+  // 一時対応: 索引ページがなくても/docsを生成し、静的エクスポートに
+  // 上記のmeta refreshフォールバックを含める。
   if (!params.some((p) => !p.slug?.length)) params.push({ slug: [] });
   return params;
 }
@@ -82,8 +81,8 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) {
-    // TEMPORARY: metadata for the /docs redirect fallback (see Page above).
-    if (!params.slug?.length) return { title: 'Documentation', robots: { index: false } };
+    // 一時対応: /docsのリダイレクト用フォールバックに使うメタデータ（上記Pageを参照）。
+    if (!params.slug?.length) return { title: 'ドキュメント', robots: { index: false } };
     notFound();
   }
 
