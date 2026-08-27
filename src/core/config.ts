@@ -30,16 +30,20 @@ export interface AIToolOption {
   available: boolean;
   successLabel?: string;
   skillsDir?: string; // 例: '.claude' - Agent Skills 仕様の /skills サフィックスを付与する
-  legacySkillsDirs?: string[]; // Former roots read for detection and migrated after replacement
-  globalSkillsDir?: string; // e.g., '.minimax' - /skills suffix, resolved from the user's home directory
+  legacySkillsDirs?: string[]; // 検出時に参照し、置換後に移行する旧ルート
+  globalSkillsDir?: string; // 例: '.minimax' - /skills サフィックスを付け、ユーザーのホームディレクトリを基準に解決する
   detectionPaths?: string[]; // 自動検出用に skillsDir を上書きするパス群。どれかが存在すれば検出対象とみなす
   setupNote?: string; // 生成ファイルをツールが認識する前に必要な手動設定。init/update後に表示する
-  requiresIdeRestart?: boolean; // True when slash commands are loaded by an IDE/editor process (a CLI picks them up immediately, so no restart hint — see #1067)
+  requiresIdeRestart?: boolean; // IDE やエディターのプロセスがスラッシュコマンドを読み込む場合は true。CLI は即座に認識するため再起動案内は不要（#1067 を参照）
 }
 
 export const AI_TOOLS: AIToolOption[] = [
   { name: 'Amazon Q Developer', value: 'amazon-q', available: true, successLabel: 'Amazon Q Developer', skillsDir: '.amazonq', requiresIdeRestart: true },
-  { name: 'Antigravity', value: 'antigravity', available: true, successLabel: 'Antigravity', skillsDir: '.agent', requiresIdeRestart: true },
+  // Antigravity は v1.20.5 で、ワークスペースのスキルとワークフローを `.agent` から
+  // 共有の `.agents` ルートへ移した。`.agents` ルート自体は Codex、Zed、ベンダー非依存の
+  // 対象と共有されるため、その存在だけでは Antigravity の利用を判断できない。
+  // 検出には `.agent` と `.agents/workflows` を使う。
+  { name: 'Antigravity', value: 'antigravity', available: true, successLabel: 'Antigravity', skillsDir: '.agents', legacySkillsDirs: ['.agent'], detectionPaths: ['.agent', '.agents/workflows'], requiresIdeRestart: true },
   { name: 'Auggie (Augment CLI)', value: 'auggie', available: true, successLabel: 'Auggie', skillsDir: '.augment' },
   { name: 'Bob Shell', value: 'bob', available: true, successLabel: 'Bob Shell', skillsDir: '.bob' },
   { name: 'Claude Code', value: 'claude', available: true, successLabel: 'Claude Code', skillsDir: '.claude' },
@@ -76,27 +80,26 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Trae', value: 'trae', available: true, successLabel: 'Trae', skillsDir: '.trae', requiresIdeRestart: true },
   { name: 'Zed Agent', value: 'zed', available: true, successLabel: 'Zed Agent', skillsDir: '.agents', detectionPaths: ['.zed', '.agents/skills'] },
   { name: 'ZCode', value: 'zcode', available: true, successLabel: 'ZCode', skillsDir: '.zcode' },
-  // Vendor-neutral target for assistants that read the shared `.agents` root.
-  // Detection keys off `.agents/skills` rather than the bare root: frameworks use
-  // `.agents/` for more than skills, so the root alone says nothing about skills.
-  // A project that does keep skills there is a project this target fits, the same
-  // way `.claude/` selects Claude Code — the signal is the user's setup, not
-  // OpenSpec's own files.
+  // 共有の `.agents` ルートを読むアシスタント向けの、ベンダー非依存の対象。
+  // フレームワークはスキル以外にも `.agents/` を使うため、ルートの存在だけでは
+  // スキルの利用を判断できない。検出には `.agents/skills` を使う。
+  // `.claude/` が Claude Code を示すのと同様に、そこへスキルを置くプロジェクトが
+  // この対象に該当する。判断材料は OpenSpec 自身のファイルではなく、ユーザーの設定である。
   { name: 'Shared .agents skills', value: 'agents', available: true, successLabel: 'shared .agents skills', skillsDir: '.agents', detectionPaths: ['.agents/skills'] }
 ];
 
 /**
- * Retired tool ids that still resolve, so a rebrand does not break scripted
- * `--tools` invocations. Windsurf was rebranded to Devin Desktop on
- * 2026-06-02 and its config directory moved from `.windsurf/` to `.devin/`;
- * `--tools windsurf` therefore configures `devin`.
+ * ブランド変更後もスクリプトによる `--tools` 呼び出しが壊れないよう、廃止済みでも
+ * 解決できるツール ID。Windsurf は 2026-06-02 に Devin Desktop へ改称され、設定
+ * ディレクトリも `.windsurf/` から `.devin/` へ移った。そのため、
+ * `--tools windsurf` は `devin` を設定する。
  */
 export const TOOL_ID_ALIASES: Record<string, string> = {
   windsurf: 'devin',
 };
 
 /**
- * Resolves a tool id through TOOL_ID_ALIASES, leaving current ids untouched.
+ * 現行の ID は変更せず、TOOL_ID_ALIASES を使ってツール ID を解決する。
  */
 export function resolveToolIdAlias(toolId: string): string {
   return TOOL_ID_ALIASES[toolId] ?? toolId;

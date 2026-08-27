@@ -53,6 +53,11 @@ export const LEGACY_TOOL_ROOTS: Record<string, LegacyToolRoot[]> = {
   // Codex now reads the canonical shared .agents root. Generate the current
   // replacement first so a divergent legacy file is preserved, not overwritten.
   codex: [{ root: '.codex', needsConsent: false, timing: 'after-generation' }],
+  // Antigravity v1.20.5 では、ワークスペースのスキルとワークフローが `.agents` に移り、
+  // 旧 `.agent` ルートはフォールバックとしてのみ読み込まれる。コピーを残すと、同じものが
+  // エージェントに二重に見えてしまう。Codex と同じく生成後に移行することで、先に代替ファイルを
+  // 書き込み、内容の異なる旧ファイルは上書きせず、報告したうえで保持する。
+  antigravity: [{ root: '.agent', needsConsent: false, timing: 'after-generation' }],
 };
 
 export interface LegacyToolMigration {
@@ -192,7 +197,13 @@ function collectLegacyToolMigrations(
         apply,
         legacyTiming === 'after-generation'
       );
-      const commands = migrateCommandFiles(projectPath, tool, legacy.root, apply);
+      const commands = migrateCommandFiles(
+        projectPath,
+        tool,
+        legacy.root,
+        apply,
+        legacyTiming === 'after-generation'
+      );
 
       if (apply) {
         removeDirIfEmpty(path.join(legacyRootPath, 'skills'));
@@ -287,7 +298,8 @@ function migrateCommandFiles(
   projectPath: string,
   tool: AIToolOption,
   legacyRoot: string,
-  apply: boolean
+  apply: boolean,
+  requireDestination = false
 ): { moved: number; kept: number } {
   const adapter = CommandAdapterRegistry.get(tool.value);
   if (!adapter || !tool.skillsDir) return { moved: 0, kept: 0 };
@@ -299,10 +311,18 @@ function migrateCommandFiles(
     const legacyPath = legacyCommandPath(currentPath, tool.skillsDir, legacyRoot);
     if (!legacyPath) continue;
 
-    const source = path.join(projectPath, legacyPath);
+    const source = FileSystemUtils.resolveProjectArtifactPath(projectPath, legacyPath);
     if (!fs.existsSync(source)) continue;
 
-    const destination = path.join(projectPath, currentPath);
+    const destination = FileSystemUtils.resolveProjectArtifactPath(
+      projectPath,
+      currentPath.split(/[\\/]/).join(path.sep)
+    );
+    // 生成後の移行は、ツールが代替ファイルを書き込んだ後に実行される。
+    // 代替ファイルがない場合、そのコマンドはスキルのみの配信か選択解除されたワークフローであり、
+    // 現在の OpenSpec がインストールする対象ではない。旧ファイルを移動すると、現行ルートで
+    // そのコマンドを復活させてしまう。
+    if (requireDestination && !fs.existsSync(destination)) continue;
     if (!areProjectArtifacts(projectPath, source, destination)) {
       console.warn(
         `プロジェクト外へ解決されるため、旧 ${legacyPath} の移行をスキップします。`
@@ -336,18 +356,16 @@ function migrateCommandFiles(
   return { moved, kept };
 }
 
-/**
- * Summarizes what a migration moved, e.g. "6 skills and 6 commands".
- */
+/** 移行した内容を「スキル 6 件、コマンド 6 件」の形式で要約する。 */
 export function describeLegacyMigration(migration: LegacyToolMigration): string {
   const parts: string[] = [];
   if (migration.skillDirs > 0) {
-    parts.push(`${migration.skillDirs} skill${migration.skillDirs === 1 ? '' : 's'}`);
+    parts.push(`スキル ${migration.skillDirs} 件`);
   }
   if (migration.commandFiles > 0) {
-    parts.push(`${migration.commandFiles} command${migration.commandFiles === 1 ? '' : 's'}`);
+    parts.push(`コマンド ${migration.commandFiles} 件`);
   }
-  return parts.join(' and ');
+  return parts.join('、');
 }
 
 /**
@@ -360,7 +378,7 @@ export function keptInPlaceNotice(migration: LegacyToolMigration): string | unde
   // Deliberately does not claim the difference came from an edit: an older
   // OpenSpec version's output differs too. Either way nothing was overwritten,
   // and the user is the one who decides which copy to keep.
-  return `${migration.to}/ のコピーと異なる ${n} 件のファイルを ${migration.from}/ に残しました。上書きはしていません。両方を比較し、カスタマイズした内容を保存してから ${migration.from}/ 側のコピーを削除してください。`;
+  return `${migration.to}/ のコピーと異なる ${n} 件のファイルを ${migration.from}/ に残しました。上書きはしていません。両方を比較し、必要なカスタマイズ内容を残したうえで ${migration.from}/ 側のコピーを削除してください。`;
 }
 
 /**
@@ -428,7 +446,7 @@ interface InstalledWorkflowArtifacts {
 function scanInstalledWorkflowArtifacts(
   projectPath: string,
   tools: AIToolOption[],
-  includeLegacySkills = false
+  includeLegacyRoots = false
 ): InstalledWorkflowArtifacts {
   const installed = new Set<string>();
   let hasSkills = false;
@@ -442,7 +460,7 @@ function scanInstalledWorkflowArtifacts(
       skillsDirs.push(resolveToolSkillsDir(projectPath, tool));
     } else if (isSharedSkillTargetActive(projectPath, tool.value)) {
       skillsDirs.push(resolveToolSkillsDir(projectPath, tool));
-      if (includeLegacySkills) {
+      if (includeLegacyRoots) {
         skillsDirs.push(
           ...(tool.legacySkillsDirs ?? []).map((root) =>
             path.join(projectPath, root, 'skills')
@@ -465,14 +483,31 @@ function scanInstalledWorkflowArtifacts(
     const adapter = CommandAdapterRegistry.get(tool.value);
     if (!adapter) continue;
 
+    // ツールが移行した後も、旧ルートにはユーザーがインストールしたコマンドファイルが残っている。
+    // 現行ルートだけを読むと、コマンドを含むインストールがスキルのみと誤判定される。
+    // その判定から配信方法を推測すると、次回の更新時にコマンドが削除されてしまう。
+    const legacyRoots = includeLegacyRoots
+      ? (LEGACY_TOOL_ROOTS[tool.value] ?? []).map((legacy) => legacy.root)
+      : [];
+
     for (const workflowId of ALL_WORKFLOWS) {
       const commandPath = adapter.getFilePath(workflowId);
-      const fullPath = path.isAbsolute(commandPath)
-        ? commandPath
-        : path.join(projectPath, commandPath);
-      if (fs.existsSync(fullPath)) {
-        installed.add(workflowId);
-        hasCommands = true;
+      const candidates = [commandPath];
+      if (tool.skillsDir) {
+        for (const root of legacyRoots) {
+          const legacyPath = legacyCommandPath(commandPath, tool.skillsDir, root);
+          if (legacyPath) candidates.push(legacyPath);
+        }
+      }
+      for (const candidate of candidates) {
+        const fullPath = path.isAbsolute(candidate)
+          ? candidate
+          : path.join(projectPath, candidate);
+        if (fs.existsSync(fullPath)) {
+          installed.add(workflowId);
+          hasCommands = true;
+          break;
+        }
       }
     }
   }
@@ -548,7 +583,7 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   }
   saveGlobalConfig(config);
 
-  console.log(`移行しました: ${installedWorkflows.length} 個のワークフローを含む custom プロファイル`);
+  console.log(`移行しました: ${installedWorkflows.length} 個のワークフローを含むカスタムプロファイル`);
   // Each detected tool resolves to a propose reference for its surface: the
   // command name its generated files answer to when commands will exist for it
   // under the effective delivery (/opsx:propose when namespaced under opsx/,
@@ -573,5 +608,5 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   );
   const proposeReference =
     proposeReferences.size === 1 ? [...proposeReferences][0] : 'openspec-propose スキル';
-  console.log(`このバージョンの新機能: ${proposeReference}。より合理化された体験には 'openspec config profile core' をお試しください。`);
+  console.log(`このバージョンの新機能: ${proposeReference}。よりシンプルな使い方を試すには、'openspec config profile core' を実行してください。`);
 }

@@ -59,7 +59,11 @@ import {
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
 import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
-import { writeSharedSkillTarget } from './shared-skill-target.js';
+import {
+  resolveSharedSkillWriters,
+  sharedSkillRootOwner,
+  writeSharedSkillTarget,
+} from './shared-skill-target.js';
 import { migrateIfNeeded, migrateLegacyToolDirs, describeLegacyMigration, keptInPlaceNotice, hasMovableContent, scanInstalledWorkflows as scanInstalledWorkflowsShared } from './migration.js';
 import {
   resolveCommandSurfaceCapability,
@@ -145,6 +149,7 @@ type ValidatedInitTool = {
   isGlobalSkillTarget: boolean;
   wasConfigured: boolean;
   requiresIdeRestart?: boolean;
+  writesSkills: boolean;
 };
 
 /**
@@ -760,41 +765,8 @@ export class InitCommand {
     toolStates: Map<string, ToolSkillStatus>,
     projectPath: string
   ): ValidatedInitTool[] {
-    const validatedTools: ValidatedInitTool[] = [];
-
-    const sharedAgentsTargets = ['codex', 'zed', 'agents'];
-    const selectedSharedTargets = sharedAgentsTargets.filter((toolId) => toolIds.includes(toolId));
-    // A Codex-rendered tree already serves Zed. Keep it when Zed is added later
-    // so Codex users do not lose the `$openspec-*` references they require.
-    const preserveConfiguredCodex = selectedSharedTargets.includes('zed') &&
-      toolStates.get('codex')?.configured;
-    const sharedTargetCandidates = preserveConfiguredCodex
-      ? [...new Set([...selectedSharedTargets, 'codex'])]
-      : selectedSharedTargets;
-    const sharedTargetOwner = sharedTargetCandidates.includes('codex')
-      ? 'codex'
-      : selectedSharedTargets.includes('zed')
-        ? 'zed'
-        : selectedSharedTargets[0];
-    const firstSharedIndex = toolIds.findIndex((id) => sharedAgentsTargets.includes(id));
-    const reconciledToolIds = sharedTargetCandidates.length > 1
-      ? toolIds.flatMap((toolId, index) => {
-          if (!sharedAgentsTargets.includes(toolId)) return [toolId];
-          return index === firstSharedIndex && sharedTargetOwner ? [sharedTargetOwner] : [];
-        })
-      : toolIds;
-    if (
-      reconciledToolIds.length !== toolIds.length ||
-      reconciledToolIds.some((toolId, index) => toolId !== toolIds[index])
-    ) {
-      console.log(
-        chalk.dim(
-          `Codex、Zed、agents は .agents/skills を共有するため、${sharedTargetOwner} 用の単一ツリーを書き込みます。`
-        )
-      );
-    }
-
-    for (const toolId of reconciledToolIds) {
+    const selectedTools: AIToolOption[] = [];
+    for (const toolId of toolIds) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (!tool) {
         const validToolIds = getToolsWithSkillsDir();
@@ -810,6 +782,53 @@ export class InitCommand {
         );
       }
 
+      selectedTools.push(tool);
+    }
+
+    // 選択したツールが、設定済みの担当ツールと物理スキルルートを共有する場合がある。
+    // 選択したツールには独立したコマンド面がある可能性があるため除外せず、担当ツールも
+    // 更新対象に加える。
+    const generationTools = [...selectedTools];
+    const delivery: Delivery = getGlobalConfig().delivery ?? 'both';
+    for (const selected of selectedTools) {
+      if (!selected.skillsDir) continue;
+      const selectedOwner = selected.value === 'codex' ||
+        !shouldGenerateSkillsForTool(selected.value, delivery)
+        ? undefined
+        : sharedSkillRootOwner(projectPath, selected.value);
+      for (const candidate of AI_TOOLS) {
+        if (
+          candidate.skillsDir === selected.skillsDir &&
+          toolStates.get(candidate.value)?.configured &&
+          candidate.value === selectedOwner &&
+          !generationTools.includes(candidate)
+        ) {
+          generationTools.push(candidate);
+        }
+      }
+    }
+
+    const skillWriters = resolveSharedSkillWriters(projectPath, generationTools);
+    const sharedRoots = new Map<string, AIToolOption[]>();
+    for (const tool of generationTools) {
+      if (!tool.skillsDir) continue;
+      const group = sharedRoots.get(tool.skillsDir) ?? [];
+      group.push(tool);
+      sharedRoots.set(tool.skillsDir, group);
+    }
+    for (const [root, group] of sharedRoots) {
+      if (group.length < 2) continue;
+      const owner = group.find((tool) => skillWriters.has(tool.value));
+      console.log(
+        chalk.dim(
+          `${group.map((tool) => tool.name).join(', ')} は ${root}/skills を共有するため、${owner?.value} 用の単一ツリーを書き込みます。`
+        )
+      );
+    }
+
+    const validatedTools: ValidatedInitTool[] = [];
+    for (const tool of generationTools) {
+      if (!toolSupportsSkills(tool)) continue;
       const preState = toolStates.get(tool.value);
       const skillsPath = resolveToolSkillsDir(projectPath, tool);
       const isGlobalSkillTarget = hasGlobalSkillTarget(tool);
@@ -822,6 +841,7 @@ export class InitCommand {
         isGlobalSkillTarget,
         wasConfigured: preState?.configured ?? false,
         requiresIdeRestart: tool.requiresIdeRestart,
+        writesSkills: !tool.skillsDir || skillWriters.has(tool.value),
       });
     }
 
@@ -921,8 +941,8 @@ export class InitCommand {
         const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
         const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
 
-        // deliveryとツール機能で許可される場合にスキルファイルを生成
-        if (shouldGenerateSkills) {
+        // 選択したデリバリーとツール機能で許可され、書き込み担当である場合にスキルを生成
+        if (shouldGenerateSkills && tool.writesSkills) {
           // スキルディレクトリと SKILL.md を作成
           for (const { template, dirName } of skillTemplates) {
             const skillDir = path.join(tool.skillsPath, dirName);
@@ -943,10 +963,14 @@ export class InitCommand {
           }
           writeSharedSkillTarget(projectPath, tool.value);
         }
-        if (shouldRemoveSkillsForTool(tool.value, delivery) && !tool.isGlobalSkillTarget) {
+        if (
+          shouldRemoveSkillsForTool(tool.value, delivery) &&
+          tool.writesSkills &&
+          !tool.isGlobalSkillTarget
+        ) {
           removedSkillCount += await this.removeSkillDirs(tool.skillsRoot, tool.skillsPath);
-          // Retain an explicit selection even when this delivery mode produces
-          // no skills, so a divergent legacy sibling cannot reclaim ownership.
+          // このデリバリーモードでスキルを生成しない場合も選択を明示的に保持し、
+          // 内容が異なる旧ルート側へ書き込み担当が戻らないようにする。
           writeSharedSkillTarget(projectPath, tool.value);
         }
 

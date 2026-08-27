@@ -2,6 +2,36 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.11.0
+
+### マイナー変更
+
+- [#1301](https://github.com/Fission-AI/OpenSpec/pull/1301) [`a7353ae`](https://github.com/Fission-AI/OpenSpec/commit/a7353aea9a0b23762602badf5055a157a76f62b1) [@m-tanner](https://github.com/m-tanner) に感謝します！ - すべてのアクティブな変更を、変更ごとにCLIを起動せず1つのプロセスで報告する `openspec status --all` を追加しました。`--all --json` は変更名順の単一エンベロープ `{ "changes": [ <status>, ... ], "root" }` を出力します。読み込みに失敗した変更は全体を中断せず、その位置に `{ "changeName", "status": [diagnostic] }` として格納されます。一部に失敗がある場合、テキスト・JSONの両モードで完全なJSONエンベロープを維持したまま終了コード1を返します。`--change` とは同時に指定できません。
+
+- [#980](https://github.com/Fission-AI/OpenSpec/pull/980) [`dd7cea3`](https://github.com/Fission-AI/OpenSpec/commit/dd7cea3ffed4a22421dce02f54c37c4f076b44f0) [@bsmedberg-xometry](https://github.com/bsmedberg-xometry) に感謝します！ - `show` に `--diff` を追加しました。デルタ要件のブロック全体を再表示する代わりに、本仕様で置き換える要件との差分を表示します。MODIFIED要件には維持する全シナリオを含める必要があるため、従来はファイルを手作業で比較しなければ実際の変更点を把握できませんでした。`openspec show <change> --diff` は、要件ごとに色付きのunified diff（追加は緑、削除は赤）、ADDED要件の全文、REMOVED要件に記述されたReason/Migration、RENAMED要件のFROM/TOを表示します。同じデルタ内で名前変更と内容変更を行う要件は、旧名称の要件と比較します。`--json --diff` は既存のペイロード形式を維持し、該当するMODIFIEDデルタだけに `diff` と `warning` フィールドを追加します。本仕様は変更と同じルートから解決されるため、`--store <id>` を指定するとそのストアの仕様と比較します。`--diff` を付けない `openspec show <change>` の出力は従来どおりです。
+
+### パッチ変更
+
+- [#830](https://github.com/Fission-AI/OpenSpec/pull/830) [`109f81f`](https://github.com/Fission-AI/OpenSpec/commit/109f81f17d3bb99eb6fb2c9a33ec9e8ab0680bb2) [@alfred-openspec](https://github.com/alfred-openspec) に感謝します！ - Antigravityのスキルとワークフローを `.agents/` に出力し、他ツールと共有するスキルツリーの所有権を調整するとともに、既存の `.agent/` インストールを安全に移行するようにしました。
+
+- [#1712](https://github.com/Fission-AI/OpenSpec/pull/1712) [`04b37ac`](https://github.com/Fission-AI/OpenSpec/commit/04b37ac1d5c852385d2effbff196ddb4fdd1700c) [@Marzx13](https://github.com/Marzx13) に感謝します！ - archiveで要件名を変更した際、名前を変えたブロックを仕様末尾へ移動せず、元の位置を維持するようにしました。
+
+- [#1716](https://github.com/Fission-AI/OpenSpec/pull/1716) [`7010e26`](https://github.com/Fission-AI/OpenSpec/commit/7010e268907598c385eb6686699928fbd5a3a733) [@aymanxdev](https://github.com/aymanxdev) に感謝します！ - exploreスキルがファイルを作成・編集・移動・削除できるコマンドやツールを使う前に、対象範囲を明示した確認を必須にしました。従来のガードレールでは「ユーザーが依頼した場合」にスキル自身の確認質問への回答も含まれ得たため、エージェントが設計の相談を作業開始の承認と解釈し、依頼されていないスキーマ作成や `openspec/config.yaml` の編集を始める可能性がありました。スキルと `/opsx:explore` コマンドは、作成・変更を提案するアーティファクトやファイルを具体的に示し、明確なyes/no質問を行い、別メッセージで確認を得るまで書き込まないようエージェントへ指示します。読み取り専用のコマンドやツールは確認なしで引き続き利用でき、承認済みの範囲を広げる場合は改めて確認が必要です。
+
+- [#1199](https://github.com/Fission-AI/OpenSpec/pull/1199) [`ab81a4b`](https://github.com/Fission-AI/OpenSpec/commit/ab81a4b43a7bd769b1d2a33457b7b708b8c52516) [@leo-ar](https://github.com/leo-ar) に感謝します！ - Fish補完を改善し、対象が実際のパスである場合を除いて、コマンド、サブコマンド、フラグ、位置番号付き引数の補完がファイルシステム候補へフォールバックしないようにしました。
+
+- [#1010](https://github.com/Fission-AI/OpenSpec/pull/1010) [`e5e350d`](https://github.com/Fission-AI/OpenSpec/commit/e5e350d04b5d635b56846f46a212b097cd00eeb6) [@Dansyuqri](https://github.com/Dansyuqri) に感謝します！ - exploreモードの図をプレーンASCIIで描くようにしました。exploreスキルと `/opsx:explore` コマンドの作例では、端末・フォント・ロケールによって表示幅が変わるUnicodeの罫線・矢印・マーカー文字を使用していました。エージェントがこの形式を模倣すると、余白付きボックスや整列した表がずれることがありました。
+
+- [`2fa679f`](https://github.com/Fission-AI/OpenSpec/commit/2fa679f180424d46ce7d8789eb85138397844a89) [@ryandemelo](https://github.com/ryandemelo) に感謝します！ - `schema init --default` がスキーマをインストールする前に設定変更を検証してステージングし、いずれかのインストールに失敗した場合は両方のファイルをロールバックするようにしました。作成されるステージング・バックアップディレクトリはスキーマ検出から除外されるため、実際のスキーマ候補として表示されません。
+
+- [#1671](https://github.com/Fission-AI/OpenSpec/pull/1671) [`126c5d6`](https://github.com/Fission-AI/OpenSpec/commit/126c5d6c59d63b7e70314bcc776104c7cc548819) [@kitimark](https://github.com/kitimark) に感謝します！ - `openspec validate` が、新規機能のarchive時に書かれるプレースホルダーのままの `## Purpose` を成功扱いせず報告するようにしました。プレースホルダーは簡潔すぎる記述を検出する50文字の下限より長いため、Purposeが未記述であることを示す文そのものが、未記述を見つけるための検査を通過していました。つまり、Purposeが `Does stuff.` の仕様は `--strict` で失敗する一方、実質的に何も書かれていない仕様は成功し、どのコマンドも成功を報告したままプレースホルダーを残し続けることができました。
+
+  警告として報告するため、すでにディスク上にプレースホルダーがあるプロジェクトも既定の検証には引き続き成功し、`--strict` の場合だけ失敗します。デルタ内の `## Purpose` は機能作成時にしか読み込まれず既存のPurposeを置き換えられないため、メッセージでは本仕様を直接編集するよう案内します。
+
+  誤検出を避けるため、検出範囲は限定しています。archiveが生成するプレースホルダーは、書き込み側と同じ定義を使い、Purpose内のどこに現れても認識します。それ以外はPurposeの冒頭が `TBD` または `TODO` の場合だけ対象となるため、`The retry budget is TBD pending benchmarks` は有効なPurposeとして扱われ、`TBDs` のような単語もマーカーにはなりません。Purpose内のフェンス付きコードはPurpose自身の記述ではなく引用内容とみなすため、プレースホルダーについて説明する仕様は検証に成功します。空のPurposeの扱いは変わりません。また、プレースホルダーとして報告したPurposeを「短すぎる」と重ねて報告しないため、`TBD` だけの場合も指摘は2件ではなく1件です。
+
+  `openspec archive` への影響はありません。再構築した仕様を `--strict` なしで検証するため、archiveが出力した仕様は従来どおり検証に成功し、archiveが書き込む文言も変更されません。
+
 ## 1.10.0
 
 - **[OpenSpec-J]** OpenSpec v1.10.0 の upstream 変更を取り込み、ドキュメント、スキーマ、CLI、OPSXワークフローの追加・変更された人間向け文言を日本語化

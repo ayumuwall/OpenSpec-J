@@ -15,7 +15,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'language',
-        description: 'Write new OpenSpec artifacts in this language',
+        description: '新しい OpenSpec アーティファクトをこの言語で作成',
         takesValue: true,
       },
       {
@@ -138,6 +138,10 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         description: '--deltas-only のエイリアス（非推奨、変更向け）',
       },
       {
+        name: 'diff',
+        description: '差分仕様の要件ごとの差分を表示（変更向け）',
+      },
+      {
         name: 'requirements',
         description: '要件だけを表示し、シナリオを除外（JSON のみ、仕様向け）',
       },
@@ -189,6 +193,10 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'change',
         description: '状況を表示する変更名',
         takesValue: true,
+      },
+      {
+        name: 'all',
+        description: 'アクティブな変更をすべて対象に状況を表示',
       },
       {
         name: 'schema',
@@ -287,6 +295,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             name: 'path',
             description: 'ストアに使用するディレクトリ',
             takesValue: true,
+            completionType: 'path',
           },
           {
             name: 'init-git',
@@ -379,6 +388,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'code-workspace',
         description: 'この集合用の VS Code workspace ファイルも書き出す',
         takesValue: true,
+        completionType: 'path',
       },
       {
         name: 'force',
@@ -410,6 +420,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             description:
               'メンバーフォルダーを <path> または <name>=<path> で指定（複数回指定可、最初がプライマリ）',
             takesValue: true,
+            completionType: 'path',
           },
           {
             name: 'tool',
@@ -491,6 +502,10 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           {
             name: 'requirements-only',
             description: '--deltas-only のエイリアス（非推奨）',
+          },
+          {
+            name: 'diff',
+            description: '差分仕様の要件ごとの差分を表示',
           },
           COMMON_FLAGS.noInteractive,
         ],

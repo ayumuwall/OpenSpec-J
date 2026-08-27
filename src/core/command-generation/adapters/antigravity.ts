@@ -10,14 +10,14 @@ import { escapeYamlValue } from '../yaml.js';
 
 /**
  * Antigravity のコマンド生成アダプター。
- * ファイルパス: .agent/workflows/opsx-<id>.md
+ * ファイルパス: .agents/workflows/opsx-<id>.md
  * フロントマター: description
  */
 export const antigravityAdapter: ToolCommandAdapter = {
   toolId: 'antigravity',
 
   getFilePath(commandId: string): string {
-    return path.join('.agent', 'workflows', `opsx-${commandId}.md`);
+    return path.join('.agents', 'workflows', `opsx-${commandId}.md`);
   },
 
   formatFile(content: CommandContent): string {

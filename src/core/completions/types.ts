@@ -25,6 +25,11 @@ export interface FlagDefinition {
   takesValue?: boolean;
 
   /**
+   * フラグ値の補完種別。
+   */
+  completionType?: PositionalType;
+
+  /**
    * Possible values for the flag (for completion suggestions)
    */
   values?: string[];

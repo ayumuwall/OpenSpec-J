@@ -56,6 +56,12 @@ export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPatter
   'factory': { type: 'files', pattern: '.factory/commands/openspec-*.md' },
   'opencode': { type: 'files', pattern: ['.opencode/command/opsx-*.md', '.opencode/command/openspec-*.md'] },
   'continue': { type: 'files', pattern: '.continue/prompts/openspec-*.prompt' },
+  // Antigravity が以前使用していた `.agent` ルート内の、opsx 移行前のファイル名だけを対象にする。
+  // 現在の `.agents/workflows/opsx-*.md` はルート名の変更後に作られたものであり、
+  // `.agent` 内にあるそのコピーは LEGACY_TOOL_ROOTS によって移動される。
+  // この処理では、カスタマイズ済みのファイルを削除せず保持できる。これらのパターンは
+  // すべてのプロジェクトで照合されるため、`.agents` のような共有ルートは指定しない。
+  // OpenSpec がそこに `openspec-*` ファイルを書き込んだことはなく、ユーザー作成の可能性がある。
   'antigravity': { type: 'files', pattern: '.agent/workflows/openspec-*.md' },
   'iflow': { type: 'files', pattern: '.iflow/commands/openspec-*.md' },
   'qwen': { type: 'files', pattern: ['.qwen/commands/opsx-*.toml', '.qwen/commands/openspec-*.toml'] },
@@ -94,7 +100,7 @@ export const LEGACY_GLOBAL_SLASH_COMMAND_PATHS: Record<string, LegacyGlobalPromp
     managedFileNames: Object.keys(LEGACY_GLOBAL_CODEX_WORKFLOWS),
     workflowIdsByFileName: LEGACY_GLOBAL_CODEX_WORKFLOWS,
     resolvePromptDir: getCodexPromptDir,
-    replacementLabel: 'Codex skills',
+    replacementLabel: 'Codex スキル',
   },
 };
 
@@ -682,8 +688,8 @@ function buildRemovalsList(detection: LegacyDetectionResult): Array<{ path: stri
   // Managed global slash command files
   for (const prompt of getLegacyGlobalPromptMatches(detection)) {
     const explanation = prompt.toolId
-      ? `replaced by .${prompt.toolId}/skills/`
-      : 'replaced by skills/';
+      ? `.${prompt.toolId}/skills/ に置き換え`
+      : 'skills/ に置き換え';
     removals.push({ path: prompt.path, explanation });
   }
 
@@ -737,7 +743,7 @@ export function formatDetectionSummary(detection: LegacyDetectionResult): string
   // Header - welcoming upgrade message
   lines.push(chalk.bold('新しい OpenSpec にアップグレードします'));
   lines.push('');
-  lines.push('OpenSpec は、コーディングエージェントの新しい標準である');
+  lines.push('OpenSpec は、コーディングエージェント間で広まりつつある標準、');
   lines.push('エージェントスキルを採用しました。これにより、従来と同じ');
   lines.push('動作を維持しつつセットアップが簡素化されます。');
   lines.push('');
@@ -782,7 +788,7 @@ export function formatDeferredGlobalPromptSummary(detection: LegacyDetectionResu
 
   const lines: string[] = [];
   lines.push(chalk.bold('グローバルプロンプトの削除を保留'));
-  lines.push(chalk.dim('これらのグローバルプロンプトは、対応する代替 skill のインストール後にのみ削除されます。'));
+  lines.push(chalk.dim('これらのグローバルプロンプトは、対応する代替スキルのインストール後にのみ削除されます。'));
   for (const prompt of deferredPrompts) {
     const toolLabel = prompt.toolId ? `${prompt.toolId}: ` : '';
     lines.push(`  • ${toolLabel}${prompt.path}`);
@@ -965,7 +971,7 @@ export function formatProjectMdMigrationHint(): string {
   const lines: string[] = [];
   lines.push(chalk.yellow.bold('要対応'));
   lines.push('  • openspec/project.md');
-  lines.push(chalk.dim('    このファイルは削除しません。プロジェクト文脈が含まれている可能性があります。'));
+  lines.push(chalk.dim('    このファイルは削除しません。プロジェクトの背景情報が含まれている可能性があります。'));
   lines.push('');
   lines.push(chalk.dim('    新しい openspec/config.yaml には、計画用の "context:" セクションが'));
   lines.push(chalk.dim('    あり、すべての OpenSpec リクエストに含まれます。旧 project.md より'));

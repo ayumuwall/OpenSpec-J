@@ -16,9 +16,10 @@ import { resolveToolSkillsDir, toolSupportsSkills } from './shared/skill-paths.j
  * Scans the project path for AI tool configuration directories and returns
  * the tools that are present.
  *
- * `detectionPaths` が設定されているツールはそのパス（ファイルまたはディレクトリ）を確認する。
- * directories). Otherwise checks the project's `skillsDir`, or managed skill
- * files in the user's home directory for a global skill target.
+ * `detectionPaths` が設定されたツールでは、指定されたパス（ファイルまたは
+ * ディレクトリ）を確認する。それ以外では、プロジェクトの `skillsDir` を確認する。
+ * グローバルスキルが対象なら、ユーザーのホームディレクトリにある管理対象の
+ * スキルファイルを確認する。
  */
 export function getAvailableTools(projectPath: string): AIToolOption[] {
   const available = AI_TOOLS.filter((tool) => {
@@ -34,7 +35,7 @@ export function getAvailableTools(projectPath: string): AIToolOption[] {
     if (!tool.skillsDir) return false;
 
     if (tool.detectionPaths && tool.detectionPaths.length > 0) {
-      // .isDirectory() なしの statSync — detectionPaths はファイルまたはディレクトリどちらでもよい
+      // detectionPaths はファイルとディレクトリの両方を許すため、isDirectory() は呼ばない
       return tool.detectionPaths.some((p) => {
         try {
           fs.statSync(path.join(projectPath, p));
@@ -58,7 +59,22 @@ export function getAvailableTools(projectPath: string): AIToolOption[] {
       available.filter((tool) => tool.skillsDir)
     ).map((tool) => tool.value)
   );
+  const hasIndependentDetectionPath = (tool: AIToolOption): boolean =>
+    (tool.detectionPaths ?? []).some((detectionPath) => {
+      // スキルルートは、この後も管理対象コンテンツの照合を通す。
+      // ディレクトリが存在するだけでは、ツールを独立に検出した根拠にはしない。
+      if (detectionPath.endsWith('/skills')) return false;
+      try {
+        fs.statSync(path.join(projectPath, detectionPath));
+        return true;
+      } catch {
+        return false;
+      }
+    });
   return available.filter(
-    (tool) => tool.globalSkillsDir || activeProjectTools.has(tool.value)
+    (tool) =>
+      tool.globalSkillsDir ||
+      hasIndependentDetectionPath(tool) ||
+      activeProjectTools.has(tool.value)
   );
 }

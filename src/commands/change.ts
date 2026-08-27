@@ -1,15 +1,26 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import chalk from 'chalk';
 import { JsonConverter } from '../core/converters/json-converter.js';
 import { Validator } from '../core/validation/validator.js';
 import { VALIDATION_MESSAGES } from '../core/validation/constants.js';
 import { ChangeParser } from '../core/parsers/change-parser.js';
-import { Change } from '../core/schemas/index.js';
+import { Change, Delta } from '../core/schemas/index.js';
 import type { RootOutput } from '../core/root-selection.js';
 import { isInteractive } from '../utils/interactive.js';
 import { getActiveChangeIds } from '../utils/item-discovery.js';
 import { getTaskProgressForChange } from '../utils/task-progress.js';
 import { FileSystemUtils } from '../utils/file-system.js';
+import { discoverSpecFiles } from '../utils/spec-discovery.js';
+import {
+  foldRequirementName,
+  parseDeltaSpec,
+} from '../core/parsers/requirement-blocks.js';
+import {
+  extractRequirementBlock,
+  diffRequirementBlock,
+  buildRenameMap,
+} from '../utils/requirement-diff.js';
 
 /**
  * True only when `target` is definitively absent. An EACCES or I/O failure
@@ -32,6 +43,20 @@ function isChangeDirectoryName(changesPath: string, changeDir: string): boolean 
   return path.dirname(path.resolve(changeDir)) === path.resolve(changesPath);
 }
 
+/** 仕様差分内の要件と、それに対応する本仕様の要件。 */
+interface RequirementDiff {
+  capability: string;
+  operation: 'ADDED' | 'REMOVED' | 'RENAMED' | 'MODIFIED';
+  requirementName: string;
+  raw: string;
+  diff?: string;
+  rename?: { from: string; to: string };
+  warning?: string;
+}
+
+/** `--diff` が MODIFIED 項目へ追加するフィールドを持つ JSON 差分。 */
+type DeltaWithDiff = Delta & { diff?: string; warning?: string };
+
 export class ChangeCommand {
   private converter: JsonConverter;
   private rootPath?: string;
@@ -47,13 +72,21 @@ export class ChangeCommand {
     return path.join(this.rootPath ?? process.cwd(), 'openspec', 'changes');
   }
 
+  // 本仕様は変更と同じルートを基準に解決する。これにより `--diff` は cwd 配下ではなく、
+  // 選択されたストアの仕様を読み込む。
+  private getSpecsPath(): string {
+    return path.join(this.rootPath ?? process.cwd(), 'openspec', 'specs');
+  }
+
   /**
    * Show a change proposal.
    * - Text mode: raw markdown passthrough (no filters)
    * - JSON mode: minimal object with deltas; --deltas-only returns same object with filtered deltas
    *   Note: --requirements-only is deprecated alias for --deltas-only
+   * - --diff: 仕様差分と本仕様を要件単位で比較する。テキストモードでは末尾に追記し、
+   *   JSON モードでは MODIFIED 差分に付与する
    */
-  async show(changeName?: string, options?: { json?: boolean; requirementsOnly?: boolean; deltasOnly?: boolean; noInteractive?: boolean; rootOutput?: RootOutput }): Promise<void> {
+  async show(changeName?: string, options?: { json?: boolean; requirementsOnly?: boolean; deltasOnly?: boolean; diff?: boolean; noInteractive?: boolean; rootOutput?: RootOutput }): Promise<void> {
     const changesPath = this.getChangesPath();
 
     if (!changeName) {
@@ -124,6 +157,10 @@ export class ChangeCommand {
       const id = parsed.name;
       const deltas = parsed.deltas || [];
 
+      if (options.diff) {
+        await this.enrichDeltasWithDiffs(deltas, changeName, changesPath);
+      }
+
       const output = {
         id,
         title,
@@ -136,6 +173,229 @@ export class ChangeCommand {
       FileSystemUtils.assertPathWithin(changeDir, proposalPath);
       const content = await fs.readFile(proposalPath, 'utf-8');
       console.log(content);
+
+      if (options?.diff) {
+        await this.showSpecDiffs(changeName, changesPath);
+      }
+    }
+  }
+
+  /**
+   * 変更配下のすべての仕様差分を読み、各要件を対応する本仕様の要件と組み合わせる。
+   * テキストモードと JSON モードはどちらもこの1回の結果から描画するため、
+   * 2つの出力が食い違わない。
+   */
+  private async collectSpecDiffs(
+    changeName: string,
+    changesPath: string
+  ): Promise<{ capabilities: string[]; results: RequirementDiff[] }> {
+    const specsDir = path.join(changesPath, changeName, 'specs');
+    const mainSpecsDir = this.getSpecsPath();
+
+    // ChangeParser と同じ検索処理を使うため、入れ子の capability（specs/<area>/<id>）も
+    // 黙ってスキップせず比較でき、ここで得る ID は JSON 差分の `spec` フィールドと一致する。
+    const discovered = await discoverSpecFiles(specsDir);
+
+    const capabilities = discovered.map(spec => spec.id);
+    const results: RequirementDiff[] = [];
+
+    for (const { id: capability, specFile: deltaSpecPath } of discovered) {
+      const deltaContent = await fs.readFile(deltaSpecPath, 'utf-8');
+
+      const mainSpecPath = path.join(mainSpecsDir, ...capability.split('/'), 'spec.md');
+      let mainContent: string | null = null;
+      try {
+        FileSystemUtils.assertPathWithin(mainSpecsDir, mainSpecPath);
+        mainContent = await fs.readFile(mainSpecPath, 'utf-8');
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') throw error;
+        // 本仕様がディスク上にない。ADDED 要件なら通常の新規 capability だが、
+        // MODIFIED 要件は後で不一致として扱う。
+      }
+
+      const plan = parseDeltaSpec(deltaContent);
+      const renameMap = buildRenameMap(plan.renamed);
+
+      for (const block of plan.added) {
+        results.push({ capability, operation: 'ADDED', requirementName: block.name, raw: block.raw });
+      }
+
+      // Reason/Migration の内容も読者に届くよう、記述された REMOVED ブロックを優先する。
+      // 箇条書き形式には名前しか含まれない。
+      const removedBlocks = new Map(
+        plan.removedBlocks.map(block => [foldRequirementName(block.name), block.raw])
+      );
+      for (const name of plan.removed) {
+        const raw = removedBlocks.get(foldRequirementName(name));
+        results.push({
+          capability,
+          operation: 'REMOVED',
+          requirementName: name,
+          raw: raw ?? `### Requirement: ${name}`,
+        });
+      }
+
+      for (const rename of plan.renamed) {
+        results.push({ capability, operation: 'RENAMED', requirementName: rename.to, raw: '', rename });
+      }
+
+      for (const block of plan.modified) {
+        const entry: RequirementDiff = {
+          capability,
+          operation: 'MODIFIED',
+          requirementName: block.name,
+          raw: block.raw,
+        };
+
+        // 同じ差分内で改名・変更された要件は、本仕様ではまだ旧名のままなので旧名で検索する。
+        const oldName = renameMap.get(foldRequirementName(block.name));
+        const lookupName = oldName ?? block.name;
+
+        const match = mainContent ? extractRequirementBlock(mainContent, lookupName) : null;
+        if (match) {
+          entry.diff = diffRequirementBlock(match.raw, block.raw, `${capability}/${block.name}`);
+          if (!match.exact) {
+            // アーカイブでは要件名を完全一致で照合するため、大文字・小文字や空白だけが
+            // 異なる見出しはマージされない。意図した差分を表示すると同時に、修正しやすい
+            // 段階で不一致を明示する。
+            entry.warning =
+              `本仕様の見出し "${match.name}" と大文字・小文字または空白だけが異なります。` +
+              `アーカイブでは名前を完全一致で照合するため、事前に表記を統一してください`;
+          }
+        } else if (mainContent) {
+          entry.warning = `${capability} の本仕様に "${lookupName}" と一致する要件が見つかりません`;
+        } else {
+          // MODIFIED 要件は既存のはずのブロックを指定するため、本仕様がない場合は
+          // 新規 capability ではなく記述エラーとなる。すべて追加行として描画すると、
+          // アーカイブで拒否される問題を隠してしまう。
+          entry.warning =
+            `openspec/specs/${capability}/spec.md に本仕様がないため、` +
+            `MODIFIED 要件 "${block.name}" には比較対象がありません`;
+        }
+
+        results.push(entry);
+      }
+    }
+
+    return { capabilities, results };
+  }
+
+  /**
+   * JSON ペイロード内の各 MODIFIED 差分に `diff`（または `warning`）を付与する。
+   * deltas 配列を直接変更する。
+   *
+   * パース済み Delta オブジェクトの `description` には見出し名ではなく要件本文が入る。
+   * そのため、capability とソース内の順序でパース済みブロックに対応付ける。
+   * ChangeParser は同じ順序で MODIFIED ブロックごとに1つの Delta を出力する。
+   */
+  private async enrichDeltasWithDiffs(deltas: Delta[], changeName: string, changesPath: string): Promise<void> {
+    const modifiedDeltasBySpec = new Map<string, Delta[]>();
+    for (const delta of deltas) {
+      if (!delta.spec || delta.operation !== 'MODIFIED') continue;
+      const list = modifiedDeltasBySpec.get(delta.spec) ?? [];
+      list.push(delta);
+      modifiedDeltasBySpec.set(delta.spec, list);
+    }
+    if (modifiedDeltasBySpec.size === 0) return;
+
+    const { results } = await this.collectSpecDiffs(changeName, changesPath);
+    const modifiedEntriesBySpec = new Map<string, RequirementDiff[]>();
+    for (const entry of results) {
+      if (entry.operation !== 'MODIFIED') continue;
+      const list = modifiedEntriesBySpec.get(entry.capability) ?? [];
+      list.push(entry);
+      modifiedEntriesBySpec.set(entry.capability, list);
+    }
+
+    for (const [capability, modifiedDeltas] of modifiedDeltasBySpec) {
+      const entries = modifiedEntriesBySpec.get(capability) ?? [];
+      for (let i = 0; i < modifiedDeltas.length && i < entries.length; i++) {
+        const entry = entries[i];
+        if (entry.diff !== undefined) {
+          (modifiedDeltas[i] as DeltaWithDiff).diff = entry.diff;
+        }
+        if (entry.warning !== undefined) {
+          (modifiedDeltas[i] as DeltaWithDiff).warning = entry.warning;
+        }
+      }
+    }
+  }
+
+  /** テキストモードで、仕様差分と本仕様の差分を要件単位に表示する。 */
+  private async showSpecDiffs(changeName: string, changesPath: string): Promise<void> {
+    const { capabilities, results } = await this.collectSpecDiffs(changeName, changesPath);
+
+    console.log();
+    if (capabilities.length === 0 || results.length === 0) {
+      // 提案だけの変更もあり得るためエラーではない。空の見出しを出すより明示する。
+      console.log(`変更 "${changeName}" には比較対象の仕様差分がありません。`);
+      return;
+    }
+
+    console.log(chalk.bold('変更された仕様（差分）'));
+    console.log();
+    this.printDiffText(results);
+  }
+
+  private printDiffText(results: RequirementDiff[]): void {
+    let currentCap = '';
+
+    for (const r of results) {
+      if (r.capability !== currentCap) {
+        if (currentCap) console.log();
+        currentCap = r.capability;
+        console.log(chalk.bold.underline(currentCap));
+        console.log();
+      }
+
+      switch (r.operation) {
+        case 'ADDED':
+          console.log(chalk.green.bold(`  ADDED: ${r.requirementName}`));
+          for (const line of r.raw.split('\n')) {
+            console.log(chalk.green(`    ${line}`));
+          }
+          console.log();
+          break;
+
+        case 'REMOVED':
+          console.log(chalk.red.bold(`  REMOVED: ${r.requirementName}`));
+          for (const line of r.raw.split('\n')) {
+            console.log(chalk.red(`    ${line}`));
+          }
+          console.log();
+          break;
+
+        case 'RENAMED':
+          console.log(chalk.cyan.bold(`  RENAMED: ${r.rename?.from} → ${r.rename?.to}`));
+          console.log();
+          break;
+
+        case 'MODIFIED':
+          console.log(chalk.yellow.bold(`  MODIFIED: ${r.requirementName}`));
+          if (r.warning) {
+            console.log(chalk.yellow(`    ⚠ ${r.warning}`));
+          }
+          // 表記だけが近い見出しでは、不一致の警告と、ほぼ一致したブロックとの差分を両方表示する。
+          if (r.diff === undefined) {
+            for (const line of r.raw.split('\n')) {
+              console.log(`    ${line}`);
+            }
+          } else if (r.diff === '') {
+            console.log(chalk.dim('    （テキストの変更なし）'));
+          } else {
+            for (const line of r.diff.split('\n')) {
+              if (line.startsWith('+')) {
+                console.log(chalk.green(`    ${line}`));
+              } else if (line.startsWith('-')) {
+                console.log(chalk.red(`    ${line}`));
+              } else {
+                console.log(`    ${line}`);
+              }
+            }
+          }
+          console.log();
+          break;
+      }
     }
   }
 
@@ -209,9 +469,9 @@ export class ChangeCommand {
         const changeDir = path.join(changesPath, changeName);
         const proposalPath = path.join(changeDir, 'proposal.md');
         const { total, completed } = await getTaskProgressForChange(changesPath, changeName, process.cwd());
-        const taskStatusText = total > 0 ? ` [tasks ${completed}/${total}]` : '';
+        const taskStatusText = total > 0 ? ` [タスク ${completed}/${total}]` : '';
         if (await isDefinitelyMissing(proposalPath)) {
-          console.log(`${changeName}: (no proposal.md yet)${taskStatusText}`);
+          console.log(`${changeName}: （proposal.md は未作成）${taskStatusText}`);
           continue;
         }
         try {
@@ -270,7 +530,7 @@ export class ChangeCommand {
       // change itself was resolved against.
       mainSpecsDir: path.join(path.dirname(changesPath), 'specs'),
       projectRoot: path.dirname(path.dirname(changesPath)),
-  });
+    });
     
     if (options?.json) {
       console.log(JSON.stringify(report, null, 2));

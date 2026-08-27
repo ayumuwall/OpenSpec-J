@@ -35,6 +35,7 @@ import { registerContextCommand } from '../commands/context.js';
 import { registerWorksetCommand } from '../commands/workset.js';
 import {
   statusCommand,
+  BATCH_STATUS_FAILURE_PAYLOAD,
   instructionsCommand,
   applyInstructionsCommand,
   archiveInstructionsCommand,
@@ -214,15 +215,15 @@ const availableToolIds = AI_TOOLS
 const toolAliasNote = Object.entries(TOOL_ID_ALIASES)
   .map(([retired, current]) => `${retired}（現在は ${current}）`)
   .join(', ');
-const toolsOptionDescription = `対話なしでAIツールを設定します。"all"、"none"、または次のIDをカンマ区切りで指定してください: ${availableToolIds.join(', ')}。旧IDも使用できます: ${toolAliasNote}`;
+const toolsOptionDescription = `対話なしで AI ツールを設定します。"all"、"none"、または次の ID をカンマ区切りで指定してください: ${availableToolIds.join(', ')}。旧 ID も使用できます: ${toolAliasNote}`;
 
 program
   .command('init [path]')
   .description('プロジェクトで OpenSpec を初期化')
   .option('--tools <tools>', toolsOptionDescription)
-  .option('--language <language>', '新しいOpenSpecアーティファクトを記述する言語')
+  .option('--language <language>', '新しい OpenSpec アーティファクトを記述する言語')
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
-  .option('--profile <profile>', 'グローバル設定 profile を上書き（core または custom）')
+  .option('--profile <profile>', 'グローバル設定のプロファイルを上書き（core または custom）')
   .option('--no-animation', 'アニメーションの代わりに静的なウェルカム画面を表示')
   .option('--copilot-cloud', '確認なしで GitHub Copilot クラウドコーディングエージェント用ファイルをセットアップ')
   .option('--no-copilot-cloud', 'GitHub Copilot クラウドコーディングエージェント用ファイルの生成をスキップ')
@@ -426,8 +427,9 @@ changeCmd
   .option('--json', 'JSON で出力')
   .option('--deltas-only', '差分のみ表示（JSON のみ）')
   .option('--requirements-only', '--deltas-only の別名（非推奨）')
+  .option('--diff', '差分仕様の要件ごとの差分を表示')
   .option('--no-interactive', '対話プロンプトを無効化')
-  .action(async (changeName?: string, options?: { json?: boolean; requirementsOnly?: boolean; deltasOnly?: boolean; noInteractive?: boolean }) => {
+  .action(async (changeName?: string, options?: { json?: boolean; requirementsOnly?: boolean; deltasOnly?: boolean; diff?: boolean; noInteractive?: boolean }) => {
     try {
       const changeCommand = new ChangeCommand();
       await changeCommand.show(changeName, options);
@@ -478,9 +480,9 @@ program
   .command('archive [change-name]')
   .description('完了した変更をアーカイブし、本仕様を更新')
   .option('-y, --yes', '確認プロンプトをスキップ')
-  .option('--skip-specs', '仕様更新処理をスキップ（インフラ、ツール、docs のみの変更に有用）')
+  .option('--skip-specs', '仕様更新処理をスキップ（インフラ、ツール、ドキュメントのみの変更に有用）')
   .option('--no-validate', '検証をスキップ（非推奨、確認が必要）')
-  .option('--json', 'JSON として出力（非対話）')
+  .option('--json', 'JSON で出力（非対話）')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
   .action(async (changeName?: string, options?: ArchiveOptions) => {
@@ -536,6 +538,7 @@ program
   // change-only flags
   .option('--deltas-only', '差分のみ表示（JSON のみ、変更）')
   .option('--requirements-only', '--deltas-only の別名（非推奨、変更）')
+  .option('--diff', '差分仕様の要件ごとの差分を表示（変更）')
   // spec-only flags
   .option('--requirements', 'JSON のみ: 要件のみ表示（シナリオを除外）')
   .option('--no-scenarios', 'JSON のみ: シナリオ内容を除外')
@@ -639,7 +642,8 @@ program
 program
   .command('status')
   .description('変更のアーティファクト完了状況を表示')
-  .option('--change <id>', '状態を表示する変更名')
+  .option('--change <id>', '完了状況を表示する変更名')
+  .option('--all', 'アクティブなすべての変更の完了状況を表示')
   .option('--schema <name>', 'スキーマを上書き（config.yaml から自動検出）')
   .option('--json', 'JSON で出力')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
@@ -648,7 +652,13 @@ program
     try {
       await statusCommand(options);
     } catch (error) {
-      failWithError(error, { enabled: options.json, fallbackCode: 'change_error' });
+      failWithError(error, {
+        enabled: options.json,
+        // バッチでは null 値を含む形にする。単一変更の失敗形式は既存契約なので、
+        // payload を追加しない。
+        payload: options.all ? BATCH_STATUS_FAILURE_PAYLOAD : undefined,
+        fallbackCode: 'change_error',
+      });
       process.exit(1);
     }
   });

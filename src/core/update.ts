@@ -71,7 +71,10 @@ import {
   shouldReconcileCommandFilesForTool,
   shouldRemoveSkillsForTool,
 } from './command-surface.js';
-import { writeSharedSkillTarget, sharedSkillRootOwner } from './shared-skill-target.js';
+import {
+  resolveSharedSkillWriters,
+  writeSharedSkillTarget,
+} from './shared-skill-target.js';
 import { includesGitHubCopilot, writeCopilotCloudFiles, removeCopilotCloudFiles, isCopilotCloudEnabled, readCopilotCloudOptIn, findUnmanagedCloudFiles } from './github-copilot/cloud-agent.js';
 
 const require = createRequire(import.meta.url);
@@ -142,7 +145,7 @@ export class UpdateCommand {
     // legacy upgrade generation.
     for (const migration of migrateLegacyToolDirs(resolvedProjectPath)) {
       if (hasMovableContent(migration)) {
-        console.log(chalk.dim(`${describeLegacyMigration(migration)} を移行しました: ${migration.from} → ${migration.to}`));
+        console.log(chalk.dim(`${describeLegacyMigration(migration)}を移行しました: ${migration.from} → ${migration.to}`));
       }
       this.reportKeptInPlace(migration);
     }
@@ -187,7 +190,7 @@ export class UpdateCommand {
         for (const migration of declinedMigrations) {
           console.log(
             chalk.yellow(
-              `更新対象がありません。このプロジェクトのOpenSpecファイルは、現在は書き込み対象外の ${migration.from}/ に残っています。`
+              `更新対象がありません。このプロジェクトの OpenSpec ファイルは、現在は書き込み対象外の ${migration.from}/ に残っています。`
             )
           );
           console.log(
@@ -265,6 +268,12 @@ export class UpdateCommand {
     const deliveryIncludesCommands = delivery !== 'skills';
     // 10. Update tools (all if force, otherwise only those needing update)
     const toolsToUpdate = this.force ? configuredTools : [...toolsToUpdateSet];
+    const sharedSkillWriters = resolveSharedSkillWriters(
+      resolvedProjectPath,
+      configuredAndNewTools
+        .map((toolId) => AI_TOOLS.find((tool) => tool.value === toolId))
+        .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined)
+    );
     const updatedTools: string[] = [];
     const updatedToolIds: string[] = [];
     const failedTools: Array<{ name: string; error: string }> = [];
@@ -286,12 +295,13 @@ export class UpdateCommand {
         const skillsRoot = hasGlobalSkillTarget(tool) ? skillsDir : resolvedProjectPath;
         const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
         const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
+        const writesSkills = !tool.skillsDir || sharedSkillWriters.has(tool.value);
         const toolWorkflows = legacyWorkflowOverrides[tool.value] ?? desiredWorkflows;
         const skillTemplates = getSkillTemplates(toolWorkflows);
         const commandContents = getCommandContents(toolWorkflows);
 
-        // Generate skill files if delivery includes skills
-        if (shouldGenerateSkills) {
+        // 配信にスキルが含まれる場合はスキルファイルを生成する
+        if (shouldGenerateSkills && writesSkills) {
           for (const { template, dirName } of skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
@@ -315,8 +325,12 @@ export class UpdateCommand {
           );
         }
 
-        // Delete skill directories if delivery is commands-only
-        if (shouldRemoveSkillsForTool(tool.value, delivery) && !hasGlobalSkillTarget(tool)) {
+        // コマンドのみの配信ではスキルディレクトリを削除する
+        if (
+          shouldRemoveSkillsForTool(tool.value, delivery) &&
+          writesSkills &&
+          !hasGlobalSkillTarget(tool)
+        ) {
           removedSkillCount += await this.removeSkillDirs(skillsRoot, skillsDir);
           // Persist the selected owner even when commands-only delivery leaves
           // this target with no generated skills.
@@ -368,7 +382,7 @@ export class UpdateCommand {
           'after-generation'
         )) {
           if (hasMovableContent(migration)) {
-            console.log(chalk.dim(`${describeLegacyMigration(migration)} を移行しました: ${migration.from} → ${migration.to}`));
+            console.log(chalk.dim(`${describeLegacyMigration(migration)}を移行しました: ${migration.from} → ${migration.to}`));
           }
           this.reportKeptInPlace(migration);
         }
@@ -394,7 +408,7 @@ export class UpdateCommand {
       console.log(chalk.red(`✗ 失敗: ${failedTools.map(f => `${f.name}（${f.error}）`).join(', ')}`));
     }
     if (skillsInvocableCommandSkips.length > 0) {
-      console.log(chalk.dim(`コマンド生成をスキップ: ${skillsInvocableCommandSkips.join(', ')}（skills を使用）`));
+      console.log(chalk.dim(`コマンド生成をスキップ: ${skillsInvocableCommandSkips.join(', ')}（スキルを使用）`));
     }
     if (removedCommandCount > 0) {
       console.log(chalk.dim(`削除: コマンドファイル ${removedCommandCount} 件（delivery: skills）`));
@@ -425,7 +439,7 @@ export class UpdateCommand {
     // naming the skill.
     if (newlyConfiguredTools.length > 0) {
       const referenceFor = (command: string): string => {
-        const neutralForm = `the ${transformToSkillReferences(command).slice(1)} skill`;
+        const neutralForm = `${transformToSkillReferences(command).slice(1)} スキル`;
         const forms = new Set(
           newlyConfiguredTools.map((toolId) => {
             if (shouldGenerateCommandsForTool(toolId, delivery)) {
@@ -581,7 +595,7 @@ export class UpdateCommand {
         return `${status.toolId} (${fromVersion} → ${OPENSPEC_VERSION})`;
       }
       return `${toolId} (設定同期)`;
-  });
+    });
 
     console.log(`更新対象: ${toolsToUpdate.length} 件（${updates.join(', ')}）`);
 
@@ -637,7 +651,7 @@ export class UpdateCommand {
     const extraWorkflows = installedWorkflows.filter((w) => !profileSet.has(w));
 
     if (extraWorkflows.length > 0) {
-      console.log(chalk.dim(`注: 現在の profile に含まれない追加ワークフローが ${extraWorkflows.length} 件あります（管理するには \`openspec config profile\` を使用）`));
+      console.log(chalk.dim(`注: 現在のプロファイルに含まれない追加ワークフローが ${extraWorkflows.length} 件あります（管理するには \`openspec config profile\` を使用）`));
     }
   }
 
@@ -658,8 +672,8 @@ export class UpdateCommand {
       return;
     }
 
-    console.log(chalk.dim(`注: custom profileにcoreワークフローが${missing.length}件不足しています: ${missing.join(', ')}`));
-    console.log(chalk.dim('追加するには `openspec config profile`、coreセットを使うには `openspec config profile core` を実行してください。'));
+    console.log(chalk.dim(`注: カスタムプロファイルに core ワークフローが ${missing.length} 件不足しています: ${missing.join(', ')}`));
+    console.log(chalk.dim('追加するには `openspec config profile`、core セットを使うには `openspec config profile core` を実行してください。'));
   }
 
   /**
@@ -822,7 +836,7 @@ export class UpdateCommand {
         let shouldMigrate: boolean;
         try {
           shouldMigrate = await confirm({
-            message: `${describeLegacyMigration(migration)} を ${migration.from}/ から ${migration.to}/ へ移動しますか？`,
+            message: `${describeLegacyMigration(migration)}を ${migration.from}/ から ${migration.to}/ へ移動しますか？`,
             default: true,
           });
         } catch {
@@ -847,7 +861,7 @@ export class UpdateCommand {
 
       for (const applied of migrateLegacyToolDirs(projectPath, [migration.toolId])) {
         if (hasMovableContent(applied)) {
-          console.log(chalk.dim(`${describeLegacyMigration(applied)} を移行しました: ${applied.from} → ${applied.to}`));
+          console.log(chalk.dim(`${describeLegacyMigration(applied)}を移行しました: ${applied.from} → ${applied.to}`));
         }
         this.reportKeptInPlace(applied);
       }
@@ -926,7 +940,7 @@ export class UpdateCommand {
     const shouldCleanup = await confirm({
       message: '旧ファイルをアップグレードしてクリーンアップしますか？',
       default: true,
-  });
+    });
 
     if (shouldCleanup) {
       const legacyUpgrade = await this.upgradeLegacyTools(
@@ -1000,7 +1014,7 @@ export class UpdateCommand {
       .filter((prompt) => !removableMatches.some((match) => match.path === prompt.path));
 
     if (blockedMatches.length > 0) {
-      console.log(chalk.yellow('代替 skill がないため、保留中のグローバルプロンプトを維持しました:'));
+      console.log(chalk.yellow('代替スキルがないため、保留中のグローバルプロンプトを維持しました:'));
       for (const prompt of blockedMatches) {
         console.log(chalk.dim(`  - ${prompt.toolId}: ${prompt.path}`));
       }
@@ -1117,6 +1131,10 @@ export class UpdateCommand {
     const newlyConfigured: string[] = [];
     const skippedSharedSkillTools: string[] = [];
     const workflowOverrides: LegacyUpgradeResult['workflowOverrides'] = {};
+    const arbitrationTools = [...new Set([...configuredTools, ...selectedTools])]
+      .map((toolId) => AI_TOOLS.find((tool) => tool.value === toolId))
+      .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined);
+    const sharedSkillWriters = resolveSharedSkillWriters(projectPath, arbitrationTools);
 
     for (const toolId of selectedTools) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -1129,6 +1147,7 @@ export class UpdateCommand {
         const skillsRoot = hasGlobalSkillTarget(tool) ? skillsDir : projectPath;
         const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
         const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
+        const writesSkills = !tool.skillsDir || sharedSkillWriters.has(tool.value);
         const toolWorkflows = (
           tool.value === 'codex' && inferredCodexWorkflows.length > 0
             ? inferredCodexWorkflows
@@ -1140,25 +1159,19 @@ export class UpdateCommand {
         const skillTemplates = getSkillTemplates(toolWorkflows);
         const commandContents = getCommandContents(toolWorkflows);
 
-        // A shared skills root (e.g. `.agents`) already owned by another tool
-        // must not be overwritten by a tool inferred from legacy artifacts: a
-        // Codex install detected only from global `~/.codex/prompts` would
-        // otherwise rewrite an existing vendor-neutral `agents` tree with
-        // Codex-specific syntax and flip its ownership marker `agents → codex`.
-        // Leave the established owner in place. (init applies the same
-        // one-writer rule up front when both targets are selected.)
-        //
-        // Skipping here means the tool is never recorded as configured, so a
-        // persistent legacy signal re-offers it on later runs. Because no
-        // replacement is written, this tool is also exempted from immediate
-        // legacy cleanup (see skippedSharedSkillTools) — otherwise a repo-local
-        // `.codex/prompts` would be deleted with nothing put in its place. That
-        // repeat is idempotent and harmless — the alternative is the silent
-        // hijack this prevents.
-        const sharedOwner = shouldGenerateSkills
-          ? sharedSkillRootOwner(projectPath, tool.value)
+        // 別のツールが所有する共有スキルルートは上書きしない。固有のコマンドインターフェースを
+        // 持つツールは、そのコマンドだけをインストールできる。この仕組みにより、旧構成の
+        // Antigravity は Codex 所有の `.agents/skills` と並んで `.agents/workflows` を追加できる。
+        // スキルのみのツールには安全にインストールできる成果物がないため、旧ファイルを保持し、
+        // 次回も移行対象として提示する。
+        const sharedOwner = shouldGenerateSkills && !writesSkills
+          ? arbitrationTools.find(
+              (candidate) =>
+                candidate.skillsDir === tool.skillsDir &&
+                sharedSkillWriters.has(candidate.value)
+            )?.value
           : undefined;
-        if (sharedOwner) {
+        if (sharedOwner && !shouldGenerateCommands) {
           const ownerName =
             AI_TOOLS.find((candidate) => candidate.value === sharedOwner)?.name ?? sharedOwner;
           spinner.info(
@@ -1168,8 +1181,8 @@ export class UpdateCommand {
           continue;
         }
 
-        // Create skill files when delivery includes skills
-        if (shouldGenerateSkills) {
+        // 配信にスキルが含まれる場合はスキルファイルを作成する
+        if (shouldGenerateSkills && writesSkills) {
           for (const { template, dirName } of skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
@@ -1211,7 +1224,7 @@ export class UpdateCommand {
           'after-generation'
         )) {
           if (hasMovableContent(migration)) {
-            console.log(chalk.dim(`${describeLegacyMigration(migration)} を移行しました: ${migration.from} → ${migration.to}`));
+            console.log(chalk.dim(`${describeLegacyMigration(migration)}を移行しました: ${migration.from} → ${migration.to}`));
           }
           this.reportKeptInPlace(migration);
         }
