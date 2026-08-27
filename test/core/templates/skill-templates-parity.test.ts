@@ -53,11 +53,11 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getArchiveChangeSkillTemplate: 'cb35ba715baab49b627f3c4e14d034671385afec21f14a8685316152b93024ea',
   getBulkArchiveChangeSkillTemplate: '093009cc6d9d3e98dccb1d3f5acd21419434c5c71dbae66607d09ee12904d01f',
   getOpsxSyncCommandTemplate: '6345933dcae5d33c5d5edb92aff679e66e7d059886c2acc2665a18e31bf0534e',
-  getVerifyChangeSkillTemplate: '957ad93c9ca2304af5e8c9e94bb0b334f73e3719468e1c99af2523ac0739b4e5',
+  getVerifyChangeSkillTemplate: '0e5ef58dae253e87efdecba9470f6a1c4b2cd6c755f54e801df4a7fc59398b75',
   getOpsxArchiveCommandTemplate: '08b1ca070b140c80fad8fa4bee5f777a17376ebbedc7a3f5997b891fe2362091',
   getOpsxOnboardCommandTemplate: 'ac9a4c82b004e298723705482c4a04c4972c6511903e34580b7bd1e94f730734',
   getOpsxBulkArchiveCommandTemplate: '1b7dae7f6382c1a9dcf560a32861f8a852ce17344cdbf1e84f67e63380029104',
-  getOpsxVerifyCommandTemplate: '772142e7d3189dafaca2b1810a117957cff0426e30ffa9a0af866d1c0b4d36f4',
+  getOpsxVerifyCommandTemplate: '8756c7ddc4cab0935dbced25c9823a415cc3ddba1f5d2f424ec1349f6c3ba7bb',
   getOpsxProposeSkillTemplate: 'd29e0072005dc386523a466a7838e47a1abe9160e395ce0fb454e1f3b3dba4b7',
   getOpsxProposeCommandTemplate: 'f7bd9849de82609d704e05bfe9fc09f5b7cad1d207987482835c327efcaaf876',
   getFeedbackSkillTemplate: 'b30b6cf2cd5705c906078d3831fe7fffed8739652da757938ad84f82755a58fd',
@@ -74,7 +74,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-sync-specs': '8c7d995daefa4a8bf6d66062b7ad5e62f450d194d7c88084b6b4065e37287950',
   'openspec-archive-change': '728ac838ac171aa6b0e44be7fbe80c62de835fdb0277886721492d5fe9fbdb55',
   'openspec-bulk-archive-change': '9ef7507fde7efcdc0c2c19d380b3683ef94d44ccc313404f883932b9d08cbfbf',
-  'openspec-verify-change': '01e3d0fa7bf054475cbdeb4386f17d06165f10068d7180f64a838bff06187dac',
+  'openspec-verify-change': '272ab3ff3a8e9bcad63d97e3f93cc8b81cb98ef73177e19f2a0b3006337af51c',
   'openspec-onboard': 'fce24ec467e3e64658226af5fb73a4f434dd7aa64ecae13064aba1e2213ea541',
   'openspec-propose': 'f316c1eef451138e0acd9dcb84bf2f36073826f33e89d8b3b43a8ff92df42e86',
   'openspec-update-change': 'c047557e430c456d36a05518c87e4a1d42621556a42ef63d716c6082032d87e0',
@@ -413,6 +413,20 @@ describe('skill templates split parity', () => {
         '[より広範な統合またはシステム動作]を[エンドツーエンドテストまたは観察可能な結果]で検証'
       );
       expect(content, label).not.toContain('[検証手順]');
+    }
+  });
+
+  it('keeps OpenSpec structural tokens intact in verify guidance', () => {
+    const variants: Array<[string, string]> = [
+      ['verify skill', generateSkillContent(getVerifyChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['verify command', getOpsxVerifyCommandTemplate().content],
+    ];
+
+    for (const [label, content] of variants) {
+      expect(content, label).toContain('`### Requirement:`');
+      expect(content, label).toContain('`#### Scenario:`');
+      expect(content, label).not.toContain('### 要件:');
+      expect(content, label).not.toContain('#### シナリオ:');
     }
   });
 
