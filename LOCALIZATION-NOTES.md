@@ -47,6 +47,38 @@
 - 対応（v1.11.0）: Unicode プロパティエスケープを使い、すべての言語の文字と数字を保持してアンカーを生成する。
 - フォローアップ: upstream のスラッグ生成ロジックを取り込むときは、日本語見出しの `id` が空にならず、同じ見出しから安定して同じアンカーが生成されることを確認する。
 
+### Purpose プレースホルダー: 生成側と検出側で翻訳を共有
+- ファイル: `src/core/validation/constants.ts`, `src/core/specs-apply.ts`, `src/core/validation/purpose-placeholder.ts`
+- 症状: archive が書き込むプレースホルダーだけを翻訳すると、検出側が英語文を探し続けて未記入の Purpose を見逃す。検出側だけを翻訳すると、生成したプレースホルダーと一致しない。
+- 対応（v1.11.0）: 日本語の前半・後半を `PURPOSE_PLACEHOLDER_PREFIX` / `PURPOSE_PLACEHOLDER_SUFFIX` として共有し、生成と検出の両方で使用する。変更名は2つの定数の間に入るため、文全体を別々に複製しない。
+- 構造上の不変条件: `## Purpose`、先頭の `TBD` / `TODO` はパーサーが認識する構造トークンとして維持する。利用者向けの診断とプレースホルダー本文だけを日本語化する。
+- フォローアップ: プレースホルダー文を変更するときは、生成した本仕様を strict 検証し、同じ行が1件の警告として報告されることを確認する。
+
+### CLI 出力: 人間向け文言と JSON 契約を分ける
+- ファイル: `src/commands/workflow/status.ts`, `src/commands/show.ts`, `src/utils/requirement-diff.ts`, `src/commands/shared-output.ts`
+- 症状: `status --all` や `show --diff` の日本語化で JSON キーや診断コードまで翻訳すると、スクリプトとエージェントが出力を解析できなくなる。反対に、テキスト表示や `message` を英語のまま残すと日本語版の利用者向け出力が混在する。
+- 対応（v1.11.0）: `changes`, `root`, `status`, `diff`, `warning`, `change_error` などの機械向けキー・コードは維持し、テキスト見出し、診断 `message`、次の操作案内を日本語化する。
+- 差分の扱い: unified diff の要件本文は利用者が記述した内容なので翻訳しない。`MODIFIED` / `ADDED` と要件名も OpenSpec の構造・利用者入力として保持する。
+- フォローアップ: JSON 対応コマンドの文言を変更するときは、stdout が単一の JSON 文書として解析でき、キー構造が upstream と一致することを確認する。
+
+### 生成スキルと仕様: 構造トークンを翻訳しない
+- ファイル: `src/core/shared/skill-generation.ts`, `src/core/templates/workflows/`, `schemas/spec-driven/schema.yaml`, `skills/`
+- 翻訳対象: `description` の値、スキル本文、質問、警告、操作案内、生成するアーティファクトの説明文。
+- 翻訳しない対象: YAML frontmatter のキー、`allowed-tools`, `metadata`, `generatedBy`, `## Why`, `## What Changes`, `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`, `### Requirement:`, `#### Scenario:`, `SHALL`, `MUST`, `WHEN`, `THEN`。
+- 理由: これらは英語表示ではなく、パーサー、ツール、検証規則が読む構造トークン。翻訳するとファイルが自然な日本語に見えても、status、validate、archive が認識できなくなる。
+- フォローアップ: テンプレート文面を翻訳した後は静的 `skills/` を再生成し、parity ハッシュを更新する。生成物の本文が日本語で、構造トークンだけが英語で残ることを確認する。
+
+### ドキュメントサイト: 日本語版の参照先を維持
+- ファイル: `website/app/layout.tsx`, `website/lib/shared.ts`, `website/docs.sync.config.mjs`, `website/scripts/sync-docs.mjs`, `website/package.json`
+- 症状: upstream 同期で `lang="en"`、`Fission-AI/OpenSpec`、upstream のブランチ名、`@fission-ai/openspec` が戻ると、表示は日本語でも編集リンク、GitHubリンク、npmリンク、同期元が本家を指す。
+- 対応（v1.11.0）: HTML の言語を `ja`、リポジトリを `ayumuwall/OpenSpec-J`、同期ブランチを `ja-docs`、npm パッケージを `@ayumuwall/openspec` に統一する。
+- フォローアップ: Webサイト同期設定を取り込んだ後は、トップページ、ドキュメントの「編集」、GitHub、npm、sitemap、redirect の参照先をまとめて確認する。
+
+### CLI ヘルプ: Commander の既定英語が残る
+- 現状（v1.11.0）: コマンドとオプションの説明は日本語化されているが、Commander が生成する `Usage`, `Options`, `Commands`, `display help for command`, `output the version number` は英語のまま表示される。
+- 影響: 機能動作には影響しないが、利用者向けヘルプでは日本語と英語が混在する。パッケージの手動確認では、動作成功と翻訳未完了を分けて記録する。
+- フォローアップ: 完全に日本語化する場合は出力文字列の後処理ではなく、Commander の Help 設定で見出しと組み込み説明を差し替える。`--help` の全体表示と各サブコマンド表示を確認する。
+
 ## テスト期待値の更新が必要だった事例
 
 - `v1.2.0` `test/core/templates/skill-templates-parity.test.ts`
