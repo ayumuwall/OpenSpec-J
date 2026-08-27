@@ -11,6 +11,22 @@ export const MAX_WHY_SECTION_LENGTH = 1000;
 export const MAX_REQUIREMENT_TEXT_LENGTH = 500;
 export const MAX_DELTAS_PER_CHANGE = 10;
 
+// デルタに利用可能な `## Purpose` がない場合、`openspec archive` が
+// 新規のメイン仕様へ書き込むプレースホルダー。同じ定義を生成と検証で共有し、
+// 文言変更によってプレースホルダー検出が機能しなくなることを防ぐ。
+export const PURPOSE_PLACEHOLDER_PREFIX = 'TBD - 変更 ';
+export const PURPOSE_PLACEHOLDER_SUFFIX =
+  ' のアーカイブ時に作成されました。アーカイブ後に Purpose を更新してください。';
+
+// The Purpose `openspec archive` writes into a main spec it creates when the
+// delta introduced the capability without a usable `## Purpose`. Named here, and
+// composed from these two halves at the write site, so validation recognises the
+// placeholder through the same definition that produces it: a second, hand-copied
+// spelling would stop matching the day the wording changed, and a check that
+// matches nothing looks exactly like a check that found nothing.
+export const PURPOSE_PLACEHOLDER_PREFIX = 'TBD - created by archiving change ';
+export const PURPOSE_PLACEHOLDER_SUFFIX = '. Update Purpose after archive.';
+
 // Validation messages
 export const VALIDATION_MESSAGES = {
   // Required content
@@ -38,6 +54,8 @@ export const VALIDATION_MESSAGES = {
   
   // Warnings
   PURPOSE_TOO_BRIEF: `Purpose セクションが短すぎます（${MIN_PURPOSE_LENGTH} 文字未満）`,
+  PURPOSE_IS_PLACEHOLDER:
+    'Purpose セクションが、誰かが記述した目的ではなくプレースホルダーのままです（新しい機能に対して `openspec archive` が書き込む文、または先頭に残された `TBD` / `TODO` マーカー）。この機能の目的へ置き換えるには、メイン仕様を直接編集してください。仕様差分の `## Purpose` は機能の新規作成時にだけ読み込まれるため、既存の Purpose は置き換えられません。',
   REQUIREMENT_TOO_LONG: `要件文が長すぎます（>${MAX_REQUIREMENT_TEXT_LENGTH} 文字）。分割を検討してください。`,
   DELTA_DESCRIPTION_TOO_BRIEF: 'デルタの説明が短すぎます',
   DELTA_MISSING_REQUIREMENTS: 'デルタには要件を含めてください',

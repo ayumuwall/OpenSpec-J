@@ -60,6 +60,8 @@
 
 `--all`はバッチ処理用で、`--change`とは同時に指定できません。併用した場合は、`{ "changes": [], "root": null, "status": [d] }`という null 形状を伴うエラーになります。出力は変更名順の`{ "changes": [ <per-change status object, no per-change root>, ... ], "root" }`です。変更提案の読み込みに失敗した場合は、その位置に`{ "changeName", "status": [d] }`を追加します。処理は続行して完全なエンベロープを維持し、テキストモードと JSON モードのどちらでも終了コード1を返します。無効な`--schema`を指定すると、変更提案が1件もない場合でも、呼び出し全体が null 形状を伴って失敗します。
 
+`--all` (batch, mutually exclusive with `--change` — combining them is an error with the `{ "changes": [], "root": null, "status": [d] }` null-shape): `{ "changes": [ <per-change status object, no per-change root>, ... ], "root" }`, sorted by change name. A change that fails to load contributes `{ "changeName", "status": [d] }` in place; the sweep continues, preserves the complete envelope, and exits 1 in both text and JSON modes. An invalid `--schema` fails the whole invocation with the null-shape, even when no changes exist.
+
 ### 4.5 `instructions <artifact> --json`
 `{ "changeName", "artifactId", "schemaName", "changeDir", "planningHome"?, "outputPath", "resolvedOutputPath", "existingOutputPaths", "description", "instruction"?, "context"?, "rules"?, "references"?: ReferenceIndexEntry[], "skipped"?, "warning"?, "template", "dependencies": [{id,done,path,description,skipped?}], "unlocks", "root" }`。`unlocks` は、このアーティファクトによりreadyになるものをスキーマ宣言順で示します。変更が `skip_specs: true` を宣言し、このアーティファクトがスキップされる場合は `"warning"` とともに `"skipped": true` が現れます。ファイルを作成してはいけません。`skipped: true` の依存項目はファイルなしで充足済みなので、パスを読まないでください。
 

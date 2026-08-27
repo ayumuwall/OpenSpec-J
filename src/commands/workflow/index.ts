@@ -4,7 +4,7 @@
  * アーティファクト駆動ワークフロー向けのコマンド: status / instructions / templates / schemas / new change。
  */
 
-export { statusCommand } from './status.js';
+export { statusCommand, BATCH_STATUS_FAILURE_PAYLOAD } from './status.js';
 export type { StatusOptions } from './status.js';
 
 export {
