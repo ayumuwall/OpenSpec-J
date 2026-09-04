@@ -112,7 +112,7 @@ openspec init [path] [options]
 
 ウェルカムアニメーションは、`OPENSPEC_NO_ANIMATION` 環境変数が設定されている場合（空値を含む）、`NO_COLOR` に空でない値が設定されている場合、またはOSで視差効果を減らす設定が有効な場合（macOSの「視差効果を減らす」、GNOMEのアニメーション無効化）にも省略されます。
 
-**対応ツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `zed`, `zcode`, `agents`
+**対応ツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `codeassistant`, `qoder`, `qwen`, `rovodev`, `roocode`, `trae`, `zed`, `zcode`, `agents`
 
 > この一覧は `src/core/config.ts` の `AI_TOOLS` と対応しています。各ツールのスキルパスとコマンドパスは [サポートされているツール](supported-tools.md) を参照してください。
 
@@ -642,6 +642,22 @@ openspec archive add-dark-mode --yes
 # 仕様に影響しないツール更新をアーカイブ
 openspec archive update-ci-config --skip-specs
 ```
+
+**機能を廃止する:** 変更メタデータへ廃止マーカーを追加します。
+
+```yaml
+# openspec/changes/retire-legacy/.openspec.yaml
+schema: spec-driven
+retire_capabilities: true
+```
+
+その後、通常どおり変更をアーカイブします。
+
+```bash
+openspec archive retire-legacy --yes
+```
+
+変更によって機能の最後の要件が削除されると、OpenSpec はその機能の本仕様 `spec.md` を削除します。同じ変更に含まれる他の機能の仕様差分は、引き続きそれぞれの本仕様へ反映されます。マーカーがない場合、archive はファイルを変更する前に停止し、マーカーを追加するよう案内します。
 
 **動作内容:**
 
@@ -1207,12 +1223,31 @@ openspec completion install
 # 特定シェル向けにインストール
 openspec completion install zsh
 
-# 手動インストール用にスクリプトを生成
+# 手動インストール用にスクリプトを生成（bash）
 openspec completion generate bash > ~/.bash_completion.d/openspec
 
 # アンインストール
 openspec completion uninstall
 ```
+
+**Windows（PowerShell）:** 現在の PowerShell ホストへ補完をインストールします。
+
+```powershell
+$env:PROFILE = $PROFILE
+openspec completion install powershell
+. $PROFILE
+```
+
+`$env:PROFILE` により、このセッションで設定するプロファイルを OpenSpec へ伝えます。インストーラーは不足しているプロファイルディレクトリを作成し、`OpenSpecCompletion.ps1` を読み込む管理対象ブロックを追加します。プロファイルを再読み込みすると、補完がすぐに有効になります。
+
+現在のホストからアンインストールするには、次を実行します。
+
+```powershell
+$env:PROFILE = $PROFILE
+openspec completion uninstall powershell
+```
+
+アンインストール後に PowerShell を再起動し、現在のセッションから補完を削除してください。
 
 補完は明示的に有効化する方式です。対話端末で初めてコマンドを実行したとき、CLIが標準エラーへ一度だけ案内を表示します。補完がすでにインストール済みの場合は表示しません。案内を完全に抑止するには `OPENSPEC_NO_COMPLETIONS=1` を設定します。
 

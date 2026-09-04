@@ -89,6 +89,53 @@ describe('default task guidance', () => {
   });
 });
 
+describe('planning code inspection (#339)', () => {
+  it('inspects the project after loading instructions and dependencies, before creating or delegating artifacts', () => {
+    for (const [label, body] of loopBodies) {
+      const instructions = body.indexOf('openspec instructions <artifact-id>');
+      const dependencies = body.indexOf('完了済みの依存ファイルをコンテキストとして読みます');
+      const inspection = body.indexOf('**下書き前に関連プロジェクトを調査します**');
+      const delegation = body.indexOf('`instruction` フィールドが特定の skill またはコマンドへ作成を委譲');
+      expect(instructions, label).toBeGreaterThanOrEqual(0);
+      expect(dependencies, label).toBeGreaterThan(instructions);
+      expect(inspection, label).toBeGreaterThan(dependencies);
+      expect(delegation, label).toBeGreaterThan(inspection);
+
+      const guidance = body.slice(inspection, delegation);
+      expect(guidance, label).toContain('最初に `context` と `rules` を読み');
+      expect(guidance, label).toContain('`openspec/` 外にある関連実装、周辺のテスト、設定、ドキュメント');
+      expect(guidance, label).toContain('調査は読み取り専用とし、変更に見合う範囲へ絞ってください');
+      expect(guidance, label).toContain('調査結果は後続のアーティファクトでも再利用');
+      expect(guidance, label).toContain('この調査は今行い');
+    }
+  });
+
+  it('handles separate stores, missing code, and uncertain findings without inventing facts', () => {
+    for (const [label, body] of loopBodies) {
+      expect(body, label).toContain('計画ホームがコードと別の場所にある場合もあります');
+      expect(body, label).toContain('対象が不明なら質問してください');
+      expect(body, label).toContain('新規プロジェクトやコード以外の変更では、利用可能な構造と関連文書を調べます');
+      expect(body, label).toContain('ソースを利用できず、計画へ重大な影響がある場合は、その制約を伝えて確認してください');
+      expect(body, label).toContain('確認できた動作、前提、追加案を区別し');
+      expect(body, label).toContain('既存仕様との矛盾を黙って判断せず明らかにしてください');
+    }
+  });
+
+  it('preserves inspection guidance through every command adapter', () => {
+    for (const command of getCommandContents(['propose', 'ff'])) {
+      for (const adapter of CommandAdapterRegistry.getAll()) {
+        const generated = generateCommand(command, adapter).fileContent;
+        const inspection = generated.indexOf('**下書き前に関連プロジェクトを調査します**');
+        const delegation = generated.indexOf('`instruction` フィールドが特定の skill またはコマンドへ作成を委譲');
+        const label = `${adapter.toolId} ${command.id}`;
+        expect(inspection, label).toBeGreaterThanOrEqual(0);
+        expect(delegation, label).toBeGreaterThan(inspection);
+        expect(generated, label).toContain('調査は読み取り専用とし、変更に見合う範囲へ絞ってください');
+      }
+    }
+  });
+});
+
 describe('propose implementation boundary', () => {
   it('makes the planning-only boundary prominent (#232, #258, #262)', () => {
     for (const [label, body] of proposeBodies) {

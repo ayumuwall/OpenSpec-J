@@ -5,6 +5,7 @@ import { SpecSchema, ChangeSchema, Spec, Change } from '../schemas/index.js';
 import { MarkdownParser } from '../parsers/markdown-parser.js';
 import { ChangeParser } from '../parsers/change-parser.js';
 import { ValidationReport, ValidationIssue, ValidationLevel } from './types.js';
+import { findSpecUpdates, buildUpdatedSpec } from '../specs-apply.js';
 import {
   MIN_PURPOSE_LENGTH,
   MAX_REQUIREMENT_TEXT_LENGTH,
@@ -150,11 +151,11 @@ export class Validator {
    * - RENAMED: pairs well-formed
    * - No duplicates within sections; no cross-section conflicts per spec
    *
-   * When `options.mainSpecsDir` is given, MODIFIED blocks are also checked
-   * against the current main specs for the scenario loss archive refuses to
-   * apply (#1477). When `options.projectRoot` is given, the schema's tracked
-   * task files are checked for ambiguous numbering (#1520). Omitting either
-   * option keeps existing library and archive callers behaving as before.
+   * `options.mainSpecsDir` を指定すると、MODIFIED ブロックについて現在の本仕様からの
+   * シナリオ消失も検査し（#1477）、マージ競合は判定を変えない INFO として報告する
+   *（#1112）。`options.projectRoot` を指定すると、スキーマが追跡するタスクファイルの
+   * 番号付けが曖昧でないか検査する（#1520）。どちらかを省略した場合は、既存の
+   * ライブラリおよびアーカイブ呼び出し元の動作を維持する。
    */
   async validateChangeDeltaSpecs(
     changeDir: string,
@@ -394,6 +395,21 @@ export class Validator {
             });
           }
         }
+      }
+
+      // アーカイブのマージビルダーを再利用して、本仕様との競合を報告する。
+      // 構造エラーとシナリオ消失は既存の診断のまま扱う。
+      if (options.mainSpecsDir) {
+        issues.push(
+          ...(await this.findArchiveBlockers(changeDir, options.mainSpecsDir, [
+            ...issues.filter((issue) => issue.level === 'ERROR').map((issue) => issue.path),
+            // 上のループで収集されるが、この try ブロックの後まで issue にならないため、
+            // filter からは見えない。解析できたセクションがない仕様差分にはマージ対象がなく、
+            // 実際の誤りを示すエラーに加えて、マージ側も独自の失敗を報告してしまう。
+            ...missingHeaderSpecs,
+            ...emptySectionSpecs.map((spec) => spec.path),
+          ]))
+        );
       }
     } catch (error) {
       // A missing specs dir (or a stray `specs` file) means no deltas;
@@ -786,6 +802,65 @@ export class Validator {
     const fileName = parts[parts.length - 1] ?? '';
     const dotIndex = fileName.lastIndexOf('.');
     return dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName;
+  }
+
+  /**
+   * 結果を書き込まずにアーカイブのマージビルダーを試行する。ビルダーを再利用することで、
+   * 同期済み仕様差分の規則を複製せず維持する。INFO は判定を変えない。対象の欠落は入力ミスの
+   * 場合も、まだアーカイブされていない関連変更が追加する要件の場合もあるためである。
+   * アーカイブで後から行うマージ済み仕様の検証や廃止検査は、ここでは実行しない。
+   */
+  private async findArchiveBlockers(
+    changeDir: string,
+    mainSpecsDir: string,
+    alreadyReportedPaths: string[]
+  ): Promise<ValidationIssue[]> {
+    const alreadyReported = new Set(alreadyReportedPaths);
+    // 生成したスケルトンの Purpose プレースホルダーにしか使われず、この試行結果は破棄する。
+    const changeName = path.basename(changeDir);
+    const issues: ValidationIssue[] = [];
+
+    let updates: Awaited<ReturnType<typeof findSpecUpdates>>;
+    try {
+      updates = await findSpecUpdates(changeDir, mainSpecsDir);
+    } catch (error) {
+      // 補助的な検査が完了できなくても、検証レポートは破棄しない。
+      // ソース探索は上で完了しており、アーカイブ側にも独自のパス保護がある。
+      return [{
+        level: 'INFO',
+        path: 'specs',
+        message: `アーカイブ時のマージ競合を検査できませんでした: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      }];
+    }
+
+    for (const update of updates) {
+      // discoverSpecFiles は同じ探索から、この ID と上の検査が報告に使う entryPath を作る。
+      const entryPath = FileSystemUtils.toPosixPath(`${update.id}/spec.md`);
+      // 上の検査ですでに拒否された仕様差分を二重に報告しない。二度目は実際の誤りを示す
+      // 文言ではなく、アーカイブ側の文言になってしまう。
+      if (alreadyReported.has(entryPath)) continue;
+
+      try {
+        await buildUpdatedSpec(update, changeName, { silent: true });
+      } catch (error) {
+        // errno を持たない、例外として投げられた事前条件だけを扱う。ファイルシステムエラーは
+        // 仕様差分を適用できるか示さない。`validate --all` は変更を6件ずつ読むため、一時的な
+        // EMFILE を存在しない競合として報告してしまう。上のシナリオ消失検査で、ファイルが
+        // 使用不能だと示すコードだけを読むのと同じ理由である。
+        if ((error as NodeJS.ErrnoException)?.code !== undefined) continue;
+        issues.push({
+          level: 'INFO',
+          path: entryPath,
+          message: `アーカイブでこの仕様差分は拒否されます: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        });
+      }
+    }
+
+    return issues;
   }
 
   private createReport(issues: ValidationIssue[]): ValidationReport {

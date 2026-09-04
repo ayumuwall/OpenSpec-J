@@ -539,12 +539,13 @@ export class ChangeCommand {
         console.log(`変更 "${changeName}" は有効です`);
       } else {
         console.error(`変更 "${changeName}" に問題があります`);
-        report.issues.forEach(issue => {
-          const label = issue.level === 'ERROR' ? 'ERROR' : 'WARNING';
-          const prefix = issue.level === 'ERROR' ? '✗' : '⚠';
-          console.error(`${prefix} [${label}] ${issue.path}: ${issue.message}`);
-        });
-        // Next steps footer to guide fixing issues
+      }
+      report.issues.forEach(issue => {
+        const prefix = issue.level === 'ERROR' ? '✗' : issue.level === 'WARNING' ? '⚠' : 'ℹ';
+        console.error(`${prefix} [${issue.level}] ${issue.path}: ${issue.message}`);
+      });
+      if (!report.valid) {
+        // 問題の修正方法を案内する「次のステップ」を末尾に表示する
         this.printNextSteps(report.issues);
         if (!options?.json) {
           process.exitCode = 1;

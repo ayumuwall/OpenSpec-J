@@ -49,6 +49,67 @@ function fencedBlockLines(body: string): Array<[number, string]> {
 }
 
 describe('explore templates', () => {
+  it('guides planning without forcing an interview on open-ended exploration (#1017)', () => {
+    for (const [label, body] of bodies) {
+      expect(body, label).toContain('ユーザーが変更を計画している場合');
+      expect(body, label).toContain('自由形式の議論では、面接のような進め方や必須の出力を押し付けず、会話の流れに従ってください');
+      expect(body, label).toContain('ユーザーが十分に整理できたら質問を止めます');
+      expect(body, label).toContain('休止、方向転換、判断の先送りを認め');
+      expect(body, label).not.toContain('Relentless Interview Mode');
+    }
+  });
+
+  it('investigates repository facts before asking while acknowledging missing evidence (#1017)', () => {
+    for (const [label, body] of bodies) {
+      expect(body, label).toContain('事実について質問する前に、後述のコンテキスト確認を行い');
+      expect(body, label).toContain('関連する OpenSpec アーティファクト、ソース、テスト、ドキュメント、設定');
+      expect(body, label).toContain('確認できる事実をユーザーに繰り返し尋ねないでください');
+      expect(body, label).toContain('根拠がない、矛盾している、またはアクセスできない場合');
+      expect(body, label).toContain('先へ進むために必要な点だけを確認してください');
+    }
+  });
+
+  it('resolves blocking decisions first and revisits dependent assumptions (#1017)', () => {
+    for (const [label, body] of bodies) {
+      expect(body, label).toContain('依存する詳細より先に、次の判断を妨げている事項を解決します');
+      expect(body, label).toContain('前段の回答が変わった場合は、後続の前提を見直してください');
+      expect(body, label).toContain('今回のゴールに関係しない分岐は扱いません');
+    }
+  });
+
+  it('asks one focused question and recommends only when evidence supports a choice (#1017)', () => {
+    for (const [label, body] of bodies) {
+      expect(body, label).toContain('一度に 1 つの明確な質問を行い');
+      expect(body, label).toContain('ユーザーがまとめて質問するよう求めた場合に限り');
+      expect(body, label).toContain('その重要性と、回答によって決められることを簡潔に説明します');
+      expect(body, label).toContain('根拠に基づいて推奨できる場合');
+      expect(body, label).toContain('意図、優先順位、外部制約を作り上げてはいけません');
+    }
+  });
+
+  it('keeps decisions in the conversation without accepting defaults or authorizing writes (#1017)', () => {
+    for (const [label, body] of bodies) {
+      expect(body, label).toContain('判断はファイルではなく会話内で追跡します');
+      expect(body, label).toContain('確定した判断、既定値としての提案、未解決の質問を区別してください');
+      expect(body, label).toContain('沈黙は同意ではありません');
+      expect(body, label).toContain('回答や一連の推奨を受け入れたことも、書き込みの許可にはなりません');
+      expect(body, label).toContain('ファイル書き込みの確認は調査質問と分け');
+    }
+  });
+
+  it('delivers the same planning guidance exactly once in both templates (#1017)', () => {
+    const sections = bodies.map(([label, body]) => {
+      const heading = '## 変更を計画する';
+      expect(occurrenceCount(body, heading), label).toBe(1);
+      const start = body.indexOf(heading);
+      const end = body.indexOf('\n---', start);
+      expect(end, label).toBeGreaterThan(start);
+      return body.slice(start, end);
+    });
+
+    expect(sections[0]).toBe(sections[1]);
+  });
+
   // Regression for #696: explore never loaded the project's declared
   // context, so it reasoned without the tech stack, conventions, and
   // rules every artifact-creating workflow already receives.

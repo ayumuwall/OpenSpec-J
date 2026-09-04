@@ -81,6 +81,7 @@ OpenSpecが生成するファイルとセットアップ後の「Getting started
 | Oh My Pi (`oh-my-pi`) | `.omp/skills/openspec-*/SKILL.md` | `.omp/commands/opsx-<id>.md` |
 | OpenCode (`opencode`) | `.opencode/skills/openspec-*/SKILL.md` | `.opencode/commands/opsx-<id>.md` |
 | Pi (`pi`) | `.pi/skills/openspec-*/SKILL.md` | `.pi/prompts/opsx-<id>.md` |
+| SourceCraft Code Assistant for VS Code (`codeassistant`) | `.codeassistant/skills/openspec-*/SKILL.md` | `.codeassistant/commands/opsx-<id>.md` |
 | Qoder (`qoder`) | `.qoder/skills/openspec-*/SKILL.md` | `.qoder/commands/opsx/<id>.md` |
 | Qwen Code (`qwen`) | `.qwen/skills/openspec-*/SKILL.md` | `.qwen/commands/opsx-<id>.md` |
 | [Rovo Dev CLI](https://support.atlassian.com/rovo/docs/use-rovo-dev-cli/) (`rovodev`) | `.rovodev/skills/openspec-*/SKILL.md` | 生成なし。Rovo にスラッシュコマンド機能はなく、スキルを自動またはプロンプト（例: "use the openspec-propose skill"）で照合します。`/skills` はスキル管理のみを行います。生成コンテンツは `/openspec-*` コマンドとしてではなく、名前でスキルを参照します。 |
@@ -95,6 +96,10 @@ OpenSpecが生成するファイルとセットアップ後の「Getting started
 \*\*\* Hermesはデフォルトで `~/.hermes/skills/` からスキルを読み込みます。プロジェクトローカルのOpenSpecスキルを使うには、プロジェクトの `.hermes/skills/` ディレクトリを `~/.hermes/config.yaml` の `skills.external_dirs` に追加してください。Hermesでは `/openspec-propose` などのスラッシュ形式でスキルを呼び出せます。
 
 \*\*\*\* Windsurfは2026年6月2日に[Devin Desktopへ名称変更](https://docs.devin.ai/desktop/devin-desktop-faq)され、設定ディレクトリも移動しました。`.devin/` が推奨される読み書き先で、`.windsurf/` は従来の読み取り専用フォールバックです。OpenSpecも名称変更に追従し、ツールIDは `devin` ですが、既存スクリプト向けに `--tools windsurf` も引き続き解決されます。`.windsurf/` にOpenSpecファイルが残るプロジェクトでは、次回の `openspec update` で移動を提案します。拒否した場合はそのまま残り、利用者が作成したファイルには触れません。ワークフローはファイル名で呼び出すため、`.devin/workflows/opsx-apply.md` は `/opsx-apply` です。[Devin Localはワークフロー非対応](https://docs.devin.ai/desktop/devin-local)でスキルだけを使い、`.windsurf/` も読みません。そのためDevin向けスキルと開始時のヒントでは、両エージェントで使える `/openspec-*` スキル呼び出しを使います。commands-only deliveryではスキルを書き込まず、どちらも `/opsx-*` へフォールバックします。
+
+SourceCraft Code Assistant 対応は VS Code 拡張機能を対象としています。[カスタムコマンド](https://sourcecraft.dev/portal/docs/en/code-assistant/operations/agent/slash-commands)と[スキル](https://sourcecraft.dev/portal/docs/ru/code-assistant/operations/agent/skills)は VS Code でのみ利用できます。この連携では、SourceCraft の Web 版や JetBrains は設定しません。
+
+skills-only delivery では、実現したい内容とともに `openspec-propose` スキルを使うよう Code Assistant へ依頼してください。スキルは依頼内容との照合によって起動します。OpenSpec はこのツール向けの `/openspec-*` コマンドを生成しません。
 
 MiniMax Code はグローバルなスキル専用統合です。OpenSpec は
 `~/.minimax/skills/` 配下の自身の `openspec-*` ディレクトリだけを書き込みます。
@@ -163,7 +168,7 @@ openspec init --tools none
 openspec init --profile core
 ```
 
-**利用可能なツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `zed`, `zcode`, `agents`
+**利用可能なツール ID（`--tools`）** — `windsurf` は `devin` の別名としても受け付けます: `amazon-q`, `antigravity`, `auggie`, `bob`, `claude`, `cline`, `command-code`, `codeartsagent`, `codex`, `devin`, `forgecode`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `hermes`, `iflow`, `junie`, `kilocode`, `kimi`, `kiro`, `lingma`, `minimax-code`, `vibe`, `oh-my-pi`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `codeassistant`, `trae`, `zed`, `zcode`, `agents`
 
 ## ワークフロー依存のインストール
 

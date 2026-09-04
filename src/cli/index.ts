@@ -511,6 +511,7 @@ program
   .option('--changes', 'すべての変更を検証')
   .option('--specs', 'すべての仕様を検証')
   .option('--archived', 'アーカイブ済みの変更ですべてのタスクが完了しているか検証（pre-commit lint 向け）')
+  .option('--report <full|findings>', '一括レポートの内容を選択: full|findings（--json と組み合わせると JSON で出力）')
   .option('--type <type>', 'あいまいな場合に項目タイプを指定: change|spec')
   .option('--strict', '厳密検証モードを有効化')
   .option('--json', '検証結果を JSON で出力')
@@ -518,7 +519,7 @@ program
   .option('--no-interactive', '対話プロンプトを無効化')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
-  .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; archived?: boolean; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string; store?: string; storePath?: string }) => {
+  .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; archived?: boolean; report?: string; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string; store?: string; storePath?: string }) => {
     try {
       const validateCommand = new ValidateCommand();
       await validateCommand.execute(itemName, options);

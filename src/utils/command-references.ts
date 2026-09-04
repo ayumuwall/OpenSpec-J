@@ -78,15 +78,13 @@ const SKILL_INVOCATION_PREFIX: Record<string, string> = {
 };
 
 /**
- * Tools that have no slash-command surface at all: skills are matched
- * automatically or invoked by natural-language prompts, never by typing a
- * `/<name>` command. Rovo Dev CLI is such a tool — `/skills` only manages
- * skills, and any `/openspec-*` form would be a dead command (see
- * docs/supported-tools.md). References for these tools are spelled as prose
- * ("the openspec-propose skill") so generated content never tells the user to
- * type a command their CLI does not register.
+ * スキルを呼び出すスラッシュ構文が文書化されていないツールでは、自動マッチングまたは
+ * 自然言語プロンプトを使う。SourceCraft Code Assistant は独立したコマンドファイルに
+ * 対応するが、スキルには説明文によるマッチングを使う。Rovo Dev の `/skills` は
+ * スキルの管理専用（docs/supported-tools.md を参照）。skills-only delivery で未登録の
+ * コマンドを案内しないよう、これらのツールへのスキル参照は文章で表現する。
  */
-const NATURAL_LANGUAGE_SKILL_TOOLS = new Set<string>(['rovodev']);
+const NATURAL_LANGUAGE_SKILL_TOOLS = new Set<string>(['rovodev', 'codeassistant']);
 
 /**
  * Whether a tool references skills by natural language rather than a slash

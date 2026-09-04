@@ -248,7 +248,7 @@ describe('CompletionCommand', () => {
     it('should output schema names for shell completion', async () => {
       await command.complete({ type: 'schemas' });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('spec-driven\tschema');
+      expect(consoleLogSpy).toHaveBeenCalledWith('spec-driven\tスキーマ');
       expect(process.exitCode).toBe(0);
     });
   });

@@ -257,17 +257,17 @@ export function registerConfigCommand(program: Command): void {
         console.log(formatValueYaml(config));
 
         // Annotate profile settings
-        const profileSource = rawConfig.profile !== undefined ? '(explicit)' : '(default)';
-        const deliverySource = rawConfig.delivery !== undefined ? '(explicit)' : '(default)';
-        console.log(`\nProfile settings:`);
+        const profileSource = rawConfig.profile !== undefined ? '(明示指定)' : '(既定値)';
+        const deliverySource = rawConfig.delivery !== undefined ? '(明示指定)' : '(既定値)';
+        console.log(`\nプロファイル設定:`);
         console.log(`  profile: ${config.profile} ${profileSource}`);
         console.log(`  delivery: ${config.delivery} ${deliverySource}`);
         if (config.profile === 'core') {
-          console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} (from core profile)`);
+          console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} (core プロファイル由来)`);
         } else if (config.workflows && config.workflows.length > 0) {
-          console.log(`  workflows: ${config.workflows.join(', ')} (explicit)`);
+          console.log(`  workflows: ${config.workflows.join(', ')} (明示指定)`);
         } else {
-          console.log(`  workflows: (none)`);
+          console.log(`  workflows: (なし)`);
         }
       }
   });

@@ -643,27 +643,43 @@ openspec validate --all            # すべての変更と仕様
 
 **オプション**
 
-| フラグ                  | 動作                                                                              |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| `--all`                 | すべての変更と仕様を検証します。                                                  |
-| `--changes`             | すべての変更を検証します。                                                        |
-| `--specs`               | すべての仕様を検証します。                                                        |
-| `--strict`              | 警告も失敗として扱います。                                                        |
-| `--type <change\|spec>` | 変更と仕様が同じ名前の場合に種類を指定します。                                    |
-| `--json`                | テキストの代わりに構造化レポートを表示します。                                    |
-| `--concurrency <n>`     | 一括実行時の最大並列検証数。既定値は`OPENSPEC_CONCURRENCY`で、未設定なら 6 です。 |
-| `--no-interactive`      | プロンプトを表示しません。名前がない、または曖昧な場合はエラーになります。        |
-| `--store <id>`          | 現在のプロジェクトではなく、登録済みストアを OpenSpec ルートとして使います。      |
+| フラグ                  | 動作                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| `--all`                 | すべての変更と仕様を検証します。                                                             |
+| `--changes`             | すべての変更を検証します。                                                                   |
+| `--specs`               | すべての仕様を検証します。                                                                   |
+| `--archived`            | 適用済みの仕様差分は検証せず、アーカイブ済み変更のタスク完了状況を確認します。               |
+| `--strict`              | 警告も失敗として扱います。                                                                   |
+| `--type <change\|spec>` | 変更と仕様が同じ名前の場合に種類を指定します。                                               |
+| `--json`                | テキストの代わりに構造化レポートを表示します。                                               |
+| `--report <mode>`       | 一括出力を `full`（既定）または `findings` にします。明示的な一括範囲の指定が必要です。      |
+| `--concurrency <n>`     | 一括実行時の最大並列検証数。既定値は`OPENSPEC_CONCURRENCY`で、未設定なら 6 です。            |
+| `--no-interactive`      | プロンプトを表示しません。名前がない、または曖昧な場合はエラーになります。                   |
+| `--store <id>`          | 現在のプロジェクトではなく、登録済みストアを OpenSpec ルートとして使います。                 |
 
 **出力**
 
-項目ごとに 1 行表示します。一括実行の最後には合計を表示します。
+一括実行では項目ごとに状態を 1 行表示し、その後に検出事項、最後に合計を表示します。
 
 ```
 ✓ change/add-rate-limit
 ✓ spec/api
 合計: 2件成功、0件失敗（全2件）
 ```
+
+**アーカイブ時のマージに関する検出事項**
+
+変更を検証する際は、ファイルを書き込まず、現在の本仕様に対してアーカイブ用のマージ処理を実行します。`MODIFIED` の対象がない場合や `ADDED` 要件が競合する場合など、マージの競合は `INFO` として報告されます。
+
+```text
+ℹ [INFO] api/spec.md: アーカイブではこの仕様差分を適用できません: api の MODIFIED で見出し「### Requirement: Rate limiting」が見つかりません
+```
+
+検証が成功した場合も、テキスト出力と JSON 出力の両方に表示されます。対象が見つからないのは、関連する別の変更がまだアーカイブされていないためかもしれません。そのため、`INFO` は `--strict` を指定した場合も終了コードへ影響しません。本仕様へ同期済みの仕様差分には、archive の既存のマージ規則が適用されます。
+
+この検査では、archive が後から行うマージ済み仕様の検証や廃止検査は実行しません。検出事項がなくても、archive の成功が保証されるわけではありません。
+
+マージの事前検査を開始できない場合は、理由を `INFO` として表示します。既存の検証結果と終了コードは変わりません。
 
 検証に失敗した項目では、各問題と修正方法を表示します。
 
@@ -715,8 +731,141 @@ openspec validate --all            # すべての変更と仕様
 
 **終了コード**
 
-- `0`：検証した全項目が成功しました。
-- `1`：項目の検証に失敗したか、名前が不明または対象がないため何も検証できませんでした。
+- `0`：空の一括範囲を含め、検証した全項目が成功しました。
+- `1`：項目の検証に失敗した、レポート要求が無効、または実行に失敗しました（名前が不明、OpenSpec ルートがない場合など）。
+
+### --report full|findings
+
+明示的に指定した一括検証範囲の出力を選択します。
+
+- **`full`**：すべての項目を出力します。これが既定値です。`--report full` を明示しても、レポートのメタデータは追加せず、既存の出力形式を維持します。
+- **`findings`**：問題がある項目だけを出力します。検証には成功したものの、警告または情報がある項目も含みます。検証自体はすべての項目に対して実行され、合計、strict モードの動作、終了コードは変わりません。
+
+```bash
+openspec validate --all --report findings
+openspec validate --archived --report findings --json
+```
+
+**対象範囲**
+
+| フラグ | findings の `report.scope` |
+| ------ | ------------------------- |
+| `--all` | `all` |
+| `--changes` | `changes` |
+| `--specs` | `specs` |
+| `--changes --specs`、または `--all` といずれかのフラグ | `all` |
+| `--archived` | `archived` |
+
+どちらのレポートモードも、位置引数での項目名、一括範囲の指定漏れ、アーカイブ済み範囲とアクティブ範囲の併用を拒否します。
+
+#### findings のテキスト出力
+
+**人間向け出力**：標準出力へ `対象範囲: <scope>（<count>件）` と合計を表示します。検出事項がある項目がない場合は次のようになります。
+
+```text
+対象範囲: all（2件）
+検出事項のある項目はありません。
+合計: 2件成功、0件失敗（全2件）
+```
+
+検出事項がある項目のラベル、重大度、パス、メッセージは標準エラーへ表示します。アクティブ範囲で失敗した場合は、合計の後に `詳細:` と再実行の案内を引き続き表示します。レポートの前に、既存のルート案内と進捗が表示される場合があります。
+
+#### findings の JSON 出力
+
+`--report findings --json` は 1 つのドキュメントを出力します。次の例では、問題のない項目が 2 件あります。
+
+```json
+{
+  "report": {
+    "kind": "validation-findings",
+    "version": "1.0",
+    "scope": "all",
+    "returnedItems": 0,
+    "totalItems": 2
+  },
+  "itemFindings": [],
+  "summary": {
+    "totals": { "items": 2, "passed": 2, "failed": 0 },
+    "byType": {
+      "change": { "items": 1, "passed": 1, "failed": 0 },
+      "spec": { "items": 1, "passed": 1, "failed": 0 }
+    }
+  },
+  "root": { "path": "/Users/you/projects/my-app", "source": "nearest" }
+}
+```
+
+- **`report.kind` と `report.version`**：`validation-findings` 形式のバージョン `1.0` であることを示します。トップレベルの `version` と `items` はありません。
+- **`report.returnedItems` と `report.totalItems`**：それぞれ、返したレコード数と検証した全項目数を示します。
+- **`itemFindings`**：`issues` 配列が空でない項目の完全なレコードです。`ERROR`、`WARNING`、`INFO` の問題を含みます。各レコードの `id`、`type`、`valid`、`issues`、`durationMs` は維持されます。アーカイブ済み項目の `type` は `"change"` です。
+- **`summary`**：返した項目だけではなく、実行全体の合計と種類別の件数です。範囲が空の場合は合計が 0 となり、終了コード 0 で終了します。
+- **`root`**：完全レポートと同じ、選択されたルートのメタデータです。
+
+**レコードの維持**：返される項目は、完全レポートでの順序と、項目または問題に追加されたフィールドを維持します。絞り込みによって、メッセージや場所（任意の `line`、`column` フィールドを含む）が書き換えられることはありません。
+
+**コマンドの失敗**：ルート選択または項目検出に失敗した場合は、既存の `status` 診断を維持して終了コード 1 で終了します。完了済みの findings レポートや、成功を示す空のレポートは返しません。
+
+#### 無効なレポート要求
+
+どちらのレポートモードも、次の要求をルート選択または項目検出の前に拒否します。
+
+- 空文字列を含む、未対応のレポート値。
+- 一括処理フラグを付けた場合も含め、位置引数で指定した項目名。
+- 明示的な一括範囲がない場合。
+- `--archived` と `--all`、`--changes`、`--specs` のいずれかの併用。
+
+JSON モードで要求が拒否されると、要素が 1 つの `status` 配列だけを返し、終了コード 1 で終了します。`root` やレポートのペイロードは含みません。
+
+```bash
+openspec validate --all --report bogus --json
+```
+
+```json
+{
+  "status": [
+    {
+      "severity": "error",
+      "code": "invalid_validation_report_request",
+      "message": "不明な検証レポート 'bogus' です。",
+      "fix": "項目名を指定せず、--report full|findings を --all、--changes、--specs、--archived のいずれかと組み合わせてください。アーカイブ済みとアクティブの範囲は併用できません。"
+    }
+  ]
+}
+```
+
+人間向けモードでは、エラーを標準エラーへ表示します。値を付けずに `--report` だけを指定すると、`--json` と併用した場合も Commander の構文エラーが標準エラーへ表示され、この診断エンベロープは使われません。
+
+#### 完全レポートを外部で絞り込む
+
+独自の JSON 表示が必要な場合は、完全レポートを `jq` または PowerShell で絞り込みます。次のスクリプト例では、検証の終了コードとコマンドエラーのドキュメントをそのまま維持します。
+
+Bash と `jq` の場合：
+
+```bash
+if validation_json=$(openspec validate --all --json); then
+  validation_exit=0
+else
+  validation_exit=$?
+fi
+printf '%s\n' "$validation_json" |
+  jq 'if has("items") then .items |= map(select(.issues | length > 0)) else . end'
+exit "$validation_exit"
+```
+
+PowerShell の場合：
+
+```powershell
+$validationJson = openspec validate --all --json
+$validationExit = $LASTEXITCODE
+$validationReport = $validationJson | ConvertFrom-Json
+if ($validationReport.PSObject.Properties.Name -contains 'items') {
+  $validationReport.items = @($validationReport.items | Where-Object { $_.issues.Count -gt 0 })
+}
+$validationReport | ConvertTo-Json -Depth 100
+exit $validationExit
+```
+
+これらの独自表示では完全レポートのキーを維持し、問題のない項目だけを除外します。完全な full-v1 レポートでも、バージョン付きの `--report findings` 形式でもありません。
 
 ## openspec archive
 

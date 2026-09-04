@@ -324,7 +324,11 @@ export async function buildUpdatedSpec(
         );
       }
     }
-  } catch {
+  } catch (error) {
+    // 読み取れない対象は新しい仕様ではない。ベースラインや対象欠落の検出結果を
+    // 作り出さず、呼び出し元へファイルシステムエラーをそのまま返す。
+    const code = (error as NodeJS.ErrnoException)?.code;
+    if (code !== 'ENOENT' && code !== 'ENOTDIR') throw error;
     // Target spec does not exist; MODIFIED and RENAMED are not allowed for new specs
     // REMOVED will be ignored with a warning since there's nothing to remove
     if (plan.modified.length > 0 || plan.renamed.length > 0) {

@@ -36,7 +36,7 @@ init がワークフローをスキル、スラッシュコマンド、または
 
 ### defaultStore
 
-ルート解決で使うマシン単位の代替ストア ID です。`--store`フラグ、ローカルの`openspec/`、プロジェクトの`store:`ポインターのいずれでも解決できない場合だけ参照します。完全な優先順位は[ルート解決](stores.md#root-resolution)を参照してください。
+ルート解決で使うマシン単位の代替ストア ID です。`--store`フラグ、ローカルの`openspec/`、プロジェクトの`store:`ポインターのいずれでも解決できない場合だけ参照します。完全な優先順位は[ルート解決](../../multi-repo/stores.md#where-artifacts-get-created-when-using-stores)を参照してください。
 
 ### openers
 

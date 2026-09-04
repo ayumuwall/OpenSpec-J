@@ -107,6 +107,12 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'archived',
         description: 'アーカイブ済みの変更ですべてのタスクが完了しているか検証（pre-commit lint 向け）',
       },
+      {
+        name: 'report',
+        description: '一括レポートに含める内容を選択',
+        takesValue: true,
+        values: ['full', 'findings'],
+      },
       COMMON_FLAGS.type,
       COMMON_FLAGS.strict,
       COMMON_FLAGS.jsonValidation,

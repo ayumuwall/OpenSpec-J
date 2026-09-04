@@ -2,6 +2,34 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.12.0
+
+- **[OpenSpec-J]** OpenSpec v1.12.0 の upstream 変更を取り込み、CLI、初期化・更新フロー、OPSX ワークフロー、ドキュメントの追加・変更された人間向け文言を日本語化
+- **[OpenSpec-J]** SourceCraft Code Assistant、`openspec validate --report findings`、空ディレクトリ保持、共通 IDE 再起動案内に対応し、静的配布スキルと parity ハッシュを再生成
+- **[OpenSpec-J] 翻訳棚卸し:** シェル補完、設定表示、OpenSpec ルート検出エラー、テレメトリー通知に残っていた英語文言を日本語化
+
+### マイナー変更
+
+- [#1171](https://github.com/Fission-AI/OpenSpec/pull/1171) [`44a39eb`](https://github.com/Fission-AI/OpenSpec/commit/44a39eb24b7ca0f2cf08df697888c3b1e9818a5a) [@aleksandr4842](https://github.com/aleksandr4842) に感謝します！ - SourceCraft Code Assistant の VS Code 拡張機能で、プロジェクトスキルとコマンドを利用できるようになりました。
+
+- [#1713](https://github.com/Fission-AI/OpenSpec/pull/1713) [`db03c6c`](https://github.com/Fission-AI/OpenSpec/commit/db03c6c4b0ef8a05308497482bdc5fc4dd151569) [@Marzx13](https://github.com/Marzx13) に感謝します！ - ### 新機能
+
+  - 明示的に指定した一括検証の範囲で利用できる `openspec validate --report findings` を追加しました。全件実行時の集計と終了コードは維持しながら、エラー・警告・情報がある項目だけを返します。JSON 出力にはレポート種別と検証範囲が含まれ、人間向け出力には各検出事項のパスとメッセージが表示されます。既定の完全レポートに変更はありません。
+
+### パッチ変更
+
+- [#1710](https://github.com/Fission-AI/OpenSpec/pull/1710) [`a4fcdbe`](https://github.com/Fission-AI/OpenSpec/commit/a4fcdbece6f4f7ce86fbd57230be2753945020ba) [@ryandemelo](https://github.com/ryandemelo) に感謝します！ - 検証中に見つかった仕様差分のマージ競合を、終了コードを変えずに情報レベルの検出事項として報告するようにしました。成功したテキストレポートにも表示されます。また、読み取れない本仕様を存在しない仕様と誤認しないよう、ファイルシステムの読み取りエラーを維持します。
+
+  助言目的のマージ事前検査で入力を解決できない場合も、検証レポートの内容を失わないようにしました。
+
+- [#1017](https://github.com/Fission-AI/OpenSpec/pull/1017) [`b976106`](https://github.com/Fission-AI/OpenSpec/commit/b976106d954a0eebbf94ec26b056208968313a4d) [@DanRioDev](https://github.com/DanRioDev) に感謝します！ - explore モードのガイダンスを改善しました。依存関係を踏まえた有用な質問を行い、既定の選択肢を提案し、リポジトリを調べれば分かる事実をユーザーへ尋ねる前にコードベースを確認します。
+
+- [#1737](https://github.com/Fission-AI/OpenSpec/pull/1737) [`98bf53e`](https://github.com/Fission-AI/OpenSpec/commit/98bf53e59ec91eb71de4ed0e8036459de7352585) [@clay-good](https://github.com/clay-good) に感謝します！ - propose と fast-forward の各ワークフローで、アーティファクトを作成する前に関連するプロジェクトコード、テスト、ドキュメントを調べるよう案内します。基本的な調査を実装タスクへ先送りせず、既存の実装を計画へ反映できるようになりました。
+
+- [#786](https://github.com/Fission-AI/OpenSpec/pull/786) [`0296401`](https://github.com/Fission-AI/OpenSpec/commit/0296401b823726ae6a8d8505104e95c7899b3056) [@Br1an67](https://github.com/Br1an67) に感謝します！ - 初期化後も空の OpenSpec ディレクトリを Git で保持するようにしました。init を再実行すると、不足しているディレクトリマーカーが復元されます。既存ファイルを上書きしたり、マーカーのシンボリックリンクをたどったりすることはありません。
+
+- [#1725](https://github.com/Fission-AI/OpenSpec/pull/1725) [`cd72444`](https://github.com/Fission-AI/OpenSpec/commit/cd724449aced1655eb513f3207600bec074c7588) [@aron-intframe](https://github.com/aron-intframe) に感謝します！ - `openspec init` と `openspec update` で、IDE の再起動案内を共通化しました。コマンドの場合は「コマンドを更新するため IDE を再起動してください。」、スキルの場合は「スキルを更新するため IDE を再起動してください。」と表示します。ワークフローを削除した場合にも対応し、新しいファイルを生成したとは案内しません。
+
 ## 1.11.0
 
 - **[OpenSpec-J]** OpenSpec v1.11.0 の upstream 変更を取り込み、CLI、スキーマ、OPSXワークフロー、Webサイトの追加・変更された人間向け文言を日本語化

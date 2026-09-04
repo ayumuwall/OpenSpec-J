@@ -56,7 +56,7 @@ operations:
 
 ### store
 
-OpenSpec ルートとして使うストア ID です。この`openspec/`ディレクトリに設定しかなく、`specs/`も`changes/`もない場合だけ参照します。上書きではなく代替値です。完全な優先順位は[ルート解決](stores.md#root-resolution)を参照してください。
+OpenSpec ルートとして使うストア ID です。この`openspec/`ディレクトリに設定しかなく、`specs/`も`changes/`もない場合だけ参照します。上書きではなく代替値です。完全な優先順位は[ルート解決](../../multi-repo/stores.md#where-artifacts-get-created-when-using-stores)を参照してください。
 
 ### references
 

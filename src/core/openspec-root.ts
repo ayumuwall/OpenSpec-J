@@ -17,8 +17,8 @@ export const OPENSPEC_ARCHIVE_DIR = 'openspec/changes/archive';
 export const DEFAULT_OPENSPEC_SCHEMA = 'spec-driven';
 export const DIRECTORY_ANCHOR_FILE_NAME = '.gitkeep';
 
-// Git cannot track empty directories, so setup anchors otherwise-empty
-// conventional store directories for teammates who clone the repo later.
+// Git は空のディレクトリを追跡できないため、後からリポジトリを clone するメンバー向けに、
+// 何もない標準ストアディレクトリへセットアップ時にアンカーファイルを置く。
 export const ANCHORED_OPENSPEC_DIRS = [OPENSPEC_SPECS_DIR, OPENSPEC_ARCHIVE_DIR] as const;
 
 type PathKind = 'missing' | 'directory' | 'file' | 'other';
@@ -115,7 +115,7 @@ async function inspectOptionalPlanningDirectory(
 
   inspection.diagnostics.push(missingDirectoryDiagnostic(
     notDirectoryCode,
-    `${relativePath}/ exists but is not a directory.`,
+    `${relativePath}/ は存在しますが、ディレクトリではありません。`,
     target
   ));
   return kind;
@@ -235,7 +235,7 @@ async function ensureDirectory(
 
   if (kind === 'directory') return;
   if (kind !== 'missing') {
-    throw new Error(`${relativePath}/ exists but is not a directory.`);
+    throw new Error(`${relativePath}/ は存在しますが、ディレクトリではありません。`);
   }
 
   await fs.mkdir(absolutePath, { recursive: true });
@@ -271,17 +271,24 @@ async function ensureDefaultConfig(
   });
 }
 
-async function ensureDirectoryAnchor(
+export async function ensureDirectoryAnchor(
   storeRoot: string,
   relativeDir: string,
-  ledger: CreatedPathLedgerEntry[]
+  ledger: CreatedPathLedgerEntry[] = []
 ): Promise<void> {
   const directory = path.join(storeRoot, relativeDir);
   if ((await fs.readdir(directory)).length > 0) return;
 
   const relativePath = `${relativeDir}/${DIRECTORY_ANCHOR_FILE_NAME}`;
   const absolutePath = path.join(directory, DIRECTORY_ANCHOR_FILE_NAME);
-  await fs.writeFile(absolutePath, '', 'utf-8');
+  try {
+    // readdir の後にファイルやシンボリックリンクが現れる可能性がある。
+    // その場合は置換も追跡も行わない。
+    await fs.writeFile(absolutePath, '', { encoding: 'utf-8', flag: 'wx' });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return;
+    throw error;
+  }
   ledger.push({
     relativePath: relativeArtifact(relativePath, 'file'),
     absolutePath,

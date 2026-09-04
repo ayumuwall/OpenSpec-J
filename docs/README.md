@@ -76,6 +76,7 @@ OpenSpec は、あなたと AI コーディングアシスタントが **コー�
 | [カスタマイズ](customization.md) | プロジェクト設定、カスタムスキーマ、共有コンテキスト |
 | [多言語](multi-language.md) | 英語以外の言語で成果物を生成する |
 | [サポートされているツール](supported-tools.md) | OpenSpecが連携する30以上のAIツールとファイル配置先 |
+| [コミュニティショーケース](community.md) | OpenSpec のために、または OpenSpec を使って作られたプロジェクトやリソース |
 
 ### 困ったとき
 

@@ -68,6 +68,81 @@ describe('InitCommand', () => {
       expect(await directoryExists(path.join(openspecPath, 'changes', 'archive'))).toBe(true);
     });
 
+    it('should create .gitkeep files in empty directories', async () => {
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+
+      await initCommand.execute(testDir);
+
+      const openspecPath = path.join(testDir, 'openspec');
+      expect(await fileExists(path.join(openspecPath, 'specs', '.gitkeep'))).toBe(true);
+      // The archive anchor also keeps its parent changes/ directory in Git.
+      expect(await fileExists(path.join(openspecPath, 'changes', '.gitkeep'))).toBe(false);
+      expect(await fileExists(path.join(openspecPath, 'changes', 'archive', '.gitkeep'))).toBe(true);
+    });
+
+    it('should restore missing directories and anchors in extend mode', async () => {
+      const initCommand1 = new InitCommand({ tools: 'claude', force: true });
+      await initCommand1.execute(testDir);
+
+      const openspecPath = path.join(testDir, 'openspec');
+
+      // Older projects may lose these empty directories when cloned.
+      await fs.rm(path.join(openspecPath, 'specs'), { recursive: true });
+      await fs.rm(path.join(openspecPath, 'changes'), { recursive: true });
+
+      // Re-run init (triggers extend mode since openspec dir already exists)
+      const initCommand2 = new InitCommand({ tools: 'claude', force: true });
+      await initCommand2.execute(testDir);
+
+      expect(await fileExists(path.join(openspecPath, 'specs', '.gitkeep'))).toBe(true);
+      expect(await fileExists(path.join(openspecPath, 'changes', '.gitkeep'))).toBe(false);
+      expect(await fileExists(path.join(openspecPath, 'changes', 'archive', '.gitkeep'))).toBe(true);
+    });
+
+    it('should preserve existing directory anchor contents when re-running init', async () => {
+      const marker = path.join(testDir, 'openspec', 'specs', '.gitkeep');
+      await fs.mkdir(path.dirname(marker), { recursive: true });
+      await fs.writeFile(marker, 'Keep this directory in Git.\n');
+
+      await new InitCommand({ tools: 'none', force: true }).execute(testDir);
+
+      expect(await fs.readFile(marker, 'utf-8')).toBe('Keep this directory in Git.\n');
+    });
+
+    it('should not add anchors to populated directories', async () => {
+      const specsPath = path.join(testDir, 'openspec', 'specs');
+      const archivePath = path.join(testDir, 'openspec', 'changes', 'archive');
+      await fs.mkdir(specsPath, { recursive: true });
+      await fs.mkdir(archivePath, { recursive: true });
+      await fs.writeFile(path.join(specsPath, '.custom'), 'keep me');
+      await fs.mkdir(path.join(archivePath, '2026-08-27-example'));
+
+      await new InitCommand({ tools: 'none', force: true }).execute(testDir);
+
+      expect(await fs.readdir(specsPath)).toEqual(['.custom']);
+      expect(await fs.readdir(archivePath)).toEqual(['2026-08-27-example']);
+    });
+
+    it.skipIf(process.platform === 'win32').each([false, true])(
+      'should leave anchor symlinks untouched (dangling: %s)',
+      async (dangling) => {
+        const target = path.join(configTempDir, 'outside-target');
+        if (!dangling) await fs.writeFile(target, 'do not overwrite');
+        const marker = path.join(testDir, 'openspec', 'specs', '.gitkeep');
+        await fs.mkdir(path.dirname(marker), { recursive: true });
+        await fs.symlink(target, marker);
+
+        await new InitCommand({ tools: 'none', force: true }).execute(testDir);
+
+        expect(await fs.readlink(marker)).toBe(target);
+        if (dangling) {
+          expect(await fileExists(target)).toBe(false);
+        } else {
+          expect(await fs.readFile(target, 'utf-8')).toBe('do not overwrite');
+        }
+      },
+    );
+
     it('should create config.yaml with default schema', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
@@ -558,6 +633,44 @@ describe('InitCommand', () => {
       expect(await directoryExists(path.join(testDir, '.agents'))).toBe(false);
     });
 
+    it.each(['both', 'skills', 'commands'] as const)(
+      'should initialize SourceCraft Code Assistant with delivery=%s and working invocation hints',
+      async (delivery) => {
+        if (delivery !== 'both') {
+          saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery });
+        }
+
+        await new InitCommand({ tools: 'codeassistant', force: true }).execute(testDir);
+
+        const skillFile = path.join(testDir, '.codeassistant', 'skills', 'openspec-apply-change', 'SKILL.md');
+        const commandFile = path.join(testDir, '.codeassistant', 'commands', 'opsx-apply.md');
+        expect(await fileExists(skillFile)).toBe(delivery !== 'commands');
+        expect(await fileExists(commandFile)).toBe(delivery !== 'skills');
+
+        if (delivery !== 'commands') {
+          const skillContent = await fs.readFile(skillFile, 'utf-8');
+          expect(skillContent).toContain(delivery === 'skills' ? 'openspec-archive-change スキル' : '/opsx-archive');
+          expect(skillContent).not.toContain('/opsx:');
+          if (delivery === 'skills') {
+            expect(skillContent).not.toContain('/openspec-');
+            expect(skillContent).not.toContain('/opsx-');
+          }
+        }
+        if (delivery !== 'skills') {
+          const commandContent = await fs.readFile(commandFile, 'utf-8');
+          expect(commandContent).toMatch(/^---\ndescription: /);
+          expect(commandContent).toContain('/opsx-archive');
+          expect(commandContent).not.toContain('/opsx:');
+        }
+
+        const logCalls = vi.mocked(console.log).mock.calls.flat().map(String);
+        const startHint = logCalls.find((entry) => entry.includes('最初の変更を開始'));
+        expect(startHint).toContain(delivery === 'skills'
+          ? 'SourceCraft Code Assistant に openspec-propose スキルを使って「あなたのアイデア」を扱うよう依頼してください'
+          : '/opsx-propose');
+      }
+    );
+
     it('should support the shared agents target as an adapterless skills-only tool', async () => {
       saveGlobalConfig({
         featureFlags: {},
@@ -1038,7 +1151,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).not.toContain('IDEを再起動してください');
+      expect(getConsoleOutput()).not.toContain('IDEを再起動');
     });
 
     it('should suggest an IDE restart for IDE-resident tools', async () => {
@@ -1046,7 +1159,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).toContain('IDEを再起動してください');
+      expect(getConsoleOutput()).toContain('IDEを再起動');
     });
 
     it('should suggest an IDE restart when a mix of CLI and IDE tools is configured', async () => {
@@ -1057,7 +1170,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).toContain('IDEを再起動してください');
+      expect(getConsoleOutput()).toContain('IDEを再起動');
     });
 
     it('should word the restart hint for commands when an IDE tool gets a command surface', async () => {
@@ -1067,7 +1180,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).toContain('新しいコマンドを有効にするにはIDEを再起動してください。');
+      expect(getConsoleOutput()).toContain('IDEを再起動してコマンドを再読み込みしてください。');
     });
 
     it('should word the restart hint for skills when an IDE tool gets only a skill surface', async () => {
@@ -1078,7 +1191,7 @@ describe('InitCommand', () => {
 
       await initCommand.execute(testDir);
 
-      expect(getConsoleOutput()).toContain('新しいスキルを有効にするにはIDEを再起動してください。');
+      expect(getConsoleOutput()).toContain('IDEを再起動してスキルを再読み込みしてください。');
     });
 
     it('should create skills for multiple tools at once', async () => {
@@ -2068,7 +2181,7 @@ describe('InitCommand - profile and detection features', () => {
     expect(startHint).not.toContain('/opsx:propose');
 
     // Codex は CLI ツールのため、スキル作成後に IDE の再起動は不要です。
-    const restartHint = logCalls.find((entry) => entry.includes('IDE を再起動'));
+    const restartHint = logCalls.find((entry) => entry.includes('IDEを再起動'));
     expect(restartHint).toBeUndefined();
   });
 
@@ -2098,7 +2211,7 @@ describe('InitCommand - profile and detection features', () => {
 
     // Commands were generated, but they are not slash commands.
     const restartHint = logCalls.find((entry) => entry.includes('IDEを再起動'));
-    expect(restartHint).toContain('新しいコマンドを有効にするにはIDEを再起動してください。');
+    expect(restartHint).toContain('IDEを再起動してコマンドを再読み込みしてください。');
     expect(restartHint).not.toContain('slash commands');
   });
 

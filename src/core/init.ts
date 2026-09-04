@@ -18,6 +18,7 @@ import {
   storePointerProblem,
 } from './project-config.js';
 import { findRepoPlanningRootSync } from './planning-home.js';
+import { ANCHORED_OPENSPEC_DIRS, ensureDirectoryAnchor } from './openspec-root.js';
 import { getSkillReferenceTransformer, getTransformerForTool, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
 import {
   AI_TOOLS,
@@ -55,6 +56,7 @@ import {
   resolveToolSkillsDir,
   toolSupportsSkills,
   type ToolSkillStatus,
+  formatIdeRestart,
 } from './shared/index.js';
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
 import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
@@ -148,7 +150,6 @@ type ValidatedInitTool = {
   skillsRoot: string;
   isGlobalSkillTarget: boolean;
   wasConfigured: boolean;
-  requiresIdeRestart?: boolean;
   writesSkills: boolean;
 };
 
@@ -840,7 +841,6 @@ export class InitCommand {
         skillsRoot: isGlobalSkillTarget ? skillsPath : projectPath,
         isGlobalSkillTarget,
         wasConfigured: preState?.configured ?? false,
-        requiresIdeRestart: tool.requiresIdeRestart,
         writesSkills: !tool.skillsDir || skillWriters.has(tool.value),
       });
     }
@@ -853,24 +853,6 @@ export class InitCommand {
   // ═══════════════════════════════════════════════════════════
 
   private async createDirectoryStructure(openspecPath: string, extendMode: boolean): Promise<void> {
-    if (extendMode) {
-      // extend モードではスピナー無しでディレクトリを確認/作成する
-      const directories = [
-        openspecPath,
-        path.join(openspecPath, 'specs'),
-        path.join(openspecPath, 'changes'),
-        path.join(openspecPath, 'changes', 'archive'),
-      ];
-
-      for (const dir of directories) {
-        FileSystemUtils.assertProjectArtifactPath(path.dirname(openspecPath), dir);
-        await FileSystemUtils.createDirectory(dir);
-      }
-      return;
-    }
-
-    const spinner = this.startSpinner('OpenSpec 構成を作成中...');
-
     const directories = [
       openspecPath,
       path.join(openspecPath, 'specs'),
@@ -878,15 +860,35 @@ export class InitCommand {
       path.join(openspecPath, 'changes', 'archive'),
     ];
 
+    if (extendMode) {
+      // extend モードではスピナー無しでディレクトリを確認・作成する
+      for (const dir of directories) {
+        FileSystemUtils.assertProjectArtifactPath(path.dirname(openspecPath), dir);
+        await FileSystemUtils.createDirectory(dir);
+      }
+      await this.writeGitkeepFiles(openspecPath);
+      return;
+    }
+
+    const spinner = this.startSpinner('OpenSpec 構成を作成中...');
+
     for (const dir of directories) {
       FileSystemUtils.assertProjectArtifactPath(path.dirname(openspecPath), dir);
       await FileSystemUtils.createDirectory(dir);
     }
 
+    await this.writeGitkeepFiles(openspecPath);
+
     spinner.stopAndPersist({
       symbol: PALETTE.white('▌'),
       text: PALETTE.white('OpenSpec 構成を作成しました'),
-  });
+    });
+  }
+
+  private async writeGitkeepFiles(openspecPath: string): Promise<void> {
+    for (const relativeDir of ANCHORED_OPENSPEC_DIRS) {
+      await ensureDirectoryAnchor(path.dirname(openspecPath), relativeDir);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -1341,7 +1343,7 @@ export class InitCommand {
           // prose ("the openspec-propose skill"); phrase the hint so it reads
           // as an instruction rather than a dead command with an argument.
           hint = usesNaturalLanguageSkillReferences(tool.value)
-            ? `最初の変更を開始: ${tool.name} に ${skillReference} を使って「あなたのアイデア」を扱うよう依頼してください`
+            ? `最初の変更を開始: ${tool.name} に ${skillReference}を使って「あなたのアイデア」を扱うよう依頼してください`
             : `最初の変更を開始: ${skillReference} "あなたのアイデア"`;
         } else {
           continue;
@@ -1399,37 +1401,16 @@ export class InitCommand {
     console.log(`詳細: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J')}`);
     console.log(`フィードバック: ${chalk.cyan('https://github.com/ayumuwall/OpenSpec-J/issues')}`);
 
-    // Restart instruction only when at least one IDE/editor-resident tool
-    // actually received a generated surface. Two conditions, coupled to the SAME
-    // tool: (1) its commands/skills are loaded by a long-running editor process
-    // (CLI tools pick the files up immediately, so a restart line would be wrong
-    // for them — see #1067), and (2) a surface was actually generated for it
-    // under the active delivery (an IDE tool that generated nothing has nothing a
-    // restart would pick up, even if a co-configured CLI tool did generate).
-    // Wording follows what the IDE tool itself generated, not the global
-    // aggregate: it must not say "commands" when the IDE tool only got skills
-    // while a co-configured CLI tool got commands. Not "slash commands" either:
-    // Amazon Q's generated files are prompt-library entries invoked with @, so a
-    // restart line promising slash commands would be wrong for it.
-    const restartCommandsGenerated = successfulTools.some(
-      (tool) =>
-        tool.requiresIdeRestart &&
-        shouldGenerateCommandsForTool(tool.value, activeDelivery)
+    // 正常に設定でき、現在の delivery で対応サーフェスがある IDE／エディター常駐型
+    // ツールに再起動を案内する。init と update で同じ状況に同じ文言を表示できるよう、
+    // 判定と文言は formatIdeRestart に集約する。
+    const restartHint = formatIdeRestart(
+      successfulTools.map((tool) => tool.value),
+      activeDelivery
     );
-    const restartSkillsGenerated = successfulTools.some(
-      (tool) =>
-        tool.requiresIdeRestart &&
-        shouldGenerateSkillsForTool(tool.value, activeDelivery)
-    );
-    if (restartCommandsGenerated || restartSkillsGenerated) {
+    if (restartHint) {
       console.log();
-      console.log(
-        chalk.white(
-          restartCommandsGenerated
-            ? '新しいコマンドを有効にするにはIDEを再起動してください。'
-            : '新しいスキルを有効にするにはIDEを再起動してください。'
-        )
-      );
+      console.log(chalk.white(restartHint));
     }
 
     console.log();

@@ -234,8 +234,8 @@ describe('getSkillReferenceTransformer', () => {
     expect(transformer('/opsx:unknown-command')).toBe('/opsx:unknown-command');
   });
 
-  it('uses natural-language references for Rovo Dev, which has no slash surface', () => {
-    const transformer = getSkillReferenceTransformer('rovodev');
+  it.each(['rovodev', 'codeassistant'])('uses natural-language skill references for %s', (toolId) => {
+    const transformer = getSkillReferenceTransformer(toolId);
     expect(transformer('/opsx:propose')).toBe('openspec-propose スキル');
     expect(transformer('Run `/opsx:apply` then /opsx:archive')).toBe(
       'Run `openspec-apply-change スキル` then openspec-archive-change スキル'

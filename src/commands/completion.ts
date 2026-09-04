@@ -279,7 +279,7 @@ export class CompletionCommand {
         case 'schemas': {
           const schemaNames = await this.completionProvider.getSchemaNames();
           for (const name of schemaNames) {
-            console.log(`${name}\tschema`);
+            console.log(`${name}\tスキーマ`);
           }
           break;
         }
