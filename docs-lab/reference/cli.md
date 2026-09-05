@@ -664,7 +664,7 @@ openspec validate --all            # すべての変更と仕様
 ```
 ✓ change/add-rate-limit
 ✓ spec/api
-合計: 2件成功、0件失敗（全2件）
+結果: 成功 2 / 失敗 0 （計 2 件）
 ```
 
 **アーカイブ時のマージに関する検出事項**
@@ -672,7 +672,7 @@ openspec validate --all            # すべての変更と仕様
 変更を検証する際は、ファイルを書き込まず、現在の本仕様に対してアーカイブ用のマージ処理を実行します。`MODIFIED` の対象がない場合や `ADDED` 要件が競合する場合など、マージの競合は `INFO` として報告されます。
 
 ```text
-ℹ [INFO] api/spec.md: アーカイブではこの仕様差分を適用できません: api の MODIFIED で見出し「### Requirement: Rate limiting」が見つかりません
+ℹ [INFO] api/spec.md: アーカイブでこの仕様差分は拒否されます: api の MODIFIED に失敗しました: "### Requirement: Rate limiting" - 見つかりません
 ```
 
 検証が成功した場合も、テキスト出力と JSON 出力の両方に表示されます。対象が見つからないのは、関連する別の変更がまだアーカイブされていないためかもしれません。そのため、`INFO` は `--strict` を指定した場合も終了コードへ影響しません。本仕様へ同期済みの仕様差分には、archive の既存のマージ規則が適用されます。
@@ -826,8 +826,8 @@ openspec validate --all --report bogus --json
     {
       "severity": "error",
       "code": "invalid_validation_report_request",
-      "message": "不明な検証レポート 'bogus' です。",
-      "fix": "項目名を指定せず、--report full|findings を --all、--changes、--specs、--archived のいずれかと組み合わせてください。アーカイブ済みとアクティブの範囲は併用できません。"
+      "message": "未知の検証レポート 'bogus' です。",
+      "fix": "項目名を指定せず、--report full|findings を --all、--changes、--specs、--archived のいずれかと組み合わせてください。アーカイブ済みとアクティブの対象範囲は同時に指定しないでください。"
     }
   ]
 }

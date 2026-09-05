@@ -28,7 +28,7 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 
 - [#786](https://github.com/Fission-AI/OpenSpec/pull/786) [`0296401`](https://github.com/Fission-AI/OpenSpec/commit/0296401b823726ae6a8d8505104e95c7899b3056) [@Br1an67](https://github.com/Br1an67) に感謝します！ - 初期化後も空の OpenSpec ディレクトリを Git で保持するようにしました。init を再実行すると、不足しているディレクトリマーカーが復元されます。既存ファイルを上書きしたり、マーカーのシンボリックリンクをたどったりすることはありません。
 
-- [#1725](https://github.com/Fission-AI/OpenSpec/pull/1725) [`cd72444`](https://github.com/Fission-AI/OpenSpec/commit/cd724449aced1655eb513f3207600bec074c7588) [@aron-intframe](https://github.com/aron-intframe) に感謝します！ - `openspec init` と `openspec update` で、IDE の再起動案内を共通化しました。コマンドの場合は「コマンドを更新するため IDE を再起動してください。」、スキルの場合は「スキルを更新するため IDE を再起動してください。」と表示します。ワークフローを削除した場合にも対応し、新しいファイルを生成したとは案内しません。
+- [#1725](https://github.com/Fission-AI/OpenSpec/pull/1725) [`cd72444`](https://github.com/Fission-AI/OpenSpec/commit/cd724449aced1655eb513f3207600bec074c7588) [@aron-intframe](https://github.com/aron-intframe) に感謝します！ - `openspec init` と `openspec update` で、IDE の再起動案内を共通化しました。コマンドの場合は「IDEを再起動してコマンドを再読み込みしてください。」、スキルの場合は「IDEを再起動してスキルを再読み込みしてください。」と表示します。ワークフローを削除した場合にも対応し、新しいファイルを生成したとは案内しません。
 
 ## 1.11.0
 
