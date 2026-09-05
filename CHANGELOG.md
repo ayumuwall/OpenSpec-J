@@ -4,6 +4,7 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 
 ## 1.12.0
 
+- **[OpenSpec-J]** 動作確認で見つかった `verify` の誤訳、ワークフローの用語混在・翻訳漏れ・ゼロ幅文字、CLI の表示と句読点を修正。Codex の共有スキル参照を日本語化し、旧形式との互換性を維持
 - **[OpenSpec-J]** OpenSpec v1.12.0 の upstream 変更を取り込み、CLI、初期化・更新フロー、OPSX ワークフロー、ドキュメントの追加・変更された人間向け文言を日本語化
 - **[OpenSpec-J]** SourceCraft Code Assistant、`openspec validate --report findings`、空ディレクトリ保持、共通 IDE 再起動案内に対応し、静的配布スキルと parity ハッシュを再生成
 - **[OpenSpec-J] 翻訳棚卸し:** シェル補完、設定表示、OpenSpec ルート検出エラー、テレメトリー通知に残っていた英語文言を日本語化

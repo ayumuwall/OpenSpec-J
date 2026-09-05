@@ -82,21 +82,13 @@ ${PLANNING_GUIDANCE}
 - 求められた場合は進め方を提案する
 
 **視覚化**
+
+システム構成、状態遷移、データの流れ、アーキテクチャ、依存関係を ASCII 図で示し、選択肢は表で比較します。以下は状態 A から B または C への遷移例です。
 \`\`\`
-+------------------------------------------+
-|     Use ASCII diagrams liberally         |
-+------------------------------------------+
-|                                          |
-|   [State A] -------> [State B]           |
-|       |                                  |
-|       v                                  |
-|   [State C]                              |
-|                                          |
-|   System diagrams, state machines,       |
-|   data flows, architecture sketches,     |
-|   dependency graphs, comparison tables   |
-|                                          |
-+------------------------------------------+
+[A] -------> [B]
+ |
+ v
+[C]
 \`\`\`
 
 **図にはプレーン ASCII だけを使う** - 境界線には \`+\` \`-\` \`|\`、矢印には \`-->\` \`<--\` \`^\` \`v\`、マーカーには \`*\` \`x\` を使います。
@@ -162,7 +154,7 @@ openspec list --json
 
 3. **決定が固まったら記録を提案する**
 
-   \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例：\`user-auth\` または \`identity/user-auth\`）。既存の capability では完全なパスを維持し、新しい capability ではプロジェクトですでに使われている構成に従います。
+   \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例：\`user-auth\` または \`identity/user-auth\`）。既存の機能では完全なパスを維持し、新しい機能ではプロジェクトですでに使われている構成に従います。
 
    | 発見した内容         | 記録先                              |
    | -------------------- | ----------------------------------- |
@@ -276,19 +268,15 @@ openspec list --json
 
 あなた: それなら前提が大きく変わります。
 
-     +-------------------------------------------------+
-     |          CLI TOOL DATA STORAGE                  |
-     +-------------------------------------------------+
+     CLI ツールのデータ保存を比較します。
 
-     Key constraints:
-     - No daemon running
-     - Must work offline
-     - Single user
+     主な制約:
+     - 常駐プロセスを起動しない
+     - オフラインで動作する
+     - ユーザーは 1 人
 
-                  SQLite          Postgres
-     Deployment   embedded        needs server
-     Offline      yes             no
-     Single file  yes             no
+     SQLite: 組み込み型でサーバー不要。単一ファイルで保存でき、オフラインで利用可能。
+     Postgres: サーバーが必要。単一ファイルでの運用には向かず、接続先を利用できる必要がある。
 
      SQLite です。かなり明確です。
 
@@ -404,21 +392,13 @@ ${PLANNING_GUIDANCE}
 - 求められた場合は進め方を提案する
 
 **視覚化**
+
+システム構成、状態遷移、データの流れ、アーキテクチャ、依存関係を ASCII 図で示し、選択肢は表で比較します。以下は状態 A から B または C への遷移例です。
 \`\`\`
-+------------------------------------------+
-|     Use ASCII diagrams liberally         |
-+------------------------------------------+
-|                                          |
-|   [State A] -------> [State B]           |
-|       |                                  |
-|       v                                  |
-|   [State C]                              |
-|                                          |
-|   System diagrams, state machines,       |
-|   data flows, architecture sketches,     |
-|   dependency graphs, comparison tables   |
-|                                          |
-+------------------------------------------+
+[A] -------> [B]
+ |
+ v
+[C]
 \`\`\`
 
 **図にはプレーン ASCII だけを使う** - 境界線には \`+\` \`-\` \`|\`、矢印には \`-->\` \`<--\` \`^\` \`v\`、マーカーには \`*\` \`x\` を使います。
@@ -486,7 +466,7 @@ openspec list --json
 
 3. **決定が固まったら記録を提案する**
 
-   \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例：\`user-auth\` または \`identity/user-auth\`）。既存の capability では完全なパスを維持し、新しい capability ではプロジェクトですでに使われている構成に従います。
+   \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例：\`user-auth\` または \`identity/user-auth\`）。既存の機能では完全なパスを維持し、新しい機能ではプロジェクトですでに使われている構成に従います。
 
    | 発見した内容         | 記録先                              |
    | -------------------- | ----------------------------------- |

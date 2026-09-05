@@ -200,7 +200,7 @@ export async function maybeShowTelemetryNotice(
     // Display notice on stderr, not stdout: stdout is reserved for command
     // output (raw passthrough text, JSON, etc.) and must stay parser/pipe-safe.
     console.error(
-      '注: OpenSpec は匿名の利用統計を収集します。オプトアウト: OPENSPEC_TELEMETRY=0 または openspec config set telemetry.enabled false'
+      '注: OpenSpec は匿名の利用統計を収集します。収集を停止するには: OPENSPEC_TELEMETRY=0 または openspec config set telemetry.enabled false'
     );
 
     // Mark as seen

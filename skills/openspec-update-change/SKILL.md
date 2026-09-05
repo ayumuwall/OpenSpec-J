@@ -1,6 +1,6 @@
 ---
 name: openspec-update-change
-description: 既存の planning アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。コードは編集しません。
+description: 既存の 計画アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。コードは編集しません。
 allowed-tools: Bash(openspec:*)
 license: MIT
 compatibility: OpenSpec CLI が必要です。

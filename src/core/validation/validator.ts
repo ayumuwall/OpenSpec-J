@@ -644,7 +644,7 @@ export class Validator {
     return error.issues.map(err => {
       let message = err.message;
       if (message === VALIDATION_MESSAGES.CHANGE_NO_DELTAS) {
-        message = `${message}. ${VALIDATION_MESSAGES.GUIDE_NO_DELTAS}`;
+        message = `${message}。${VALIDATION_MESSAGES.GUIDE_NO_DELTAS}`;
       }
       return {
         level: 'ERROR' as ValidationLevel,
@@ -698,7 +698,7 @@ export class Validator {
         issues.push({
           level: 'WARNING',
           path: `requirements[${index}].scenarios`,
-          message: `${VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS}. ${VALIDATION_MESSAGES.GUIDE_SCENARIO_FORMAT}`,
+          message: `${VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS}。${VALIDATION_MESSAGES.GUIDE_SCENARIO_FORMAT}`,
         });
       }
   });
@@ -762,8 +762,9 @@ export class Validator {
 
   private enrichTopLevelError(itemId: string, baseMessage: string): string {
     const msg = baseMessage.trim();
+    const separator = /[\u3040-\u30ff\u3400-\u9fff]/u.test(msg) ? '。' : '. ';
     if (msg === VALIDATION_MESSAGES.CHANGE_NO_DELTAS) {
-      return `${msg}. ${VALIDATION_MESSAGES.GUIDE_NO_DELTAS}`;
+      return `${msg}${separator}${VALIDATION_MESSAGES.GUIDE_NO_DELTAS}`;
     }
     if (
       msg.includes('Spec must have a Purpose section') ||
@@ -771,7 +772,7 @@ export class Validator {
       msg.includes(VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY) ||
       msg.includes(VALIDATION_MESSAGES.SPEC_NO_REQUIREMENTS)
     ) {
-      return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS}`;
+      return `${msg}${separator}${VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS}`;
     }
     if (
       msg.includes('Change must have a Why section') ||
@@ -780,7 +781,7 @@ export class Validator {
       msg.includes('Why セクション') ||
       msg.includes(VALIDATION_MESSAGES.CHANGE_WHAT_EMPTY)
     ) {
-      return `${msg}. ${VALIDATION_MESSAGES.GUIDE_MISSING_CHANGE_SECTIONS}`;
+      return `${msg}${separator}${VALIDATION_MESSAGES.GUIDE_MISSING_CHANGE_SECTIONS}`;
     }
     return msg;
   }

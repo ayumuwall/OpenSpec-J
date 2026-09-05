@@ -211,8 +211,8 @@ proposal は、この変更を **なぜ** するのか、**何を** するのか
 **実行:** proposal のドラフトを作成（まだ保存しない）:
 
 `<capability-path>` は `specs/` からの相対仕様ディレクトリです（例:
-`user-auth` または `identity/user-auth`）。変更する capability には既存の完全なパスを使用します。
-新しい capability は、プロジェクトで確立済みの仕様構成に従います。
+`user-auth` または `identity/user-auth`）。変更する機能には既存の完全なパスを使用します。
+新しい機能は、プロジェクトで確立済みの仕様構成に従います。
 
 ```
 proposal のドラフトです:
@@ -229,10 +229,10 @@ proposal のドラフトです:
 
 ## Capabilities
 
-### 新しい能力
+### New Capabilities
 - `<capability-path>`: [内容の簡潔な説明]
 
-### 変更する機能
+### Modified Capabilities
 <!-- 既存の挙動を変更する場合 -->
 - `<existing-capability-path>`: [内容の簡潔な説明]
 

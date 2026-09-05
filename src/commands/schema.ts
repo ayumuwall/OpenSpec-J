@@ -1421,7 +1421,7 @@ function createDefaultTemplate(artifactId: string): string {
 
 ## Capabilities
 
-### 新しい能力
+### New Capabilities
 <!-- 追加する機能を列挙します -->
 
 ### Modified Capabilities

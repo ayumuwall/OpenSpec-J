@@ -205,7 +205,7 @@ export function printStatusText(status: ChangeStatus): void {
   console.log(`変更: ${status.changeName}`);
   console.log(`スキーマ: ${status.schemaName}`);
   if (status.changeRoot) {
-    console.log(`変更Root: ${status.changeRoot}`);
+    console.log(`変更ルート: ${status.changeRoot}`);
   }
   const skippedSuffix = skippedCount > 0 ? `（${skippedCount}件スキップ）` : '';
   console.log(`進捗: ${doneCount}/${total} アーティファクト完了${skippedSuffix}`);

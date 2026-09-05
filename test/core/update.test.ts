@@ -485,7 +485,7 @@ metadata:
         const skillFile = path.join(legacySkills, entry.name, 'SKILL.md');
         const legacyContent = (await fs.readFile(skillFile, 'utf-8'))
           .replace(
-            /\$openspec-([a-z0-9-]+) \(Codex\) or \/openspec-\1 \(other agents\)/g,
+            /\$openspec-([a-z0-9-]+)（Codex）、\/openspec-\1（その他の対応エージェント）/g,
             '$openspec-$1'
           )
           .replace(/generatedBy:\s*"[^"]+"/, 'generatedBy: "0.1.0"')

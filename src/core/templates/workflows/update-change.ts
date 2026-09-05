@@ -10,7 +10,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 export function getUpdateChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-update-change',
-    description: '既存の planning アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。コードは編集しません。',
+    description: '既存の 計画アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。コードは編集しません。',
     instructions: `変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
 
 ${STORE_SELECTION_GUIDANCE}
@@ -99,7 +99,7 @@ ${STORE_SELECTION_GUIDANCE}
 export function getOpsxUpdateCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Update',
-    description: '変更を更新し、既存の planning アーティファクトを修正して一貫性を保つ（実験的）',
+    description: '変更を更新し、既存の 計画アーティファクトを修正して一貫性を保つ（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。

@@ -324,10 +324,10 @@ describe('getTransformerForTool', () => {
     for (const delivery of ['both', 'commands', 'skills'] as const) {
       const transformer = getTransformerForTool('codex', delivery, 'skills-invocable', undefined);
       expect(transformer?.('/opsx:propose')).toBe(
-        '$openspec-propose (Codex) or /openspec-propose (other agents)'
+        '$openspec-propose（Codex）、/openspec-propose（その他の対応エージェント）'
       );
       expect(transformer?.('Run /opsx:apply next')).toBe(
-        'Run $openspec-apply-change (Codex) or /openspec-apply-change (other agents) next'
+        'Run $openspec-apply-change（Codex）、/openspec-apply-change（その他の対応エージェント） next'
       );
     }
   });

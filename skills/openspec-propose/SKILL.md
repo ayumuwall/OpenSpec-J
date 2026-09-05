@@ -15,11 +15,11 @@ metadata:
 
 スキーマで定義されたアーティファクトを含む変更を作成します。デフォルトの spec-driven スキーマでは次のとおりです:
 - proposal.md（何を、なぜ）
-- `specs/<capability-path>/spec.md`（システムが果たすべき内容。本仕様ではなく delta）
+- `specs/<capability-path>/spec.md`（システムが果たすべき内容。本仕様ではなく仕様差分）
 - design.md（どのように）
 - tasks.md（実装手順）
 
-`<capability-path>` は `specs/` からの相対仕様ディレクトリです（例: `user-auth` または `identity/user-auth`）。既存の capability では完全なパスを維持し、新しい capability はプロジェクトで確立済みの構成に従います。
+`<capability-path>` は `specs/` からの相対仕様ディレクトリです（例: `user-auth` または `identity/user-auth`）。既存の機能では完全なパスを維持し、新しい機能はプロジェクトで確立済みの構成に従います。
 
 ユーザーが実装する準備ができたら、明示的に apply ワークフローを開始する必要があります。
 

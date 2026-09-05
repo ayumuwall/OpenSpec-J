@@ -117,7 +117,7 @@ export function transformToCodexCompatibleSkillReferences(text: string): string 
     const skillName = COMMAND_TO_SKILL_NAME[commandId];
     return skillName === undefined
       ? match
-      : `$${skillName} (Codex) or /${skillName} (other agents)`;
+      : `$${skillName}（Codex）、/${skillName}（その他の対応エージェント）`;
   });
 }
 

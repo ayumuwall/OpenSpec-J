@@ -40,7 +40,7 @@ function normalizeGeneratedSkill(content: string): string {
  */
 function toLegacyCodexReferences(content: string): string {
   return content.replace(
-    /\$(openspec-[a-z0-9-]+) \(Codex\) or \/\1 \(other agents\)/g,
+    /\$(openspec-[a-z0-9-]+)(?: \(Codex\) or \/\1 \(other agents\)|（Codex）、\/\1（その他の対応エージェント）)/g,
     (match, skillName: string) =>
       OPENSPEC_SKILL_NAME_SET.has(skillName) ? `$${skillName}` : match
   );
@@ -59,6 +59,6 @@ export function isLegacyCodexSkillEquivalentToCurrent(
   const normalizedCurrent = normalizeGeneratedSkill(currentContent);
   return (
     normalizedLegacy === normalizedCurrent ||
-    normalizedLegacy === toLegacyCodexReferences(normalizedCurrent)
+    toLegacyCodexReferences(normalizedLegacy) === toLegacyCodexReferences(normalizedCurrent)
   );
 }

@@ -24,14 +24,14 @@ OpenSpec の変更に含まれるタスクを実装します。
    - アクティブな変更が1つだけなら自動選択する
    - 曖昧なら `openspec list --json` で利用可能な変更を取得し、ユーザーに選択してもらう
 
-常に「変​​更の使用: <name>」と上書き方法 (例: `/openspec-apply-change <other>`) をアナウンスします。
+常に「変更の使用: <name>」と上書き方法 (例: `/openspec-apply-change <other>`) をアナウンスします。
 
 2. **ステータスを確認してスキーマを理解します**
    ```bash
    openspec status --change "<name>" --json
    ```
 JSON を解析して以下を理解します。
-- `schemaName`: 使用されているワークフロー (例: 「仕様主導」)
+- `schemaName`: 使用されているワークフロー (例: 「spec-driven」)
 - `planningHome`、`changeRoot`、および `actionContext`: 計画範囲と編集制約
 - どのアーティファクトにタスクが含まれているか (通常、仕様主導型の場合は「タスク」、その他の場合はステータスを確認)
 

@@ -2,6 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { isLegacyCodexSkillEquivalentToCurrent } from '../../../src/core/shared/skill-content-equivalence.js';
 
 describe('legacy Codex skill equivalence', () => {
+  it.each([
+    '$openspec-apply-change',
+    '$openspec-apply-change (Codex) or /openspec-apply-change (other agents)',
+  ])('旧形式 %s と日本語の共有参照を同等と判定する', (legacy) => {
+    const current = '$openspec-apply-change（Codex）、/openspec-apply-change（その他の対応エージェント）';
+    expect(isLegacyCodexSkillEquivalentToCurrent(legacy, current)).toBe(true);
+    expect(isLegacyCodexSkillEquivalentToCurrent(`${legacy}\nユーザーの追記`, current)).toBe(false);
+  });
+
+  it.each([
+    ['$openspec-personal', '$openspec-personal（Codex）、/openspec-personal（その他の対応エージェント）'],
+    ['$openspec-apply-change', '$openspec-apply-change（Codex）、/openspec-archive-change（その他の対応エージェント）'],
+  ])('独自参照や左右の名前が異なる参照は同等とみなさない: %s', (legacy, current) => {
+    expect(isLegacyCodexSkillEquivalentToCurrent(legacy, current)).toBe(false);
+  });
+
   it('accepts generated version, BOM, CRLF, and known dual-reference differences', () => {
     const legacy =
       '\uFEFF---\r\nmetadata:\r\n  generatedBy: "0.1.0"\r\n---\r\nUse $openspec-apply-change.\r\n';

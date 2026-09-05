@@ -8,13 +8,13 @@
 
 ## Capabilities
 
-### 新しい能力
+### New Capabilities
 <!-- 導入する機能。プロジェクトの既存の仕様構成に従い、新しく導入するパス区切りは
      kebab-case にします（例: user-auth または identity/user-auth）。各項目は
      specs/<capability-path>/spec.md を作成します。 -->
 - `<capability-path>`: <この機能が対象にする内容の簡潔な説明>
 
-### 変更する機能
+### Modified Capabilities
 <!-- REQUIREMENTS が変わる既存機能（実装のみの変更なら不要）。
      仕様レベルの振る舞いが変わる場合だけ記載してください。各項目には仕様差分ファイルが必要です。
      openspec/specs/ 内の既存パスを正確に使用します。要件変更がなければ空にしてください。

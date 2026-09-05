@@ -28,6 +28,7 @@
 ### 0.3 翻訳対象の原則
 
 - `/openspec/` 配下は **すべて翻訳対象外**。
+- `/website/` 配下は **すべて翻訳・検証対象外**。upstream の変更は人間向け文言も翻訳せず、そのまま取り込む。`website/` 用の依存関係インストール、型検査、テスト、ビルドも実施しない。
 - `/test/` など配布物に含まれないファイルは原則翻訳対象外（日本語版テスト検証に必要な場合のみ変更）。
 - 変更してよいのは **人間が読むテキスト** のみ。
   - README / docs / コメント
@@ -208,7 +209,10 @@ git diff upstream-vA.B.C upstream-vX.Y.Z > diffs/upstream-vA.B.C__upstream-vX.Y.
 
 A openspec/changes/...
 M test/...
+M website/...
 ```
+
+- `website/**` は内容にかかわらず **翻訳対象外** セクションへ分類し、進捗用チェックボックスを付けない。
 
 ### 2.3 ja-docs に切り替え
 
@@ -268,7 +272,7 @@ git merge main
 - コマンド名・フラグ・ファイルパスは翻訳しない
 - `OPENSPEC-J:NOTE` を維持
 - README_OLD.md は同期対象外
-- 翻訳対象外（/openspec/, /test/ など）は編集しない
+- 翻訳対象外（/openspec/, /website/, /test/ など）は翻訳目的で編集しない。`website/**` の upstream 変更は未翻訳のまま取り込み、OpenSpec-J 固有のリンクや設定だけを維持する
 - マージと競合解消の直後に、OpenSpec-J の不変条件を確認する。
   ```
   node -p "require('./package.json').name"
@@ -293,6 +297,7 @@ node bin/openspec.js init /tmp/openspec-j-init
 node bin/openspec.js validate --strict
 ```
 
+- `website/**` は検証対象外とし、`pnpm --dir website ...` などの website 用コマンドは実行しない。
 - **上記コマンドは実行するだけでなく、原則としてすべて成功させる。**
   - `pnpm build` と `pnpm test` が終了コード 0 で完了し、全テストが成功することを、§2.6 以降へ進むための必須条件とする。
   - テスト失敗が1件でも残っている状態で、ローカライズ作業を「完了」と報告したり、§2.6 の仕上げ、タグ付与、GitHub Release 作成、npm 公開へ進んだりしない。
