@@ -75,7 +75,7 @@ metadata:
    ```bash
    openspec new change "<name>" --schema "<schema-name>"
    ```
-これにより、planning home 配下に変更ディレクトリが作成されます。場所は CLI が `.openspec.yaml` を使って解決します。
+CLI が特定した OpenSpec ルートの `openspec/changes/` 配下に変更ディレクトリが作成されます。変更の設定は、その中の `.openspec.yaml` に保存されます。
 
 5. **アーティファクトの作成順序を取得する**
    ```bash

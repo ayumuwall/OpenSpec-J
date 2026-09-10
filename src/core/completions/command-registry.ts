@@ -404,7 +404,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'doctor',
-    description: '解決済み OpenSpec ルートの関連状態を診断',
+    description: '対象の OpenSpec ルートと参照先の状態を診断',
     flags: [
       COMMON_FLAGS.json,
       COMMON_FLAGS.store,

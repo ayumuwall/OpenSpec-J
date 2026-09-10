@@ -583,7 +583,7 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   }
   saveGlobalConfig(config);
 
-  console.log(`移行しました: ${installedWorkflows.length} 個のワークフローを含むカスタムプロファイル`);
+  console.log(`グローバル設定にプロファイルが未指定のため、既存の ${installedWorkflows.length} 個のワークフローを custom プロファイルとして保存しました。`);
   // Each detected tool resolves to a propose reference for its surface: the
   // command name its generated files answer to when commands will exist for it
   // under the effective delivery (/opsx:propose when namespaced under opsx/,
@@ -608,5 +608,5 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   );
   const proposeReference =
     proposeReferences.size === 1 ? [...proposeReferences][0] : 'openspec-propose スキル';
-  console.log(`このバージョンの新機能: ${proposeReference}。よりシンプルな使い方を試すには、'openspec config profile core' を実行してください。`);
+  console.log(`変更提案の作成: ${proposeReference}。基本のワークフロー構成に切り替えるには、'openspec config profile core' を実行してください。`);
 }

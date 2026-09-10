@@ -185,7 +185,7 @@ function printHumanHealth(health: RelationshipHealth, declaredReferenceCount: nu
 export function registerDoctorCommand(program: Command): void {
   const description =
     COMMAND_REGISTRY.find((entry) => entry.name === 'doctor')?.description ??
-    '解決済みの OpenSpec ルートに対する関連状態を診断';
+    '対象の OpenSpec ルートと参照先の状態を診断';
 
   program
     .command('doctor')
