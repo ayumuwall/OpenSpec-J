@@ -10,7 +10,7 @@
  * src/utils/command-references.ts at the call site.
  */
 
-import type { WorkflowId } from './profiles.js';
+import { ALL_WORKFLOWS, type WorkflowId } from './profiles.js';
 
 export type OnboardingCommand = {
   workflow: WorkflowId;
@@ -47,4 +47,26 @@ export function getOnboardingCommands(
 ): OnboardingCommand[] {
   const installed = new Set(workflows);
   return ONBOARDING_COMMANDS.filter((entry) => installed.has(entry.workflow));
+}
+
+/**
+ * プロファイルに含まれないワークフローの案内を返す。すべて導入済みなら null。
+ * セットアップ時に追加できるワークフローを示し、未導入のコマンドに気付けるようにする。
+ */
+export function formatOptionalWorkflowsNote(
+  installedWorkflows: readonly string[]
+): string[] | null {
+  const installed = new Set(installedWorkflows);
+  const missing = ALL_WORKFLOWS.filter((workflow) => !installed.has(workflow));
+
+  if (missing.length === 0) {
+    return null;
+  }
+
+  // `openspec config profile` 自体がプロジェクトへの適用を提案し、辞退時は
+  // `openspec update` を案内するため、ここでは2つ目のコマンドを示さない。
+  return [
+    `補足: ほかに ${missing.length} 件のワークフローを利用できます（${missing.join(', ')}）。`,
+    `\`openspec config profile\` で追加できます。`,
+  ];
 }

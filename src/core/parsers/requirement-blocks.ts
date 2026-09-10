@@ -169,24 +169,31 @@ export function parseDeltaSpec(content: string): DeltaPlan {
   const lines = normalized.split('\n');
   const fenceMask = buildCodeFenceMask(lines);
   const sections = splitTopLevelSections(lines, fenceMask);
-  const addedLookup = getSectionCaseInsensitive(sections, 'ADDED Requirements');
-  const modifiedLookup = getSectionCaseInsensitive(sections, 'MODIFIED Requirements');
-  const removedLookup = getSectionCaseInsensitive(sections, 'REMOVED Requirements');
-  const renamedLookup = getSectionCaseInsensitive(sections, 'RENAMED Requirements');
+  const addedLookup = getSectionsCaseInsensitive(sections, 'ADDED Requirements');
+  const modifiedLookup = getSectionsCaseInsensitive(sections, 'MODIFIED Requirements');
+  const removedLookup = getSectionsCaseInsensitive(sections, 'REMOVED Requirements');
+  const renamedLookup = getSectionsCaseInsensitive(sections, 'RENAMED Requirements');
   const skippedHeaders: SkippedHeader[] = [];
-  const added = parseRequirementBlocksFromSection(addedLookup.body, {
-    section: addedLookup.title,
-    bodyStartLine: addedLookup.bodyStartLine,
-    sink: skippedHeaders,
-  });
-  const modified = parseRequirementBlocksFromSection(modifiedLookup.body, {
-    section: modifiedLookup.title,
-    bodyStartLine: modifiedLookup.bodyStartLine,
-    sink: skippedHeaders,
-  });
-  const removedNames = parseRemovedNames(removedLookup.body);
-  const removedBlocks = parseRequirementBlocksFromSection(removedLookup.body);
-  const renamedPairs = parseRenamedPairs(renamedLookup.body);
+  const added = addedLookup.bodies.flatMap((body) =>
+    parseRequirementBlocksFromSection(body, {
+      section: addedLookup.title,
+      bodyStartLine: body.bodyStartLine,
+      sink: skippedHeaders,
+    })
+  );
+  const modified = modifiedLookup.bodies.flatMap((body) =>
+    parseRequirementBlocksFromSection(body, {
+      section: modifiedLookup.title,
+      bodyStartLine: body.bodyStartLine,
+      sink: skippedHeaders,
+    })
+  );
+  const removedNames = removedLookup.bodies.flatMap((body) => parseRemovedNames(body));
+  const removedBlocks = removedLookup.bodies.flatMap((body) =>
+    parseRequirementBlocksFromSection(body)
+  );
+  // セクションごとにペアを読むため、別セクションの FROM と TO は組み合わされない。
+  const renamedPairs = renamedLookup.bodies.flatMap((body) => parseRenamedPairs(body));
   skippedHeaders.sort((a, b) => a.line - b.line);
   return {
     added,
@@ -204,8 +211,19 @@ export function parseDeltaSpec(content: string): DeltaPlan {
   };
 }
 
-function splitTopLevelSections(lines: string[], fenceMask: boolean[]): Record<string, SectionBody> {
-  const result: Record<string, SectionBody> = {};
+/** 仕様差分ファイルの ## セクション。記述順に保持する。 */
+interface DeltaSection {
+  title: string;
+  body: SectionBody;
+}
+
+/**
+ * すべての ## セクションをリストで保持する。
+ * 見出しをキーにすると同じ見出しの前の本文が失われ、検証・マージに渡らない。
+ * 出現ごとに保持し、後続の検索で統合する。
+ */
+function splitTopLevelSections(lines: string[], fenceMask: boolean[]): DeltaSection[] {
+  const sections: DeltaSection[] = [];
   const indices: Array<{ title: string; index: number }> = [];
   for (let i = 0; i < lines.length; i++) {
     if (fenceMask[i]) continue;
@@ -218,28 +236,38 @@ function splitTopLevelSections(lines: string[], fenceMask: boolean[]): Record<st
     const current = indices[i];
     const next = indices[i + 1];
     const end = next ? next.index : lines.length;
-    result[current.title] = {
-      lines: lines.slice(current.index + 1, end),
-      fenceMask: fenceMask.slice(current.index + 1, end),
-      bodyStartLine: current.index + 2,
-    };
+    sections.push({
+      title: current.title,
+      body: {
+        lines: lines.slice(current.index + 1, end),
+        fenceMask: fenceMask.slice(current.index + 1, end),
+        bodyStartLine: current.index + 2,
+      },
+    });
   }
-  return result;
+  return sections;
 }
 
-const EMPTY_SECTION_BODY: SectionBody = { lines: [], fenceMask: [], bodyStartLine: 0 };
-
-function getSectionCaseInsensitive(
-  sections: Record<string, SectionBody>,
+/**
+ * 大文字・小文字を区別せず desired に一致する本文を文書順に返す。
+ * 同じ見出しや表記違いの見出しもすべて適用する。
+ * 各本文の bodyStartLine は保持し、診断の行番号を正確にする。
+ * title は最初に使われた表記であり、診断に引用する。
+ */
+function getSectionsCaseInsensitive(
+  sections: DeltaSection[],
   desired: string
-): { title: string; body: SectionBody; bodyStartLine: number; found: boolean } {
+): { title: string; bodies: SectionBody[]; found: boolean } {
   const target = desired.toLowerCase();
-  for (const [title, body] of Object.entries(sections)) {
-    if (title.toLowerCase() === target) {
-      return { title, body, bodyStartLine: body.bodyStartLine, found: true };
-    }
+  const matches = sections.filter((section) => section.title.toLowerCase() === target);
+  if (matches.length === 0) {
+    return { title: desired, bodies: [], found: false };
   }
-  return { title: desired, body: EMPTY_SECTION_BODY, bodyStartLine: 0, found: false };
+  return {
+    title: matches[0].title,
+    bodies: matches.map((section) => section.body),
+    found: true,
+  };
 }
 
 function parseRequirementBlocksFromSection(
@@ -286,6 +314,11 @@ function parseRequirementBlocksFromSection(
   return blocks;
 }
 
+/**
+ * ## REMOVED Requirements の要件名を文書順に返す。
+ * ### Requirement: 見出しと、それを含む箇条書きの両方に対応する。
+ * 箇条書きは CommonMark のすべての記号を認識する。
+ */
 function parseRemovedNames(sectionBody: SectionBody): string[] {
   const { lines, fenceMask } = sectionBody;
   if (lines.length === 0) return [];
@@ -298,8 +331,9 @@ function parseRemovedNames(sectionBody: SectionBody): string[] {
       names.push(normalizeRequirementName(m[1]));
       continue;
     }
-    // Also support bullet list of headers
-    const bullet = line.match(/^\s*-\s*`?###\s*Requirement:\s*(.+?)`?\s*$/);
+    // 箇条書きの見出しも認識する。* や + による削除が無視されないよう、
+    // CommonMark のすべての箇条書き記号に対応する。
+    const bullet = line.match(/^\s*[-*+]\s*`?###\s*Requirement:\s*(.+?)`?\s*$/);
     if (bullet) {
       names.push(normalizeRequirementName(bullet[1]));
     }
@@ -307,6 +341,11 @@ function parseRemovedNames(sectionBody: SectionBody): string[] {
   return names;
 }
 
+/**
+ * ## RENAMED Requirements の FROM:/TO: ペアを文書順に返す。
+ * 箇条書き記号は省略可能で、CommonMark のすべての記号を認識する。
+ * 従来は * や + による改名が無視されても archive が成功していた。
+ */
 function parseRenamedPairs(sectionBody: SectionBody): Array<{ from: string; to: string }> {
   const { lines, fenceMask } = sectionBody;
   if (lines.length === 0) return [];
@@ -315,8 +354,9 @@ function parseRenamedPairs(sectionBody: SectionBody): Array<{ from: string; to: 
   for (let i = 0; i < lines.length; i++) {
     if (fenceMask[i]) continue;
     const line = lines[i];
-    const fromMatch = line.match(/^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/);
-    const toMatch = line.match(/^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/);
+    // 箇条書き記号は省略可能。* や + による改名も認識する。
+    const fromMatch = line.match(/^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/);
+    const toMatch = line.match(/^\s*[-*+]?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/);
     if (fromMatch) {
       current.from = normalizeRequirementName(fromMatch[1]);
     } else if (toMatch) {

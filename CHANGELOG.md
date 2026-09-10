@@ -2,6 +2,37 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.13.0
+
+- [OpenSpec-J] upstream v1.13.0 に追従。apply の警告と依存関係の案内、提案前のコンテキスト確認、既存仕様の調査手順、追加ワークフローの案内を日本語化しました。既存の日本語訳と日本語版固有の設定を維持しています。
+- [OpenSpec-J] 翻訳棚卸し: `buildLaunchCommand` のメンバー未指定・workspace-file の相対パスに関するエラー2件を日本語化しました。
+
+### マイナー変更
+
+- [#1783](https://github.com/Fission-AI/OpenSpec/pull/1783) [`8ba4ac1`](https://github.com/Fission-AI/OpenSpec/commit/8ba4ac1b16a33830a766f0c03d224d516b6a90ce) [@clay-good](https://github.com/clay-good) に感謝します！ - 仕様差分がない変更を apply が警告するようになりました。従来はスキーマの `apply.requires` だけで実装可否を判定していたため、仕様より先に `tasks.md` を作ると、`openspec validate` では拒否される仕様差分のない状態でも実装可能と表示されていました。`openspec instructions apply` はテキストと `--json` の両方で不足を警告し、仕様を作成するか `skip_specs: true` を宣言するよう案内します。仕様がある変更、`skip_specs` を宣言した変更、必須アーティファクトが不足している変更には影響しません。
+
+  apply がブロックされている場合は、直接の依存先だけでなく、依存関係全体を案内します。提案だけがある変更に対して従来は `Missing artifacts: tasks` と表示し、tasks が依存する仕様の不足を示していませんでした。`--json` の `missingPrerequisites` には、作成順に不足アーティファクトを返します。復旧手順には、`core` プロファイルに含まれない `openspec-continue-change` スキルではなく、`openspec instructions <artifact> --change <name>` コマンドを示します。
+
+### パッチ変更
+
+- [#1798](https://github.com/Fission-AI/OpenSpec/pull/1798) [`aedf4d0`](https://github.com/Fission-AI/OpenSpec/commit/aedf4d0c64c4bdde2e21f199aee93fa0d598c33e) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - archive がフェンス付きコードブロック内の空行を書き換える不具合を修正しました。`buildUpdatedSpec` は文書の断片を結合する際、文書全体の連続する空行をまとめていたため、サンプル中の空行もアーカイブのたびに削除されていました。YAML のブロックスカラー、Python、期待出力のフィクスチャ、Markdown 内の Markdown など、空白に意味がある記述に影響していました。既存の構造解析と同じ `buildCodeFenceMask` を使い、フェンスの外側だけで空行をまとめます。外側の挙動は変わらず、空白文字を含む行は空行として扱いません。[#1797](https://github.com/Fission-AI/OpenSpec/issues/1797) を修正。
+
+- [#1800](https://github.com/Fission-AI/OpenSpec/pull/1800) [`fadac3e`](https://github.com/Fission-AI/OpenSpec/commit/fadac3e1c927bf5180ce82c806435c61db5d5adb) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `*` と `+` の箇条書きで記述した削除・改名を正しく読み取るようになりました。CommonMark は `-`、`*`、`+` を認めていますが、`## REMOVED Requirements` の箇条書きと `## RENAMED Requirements` の `FROM:` / `TO:` 行は `-` しか認識していませんでした。他の記号では操作が無視され、validate と archive が成功しても要件が残ったままになっていました。両形式とも `[-*+]` に対応します。`FROM:` / `TO:` の箇条書き記号は引き続き省略でき、`### Requirement:` 見出し形式も変更しません。[#1799](https://github.com/Fission-AI/OpenSpec/issues/1799) を修正。
+
+- [#1802](https://github.com/Fission-AI/OpenSpec/pull/1802) [`8251763`](https://github.com/Fission-AI/OpenSpec/commit/8251763ecdc349a0a1484f09da85f7e5c33f4836) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - 同じ見出しの仕様差分セクションをすべて適用するようになりました。従来は見出しをキーに本文を保存していたため、`## ADDED Requirements` が複数あると前の本文を上書きし、大文字・小文字だけが異なる見出しでは最初の一致しか読み取っていませんでした。破棄された要件を検証やマージが認識できず、validate と archive が成功してもレビューした仕様差分の一部が反映されない状態になっていました。セクションをリストで保持し、一致する本文をすべて読み取ります。診断の行番号は各セクションの元の位置を維持します。改名ペアはセクションごとに読み取り、別セクションの `FROM:` と `TO:` を組み合わせません。OpenSpec の構文をフェンス付きの例に含めた場合も対象です。[#1801](https://github.com/Fission-AI/OpenSpec/issues/1801) を修正。
+
+- [#1657](https://github.com/Fission-AI/OpenSpec/pull/1657) [`6d2dbe6`](https://github.com/Fission-AI/OpenSpec/commit/6d2dbe62d3386ac0df576136759775678102acf2) [@clay-good](https://github.com/clay-good) に感謝します！ - 提案の計画前に、選択したプロジェクトまたはストアのルートからプロジェクトコンテキストを読み込むようになりました。設定の優先順位と検証上の制限を適用します。ルートがない場合は暗黙に作成せず、ファイルを書き込まずに停止して初期化を案内します。
+
+- [#1700](https://github.com/Fission-AI/OpenSpec/pull/1700) [`3915db7`](https://github.com/Fission-AI/OpenSpec/commit/3915db763ad5394b29cdd895c87a91c837313ae8) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成する案内に、既存仕様の一覧取得と読み取り手順を追加しました。従来は進行中の変更一覧を返す `openspec list --json` だけが各所にあり、エージェントが仕様を調べるつもりで変更を列挙することがありました。explore スキルとコマンドは `openspec list --specs` による仕様一覧も示し、変更一覧との違いを説明します。spec-driven の `proposal` と `specs` の指示にも、既存機能の調査と仕様差分のパスを確認するコマンドを追加しました。一覧と読み取りの両方に `--store "<id>"` を渡し、`openspec show "<spec-id>" --type spec --json --no-scenarios` で同じルートの機能を読み取ります。[#1689](https://github.com/Fission-AI/OpenSpec/issues/1689) を修正。
+
+  シナリオを除いた読み取りは概要の確認に限ります。既存の対応範囲や変更内容を判断する前に、関連する仕様をシナリオも含めて全文読み取ります。
+
+- [#1779](https://github.com/Fission-AI/OpenSpec/pull/1779) [`3c6d318`](https://github.com/Fission-AI/OpenSpec/commit/3c6d318b837f443d1aabf969ce368e78ae12e891) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec init` と `openspec update` が、プロファイルに含まれないワークフローと追加方法を案内するようになりました。未インストールのコマンドを設定不備と誤認しにくくなります。
+
+- [#1808](https://github.com/Fission-AI/OpenSpec/pull/1808) [`d9e1a28`](https://github.com/Fission-AI/OpenSpec/commit/d9e1a28c38927e6d649781976cd1a753e28973af) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - コマンドファイルが破損しているのに `openspec update` が最新と報告する不具合を修正しました。従来はスキルファイルの `generatedBy` バージョンだけを確認していたため、コマンドファイルを手動編集したり途中で切れたりしても、`--force` なしでは修復されませんでした。削除されたファイルはすでに検出できていました。今後は既存の内容比較も使ってコマンドファイルを確認します。スキルとコマンドの両方を生成するツールが対象です。コマンドのみの経路は変更せず、配布モードでコマンドを生成しないツールでは比較を省略します。[#1807](https://github.com/Fission-AI/OpenSpec/issues/1807) を修正。
+
+- [#1782](https://github.com/Fission-AI/OpenSpec/pull/1782) [`c170dc7`](https://github.com/Fission-AI/OpenSpec/commit/c170dc77adbe868ce731e07df2806a7ca8fcb4ec) [@clay-good](https://github.com/clay-good) に感謝します！ - シナリオの箇条書きが複数行にわたる仕様で、`retire_capabilities` が廃止を拒否する不具合を修正しました。継続行をマージで扱えない内容として数えていたため、廃止をブロックし、マーカーを案内するヒントも表示していませんでした（[#1780](https://github.com/Fission-AI/OpenSpec/issues/1780)）。`+` の箇条書きにも対応します。従来は `-` と `*` しか認識せず、`+` を使ったシナリオを未処理の内容とみなして廃止できませんでした。
+
 ## 1.12.0
 
 - **[OpenSpec-J]** 動作確認で見つかった `verify` の誤訳、ワークフローの用語混在・翻訳漏れ・ゼロ幅文字、CLI の表示と句読点を修正。Codex の共有スキル参照を日本語化し、旧形式との互換性を維持

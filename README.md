@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.12.0 です。**<br>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.13.0 です。**<br>
 > 生成物だけ日本語にできれば十分な場合は、本家版の [Multi-Language](docs/multi-language.md) を利用できます。
 
 <details>
@@ -231,21 +231,9 @@ openspec update
 
 ## 貢献する
 
-**小さな修正** — バグ修正、タイプミスの修正、および軽微な改善は PR として直接送信できます。
+PR を作成する前に、基本設計の変更はディスカッション、それ以外は Issue を作成し、PR からリンクしてください。新機能、大規模なリファクタリング、アーキテクチャの変更には、先に OpenSpec の変更提案が必要です。
 
-**大規模な変更** — 新機能、重要なリファクタリング、またはアーキテクチャの変更については、実装を開始する前に意図と目標を調整できるよう、まず OpenSpec の変更提案を提出してください。
-
-提案書を作成するときは、OpenSpec の哲学を念頭に置いてください。私たちは、さまざまなコーディングエージェント、モデル、ユースケースを使う幅広いユーザーに向けて OpenSpec を作っています。変更は、特定の環境だけでなく多くの利用者にとってうまく機能するべきです。
-
-**AI によって生成されたコードは歓迎されます** — テストと検証が行われている限り。AI 生成コードを含む PR では、使用したコーディングエージェントとモデルを明記してください（例: 「Claude Code で claude-opus-4-5-20251101 を使用して生成」）。
-
-### 開発
-
-- 依存関係のインストール: `pnpm install`
-- ビルド: `pnpm run build`
-- テスト: `pnpm test`
-- CLI をローカルで開発: `pnpm run dev` または `pnpm run dev:cli`
-- Conventional Commit (1 行): `type(scope): subject`
+→ **[CONTRIBUTING.md](CONTRIBUTING.md)**: 最初の Issue から PR のマージまでの手順
 
 ## その他
 

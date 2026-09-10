@@ -16,6 +16,7 @@ import {
   resolveArtifactOutputs,
   type ArtifactInstructions,
 } from '../../core/artifact-graph/index.js';
+import { isSpecsArtifactPath } from '../../core/artifact-graph/outputs.js';
 import {
   getChangeDir,
   resolveCurrentPlanningHomeSync,
@@ -48,6 +49,7 @@ import {
   type ArchiveInstructions,
 } from './shared.js';
 import { parseTaskLines, type ParsedTask } from '../../utils/task-progress.js';
+import { METADATA_FILENAME } from '../../utils/change-metadata.js';
 
 // -----------------------------------------------------------------------------
 // 型
@@ -350,6 +352,107 @@ function toTaskItems(parsed: ParsedTask[]): TaskItem[] {
   return tasks;
 }
 
+/**
+ * アーティファクトを作成するコマンドを案内する。
+ * core に含まれない openspec-continue-change スキルの代わりに、
+ * すべてのプロファイルで利用できる CLI コマンドを使う。
+ */
+function describeArtifactRemedy(
+  changeName: string,
+  artifactId?: string,
+  options: { many?: boolean } = {}
+): string {
+  const target = artifactId ?? '<artifact>';
+  const verb = options.many ? '各アーティファクトを作成してください。' : '作成してください。';
+  return (
+    `\`openspec instructions ${target} --change ${changeName}\` で${verb}` +
+    `（\`openspec status --change ${changeName}\` で残りを確認できます）。`
+  );
+}
+
+/**
+ * 生成先パスからアーティファクト ID を探し、作成方法の案内に使う。
+ */
+function findArtifactIdFor(
+  schema: { artifacts: { id: string; generates: string }[] },
+  generates: string
+): string | undefined {
+  return schema.artifacts.find((artifact) => artifact.generates === generates)?.id;
+}
+
+/**
+ * apply の実行前に不足しているアーティファクトを作成順に返す。
+ * apply.requires の直接の依存先だけでなく、その先もたどる (#834, #869)。
+ * apply をブロックする条件は変更せず、status と同じ集合・順序で案内する。
+ */
+function collectMissingPrerequisites(input: {
+  requiredArtifactIds: string[];
+  schema: { artifacts: { id: string; requires: string[] }[] };
+  buildOrder: string[];
+  completed: Set<string>;
+}): string[] {
+  const { requiredArtifactIds, schema, buildOrder, completed } = input;
+  const byId = new Map(schema.artifacts.map((artifact) => [artifact.id, artifact]));
+  const missing = new Set<string>();
+  const queue = [...requiredArtifactIds];
+  const seen = new Set<string>(queue);
+
+  while (queue.length > 0) {
+    const id = queue.shift() as string;
+    const artifact = byId.get(id);
+    if (!artifact) continue;
+    if (!completed.has(id)) missing.add(id);
+    for (const dependency of artifact.requires) {
+      if (seen.has(dependency)) continue;
+      seen.add(dependency);
+      queue.push(dependency);
+    }
+  }
+
+  const order = new Map(buildOrder.map((id, index) => [id, index]));
+  return [...missing].sort(
+    (a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)
+  );
+}
+
+/**
+ * apply の指示とともに返す警告。
+ * apply.requires を満たしていても仕様差分がない状態は validate で拒否されるため、
+ * 実行をブロックする条件は変えず、不足を警告する。
+ * apply がブロック中なら不足は次の作業として案内し、警告にはしない。
+ * 仕様を生成しないスキーマでは作成時に skip_specs が付くため対象外。
+ */
+function collectApplyWarnings(input: {
+  state: ApplyInstructions['state'];
+  schema: { artifacts: { id: string; generates: string }[] };
+  changeDir: string;
+  changeName: string;
+  skippedArtifacts?: Set<string>;
+}): string[] {
+  const { state, schema, changeDir, changeName, skippedArtifacts } = input;
+  if (state === 'blocked') return [];
+
+  const specArtifacts = schema.artifacts.filter((artifact) =>
+    isSpecsArtifactPath(artifact.generates)
+  );
+  if (specArtifacts.length === 0) return [];
+  if (specArtifacts.some((artifact) => skippedArtifacts?.has(artifact.id))) return [];
+  const hasDeltas = specArtifacts.some(
+    (artifact) => resolveArtifactOutputs(changeDir, artifact.generates).length > 0
+  );
+  if (hasDeltas) return [];
+
+  const metadataPath = path.join(changeDir, METADATA_FILENAME);
+  // スキーマが実際に宣言する ID を使う。specs と決め打ちすると、contracts などの
+  // 別名を使うスキーマでは案内が失敗する。複数ある場合は推測せずプレースホルダーにする。
+  const specTarget = specArtifacts.length === 1 ? specArtifacts[0].id : '<artifact-id>';
+  return [
+    `この変更には仕様差分がなく、\`skip_specs: true\` も宣言されていないため、\`openspec validate ${changeName}\` は失敗します。` +
+      `実装前に仕様差分を作成してください（\`openspec instructions ${specTarget} --change ${changeName}\`）。` +
+      `仕様で定めた振る舞いが変わらない場合は、${metadataPath} に \`skip_specs: true\` を追加してください。`,
+  ];
+}
+
 export interface GenerateApplyInstructionsOptions {
   planningHome?: PlanningHome;
   references?: ReferenceIndexEntry[];
@@ -403,6 +506,14 @@ export async function generateApplyInstructions(
     }
   }
 
+  // apply の直接の必須条件に加え、その依存先の不足も収集する。
+  const missingPrerequisites = collectMissingPrerequisites({
+    requiredArtifactIds: [...requiredArtifactIds],
+    schema,
+    buildOrder: context.graph.getBuildOrder(),
+    completed: context.completed,
+  });
+
   // Build context files from all existing artifacts in schema
   const contextFiles: Record<string, string[]> = {};
   for (const artifact of schema.artifacts) {
@@ -437,18 +548,34 @@ export async function generateApplyInstructions(
 
   if (missingArtifacts.length > 0) {
     state = 'blocked';
-    instruction = `この変更はまだ適用できません。不足アーティファクト: ${missingArtifacts.join(', ')}。\n先に openspec-continue-change スキルで不足アーティファクトを作成してください。`;
+    const chain =
+      missingPrerequisites.length > missingArtifacts.length
+        ? `\n未作成（作成順）: ${missingPrerequisites.join(', ')}。` +
+          ` 適用前に、この変更で必要なものを作成してください。条件付きのものはスキーマで確認できます。`
+        : '';
+    instruction =
+      `この変更はまだ適用できません。不足アーティファクト: ${missingArtifacts.join(', ')}。${chain}` +
+      `\n${describeArtifactRemedy(
+        changeName,
+        // 不足が1つの場合だけ ID を指定する。複数ある場合の先頭は条件付きかもしれない。
+        missingPrerequisites.length === 1 ? missingPrerequisites[0] : undefined,
+        { many: missingPrerequisites.length > 1 }
+      )}`;
   } else if (tracksFile && !tracksFileExists) {
     // Tracking file configured but doesn't exist yet
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `${tracksFilename} ファイルが見つからないため、作成が必要です。\nopenspec-continue-change で追跡ファイルを生成してください。`;
+    instruction =
+      `${tracksFilename} ファイルが見つからないため、作成が必要です。` +
+      `\n${describeArtifactRemedy(changeName, findArtifactIdFor(schema, tracksFile))}`;
   } else if (tracksFile && tracksFileExists && tasks.length === 0) {
     // Tracking file exists but lists nothing an agent can work on: either no
     // checkboxes at all, or only checkboxes with no text after them.
     const tracksFilename = path.basename(tracksFile);
     state = 'blocked';
-    instruction = `${tracksFilename} は存在しますが、着手できるタスクがありません。\n${tracksFilename} にタスクを追加するか、openspec-continue-change で再生成してください。`;
+    instruction =
+      `${tracksFilename} は存在しますが、着手できるタスクがありません。` +
+      `\n${tracksFilename} にタスクを追加するか、再生成してください: ${describeArtifactRemedy(changeName, findArtifactIdFor(schema, tracksFile))}`;
   } else if (tracksFile && remaining === 0 && total > 0) {
     state = 'all_done';
     instruction = 'すべてのタスクが完了しました！この変更はアーカイブ可能です。\nアーカイブ前にテスト実行と変更レビューを検討してください。';
@@ -461,6 +588,14 @@ export async function generateApplyInstructions(
     instruction = schemaInstruction?.trim() ?? 'コンテキストファイルを読み、未完了タスクを進め、進捗に合わせて完了マークする。\nブロッカーや不明点があれば一旦止めて確認する。';
   }
 
+  const warnings = collectApplyWarnings({
+    state,
+    schema,
+    changeDir,
+    changeName,
+    skippedArtifacts: context.skippedArtifacts,
+  });
+
   return {
     changeName,
     changeDir,
@@ -470,6 +605,8 @@ export async function generateApplyInstructions(
     tasks,
     state,
     missingArtifacts: missingArtifacts.length > 0 ? missingArtifacts : undefined,
+    ...(missingPrerequisites.length > 0 ? { missingPrerequisites } : {}),
+    ...(warnings.length > 0 ? { warnings } : {}),
     instruction,
     ...(references !== undefined ? { references } : {}),
     ...operationInputs,
@@ -524,7 +661,7 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
 }
 
 export function printApplyInstructionsText(instructions: ApplyInstructions): void {
-  const { changeName, schemaName, contextFiles, progress, tasks, state, missingArtifacts, instruction } = instructions;
+  const { changeName, schemaName, contextFiles, progress, tasks, state, missingArtifacts, warnings, instruction } = instructions;
 
   console.log(`## 適用: ${changeName}`);
   console.log(`スキーマ: ${schemaName}`);
@@ -540,7 +677,23 @@ export function printApplyInstructionsText(instructions: ApplyInstructions): voi
     console.log('### ⚠️ ブロック中');
     console.log();
     console.log(`不足アーティファクト: ${missingArtifacts.join(', ')}`);
-    console.log('先に openspec-continue-change スキルでこれらを作成してください。');
+    if (
+      instructions.missingPrerequisites &&
+      instructions.missingPrerequisites.length > missingArtifacts.length
+    ) {
+      console.log(
+        `未作成（作成順）: ${instructions.missingPrerequisites.join(', ')}`
+      );
+    }
+    console.log();
+  }
+
+  if (warnings && warnings.length > 0) {
+    console.log('### ⚠️ 警告');
+    console.log();
+    for (const warning of warnings) {
+      console.log(`- ${warning}`);
+    }
     console.log();
   }
 

@@ -4,6 +4,10 @@ packages:
 allowBuilds:
   esbuild@0.28.1: true
 
+# overrides はここだけで宣言する。pnpm 10 は package.json の pnpm.overrides を
+# この一覧へ統合せず、一覧全体の代わりに使う。Dependabot は package.json の
+# パッケージ名による指定を更新するため、重複して置くと設定がずれ、
+# こちらの脆弱性対策の固定バージョンが使われなくなる。
 overrides:
   brace-expansion@<=5.0.8: '>=5.0.9 <6'
   postcss@<8.5.23: '>=8.5.23 <9'

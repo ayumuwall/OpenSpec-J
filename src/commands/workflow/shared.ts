@@ -43,6 +43,14 @@ export interface ApplyInstructions {
   tasks: TaskItem[];
   state: 'blocked' | 'all_done' | 'ready';
   missingArtifacts?: string[];
+  /**
+   * apply の実行前に不足しているアーティファクトを作成順に列挙する。
+   * apply.requires の依存先もたどるため、直接の必須条件だけを示す
+   * missingArtifacts より多くなる場合がある。
+   */
+  missingPrerequisites?: string[];
+  /** 指示とともに返す、変更の実行をブロックしない問題。 */
+  warnings?: string[];
   instruction: string;
   /** Referenced-store index (read-only upstream context; omitted when none declared) */
   references?: ReferenceIndexEntry[];

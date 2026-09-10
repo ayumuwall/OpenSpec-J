@@ -181,6 +181,29 @@ jobs:
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
 
+      # nix build より先に更新スクリプトを実行する。pnpm-lock.yaml からハッシュを
+      # 再計算して flake.nix を更新するため、古い場合は置き換える値をここで示せる。
+      # ビルドを先にすると ERR_PNPM_NO_OFFLINE_TARBALL で停止し、ハッシュを案内できない。
+      # ルートの lockfile を変更するたびに更新が必要で、Dependabot では生成できない。
+      - name: pnpmDeps ハッシュと lockfile の一致を検証
+        run: |
+          bash scripts/update-flake.sh
+          if git diff --quiet flake.nix; then
+            echo "✅ flake.nix の pnpmDeps ハッシュは最新です"
+            exit 0
+          fi
+          # pnpmDeps ブロックだけを検索し、前方に追加された別の固定出力 derivation の
+          # ハッシュを誤って取得しない。
+          HASH=$(sed -n '/pnpmDeps = /,/};/p' flake.nix \
+            | sed -nE 's/.*hash = "(sha256-[^"]+)".*/\1/p' | head -1)
+          git diff flake.nix
+          echo "::error file=flake.nix::pnpmDeps ハッシュが古くなっています。pnpmDeps.hash を $HASH に更新して push してください。"
+          exit 1
+
+      - name: Restore flake.nix
+        if: always()
+        run: git checkout -- flake.nix || true
+
       - name: Build with Nix
         run: nix build
 
@@ -205,25 +228,6 @@ jobs:
             exit 1
           fi
           echo "✅ Binary execution successful"
-
-      - name: Validate update script
-        run: |
-          echo "Testing update-flake.sh script..."
-          bash scripts/update-flake.sh
-          echo "✅ Update script executed successfully"
-
-      - name: Check flake.nix modifications
-        run: |
-          if git diff --quiet flake.nix; then
-            echo "ℹ️  flake.nix unchanged (hash already up-to-date)"
-          else
-            echo "✅ flake.nix was updated by script"
-            git diff flake.nix
-          fi
-
-      - name: Restore flake.nix
-        if: always()
-        run: git checkout -- flake.nix || true
 
   validate-changesets:
     name: Validate Release Tracking

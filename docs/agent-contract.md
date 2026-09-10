@@ -68,7 +68,13 @@
 `ReferenceIndexEntry`: `{ "store_id", "root"?, "specs"?: [{id,summary}], "fetch"?, "status": [] }` — 解決済みのエントリには `root` / `specs` / `fetch` が含まれます。未解決のエントリは `store_id` と警告ステータスを保持します。インデックスの上限は 50KB (`reference_index_truncated`) です。
 
 ### 4.6 `instructions apply --json`
-`{ "changeName", "changeDir", "schemaName", "contextFiles": { "<artifactId>": ["/abs", ...] }, "progress": {total,complete,remaining}, "tasks": [{id,description,done}], "state": "blocked"|"all_done"|"ready", "missingArtifacts"?, "instruction", "references"?, "context"?, "operationGuidance"?, "root" }`。2つの任意フィールドは呼び出しごとに選択ルートから読み取ります。`context` は関連するプロジェクト情報・規約・制約を適用する必須のプロンプト入力、`operationGuidance` は組み込みワークフローと両立し、該当する場合だけ従う助言です。どちらも状態、タスク、進捗、コンテキストファイル、組み込み指示とは分離されます。
+`{ "changeName", "changeDir", "schemaName", "contextFiles": { "<artifactId>": ["/abs", ...] }, "progress": {total,complete,remaining}, "tasks": [{id,description,done}], "state": "blocked"|"all_done"|"ready", "missingArtifacts"?, "missingPrerequisites"?, "warnings"?, "instruction", "references"?, "context"?, "operationGuidance"?, "root" }`。
+
+- **`missingArtifacts`**: apply をブロックしている必須アーティファクト（スキーマの `apply.requires`）。
+- **`missingPrerequisites`**: apply の実行前に作成する必要があるアーティファクトを、依存先も含めて作成順に列挙します。`missingArtifacts` より多くなる場合があります。
+- **`warnings`**: 変更自体に関する、実行をブロックしない問題。現在は、実装可能な状態で仕様差分がなく、`skip_specs: true` も宣言していない場合を報告します。この状態は `openspec validate` では拒否されます。
+
+ルートの2つの任意フィールド（`context`、`operationGuidance`）は呼び出しごとに選択ルートから読み取ります。`context` は関連するプロジェクト情報・規約・制約を適用する必須のプロンプト入力、`operationGuidance` は組み込みワークフローと両立し、該当する場合だけ従う助言です。どちらも状態、タスク、進捗、コンテキストファイル、組み込み指示とは分離されます。
 
 ### 4.7 `instructions archive --json`
 `{ "changeName", "context"?, "operationGuidance"?, "root" }`。解決済みのリポジトリ/storeルートに有効な `--change` が必要で、applyと同じ必須コンテキスト・助言ガイダンスの意味を持ちます。読み取り専用の実行時入力であり、静的archiveワークフローの返却、仕様差分の検査・マージ、本仕様への書き込み、変更の移動は行いません。

@@ -61,6 +61,7 @@ import {
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
 import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
+import { formatOptionalWorkflowsNote } from './onboarding-commands.js';
 import {
   resolveSharedSkillWriters,
   sharedSkillRootOwner,
@@ -1385,15 +1386,32 @@ export class InitCommand {
         )
       );
     }
+    let advertisedAnInvocation = true;
     if (successfulTools.length > 0 && !commandsGenerated && !skillsGenerated) {
       // Nothing was generated for any tool: the correction above is the
       // whole story, so don't advertise an invocation that doesn't exist.
+      advertisedAnInvocation = false;
     } else if (activeWorkflows.includes('propose')) {
       printStartHints('/opsx:propose');
     } else if (activeWorkflows.includes('new')) {
       printStartHints('/opsx:new');
     } else {
       console.log("完了。ワークフローを設定するには 'openspec config profile' を実行してください。");
+      advertisedAnInvocation = false;
+    }
+
+    // プロファイルに含まれないワークフローを案内し、未導入のコマンドを
+    // インストール不備と誤認するのを防ぐ (#1076)。上ですでに設定方法を
+    // 案内した場合や、どのツールにもスキル・コマンドを生成していない場合は省略する。
+    // 後者ではワークフローを追加してもファイルが生成されず、解決策にならない。
+    if (advertisedAnInvocation && (commandsGenerated || skillsGenerated)) {
+      const optionalWorkflowsNote = formatOptionalWorkflowsNote(activeWorkflows);
+      if (optionalWorkflowsNote) {
+        console.log();
+        for (const line of optionalWorkflowsNote) {
+          console.log(chalk.dim(line));
+        }
+      }
     }
 
     // リンク

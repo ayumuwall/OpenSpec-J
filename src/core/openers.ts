@@ -335,7 +335,7 @@ export function buildLaunchCommand(
   input: { members: WorksetMember[]; codeWorkspacePath: string }
 ): LaunchCommand {
   if (input.members.length === 0) {
-    throw new Error('buildLaunchCommand requires at least one member.');
+    throw new Error('buildLaunchCommand には少なくとも1つのメンバーが必要です。');
   }
 
   // The no-hijack and no-positional guarantees lean on absolute paths
@@ -343,7 +343,7 @@ export function buildLaunchCommand(
   // invariant local instead of three modules away.
   if (!path.isAbsolute(input.codeWorkspacePath)) {
     throw new Error(
-      `buildLaunchCommand requires an absolute workspace-file path (got '${input.codeWorkspacePath}').`
+      `buildLaunchCommand には workspace-file の絶対パスが必要です（指定値: '${input.codeWorkspacePath}'）。`
     );
   }
 

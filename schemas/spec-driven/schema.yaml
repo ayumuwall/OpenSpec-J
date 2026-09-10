@@ -18,8 +18,17 @@ artifacts:
       - **Impact**: 影響するコード、API、依存関係、システム。
 
       重要: Capabilities セクションは必須。proposal と specs フェーズの間の契約になる。
-      記入前に既存の仕様を調査すること。
-      ここに書いた各 capability には対応する spec ファイルが必要になる。
+      記入前に `openspec list --specs` でプロジェクトの機能一覧を調べ、関連しそうな仕様を
+      `openspec show "<spec-id>" --type spec --json --no-scenarios` で確認する。
+      仕様ファイル全体をコンテキストに取り込まず、機能の目的と要件本文を取得できる。
+      登録済みの独立ストアを使う場合だけ、両コマンドに `--store "<id>"` を付ける。
+      `--type spec` は省略しない。同名の変更と仕様があると、対象が曖昧というエラーになる。
+      `--specs` のない `openspec list` は進行中の変更一覧であり、既存の対応範囲は分からない。
+      似た名前の機能を新設せず、既存機能の正確なパスを再利用する。
+      シナリオを除いた読み取りは概要の確認に限る。既存の対応範囲や変更内容を判断する前に、
+      `openspec show "<spec-id>" --type spec` で関連仕様をシナリオも含めて全文読み取る
+      （`--store` の指定条件は同じ）。
+      ここに書いた各機能には対応する仕様ファイルが必要になる。
 
       すべての変更は、1つ以上の機能（新規または変更）を宣言するか、仕様を明示的に
       対象外にする必要がある。仕様差分が0件の場合、変更の `.openspec.yaml` に
@@ -59,7 +68,7 @@ artifacts:
       `<capability-path>` は `specs/` からの相対仕様ディレクトリ（例: `user-auth` または
       `identity/user-auth`）。完全なパスを維持する:
       - 新機能: proposal の `specs/<capability-path>/spec.md` に記載したパスをそのまま使う。proposal で新設するパス区切りは kebab-case にする。プロジェクトの既存構成に従い、フラットな構成なら新しいドメイン階層を加えない。
-      - 変更機能: `specs/<capability-path>/spec.md` に仕様差分を作成するとき、`openspec/specs/<capability-path>/` の既存パスを正確に使う。機能を移動・改名しない。
+      - 変更機能: `specs/<capability-path>/spec.md` に仕様差分を作成するとき、`openspec/specs/<capability-path>/` の既存パスを正確に使う。仕様差分を書く前に `openspec list --specs` でパスを確認し、登録済みの独立ストアを使う場合だけ `--store "<id>"` を付ける。誤記したパスや作り上げたパスは、意図した機能ではなく存在しない機能を指してしまう。機能を移動・改名しない。
 
       `.openspec.yaml` に `skip_specs: true`（仕様レベルの振る舞い変更なし）が
       設定されていない限り、少なくとも1つのspecファイルが必要である。

@@ -46,7 +46,7 @@ import {
 import { isInteractive } from '../utils/interactive.js';
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
 import { getProfileWorkflows, ALL_WORKFLOWS, CORE_WORKFLOWS } from './profiles.js';
-import { getOnboardingCommands } from './onboarding-commands.js';
+import { formatOptionalWorkflowsNote, getOnboardingCommands } from './onboarding-commands.js';
 import { getAvailableTools } from './available-tools.js';
 import {
   WORKFLOW_TO_SKILL_DIR,
@@ -249,8 +249,7 @@ export class UpdateCommand {
 
       // Still check for new tool directories and extra workflows
       this.detectNewTools(resolvedProjectPath, configuredTools);
-      this.displayExtraWorkflowsNote(resolvedProjectPath, configuredTools, desiredWorkflows);
-      this.displayMissingCoreWorkflowsNote(profile, desiredWorkflows);
+      this.displayProfileNotes(resolvedProjectPath, configuredTools, desiredWorkflows, profile, delivery);
       this.displaySetupNotes(configuredTools);
       return;
     }
@@ -488,9 +487,8 @@ export class UpdateCommand {
     // 13. Detect new tool directories not currently configured
     this.detectNewTools(resolvedProjectPath, configuredAndNewTools);
 
-    // 14. Display note about extra workflows not in profile
-    this.displayExtraWorkflowsNote(resolvedProjectPath, configuredAndNewTools, desiredWorkflows);
-    this.displayMissingCoreWorkflowsNote(profile, desiredWorkflows);
+    // 14. プロファイルの補足を表示
+    this.displayProfileNotes(resolvedProjectPath, configuredAndNewTools, desiredWorkflows, profile, delivery);
     this.displaySetupNotes(configuredAndNewTools);
 
     // 15. List affected tools
@@ -633,20 +631,47 @@ export class UpdateCommand {
   }
 
   /**
+   * 補足を順番に表示し、設定コマンドの案内が重複するのを防ぐ。
+   * 各補足を必ず評価する。|| で呼び出しを連結すると、短絡評価で後続が省略される。
+   */
+  private displayProfileNotes(
+    projectPath: string,
+    configuredTools: string[],
+    desiredWorkflows: readonly string[] | undefined,
+    profile: Profile,
+    delivery: Delivery
+  ): void {
+    const printedExtraNote = this.displayExtraWorkflowsNote(
+      projectPath,
+      configuredTools,
+      desiredWorkflows ?? []
+    );
+    const printedMissingCoreNote = this.displayMissingCoreWorkflowsNote(profile, desiredWorkflows);
+    this.displayOptionalWorkflowsNote(
+      configuredTools,
+      desiredWorkflows,
+      delivery,
+      printedExtraNote || printedMissingCoreNote
+    );
+  }
+
+  /**
    * Displays a note about extra workflows installed that aren't in the current profile.
    */
   private displayExtraWorkflowsNote(
     projectPath: string,
     configuredTools: string[],
     profileWorkflows: readonly string[]
-  ): void {
+  ): boolean {
     const installedWorkflows = scanInstalledWorkflows(projectPath, configuredTools);
     const profileSet = new Set(profileWorkflows);
     const extraWorkflows = installedWorkflows.filter((w) => !profileSet.has(w));
 
     if (extraWorkflows.length > 0) {
       console.log(chalk.dim(`注: 現在のプロファイルに含まれない追加ワークフローが ${extraWorkflows.length} 件あります（管理するには \`openspec config profile\` を使用）`));
+      return true;
     }
+    return false;
   }
 
   /**
@@ -654,20 +679,55 @@ export class UpdateCommand {
    * grow CORE_WORKFLOWS stay discoverable. Keep custom profiles user-owned;
    * do not mutate them.
    */
-  private displayMissingCoreWorkflowsNote(profile: Profile, workflows?: readonly string[]): void {
+  private displayMissingCoreWorkflowsNote(profile: Profile, workflows?: readonly string[]): boolean {
     if (profile !== 'custom' || !workflows) {
-      return;
+      return false;
     }
 
     const workflowSet = new Set(workflows);
     const missing = CORE_WORKFLOWS.filter((workflow) => !workflowSet.has(workflow));
 
     if (missing.length === 0) {
-      return;
+      return false;
     }
 
     console.log(chalk.dim(`注: カスタムプロファイルに core ワークフローが ${missing.length} 件不足しています: ${missing.join(', ')}`));
     console.log(chalk.dim('追加するには `openspec config profile`、core セットを使うには `openspec config profile core` を実行してください。'));
+    return true;
+  }
+
+  /**
+   * 他の補足が出ない場合も、プロファイルに含まれないワークフローを案内する (#1076)。
+   * 既定の core でも、未導入のコマンドの追加方法が分かるようにする。
+   * 設定方法をすでに案内した場合や、現在の配布モードではどのツールにも
+   * スキル・コマンドを生成できない場合は省略する。
+   */
+  private displayOptionalWorkflowsNote(
+    configuredTools: string[],
+    workflows: readonly string[] | undefined,
+    delivery: Delivery,
+    alreadyPointedAtProfileConfig: boolean
+  ): void {
+    if (alreadyPointedAtProfileConfig || !workflows) {
+      return;
+    }
+
+    const anyToolHasASurface = configuredTools.some(
+      (toolId) =>
+        shouldGenerateSkillsForTool(toolId, delivery) ||
+        shouldGenerateCommandsForTool(toolId, delivery)
+    );
+    if (!anyToolHasASurface) {
+      return;
+    }
+
+    const note = formatOptionalWorkflowsNote(workflows);
+    if (!note) {
+      return;
+    }
+    for (const line of note) {
+      console.log(chalk.dim(line));
+    }
   }
 
   /**

@@ -565,11 +565,12 @@ export async function buildUpdatedSpec(
   // glued the heading to the Purpose paragraph and the first requirement, so
   // every archive rewrote a well-formatted spec into that shape. Separate
   // non-empty slices with one blank line instead.
-  const rebuilt = [parts.before.trimEnd(), parts.headerLine, reqBody, parts.after.trim()]
-    .filter((s) => s !== '')
-    .join('\n\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trimEnd() + '\n';
+  const rebuilt =
+    collapseBlankRunsOutsideFences(
+      [parts.before.trimEnd(), parts.headerLine, reqBody, parts.after.trim()]
+        .filter((s) => s !== '')
+        .join('\n\n')
+    ).trimEnd() + '\n';
 
   return {
     rebuilt,
@@ -616,6 +617,55 @@ function firstForeignTail(raw: string): { heading: string; raw: string } | undef
     }
   }
   return undefined;
+}
+
+/**
+ * 本文の開始列。タブは4列単位のタブ位置まで展開する。
+ * prefix は本文の前にある字下げ、または箇条書き記号までを含む接頭辞。
+ */
+function contentColumn(prefix: string): number {
+  let column = 0;
+  for (const char of prefix) column += char === '\t' ? 4 - (column % 4) : 1;
+  return column;
+}
+
+/**
+ * 引用、水平線、箇条書き、表、HTML など、独立したブロックを開始する行。
+ * 段落を中断するため、箇条書きの継続として削除せず監査で報告する。
+ * 見出しは字下げにかかわらず拒否するため別途確認する。
+ */
+const INTERRUPTS_PARAGRAPH =
+  /^ {0,3}(?:>|(?:[-*_][ \t]*){3,}$|(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)|[<|])/;
+
+/**
+ * CommonMark の箇条書き項目。字下げ、記号、後続の空白を捕捉し、本文の開始列を測る。
+ * - と * に加え + も認識する。+ を除外するとシナリオの内容を未処理と誤認し、
+ * 機能を廃止できなくなる。番号付き記号は CommonMark と同じ9桁を上限とし、
+ * INTERRUPTS_PARAGRAPH と判定をそろえる。記号の後に本文がない項目も認識する。
+ */
+const LIST_ITEM = /^(\s*(?:[-*+]|\d{1,9}[.)])\s+)/;
+
+/**
+ * 先頭の空白を最大 columns 列分除き、項目内での構造を判定する。
+ * 100. Step の下の ## Retention など、ファイル先頭基準では見逃す見出しも認識する。
+ * 境界をまたぐタブは全体を除くため、構造として検出し廃止を拒否する側に判定される。
+ */
+function dropIndent(line: string, columns: number): string {
+  let column = 0;
+  let index = 0;
+  while (index < line.length && column < columns) {
+    const char = line[index];
+    if (char === ' ') column += 1;
+    else if (char === '\t') column += 4 - (column % 4);
+    else break;
+    index++;
+  }
+  return line.slice(index);
+}
+
+/** ATX または HTML 形式の見出しかを判定する。 */
+function isHeadingLine(line: string): boolean {
+  return /^ {0,3}#{1,6}(?:[ \t]|$)/.test(line) || /^\s*<h[1-6]\b/i.test(line);
 }
 
 /**
@@ -704,35 +754,80 @@ function contentTheMergeCannotName(parts: RequirementsSectionParts): string[] {
     // operational note below the last scenario be deleted unmentioned.
     let inScenarioBullets = false;
     let bulletsSeen = false;
+    // 前の行が開始・継続した項目の本文開始列。項目外なら null。
+    // この列まで字下げされた行を継続として扱う (#1780)。
+    // 空行でリセットし、シナリオの下に書かれた独立した注記は保護する。
+    let listContentIndent: number | null = null;
+    // 箇条書きの段落が継続中か。字下げのない折り返し行も認識する。
+    // 空行、フェンス、見出し、独立したブロックで閉じる。
+    let paragraphOpen = false;
     for (let index = 0; index < lines.length; index++) {
       const line = lines[index];
       if (!line.trim()) {
         // Only a blank that follows actual bullets closes the run, so a blank
         // between a scenario header and its first bullet is not a boundary.
         if (bulletsSeen) inScenarioBullets = false;
+        listContentIndent = null;
+        paragraphOpen = false;
         continue;
       }
       if (index === 0) continue; // the `### Requirement:` header itself
+      const indent = contentColumn(/^[ \t]*/.exec(line)![0]);
+      // 本文開始列まで字下げされていれば、入れ子のリスト・表・引用も項目内とみなす。
+      const insideItem = listContentIndent !== null && indent >= listContentIndent;
+      // 以下は項目内の相対位置で判定する。幅の広い番号付き記号でも、
+      // 項目内の見出しやブロック開始を見逃さない。
+      const withinItem = insideItem ? dropIndent(line, listContentIndent!) : line;
+      // シナリオ内の途切れていない箇条書きでは、字下げのない折り返しも
+      // 直前の段落の継続として扱う。それ以外では字下げを必須とし、独立した注記を保護する。
+      const lazilyContinuesBullet =
+        paragraphOpen && inScenarioBullets && !INTERRUPTS_PARAGRAPH.test(withinItem);
+      // 見出しは字下げによらず継続に含めない。ATX は firstForeignTail、
+      // HTML は before の走査で検出する。箇条書きの下に置いても監査を通過させない。
+      const continuesListItem = (insideItem || lazilyContinuesBullet) && !isHeadingLine(withinItem);
       // Fenced lines render as a code block inside the requirement, so they are
       // its own content however they are spelled - a `### Requirement:` in an
       // example is not a heading to any reader. Flagging them made a spec that
       // merely documents a command unretirable.
-      if (mask[index]) continue;
+      if (mask[index]) {
+        // 本文開始列より左で始まるフェンスは項目を閉じる。
+        // フェンスは位置によらず段落を閉じ、後続を字下げなしの継続として扱わない。
+        if (!insideItem) listContentIndent = null;
+        paragraphOpen = false;
+        continue;
+      }
+      // Setext の下線は直前の行を見出しにするため、継続判定より先に確認する。
+      // 箇条書き内へ字下げしても見出しを吸収しない。
       if (
         index > 1 &&
-        /^ {0,3}(?:=+|-+)\s*$/.test(line) &&
+        /^ {0,3}(?:=+|-+)\s*$/.test(withinItem) &&
         lines[index - 1].trim()
       ) {
         leftovers.push(lines[index - 1].trim());
+        listContentIndent = null;
+        paragraphOpen = false;
         continue;
       }
+      // 空行を挟まず本文開始列まで字下げされた行は直前の項目に属する。
+      // 項目が処理済みならこの行も処理済み、未処理なら項目自体が報告済みとなる。
+      if (continuesListItem) {
+        // 入れ子のリストや引用は項目内でも段落を閉じるため、
+        // 後続の字下げのない行をその段落の継続として扱わない。
+        paragraphOpen = !INTERRUPTS_PARAGRAPH.test(withinItem);
+        continue;
+      }
+      // それ以外の行は項目を閉じる。箇条書きなら次の項目を開始し、
+      // 記号自身の字下げと幅から本文開始列を計算する。
+      const bullet = line.match(LIST_ITEM);
+      listContentIndent = bullet ? contentColumn(bullet[1]) : null;
+      paragraphOpen = bullet !== null;
       if (/^ {0,3}####\s+Scenario:/i.test(line)) {
         seenScenario = true;
         inScenarioBullets = true;
         bulletsSeen = false;
         continue;
       }
-      if (/^\s*(?:[-*]|\d+[.)])\s/.test(line)) {
+      if (bullet) {
         if (inScenarioBullets) {
           bulletsSeen = true;
           continue;
@@ -750,6 +845,35 @@ function contentTheMergeCannotName(parts: RequirementsSectionParts): string[] {
   }
 
   return [...new Set(leftovers)];
+}
+
+/**
+ * フェンス付きコードブロックの外側だけで、連続する空行を1行にまとめる。
+ * 文書の断片の境界を整える際、コード例の空白をアーカイブのたびに変更しないようにする。
+ * 他の構造解析と同じ buildCodeFenceMask を使う。空白文字を含む行は従来どおり対象外。
+ */
+function collapseBlankRunsOutsideFences(content: string): string {
+  const lines = content.split('\n');
+  const mask = buildCodeFenceMask(lines);
+  const kept: string[] = [];
+  let blankRun = 0;
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    if (mask[index]) {
+      blankRun = 0;
+      kept.push(line);
+      continue;
+    }
+    if (line === '') {
+      blankRun++;
+      if (blankRun > 1) continue;
+      kept.push(line);
+      continue;
+    }
+    blankRun = 0;
+    kept.push(line);
+  }
+  return kept.join('\n');
 }
 
 function normalizeBlockRaw(raw: string): string {

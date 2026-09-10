@@ -359,7 +359,31 @@ export function getToolVersionStatus(
     }
   }
 
-  const needsUpdate = configured && (generatedByVersion === null || generatedByVersion !== currentVersion);
+  // 3. スキルのバージョンが一致しても、コマンドファイルは手動編集や書き込み中断で
+  //    変わっている場合がある。既存の内容比較も行い、--force なしで修復可能にする。
+  //    スキルとコマンドの両方があるツールだけを対象とし、コマンドのみの経路は維持する。
+  //    配布モードがコマンドを生成しない場合は比較しない。空のコマンド集合を
+  //    areCommandFilesUpToDate は「最新ではない」と判定するため。
+  let commandsDrifted = false;
+  if (skillConfigured && commandConfigured) {
+    let generatesCommands = true;
+    try {
+      generatesCommands = shouldGenerateCommandsForTool(
+        toolId,
+        getGlobalConfig().delivery ?? 'both'
+      );
+    } catch {
+      generatesCommands = true;
+    }
+    commandsDrifted =
+      generatesCommands && !areCommandFilesUpToDate(projectRoot, toolId, options);
+  }
+
+  const needsUpdate =
+    configured &&
+    (generatedByVersion === null ||
+      generatedByVersion !== currentVersion ||
+      commandsDrifted);
 
   return {
     toolId,
