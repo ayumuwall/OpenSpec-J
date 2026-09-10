@@ -318,7 +318,7 @@ node bin/openspec.js validate --strict
 
 ### 2.6 仕上げ（記録）
 
-- `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記（OpenSpec-J 独自変更は `[OpenSpec-J]` 付き）
+- `SESSION_MEMO.md` を参照し、要約して `CHANGELOG.md` に追従内容を追記。OpenSpec-J 独自変更は §3.1 の共通書式に従う。
 - `README.md` の「現在の同期元は OpenSpec vX.Y.Z」を更新
 - コミット前に `$session-memo` を実行して `SESSION_MEMO.md` を更新する（Codex利用時）
 - GitHub Release の本文は `CHANGELOG.md` から転載せず、§3.1 の手順で別途作成する
@@ -350,9 +350,23 @@ node bin/openspec.js validate --strict
 
 ### 3.1 リリースタグ付与と GitHub Release 作成
 
+#### OpenSpec-J 独自変更の共通書式（Release・CHANGELOG）
+
+- 従来の箇条書き形式に統一し、各項目を必ず `- **[OpenSpec-J]** ` で始める。
+- GitHub Release では本文の冒頭、`CHANGELOG.md` では対象バージョンの見出し直後にまとめ、本家の変更点より先に記載する。
+- 独自変更だけの見出し（`## [OpenSpec-J]`、`## OpenSpec-J の変更` など）や、箇条書きに含まれない導入段落は追加しない。
+- `翻訳棚卸し:` などの補足は太字タグの後に置く。タグを太字にしない形式や、補足まで太字に含める形式を混在させない。
+- Release と CHANGELOG の独自変更は、同じ変更内容をこの書式で記載する。本家の変更点については、引き続き下記の手順で GitHub Release 本文を取得・翻訳する。
+
+```markdown
+- **[OpenSpec-J]** OpenSpec vX.Y.Z の変更を取り込み、追加・変更された利用者向け文言を日本語化
+- **[OpenSpec-J]** 動作確認で見つかった案内文の誤訳と用語の不統一を修正
+- **[OpenSpec-J]** 翻訳棚卸し: CLI に残っていた英語の案内を日本語化
+```
+
 リリース本文は次の順序・内容で作成する。
 
-1. 冒頭に、今回のローカライズで発生した OpenSpec-J 独自の変更を `[OpenSpec-J]` と明記して記載する。
+1. 冒頭に、今回のローカライズで発生した OpenSpec-J 独自の変更を上記の共通書式で記載する。
 2. upstream（`Fission-AI/OpenSpec`）の対象バージョンの GitHub Release 本文を取得し、自然な日本語に翻訳して記載する。
    - GitHub Release 本文を正とし、`CHANGELOG.md` の内容を代用しない。
    - コマンド名・フラグ・識別子・ファイルパス・リンクなどは翻訳しない。
@@ -380,7 +394,7 @@ gh release view vX.Y.Z \
 
 リリース本文の作成後は、公開前に次を照合する。
 
-1. 冒頭が `[OpenSpec-J]` 独自変更で始まっている。
+1. 冒頭が `- **[OpenSpec-J]** ` で始まり、独自変更の全項目が共通書式に揃っている。
 2. その後に対象となる各 upstream バージョンの見出しが古い順で並んでいる。
 3. 各 upstream 本文の箇条書きが日本語版の箇条書きと1対1で対応し、追加・欠落・別バージョンとの混在がない。
 4. upstream の全リンクとクレジットが保持されている。

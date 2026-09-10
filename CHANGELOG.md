@@ -4,8 +4,9 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 
 ## 1.13.0
 
-- [OpenSpec-J] upstream v1.13.0 に追従。apply の警告と依存関係の案内、提案前のコンテキスト確認、既存仕様の調査手順、追加ワークフローの案内を日本語化しました。既存の日本語訳と日本語版固有の設定を維持しています。
-- [OpenSpec-J] 翻訳棚卸し: `buildLaunchCommand` のメンバー未指定・workspace-file の相対パスに関するエラー2件を日本語化しました。
+- **[OpenSpec-J]** upstream v1.13.0 に追従。apply の警告と依存関係の案内、提案前のコンテキスト確認、既存仕様の調査手順、追加ワークフローの案内を日本語化しました。既存の日本語訳と日本語版固有の設定を維持しています。
+- **[OpenSpec-J]** 再初期化時に既存のワークフロー構成を保存する理由を明記し、proposeを新機能と誤解させる案内を修正。doctorの診断対象とproposeの変更ディレクトリの説明も明確化
+- **[OpenSpec-J]** 翻訳棚卸し: `buildLaunchCommand` のメンバー未指定・workspace-file の相対パスに関するエラー2件を日本語化しました。
 
 ### マイナー変更
 
@@ -38,7 +39,7 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 - **[OpenSpec-J]** 動作確認で見つかった `verify` の誤訳、ワークフローの用語混在・翻訳漏れ・ゼロ幅文字、CLI の表示と句読点を修正。Codex の共有スキル参照を日本語化し、旧形式との互換性を維持
 - **[OpenSpec-J]** OpenSpec v1.12.0 の upstream 変更を取り込み、CLI、初期化・更新フロー、OPSX ワークフロー、ドキュメントの追加・変更された人間向け文言を日本語化
 - **[OpenSpec-J]** SourceCraft Code Assistant、`openspec validate --report findings`、空ディレクトリ保持、共通 IDE 再起動案内に対応し、静的配布スキルと parity ハッシュを再生成
-- **[OpenSpec-J] 翻訳棚卸し:** シェル補完、設定表示、OpenSpec ルート検出エラー、テレメトリー通知に残っていた英語文言を日本語化
+- **[OpenSpec-J]** 翻訳棚卸し: シェル補完、設定表示、OpenSpec ルート検出エラー、テレメトリー通知に残っていた英語文言を日本語化
 
 ### マイナー変更
 
