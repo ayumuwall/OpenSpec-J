@@ -645,7 +645,7 @@ export class UpdateCommand {
    */
   private displayUpToDateMessage(toolStatuses: ToolVersionStatus[]): void {
     const toolNames = toolStatuses.map((s) => s.toolId);
-    console.log(chalk.green(`✓ すべての ${toolStatuses.length} ツールは最新です（v${OPENSPEC_VERSION}）`));
+    console.log(chalk.green(`✓ 設定済みのツール${toolStatuses.length}件はすべて最新です（v${OPENSPEC_VERSION}）`));
     console.log(chalk.dim(`  ツール: ${toolNames.join(', ')}`));
     console.log();
     console.log(chalk.dim('ファイルを再生成するには --force を使用してください。'));

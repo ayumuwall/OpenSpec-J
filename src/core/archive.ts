@@ -1437,7 +1437,7 @@ export class ArchiveCommand {
             (issue) => !/^deltas\.\d+\.requirements?\./.test(issue.path)
           );
           if (!changeReport.valid && proposalIssues.length > 0) {
-            console.log(chalk.yellow('\nproposal.md の警告（ブロックしません）:'));
+            console.log(chalk.yellow('\nproposal.md の警告（アーカイブは続行します）:'));
             for (const issue of proposalIssues) {
               const symbol = issue.level === 'ERROR' ? '⚠' : (issue.level === 'WARNING' ? '⚠' : 'ℹ');
               console.log(chalk.yellow(`  ${symbol} ${issue.message}`));
@@ -1655,7 +1655,7 @@ export class ArchiveCommand {
         if (!json) {
           console.log('\n更新する仕様:');
           for (const update of specUpdates) {
-            const status = update.exists ? 'update' : 'create';
+            const status = update.exists ? '更新' : '新規作成';
             const capability = update.id;
             console.log(`  ${capability}: ${status}`);
           }

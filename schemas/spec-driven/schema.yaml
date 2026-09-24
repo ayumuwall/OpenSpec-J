@@ -13,7 +13,7 @@ artifacts:
       - **Why**: 問題または機会を1〜2文で示す。どの問題を、なぜ今解決するのか。
       - **What Changes**: 変更の箇条書き。新機能、変更、削除を具体的に示す。破壊的変更には **BREAKING** を付ける。
       - **Capabilities**: 作成または変更する仕様を特定する:
-        - **New Capabilities**: 導入する機能を列挙する。各項目は `specs/<capability-path>/spec.md` になる。新しく導入するパス区切りは kebab-case にし（例: `user-auth` または `identity/user-auth`）、プロジェクトの既存の仕様構成に従う。
+        - **New Capabilities**: 導入する機能を列挙する。各項目は `specs/<capability-path>/spec.md` になる。新しく追加するパスの各階層の名前は kebab-case にし（例: `user-auth` または `identity/user-auth`）、プロジェクトの既存の仕様構成に従う。
         - **Modified Capabilities**: REQUIREMENTS が変わる既存機能を列挙する。実装詳細だけでなく、仕様レベルの振る舞いが変わる場合に限る。各項目には仕様差分ファイルが必要。`openspec/specs/` 内の既存パスを正確に使い、要件変更がなければ空にする。
       - **Impact**: 影響するコード、API、依存関係、システム。
 
@@ -67,7 +67,7 @@ artifacts:
       proposal の Capabilities セクションに列挙された機能ごとに、仕様ファイルを1つ作成する。
       `<capability-path>` は `specs/` からの相対仕様ディレクトリ（例: `user-auth` または
       `identity/user-auth`）。完全なパスを維持する:
-      - 新機能: proposal の `specs/<capability-path>/spec.md` に記載したパスをそのまま使う。proposal で新設するパス区切りは kebab-case にする。プロジェクトの既存構成に従い、フラットな構成なら新しいドメイン階層を加えない。
+      - 新機能: proposal の `specs/<capability-path>/spec.md` に記載したパスをそのまま使う。proposal で新しく追加するパスの各階層の名前は kebab-case にする。プロジェクトの既存構成に従い、フラットな構成なら新しいドメイン階層を加えない。
       - 変更機能: `specs/<capability-path>/spec.md` に仕様差分を作成するとき、`openspec/specs/<capability-path>/` の既存パスを正確に使う。仕様差分を書く前に `openspec list --specs` でパスを確認し、登録済みの独立ストアを使う場合だけ `--store "<id>"` を付ける。誤記したパスや作り上げたパスは、意図した機能ではなく存在しない機能を指してしまう。機能を移動・改名しない。
 
       `.openspec.yaml` に `skip_specs: true`（仕様レベルの振る舞い変更なし）が

@@ -261,7 +261,7 @@ export function deriveProfileFromWorkflowSelection(selectedWorkflows: string[]):
  * Format a compact workflow summary for the profile header.
  */
 export function formatWorkflowSummary(workflows: readonly string[], profile: Profile): string {
-  return `${workflows.length} selected (${profile})`;
+  return `${workflows.length}個を選択（${profile}）`;
 }
 
 function stableWorkflowOrder(workflows: readonly string[]): string[] {
@@ -603,7 +603,7 @@ export function registerConfigCommand(program: Command): void {
   // config profile [preset]
   configCmd
     .command('profile [preset]')
-    .description('ワークフロー profile を設定（対話選択または preset shortcut）')
+    .description('ワークフローのプロファイルを設定（対話選択またはプリセット指定）')
     .action(async (preset?: string) => {
       if (refuseUnreadableConfig()) {
         return;
@@ -621,7 +621,7 @@ export function registerConfigCommand(program: Command): void {
       }
 
       if (preset) {
-        console.error(`エラー: 不明な profile preset "${preset}" です。利用可能な preset: core`);
+        console.error(`エラー: 不明なプロファイルのプリセット "${preset}" です。利用可能なプリセット: core`);
         process.exitCode = 1;
         return;
       }
@@ -641,11 +641,11 @@ export function registerConfigCommand(program: Command): void {
         const config = getGlobalConfig();
         const currentState = resolveCurrentProfileState(config);
 
-        console.log(chalk.bold('\n現在の profile 設定'));
-        console.log(`  配信方式: ${currentState.delivery}`);
+        console.log(chalk.bold('\n現在のプロファイル設定'));
+        console.log(`  インストール形式: ${currentState.delivery}`);
         console.log(`  ワークフロー: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
-        console.log(chalk.dim('  Delivery = ワークフローのインストール先（skills, commands, both）'));
-        console.log(chalk.dim('  Workflows = 利用可能な action（propose, explore, apply など）'));
+        console.log(chalk.dim('  インストール形式: スキル（skills）、スラッシュコマンド（commands）、両方（both）'));
+        console.log(chalk.dim('  ワークフロー: 利用する操作（propose, explore, apply など）'));
         console.log();
 
         const action = await select<ProfileAction>({
@@ -653,18 +653,18 @@ export function registerConfigCommand(program: Command): void {
           choices: [
             {
               value: 'both',
-              name: 'Delivery と workflows',
-              description: 'インストールモードと利用可能 action をまとめて更新',
+              name: 'インストール形式とワークフロー',
+              description: 'インストール形式と利用するワークフローをまとめて変更',
             },
             {
               value: 'delivery',
-              name: 'Delivery のみ',
-              description: 'ワークフローのインストール先を変更',
+              name: 'インストール形式のみ',
+              description: 'スキルとスラッシュコマンドのどちらをインストールするか変更',
             },
             {
               value: 'workflows',
-              name: 'Workflows のみ',
-              description: '利用可能なワークフローアクションを変更',
+              name: 'ワークフローのみ',
+              description: '利用するワークフローを変更',
             },
             {
               value: 'keep',
@@ -691,18 +691,18 @@ export function registerConfigCommand(program: Command): void {
           const deliveryChoices: { value: Delivery; name: string; description: string }[] = [
             {
               value: 'both' as Delivery,
-              name: '両方（skills + commands）',
-              description: 'workflows を skills と slash commands の両方としてインストール',
+              name: '両方（スキルとスラッシュコマンド）',
+              description: 'ワークフローをスキルとスラッシュコマンドの両方としてインストール',
             },
             {
               value: 'skills' as Delivery,
-              name: 'Skills のみ',
-              description: 'workflows を skills としてのみインストール',
+              name: 'スキルのみ',
+              description: 'ワークフローをスキルとしてのみインストール',
             },
             {
               value: 'commands' as Delivery,
-              name: 'Commands のみ',
-              description: 'workflows を slash commands としてのみインストール',
+              name: 'スラッシュコマンドのみ',
+              description: 'ワークフローをスラッシュコマンドとしてのみインストール',
             },
           ];
           for (const choice of deliveryChoices) {
@@ -712,7 +712,7 @@ export function registerConfigCommand(program: Command): void {
           }
 
           nextState.delivery = await select<Delivery>({
-            message: 'Delivery mode（workflows のインストール方法）:',
+            message: 'ワークフローのインストール形式を選択してください:',
             choices: deliveryChoices,
             default: currentState.delivery,
           });

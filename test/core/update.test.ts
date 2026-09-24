@@ -1796,7 +1796,7 @@ metadata:
       await expect(new UpdateCommand().execute(testDir)).rejects.toThrow(
         '次のツールの OpenSpec 更新に失敗しました: Codex'
       );
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('すべての 1 ツールは最新です'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('設定済みのツール1件はすべて最新です'));
     });
 
     it('should report a failed bootstrap after declining an unrelated migration', async () => {

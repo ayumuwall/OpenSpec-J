@@ -11,7 +11,7 @@
 ## Capabilities
 
 ### New Capabilities
-<!-- 導入する機能。プロジェクトの既存の仕様構成に従い、新しく導入するパス区切りは
+<!-- 導入する機能。プロジェクトの既存の仕様構成に従い、新しく追加するパスの各階層の名前は
      kebab-case にします（例: user-auth または identity/user-auth）。各項目は
      specs/<capability-path>/spec.md を作成します。 -->
 - `<capability-path>`: <この機能が対象にする内容の簡潔な説明>

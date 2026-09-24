@@ -184,11 +184,11 @@ describe('config profile interactive flow', () => {
     expect(firstCall.choices).toEqual(expect.arrayContaining([
       expect.objectContaining({
         value: 'delivery',
-        description: 'ワークフローのインストール先を変更',
+        description: 'スキルとスラッシュコマンドのどちらをインストールするか変更',
       }),
       expect.objectContaining({
         value: 'workflows',
-        description: '利用可能なワークフローアクションを変更',
+        description: '利用するワークフローを変更',
       }),
       expect.objectContaining({
         value: 'keep',
@@ -238,7 +238,7 @@ describe('config profile interactive flow', () => {
     expect(select).toHaveBeenCalledTimes(2);
     const secondCall = select.mock.calls[1][0];
     expect(secondCall.choices).toEqual(expect.arrayContaining([
-      expect.objectContaining({ value: 'commands', name: 'Commands のみ [現在]' }),
+      expect.objectContaining({ value: 'commands', name: 'スラッシュコマンドのみ [現在]' }),
     ]));
   });
 
