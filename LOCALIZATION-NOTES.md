@@ -8,6 +8,12 @@
 
 ## 既知の事例 / 注意点
 
+### v1.13.2: 診断文を参照する判定とテンプレートの回帰検査
+
+- `src/utils/nested-change.ts` の `NESTED_CHANGE_ISSUE_MARKER` は表示文と `validate` の次の操作案内で共有する。表示文だけを変更すると、入れ子の変更に対する案内を選べなくなるため、定数を介した対応を維持する。
+- `src/core/templates/workflows/project-root.ts` のストアエラー判定は、実際の日本語診断に合わせて `での宣言:` / `のストア宣言が不正です:` を参照する。英語の接頭辞へ戻すと、宣言済みストアの問題を未初期化と混同する。`test/core/templates/project-root-guard.test.ts` で実際の診断との対応と、既定ストアの無関係なエラーを除外することを確認する。
+- `test/core/templates/explore.test.ts` / `update-change.test.ts` の語句検出は日本語も対象にする。英語の `confirm` / `write` だけでは、日本語本文に追加された不適切な承認条件や書き込み指示を検出できない。日本語の句点で文を区切り、日本語の不正な指示を挿入した場合にも検査が失敗することを確認する。
+
 ### Codex の共有スキル参照: 日本語化と旧形式の互換性
 
 - `src/utils/command-references.ts` は `$スキル名（Codex）、/スキル名（その他の対応エージェント）` を生成する。共有される `.agents/skills` のため、両方の呼び出し方を残す。
@@ -55,6 +61,7 @@
 - 仕様: 日本語では単数・複数の揺れを避け、カウントは「件」や「タスク」など固定表記に寄せる。
 - 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は「タスクなし」「N/M タスク」、`src/core/view.ts` は「N 件」、`src/core/list.ts` の仕様一覧は「要件 N」と表示する。いずれも英語の単複数分岐は設けない。
 - 追加実例（v1.9.0）: `src/core/migration.ts` の `keptInPlaceNotice` は、英語の `file` / `files` と `differ` / `differs` の分岐を廃止し、件数にかかわらず「N 件のファイル」に統一。
+- 追加実例（v1.13.2）: `describeScenarioBalance` は「N 件のシナリオ」、入れ子のストア削除拒否は「内部のストア」に統一する。英語の単複数分岐だけを省き、件数・対象名・拒否条件は保持する。
 - 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。`ADDED` / `MODIFIED` だけでなく、`REMOVED` / `RENAMED` の `description` もユーザー向け表示に出る可能性があるため、upstream 追従時に英語へ戻っていないか確認する。
 
 ### CLI 結合テスト: 固定一時ディレクトリは並列実行で衝突する

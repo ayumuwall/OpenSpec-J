@@ -5,15 +5,35 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
+
+/**
+ * Handoffs to `continue`, which is not guaranteed to be installed alongside
+ * `new`; resolved at generation time (see optional-workflow.ts).
+ */
+const FIRST_ARTIFACT_PROMPT = optionalWorkflow(
+  'continue',
+  '`/opsx:continue` を実行するか、この変更の内容を説明してください。下書きします。',
+  'この変更の内容を説明してください。下書きします。'
+);
+
+const EXISTING_CHANGE_HINT = optionalWorkflow(
+  'continue',
+  '代わりに `/opsx:continue` を使うよう提案します',
+  'その旨を伝え、その変更を再開するか別の名前にするか確認します'
+);
 
 export function getNewChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-new-change',
-    description: '実験的アーティファクトワークフローで新しい OpenSpec 変更を開始します。新機能、修正、変更を構造化された手順で作成したいときに使用します。',
+    description: '実験的アーティファクトワークフローで新しい OpenSpec 変更を開始します。新機能、修正、変更を構造化された手順で作成したいときに使用します。「openspec new change」「opsx new」と言われた場合にも使用します。',
     instructions: `実験的な成果物主導のアプローチを使用して、新しい変更を開始します。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 **入力**: ユーザーのリクエストには、変更名 (kebab-case) または構築したい内容の説明を含める必要があります。
 
@@ -92,6 +112,8 @@ export function getOpsxNewCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
+${PROJECT_ROOT_GUARD}
+
 **入力**: \`/opsx:new\` の後の引数は、変更名 (kebab-case)、またはユーザーが構築したい内容の説明です。
 
 **手順**
@@ -144,13 +166,13 @@ ${STORE_SELECTION_GUIDANCE}
 - 使用されているスキーマ/ワークフローとそのアーティファクト シーケンス
 - 現在のステータス (0/N 個の成果物が完了)
 - 最初のアーティファクトのテンプレート
-- プロンプト: 「最初のアーティファクトを作成する準備はできましたか? \`/opsx:continue\` を実行するか、この変更の内容を説明してください。下書きします。」
+- プロンプト: 「最初のアーティファクトを作成する準備はできましたか? ${FIRST_ARTIFACT_PROMPT}」
 
 **ガードレール**
 - まだアーティファクトを作成しないでください。手順を表示するだけにしてください。
 - 最初の成果物テンプレートの表示以降は進めないでください。
 - 名前が無効な場合 (ケバブケースではない)、有効な名前を尋ねます
-- その名前の変更がすでに存在する場合は、代わりに \`/opsx:continue\` を使用することをお勧めします。
+- その名前の変更がすでに存在する場合は、${EXISTING_CHANGE_HINT}
 - デフォルト以外のワークフローを使用する場合は --schema を渡します`
   };
 }

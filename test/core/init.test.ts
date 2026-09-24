@@ -518,45 +518,60 @@ describe('InitCommand', () => {
         );
       }
 
-      const updateVariants: Array<[string, string]> = [
-        [
-          await fs.readFile(
-            path.join(
-              testDir,
-              '.claude',
-              'skills',
-              'openspec-update-change',
-              'SKILL.md'
-            ),
-            'utf-8'
+      // The default profile installs six workflows; `continue` and `new` are
+      // not among them. Nothing it generates may name them (#1734) - it would
+      // send the agent to a skill that was never written. The CLI fallback is
+      // stated outright instead of behind a runtime availability check.
+      const updateVariants = [
+        await fs.readFile(
+          path.join(
+            testDir,
+            '.claude',
+            'skills',
+            'openspec-update-change',
+            'SKILL.md'
           ),
-          '`/opsx:continue`',
-        ],
-        [
-          await fs.readFile(
-            path.join(testDir, '.claude', 'commands', 'opsx', 'update.md'),
-            'utf-8'
-          ),
-          '`/opsx:continue`',
-        ],
+          'utf-8'
+        ),
+        await fs.readFile(
+          path.join(testDir, '.claude', 'commands', 'opsx', 'update.md'),
+          'utf-8'
+        ),
       ];
 
-      for (const [content, continueReference] of updateVariants) {
-        const availabilityGuidance = content.indexOf(
-          `${continueReference} は任意のワークフローで、インストールされていない場合があります`
-        );
-        const nextReference = content.indexOf(
-          continueReference,
-          availabilityGuidance + continueReference.length
-        );
-
-        expect(availabilityGuidance).toBeGreaterThanOrEqual(0);
-        expect(content.indexOf(continueReference)).toBe(availabilityGuidance);
-        expect(nextReference).toBeGreaterThan(availabilityGuidance);
+      for (const content of updateVariants) {
+        expect(content).not.toContain('/opsx:continue');
+        expect(content).not.toContain('/opsx:new');
+        expect(content).not.toContain('is an optional workflow and may not be installed');
+        expect(content).toContain('未作成のアーティファクトは作成しません');
         expect(content).toContain('openspec status --change "<name>" --json');
         expect(content).toContain(
           'openspec instructions "<artifact-id>" --change "<name>" --json'
         );
+        expect(content).toContain('openspec new change "<new-change-name>"');
+      }
+
+      const applyVariants = [
+        await fs.readFile(
+          path.join(testDir, '.claude', 'skills', 'openspec-apply-change', 'SKILL.md'),
+          'utf-8'
+        ),
+        await fs.readFile(
+          path.join(testDir, '.claude', 'commands', 'opsx', 'apply.md'),
+          'utf-8'
+        ),
+      ];
+
+      for (const content of applyVariants) {
+        // The core profile has no `continue`, so the blocked-state handoff
+        // must be the CLI recovery in full, not a workflow this install lacks.
+        expect(content).not.toContain('/opsx:continue');
+        expect(content).toContain('openspec status --change "<name>" --json');
+        expect(content).toContain('次の `ready` アーティファクト（`skipped` や `blocked` ではないもの）');
+        expect(content).toContain(
+          'openspec instructions "<artifact-id>" --change "<name>" --json'
+        );
+        expect(content).toContain('両コマンドで選択済みの `--store <id>` を維持');
       }
 
       const syncFiles = [
@@ -1014,9 +1029,9 @@ describe('InitCommand', () => {
         .map(String);
       expect(logCalls.some((entry) => entry.includes('新規作成: Codex'))).toBe(true);
       expect(logCalls.some((entry) => entry.includes('Zed Agent'))).toBe(true);
-      expect(logCalls.some((entry) => entry.includes('Shared .agents skills'))).toBe(true);
+      expect(logCalls.some((entry) => entry.includes('Other / Universal (shared .agents skills)'))).toBe(true);
       expect(
-        logCalls.some((entry) => entry.includes('Codex, Zed Agent, Shared .agents skills は .agents/skills を共有するため、codex 用の単一ツリーを書き込みます'))
+        logCalls.some((entry) => entry.includes('Codex, Zed Agent, Other / Universal (shared .agents skills) は .agents/skills を共有するため、codex 用の単一ツリーを書き込みます'))
       ).toBe(true);
     });
 
@@ -1223,7 +1238,7 @@ describe('InitCommand', () => {
       const proposeFiles = [
         path.join(testDir, '.factory', 'commands', 'opsx-propose.md'),
         path.join(testDir, '.cursor', 'commands', 'opsx-propose.md'),
-        path.join(testDir, '.kilocode', 'workflows', 'opsx-propose.md'),
+        path.join(testDir, '.kilo', 'command', 'opsx-propose.md'),
         path.join(testDir, '.pi', 'prompts', 'opsx-propose.md'),
         path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'),
       ];
@@ -1487,6 +1502,22 @@ describe('InitCommand', () => {
 
       await expect(initCommand.execute(testDir)).rejects.toThrow(/ツールが検出されず、--tools フラグも指定されていません/);
     });
+
+    it('should name the universal target when no tools are detected non-interactively', async () => {
+      // The scripted counterpart of the picker's empty-search hint (#653):
+      // a bare list of ids does not tell someone whose tool is absent what to do.
+      const initCommand = new InitCommand({ interactive: false });
+
+      await expect(initCommand.execute(testDir)).rejects.toThrow(/--tools agents/);
+    });
+
+    it('should name the universal target when --tools names something unknown', async () => {
+      const initCommand = new InitCommand({ tools: 'turing-corp-plugin', force: true });
+
+      await expect(initCommand.execute(testDir)).rejects.toThrow(
+        /無効なツール: turing-corp-plugin[\s\S]*--tools agents/
+      );
+    });
   });
 
   describe('tool-specific adapters', () => {
@@ -1550,6 +1581,9 @@ describe('InitCommand', () => {
       const content = await fs.readFile(cmdFile, 'utf-8');
       expect(content).toContain('name: "opsx-explore"');
       expect(content).toContain('invokable: true');
+      expect(content).toContain(
+        '---\n\nこのワークフロープロンプトはすでに有効です。記載された指示にそのまま従ってください。このワークフローと同名のツールを呼び出してはいけません。\n\n探索モードに入ります。'
+      );
     });
 
     it('should generate Cline workflow files', async () => {
@@ -1560,12 +1594,20 @@ describe('InitCommand', () => {
       expect(await fileExists(cmdFile)).toBe(true);
     });
 
-    it('should generate GitHub Copilot prompt files', async () => {
+    it('should generate GitHub Copilot prompt and skill files with default delivery', async () => {
       const initCommand = new InitCommand({ tools: 'github-copilot', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.github', 'prompts', 'opsx-explore.prompt.md');
+      const skillFile = path.join(
+        testDir,
+        '.github',
+        'skills',
+        'openspec-explore',
+        'SKILL.md'
+      );
       expect(await fileExists(cmdFile)).toBe(true);
+      expect(await fileExists(skillFile)).toBe(true);
     });
 
     it('should fail GitHub Copilot setup without partially creating cloud files', async () => {
@@ -1741,6 +1783,18 @@ describe('InitCommand - profile and detection features', () => {
     expect(proposeCommand).toContain('**指定された引数**: $ARGUMENTS');
   });
 
+  it('should replace legacy Kilo workflows with commands in the canonical directory', async () => {
+    const legacyDir = path.join(testDir, '.kilocode', 'workflows');
+    await fs.mkdir(legacyDir, { recursive: true });
+    await fs.writeFile(path.join(legacyDir, 'opsx-propose.md'), 'legacy content');
+
+    const initCommand = new InitCommand({ tools: 'kilocode' });
+    await initCommand.execute(testDir);
+
+    expect(await fileExists(path.join(legacyDir, 'opsx-propose.md'))).toBe(false);
+    expect(await fileExists(path.join(testDir, '.kilo', 'command', 'opsx-propose.md'))).toBe(true);
+  });
+
   it('should remove managed global Codex prompts in non-interactive mode', async () => {
     const promptDir = path.join(process.env.CODEX_HOME!, 'prompts');
     const legacyPrompt = path.join(promptDir, 'opsx-apply.md');
@@ -1886,6 +1940,42 @@ describe('InitCommand - profile and detection features', () => {
     const githubCopilot = choices.find((choice) => choice.value === 'github-copilot');
 
     expect(githubCopilot?.preSelected).toBe(true);
+  });
+
+  it('should offer the universal target with the search terms an unlisted tool suggests', async () => {
+    // #653: the picker filters on name and id, and this entry is named for a
+    // directory. Without aliases the escape hatch cannot be searched for.
+    searchableMultiSelectMock.mockResolvedValue(['claude']);
+
+    const initCommand = new InitCommand({ force: true });
+    vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
+
+    await initCommand.execute(testDir);
+
+    const [config] = searchableMultiSelectMock.mock.calls[0] as [
+      { choices: Array<{ value: string; name: string; searchAliases?: string[] }>; emptyHint?: string }
+    ];
+    const universal = config.choices.find((choice) => choice.value === 'agents');
+
+    expect(universal).toBeDefined();
+    expect(universal?.name).toContain('Other / Universal');
+    for (const term of ['universal', 'other', 'generic', 'unlisted']) {
+      expect(universal?.searchAliases).toContain(term);
+    }
+  });
+
+  it('should hand the picker a fallback hint naming the universal target', async () => {
+    searchableMultiSelectMock.mockResolvedValue(['claude']);
+
+    const initCommand = new InitCommand({ force: true });
+    vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
+
+    await initCommand.execute(testDir);
+
+    const [config] = searchableMultiSelectMock.mock.calls[0] as [{ emptyHint?: string }];
+
+    expect(config.emptyHint).toContain('使いたいツールが一覧にない場合');
+    expect(config.emptyHint).toContain('Other / Universal (shared .agents skills)');
   });
 
   it('interactive init: confirming the cloud prompt writes files and persists the opt-in', async () => {
@@ -2221,28 +2311,33 @@ describe('InitCommand - profile and detection features', () => {
     }
   });
 
-  it('should print the $-prefixed skill hint for codex (skills-invocable, no slash surface)', async () => {
-    // Codex has no slash-command surface: it invokes skills as $<name>, so the
-    // hint - and the generated skills - must use that form, never /opsx:*
-    const initCommand = new InitCommand({ tools: 'codex', force: true });
-    await initCommand.execute(testDir);
+  it.each(['both', 'skills', 'commands'] as const)(
+    'should print the Codex skill hint with delivery=%s',
+    async (delivery) => {
+      saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery });
+      // Codex has no slash-command surface: it invokes skills as $<name>, so the
+      // hint - and the generated skills - must use that form, never /opsx:*
+      const initCommand = new InitCommand({ tools: 'codex', force: true });
+      await initCommand.execute(testDir);
 
-    const skillFile = path.join(testDir, '.agents', 'skills', 'openspec-apply-change', 'SKILL.md');
-    expect(await fileExists(skillFile)).toBe(true);
-    const skillContent = await fs.readFile(skillFile, 'utf-8');
-    expect(skillContent).not.toContain('/opsx:');
-    expect(skillContent).toContain('$openspec-');
+      const skillFile = path.join(testDir, '.agents', 'skills', 'openspec-apply-change', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+      const skillContent = await fs.readFile(skillFile, 'utf-8');
+      expect(skillContent).not.toContain('/opsx:');
+      expect(skillContent).toContain('$openspec-');
 
-    const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
-    const startHint = logCalls.find((entry) => entry.includes('最初の変更を開始'));
-    expect(startHint).toContain('$openspec-propose');
-    expect(startHint).not.toContain('/openspec-propose');
-    expect(startHint).not.toContain('/opsx:propose');
+      const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
+      const startHints = logCalls.filter((entry) => entry.includes('最初の変更を開始'));
+      expect(startHints).toEqual([
+        '  最初の変更を開始: $openspec-propose "あなたのアイデア"（Codex CLI または IDE）。Codex デスクトップアプリでは、サイドバーの Skills から openspec-propose を選択してください',
+      ]);
 
-    // Codex は CLI ツールのため、スキル作成後に IDE の再起動は不要です。
-    const restartHint = logCalls.find((entry) => entry.includes('IDEを再起動'));
-    expect(restartHint).toBeUndefined();
-  });
+      // Codex is a CLI tool: its skills load as soon as the files exist, with no
+      // IDE process to restart, so the restart line must not appear at all (#1067).
+      const restartHint = logCalls.find((entry) => entry.includes('IDEを再起動'));
+      expect(restartHint).toBeUndefined();
+    }
+  );
 
   it('should print the @-prefixed prompt hint for amazon-q (prompt library, no slash surface)', async () => {
     // Amazon Q loads .amazonq/prompts/opsx-<id>.md into its prompt library,
@@ -2284,8 +2379,11 @@ describe('InitCommand - profile and detection features', () => {
     const codexHint = startHints.find((entry) => entry.includes('(Codex)'));
     const vibeHint = startHints.find((entry) => entry.includes('Mistral Vibe'));
     expect(codexHint).toContain('$openspec-propose');
+    expect(codexHint).toContain('（Codex CLI または IDE）');
+    expect(codexHint).toContain('サイドバーの Skills');
     expect(codexHint).not.toContain('/openspec-propose');
     expect(vibeHint).toContain('/openspec-propose');
+    expect(vibeHint).not.toContain('サイドバーの Skills');
     for (const hint of startHints) {
       expect(hint).not.toContain('/opsx:');
     }

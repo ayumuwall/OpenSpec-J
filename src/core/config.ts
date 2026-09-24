@@ -33,6 +33,7 @@ export interface AIToolOption {
   legacySkillsDirs?: string[]; // 検出時に参照し、置換後に移行する旧ルート
   globalSkillsDir?: string; // 例: '.minimax' - /skills サフィックスを付け、ユーザーのホームディレクトリを基準に解決する
   detectionPaths?: string[]; // 自動検出用に skillsDir を上書きするパス群。どれかが存在すれば検出対象とみなす
+  searchAliases?: string[]; // 初期化時のツール選択で検索に使う追加の単語。表示はしない
   setupNote?: string; // 生成ファイルをツールが認識する前に必要な手動設定。init/update後に表示する
   requiresIdeRestart?: boolean; // IDE やエディターのプロセスがスラッシュコマンドを読み込む場合は true。CLI は即座に認識するため再起動案内は不要（#1067 を参照）
 }
@@ -86,8 +87,36 @@ export const AI_TOOLS: AIToolOption[] = [
   // スキルの利用を判断できない。検出には `.agents/skills` を使う。
   // `.claude/` が Claude Code を示すのと同様に、そこへスキルを置くプロジェクトが
   // この対象に該当する。判断材料は OpenSpec 自身のファイルではなく、ユーザーの設定である。
-  { name: 'Shared .agents skills', value: 'agents', available: true, successLabel: 'shared .agents skills', skillsDir: '.agents', detectionPaths: ['.agents/skills'] }
+  // The picker is searchable, so this entry also answers to the words someone
+  // whose assistant is not on the list actually types (#653) — it is named for
+  // a directory, which none of them would guess. Aliases are single words: the
+  // space bar toggles a selection rather than typing into the search box.
+  { name: 'Other / Universal (shared .agents skills)', value: 'agents', available: true, successLabel: 'shared .agents skills', skillsDir: '.agents', detectionPaths: ['.agents/skills'], searchAliases: ['universal', 'other', 'generic', 'custom', 'proprietary', 'unlisted', 'unsupported', 'vendor-neutral', 'agents.md'] }
 ];
+
+/**
+ * The vendor-neutral target every assistant that is not listed above can use.
+ * Named wherever a tool lookup comes up empty, so "my tool isn't here" is never
+ * a dead end (#653).
+ */
+export const UNIVERSAL_TOOL_ID = 'agents';
+
+/** The universal target's entry, or undefined if it was removed from AI_TOOLS. */
+export function getUniversalTool(): AIToolOption | undefined {
+  return AI_TOOLS.find((tool) => tool.value === UNIVERSAL_TOOL_ID);
+}
+
+/**
+ * One-line pointer at the universal target for non-interactive errors, the
+ * scripted counterpart of the picker's empty-search hint. Undefined when the
+ * target is not among the tools on offer, so the hint never names a choice the
+ * caller cannot make.
+ */
+export function universalToolFallbackHint(offeredToolIds: string[]): string | undefined {
+  const universal = getUniversalTool();
+  if (!universal || !offeredToolIds.includes(universal.value)) return undefined;
+  return `一覧にないツールには --tools ${universal.value} を使用してください。ベンダーに依存せず、各アシスタント向けのスキルを ${universal.skillsDir}/skills/ に作成します。`;
+}
 
 /**
  * ブランド変更後もスクリプトによる `--tools` 呼び出しが壊れないよう、廃止済みでも

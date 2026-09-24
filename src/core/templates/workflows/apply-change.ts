@@ -5,7 +5,27 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
+
+/**
+ * `/opsx:continue` is not in the `core` profile, so the blocked-state handoff
+ * is authored with a CLI fallback and resolved at generation time (see
+ * optional-workflow.ts).
+ */
+const BLOCKED_STATE_HANDOFF = optionalWorkflow(
+  'continue',
+  '`/opsx:continue` での作成を提案する。',
+  '不足しているアーティファクトの完成を提案する。`openspec status --change "<name>" --json` を実行し、次の `ready` アーティファクト（`skipped` や `blocked` ではないもの）を選び、`openspec instructions "<artifact-id>" --change "<name>" --json` でルールとテンプレートを取得する。両コマンドで選択済みの `--store <id>` を維持する。'
+);
+
+/** The archive handoff shown once every task is done. */
+const ARCHIVE_HANDOFF = optionalWorkflow(
+  'archive',
+  '`/opsx:archive` でこの変更をアーカイブできます。',
+  '`openspec archive "<name>"` を実行すると、この変更をアーカイブできます。'
+);
 
 /**
  * The apply workflow instructions, authored once and rendered by both the
@@ -20,6 +40,8 @@ export function getApplyInstructions(): string {
   return `OpenSpec の変更に含まれるタスクを実装します。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 **入力**: 必要に応じて、変更名を指定します (例: \`/opsx:apply add-auth\`)。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
@@ -56,9 +78,12 @@ JSON を解析して以下を理解します。
    - 現在の状態に応じた動的な指示
    - 任意の \`context\`: 選択したルートから得る、現在必須のプロジェクト指示入力
    - 任意の \`operationGuidance\`: apply の現在の助言的ガイダンス
+   - \`missingArtifacts\`（存在する場合）: 出力がない必須アーティファクトの ID
 
    **状態ごとの処理:**
-   - \`state: "blocked"\`（アーティファクト不足）の場合: メッセージを表示し、\`/opsx:continue\` を提案します（未インストールなら、\`openspec status --change "<name>" --json\` で次のアーティファクトを確認し、\`openspec instructions <artifact-id> --change "<name>" --json\` で作成方法を確認する）
+   - \`state: "blocked"\` の場合: メッセージを表示し、実装を一時停止する。
+     - \`missingArtifacts\` が空でない場合: ${BLOCKED_STATE_HANDOFF}
+     - それ以外の場合は、CLI の指示に従い、既存の計画アーティファクトからスキーマで設定された追跡ファイルを作成または修復する。別のアーティファクトが作成可能だと決めつけたり、ブロック中に実装を始めたりしない。
    - \`state: "all_done"\` の場合: 完了を祝い、archive を提案する
    - それ以外: 実装に進む
 
@@ -145,7 +170,7 @@ JSON を解析して以下を理解します。
 - [x] タスク 2
 ...
 
-すべてのタスクが完了しました。\`/opsx:archive\` でこの変更をアーカイブできます。
+すべてのタスクが完了しました。${ARCHIVE_HANDOFF}
 \`\`\`
 
 **一時停止時の出力 (問題が発生しました)**
@@ -196,7 +221,7 @@ JSON を解析して以下を理解します。
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-apply-change',
-    description: 'OpenSpec の変更に含まれるタスクを実装します。実装の開始・継続やタスクの実行を求められた場合に使用します。',
+    description: 'OpenSpec の変更に含まれるタスクを実装します。実装の開始・継続やタスクの実行を求められた場合に使用します。「openspec apply」「opsx apply」「openspec implement」と言われた場合にも使用します。',
     instructions: getApplyInstructions(),
     license: 'MIT',
     compatibility: 'OpenSpec CLI が必要です。',

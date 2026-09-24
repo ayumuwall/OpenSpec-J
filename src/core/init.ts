@@ -22,6 +22,8 @@ import { ANCHORED_OPENSPEC_DIRS, ensureDirectoryAnchor } from './openspec-root.j
 import { getSkillReferenceTransformer, getTransformerForTool, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
 import {
   AI_TOOLS,
+  getUniversalTool,
+  universalToolFallbackHint,
   OPENSPEC_DIR_NAME,
   AIToolOption,
   resolveToolIdAlias,
@@ -625,8 +627,9 @@ export class InitCommand {
       if (detectedToolIds.size > 0) {
         return [...detectedToolIds];
       }
+      const fallbackHint = universalToolFallbackHint(validTools);
       throw new Error(
-        `ツールが検出されず、--tools フラグも指定されていません。利用可能なツール:\n  ${validTools.join('\n  ')}\n\n--tools all、--tools none、または --tools claude,cursor,... を使用してください。`
+        `ツールが検出されず、--tools フラグも指定されていません。利用可能なツール:\n  ${validTools.join('\n  ')}\n\n--tools all、--tools none、または --tools claude,cursor,... を使用してください。${fallbackHint ? `\n${fallbackHint}` : ''}`
       );
     }
 
@@ -650,6 +653,7 @@ export class InitCommand {
         return {
           name: tool?.name || toolId,
           value: toolId,
+          searchAliases: tool?.searchAliases,
           configured,
           detected: detected && !configured,
           preSelected: configured || (shouldPreselectDetected && detected && !configured),
@@ -683,12 +687,21 @@ export class InitCommand {
       console.log(`検出したツールディレクトリ: ${detectedOnlyNames.join(', ')}（${detectionLabel}）`);
     }
 
+    // A search that matches nothing is where someone whose assistant is not on
+    // the list gives up (#653), so name the vendor-neutral entry right there.
+    const universalTool = getUniversalTool();
+    const universalHint =
+      universalTool && validTools.includes(universalTool.value)
+        ? `使いたいツールが一覧にない場合は、検索をクリアして「${universalTool.name}」を選んでください。`
+        : undefined;
+
     const selectedTools = await searchableMultiSelect({
       message: `セットアップするツールを選択してください（利用可能: ${validTools.length}）`,
       pageSize: 15,
       choices: sortedChoices,
+      emptyHint: universalHint,
       validate: (selected: string[]) => selected.length > 0 || '少なくとも 1 つ選択してください',
-  });
+    });
 
     if (selectedTools.length === 0) {
       throw new Error('少なくとも 1 つのツールを選択してください');
@@ -746,8 +759,9 @@ export class InitCommand {
     );
 
     if (invalidTokens.length > 0) {
+      const fallbackHint = universalToolFallbackHint([...availableSet]);
       throw new Error(
-        `無効なツール: ${invalidTokens.join(', ')}。利用可能な値: ${availableList}`
+        `無効なツール: ${invalidTokens.join(', ')}。利用可能な値: ${availableList}${fallbackHint ? `\n${fallbackHint}` : ''}`
       );
     }
 
@@ -1343,9 +1357,13 @@ export class InitCommand {
           // Tools with no slash surface (e.g. Rovo Dev) reference skills as
           // prose ("the openspec-propose skill"); phrase the hint so it reads
           // as an instruction rather than a dead command with an argument.
-          hint = usesNaturalLanguageSkillReferences(tool.value)
-            ? `最初の変更を開始: ${tool.name} に ${skillReference}を使って「あなたのアイデア」を扱うよう依頼してください`
-            : `最初の変更を開始: ${skillReference} "あなたのアイデア"`;
+          if (usesNaturalLanguageSkillReferences(tool.value)) {
+            hint = `最初の変更を開始: ${tool.name} に ${skillReference}を使って「あなたのアイデア」を扱うよう依頼してください`;
+          } else if (tool.value === 'codex') {
+            hint = `最初の変更を開始: ${skillReference} "あなたのアイデア"（Codex CLI または IDE）。Codex デスクトップアプリでは、サイドバーの Skills から ${skillReference.slice(1)} を選択してください`;
+          } else {
+            hint = `最初の変更を開始: ${skillReference} "あなたのアイデア"`;
+          }
         } else {
           continue;
         }

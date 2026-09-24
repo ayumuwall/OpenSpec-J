@@ -18,19 +18,37 @@ import {
 } from '../../../src/core/command-generation/invocation.js';
 import { getCommandContents } from '../../../src/core/shared/skill-generation.js';
 import { MAX_CONTEXT_SIZE } from '../../../src/core/project-config.js';
+import { resolveOptionalWorkflows } from '../../../src/core/templates/optional-workflow.js';
+import { ALL_WORKFLOWS } from '../../../src/core/profiles.js';
 
-const proposeSkillBody = getOpsxProposeSkillTemplate().instructions;
-const proposeCommandBody = getOpsxProposeCommandTemplate().content;
+// Templates carry optional-workflow conditionals; a body only means anything
+// once resolved against a workflow set. Unless a test says otherwise, these are
+// the bodies a profile with every workflow installed receives.
+const withAll = (body: string) =>
+  resolveOptionalWorkflows(body, new Set<string>(ALL_WORKFLOWS));
+const withoutApply = (body: string) =>
+  resolveOptionalWorkflows(
+    body,
+    new Set<string>(ALL_WORKFLOWS.filter((id) => id !== 'apply'))
+  );
+
+const proposeSkillBody = withAll(getOpsxProposeSkillTemplate().instructions);
+const proposeCommandBody = withAll(getOpsxProposeCommandTemplate().content);
+const asDeployed = <T extends { instructions: string }>(template: T): T => ({
+  ...template,
+  instructions: withAll(template.instructions),
+});
+
 const proposeBodies: Array<[string, string]> = [
-  ['propose skill', generateSkillContent(getOpsxProposeSkillTemplate(), 'TEST')],
-  ['propose command', getOpsxProposeCommandTemplate().content],
+  ['propose skill', generateSkillContent(asDeployed(getOpsxProposeSkillTemplate()), 'TEST')],
+  ['propose command', proposeCommandBody],
 ];
 
 // ff runs the byte-identical artifact loop, so it carries the identical guards.
 const loopBodies: Array<[string, string]> = [
   ...proposeBodies,
-  ['ff skill', getFfChangeSkillTemplate().instructions],
-  ['ff command', getOpsxFfCommandTemplate().content],
+  ['ff skill', withAll(getFfChangeSkillTemplate().instructions)],
+  ['ff command', withAll(getOpsxFfCommandTemplate().content)],
 ];
 
 const repoRoot = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
@@ -80,13 +98,52 @@ describe('default task guidance', () => {
     const example = tasks!.instruction.match(/```\s*([\s\S]*?)```/)?.[1];
     expect(example).toBeDefined();
     const numberedTasks = example!.split('\n').filter(line => /^- \[ \] \d+\.\d+ /.test(line));
-    expect(numberedTasks).toHaveLength(4);
+    expect(numberedTasks).toHaveLength(5);
     expect(numberedTasks.every(line => /確認/.test(line))).toBe(true);
     expect(numberedTasks[0]).toContain('期待するファイルが存在');
     expect(numberedTasks[1]).toContain('パッケージのインストールが成功');
     expect(numberedTasks[2]).toContain('エクスポートテストの成功');
-    expect(numberedTasks[3]).toContain('引用符と区切り文字');
-    expect(example).not.toMatch(/^- \[ \] \d+\.\d+ 検証\b/im);
+    expect(numberedTasks[3]).toContain('引用符と区切り文字が単体テストで網羅');
+    expect(numberedTasks[4]).toContain('エクスポート API を文書化');
+    expect(example).not.toMatch(/^- \[ \] \d+\.\d+ (?:verify|run (?:the )?verification)\b/im);
+  });
+
+  // #1952: agents parked testing and documentation in one trailing group, so a
+  // failure seeded in group 1 only surfaced at the end and cascaded into rework.
+  it('keeps tests and documentation inside the group that does the work (#1952)', () => {
+    const tasks = defaultSchema.artifacts.find(artifact => artifact.id === 'tasks');
+    expect(tasks).toBeDefined();
+    expect(tasks!.instruction).toMatch(
+      /各タスクグループで、その作業に必要なテストとドキュメントを必ず揃える/
+    );
+    expect(tasks!.instruction).toMatch(
+      /テストやドキュメントを最後のグループにまとめない/
+    );
+    // The rule is scoped to what a group's work actually needs, so the worked
+    // example's scaffolding group can carry no tests or docs without
+    // contradicting it.
+    expect(tasks!.instruction).toMatch(
+      /ひな形作成や依存関係のセットアップなど、どちらも不要な\s+グループには追加しない/
+    );
+    expect(tasks!.instruction).toMatch(
+      /最後のグループは統合確認だけに使い、前のグループで\s+対応すべきテストやドキュメントを持ち越さない/
+    );
+
+    // The worked example has to show a docs task inside the implementation
+    // group, not a trailing "testing and documentation" group of its own.
+    const example = tasks!.instruction.match(/```\s*([\s\S]*?)```/)?.[1];
+    expect(example).toBeDefined();
+    const headings = example!
+      .split('\n')
+      .filter(line => /^## /.test(line.trim()))
+      .map(line => line.trim());
+    expect(headings).toHaveLength(2);
+    expect(headings.some(heading => /\b(test|testing|documentation|docs)\b/i.test(heading))).toBe(
+      false
+    );
+
+    const lastGroup = example!.slice(example!.lastIndexOf(headings[headings.length - 1]));
+    expect(lastGroup).toMatch(/^- \[ \] \d+\.\d+ docs\/export\.md にエクスポート API を文書化/im);
   });
 });
 
@@ -201,7 +258,9 @@ describe('planning code inspection (#339)', () => {
   });
 
   it('preserves inspection guidance through every command adapter', () => {
-    for (const command of getCommandContents(['propose', 'ff'])) {
+    for (const command of getCommandContents(ALL_WORKFLOWS).filter(({ id }) =>
+      ['propose', 'ff'].includes(id)
+    )) {
       for (const adapter of CommandAdapterRegistry.getAll()) {
         const generated = generateCommand(command, adapter).fileContent;
         const inspection = generated.indexOf('**下書き前に関連プロジェクトを調査します**');
@@ -277,8 +336,36 @@ describe('propose implementation boundary', () => {
     expect(proposeSkillBody).not.toContain('実装するよう依頼');
   });
 
+  // The same boundary has to hold when `apply` is not installed: the command
+  // surface may name the CLI, never a conversational handoff (#1734).
+  it('keeps command-only tools off direct coding when apply is not installed', () => {
+    const command = withoutApply(getOpsxProposeCommandTemplate().content);
+    const skill = withoutApply(getOpsxProposeSkillTemplate().instructions);
+    const ffCommand = withoutApply(getOpsxFfCommandTemplate().content);
+
+    for (const body of [command, skill, ffCommand]) {
+      expect(body).not.toContain('/opsx:apply');
+    }
+
+    expect(command).toContain(
+      '`openspec instructions apply --change "<name>" --json` を実行してタスクを取得'
+    );
+    expect(command).not.toContain('ask me to implement');
+    expect(command).not.toContain('この変更の適用を依頼してください');
+
+    expect(ffCommand).toContain(
+      '`openspec instructions apply --change "<name>" --json` でタスク一覧を取得'
+    );
+    expect(ffCommand).not.toContain('ask me to implement');
+
+    expect(skill).toContain('この変更の適用を依頼してください');
+    expect(skill).not.toContain('ask me to implement');
+  });
+
   it('preserves planning and initialization boundaries through every command adapter', () => {
-    const propose = getCommandContents(['propose'])[0];
+    // Resolve against every workflow: this asserts the apply handoff, which
+    // is only emitted when `apply` is installed.
+    const propose = getCommandContents(ALL_WORKFLOWS).find(({ id }) => id === 'propose');
     expect(propose?.id).toBe('propose');
 
     for (const adapter of CommandAdapterRegistry.getAll()) {

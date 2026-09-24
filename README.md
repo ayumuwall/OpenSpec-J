@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.13.0 です。**<br>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.13.2 です。**<br>
 > 生成物だけ日本語にできれば十分な場合は、本家版の [Multi-Language](docs/multi-language.md) を利用できます。
 
 <details>
@@ -137,6 +137,12 @@ OpenSpec をグローバルにインストールします。
 npm install -g @ayumuwall/openspec@latest
 ```
 
+macOS / Linux では、本家版の公式 [Homebrew formula](https://formulae.brew.sh/formula/openspec) も利用できます。Node.js は依存関係としてインストールされます。
+
+```bash
+brew install openspec
+```
+
 次に、プロジェクトディレクトリに移動して初期化します。
 
 ```bash
@@ -144,11 +150,11 @@ cd your-project
 openspec init
 ```
 
-> **AIに任せたい場合は、** [セットアップ用プロンプト](docs/installation.md#aiアシスタントでインストール)をコーディングアシスタントへ貼り付けてください。CLIのインストール、`openspec init` の実行、結果の確認まで行います。
+> **AIに任せたい場合は、** [セットアップ用プロンプト](docs-lab/start/installation.md#ai-アシスタントでインストールする)をコーディングアシスタントへ貼り付けてください。CLIのインストール、`openspec init` の実行、結果の確認まで行います。
 
 次にAIへ話しかけます。
 
-- **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、何かを書く前に計画の形へ整理してくれる安全な相談相手です。([探索ガイド](docs/explore.md))
+- **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、コードを書く前に計画の形へ整理してくれる安全な相談相手です。([探索ガイド](docs/explore.md))
 - **欲しいものはもう決まっていますか?** `/opsx:propose <what-you-want-to-build>` へ直接進んでください。
 
 どちらもデフォルトのプロファイルに含まれています。拡張ワークフロー（`/opsx:new`、`/opsx:continue`、`/opsx:ff`、`/opsx:verify`、`/opsx:bulk-archive`、`/opsx:onboard`）が必要な場合は、`openspec config profile`で選択し、`openspec update`で適用します。
@@ -158,7 +164,7 @@ openspec init
 > [!NOTE]
 > 使用しているツールが対応しているか不明ですか？[完全な一覧](docs/supported-tools.md)を参照してください。30以上のツールに対応し、今後も追加していきます。
 >
-> pnpm、yarn、bun、nix でも動作します。 [インストールオプション](docs/installation.md)を参照してください。
+> Homebrew（本家版）、pnpm、yarn、bun、Nix でも動作します。[インストールオプション](docs-lab/start/installation.md)を参照してください。
 
 ## ドキュメント
 
@@ -213,6 +219,12 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 
 ```bash
 npm install -g @ayumuwall/openspec@latest
+```
+
+Homebrew で本家版をインストールした場合：
+
+```bash
+brew upgrade openspec
 ```
 
 **エージェントの指示を更新します**

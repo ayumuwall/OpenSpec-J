@@ -5,12 +5,35 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
+
+/**
+ * The implementation handoff. `apply` is not guaranteed to be installed, so
+ * the prompt is resolved at generation time (see optional-workflow.ts) rather
+ * than naming a workflow that may not exist.
+ *
+ * The two surfaces word this differently on purpose (#258): a command-only
+ * tool has no conversational agent to ask, so its prompt names a command or
+ * the CLI and never invites "ask me to implement".
+ */
+const SKILL_APPLY_HANDOFF = optionalWorkflow(
+  'apply',
+  '`/opsx:apply` を実行するか、この変更の適用を依頼してください',
+  'この変更の適用を依頼してください'
+);
+
+const COMMAND_APPLY_HANDOFF = optionalWorkflow(
+  'apply',
+  '`/opsx:apply` を実行してください',
+  '`openspec instructions apply --change "<name>" --json` を実行してタスクを取得してください'
+);
 
 export function getOpsxProposeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-propose',
-    description: '新しい変更を提案し、すべてのアーティファクトを 1 ステップで生成します。作りたいものを素早く説明し、proposal、design、specs、tasks を実装準備済みの形で揃えたいときに使用します。',
+    description: '新しい OpenSpec の変更を提案し、すべてのアーティファクトを 1 ステップで生成します。作りたいものを素早く説明し、proposal、design、specs、tasks を実装準備済みの形で揃えたいときに使用します。「openspec propose」または「opsx propose」と依頼された場合にも使用します。',
     instructions: `新しい変更を提案します。変更を作成し、必要なアーティファクトを 1 ステップで生成します。
 
 **計画の境界**: このワークフローが作成するのは計画アーティファクトだけです。このワークフローを選択または起動したユーザー要求は、何かの作成や修正も求めていても、計画だけを許可します。プロジェクトコードを編集してはいけません。計画アーティファクトが完了したら停止します。最初の要求に含まれていても、同じ応答で実装を始めてはいけません。アーティファクトを提示した後は新しいユーザー要求を待ち、そのときに apply ワークフローを開始します。
@@ -29,6 +52,8 @@ export function getOpsxProposeSkillTemplate(): SkillTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
+${PROJECT_ROOT_GUARD}
+
 **入力**: ユーザーのリクエストには、変更名 (kebab-case) または作りたい内容の説明を含める必要があります。
 
 **手順**
@@ -46,7 +71,7 @@ ${STORE_SELECTION_GUIDANCE}
 
 2. **プロジェクトコンテキストを読み込む**
 
-   現在の作業ディレクトリから \`openspec context --json\` を実行します。登録済みストアを明示的に選択した場合は \`openspec context --json --store "<store-id>"\` を実行します。返された \`root.path\` を正規の OpenSpec ルートとして使います。\`no_openspec_root\` が返された場合は、ファイルを作成・変更せずに停止します。\`openspec init\` を案内し、ユーザーが初期化を依頼するまで待ってください。自動で初期化したり \`openspec new change\` を実行したりしてはいけません。初期化後は、このコンテキスト確認を再実行してから進めます。その他の失敗でも停止してエラーを報告します。現在のディレクトリへフォールバックしたり、選択したストアを省いて後続の OpenSpec コマンドを実行したりしてはいけません。
+   現在の作業ディレクトリから \`openspec context --json\` を実行します。登録済みストアを明示的に選択した場合は \`openspec context --json --store "<store-id>"\` を実行します。返された \`root.path\` を正規の OpenSpec ルートとして使います。\`no_openspec_root\` が返された場合は、ファイルを作成・変更せずに停止し、このワークフローを使うに至った経緯に応じて、上記の **プロジェクトの確認** に従います。OpenSpec を明示的に指定された場合にだけ \`openspec init\` を案内し、ユーザーが初期化を依頼するまで待ってください。自動で初期化したり \`openspec new change\` を実行したりしてはいけません。初期化後は、このコンテキスト確認を再実行してから進めます。その他の失敗でも停止してエラーを報告します。現在のディレクトリへフォールバックしたり、選択したストアを省いて後続の OpenSpec コマンドを実行したりしてはいけません。
 
    \`root.path\` が解決できた場合だけ、\`<root.path>/openspec/config.yaml\` を読みます。\`config.yml\` を使うのは \`config.yaml\` が存在しない場合だけです。どちらもなければ、プロジェクトコンテキストなしで続行します。\`config.yaml\` が読み取れない、または無効な場合に \`config.yml\` へ切り替えてはいけません。
 
@@ -142,7 +167,7 @@ CLI が特定した OpenSpec ルートの \`openspec/changes/\` 配下に変更�
 - 変更名と場所
 - 作成したアーティファクトと簡単な説明、およびスキップした条件付きアーティファクトとその理由
 - 準備状況: 「実装に必要な全アーティファクトの準備ができました。」
-- 案内: 「アーティファクトはレビューの準備ができました。準備ができたら \`/opsx:apply\` を実行するか、この変更の適用を依頼してください。」
+- 案内: 「アーティファクトはレビューの準備ができました。準備ができたら ${SKILL_APPLY_HANDOFF}。」
 
 **アーティファクト作成ガイドライン**
 
@@ -192,6 +217,8 @@ export function getOpsxProposeCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
+${PROJECT_ROOT_GUARD}
+
 **入力**: \`/opsx:propose\` の後の引数は、変更名 (kebab-case)、またはユーザーが作りたい内容の説明です。
 
 **手順**
@@ -209,7 +236,7 @@ ${STORE_SELECTION_GUIDANCE}
 
 2. **プロジェクトコンテキストを読み込む**
 
-   現在の作業ディレクトリから \`openspec context --json\` を実行します。登録済みストアを明示的に選択した場合は \`openspec context --json --store "<store-id>"\` を実行します。返された \`root.path\` を正規の OpenSpec ルートとして使います。\`no_openspec_root\` が返された場合は、ファイルを作成・変更せずに停止します。\`openspec init\` を案内し、ユーザーが初期化を依頼するまで待ってください。自動で初期化したり \`openspec new change\` を実行したりしてはいけません。初期化後は、このコンテキスト確認を再実行してから進めます。その他の失敗でも停止してエラーを報告します。現在のディレクトリへフォールバックしたり、選択したストアを省いて後続の OpenSpec コマンドを実行したりしてはいけません。
+   現在の作業ディレクトリから \`openspec context --json\` を実行します。登録済みストアを明示的に選択した場合は \`openspec context --json --store "<store-id>"\` を実行します。返された \`root.path\` を正規の OpenSpec ルートとして使います。\`no_openspec_root\` が返された場合は、ファイルを作成・変更せずに停止し、このワークフローを使うに至った経緯に応じて、上記の **プロジェクトの確認** に従います。OpenSpec を明示的に指定された場合にだけ \`openspec init\` を案内し、ユーザーが初期化を依頼するまで待ってください。自動で初期化したり \`openspec new change\` を実行したりしてはいけません。初期化後は、このコンテキスト確認を再実行してから進めます。その他の失敗でも停止してエラーを報告します。現在のディレクトリへフォールバックしたり、選択したストアを省いて後続の OpenSpec コマンドを実行したりしてはいけません。
 
    \`root.path\` が解決できた場合だけ、\`<root.path>/openspec/config.yaml\` を読みます。\`config.yml\` を使うのは \`config.yaml\` が存在しない場合だけです。どちらもなければ、プロジェクトコンテキストなしで続行します。\`config.yaml\` が読み取れない、または無効な場合に \`config.yml\` へ切り替えてはいけません。
 
@@ -305,7 +332,7 @@ CLI が特定した OpenSpec ルートの \`openspec/changes/\` 配下に変更�
 - 変更名と場所
 - 作成したアーティファクトと簡単な説明、およびスキップした条件付きアーティファクトとその理由
 - 準備状況: 「実装に必要な全アーティファクトの準備ができました。」
-- 案内: 「アーティファクトはレビューの準備ができました。準備ができたら \`/opsx:apply\` を実行してください。」
+- 案内: 「アーティファクトはレビューの準備ができました。準備ができたら ${COMMAND_APPLY_HANDOFF}。」
 
 **アーティファクト作成ガイドライン**
 

@@ -54,6 +54,8 @@ openspec/changes/add-user-auth/
 エージェントが出力形式として受け取るテンプレート（[templates/proposal.md](https://github.com/ayumuwall/OpenSpec-J/blob/main/schemas/spec-driven/templates/proposal.md)）：
 
 ```md
+# Proposal
+
 ## Why
 
 <!-- この変更の動機を説明します。どんな問題を解決するのか、なぜ今なのか。 -->
@@ -93,7 +95,7 @@ openspec/changes/add-user-auth/
 この変更がなぜ必要か（WHY）を明確にする提案ドキュメントを作成する。
 
 セクション:
-- **Why**: 問題または機会を 1〜2 文で示す。どの問題を、なぜ今解決するのか。
+- **Why**: 問題または機会を1〜2文で示す。どの問題を、なぜ今解決するのか。
 - **What Changes**: 変更の箇条書き。新機能、変更、削除を具体的に示す。破壊的変更には **BREAKING** を付ける。
 - **Capabilities**: 作成または変更する仕様を特定する:
   - **New Capabilities**: 導入する機能を列挙する。各項目は `specs/<capability-path>/spec.md` になる。新しく導入するパス区切りは kebab-case にし（例: `user-auth` または `identity/user-auth`）、プロジェクトの既存の仕様構成に従う。
@@ -101,11 +103,20 @@ openspec/changes/add-user-auth/
 - **Impact**: 影響するコード、API、依存関係、システム。
 
 重要: Capabilities セクションは必須。proposal と specs フェーズの間の契約になる。
-記入前に既存の仕様を調査すること。
-ここに書いた各機能には対応する spec ファイルが必要になる。
+記入前に `openspec list --specs` でプロジェクトの機能一覧を調べ、関連しそうな仕様を
+`openspec show "<spec-id>" --type spec --json --no-scenarios` で確認する。
+仕様ファイル全体をコンテキストに取り込まず、機能の目的と要件本文を取得できる。
+登録済みの独立ストアを使う場合だけ、両コマンドに `--store "<id>"` を付ける。
+`--type spec` は省略しない。同名の変更と仕様があると、対象が曖昧というエラーになる。
+`--specs` のない `openspec list` は進行中の変更一覧であり、既存の対応範囲は分からない。
+似た名前の機能を新設せず、既存機能の正確なパスを再利用する。
+シナリオを除いた読み取りは概要の確認に限る。既存の対応範囲や変更内容を判断する前に、
+`openspec show "<spec-id>" --type spec` で関連仕様をシナリオも含めて全文読み取る
+（`--store` の指定条件は同じ）。
+ここに書いた各機能には対応する仕様ファイルが必要になる。
 
-すべての変更は、1 つ以上の機能（新規または変更）を宣言するか、仕様を明示的に
-対象外にする必要がある。仕様差分が 0 件の場合、変更の `.openspec.yaml` に
+すべての変更は、1つ以上の機能（新規または変更）を宣言するか、仕様を明示的に
+対象外にする必要がある。仕様差分が0件の場合、変更の `.openspec.yaml` に
 `skip_specs: true` がなければ `openspec validate` は拒否する。
 `skip_specs: true` は仕様レベルの振る舞いが変わらない場合（純粋な
 リファクタリング、ツール、文書）だけ使う。検証を通すためだけに要件を作らない。
@@ -119,11 +130,15 @@ openspec/changes/add-user-auth/
 
 変わる振る舞いを定義します。proposal に列挙した機能ごとに 1 つのデルタ仕様を作成します。
 
+各仕様差分は、機能フォルダ内の`spec.md`に記述します。`specs/user-auth.md`など、`specs/`配下の別のファイルに書いた差分セクションは archive がマージしないため、`openspec validate`と`openspec archive`が拒否します。
+
 ### 構造
 
 エージェントが出力形式として受け取るテンプレート（[templates/spec.md](https://github.com/ayumuwall/OpenSpec-J/blob/main/schemas/spec-driven/templates/spec.md)）：
 
 ```md
+# Spec Delta
+
 ## Purpose
 <!-- 新しい機能の場合のみ: この機能の目的を1〜2文（50文字以上）で記述します。既存の機能では、このセクションを削除してください。 -->
 
@@ -144,7 +159,7 @@ openspec/changes/add-user-auth/
 ````md
 システムが何をするか（WHAT）を定義する仕様ファイルを作成する。
 
-spec は実装計画ではなく、振る舞いの契約である。
+specは実装計画ではなく、振る舞いの契約である。
 
 適切な内容:
 - ユーザーや下流システムが依存する観測可能な振る舞い
@@ -156,49 +171,52 @@ spec は実装計画ではなく、振る舞いの契約である。
 - 内部のクラス名・関数名
 - ライブラリやフレームワークの選択
 - 段階的な実装詳細
-- 詳細な実行計画（design.md または tasks.md に書く）
+- 詳細な実行計画（design.mdまたはtasks.mdに書く）
 
-実装を変えても外部から見える振る舞いが変わらないなら、spec には含めない。
+実装を変えても外部から見える振る舞いが変わらないなら、specには含めない。
 
-proposal の Capabilities セクションに列挙された機能ごとに、仕様ファイルを 1 つ作成する。
-`<capability-path>`は`specs/`からの相対仕様ディレクトリ（例：
-`user-auth`または`identity/user-auth`）。完全なパスを維持する:
-- 新機能: proposal の`specs/<capability-path>/spec.md`に記載したパスをそのまま使う。proposal で新設するパス区切りは kebab-case にする。プロジェクトの既存構成に従い、フラットな構成なら新しいドメイン階層を加えない。
-- 変更機能: `specs/<capability-path>/spec.md`に仕様差分を作成するとき、`openspec/specs/<capability-path>/`の既存パスを正確に使う。機能を移動・改名しない。
+proposal の Capabilities セクションに列挙された機能ごとに、仕様ファイルを1つ作成する。
+`<capability-path>` は `specs/` からの相対仕様ディレクトリ（例: `user-auth` または
+`identity/user-auth`）。完全なパスを維持する:
+- 新機能: proposal の `specs/<capability-path>/spec.md` に記載したパスをそのまま使う。proposal で新設するパス区切りは kebab-case にする。プロジェクトの既存構成に従い、フラットな構成なら新しいドメイン階層を加えない。
+- 変更機能: `specs/<capability-path>/spec.md` に仕様差分を作成するとき、`openspec/specs/<capability-path>/` の既存パスを正確に使う。仕様差分を書く前に `openspec list --specs` でパスを確認し、登録済みの独立ストアを使う場合だけ `--store "<id>"` を付ける。誤記したパスや作り上げたパスは、意図した機能ではなく存在しない機能を指してしまう。機能を移動・改名しない。
 
-`.openspec.yaml`に`skip_specs: true`（仕様レベルの振る舞い変更なし）が
-設定されていない限り、少なくとも 1 つの spec ファイルが必要である。
-proposal に機能がなく`skip_specs`もない場合は、先に proposal を見直す。
+`.openspec.yaml` に `skip_specs: true`（仕様レベルの振る舞い変更なし）が
+設定されていない限り、少なくとも1つのspecファイルが必要である。
+proposalにcapabilityがなくskip_specsもない場合は、先にproposalを見直す。
 
 差分操作（## 見出しを使用）:
 - **ADDED Requirements**: 新しい機能
-- **MODIFIED Requirements**: 振る舞い変更。MUST で全文更新する
-- **REMOVED Requirements**: 廃止機能。**Reason**と**Migration**を必ず記載
-- **RENAMED Requirements**: 名称変更のみ。FROM:/TO: 形式
+- **MODIFIED Requirements**: 振る舞い変更 - MUST で全文更新する
+- **REMOVED Requirements**: 廃止機能 - **Reason** と **Migration** を必ず記載
+- **RENAMED Requirements**: 名称変更のみ - FROM:/TO: 形式
 
 書式ルール:
-- 各要件: `### Requirement: <name>`の後に本文を書く
-- 規範要件は SHALL/MUST を使う（should/may は避ける）
-- 各シナリオ: `#### Scenario: <name>`を WHEN/THEN 形式で書く
+- 各要件: `### Requirement: <name>` の後に本文を書く
+- 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）
+- 語尾は「〜しなければならない。(SHALL)」の形式に揃える。文中に SHALL/MUST を挿入しない。
+- 各シナリオ: `#### Scenario: <name>` を WHEN/THEN 形式で書く
 - **CRITICAL**: シナリオは必ず 4 つのハッシュ（`####`）を使う。3 つや箇条書きにすると静かに失敗する。
 - すべての要件は少なくとも 1 つのシナリオを持つ。
 
-新機能の場合だけ、仕様差分を`## Purpose`セクションから始める。機能の目的を 1〜2 文（50 文字以上。
-`openspec validate --strict`では短すぎると報告される）で説明する。アーカイブ時に作成する本仕様へコピーされる。
-ない場合は、新しい本仕様に`TBD ... Update Purpose after archive`のプレースホルダーが残り、手動で記入する必要がある。
-既存機能の仕様差分には`## Purpose`を加えない。その仕様にはすでに存在し、差分側は無視される。既存機能の Purpose（残った`TBD`プレースホルダーを含む）を変更する場合は、`openspec/specs/<capability-path>/spec.md`を直接編集する。
+新機能の場合だけ、仕様差分の最初のセクションを `## Purpose` にする。機能の目的を1〜2文（50文字以上。
+`openspec validate --strict` では短すぎると報告される）で説明する。アーカイブ時に作成する本仕様へコピーされる。
+ない場合は、新しい本仕様に `TBD ... Update Purpose after archive` のプレースホルダーが残り、手動で記入する必要がある。
+既存機能の仕様差分には `## Purpose` を加えない。その仕様には既に存在し、差分側は無視される。既存機能の Purpose（残った `TBD` プレースホルダーを含む）を変更する場合は、`<planningHome.root>/openspec/specs/<capability-path>/spec.md` を直接編集する。`planningHome.root` は `openspec instructions ... --json` の応答から取得する。変更が `--store`、プロジェクトの `store:` ポインター、グローバル既定ストアのいずれでストアに置かれていても正しいルートへ解決され、そうでなければ現在のリポジトリを指すため、必ずこの値を使う。どちらの場合かを推測しない。
 
 MODIFIED 要件の手順:
-1. openspec/specs/<capability-path>/spec.md から既存の要件を見つける
-2. 要件ブロック全体（`### Requirement:`からすべてのシナリオまで）をコピーする
-3. `## MODIFIED Requirements`の下へ貼り付け、新しい振る舞いを反映するよう編集する
+1. `<planningHome.root>/openspec/specs/<capability-path>/spec.md`（上記と同じストア対応ルート）から既存の要件を見つける
+2. 要件ブロック全体（`### Requirement:` からすべてのシナリオまで）をコピーする
+3. `## MODIFIED Requirements` の下へ貼り付け、新しい振る舞いを反映するよう編集する
 4. 見出しテキストが正確に一致することを確認する（空白は区別しない）
 
 よくある落とし穴: MODIFIED で部分的に書くとアーカイブ時に詳細が失われる。
 既存の振る舞いを変えずに追加するなら ADDED を使う。
 
-例（新しい機能なので`## Purpose`から始める）:
+例（新しい機能なので、最初のセクションは `## Purpose`）:
 ```
+# Spec Delta
+
 ## Purpose
 
 ユーザーがポータブルな形式で製品からデータを取り出せるようにする。
@@ -231,6 +249,8 @@ MODIFIED 要件の手順:
 エージェントが出力形式として受け取るテンプレート（[templates/design.md](https://github.com/ayumuwall/OpenSpec-J/blob/main/schemas/spec-driven/templates/design.md)）：
 
 ```md
+# Design
+
 ## Context
 
 <!-- アプローチを決める背景・現状・制約。動機は proposal.md を参照し、ここでは繰り返さない -->
@@ -266,18 +286,18 @@ design.md を作成する条件（該当する場合のみ作成）:
 - 実装前に技術判断が必要な曖昧さ
 
 セクション:
-- **Context**: アプローチの説明に必要な現状と制約だけを書く。動機は proposal を参照する
-- **Goals / Non-Goals**: 設計レベルの境界だけを書き、proposal のスコープを繰り返さない
+- **Context**: アプローチの説明に必要な現状と制約だけを書く。動機はproposalを参照する
+- **Goals / Non-Goals**: 設計レベルの境界だけを書き、proposalのスコープを繰り返さない
 - **Decisions**: 主要な技術判断と理由（なぜ X ではなく Y か）。各判断に代替案の検討も含める。
 - **Risks / Trade-offs**: 既知の制約や失敗しうる点。形式: [Risk] → Mitigation
 - **Migration Plan**: デプロイ手順、ロールバック戦略（該当する場合）
 - **Open Questions**: specs、アプローチ、タスク分解を変えず後で安全に回答できる未決事項。なければ省略
 
-Open Questions は先送りできる未知事項のためのもので、未判断の代用ではない。
+Open Questionsは先送りできる未知事項のためのもので、未判断の代用ではない。
 specs、アプローチ、タスク分解を変える問いは、推測せず今ユーザーへ確認する。
 
 行ごとの実装詳細ではなく、アーキテクチャと方針に集中する。
-why と what は proposal、how は design、要件は specs を参照し、内容を繰り返さない。
+whyとwhatはproposal、howはdesign、要件はspecsを参照し、内容を繰り返さない。
 
 良い設計ドキュメントは技術判断の「なぜ」を説明する。
 ```
@@ -291,6 +311,8 @@ why と what は proposal、how は design、要件は specs を参照し、内�
 エージェントが出力形式として受け取るテンプレート（[templates/tasks.md](https://github.com/ayumuwall/OpenSpec-J/blob/main/schemas/spec-driven/templates/tasks.md)）：
 
 ```md
+# Tasks
+
 ## 1. <!-- タスクグループ名 -->
 
 - [ ] 1.1 <!-- タスク内容 -->
@@ -309,33 +331,45 @@ why と what は proposal、how は design、要件は specs を参照し、内�
 ````md
 実装作業を分解したタスクリストを作成する。
 
-tasks を書く前に design.md の Open Questions を確認する。実装内容を変える問いがあれば、
+tasksを書く前にdesign.mdのOpen Questionsを確認する。実装内容を変える問いがあれば、
 暗黙の仮定をタスクリストへ入れず、先にユーザーと解決する。
 
 **IMPORTANT: 下記テンプレートに厳密に従う。** apply フェーズは
-チェックボックス形式を解析して進捗を追跡する。`- [ ]`を使わないタスクは追跡されない。
+チェックボックス形式を解析して進捗を追跡する。中身が `x` だけなら、大文字・小文字や
+空白の有無にかかわらず完了とみなすため、`- [ x]` も完了になる。それ以外のマーカーは、
+`- [~]`、`- [-]`、空の `- []` を含め、すべて未完了として扱う。
+チェックボックスのない行は追跡しない。
 
 ガイドライン:
 - 関連タスクを ## 番号付き見出し配下にまとめる
 - 各タスクは必ずチェックボックス: `- [ ] X.Y タスク内容`
 - 1 セッションで終わる大きさにする
 - 依存順に並べる（最初にやるべきものから）
+- 各タスクのチェックボックス説明には、完了を確認する方法（テスト、コマンド、観察可能な振る舞い、納品物）を必ず含める。複数の実装タスクにまたがる統合・システム動作を確認する場合だけ、独立した検証タスクを使う。
+- 各タスクグループで、その作業に必要なテストとドキュメントを必ず揃える。
+  テストやドキュメントを最後のグループにまとめない。後のグループで初めて前の
+  グループの作業を検証すると、失敗の影響がその間のすべてのグループに及び、
+  手戻りが発生する。ひな形作成や依存関係のセットアップなど、どちらも不要な
+  グループには追加しない。最後のグループは統合確認だけに使い、前のグループで
+  対応すべきテストやドキュメントを持ち越さない。
 
 例:
 ```
+# Tasks
+
 ## 1. セットアップ
 
-- [ ] 1.1 新しいモジュール構成を作成する
-- [ ] 1.2 package.json に依存関係を追加する
+- [ ] 1.1 新しいモジュール構成を作成し、期待するファイルが存在することを確認
+- [ ] 1.2 package.json に依存関係を追加し、パッケージのインストールが成功することを確認
 
 ## 2. コア実装
 
-- [ ] 2.1 データエクスポート関数を実装する
-- [ ] 2.2 CSV 変換ユーティリティを追加する
+- [ ] 2.1 データエクスポート関数を実装し、エクスポートテストの成功を確認
+- [ ] 2.2 CSV 変換ユーティリティを追加し、引用符と区切り文字が単体テストで網羅されることを確認
+- [ ] 2.3 docs/export.md にエクスポート API を文書化し、記載したコマンドがそのまま実行できることを確認
 ```
 
 何を作るかは specs、どう作るかは design を参照する。
-各タスクは完了を判断できるようにする。
 ````
 
 ## Apply

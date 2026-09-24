@@ -5,15 +5,34 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
+
+/**
+ * The planning-complete handoff. Neither `apply` nor `archive` is guaranteed
+ * to be installed, so each half is resolved at generation time (see
+ * optional-workflow.ts).
+ */
+const PLANNING_COMPLETE_HANDOFF = optionalWorkflow(
+  'apply',
+  '`/opsx:apply` でこの変更を実装できます。',
+  'この変更を実装できます。`openspec instructions apply --change "<name>" --json` でタスクとその進め方を取得してください。'
+) + ' ' + optionalWorkflow(
+  'archive',
+  '実装と追跡対象の作業がすべて完了したら、`/opsx:archive` でアーカイブしてください。',
+  '実装と追跡対象の作業がすべて完了したら、`openspec archive "<name>"` でアーカイブしてください。'
+);
 
 export function getContinueChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-continue-change',
-    description: '次のアーティファクトを作成して OpenSpec 変更の作業を継続します。変更を進めたい、次のアーティファクトを作成したい、またはワークフローを継続したいときに使用します。',
+    description: '次のアーティファクトを作成して OpenSpec 変更の作業を継続します。変更を進めたい、次のアーティファクトを作成したい、またはワークフローを継続したいときに使用します。「openspec continue」「opsx continue」と言われた場合にも使用します。',
     instructions: `次の成果物を作成して変更作業を続けます。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 **入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
@@ -28,7 +47,6 @@ ${STORE_SELECTION_GUIDANCE}
 
    選択を求める際は、最近変更された上位3〜4件を候補として表示し、次を示します:
    - 変更名
-   - スキーマ（\`schema\` フィールド。なければ "spec-driven"）
    - 状態（例: "0/5 tasks"、"complete"、"no tasks"）
    - 最終更新からの経過（\`lastModified\` フィールド）
 
@@ -133,6 +151,8 @@ export function getOpsxContinueCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
+${PROJECT_ROOT_GUARD}
+
 **入力**: オプションで、\`/opsx:continue\` の後に変更名を指定します (例: \`/opsx:continue add-auth\`)。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
 **手順**
@@ -146,7 +166,6 @@ ${STORE_SELECTION_GUIDANCE}
 
    選択を求める際は、最近変更された上位3〜4件を候補として表示し、次を示します:
    - 変更名
-   - スキーマ（\`schema\` フィールド。なければ "spec-driven"）
    - 状態（例: "0/5 tasks"、"complete"、"no tasks"）
    - 最終更新からの経過（\`lastModified\` フィールド）
 
@@ -171,7 +190,7 @@ ${STORE_SELECTION_GUIDANCE}
    **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
 - ユーザーに祝福を与える
 - 使用されたスキーマを含む最終ステータスを表示します
-   - 提案: 「計画が完了しました。\`/opsx:apply\` でこの変更を実装できます。実装と追跡対象の作業がすべて完了したら、\`/opsx:archive\` でアーカイブしてください。」
+   - 提案: 「計画が完了しました。${PLANNING_COMPLETE_HANDOFF}」
 - 停止
 
    ---

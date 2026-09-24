@@ -36,7 +36,7 @@ describe('ViewCommand', () => {
 
     // Change with tasks.md but no tasks - should show in Draft
     await fs.mkdir(path.join(changesDir, 'no-tasks-change'), { recursive: true });
-    await fs.writeFile(path.join(changesDir, 'no-tasks-change', 'tasks.md'), '# Tasks\n\nNo tasks yet.');
+    await fs.writeFile(path.join(changesDir, 'no-tasks-change', 'tasks.md'), '# Tasks\n\nタスクなし yet.');
 
     // Change with all tasks complete - should show in Completed
     await fs.mkdir(path.join(changesDir, 'completed-change'), { recursive: true });

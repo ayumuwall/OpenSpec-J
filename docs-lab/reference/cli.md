@@ -302,6 +302,15 @@ featureFlags.workspaces = true を設定しました
 エラー: 無効な設定です - delivery: Invalid option: expected one of "both"|"skills"|"commands"
 ```
 
+設定ファイルが不正な JSON、またはルートが`null`や配列など JSON オブジェクト以外の場合、`config set`、`config unset`、`config profile`はファイルを変更せず終了コード 1 で終了します。`openspec config edit`で修正するか、`openspec config reset --all`で置き換えてください。
+
+```
+エラー: /home/you/.config/openspec/config.json を解析できなかったため、変更しませんでした。
+"openspec config edit" で修正するか、"openspec config reset --all" でリセットしてください。
+```
+
+修正するまで、テレメトリーと更新確認は停止します。
+
 ### openspec config unset
 
 ```bash
@@ -314,7 +323,7 @@ openspec config unset delivery
 delivery を削除しました（デフォルトへ戻しました）
 ```
 
-値がまったくないキーでは、`キー "featureFlags.nothere" は設定されていません`と表示します。どちらの場合も終了コードは 0 です。
+値がまったくないキーでは、`キー "featureFlags.nothere" は設定されていません`と表示します。どちらの場合も終了コードは 0 です。設定ファイルを解析できない場合は、`config set`と同じく終了コード 1 で終了します。
 
 ### openspec config reset
 
@@ -350,7 +359,11 @@ openspec config reset --all -y   # プロンプトなし
 openspec config edit
 ```
 
-設定ファイルを`$EDITOR`で開きます。`$EDITOR`がなければ`$VISUAL`を使います。ファイルがなければ、先に既定値で作成します。エディタを閉じるとファイルを検証します。JSON または設定が無効な場合は終了コード 1 で終了します。エディタが設定されていない場合も終了コード 1 です。
+設定ファイルを`$EDITOR`で開きます。`$EDITOR`がなければ`$VISUAL`を使います。ファイルがなければ、先に既定値で作成します。エディタを閉じるとファイルを検証します。JSON または設定が無効な場合は終了コード 1 で終了します。
+
+エディタの指定には引数や引用符付きパスを含められます。例：`code --wait`、`"/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" -w`。シェルを介さず分割するため、`$VAR`、`~`、`;`はそのまま渡します。起動できない場合や非ゼロで終了した場合は、1行のエラーを表示して終了コード 1 で終了します。
+
+エディタが設定されていない場合も終了コード 1 です。
 
 ```
 エラー: エディタが設定されていません
@@ -448,6 +461,13 @@ openspec list --json    # 解決済みルートを含む機械可読形式
 ```
 
 対象がない場合は`進行中の変更はありません。`または`仕様が見つかりません。`と表示し、終了コード 0 で終了します。
+
+変更は`openspec/changes/`直下のディレクトリです。仕様とは異なり、名前空間フォルダへ入れ子にできません。`changes/mobile/refresh-token/`だけを含む`changes/mobile/`は「変更ではありません」と表示し、入れ子の場所を警告します。`--json`ではその項目へ`nested`配列、トップレベルへ`warnings`配列を追加します。`show`、`status`、`validate`、`archive`も同じ案内で拒否します。変更を1階層上へ移し、名前に名前空間を含めてください。
+
+```bash
+mv openspec/changes/mobile/refresh-token openspec/changes/mobile-refresh-token
+rmdir openspec/changes/mobile
+```
 
 **終了コード**
 
@@ -666,6 +686,18 @@ openspec validate --all            # すべての変更と仕様
 ✓ spec/api
 結果: 成功 2 / 失敗 0 （計 2 件）
 ```
+
+**タスクのチェックボックスに関する検出事項**
+
+進捗はチェックボックスだけを数えます。通常の箇条書きではタスクが0件となり、`openspec list`と`openspec status`は作業なしと報告し、`openspec archive`は未完了を検出できません。Validate は、作業を列挙しているのにチェックボックスがない追跡対象ファイルを`WARNING`として報告します。
+
+```text
+⚠ [WARNING] tasks.md: この変更のタスク数は 0 件です。追跡対象のタスクファイルにチェックボックスがないため、"openspec list" と "openspec status" は作業なしと表示し、"openspec archive" は未完了を検出できません。各タスクを "- [ ] 1.1 説明" の形式で記述してください。
+```
+
+警告するのは、追跡対象全体にチェックボックスが1つもない場合だけです。実際のチェックリストと並ぶ説明文のファイルは報告せず、作成途中でも1つあれば進捗を数えます。`--strict`では警告を失敗として扱います。行番号は`--json`のレポートに含まれます。
+
+コードフェンス、HTML コメント、YAML frontmatter、インデント付きコードは対象外です。貼り付けたターミナルの例をタスクリストとはみなしません。
 
 **アーカイブ時のマージに関する検出事項**
 
@@ -999,7 +1031,20 @@ created: 2026-08-11
 次: openspec status --change add-caching
 ```
 
-`--json`を指定した場合：
+`openspec/`が見つからなければ、`new change`は現在の場所に作成し、その旨を表示します。
+
+```
+変更 'add-caching' を作成しました: openspec/changes/add-caching/
+スキーマ: spec-driven
+次: openspec status --change add-caching
+
+注意: OpenSpec ルートが見つからなかったため、openspec/ に作成しました。
+`openspec init` でプロジェクトのセットアップを完了してください。別のプロジェクトを意図していた場合は、このディレクトリを削除してください。
+```
+
+案内は他の人間向け出力とともに標準出力へ表示し、`--json`では表示しません。
+
+すでに`openspec/`があるプロジェクトで`--json`を指定した場合：
 
 ```json
 {
@@ -1013,6 +1058,15 @@ created: 2026-08-11
     "path": "/Users/you/projects/my-app",
     "source": "nearest"
   }
+}
+```
+
+`openspec/`がなく`new change`が作成した場合も、JSON の構造は同じです。`root.path`は実行元ディレクトリ、`root.source`は`implicit`です。
+
+```json
+"root": {
+  "path": "/Users/you/projects/my-app",
+  "source": "implicit"
 }
 ```
 
@@ -1065,7 +1119,23 @@ openspec status --all --json                     # 1 つの一括レポート
 [x] specs
 [ ] design
 [-] tasks（ブロック元: design）
+
+次: openspec instructions design --change "add-rate-limit" --json
 ```
+
+`次:`行は変更を進めるコマンドを示します。新しいセッションでも`openspec status`で再開できます。計画中は次の ready アーティファクト、計画用アーティファクトがすべて揃ったら`openspec instructions apply`を案内します。
+
+```
+[x] proposal
+[x] specs
+[x] design
+[x] tasks
+
+すべての計画アーティファクトが完了しました！
+次: openspec instructions apply --change "add-rate-limit" --json
+```
+
+ルートがストアなら`--store <id>`を付けます。JSON の`nextSteps`と同じコマンドです。
 
 `--json`では、アーティファクトごとの依存関係、解決済みファイルパス、推奨する次の手順も表示します。次の例は一部を省略しています。
 
@@ -1211,7 +1281,9 @@ openspec instructions archive --change add-rate-limit    # アーカイブ用の
   ...
 ```
 
-この後に`outputPath`、`existingOutputPaths`、全文の`instruction`と`template`、`dependencies`、`unlocks`、`root`が続きます。`apply`形式には`contextFiles`、`progress`、`tasks`、`state`（`blocked`、`ready`、`all_done`）、`instruction`が入ります。
+この後に`outputPath`、`existingOutputPaths`、全文の`instruction`と`template`、`dependencies`、`unlocks`、`root`が続きます。`apply`形式には`contextFiles`、`progress`、`tasks`、`taskTrackingConfigured`、`state`（`blocked`、`ready`、`all_done`）、`instruction`が入ります。
+
+`taskTrackingConfigured`は常に真偽値です。スキーマの[`apply.tracks`](schemas/schema-yaml.md#tracks)が null 以外なら、一致するファイルがなくても`true`、それ以外は`false`です。一致した追跡対象ファイルを読めなければ、`unavailableTrackingFiles`に絶対パスの`path`とエラーの`reason`が入ります。すべて読める場合はこのフィールドを省略します。読めるファイルは`tasks`と`progress`へ集計しますが、すべて読めるまで`state`は`all_done`になりません。
 
 **終了コード**
 
@@ -1398,7 +1470,7 @@ openspec schema validate spec-driven   # 任意のソースにある 1 スキー
 openspec schema validate               # プロジェクト内の全スキーマ
 ```
 
-`schema.yaml`が存在して解析できること、構造がスキーマ形式に合うこと、各アーティファクトのテンプレートがスキーマの`templates/`ディレクトリ内にあること、依存グラフに循環や不明な参照がないことを検証します。
+`schema.yaml`が存在して解析できること、構造がスキーマ形式に合うこと、各アーティファクトのテンプレートがスキーマの`templates/`ディレクトリ内にあること、`apply.requires`も含め依存グラフに循環や不明な参照がないことを検証します。`apply.tracks`がどのアーティファクトの`generates`とも完全一致しない場合は、どのアーティファクトの進捗か特定できないため`warning:`を表示します。警告だけでは検証は失敗しません。
 
 **オプション**
 
@@ -1547,6 +1619,8 @@ openspec store setup team-context --path ~/openspec/team-context
 
 対話式ターミナルでは、不足している名前と場所を尋ね、作成前に確認します。非対話環境で名前または`--path`がない場合は、指定するフラグを表示して終了コード 1 で終了します。登録済みストアへ setup を再実行すると、`登録状態: 登録済み`と表示します。
 
+`--path`が別の Git リポジトリ内にあると、リポジトリの入れ子を防ぐため`store_setup_inside_git_repo`と終了コード 1 を返します。`--no-init-git`ではリポジトリを作らないため、この検査を省略します。ホーム自体を dotfiles 用の Git リポジトリにしていて`~/openspec/<id>`へストアを置きたい場合に使えます。
+
 **引数**
 
 | 引数 | 内容                                      |
@@ -1669,6 +1743,8 @@ openspec store remove design-system --yes
 エラー: 非対話でストアファイルを削除するには --yes を指定してください。
 修正: openspec store remove design-system --yes
 ```
+
+フォルダに一致するストアメタデータがない場合や、内部に別の登録済みストア（Git サブモジュールなど）がある場合、remove は何も削除せず終了コード 1 で終了します。入れ子のストアでは`store_remove_contains_registered_store`を返します。先に`openspec store unregister <nested-id>`を実行するか、ファイルを残して登録だけ解除する`openspec store unregister <id>`を使ってください。
 
 **オプション**
 
@@ -2105,6 +2181,8 @@ openspec completion generate zsh   # スクリプトを標準出力へ表示
 | `generate [shell]`  | 補完スクリプトを標準出力に表示します。                   |
 | `install [shell]`   | スクリプトを書き込み、シェルの起動ファイルを設定します。 |
 | `uninstall [shell]` | スクリプトと設定ブロックを削除します。                   |
+
+Nix flake パッケージは Bash、Fish、Zsh の補完を標準の場所へ配置するため、`install`は不要です（[インストール](../start/installation.md#nix)）。
 
 ### openspec completion generate
 

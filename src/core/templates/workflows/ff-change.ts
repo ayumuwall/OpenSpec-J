@@ -5,15 +5,39 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
+
+/**
+ * The implementation handoff, resolved at generation time so a profile
+ * without `apply` is not told to run it (see optional-workflow.ts).
+ *
+ * The two surfaces word this differently on purpose (#258): a command-only
+ * tool has no conversational agent to ask, so its prompt names a command or
+ * the CLI and never invites "ask me to implement".
+ */
+const SKILL_APPLY_HANDOFF = optionalWorkflow(
+  'apply',
+  'タスクに着手するには、`/opsx:apply` を実行するか、実装を依頼してください。',
+  'タスクに着手するには、実装を依頼してください。'
+);
+
+const COMMAND_APPLY_HANDOFF = optionalWorkflow(
+  'apply',
+  '`/opsx:apply` を実行して実装を開始してください。',
+  '`openspec instructions apply --change "<name>" --json` でタスク一覧を取得し、実装を開始してください。'
+);
 
 export function getFfChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-ff-change',
-    description: 'OpenSpec アーティファクト作成を一気に進めます。各ステップを個別に進めず、実装に必要な全アーティファクトを素早く作成したいときに使用します。',
+    description: 'OpenSpec アーティファクト作成を一気に進めます。各ステップを個別に進めず、実装に必要な全アーティファクトを素早く作成したいときに使用します。「openspec ff」「opsx ff」と言われた場合にも使用します。',
     instructions: `アーティファクトの作成を早送り - 実装を開始するために必要なものをすべて一度に生成します。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 **入力**: ユーザーのリクエストには、変更名 (kebab-case) または構築したい内容の説明を含める必要があります。
 
@@ -82,7 +106,7 @@ ${STORE_SELECTION_GUIDANCE}
       - 依存関係は作業を可能にするもので、ゲートではありません。条件付き依存先をスキップしたことだけが原因で必須アーティファクトが \`blocked\` のままなら、それでも作成します
       - 必須セットの全アーティファクトが \`done\`、\`skipped\`、または意図的にスキップ済みになったら終了します
 
-   c. **アーティファクトにユーザー入力が必要な場合**（コンテキストが不明瞭）:
+   c. **アーティファクトにユーザー入力が必要な場合**（判断に必要な重要なコンテキストが不明瞭）:
       - ユーザーへ確認を求めます
       - その後、作成を続行します
 
@@ -97,7 +121,7 @@ ${STORE_SELECTION_GUIDANCE}
 - 変更名と場所
 - 作成したアーティファクトと簡単な説明、およびスキップした条件付きアーティファクトとその理由
 - 準備状況: 「実装に必要な全アーティファクトの準備ができました。」
-- 案内: 「\`/opsx:apply\` を実行するか、実装を依頼してタスクへの着手を開始してください。」
+- 案内: 「${SKILL_APPLY_HANDOFF}」
 
 **アーティファクト作成ガイドライン**
 
@@ -131,6 +155,8 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
     content: `アーティファクトの作成を早送りして、実装を開始するために必要なものをすべて生成します。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 **入力**: \`/opsx:ff\` の後の引数は、変更名 (kebab-case)、またはユーザーが構築したい内容の説明です。
 
@@ -199,7 +225,7 @@ ${STORE_SELECTION_GUIDANCE}
       - 依存関係は作業を可能にするもので、ゲートではありません。条件付き依存先をスキップしたことだけが原因で必須アーティファクトが \`blocked\` のままなら、それでも作成します
       - 必須セットの全アーティファクトが \`done\`、\`skipped\`、または意図的にスキップ済みになったら終了します
 
-   c. **アーティファクトにユーザー入力が必要な場合**（コンテキストが不明瞭）:
+   c. **アーティファクトにユーザー入力が必要な場合**（判断に必要な重要なコンテキストが不明瞭）:
       - ユーザーへ確認を求めます
       - その後、作成を続行します
 
@@ -214,7 +240,7 @@ ${STORE_SELECTION_GUIDANCE}
 - 変更名と場所
 - 作成したアーティファクトと簡単な説明、およびスキップした条件付きアーティファクトとその理由
 - 準備状況: 「実装に必要な全アーティファクトの準備ができました。」
-- 案内: 「\`/opsx:apply\` を実行して実装を開始してください。」
+- 案内: 「${COMMAND_APPLY_HANDOFF}」
 
 **アーティファクト作成ガイドライン**
 

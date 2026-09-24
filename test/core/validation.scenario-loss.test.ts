@@ -446,4 +446,39 @@ describe('validate: MODIFIED blocks that would drop a main-spec scenario (#1477)
     expect(lossIssue(report)).toBeUndefined();
     expect(report.issues.map((i) => i.message).join('\n')).toContain('MODIFIED が RENAMED の古い名前を参照しています');
   });
+  it('reports both new headings when one current scenario is replaced by two (#1697)', async () => {
+    await writeMainSpec(
+      'widgets',
+      mainSpec(`### Requirement: Widget state\nThe system SHALL report the widget state.\n\n#### Scenario: Existing scenario\n- **WHEN** queried\n- **THEN** the state is reported`)
+    );
+    const widened = `## MODIFIED Requirements\n\n### Requirement: Widget state\nThe system SHALL report the widget state.\n\n#### Scenario: Existing scenario, first branch\n- **WHEN** queried in the first case\n- **THEN** the first state is reported\n\n#### Scenario: Existing scenario, second branch\n- **WHEN** queried in the second case\n- **THEN** the second state is reported\n`;
+    const changeDir = await writeChange('widen-scenario', 'widgets', widened);
+
+    const report = await validate(changeDir);
+    const issue = lossIssue(report);
+
+    // The guard still fires: a widened title is a dropped name, and nothing
+    // here decides whether that was deliberate.
+    expect(report.valid).toBe(false);
+    expect(issue?.message).toContain('"Existing scenario"');
+    expect(issue?.message).toContain(
+      '変更後のブロックには 2 件のシナリオ、現在の仕様には 1 件のシナリオがあります。現在の仕様にない 2 件のシナリオが追加されます: "Existing scenario, first branch", "Existing scenario, second branch"。'
+    );
+    // Parity: archive refuses the same change and prints the same sentence.
+    expect(await archiveError(changeDir)).toContain(
+      '現在の仕様にない 2 件のシナリオが追加されます: "Existing scenario, first branch", "Existing scenario, second branch"。'
+    );
+  });
+
+  it('says the block adds none when scenarios are only dropped (#1697)', async () => {
+    await writeMainSpec('widgets', mainSpec(TWO_SCENARIO_REQUIREMENT));
+    const changeDir = await writeChange('drop-scenario', 'widgets', DELTA_KEEPING_ONE);
+
+    const issue = lossIssue(await validate(changeDir));
+
+    expect(issue?.message).toContain(
+      '変更後のブロックには 1 件のシナリオ、現在の仕様には 2 件のシナリオがあります。追加されるシナリオはありません。'
+    );
+    expect(await archiveError(changeDir)).toContain('追加されるシナリオはありません。');
+  });
 });

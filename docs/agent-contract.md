@@ -47,7 +47,9 @@
 ## 4. コマンド JSON 形状
 
 ### 4.1 `list --json`
-`{ "changes": [ { "name", "completedTasks", "totalTasks", "lastModified", "status": "no-tasks"|"complete"|"in-progress" } ], "root": RootOutput }` — ここでは、変更ごとの `status` が文字列列挙型であることに注意してください。 `--specs`: `{ "specs": [ { "id", "requirementCount" } ], "root" }`。
+`{ "changes": [ { "name", "completedTasks", "totalTasks", "lastModified", "status": "no-tasks"|"complete"|"in-progress", "nested"?: ["<area>/<name>", ...] } ], "warnings"?: [ { "code", "name", "nested", "message" } ], "root": RootOutput }` — ここでは、変更ごとの `status` が文字列列挙型であることに注意してください。 `--specs`: `{ "specs": [ { "id", "requirementCount" } ], "root" }`。
+
+`warnings`（空の場合は省略）は、`changes/` 配下にある、変更ではないディレクトリを報告します。現在のコードは `nested_change_directory` だけです。これは変更ディレクトリをまとめる名前空間フォルダを示します。OpenSpec の変更は常に `changes/` の直下に置くため、このようなフォルダ内の変更は指定できません。一覧の同じ項目にも `nested` が付与され、その項目の `status` は意味を持ちません。この項目を変更として扱わず、メッセージを報告し、ディレクトリには手を加えないでください。
 
 ### 4.2 `show <item> --json`
 変更: `{ "id", "title", "deltaCount", "deltas": [...], "root" }`。仕様：`{ "id", "title", "overview", "requirementCount", "requirements": [...], "metadata": { "version", "format", "sourcePath"? }, "root" }`。
@@ -118,7 +120,7 @@ setup/register: `{ "store": {id, root, metadata_path?}, "registry": {path, regis
 `invalid_store_id`、`invalid_store_registry`、`invalid_store_metadata`、`store_registry_busy`、`store_not_found`、`no_store_registry`、`store_registry_changed`、`store_metadata_missing`、`store_metadata_id_mismatch`、`store_metadata_invalid`、`store_id_conflict`、`store_path_conflict`、`store_already_registered` (情報)。
 
 ### ストアの設定・登録・削除
-`store_setup_id_required`、`store_setup_path_required`、`store_setup_path_not_directory`、`store_setup_inside_git_repo`、`store_setup_non_empty_directory`、`store_setup_cancelled`、`store_path_required`、`store_path_missing`、`store_path_not_directory`、`store_root_pointer_declared`、`store_register_root_unhealthy`、`store_register_identity_confirmation_required`、`store_register_cancelled`、`store_remote_empty`、 `store_remote_requires_hand_edit`、`store_remove_confirmation_required`、`store_remove_cancelled`、`store_remove_path_not_directory`、`store_remove_metadata_missing`、`store_root_missing` (削除時の警告、ドクターのエラー)、`store_root_not_directory`。
+`store_setup_id_required`、`store_setup_path_required`、`store_setup_path_not_directory`、`store_setup_inside_git_repo`、`store_setup_non_empty_directory`、`store_setup_cancelled`、`store_path_required`、`store_path_missing`、`store_path_not_directory`、`store_root_pointer_declared`、`store_register_root_unhealthy`、`store_register_identity_confirmation_required`、`store_register_cancelled`、`store_remote_empty`、 `store_remote_requires_hand_edit`、`store_remove_confirmation_required`、`store_remove_cancelled`、`store_remove_path_not_directory`、`store_remove_metadata_missing`、`store_remove_contains_registered_store`、`store_root_missing` (削除時の警告、ドクターのエラー)、`store_root_not_directory`。
 
 ### Storeのgit
 `store_git_init_failed`、`store_git_identity_missing`、`store_git_commit_failed`、`store_git_no_commits`（警告）、`store_clone_fragile_directories`（警告）、`store_remote_divergence`（情報、doctor）、`store_checkout_drift`（情報、doctor）。

@@ -10,14 +10,14 @@ import type { CommandContent, ToolCommandAdapter } from '../types.js';
 
 /**
  * Kilo Code のコマンド生成アダプター。
- * ファイルパス: .kilocode/workflows/opsx-<id>.md
+ * ファイルパス: .kilo/command/opsx-<id>.md
  * 形式: Plain markdown without frontmatter
  */
 export const kilocodeAdapter: ToolCommandAdapter = {
   toolId: 'kilocode',
 
   getFilePath(commandId: string): string {
-    return path.join('.kilocode', 'workflows', `opsx-${commandId}.md`);
+    return path.join('.kilo', 'command', `opsx-${commandId}.md`);
   },
 
   formatFile(content: CommandContent): string {

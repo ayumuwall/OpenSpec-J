@@ -6,16 +6,19 @@
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
 
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-sync-specs',
-    description: '変更の仕様差分を本仕様へ同期します。変更をアーカイブせずに、仕様差分の内容で本仕様を更新したいときに使用します。',
+    description: 'OpenSpec の変更の仕様差分を本仕様へ同期します。変更をアーカイブせずに、仕様差分の内容で本仕様を更新したいときに使用します。「openspec sync」または「opsx sync」と依頼された場合にも使用します。',
     instructions: `変更の仕様差分を本仕様へ同期します。
 
 これは**エージェント主導**の操作です。仕様差分を読み取り、本仕様を直接編集して変更を適用します。これにより、インテリジェントなマージ (要件全体をコピーせずにシナリオを追加するなど) が可能になります。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各仕様差分から本仕様を解決するときは、完全なパスを維持します。
 
@@ -82,7 +85,13 @@ ${STORE_SELECTION_GUIDANCE}
 
    b. **本仕様を読む**: \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\`（まだ存在しない場合があります）
 
-c. **変更をインテリジェントに適用**:
+      **本仕様がまだ存在しない場合**（新しい機能）は、\`openspec archive\` と同じ動作にします。
+      適用できるのは ADDED 要件だけで、手順 d でその要件から本仕様を作成します。
+      MODIFIED と RENAMED は対象の要件がないため、その機能の同期を停止し、
+      本仕様が存在せず、新規仕様では ADDED だけが許可されることを報告します。
+      存在しない要件を補ってはいけません。REMOVED は削除対象がないため、スキップして警告します。
+
+   c. **変更をインテリジェントに適用**:
 
 **追加要件:**
 - 主要仕様に要件が存在しない場合 → 追加する
@@ -115,6 +124,14 @@ c. **変更をインテリジェントに適用**:
       - 本仕様にすでに存在する場合はそれが正式な内容なので変更しません（\`openspec archive\` も警告して処理を続けます）
 
    d. **機能がまだ存在しない場合は本仕様を作成**:
+      - 仕様差分に追加する ADDED 要件があり、手順 b で MODIFIED または RENAMED によって
+        その機能の同期が妨げられていない場合だけ作成します。それ以外は何も作成せず、
+        specs ディレクトリも変更しません。REMOVED だけの差分で、変更の \`.openspec.yaml\` に
+        \`retire_capabilities: true\` が指定されていれば、廃止済みと報告し、本仕様を再作成せず続行します。
+        この指定がなければ、同期が妨げられていると報告します。\`openspec archive\` は
+        \`仕様には少なくとも 1 つの要件が必要です\` というエラーで拒否します。
+        空の差分も同期する操作がないため、同期が妨げられていると報告します。
+        空の \`## Requirements\` セクションは決して作成しません。
       - \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` を作成します
       - Purpose セクションを追加します。delta に \`## Purpose\` の本文があればそのままコピーします（\`openspec archive\` と同じ動作）。ない場合だけ短い TBD プレースホルダーを書きます
       - ADDED 要件を含む Requirements セクションを追加します
@@ -136,6 +153,8 @@ c. **変更をインテリジェントに適用**:
 **仕様差分フォーマットリファレンス**
 
 \`\`\`markdown
+# Spec Delta
+
 ## Purpose
 
 新しい機能を導入する delta にだけ記載します。新しい本仕様の初期内容になります。
@@ -247,6 +266,8 @@ export function getOpsxSyncCommandTemplate(): CommandTemplate {
 
 ${STORE_SELECTION_GUIDANCE}
 
+${PROJECT_ROOT_GUARD}
+
 \`<capability-path>\` は \`specs/\` からの相対仕様ディレクトリです（例: \`user-auth\` または \`identity/user-auth\`）。各仕様差分から本仕様を解決するときは、完全なパスを維持します。
 
 **入力**: \`/opsx:sync\` の後に変更名を任意で指定できます（例: \`/opsx:sync add-auth\`）。省略した場合は会話のコンテキストから推測できるか確認します。判断できない場合や曖昧な場合は、利用可能な変更を提示して必ず選択を求めます。
@@ -312,7 +333,13 @@ ${STORE_SELECTION_GUIDANCE}
 
    b. **本仕様を読む**: \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\`（まだ存在しない場合があります）
 
-c. **変更をインテリジェントに適用**:
+      **本仕様がまだ存在しない場合**（新しい機能）は、\`openspec archive\` と同じ動作にします。
+      適用できるのは ADDED 要件だけで、手順 d でその要件から本仕様を作成します。
+      MODIFIED と RENAMED は対象の要件がないため、その機能の同期を停止し、
+      本仕様が存在せず、新規仕様では ADDED だけが許可されることを報告します。
+      存在しない要件を補ってはいけません。REMOVED は削除対象がないため、スキップして警告します。
+
+   c. **変更をインテリジェントに適用**:
 
 **追加要件:**
 - 主要仕様に要件が存在しない場合 → 追加する
@@ -345,6 +372,14 @@ c. **変更をインテリジェントに適用**:
       - 本仕様にすでに存在する場合はそれが正式な内容なので変更しません（\`openspec archive\` も警告して処理を続けます）
 
    d. **機能がまだ存在しない場合は本仕様を作成**:
+      - 仕様差分に追加する ADDED 要件があり、手順 b で MODIFIED または RENAMED によって
+        その機能の同期が妨げられていない場合だけ作成します。それ以外は何も作成せず、
+        specs ディレクトリも変更しません。REMOVED だけの差分で、変更の \`.openspec.yaml\` に
+        \`retire_capabilities: true\` が指定されていれば、廃止済みと報告し、本仕様を再作成せず続行します。
+        この指定がなければ、同期が妨げられていると報告します。\`openspec archive\` は
+        \`仕様には少なくとも 1 つの要件が必要です\` というエラーで拒否します。
+        空の差分も同期する操作がないため、同期が妨げられていると報告します。
+        空の \`## Requirements\` セクションは決して作成しません。
       - \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` を作成します
       - Purpose セクションを追加します。delta に \`## Purpose\` の本文があればそのままコピーします（\`openspec archive\` と同じ動作）。ない場合だけ短い TBD プレースホルダーを書きます
       - ADDED 要件を含む Requirements セクションを追加します
@@ -366,6 +401,8 @@ c. **変更をインテリジェントに適用**:
 **仕様差分フォーマットリファレンス**
 
 \`\`\`markdown
+# Spec Delta
+
 ## Purpose
 
 新しい機能を導入する delta にだけ記載します。新しい本仕様の初期内容になります。

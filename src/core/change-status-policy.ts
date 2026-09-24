@@ -62,20 +62,41 @@ export function buildActionContext(input: ActionContextInput): ActionContext {
   };
 }
 
-export function buildNextSteps(input: ChangeNextStepsInput): string[] {
+/**
+ * The one next action for a change, in both the forms the CLI needs.
+ *
+ * `sentence` is what the JSON `nextSteps` contract publishes; `command` is the
+ * bare command the text surface prints. Both are built here so the two
+ * surfaces can never name a different next step.
+ */
+export interface ChangeNextStep {
+  /** Ready-to-run command, including any `--store` flag. */
+  command: string;
+  /** Sentence form carried by the JSON `nextSteps` array. */
+  sentence: string;
+}
+
+export function resolveNextStep(input: ChangeNextStepsInput): ChangeNextStep | undefined {
   const readyArtifact = input.artifactStatuses.find((artifact) => artifact.status === 'ready');
-  const steps: string[] = [];
   const storeFlag = input.storeId ? ` --store ${input.storeId}` : '';
 
   if (readyArtifact) {
-    steps.push(
-      `そのアーティファクトを書き始める前に、openspec instructions ${readyArtifact.id} --change "${input.changeName}"${storeFlag} --json を実行してください。`
-    );
-  } else if (input.allArtifactsComplete) {
-    steps.push(
-      `すべての計画アーティファクトが完了しました。実装の進捗を確認するには、openspec instructions apply --change "${input.changeName}"${storeFlag} --json を実行してください。`
-    );
+    const command = `openspec instructions ${readyArtifact.id} --change "${input.changeName}"${storeFlag} --json`;
+    return { command, sentence: `そのアーティファクトを書き始める前に、${command} を実行してください。` };
   }
 
-  return steps;
+  if (input.allArtifactsComplete) {
+    const command = `openspec instructions apply --change "${input.changeName}"${storeFlag} --json`;
+    return {
+      command,
+      sentence: `すべての計画アーティファクトが完了しました。実装の進捗を確認するには、${command} を実行してください。`,
+    };
+  }
+
+  return undefined;
+}
+
+export function buildNextSteps(input: ChangeNextStepsInput): string[] {
+  const step = resolveNextStep(input);
+  return step ? [step.sentence] : [];
 }

@@ -5,12 +5,75 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { onlyWithWorkflow, optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
+import { PROJECT_ROOT_GUARD } from './project-root.js';
+
+/**
+ * The tutorial names other workflows throughout. Which of them exist depends
+ * on the profile, so each mention is resolved at generation time (see
+ * optional-workflow.ts) instead of being listed with an "if installed" caveat
+ * the reader has to check for themselves.
+ */
+const EXPLORE_MODE_NOTE = optionalWorkflow(
+  'explore',
+  'explore モード（`/opsx:explore`）は、実装前にこうした調査・思考をするためのものです。必要なときにいつでも使えます。',
+  '問題をじっくり考える必要があるときは、実装前に調査しましょう。'
+);
+
+/**
+ * The command-reference tables. Every row is dropped along with its line when
+ * the profile does not install that workflow, so the table lists exactly the
+ * commands the reader can run — and stays a valid table either way.
+ */
+const COMMAND_REFERENCE_ROWS = [
+  onlyWithWorkflow('propose', ' | `/opsx:propose` | change を作成し、全アーティファクトを生成 |'),
+  onlyWithWorkflow('explore', ' | `/opsx:explore` | 作業前/作業中に問題を考える  |'),
+  onlyWithWorkflow('apply', ' | `/opsx:apply`   | change のタスクを実装              |'),
+  onlyWithWorkflow('archive', ' | `/opsx:archive` | 完了した変更をアーカイブ                 |'),
+  onlyWithWorkflow('new', ' | `/opsx:new`     | 新しい change を始め、アーティファクトを1つずつ進める |'),
+  onlyWithWorkflow('continue', ' | `/opsx:continue` | 既存 change の作業を続ける    |'),
+  onlyWithWorkflow('ff', ' | `/opsx:ff`      | fast-forward: 全アーティファクトを一度に作成 |'),
+  onlyWithWorkflow('verify', ' | `/opsx:verify`  | 実装がアーティファクトと一致するか検証    |'),
+].join('\n');
+
+const QUICK_REFERENCE_ROWS = [
+  onlyWithWorkflow('propose', ' | `/opsx:propose <name>`  | change を作成し、全アーティファクトを生成 |'),
+  onlyWithWorkflow('explore', ' | `/opsx:explore`         | 問題を考える（コード変更なし）   |'),
+  onlyWithWorkflow('apply', ' | `/opsx:apply <name>`    | タスクを実装                            |'),
+  onlyWithWorkflow('archive', ' | `/opsx:archive <name>`  | 完了時にアーカイブ                          |'),
+  onlyWithWorkflow('new', ' | `/opsx:new <name>`      | 新しい change を段階的に開始           |'),
+  onlyWithWorkflow('continue', ' | `/opsx:continue <name>` | 既存 change を続行                |'),
+  onlyWithWorkflow('ff', ' | `/opsx:ff <name>`       | fast-forward: 全アーティファクトを一括作成        |'),
+  onlyWithWorkflow('verify', ' | `/opsx:verify <name>`   | 実装を検証                      |'),
+].join('\n');
+
+/**
+ * Resume hints for a user stopping mid-tutorial. Both are optional, so the
+ * sentence that introduces them stands on its own without either.
+ */
+const RESUME_HINTS = [
+  onlyWithWorkflow('continue', '- `/opsx:continue <name>` - アーティファクト作成を再開'),
+  onlyWithWorkflow('apply', '- `/opsx:apply <name>` - 実装へ進む（tasks がある場合）'),
+].join('\n');
+
+/** Where the tutorial points once it is over. */
+const NEXT_STEP_INVITE = optionalWorkflow(
+  'propose',
+  '実際に作りたいものに対して `/opsx:propose` を試してください。流れはもう掴めています。',
+  '実際に作りたいもので試してください。流れはもう掴めています。'
+);
+
+const QUICK_REFERENCE_INVITE = optionalWorkflow(
+  'propose',
+  '`/opsx:propose` で最初の change を始めてみてください。',
+  '準備ができたら、最初の change を始めるよう依頼してください。'
+);
 
 export function getOnboardSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-onboard',
-    description: 'OpenSpec のガイド付きオンボーディングです。説明を交えながら、実際のコードベース作業を通じて完全なワークフローサイクルを体験します。',
+    description: 'OpenSpec のガイド付きオンボーディングです。説明を交えながら、実際のコードベース作業を通じて完全なワークフローサイクルを体験します。「openspec onboard」または「opsx onboard」と依頼された場合にも使用します。',
     instructions: getOnboardInstructions(),
     license: 'MIT',
     compatibility: 'OpenSpec CLI が必要です。',
@@ -22,6 +85,8 @@ function getOnboardInstructions(): string {
   return `ユーザーを初めての完全な OpenSpec ワークフローサイクルへ案内してください。これは学習体験です。各ステップを説明しながら、実際にユーザーのコードベースで作業します。
 
 ${STORE_SELECTION_GUIDANCE}
+
+${PROJECT_ROOT_GUARD}
 
 ---
 
@@ -164,7 +229,7 @@ git log --oneline -10 2>/dev/null || echo "Git 履歴なし"
 │   [必要なら ASCII 図]                  │
 └─────────────────────────────────────────┘
 
-explore モード（\`/opsx:explore\`）は、実装前にこうした調査・思考をするためのものです。必要なときにいつでも使えます。
+${EXPLORE_MODE_NOTE}
 
 では、この作業を入れるための change を作成します。
 \`\`\`
@@ -228,6 +293,8 @@ proposal は、この変更を **なぜ** するのか、**何を** するのか
 proposal のドラフトです:
 
 ---
+
+# Proposal
 
 ## Why
 
@@ -296,6 +363,8 @@ spec です:
 
 ---
 
+# Spec Delta
+
 ## ADDED Requirements
 
 ### Requirement: <名前>
@@ -335,6 +404,8 @@ design です:
 
 ---
 
+# Design
+
 ## Context
 
 [現在の状況の簡潔な文脈]
@@ -370,7 +441,7 @@ design です:
 
 最後に、実装タスクへ分解します。apply フェーズでチェックを付けるタスク一覧です。
 
-小さく、明確で、順序立てて書くことが重要です。
+小さく、明確で、順序立てて書くことが重要です。各グループに、その作業に対応するテストとドキュメントを含めます。最後のグループは統合確認だけに使います。
 \`\`\`
 
 **実行:** specs/design を元に tasks を作成:
@@ -379,6 +450,8 @@ design です:
 実装タスクは次の通りです:
 
 ---
+
+# Tasks
 
 ## 1. [カテゴリまたはファイル]
 
@@ -391,12 +464,17 @@ design です:
 
 ---
 
-各チェックボックスが apply フェーズの単位作業になります。実装に進めますか？
+各チェックボックスが apply フェーズの単位作業になります。このタスク分割でよいですか？
 \`\`\`
 
-**一時停止** - 実装に進む準備ができたか確認する。
+**一時停止** - ユーザーの承認やフィードバックを待つ。
 
-\`openspec/changes/<name>/tasks.md\` に保存。
+承認後、\`openspec instructions tasks --change "<name>" --json\` の \`resolvedOutputPath\` に保存する。
+
+続けて確認する:
+> 「タスクを保存しました。実装に進めますか？」
+
+**一時停止** - 実装を始める前にユーザーの確認を待つ。
 
 ---
 
@@ -481,29 +559,17 @@ OpenSpec の完全なサイクルを完了しました:
 
 ## コマンドリファレンス
 
-**基本ワークフロー:**
+**インストール済みのコマンド:**
 
- | コマンド          | 役割                                       |
- |-------------------|--------------------------------------------|
- | \`/opsx:propose\` | change を作成し、全アーティファクトを生成 |
- | \`/opsx:explore\` | 作業前/作業中に問題を考える               |
- | \`/opsx:apply\`   | change のタスクを実装                     |
- | \`/opsx:archive\` | 完了した変更をアーカイブ                  |
-
-**追加コマンド**（インストール済みの場合のみ。利用可否はプロファイルによります）:
-
- | コマンド           | 役割                                                     |
- |--------------------|----------------------------------------------------------|
- | \`/opsx:new\`      | 新しい change を始め、アーティファクトを1つずつ進める   |
- | \`/opsx:continue\` | 既存 change の作業を続ける                              |
- | \`/opsx:ff\`       | fast-forward: 全アーティファクトを一度に作成             |
- | \`/opsx:verify\`   | 実装がアーティファクトと一致するか検証                  |
+ | コマンド         | 役割                                       |
+ |------------------|--------------------------------------------|
+${COMMAND_REFERENCE_ROWS}
 
 ---
 
 ## 次にやること
 
-実際に作りたいものに対して \`/opsx:propose\` を試してください。流れはもう掴めています。
+${NEXT_STEP_INVITE}
 \`\`\`
 
 ---
@@ -517,9 +583,8 @@ OpenSpec の完全なサイクルを完了しました:
 \`\`\`
 問題ありません。変更は \`openspec status --change "<name>" --json\` が返す \`changeRoot\` に保存されています。
 
-後で続きから再開するには:
-- \`/opsx:continue <name>\` - アーティファクト作成を再開（インストールされていなければ、\`openspec status --change "<name>" --json\` で次のアーティファクトを確認）
-- \`/opsx:apply <name>\` - 実装へ進む（tasksがある場合）
+後で続きから再開する際は、\`openspec status --change "<name>" --json\` で変更の現在の状態を確認できます。
+${RESUME_HINTS}
 
 作業は失われません。準備ができたらいつでも戻ってください。
 \`\`\`
@@ -533,25 +598,13 @@ OpenSpec の完全なサイクルを完了しました:
 \`\`\`
 ## OpenSpec クイックリファレンス
 
-**基本ワークフロー:**
+**インストール済みのコマンド:**
 
  | コマンド                 | 役割                                       |
  |--------------------------|--------------------------------------------|
- | \`/opsx:propose <name>\` | change を作成し、全アーティファクトを生成 |
- | \`/opsx:explore\`        | 問題を考える（コード変更なし）             |
- | \`/opsx:apply <name>\`   | タスクを実装                               |
- | \`/opsx:archive <name>\` | 完了時にアーカイブ                         |
+${QUICK_REFERENCE_ROWS}
 
-**追加コマンド**（インストール済みの場合のみ。利用可否はプロファイルによります）:
-
- | コマンド                  | 役割                                |
- |---------------------------|-------------------------------------|
- | \`/opsx:new <name>\`      | 新しい change を段階的に開始        |
- | \`/opsx:continue <name>\` | 既存 change を続行                  |
- | \`/opsx:ff <name>\`       | fast-forward: 全アーティファクトを一括作成 |
- | \`/opsx:verify <name>\`   | 実装を検証                          |
-
-\`/opsx:propose\` で最初の change を始めてみてください。
+${QUICK_REFERENCE_INVITE}
 \`\`\`
 
 穏やかに終了します。

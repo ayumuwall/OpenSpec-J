@@ -4,7 +4,8 @@
 
 ## Prerequisites
 
-OpenSpec は Node.js 製の CLI です。Node.js 20.19.0 以降が必要です。
+OpenSpec は Node.js 20.19.0 以降で動作します。Homebrew は Node.js を依存関係として
+インストールし、Nix パッケージは実行環境を含みます。ほかの方法では、事前にバージョンを確認してください。
 
 ターミナルで次を実行します。
 
@@ -14,6 +15,7 @@ node --version
 
 `v20.19.0`以降が表示されれば準備完了です。それより古い場合は、[nodejs.org](https://nodejs.org)または
 バージョンマネージャー（nvm、fnm、asdf、volta）から新しい Node.js をインストールしてください。
+Homebrew または Nix でインストールする場合は、この確認を省略できます。
 
 ワークフロー自体は、Claude Code、Cursor、または[対応ツール一覧](../reference/supported-tools.md)にある
 AI コーディングツール内で実行します。
@@ -57,6 +59,16 @@ CLI をグローバルにインストールします。[プロジェクトのセ
 ```npm
 npm install -g @ayumuwall/openspec@latest
 ```
+
+### Homebrew
+
+Homebrew は macOS / Linux に本家版 OpenSpec と Node.js をインストールします。日本語版は上記の npm コマンドで導入してください。本家版を使う場合はターミナルで次を実行します。
+
+```bash
+brew install openspec
+```
+
+formula は[homebrew-core](https://formulae.brew.sh/formula/openspec)で公開されているため、tap の追加は不要です。
 
 ### Yarn
 
@@ -110,6 +122,11 @@ nix run github:ayumuwall/OpenSpec-J -- --version
 デフォルトパッケージを使用します。出力の一覧は
 [flake.nix](https://github.com/ayumuwall/OpenSpec-J/blob/main/flake.nix)を参照してください。
 
+Nix パッケージは Bash、Fish、Zsh の補完スクリプトを標準の場所
+（`share/bash-completion/completions`、`share/fish/vendor_completions.d`、
+`share/zsh/site-functions`）へ配置します。パッケージとともに読み込まれるため、
+`openspec completion install`は不要です。
+
 ### インストールを確認する
 
 どの方法を使用した場合も、ターミナルで次を実行します。
@@ -137,7 +154,7 @@ openspec update
 `✓ All 2 tool(s) up to date (v1.7.0)`と表示されます。
 
 > [!WARNING]
-> Deno では、[Deno のインストール](#deno)を`-f`付きで再実行してください。このフラグがないと、
+> Homebrew では`brew upgrade openspec`を実行します。Deno では、[Deno のインストール](#deno)を`-f`付きで再実行してください。このフラグがないと、
 > インストール済みのコマンドを上書きしません。Nix では`nix profile upgrade openspec`を使用します。
 
 > [!NOTE]
@@ -162,7 +179,7 @@ openspec completion uninstall
 npm uninstall -g @ayumuwall/openspec
 ```
 
-Deno では`deno uninstall --global openspec`、Nix では`nix profile remove openspec`を実行します。
+Homebrew では`brew uninstall openspec`、Deno では`deno uninstall --global openspec`、Nix では`nix profile remove openspec`を実行します。
 これでシェルから`openspec`が見つからなくなります。
 
 **3. 残ったファイルを削除するか、そのまま保持する。**

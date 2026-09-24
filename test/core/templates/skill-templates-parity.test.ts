@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -36,48 +38,84 @@ import {
   getSkillTemplates,
 } from '../../../src/core/shared/skill-generation.js';
 import { STORE_SELECTION_GUIDANCE } from '../../../src/core/templates/workflows/store-selection.js';
+import { resolveOptionalWorkflows } from '../../../src/core/templates/optional-workflow.js';
+import { ALL_WORKFLOWS } from '../../../src/core/profiles.js';
+import { parseSchema } from '../../../src/core/artifact-graph/schema.js';
+
+/**
+ * Templates carry optional-workflow conditionals that the production registry
+ * resolves against the installed workflow set. Pin what generation emits, not
+ * the unresolved authoring form: with every workflow installed this is byte
+ * for byte what `getSkillTemplates()` returns.
+ */
+const asDeployed = (template: SkillTemplate): SkillTemplate => ({
+  ...template,
+  instructions: resolveOptionalWorkflows(
+    template.instructions,
+    new Set<string>(ALL_WORKFLOWS)
+  ),
+});
+
+/**
+ * The title `spec-driven` gives each artifact, read from the packaged templates
+ * so guidance and template cannot drift apart.
+ */
+function specDrivenTitles(): Record<string, string> {
+  const schemaDir = path.join(__dirname, '..', '..', '..', 'schemas', 'spec-driven');
+  const schema = parseSchema(fs.readFileSync(path.join(schemaDir, 'schema.yaml'), 'utf-8'));
+
+  return Object.fromEntries(
+    schema.artifacts.map((artifact) => [
+      artifact.id,
+      fs
+        .readFileSync(path.join(schemaDir, 'templates', artifact.template), 'utf-8')
+        .replace(/\r\n?/g, '\n')
+        .split('\n')[0],
+    ])
+  );
+}
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
-  getExploreSkillTemplate: 'd53320168a667f9965e9adaea818535e416da7c64d85f61bfbc5b806dfd18334',
-  getNewChangeSkillTemplate: 'db40ed5920852d210cb42122298ec0baca3f11a8b968ab1b5565ab1d3d62f38b',
-  getContinueChangeSkillTemplate: '01977bc5c7c2f6a2bccc0f5666fc03fc148f89c28d15bd26694c82c46a798d24',
-  getApplyChangeSkillTemplate: '7ce33a37119c459dae38cc3e6533b8c988477f9e8bd35c8da745a3ea9a57316d',
-  getFfChangeSkillTemplate: '0d7e2cebef14c8bdd5deb7608f7d148c92659e3716ad04ce0fba1837db20c32f',
-  getSyncSpecsSkillTemplate: '79e569416749724a0d404782f10c4adc4e89d8ea2e772e35b1980230ec500020',
-  getOnboardSkillTemplate: 'a2ce411ab84f0e12d915a47f66b0d2a15d56e003111e9d6ac7382a224a0f9ffd',
-  getOpsxExploreCommandTemplate: '11069fd1f8c96ea3af2ecc61ca42c6332bec32124f34cb2038471bae5fc38d85',
-  getOpsxNewCommandTemplate: 'f5e553c5052635f6263b78fdcdd31fb9cbe9a6c44ffba3104ee5cd7c7561e025',
-  getOpsxContinueCommandTemplate: 'a1c0c43f5daf566e485b21dc5e09607f66000c9d0cba4865f1e5a1284008074a',
-  getOpsxApplyCommandTemplate: '27b678fc6272f3f0d30073933de0b689518acb134e60771f829d44e0bb36d7ec',
-  getOpsxFfCommandTemplate: '083eafd1f758cec561a00b8cb4eb1d6e2fd276da8843bb33f668e601329336d4',
-  getArchiveChangeSkillTemplate: '0abef2960417704ccf88b96e65509749697450d0b385b5cda4d9fb943ca5e55c',
-  getBulkArchiveChangeSkillTemplate: 'e1ba5fb9b983ec1cab90cf49fd6a86a5849a3bdca058c2598f87ec1ffa4cb081',
-  getOpsxSyncCommandTemplate: '9a22c1df5869e26157897d2fc301bb608b3d10695c335d1c49014c10ff610a96',
-  getVerifyChangeSkillTemplate: '511a4714c4e65d9d5d6c9258f7100c57fa115e869b6c630e36bf244f0031f43d',
-  getOpsxArchiveCommandTemplate: 'cacf0d8de1f56b6adce9d46815d4e6fc7d6f875f908842a70e18f8d46e1677ee',
-  getOpsxOnboardCommandTemplate: '5bc27cfad7fec18f352f6b5dec8fae76146d5229303157ad8305ff6523c88e26',
-  getOpsxBulkArchiveCommandTemplate: '364c23d82b21b2e442e229af3d0e839228aa2cf9b6e54deda8b8f33d145ffd8a',
-  getOpsxVerifyCommandTemplate: '5a7ad1e38ea469821125fe74c2a68efcf78f35e8cef1e5c42a850fcce75a0f7a',
-  getOpsxProposeSkillTemplate: 'b51441a65999f7b0ba7522abe5df659df07c61f7feb14348d10cbfff8930b2c4',
-  getOpsxProposeCommandTemplate: '567a2dab6654e10d70f3e6310ef80ba900f465c6598ace2c76a32eb3396da2d4',
+  getExploreSkillTemplate: 'ac325295a8ab73d68f4f6049949f536a043ea15e895c970b05913e4ead104398',
+  getNewChangeSkillTemplate: 'f867a299c723742a16f70a614b93d9df05ebefaf539b35248689532ff4f0de80',
+  getContinueChangeSkillTemplate: '6a705cd5ef5e810b4d7fcf46e6e76010160b887f36c318da885d84ea0882daef',
+  getApplyChangeSkillTemplate: 'c3753e9a59d34ef1693d2083d205f73148a633b9129bbed0b972003a08175dae',
+  getFfChangeSkillTemplate: '9d5e795b526088a34bbdc5e160d64ccb80c215ab23b5942cabb9ad31e23d7d2a',
+  getSyncSpecsSkillTemplate: 'ac3ac7cc7d6873f548abf29707de554d873f61bde297a70e6b8985fb26169378',
+  getOnboardSkillTemplate: 'c9a62581b884b0e3cbacadd0590b7654cec9600e7f2b7fa79d783383587a1901',
+  getOpsxExploreCommandTemplate: 'f42241c677d017af2be893af727cd39a34a38c556815d4178d092bf2645c8490',
+  getOpsxNewCommandTemplate: '9d0ebe3f3408231630508098e52ffbc3aa64b843ba907a2a2f0324c19ac9aec5',
+  getOpsxContinueCommandTemplate: 'd7b63c11ba50d6db1708558d8d9b3290da50b64a25856cf9a9dfd288f0e1d2d4',
+  getOpsxApplyCommandTemplate: 'a5b91debb713b3be6b61190dc78752500ce9fd5a9b971698e0d831f610b3de45',
+  getOpsxFfCommandTemplate: 'bce9a22c838d2aee624b27f26535dec08111fe8c56fbc5fd52e26ac868a87f5d',
+  getArchiveChangeSkillTemplate: '0d7492e2e683272c7adb3668308268b9fb6fae539ac63464d0247e14c9f5ea42',
+  getBulkArchiveChangeSkillTemplate: '09ad640f98b9d301afabc9cff7f090fd0994b946f27054649eb5aaf8ec0905b7',
+  getOpsxSyncCommandTemplate: '7a08d2b60651e311f5e9f42401e702adc44fb332ec57051bbe5d7b8b6fadeae5',
+  getVerifyChangeSkillTemplate: 'c6674c8da7c807d7c38339f5175219bba6e441431cb4a038b0425178f1a7436c',
+  getOpsxArchiveCommandTemplate: '28956ee2b3d8c9cfb4d47340a18722b03915f496fdce7e5482af1e11bc44e623',
+  getOpsxOnboardCommandTemplate: '938caeb782ba5e5daf7e2d68433033dc422caf88f6d200968e5513efa4881179',
+  getOpsxBulkArchiveCommandTemplate: '4e20b8839903d55a3fc821ebd564e9e32d5d1b61009f32b25842d655e0ce379d',
+  getOpsxVerifyCommandTemplate: 'f619656e3c193f2de8aff31396730295a3638d4072104ff5875d80fef7ee7e93',
+  getOpsxProposeSkillTemplate: 'fe47c86b28a9518382347a958c2ac4656d36669d522f294de18c906dfc5fb73c',
+  getOpsxProposeCommandTemplate: '2f016cba58927e6394c855d08214e2d3ffbf585b334ee1ad87cd6bf6fe09b4ba',
   getFeedbackSkillTemplate: 'b30b6cf2cd5705c906078d3831fe7fffed8739652da757938ad84f82755a58fd',
-  getUpdateChangeSkillTemplate: '1b18321b73f33c917153972210423c5f9f38445395160c58ff798aeb1518ddfd',
-  getOpsxUpdateCommandTemplate: '102fa83152ff51fc7d2467a837cec3f374d1e5b694643da269a5321f406c6f33',
+  getUpdateChangeSkillTemplate: 'c6e44817e83257c1b75aad107b0caaec6be377ade78cb19f51ccc92602b1c3dc',
+  getOpsxUpdateCommandTemplate: '6d36658fe81aa137bba1ba23046c108957dcb2d72a3cd8317037bd1b0a57e782',
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': '0ce43e3344a352acf7c33babd269c85c44515c67f68c9208e25438cfd943f8e5',
-  'openspec-new-change': '859af1966a7daf004bc83ef62611c8798df6b070d2f10e90849eccc239a4e9e6',
-  'openspec-continue-change': 'cb105a8efdba7b68e7c09c14950e933fc564ed5ddb5fb4b82f6cf647b3ca4077',
-  'openspec-apply-change': '2e3e4b6df1d069f6041fdfbc01d22ecc1821e5d40c82e39b6c32457efc5da9d3',
-  'openspec-ff-change': '58359f2ce68c72cb09235305a85f120f10f712aac65213861ea3348637a5b8e5',
-  'openspec-sync-specs': 'a9342cf9839a394f9f9cded07a85f526d28b6fc90e3caac92a82119f398c21d7',
-  'openspec-archive-change': '97210818a56091df90a1f7f78d548b21a2d048bf121f3a9e4f33c5da42b5407b',
-  'openspec-bulk-archive-change': '8bd6cefe938ed6bb0bab43cebdcc226693af325bedcebaa41d19b4d90368ee26',
-  'openspec-verify-change': 'dbbc14ebab95aafdb91b030264b5b29201e7a7ef8b9f2b55423c1456a09a94c7',
-  'openspec-onboard': 'dcffc2033b4c4550d777739f4503c0c34151df137557d2801a5efa58a1469bc5',
-  'openspec-propose': '25d7f8c828cd13a527e892f7faadd4d5d1ec8f02e53a6bd243f5c60c5e394719',
-  'openspec-update-change': '24238e35ab5c72c9af1d7c2055ebecb4bde1f9087d8003f00486d4ab071cd325',
+  'openspec-explore': '843aa6200151f2f8d913ee5f974420b081c1ce031f6b242ee296d5a66bd0431f',
+  'openspec-new-change': '2c92d2388f9003a6e886bd9c1c8af11ba579da95e836e3dc6bb0b65b55d22d94',
+  'openspec-continue-change': '575a26846c09c1cc5e414f1d6b4e319671e859fac5a552d00623d1dde0891a82',
+  'openspec-apply-change': 'ddc9e753f0b4313f989090cf024910dec2cfc260ada659cd9fbfed68dc492065',
+  'openspec-ff-change': '968c06d265e6c7ead29ca0cfd4074e837d625e8a1eb55a3c8e7bf7bfdfd5107b',
+  'openspec-sync-specs': '88505cf01f65e2c5676ced5be2dc891efc11decec83cb3d46b009eab1d78ca81',
+  'openspec-archive-change': '43f6176311b08fd82d7ba07cb119b95edda797a551467fecf0677ea74d0a0da6',
+  'openspec-bulk-archive-change': '0d1caeb9f17c3a3cda6dd1464b407d003aa7e3280b08f510423ac8bfbb94d80f',
+  'openspec-verify-change': '810e17e1b841a10ed2c14da3e51cde7d404cdd8dd01b5a6fff036aa6eaac113d',
+  'openspec-onboard': 'd98b8d44105ae40c367a257c87af1a2f3c310694a2dbabcd7ffae3a98f3b5b69',
+  'openspec-propose': '8266268a09516d96b19e8d35f1973ed5e1959a0410bf0d36de4f12e510b6fb94',
+  'openspec-update-change': 'caeefd866849be16f66c62401bf78c4bfeb77f1104c48729a0c92019ed68a073',
 };
 
 // Intentionally excludes getFeedbackSkillTemplate: this list only models templates
@@ -125,10 +163,55 @@ describe('skill templates split parity', () => {
     ]) {
       expect(content).toContain('シナリオが実装・テストでカバーされていない場合:');
       expect(content).toContain('警告を追加: 「シナリオはカバーされていません:');
-      expect(content).toContain('tasks.md のみが存在する場合: タスクの完了のみを検証し、仕様/設計チェックをスキップ');
+      expect(content).toContain('適用対象のチェックで使える証拠がタスクだけなら、タスクの完了だけを検証します。');
       expect(content).toContain('### Requirement:');
       expect(content).toContain('#### Scenario:');
       expect(content).not.toMatch(/[\u200b\ufffd]/);
+    }
+  });
+
+  it('uses one clarification threshold in fast-forward guidance (#1837)', () => {
+    const variants: Array<[string, string]> = [
+      ['ff skill', getFfChangeSkillTemplate().instructions],
+      ['ff command', getOpsxFfCommandTemplate().content],
+    ];
+
+    for (const [variant, content] of variants) {
+      expect(content, variant).toContain(
+        '**アーティファクトにユーザー入力が必要な場合**（判断に必要な重要なコンテキストが不明瞭）'
+      );
+      expect(content, variant).not.toContain(
+        '**アーティファクトにユーザー入力が必要な場合**（コンテキストが不明瞭）'
+      );
+    }
+  });
+
+  it('approves onboarding tasks before saving or offering implementation (#1837)', () => {
+    const variants: Array<[string, string]> = [
+      ['onboard skill', getOnboardSkillTemplate().instructions],
+      ['onboard command', getOpsxOnboardCommandTemplate().content],
+    ];
+
+    for (const [variant, content] of variants) {
+      expect(content, variant).toContain('このタスク分割でよいですか？');
+      expect(content, variant).not.toContain(
+        'Each checkbox becomes a unit of work in the apply phase. Ready to implement?'
+      );
+      expect(content, variant).toContain(
+        '**一時停止** - ユーザーの承認やフィードバックを待つ。\n\n' +
+        '承認後、`openspec instructions tasks --change "<name>" --json` の `resolvedOutputPath` に保存する。'
+      );
+      expect(content, variant).toContain('> 「タスクを保存しました。実装に進めますか？」');
+      expect(content, variant).toContain(
+        '**一時停止** - 実装を始める前にユーザーの確認を待つ。'
+      );
+
+      const saveAt = content.indexOf('承認後、`openspec instructions tasks --change "<name>" --json` の `resolvedOutputPath`');
+      const implementationChoiceAt = content.indexOf('> 「タスクを保存しました。実装に進めますか？」');
+      const implementationAt = content.indexOf('## フェーズ 9: Apply（実装）');
+      expect(saveAt, variant).toBeGreaterThanOrEqual(0);
+      expect(implementationChoiceAt, variant).toBeGreaterThan(saveAt);
+      expect(implementationAt, variant).toBeGreaterThan(implementationChoiceAt);
     }
   });
 
@@ -172,7 +255,7 @@ describe('skill templates split parity', () => {
     const actualHashes = Object.fromEntries(
       GENERATED_SKILL_FACTORIES.map(([dirName, createTemplate]) => [
         dirName,
-        hash(generateSkillContent(createTemplate(), 'PARITY-BASELINE')),
+        hash(generateSkillContent(asDeployed(createTemplate()), 'PARITY-BASELINE')),
       ])
     );
 
@@ -261,7 +344,7 @@ describe('skill templates split parity', () => {
     const pathAwareTemplates: Array<[string, string, string, string]> = [
       [
         'propose skill',
-        generateSkillContent(getOpsxProposeSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getOpsxProposeSkillTemplate()), 'PARITY-BASELINE'),
         'specs/<capability-path>/spec.md',
         '既存の機能では完全なパスを維持',
       ],
@@ -273,7 +356,7 @@ describe('skill templates split parity', () => {
       ],
       [
         'explore skill',
-        generateSkillContent(getExploreSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getExploreSkillTemplate()), 'PARITY-BASELINE'),
         'specs/<capability-path>/spec.md',
         '既存の機能では完全なパスを維持',
       ],
@@ -285,7 +368,7 @@ describe('skill templates split parity', () => {
       ],
       [
         'onboard skill',
-        generateSkillContent(getOnboardSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getOnboardSkillTemplate()), 'PARITY-BASELINE'),
         '<existing-capability-path>',
         '変更する機能には既存の完全なパスを使用',
       ],
@@ -297,7 +380,7 @@ describe('skill templates split parity', () => {
       ],
       [
         'sync skill',
-        generateSkillContent(getSyncSpecsSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getSyncSpecsSkillTemplate()), 'PARITY-BASELINE'),
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
         '各仕様差分から本仕様を解決するときは、完全なパスを維持',
       ],
@@ -309,7 +392,7 @@ describe('skill templates split parity', () => {
       ],
       [
         'archive skill',
-        generateSkillContent(getArchiveChangeSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getArchiveChangeSkillTemplate()), 'PARITY-BASELINE'),
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
         '各仕様差分から本仕様を解決するときは、完全なパスを維持',
       ],
@@ -321,7 +404,7 @@ describe('skill templates split parity', () => {
       ],
       [
         'bulk archive skill',
-        generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getBulkArchiveChangeSkillTemplate()), 'PARITY-BASELINE'),
         '<planningHome.root>/openspec/specs/<capability-path>/spec.md',
         '各仕様差分から本仕様を解決するときは、完全なパスを維持',
       ],
@@ -343,7 +426,7 @@ describe('skill templates split parity', () => {
     const onboardVariants: Array<[string, string]> = [
       [
         'onboard skill',
-        generateSkillContent(getOnboardSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getOnboardSkillTemplate()), 'PARITY-BASELINE'),
       ],
       ['onboard command', getOpsxOnboardCommandTemplate().content],
     ];
@@ -358,7 +441,7 @@ describe('skill templates split parity', () => {
     const bulkArchiveVariants: Array<[string, string]> = [
       [
         'bulk archive skill',
-        generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getBulkArchiveChangeSkillTemplate()), 'PARITY-BASELINE'),
       ],
       ['bulk archive command', getOpsxBulkArchiveCommandTemplate().content],
     ];
@@ -398,7 +481,7 @@ describe('skill templates split parity', () => {
 
   it('keeps onboarding task examples aligned with concrete verification guidance (#345)', () => {
     const variants: Array<[string, string]> = [
-      ['onboard skill', generateSkillContent(getOnboardSkillTemplate(), 'PARITY-BASELINE')],
+      ['onboard skill', generateSkillContent(asDeployed(getOnboardSkillTemplate()), 'PARITY-BASELINE')],
       ['onboard command', getOpsxOnboardCommandTemplate().content],
     ];
 
@@ -444,6 +527,25 @@ describe('skill templates split parity', () => {
     }
   });
 
+  // #1952: the onboarding walkthrough is where a user first meets task groups,
+  // so it has to say the same thing the tasks instruction does - tests and docs
+  // belong to the group that did the work, not to a trailing catch-up group.
+  it('teaches per-group tests and docs in the onboarding walkthrough (#1952)', () => {
+    const variants: Array<[string, string]> = [
+      ['onboard skill', generateSkillContent(asDeployed(getOnboardSkillTemplate()), 'PARITY-BASELINE')],
+      ['onboard command', getOpsxOnboardCommandTemplate().content],
+    ];
+
+    for (const [label, content] of variants) {
+      expect(content, label).toContain(
+        '各グループに、その作業に対応するテストとドキュメントを含めます。最後のグループは統合確認だけに使います。'
+      );
+      // The trailing group stays integration-only; it must not be renamed back
+      // into a general testing/documentation bucket.
+      expect(content, label).toContain('## 2. 統合検証');
+    }
+  });
+
   it('generates no workspace-planning residue in any workflow template (4.1)', () => {
     const allSkills: Array<[string, () => SkillTemplate]> = [
       ['openspec-apply-change', getApplyChangeSkillTemplate],
@@ -454,7 +556,7 @@ describe('skill templates split parity', () => {
     ];
 
     for (const [dirName, createTemplate] of allSkills) {
-      const content = generateSkillContent(createTemplate(), 'PARITY-BASELINE');
+      const content = generateSkillContent(asDeployed(createTemplate()), 'PARITY-BASELINE');
       expect(content, dirName).not.toContain('workspace-planning');
       expect(content, dirName).not.toContain('Workspace guard');
     }
@@ -464,7 +566,7 @@ describe('skill templates split parity', () => {
     const variants: Array<[string, string]> = [
       [
         'skill',
-        generateSkillContent(getContinueChangeSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getContinueChangeSkillTemplate()), 'PARITY-BASELINE'),
       ],
       ['opsx command', getOpsxContinueCommandTemplate().content],
     ];
@@ -480,7 +582,7 @@ describe('skill templates split parity', () => {
   });
 
   it('gates the archive on a completed spec sync (#1393)', () => {
-    const generatedSkill = generateSkillContent(getArchiveChangeSkillTemplate(), 'PARITY-BASELINE');
+    const generatedSkill = generateSkillContent(asDeployed(getArchiveChangeSkillTemplate()), 'PARITY-BASELINE');
     const commandContent = getOpsxArchiveCommandTemplate().content;
 
     // The single archive skill references openspec-sync-specs; opsx command references /opsx:sync.
@@ -509,8 +611,144 @@ describe('skill templates split parity', () => {
     }
   });
 
+  it('requires sync to create a missing main spec from ADDED requirements (#1222, #1264)', () => {
+    // `openspec archive` creates the main spec from the delta's ADDED requirements
+    // when it does not exist yet (`buildUpdatedSpec`, specs-apply.ts). The agent
+    // workflow only told the agent to "compare each delta spec with its
+    // corresponding main spec", so a capability with no main spec compared against
+    // nothing, read as "already synced", and the change archived with the spec
+    // never written. Assertions are scoped to the sync-assessment step so they
+    // cannot pass on unrelated text elsewhere in the body.
+    const archiveVariants: Array<[string, string]> = [
+      ['archive skill', generateSkillContent(getArchiveChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['archive opsx command', getOpsxArchiveCommandTemplate().content],
+    ];
+
+    for (const [variant, content] of archiveVariants) {
+      const start = content.indexOf('**仕様差分の同期状態を評価します**');
+      const end = content.indexOf('**アーカイブを実行します**');
+      expect(start, variant).toBeGreaterThan(-1);
+      expect(end, variant).toBeGreaterThan(start);
+      const assessStep = content.slice(start, end);
+
+      expect(assessStep, variant).toContain(
+        '本仕様がないだけで**自動的に「同期済み」とは判断しません**'
+      );
+      expect(assessStep, variant).toContain('同期の入力ではなく出力');
+      expect(assessStep, variant).toContain('差分に MODIFIED または RENAMED 要件がある場合');
+      expect(assessStep, variant).toContain('新しい本仕様を作成できるのは ADDED 要件だけ');
+      expect(assessStep, variant).toContain('要件を作り上げない');
+      expect(assessStep, variant).toContain('それ以外で、差分に ADDED 要件がない場合');
+      expect(assessStep, variant).toContain('同期できないと報告');
+      expect(assessStep, variant).toContain('REMOVED だけの差分では');
+      expect(assessStep, variant).toContain('本仕様ツリーは変更しません');
+      expect(assessStep, variant).toContain('その機能を同期ブロック状態にします');
+      expect(assessStep, variant).toContain('仕様には少なくとも 1 つの要件が必要です');
+      expect(assessStep, variant).toContain('それ以外は同期が必要な機能として数え');
+      expect(assessStep, variant).toContain('差分に REMOVED 要件もある場合');
+      expect(assessStep, variant).toContain('無視されることを警告');
+      expect(assessStep, variant).toContain(
+        "差分の ADDED 要件だけから本仕様を作成"
+      );
+    }
+
+    // The sync itself must not invent a requirement that has no base to modify:
+    // the CLI throws "only ADDED requirements are allowed for new specs".
+    const syncVariants: Array<[string, string]> = [
+      ['sync skill', getSyncSpecsSkillTemplate().instructions],
+      ['sync command', getOpsxSyncCommandTemplate().content],
+    ];
+
+    for (const [variant, content] of syncVariants) {
+      const start = content.indexOf('b. **本仕様を読む**');
+      const end = content.indexOf('c. **変更をインテリジェントに適用**');
+      expect(start, variant).toBeGreaterThan(-1);
+      expect(end, variant).toBeGreaterThan(start);
+      const readStep = content.slice(start, end);
+
+      expect(readStep, variant).toContain('**本仕様がまだ存在しない場合**（新しい機能）');
+      expect(readStep, variant).toContain('適用できるのは ADDED 要件だけ');
+      expect(readStep, variant).toContain('MODIFIED と RENAMED は対象の要件がない');
+      expect(readStep, variant).toContain('存在しない要件を補ってはいけません');
+      expect(readStep, variant).toContain('REMOVED は削除対象がない');
+
+      // ...and the creation step must not then write the empty spec the CLI refuses:
+      // an unmarked REMOVED-only delta against a capability with no main spec aborts with
+      // "仕様には少なくとも 1 つの要件が必要です" and leaves the tree untouched.
+      const createStart = content.indexOf("d. **機能がまだ存在しない場合は本仕様を作成**");
+      const createEnd = content.indexOf('**更新した本仕様を検証する**');
+      expect(createStart, variant).toBeGreaterThan(-1);
+      expect(createEnd, variant).toBeGreaterThan(createStart);
+      const createStep = content.slice(createStart, createEnd);
+
+      expect(createStep, variant).toContain(
+        '仕様差分に追加する ADDED 要件があり'
+      );
+      expect(createStep, variant).toContain('手順 b で MODIFIED または RENAMED によって');
+      expect(createStep, variant).toContain('何も作成せず');
+      expect(createStep, variant).toContain('仕様には少なくとも 1 つの要件が必要です');
+      expect(createStep, variant).toContain('空の');
+    }
+  });
+
+  it('preserves explicit archive-without-sync when a missing target blocks sync', () => {
+    for (const content of [
+      getArchiveChangeSkillTemplate().instructions,
+      getOpsxArchiveCommandTemplate().content,
+    ]) {
+      const assessment = content.slice(
+        content.indexOf('**仕様差分がある場合:**'),
+        content.indexOf('選択された同期で本仕様へ書き込む前に')
+      );
+      expect(assessment).not.toContain('stop instead of prompting to sync');
+      expect(assessment).toContain('その機能を同期ブロック状態にします');
+      expect(assessment).toContain('残りの機能の評価を続けます');
+      expect(assessment).toContain(
+        '同期がブロックされる機能がある場合: 理由を説明し、「同期せずにアーカイブ」と「キャンセル」だけを提示'
+      );
+      expect(assessment).toContain('同期がブロックされる機能がある間は、どの同期も開始せず');
+      expect(assessment).toContain('「同期せずにarchive」または「今すぐarchive」— archiveへ進む');
+      expect(assessment).toContain('「キャンセル」— 停止し、archiveしない');
+      expect(content).toContain('同期に失敗した場合や、いずれかの機能が');
+      expect(content).toContain('停止し、archiveしません');
+    }
+  });
+
+  it('recognizes explicitly retired missing specs without blocking archive verification', () => {
+    for (const content of [
+      getArchiveChangeSkillTemplate().instructions,
+      getOpsxArchiveCommandTemplate().content,
+    ]) {
+      const assessment = content.slice(
+        content.indexOf('**仕様差分がある場合:**'),
+        content.indexOf('**プロンプトオプション:**')
+      );
+      const retirement = assessment.indexOf('それ以外で、差分が REMOVED 要件だけで');
+      expect(retirement).toBeGreaterThan(-1);
+      expect(retirement).toBeLessThan(assessment.indexOf('それ以外で、差分に ADDED 要件がない場合'));
+      expect(assessment).toContain('`retire_capabilities: true`');
+      expect(assessment).toContain('同期済みとして数え');
+      expect(assessment).toContain('本仕様を再作成しません');
+      expect(content).toContain('明示的に廃止され本仕様がないケースも含め');
+    }
+
+    for (const content of [
+      getSyncSpecsSkillTemplate().instructions,
+      getOpsxSyncCommandTemplate().content,
+    ]) {
+      const createStep = content.slice(
+        content.indexOf('d. **機能がまだ存在しない場合は本仕様を作成**'),
+        content.indexOf('**更新した本仕様を検証する**')
+      );
+      expect(createStep).toContain('`retire_capabilities: true`');
+      expect(createStep).toContain('廃止済みと報告');
+      expect(createStep).toContain('この指定がなければ、同期が妨げられていると報告');
+      expect(createStep).toContain('何も作成せず');
+    }
+  });
+
   it('gates bulk archive on inline synchronous spec sync and verification before moving change root', () => {
-    const generatedSkill = generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE');
+    const generatedSkill = generateSkillContent(asDeployed(getBulkArchiveChangeSkillTemplate()), 'PARITY-BASELINE');
     const commandContent = getOpsxBulkArchiveCommandTemplate().content;
 
     // The bulk archive skill references openspec-sync-specs; opsx command references /opsx:sync.
@@ -541,7 +779,7 @@ describe('skill templates split parity', () => {
     const variants: Array<[string, string]> = [
       [
         'bulk skill',
-        generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE'),
+        generateSkillContent(asDeployed(getBulkArchiveChangeSkillTemplate()), 'PARITY-BASELINE'),
       ],
       ['bulk opsx command', getOpsxBulkArchiveCommandTemplate().content],
     ];
@@ -907,9 +1145,9 @@ describe('skill templates split parity', () => {
   // bug #1381 actually reported.
   it('honors Cancel at every archive confirmation (#1381)', () => {
     const variants: Array<[string, string]> = [
-      ['bulk skill', generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['bulk skill', generateSkillContent(asDeployed(getBulkArchiveChangeSkillTemplate()), 'PARITY-BASELINE')],
       ['bulk opsx command', getOpsxBulkArchiveCommandTemplate().content],
-      ['single skill', generateSkillContent(getArchiveChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['single skill', generateSkillContent(asDeployed(getArchiveChangeSkillTemplate()), 'PARITY-BASELINE')],
       ['single opsx command', getOpsxArchiveCommandTemplate().content],
     ];
 
@@ -928,7 +1166,7 @@ describe('skill templates split parity', () => {
   // would send every legitimate answer down the "ask again" path forever.
   it('routes the bulk archive confirmation by intent, not by literal label (#1381)', () => {
     const variants: Array<[string, string]> = [
-      ['bulk skill', generateSkillContent(getBulkArchiveChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['bulk skill', generateSkillContent(asDeployed(getBulkArchiveChangeSkillTemplate()), 'PARITY-BASELINE')],
       ['bulk opsx command', getOpsxBulkArchiveCommandTemplate().content],
     ];
 
@@ -948,11 +1186,11 @@ describe('skill templates split parity', () => {
 
   it('makes the schema instruction field authoritative for artifact creation (#777)', () => {
     const variants: Array<[string, string]> = [
-      ['propose skill', generateSkillContent(getOpsxProposeSkillTemplate(), 'PARITY-BASELINE')],
+      ['propose skill', generateSkillContent(asDeployed(getOpsxProposeSkillTemplate()), 'PARITY-BASELINE')],
       ['propose command', getOpsxProposeCommandTemplate().content],
-      ['continue skill', generateSkillContent(getContinueChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['continue skill', generateSkillContent(asDeployed(getContinueChangeSkillTemplate()), 'PARITY-BASELINE')],
       ['continue command', getOpsxContinueCommandTemplate().content],
-      ['ff skill', generateSkillContent(getFfChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['ff skill', generateSkillContent(asDeployed(getFfChangeSkillTemplate()), 'PARITY-BASELINE')],
       ['ff command', getOpsxFfCommandTemplate().content],
     ];
 
@@ -1017,5 +1255,38 @@ describe('apply skill/command shared instruction core', () => {
     const core = getApplyInstructions();
     expect(getApplyChangeSkillTemplate().instructions).toBe(core);
     expect(getOpsxApplyCommandTemplate().content).toBe(core);
+  });
+});
+
+describe('workflow guidance matches the packaged templates (#1138)', () => {
+  // Onboard drafts each artifact in the conversation and then saves what it
+  // drafted, so a preview missing the template's title writes an untitled file
+  // no matter what the template says.
+  it('shows every artifact title in the onboarding walkthrough', () => {
+    const titles = specDrivenTitles();
+    const surfaces: Array<[string, string]> = [
+      ['onboard skill', getOnboardSkillTemplate().instructions],
+      ['opsx onboard command', getOpsxOnboardCommandTemplate().content],
+    ];
+
+    for (const [surface, text] of surfaces) {
+      for (const artifactId of ['proposal', 'specs', 'design', 'tasks']) {
+        expect(text, `${surface} / ${artifactId}`).toContain(`\n${titles[artifactId]}\n`);
+      }
+    }
+  });
+
+  // The sync workflow prints a delta reference right beside the main-spec one.
+  // The two are only telling them apart if the delta carries its own title.
+  it('titles the delta spec in the sync format reference', () => {
+    const titles = specDrivenTitles();
+
+    for (const [surface, text] of [
+      ['sync skill', getSyncSpecsSkillTemplate().instructions],
+      ['opsx sync command', getOpsxSyncCommandTemplate().content],
+    ] as Array<[string, string]>) {
+      expect(text, surface).toContain(`\n${titles.specs}\n\n## Purpose\n`);
+      expect(text, surface).toContain('\n# <capability> Specification\n');
+    }
   });
 });

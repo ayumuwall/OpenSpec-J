@@ -7,6 +7,7 @@
 import type { CommandContent, ToolCommandAdapter, GeneratedCommand } from './types.js';
 import { getInvocationForAdapter, needsInvocationRewrite } from './invocation.js';
 import { transformCommandInvocations } from '../../utils/command-references.js';
+import { assertWorkflowConditionalsResolved } from '../templates/optional-workflow.js';
 
 /**
  * 指定されたアダプターで 1 つのコマンドファイルを生成する。
@@ -24,6 +25,11 @@ export function generateCommand(
   content: CommandContent,
   adapter: ToolCommandAdapter
 ): GeneratedCommand {
+  assertWorkflowConditionalsResolved(
+    content.body,
+    `コマンド '${content.id}' が任意ワークフローのブロックを未解決のまま生成されました`
+  );
+
   const invocation = getInvocationForAdapter(adapter);
   const formatted = needsInvocationRewrite(invocation)
     ? { ...content, body: transformCommandInvocations(content.body, invocation) }

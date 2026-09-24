@@ -12,11 +12,11 @@ import {
   loadChangeContext,
   generateInstructions,
   resolveSchema,
-  resolveArtifactOutputPath,
   resolveArtifactOutputs,
   type ArtifactInstructions,
 } from '../../core/artifact-graph/index.js';
 import { isSpecsArtifactPath } from '../../core/artifact-graph/outputs.js';
+import { findUnreadDeltaFiles } from '../../utils/spec-discovery.js';
 import {
   getChangeDir,
   resolveCurrentPlanningHomeSync,
@@ -31,8 +31,11 @@ import {
 } from '../../core/root-selection.js';
 import {
   assembleReferenceIndex,
+  escapeEnvelopeAttribute,
+  escapeEnvelopeTags,
   renderReferencedStoresBlock,
   renderReferencedStoresSection,
+  sanitizeInline,
   type ReferenceIndexEntry,
 } from '../../core/references.js';
 import { readRegistrySnapshot } from '../../core/store/registry.js';
@@ -198,8 +201,14 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     unlocks,
   } = instructions;
 
-  // 開始タグ
-  console.log(`<artifact id="${artifactId}" change="${changeName}" schema="${schemaName}">`);
+  // Opening tag. The change name is a directory name read from disk, and the
+  // read path rejects only separators and NUL - a quote in it would otherwise
+  // close the attribute and forge siblings on this tag.
+  console.log(
+    `<artifact id="${escapeEnvelopeAttribute(artifactId)}"` +
+      ` change="${escapeEnvelopeAttribute(changeName)}"` +
+      ` schema="${escapeEnvelopeAttribute(schemaName)}">`
+  );
   console.log();
 
   // skip_specs でスキップしたアーティファクトには作成指示を出さない。
@@ -226,8 +235,10 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
 
   // タスク指示
   console.log('<task>');
-  console.log(`変更 "${changeName}" の ${artifactId} アーティファクトを作成してください。`);
-  console.log(description);
+  console.log(
+    `変更 "${escapeEnvelopeTags(changeName)}" の ${escapeEnvelopeTags(artifactId)} アーティファクトを作成してください。`
+  );
+  console.log(escapeEnvelopeTags(description));
   console.log('</task>');
   console.log();
 
@@ -235,7 +246,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   if (context) {
     console.log('<project_context>');
     console.log('<!-- これは背景情報です。出力には含めないでください。 -->');
-    console.log(context);
+    console.log(escapeEnvelopeTags(context));
     console.log('</project_context>');
     console.log();
   }
@@ -251,7 +262,9 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     console.log('<rules>');
     console.log('<!-- これは従うべき制約です。出力には含めないでください。 -->');
     for (const rule of rules) {
-      console.log(`- ${rule}`);
+      // Flattened so a newline cannot forge a sibling bullet, but never
+      // truncated: these are instructions an agent has to follow in full.
+      console.log(`- ${escapeEnvelopeTags(sanitizeInline(rule, Infinity))}`);
     }
     console.log('</rules>');
     console.log();
@@ -276,7 +289,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
       const fullPath = path.join(changeDir, dep.path);
       console.log(`<dependency id="${dep.id}" status="${status}">`);
       console.log(`  <path>${fullPath}</path>`);
-      console.log(`  <description>${dep.description}</description>`);
+      console.log(`  <description>${escapeEnvelopeTags(dep.description)}</description>`);
       console.log('</dependency>');
     }
     console.log('</dependencies>');
@@ -292,7 +305,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // 指示（ガイダンス）
   if (instruction) {
     console.log('<instruction>');
-    console.log(instruction.trim());
+    console.log(escapeEnvelopeTags(instruction.trim()));
     console.log('</instruction>');
     console.log();
   }
@@ -300,7 +313,10 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
   // テンプレート
   console.log('<template>');
   console.log('<!-- 出力ファイルの構成として使い、各セクションを埋めてください。 -->');
-  console.log(template.trim());
+  // Copied verbatim into the artifact file, so its `<!-- ... -->` comments and
+  // `<placeholder>` markers must survive - only the envelope's own closing
+  // tags are neutralized.
+  console.log(escapeEnvelopeTags(template.trim()));
   console.log('</template>');
   console.log();
 
@@ -421,14 +437,15 @@ function collectMissingPrerequisites(input: {
  * 実行をブロックする条件は変えず、不足を警告する。
  * apply がブロック中なら不足は次の作業として案内し、警告にはしない。
  * 仕様を生成しないスキーマでは作成時に skip_specs が付くため対象外。
+ * マージ対象外の差分ファイルも仕様の glob に一致するため、該当する各ファイルを警告する。
  */
-function collectApplyWarnings(input: {
+async function collectApplyWarnings(input: {
   state: ApplyInstructions['state'];
   schema: { artifacts: { id: string; generates: string }[] };
   changeDir: string;
   changeName: string;
   skippedArtifacts?: Set<string>;
-}): string[] {
+}): Promise<string[]> {
   const { state, schema, changeDir, changeName, skippedArtifacts } = input;
   if (state === 'blocked') return [];
 
@@ -437,16 +454,22 @@ function collectApplyWarnings(input: {
   );
   if (specArtifacts.length === 0) return [];
   if (specArtifacts.some((artifact) => skippedArtifacts?.has(artifact.id))) return [];
+  const warnings = (await findUnreadDeltaFiles(path.join(changeDir, 'specs'))).map(
+    (file) =>
+      `specs/${file.path} は機能の spec.md ではないため、\`openspec validate ${changeName}\` で拒否され、アーカイブ時にもマージされません。` +
+      `要件を specs/${file.expected} に移動してください。`
+  );
   const hasDeltas = specArtifacts.some(
     (artifact) => resolveArtifactOutputs(changeDir, artifact.generates).length > 0
   );
-  if (hasDeltas) return [];
+  if (hasDeltas) return warnings;
 
   const metadataPath = path.join(changeDir, METADATA_FILENAME);
   // スキーマが実際に宣言する ID を使う。specs と決め打ちすると、contracts などの
   // 別名を使うスキーマでは案内が失敗する。複数ある場合は推測せずプレースホルダーにする。
   const specTarget = specArtifacts.length === 1 ? specArtifacts[0].id : '<artifact-id>';
   return [
+    ...warnings,
     `この変更には仕様差分がなく、\`skip_specs: true\` も宣言されていないため、\`openspec validate ${changeName}\` は失敗します。` +
       `実装前に仕様差分を作成してください（\`openspec instructions ${specTarget} --change ${changeName}\`）。` +
       `仕様で定めた振る舞いが変わらない場合は、${metadataPath} に \`skip_specs: true\` を追加してください。`,
@@ -523,15 +546,27 @@ export async function generateApplyInstructions(
     }
   }
 
-  // Parse tasks if tracking file exists
+  // Parse every concrete file matched by apply.tracks. A tracking path may be
+  // a glob owned by an artifact with any ID, so treating it as one literal
+  // path loses task evidence for valid custom schemas.
   let parsedTasks: ParsedTask[] = [];
+  const unavailableTrackingFiles: Array<{ path: string; reason: string }> = [];
   let tracksFileExists = false;
   if (tracksFile) {
-    const tracksPath = resolveArtifactOutputPath(changeDir, tracksFile);
-    tracksFileExists = fs.existsSync(tracksPath);
-    if (tracksFileExists) {
-      const tasksContent = await fs.promises.readFile(tracksPath, 'utf-8');
-      parsedTasks = parseTaskLines(tasksContent);
+    const tracksPaths = resolveArtifactOutputs(changeDir, tracksFile);
+    tracksFileExists = tracksPaths.length > 0;
+    for (const tracksPath of tracksPaths) {
+      try {
+        const tasksContent = await fs.promises.readFile(tracksPath, 'utf-8');
+        parsedTasks.push(...parseTaskLines(tasksContent));
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException)?.code;
+        const message = error instanceof Error ? error.message : String(error);
+        unavailableTrackingFiles.push({
+          path: tracksPath,
+          reason: code && !message.includes(code) ? `${code}: ${message}` : message,
+        });
+      }
     }
   }
   const tasks = toTaskItems(parsedTasks);
@@ -568,6 +603,9 @@ export async function generateApplyInstructions(
     instruction =
       `${tracksFilename} ファイルが見つからないため、作成が必要です。` +
       `\n${describeArtifactRemedy(changeName, findArtifactIdFor(schema, tracksFile))}`;
+  } else if (tracksFile && unavailableTrackingFiles.length > 0 && tasks.length === 0) {
+    state = 'blocked';
+    instruction = '読み取れるタスクの説明がありません。';
   } else if (tracksFile && tracksFileExists && tasks.length === 0) {
     // Tracking file exists but lists nothing an agent can work on: either no
     // checkboxes at all, or only checkboxes with no text after them.
@@ -576,7 +614,12 @@ export async function generateApplyInstructions(
     instruction =
       `${tracksFilename} は存在しますが、着手できるタスクがありません。` +
       `\n${tracksFilename} にタスクを追加するか、再生成してください: ${describeArtifactRemedy(changeName, findArtifactIdFor(schema, tracksFile))}`;
-  } else if (tracksFile && remaining === 0 && total > 0) {
+  } else if (
+    tracksFile &&
+    unavailableTrackingFiles.length === 0 &&
+    remaining === 0 &&
+    total > 0
+  ) {
     state = 'all_done';
     instruction = 'すべてのタスクが完了しました！この変更はアーカイブ可能です。\nアーカイブ前にテスト実行と変更レビューを検討してください。';
   } else if (!tracksFile) {
@@ -588,7 +631,14 @@ export async function generateApplyInstructions(
     instruction = schemaInstruction?.trim() ?? 'コンテキストファイルを読み、未完了タスクを進め、進捗に合わせて完了マークする。\nブロッカーや不明点があれば一旦止めて確認する。';
   }
 
-  const warnings = collectApplyWarnings({
+  if (unavailableTrackingFiles.length > 0) {
+    const unavailableDetails = unavailableTrackingFiles
+      .map((file) => `- ${file.path}: ${file.reason}`)
+      .join('\n');
+    instruction += `\n追跡対象の証拠を取得できなかったため、タスクの完了は未検証です:\n${unavailableDetails}`;
+  }
+
+  const warnings = await collectApplyWarnings({
     state,
     schema,
     changeDir,
@@ -603,6 +653,8 @@ export async function generateApplyInstructions(
     contextFiles,
     progress: { total, complete, remaining },
     tasks,
+    taskTrackingConfigured: tracksFile !== null,
+    ...(unavailableTrackingFiles.length > 0 ? { unavailableTrackingFiles } : {}),
     state,
     missingArtifacts: missingArtifacts.length > 0 ? missingArtifacts : undefined,
     ...(missingPrerequisites.length > 0 ? { missingPrerequisites } : {}),
@@ -794,6 +846,8 @@ function printOperationInputsText(inputs: {
 }): void {
   if (inputs.context) {
     console.log('### プロジェクトコンテキスト（必須の指示入力）');
+    // Printed verbatim on purpose. Escaping a leading `#` would also fire inside
+    // fenced code (`# install deps`), so heading forgery is not guarded here.
     console.log(inputs.context);
     console.log();
   }
@@ -801,7 +855,7 @@ function printOperationInputsText(inputs: {
   if (inputs.operationGuidance && inputs.operationGuidance.length > 0) {
     console.log('### 操作ガイダンス（参考）');
     for (const guidance of inputs.operationGuidance) {
-      console.log(`- ${guidance}`);
+      console.log(`- ${sanitizeInline(guidance, Infinity)}`);
     }
     console.log();
   }

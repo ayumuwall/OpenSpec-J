@@ -58,8 +58,6 @@ rules:
 
 最初にプロジェクト設定が渡され、その後に OpenSpec の組み込み指示とテンプレートが続きます。ルールは組み込み指示へ追加され、置き換えることはありません。`config.yaml`の編集内容は、次回の実行からエージェントへ渡されます。
 
-[ワークフロー実行](../reference/architecture/workflow-runs.md)では、呼び出しからアーティファクトの書き出しまで、実行処理全体を説明しています。
-
 ## フィールド
 
 エージェントが受け取る内容は、3 つのフィールドで指定します。各フィールドの型、制限、検証規則は、[Project configuration (config.yaml)](../reference/configuration/config-yaml.md)を参照してください。

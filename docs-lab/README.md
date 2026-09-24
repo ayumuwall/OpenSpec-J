@@ -46,7 +46,7 @@ Reference 内のページ名には 3 つの規則があります。グループ�
 | [Overview](start/overview.md)         | _TODO：2026-08-21 に内容を削除し、一から書き直すまでサイトでも非公開。`/docs`は一時的に Installation へリダイレクトする。以前の役割説明は価値提案として弱いため削除した。詳細は`Notes.md`を参照。_ |
 | [Installation](start/installation.md) | `openspec` CLI のインストール、更新、アンインストール。                                                                                                                                            |
 | [Set up your project](start/setup.md) | プロジェクトで init を実行し、生成物を確認して設定を調整する。                                                                                                                                     |
-| [Quickstart](start/quickstart.md)     | 既存リポジトリで、アイデアを最初のアーカイブ済み変更にするまで。                                                                                                                                   |
+| [Quickstart](start/quickstart.md)     | 新規または既存のプロジェクトで、アイデアを最初のアーカイブ済み変更にするまで。                                                                                                                                   |
 
 ### ガイド：システムを理解し、うまく使いこなし、コードベースとチームに導入する
 

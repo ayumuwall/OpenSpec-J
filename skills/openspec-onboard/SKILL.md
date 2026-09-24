@@ -1,6 +1,6 @@
 ---
 name: openspec-onboard
-description: OpenSpec のガイド付きオンボーディングです。説明を交えながら、実際のコードベース作業を通じて完全なワークフローサイクルを体験します。
+description: OpenSpec のガイド付きオンボーディングです。説明を交えながら、実際のコードベース作業を通じて完全なワークフローサイクルを体験します。「openspec onboard」または「opsx onboard」と依頼された場合にも使用します。
 allowed-tools: Bash(openspec:*)
 license: MIT
 compatibility: OpenSpec CLI が必要です。
@@ -12,6 +12,17 @@ metadata:
 ユーザーを初めての完全な OpenSpec ワークフローサイクルへ案内してください。これは学習体験です。各ステップを説明しながら、実際にユーザーのコードベースで作業します。
 
 **ストアの選択:** ユーザーがストア（この端末に登録された独立した OpenSpec リポジトリ）を指定した場合、または作業がストアにある場合は、`openspec store list --json` で登録済みストア ID を調べます。その後、仕様と変更を読み書きするコマンド（`new change`、`status`、`instructions`、`list`、`show`、`validate`、`archive`、`doctor`、`context`、`schemas`、`view`）に `--store <id>` を指定します。一度選んだら、その後のワークフローでは `--store <id>` を維持します。以下にフラグなしで示すコマンド例は省略形なので、実行前にフラグを追加してください。たとえば、フラグなしの例ではなく `openspec status --change "<name>" --json --store "<id>"` を実行します。ほかのコマンドはこのフラグを受け取りません。コマンドが出力するヒントには既にフラグが含まれるため、後続コマンドでも維持してください。ストアを使わない場合、コマンドは最も近いローカルの `openspec/` ルートを対象にします。
+
+**プロジェクトの確認:** この手順は、すでに OpenSpec を使っているプロジェクトを対象とします。最初の書き込み操作（`new change`、`archive`、`sync specs`、アーティファクトファイルの作成など）の前に、プロジェクトにルートがあることを確認してください。`openspec list --json` を実行し、`root` を読み取ります（ストアを選択している場合は、そのストアがルートになるため `--store <id>` を指定します）。ルートオブジェクトがあればセットアップ済みです。`"root": null` なら未設定で、この場所には `openspec/` ディレクトリがありません。`openspec new change` などの書き込み操作を行うと、副作用として作成されます。この場合、コマンドは非ゼロで終了しますが、CLI の故障ではなく確認結果です。再試行や回避策を試すのではなく JSON を読んでください。
+
+`"root": null` でも、未設定を意味しない場合があります。`status` のエラーメッセージが、このプロジェクトの `openspec/config.yaml`（または `config.yml`）を示し、「での宣言:」または「のストア宣言が不正です:」と続く場合です。このプロジェクトは宣言したストアを通じて OpenSpec を使っていますが、このマシンではストアを解決できません（ストアが未登録、または `store:` 行の形式が不正）。未初期化として扱わず、以下の分岐には進まないでください。書き込み前に停止し、エラーの `message` と `fix` をユーザーに示します。
+
+それ以外でルートがない場合は、このワークフローを使うに至った経緯に応じて対応します:
+
+- **自動選択した場合**: ユーザーが OpenSpec やこのスキルを指定せず、スラッシュコマンドも実行していないのに、自分でこのワークフローを選んだ場合です。OpenSpec の使用をやめ、OpenSpec がインストールされていない場合と同じように、通常どおり依頼に対応してください。セットアップを求めたり、OpenSpec のセットアップに言及したりしないでください。
+- **OpenSpec を明示的に指定された場合**: ユーザーが OpenSpec やこのスキルを指定した、またはスラッシュコマンドを実行した場合です。書き込み前に停止し、このプロジェクトをセットアップする（`openspec init`）、既存のストアを対象にする（`--store <id>`）、今回の依頼は OpenSpec を使わずに進める、のどれにするかを尋ねて回答を待ちます。
+
+どちらの場合も、副作用としてルートを作成してはいけません。ユーザーが依頼するまでは `openspec init` を実行せず、`openspec/` 配下のファイルを手作業で作成せず、コマンドによる自動作成も避けてください。
 
 ---
 
@@ -219,6 +230,8 @@ proposal のドラフトです:
 
 ---
 
+# Proposal
+
 ## Why
 
 [問題/機会を説明する1〜2文]
@@ -286,6 +299,8 @@ spec です:
 
 ---
 
+# Spec Delta
+
 ## ADDED Requirements
 
 ### Requirement: <名前>
@@ -325,6 +340,8 @@ design です:
 
 ---
 
+# Design
+
 ## Context
 
 [現在の状況の簡潔な文脈]
@@ -360,7 +377,7 @@ design です:
 
 最後に、実装タスクへ分解します。apply フェーズでチェックを付けるタスク一覧です。
 
-小さく、明確で、順序立てて書くことが重要です。
+小さく、明確で、順序立てて書くことが重要です。各グループに、その作業に対応するテストとドキュメントを含めます。最後のグループは統合確認だけに使います。
 ```
 
 **実行:** specs/design を元に tasks を作成:
@@ -369,6 +386,8 @@ design です:
 実装タスクは次の通りです:
 
 ---
+
+# Tasks
 
 ## 1. [カテゴリまたはファイル]
 
@@ -381,12 +400,17 @@ design です:
 
 ---
 
-各チェックボックスが apply フェーズの単位作業になります。実装に進めますか？
+各チェックボックスが apply フェーズの単位作業になります。このタスク分割でよいですか？
 ```
 
-**一時停止** - 実装に進む準備ができたか確認する。
+**一時停止** - ユーザーの承認やフィードバックを待つ。
 
-`openspec/changes/<name>/tasks.md` に保存。
+承認後、`openspec instructions tasks --change "<name>" --json` の `resolvedOutputPath` に保存する。
+
+続けて確認する:
+> 「タスクを保存しました。実装に進めますか？」
+
+**一時停止** - 実装を始める前にユーザーの確認を待つ。
 
 ---
 
@@ -471,23 +495,18 @@ OpenSpec の完全なサイクルを完了しました:
 
 ## コマンドリファレンス
 
-**基本ワークフロー:**
+**インストール済みのコマンド:**
 
- | コマンド          | 役割                                       |
- |-------------------|--------------------------------------------|
+ | コマンド         | 役割                                       |
+ |------------------|--------------------------------------------|
  | `/openspec-propose` | change を作成し、全アーティファクトを生成 |
- | `/openspec-explore` | 作業前/作業中に問題を考える               |
- | `/openspec-apply-change`   | change のタスクを実装                     |
- | `/openspec-archive-change` | 完了した変更をアーカイブ                  |
-
-**追加コマンド**（インストール済みの場合のみ。利用可否はプロファイルによります）:
-
- | コマンド           | 役割                                                     |
- |--------------------|----------------------------------------------------------|
- | `/openspec-new-change`      | 新しい change を始め、アーティファクトを1つずつ進める   |
- | `/openspec-continue-change` | 既存 change の作業を続ける                              |
- | `/openspec-ff-change`       | fast-forward: 全アーティファクトを一度に作成             |
- | `/openspec-verify-change`   | 実装がアーティファクトと一致するか検証                  |
+ | `/openspec-explore` | 作業前/作業中に問題を考える  |
+ | `/openspec-apply-change`   | change のタスクを実装              |
+ | `/openspec-archive-change` | 完了した変更をアーカイブ                 |
+ | `/openspec-new-change`     | 新しい change を始め、アーティファクトを1つずつ進める |
+ | `/openspec-continue-change` | 既存 change の作業を続ける    |
+ | `/openspec-ff-change`      | fast-forward: 全アーティファクトを一度に作成 |
+ | `/openspec-verify-change`  | 実装がアーティファクトと一致するか検証    |
 
 ---
 
@@ -507,9 +526,9 @@ OpenSpec の完全なサイクルを完了しました:
 ```
 問題ありません。変更は `openspec status --change "<name>" --json` が返す `changeRoot` に保存されています。
 
-後で続きから再開するには:
-- `/openspec-continue-change <name>` - アーティファクト作成を再開（インストールされていなければ、`openspec status --change "<name>" --json` で次のアーティファクトを確認）
-- `/openspec-apply-change <name>` - 実装へ進む（tasksがある場合）
+後で続きから再開する際は、`openspec status --change "<name>" --json` で変更の現在の状態を確認できます。
+- `/openspec-continue-change <name>` - アーティファクト作成を再開
+- `/openspec-apply-change <name>` - 実装へ進む（tasks がある場合）
 
 作業は失われません。準備ができたらいつでも戻ってください。
 ```
@@ -523,23 +542,18 @@ OpenSpec の完全なサイクルを完了しました:
 ```
 ## OpenSpec クイックリファレンス
 
-**基本ワークフロー:**
+**インストール済みのコマンド:**
 
  | コマンド                 | 役割                                       |
  |--------------------------|--------------------------------------------|
- | `/openspec-propose <name>` | change を作成し、全アーティファクトを生成 |
- | `/openspec-explore`        | 問題を考える（コード変更なし）             |
- | `/openspec-apply-change <name>`   | タスクを実装                               |
- | `/openspec-archive-change <name>` | 完了時にアーカイブ                         |
-
-**追加コマンド**（インストール済みの場合のみ。利用可否はプロファイルによります）:
-
- | コマンド                  | 役割                                |
- |---------------------------|-------------------------------------|
- | `/openspec-new-change <name>`      | 新しい change を段階的に開始        |
- | `/openspec-continue-change <name>` | 既存 change を続行                  |
- | `/openspec-ff-change <name>`       | fast-forward: 全アーティファクトを一括作成 |
- | `/openspec-verify-change <name>`   | 実装を検証                          |
+ | `/openspec-propose <name>`  | change を作成し、全アーティファクトを生成 |
+ | `/openspec-explore`         | 問題を考える（コード変更なし）   |
+ | `/openspec-apply-change <name>`    | タスクを実装                            |
+ | `/openspec-archive-change <name>`  | 完了時にアーカイブ                          |
+ | `/openspec-new-change <name>`      | 新しい change を段階的に開始           |
+ | `/openspec-continue-change <name>` | 既存 change を続行                |
+ | `/openspec-ff-change <name>`       | fast-forward: 全アーティファクトを一括作成        |
+ | `/openspec-verify-change <name>`   | 実装を検証                      |
 
 `/openspec-propose` で最初の change を始めてみてください。
 ```

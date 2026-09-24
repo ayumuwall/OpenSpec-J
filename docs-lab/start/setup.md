@@ -42,7 +42,7 @@ init はプロジェクトに 2 つのものを作成します。
 - リポジトリのルートに`openspec/`フォルダ
 - AI ツールのフォルダ（`.agents/`、`.claude/`など）にワークフローファイル（スキルとコマンド）
 
-ほかのソースと同様に、すべてコミットしてください。理由は[FAQ](../help/faq.md)で説明しています。
+ほかのソースと同様に、すべてコミットしてください。
 init はリポジトリ内のほかの内容を変更しません。旧バージョンの OpenSpec が残したファイルを
 見つけた場合は、削除前に確認します。
 
@@ -58,7 +58,6 @@ openspec/
     └── archive/    完了した変更提案の移動先
 ```
 
-[コンセプト](../guides/concepts.md)で 2 種類のアーティファクトを、
 [プロジェクト設定](../customize/project-config.md)で`config.yaml`を説明しています。
 
 ### The workflow files (skills and commands)
@@ -122,5 +121,27 @@ openspec config profile
 
 「はい」と答えると、現在のプロジェクトへその場で適用します。ほかのプロジェクトでは、次回の
 `openspec update`時に適用されます。この設定はマシンごとのグローバル設定です。
+
+#### Claude Code にワークフローが表示されない
+
+Claude Code は配布設定に応じて、次の一方または両方から OpenSpec ワークフローを読み込みます。
+
+- **スキル**：`.claude/skills/openspec-*/SKILL.md`
+- **コマンド**：`.claude/commands/opsx/<id>.md`
+
+ファイルがなければ、ターミナルでプロジェクトを更新します。
+
+```bash
+openspec update
+```
+
+コマンドファイルがあるのに`/opsx:`で表示されなければ、Claude Code を更新して再起動します。それでも読み込まれなければ、ターミナルでスキルも有効にします。
+
+```bash
+openspec config set delivery both
+openspec update
+```
+
+Claude Code を再起動し、チャットで`/openspec-propose`を実行してください。一部のワークフローだけがない場合は、[プロファイルを変更](../customize/profiles.md#セットの拡張オプションのワークフロー)してください。
 
 セットアップは完了です。[クイックスタート](quickstart.md)で、最初の変更提案をここから進めます。

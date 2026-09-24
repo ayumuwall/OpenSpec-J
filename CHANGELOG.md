@@ -2,6 +2,151 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.13.2
+
+- **[OpenSpec-J]** OpenSpec v1.13.1・v1.13.2 の変更を取り込み、ドキュメント、CLI、スキーマ、生成スキル・コマンドの追加・変更文言を日本語化
+- **[OpenSpec-J]** 日本語化した診断とワークフローの判定を整合させ、承認・書き込み指示の回帰テストを日本語にも対応
+
+### パッチ変更
+
+- [#1940](https://github.com/Fission-AI/OpenSpec/pull/1940) [`0b5ce44`](https://github.com/Fission-AI/OpenSpec/commit/0b5ce44b55e0d793a312290ba5a41170a78e47c6) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成スキルとコマンドで、fast-forward の確認方針とオンボーディングのタスク承認を統一しました。fast-forward は重要なコンテキストが不明な場合だけ質問します。オンボーディングはタスク分割を保存する前に承認を求め、実装を始めるかどうかは別に確認します。
+
+- [#1926](https://github.com/Fission-AI/OpenSpec/pull/1926) [`f2812f6`](https://github.com/Fission-AI/OpenSpec/commit/f2812f6d185f47cb577055f2fe243f12000d6cd2) [@kevin9327](https://github.com/kevin9327) に感謝します！ - ### バグ修正
+
+  - **Archive**：Windows の `EPERM` により子要素のある変更ディレクトリを改名できない場合、同じ理由で失敗する退避用の改名を必須とせず、元の場所からコピーします。`EPERM` / `EXDEV` 以外の退避失敗では元のディレクトリを変更しません。
+
+    コピー元は書き込みが続く可能性のある変更ディレクトリなので、削除するのはコピーして一致を確認した項目だけです。コピー中に追加されたファイルは残し、復旧用にコピー先も保持します。
+
+    削除前には各項目を原子的に改名して確保し、コピーと再比較します。先に更新されたファイルは差異を検出して元に戻し、確保後に元のパスへ作られたファイルは削除しません。更新内容を保持し、移動が未完了であることを報告します。
+
+    新規仕様のロールバックでは、その処理が作成した機能ディレクトリだけを削除します。既存の空ディレクトリと権限は保持します。
+
+- [#1795](https://github.com/Fission-AI/OpenSpec/pull/1795) [`fb1b876`](https://github.com/Fission-AI/OpenSpec/commit/fb1b87613b7cdbe8d74e8147833904f46f0468c6) [@runsonmypc](https://github.com/runsonmypc) に感謝します！ - アーカイブのワークフローは `openspec list --json` が返すスキーマに基づくタスク進捗を使うようになりました。独自のタスクファイルや glob でも未完了タスクを警告します。
+
+- [#1885](https://github.com/Fission-AI/OpenSpec/pull/1885) [`fd56e12`](https://github.com/Fission-AI/OpenSpec/commit/fd56e12c9e7fdbbfdc2dcd0a5ef3fab04840909d) [@philo-x](https://github.com/philo-x) に感謝します！ - アーティファクト出力の解決でブレース展開と extglob に対応しました。リテラルの出力ファイル名を保持し、ブレース展開後のパスも変更ディレクトリ内に制限します。
+
+- [#1964](https://github.com/Fission-AI/OpenSpec/pull/1964) [`7ac58dc`](https://github.com/Fission-AI/OpenSpec/commit/7ac58dc7905a4eeaaad7eff2b2b64cf971fd6ec7) [@clay-good](https://github.com/clay-good) に感謝します！ - Continue 用コマンドの冒頭に、有効な OpenSpec ワークフローの指示を直接実行するよう明記しました。ローカルモデルがワークフロー名をツール名と誤認して呼び出す問題を修正します（[#1944](https://github.com/Fission-AI/OpenSpec/issues/1944)）。
+
+- [#1964](https://github.com/Fission-AI/OpenSpec/pull/1964) [`7ac58dc`](https://github.com/Fission-AI/OpenSpec/commit/7ac58dc7905a4eeaaad7eff2b2b64cf971fd6ec7) [@clay-good](https://github.com/clay-good) に感謝します！ - Kilo Code 用コマンドを `.kilocode/workflows/` ではなく、Kilo Code が読み取る `.kilo/command/` に生成します（[#1938](https://github.com/Fission-AI/OpenSpec/issues/1938)）。`openspec init` と旧形式のクリーンアップは、既知のファイル名で OpenSpec の旧生成物を識別して削除します。編集済みのコピーも対象ですが、別名のファイルは保持します。
+
+- [#1958](https://github.com/Fission-AI/OpenSpec/pull/1958) [`1d35e90`](https://github.com/Fission-AI/OpenSpec/commit/1d35e908804dbb3c4a1851516759c5de190aa4d5) [@clay-good](https://github.com/clay-good) に感謝します！ - 書き換え時に既存の改行コードを保持し、Windows でファイル全体が差分になる問題を修正しました。`openspec archive` は CRLF の仕様を CRLF のまま保存します。新規仕様は引き続き LF で作成します。
+
+  マーカー管理ファイルも同様です。CRLF の `.bashrc` / `.zshrc` に補完を追加・更新しても改行コードが混在せず、bash の `$'\r': command not found` を防ぎます。
+
+  `removeMarkerBlock` による旧生成物の削除でも改行コードを保持します。どちらの書き込みも最も多い改行コードを採用するため、LF のファイルに CRLF が1か所混ざっていても、全体を CRLF に変えません。
+
+  `scripts/pack-version-check.mjs` は `cross-spawn` で npm を起動します。`execFile` では `npm.cmd` を解決できない Windows でも公開前チェックを実行できます。
+
+- [#1912](https://github.com/Fission-AI/OpenSpec/pull/1912) [`8826c0c`](https://github.com/Fission-AI/OpenSpec/commit/8826c0c4a17d3511947b7c5e0934257f153f0ed2) [@Tyagiquamar](https://github.com/Tyagiquamar) に感謝します！ - Purpose がスペイン語の「Todo el…」やポルトガル語の「Todo o…」で始まるとき、`validate --strict` が `PURPOSE_IS_PLACEHOLDER` を誤報する問題を修正しました（[#1897](https://github.com/Fission-AI/OpenSpec/issues/1897)）。
+
+  - 大文字の `TBD` / `TODO` は、後続に関係なくプレースホルダーです。`TODO write this later` も報告します。
+  - それ以外の大文字・小文字表記は、直後が Purpose の末尾、改行、または `todo -` / `tbd.` のような区切り記号の場合だけマーカーとみなします。
+
+- [#1744](https://github.com/Fission-AI/OpenSpec/pull/1744) [`5b55263`](https://github.com/Fission-AI/OpenSpec/commit/5b5526377506c2f0179674a869c1ac64ca9ab72d) [@javigomez](https://github.com/javigomez) に感謝します！ - Codex の CLI、IDE、デスクトップアプリそれぞれの設定案内を明確にしました。
+
+- [#1809](https://github.com/Fission-AI/OpenSpec/pull/1809) [`a5ceea3`](https://github.com/Fission-AI/OpenSpec/commit/a5ceea32cf110b6d8bbfea0bf1c65fe55abb133b) [@ryandemelo](https://github.com/ryandemelo) に感謝します！ - シナリオ欠落の保護機能が働いたとき、`MODIFIED` が追加するシナリオも表示します（[#1809](https://github.com/Fission-AI/OpenSpec/pull/1809)）。`openspec validate` と `openspec archive` は、欠落名に加えて両側の件数と新規シナリオ名（最大3件）を示し、改名と切り詰めを区別しやすくします。検出条件と終了コードは変わりません。
+
+- [#1731](https://github.com/Fission-AI/OpenSpec/pull/1731) [`d6bdef6`](https://github.com/Fission-AI/OpenSpec/commit/d6bdef6577a077614382ef47b64100852182d6a6) [@runsonmypc](https://github.com/runsonmypc) に感謝します！ - `openspec list --json` に含まれないスキーマ名をワークフローが表示しないようにしました。update と continue は選択肢に `spec-driven` を補わず、bulk archive と explore は実際に返される変更フィールドだけを案内します。
+
+- [#1955](https://github.com/Fission-AI/OpenSpec/pull/1955) [`ed5d386`](https://github.com/Fission-AI/OpenSpec/commit/ed5d386a559c0215af1182d479d7f99b309fdcd2) [@clay-good](https://github.com/clay-good) に感謝します！ - 各タスクグループで、その変更に必要なテストとドキュメント更新まで完了するよう指示を改めました。末尾の別グループへの先送りを防ぎます。オンボーディングも同じ方針とし、公開スキーマリファレンスの古い指示を更新しました。
+
+- [#1939](https://github.com/Fission-AI/OpenSpec/pull/1939) [`a64303f`](https://github.com/Fission-AI/OpenSpec/commit/a64303fe1e24f08dbf44f78032fadbeac3a6f7fa) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec update --force` が旧形式だけの Codex インストールを置き換えられない場合、非ゼロの終了コードを返します。
+
+- [#1733](https://github.com/Fission-AI/OpenSpec/pull/1733) [`72fbe4c`](https://github.com/Fission-AI/OpenSpec/commit/72fbe4c904707396151921a20b506d081a9dc024) [@runsonmypc](https://github.com/runsonmypc) に感謝します！ - 完了済みの glob アーティファクトに不足ファイルがある場合、`/opsx:update` で作成できるようにしました。glob は1件でも一致すれば完了となり、`/opsx:continue` は `ready` だけを処理するため、従来の continue への案内では作成できませんでした。
+
+- [#1962](https://github.com/Fission-AI/OpenSpec/pull/1962) [`3364146`](https://github.com/Fission-AI/OpenSpec/commit/336414665f3f987ae424177ab1b6891a4304baeb) [@ryandemelo](https://github.com/ryandemelo) に感謝します！ - `/opsx:verify` が正しく削除された要件を未実装と報告する問題を修正しました。ADDED / MODIFIED は実装を確認し、REMOVED は振る舞いが消えていれば合格、残っていれば指摘します。RENAMED の旧名を未実装とは報告しません。
+
+- [#1732](https://github.com/Fission-AI/OpenSpec/pull/1732) [`072de6b`](https://github.com/Fission-AI/OpenSpec/commit/072de6bc39b1c47b9aacf4d484be16345ca4f38e) [@runsonmypc](https://github.com/runsonmypc) に感謝します！ - `/opsx:verify` が未実施の検査を合格と報告しないようにしました。タスク進捗は apply 指示のスキーマ対応 `tasks` / `progress` を使い、仕様・設計がないため実施できない検査を個別に示します。apply 指示は追跡対象のアーティファクト ID にかかわらず、設定されたパスや glob に一致する全タスクファイルを集計します。任意または意図的に省略したアーティファクトを必須にはしません。未実施の検査があれば、最終判定でアーカイブ準備完了とは述べません。
+
+- [#1769](https://github.com/Fission-AI/OpenSpec/pull/1769) [`d3d7707`](https://github.com/Fission-AI/OpenSpec/commit/d3d770736fc01bb246b4f12a7cef7e3572ec1fb6) [@kikeprzn](https://github.com/kikeprzn) に感謝します！ - Windows で `openspec archive` が `.openspec-archive.lock` を残す問題を修正しました。パスの stat が `dev: 0n`、開いたハンドルが実際のボリューム ID を返す場合、ロック所有権の照合が失敗していました。デバイス ID が得られない場合は比較対象から外しますが、削除前には引き続き inode とロック内容の一致を必須にします。
+
+## 1.13.1
+
+### パッチ変更
+
+- [#1864](https://github.com/Fission-AI/OpenSpec/pull/1864) [`767d63c`](https://github.com/Fission-AI/OpenSpec/commit/767d63c926ab1996170f2d101acac0bac6da0287) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - 既存要件と大文字・小文字や空白だけが異なる名前の ADDED や RENAMED 先を拒否します。従来は `Late Fees` に対する `late fees` の追加などで、矛盾する要件が重複して残っていました。既存の REMOVED と同じ形式で該当要件を示します。完全一致の重複エラー、自身の名前の大小文字だけを変える改名、先行する削除・改名で空いた名前への追加は従来どおりです。
+
+- [#1872](https://github.com/Fission-AI/OpenSpec/pull/1872) [`72bf760`](https://github.com/Fission-AI/OpenSpec/commit/72bf7600a5f7bdf74d6387e163577086fb4c68e0) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `openspec completion uninstall bash` が `.bashrc` をインストール前と同じ内容へ戻すようにしました。先頭の OpenSpec ブロックと一緒に追加した区切りの空行だけを取り除き、末尾改行、末尾の空行、CRLF を保持します。従来は末尾改行を消していたため、nvm、conda、rustup などが `>>` で追記すると最後の行と結合していました。ユーザーが別の位置へ移したブロックも削除できます。zsh、fish、PowerShell のインストーラーは変更しません。
+
+- [#1829](https://github.com/Fission-AI/OpenSpec/pull/1829) [`e67ac47`](https://github.com/Fission-AI/OpenSpec/commit/e67ac47f3a164cf6d87ddcd9f50272b88f39ee0c) [@choi138](https://github.com/choi138) に感謝します！ - 一括アーカイブで、既存のアーカイブ先の内側へ変更を移動する問題を修正しました。本仕様への書き込み前に全移動先を確認し、既存の移動先や選択変更間で重複する移動先は失敗として扱い、同期も移動もしません。他の変更は処理を続け、各移動の直前にも再確認します。
+
+- [#1878](https://github.com/Fission-AI/OpenSpec/pull/1878) [`2ef6fbd`](https://github.com/Fission-AI/OpenSpec/commit/2ef6fbde3da95f6e471bcb504d13711308091be0) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `openspec config edit` で `code --wait`、`subl -w`、`emacsclient -t` など引数付きの `EDITOR` / `VISUAL` を使えるようにしました。引用符付きの空白入りパスを考慮して実行ファイルと引数に分け、設定パスを独立した引数として追加します。シェルは介さず、メタ文字をそのまま渡します。Windows の `.cmd` に対応し、値全体が既存ファイルの絶対パスなら空白があっても従来どおりそのまま実行します。起動失敗、非ゼロ終了、シグナル終了はエディター名を含む1行のエラーと終了コード1で報告し、実行ファイルがなければインストールを案内します。`EDITOR` 優先と編集後の検証は維持します。
+
+- [#1773](https://github.com/Fission-AI/OpenSpec/pull/1773) [`11a9691`](https://github.com/Fission-AI/OpenSpec/commit/11a9691524bad84a575854bf6dc5124f630479ba) [@clay-good](https://github.com/clay-good) に感謝します！ - タスク解析で未知のチェックボックスを無視しないようにしました。空の `[]` や `[~]` などは未完了として数え、括弧内の空白を除いて `x` / `X` だけなら完了とします。進捗、apply の一覧、archive の確認、validate の番号検査を統一し、archive / bulk-archive / verify と spec-driven のタスク指示も同じ規則にしました。`- [Some doc](./doc.md)` や `- [A](https://example.com)` などの Markdown リンクは数えません。
+
+- [#1701](https://github.com/Fission-AI/OpenSpec/pull/1701) [`92fb72d`](https://github.com/Fission-AI/OpenSpec/commit/92fb72d1dcd5fa6e43802c5b2f74b5e78416e545) [@clay-good](https://github.com/clay-good) に感謝します！ - エージェントの archive / sync ワークフローは、本仕様がなければ ADDED 要件から作成します。MODIFIED / RENAMED の要件を推測したり、REMOVED だけの差分から空の仕様を作ったりせず、同期を止めます。ユーザーが明示的に同期なしのアーカイブを選ぶことは引き続き可能です。`retire_capabilities: true` の REMOVED のみの差分で本仕様がすでにない場合は、同期済みとみなします。[#1222](https://github.com/Fission-AI/OpenSpec/issues/1222) と [#1264](https://github.com/Fission-AI/OpenSpec/issues/1264) を修正。
+
+- [#1804](https://github.com/Fission-AI/OpenSpec/pull/1804) [`a5bf5c6`](https://github.com/Fission-AI/OpenSpec/commit/a5bf5c68447f03e4f99206e49e00b5d9111301a4) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - 仕様差分セクションの外にある `### Requirement:` を警告します。`## Notes`、誤記した `## Add Requirements`、最初の第2レベル見出しより前などにある要件について、validate と archive がセクション名と行番号を示します。これらの要件は引き続き適用されず、`--strict` 以外では警告だけで無効にはしません。コードフェンス内の例は対象外です。[#1803](https://github.com/Fission-AI/OpenSpec/issues/1803) を修正。
+
+- [#1832](https://github.com/Fission-AI/OpenSpec/pull/1832) [`4c369e0`](https://github.com/Fission-AI/OpenSpec/commit/4c369e022b1d397842d2b85675e34da6287f5801) [@clay-good](https://github.com/clay-good) に感謝します！ - explore の記録手順と書き込み承認の矛盾を解消しました。「変更として記録して」などの明示的な依頼は、その変更と依頼で指定したアーティファクトの作成への承認とみなします。エージェントから記録を提案する場合や依頼の範囲を超える場合は、従来どおり先に確認します。設計上の質問や確認への回答を、書き込みへの同意とはみなしません。スキル・コマンドの両方で統一し、[#1715](https://github.com/Fission-AI/OpenSpec/issues/1715) の保護を維持します。[#1828](https://github.com/Fission-AI/OpenSpec/issues/1828) を修正。
+
+- [#1788](https://github.com/Fission-AI/OpenSpec/pull/1788) [`62106f4`](https://github.com/Fission-AI/OpenSpec/commit/62106f40e3b7b7364529a2f928717e23e37282eb) [@clay-good](https://github.com/clay-good) に感謝します！ - explore の引き継ぎ先を明記しました。実装を断る案内、提案へ進む結び、終了時の要約、実装しない制約で `/opsx:propose` を示します。記録後は残りの計画に `/opsx:propose`、実装に `/opsx:apply` を案内し、記録への承認が実装への承認ではないことを明記します。
+
+  正規の `/opsx:<id>` 参照を各ツールの呼び出し形式へ変換します。対象ワークフローがない独自プロファイルでは、explore 自身の記録手順と `openspec instructions apply` を案内します。[#869](https://github.com/Fission-AI/OpenSpec/issues/869) を修正。
+
+- [#1787](https://github.com/Fission-AI/OpenSpec/pull/1787) [`9827762`](https://github.com/Fission-AI/OpenSpec/commit/9827762d2d18d8076acf90be79d64894255099ea) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - 全生成ワークフローは最初の書き込み前に `openspec list --json` の `root` を確認し、`"root": null` を未初期化と判定します。エージェントが自ら選んだスキルなら OpenSpec を使わず通常の依頼として処理します。ユーザーが名前で指定したワークフローやスラッシュコマンドなら停止し、初期化、ストア指定、OpenSpec を使わない処理のいずれかを確認します。解決できない `store:` 設定は未初期化と混同せず、そのエラーを表示します。暗黙の `openspec new change` によるルート作成を防ぎます。スキルの説明に OpenSpec を明記し、関係ないリポジトリでの選択を抑制します。CLI の `openspec new change` がルートを作成した場合は人間向け出力で知らせます。`--json` は変更しません。
+
+- [#1902](https://github.com/Fission-AI/OpenSpec/pull/1902) [`eb03b9e`](https://github.com/Fission-AI/OpenSpec/commit/eb03b9e93320cf74a0df9043577d8023116cb1aa) [@clay-good](https://github.com/clay-good) に感謝します！ - 未確認のクローン済みリポジトリに対する CLI の安全性を強化しました（[#1835](https://github.com/Fission-AI/OpenSpec/pull/1835)）。
+
+  - `config.yaml` の値がプロジェクトコンテキストのブロックを閉じて指示を挿入することを防ぎます。
+  - 細工された差分やスキルによる正規表現の過剰なバックトラッキングを防ぎます。
+  - 更新確認で `.npmrc` から平文 HTTP や攻撃者のレジストリを指定できないようにし、不正なレジストリでは確認を無効にします。
+  - `openspec update` が手動編集された生成 `SKILL.md` を検出・復元します。
+  - `DO_NOT_TRACK=true` など一般的な停止指定に対応し、初回通知前にはテレメトリーを送信しません。
+  - 補完インストールでパスを安全に引用し、Git の調査に時間・出力量の上限を設け、依存関係の既知の脆弱性を解消します。
+
+- [#1874](https://github.com/Fission-AI/OpenSpec/pull/1874) [`388d344`](https://github.com/Fission-AI/OpenSpec/commit/388d34473a40529320b2b7b9c5bb6723d18322b0) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - 旧形式のクリーンアップでユーザー独自ファイルを削除しないようにしました。Claude Code、CodeBuddy、Qoder、Lingma、Crush、Gemini CLI の `<tool>/commands/openspec/` は、OpenSpec マーカー付きの `proposal` / `apply` / `archive` ファイルだけを削除します。ユーザーが作った同名ファイルは残し、シンボリックリンクのフォルダはたどりません。空になったフォルダだけを削除し、残した項目を列挙します。OpenSpec 生成物がないフォルダは旧形式と報告しません。生成物だけのフォルダと空フォルダは従来どおり削除します。
+
+- [#1866](https://github.com/Fission-AI/OpenSpec/pull/1866) [`8146be5`](https://github.com/Fission-AI/OpenSpec/commit/8146be5546918cdffce860f1e327d929c5a49bd3) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `openspec list` が変更日時を調べる際、途中で削除されたファイル、リンク切れ、シンボリックリンクのループを無視するようにしました。Emacs の `.#tasks.md` など1件の解決不能な項目で一覧全体が失敗する問題を防ぎます。有効なリンクの日時取得と、権限エラーなど他の失敗の扱いは維持します。
+
+- [#1849](https://github.com/Fission-AI/OpenSpec/pull/1849) [`09a999b`](https://github.com/Fission-AI/OpenSpec/commit/09a999bbb258c2ad6d7cdc33436c698c15d4eebe) [@clay-good](https://github.com/clay-good) に感謝します！ - 名前空間フォルダ内に入れ子になった変更を診断します。変更は `changes/` 直下に置く必要があり、`changes/mobile/refresh-token/` の `mobile` を変更として扱わないようにしました。list、show、status、validate は入れ子の場所と平坦な配置例を示し、`list --json` は `warnings` を返し、archive は拒否します。検出範囲は `changes/` の下3階層までです。[#1846](https://github.com/Fission-AI/OpenSpec/issues/1846) を修正。
+
+- [#1902](https://github.com/Fission-AI/OpenSpec/pull/1902) [`eb03b9e`](https://github.com/Fission-AI/OpenSpec/commit/eb03b9e93320cf74a0df9043577d8023116cb1aa) [@clay-good](https://github.com/clay-good) に感謝します！ - Nix flake パッケージに bash、zsh、fish の補完を標準の `share/` 配下へ同梱しました。ホームディレクトリに `openspec completion install` を実行せず利用できます（[#1785](https://github.com/Fission-AI/OpenSpec/pull/1785)）。
+
+- [#1775](https://github.com/Fission-AI/OpenSpec/pull/1775) [`626269e`](https://github.com/Fission-AI/OpenSpec/commit/626269ed732250492d8bd220a83df23dd756ee5d) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成スキルとコマンドは、有効なプロファイルに含まれるワークフローだけを引き継ぎ先として示します。生成時に導入対象を確認し、存在しなければ `openspec status`、`openspec instructions`、`openspec archive` などの具体的な CLI 手順へ置き換えます。オンボーディングのコマンド表も導入済みワークフローから生成します。
+
+  同じ問題（[#1734](https://github.com/Fission-AI/OpenSpec/issues/1734)）を扱う [#1735](https://github.com/Fission-AI/OpenSpec/issues/1735) も統合しました。実行時に選ばれる CLI の指示は `openspec-continue-change` を指定せず、status で次の `ready` を選び、instructions で規則を読み、選択済みの `--store` を保つ復旧手順を示します。
+
+- [#1870](https://github.com/Fission-AI/OpenSpec/pull/1870) [`e01ed07`](https://github.com/Fission-AI/OpenSpec/commit/e01ed070f18e15529f82563d4c5af35d8124bad3) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `specs/<capability-path>/spec.md` 以外に書かれた仕様差分を検証エラーにします。`specs/user-auth.md` や同じ機能の別ファイルなど、差分セクションを含む Markdown について、ファイル名と移すべき `spec.md` を示します。archive は検証で拒否し、apply 指示は `warnings` に列挙します。`--no-validate`、仕様ファイルのない変更、差分セクションのないメモは従来どおりです。
+
+- [#1806](https://github.com/Fission-AI/OpenSpec/pull/1806) [`6e62b1d`](https://github.com/Fission-AI/OpenSpec/commit/6e62b1d522cfadb4b9836b63d5afa127bc950743) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `## RENAMED Requirements` の対応しない `FROM:` / `TO:` を行番号付きの ERROR として報告します。順序違い、連続する `FROM:`、末尾の `FROM:` を捨てたり誤って組み合わせたりせず、archive は修正まで拒否します。正しい連続ペアの動作は変わりません。[#1805](https://github.com/Fission-AI/OpenSpec/issues/1805) を修正。
+
+- [#1860](https://github.com/Fission-AI/OpenSpec/pull/1860) [`4b5c07a`](https://github.com/Fission-AI/OpenSpec/commit/4b5c07a0c2e5a4a1dcb3ed9f3a040f826eb7d457) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `### Requirement: Late Fees ###` のような CommonMark の閉じ記号を要件名から除きます。削除・変更・改名・重複判定で末尾の `#` を名前の一部として扱う問題を修正します。直前が空白またはタブの場合だけ除去するため、`C#` は保持します。
+
+- [#1868](https://github.com/Fission-AI/OpenSpec/pull/1868) [`7090e16`](https://github.com/Fission-AI/OpenSpec/commit/7090e16d74dfe588dad72bc4fda9bf124e71b0af) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `apply.requires` に未定義のアーティファクト ID があるスキーマを拒否します。`desgin` のような誤記で apply の前提条件が無効になる問題を防ぎ、不正な ID と有効な ID を示します。また `apply.tracks` がどの `generates` とも文字列として完全一致しなければ、schema validate が警告します。`tasks/main.md` と `tasks/*.md` のような組み合わせも対象ですが、追跡パス自体は引き続き読み取るため、手書きファイルを追跡するスキーマは利用できます。
+
+- [#1856](https://github.com/Fission-AI/OpenSpec/pull/1856) [`46ff91f`](https://github.com/Fission-AI/OpenSpec/commit/46ff91f2d626ef2c3f9f55ff345aa23cd44a6e95) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `openspec show --json --deltas-only` が archive と同じ差分を返すようにしました。`ChangeParser` は `parseDeltaSpec` から全操作を取得し、箇条書きの REMOVED、繰り返しセクション、`*` / `+` の RENAMED も扱います。差分セクションがある場合は提案の What Changes から操作を補いません。要件本文・シナリオの読み取りは維持し、差分ファイルや差分セクションがない旧形式では従来のフォールバックを保ちます。
+
+- [#1786](https://github.com/Fission-AI/OpenSpec/pull/1786) [`8b99c07`](https://github.com/Fission-AI/OpenSpec/commit/8b99c07bd0d455f72e746d3950f03e52a025d655) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec status` のテキスト出力に、変更を次へ進めるコマンドを追加しました。計画中は次の ready アーティファクトの `openspec instructions`、計画完了後は `openspec instructions apply` を末尾に表示します。ストアの場合は `--store <id>` を付けます。JSON の `nextSteps` と同じ情報源から生成します。
+
+- [#1882](https://github.com/Fission-AI/OpenSpec/pull/1882) [`208b5b5`](https://github.com/Fission-AI/OpenSpec/commit/208b5b55106fbeda2ed9f099671b8ce85a01cbaa) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `specs` / `changes` という名前のストアがルート選択を誤らせる問題を修正しました。ストアのメタデータを持つディレクトリを親の計画用ディレクトリとはみなさないため、`~/openspec/specs` などがあってもホームをプロジェクトルートと誤認しません。通常のプロジェクトの `openspec/specs/` / `openspec/changes/` は変更しません。
+
+- [#1880](https://github.com/Fission-AI/OpenSpec/pull/1880) [`9f8dec5`](https://github.com/Fission-AI/OpenSpec/commit/9f8dec5dd937da78bbdaeff5e5dfd041bb43cf5c) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `openspec store remove` の削除先の内側に別の登録済みストアがあれば、削除を拒否します。登録ロック内で確認し、該当ストアと先に実行する `openspec store unregister` を示します。サブモジュールなどの入れ子の未コミット作業を巻き込んで削除する問題を防ぎます。兄弟ディレクトリのストアと、入れ子の登録自体の扱いは変わりません。
+
+- [#1884](https://github.com/Fission-AI/OpenSpec/pull/1884) [`5d22145`](https://github.com/Fission-AI/OpenSpec/commit/5d221456e57feb9277de40482fade427201b9bdb) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - `openspec store setup --no-init-git` で既存 Git リポジトリ内にストアを作成できます。Git を初期化しない場合は入れ子のリポジトリ検査を省き、親の remote も記録しません。既定の setup と明示的な `--init-git` は引き続き拒否します。
+
+- [#1862](https://github.com/Fission-AI/OpenSpec/pull/1862) [`8fc65b7`](https://github.com/Fission-AI/OpenSpec/commit/8fc65b7f70c4bd730a1dbe500cbe165d156f3c58) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - CommonMark の全リスト記号でタスクを数えます。`-` / `*` に加え、`+`、`1.`、`1)`（番号は最大9桁）のチェックボックスを、list、status、view、apply 指示、validate --archived、archive の未完了確認で扱います。入れ子、CRLF、記号直後の空白省略にも対応し、番号検査も同じ対象を読み取ります。チェックボックスのない通常のリスト項目は数えません。
+
+- [#1777](https://github.com/Fission-AI/OpenSpec/pull/1777) [`3312af4`](https://github.com/Fission-AI/OpenSpec/commit/3312af4799eb162d3ddb7804d643ace5282c22cb) [@clay-good](https://github.com/clay-good) に感謝します！ - 生成する proposal、spec、design、tasks の先頭に第1レベル見出しを追加し、markdownlint の MD041 を防ぎます。`openspec schema init` の独自テンプレートも同様です。
+
+  提案のタイトルがテンプレートどおりの `# Proposal` の場合、`openspec show --json` と `openspec change list --json` は引き続き変更 ID を名前に使います。
+
+- [#1778](https://github.com/Fission-AI/OpenSpec/pull/1778) [`7de2404`](https://github.com/Fission-AI/OpenSpec/commit/7de24044ef4c635f634b78fa6bc4b5905967bfd8) [@clay-good](https://github.com/clay-good) に感謝します！ - 一覧にない AI ツール向けの汎用選択肢を見つけやすくしました。init は「Other / Universal（共有 .agents スキル）」を表示し、`universal`、`other`、`generic`、`custom`、`proprietary`、`unlisted`、`unsupported`、`vendor-neutral`、`agents.md` で検索できます。検索結果がない場合と `--tools <unknown>` のエラーでも案内します。検索は句読点・記号も受け付け、`.agents` や `amazon-q` を入力できます。
+
+- [#1876](https://github.com/Fission-AI/OpenSpec/pull/1876) [`605d9e7`](https://github.com/Fission-AI/OpenSpec/commit/605d9e7a2bb5c1bab90268933f9b84ff1eb8807c) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - 解析不能なグローバル設定を暗黙に上書きしないようにしました。JSON の誤記や、ルートが `null`・配列・文字列などの場合、テレメトリーと更新確認は停止扱いにします。`config set` / `unset` / `profile` はファイル名と `openspec config edit` を案内して拒否します。`config reset --all` による置き換え、既存の不正 JSON 警告、正常な設定や設定がない場合の動作は維持します。
+
+- [#1840](https://github.com/Fission-AI/OpenSpec/pull/1840) [`fede536`](https://github.com/Fission-AI/OpenSpec/commit/fede536c27e03c1aaa3c17caffa837f483d9e9b9) [@clay-good](https://github.com/clay-good) に感謝します！ - `/opsx:update` の書き込み承認手順を統一しました。手順4は会話内に修正案を提示し、手順5がユーザーの承認後にすべてのアーティファクト書き込みを行います。「要求された編集を適用」と「各修正の承認を待つ」の矛盾を解消します。[#1836](https://github.com/Fission-AI/OpenSpec/issues/1836) を修正。
+
+- [#1858](https://github.com/Fission-AI/OpenSpec/pull/1858) [`db560ae`](https://github.com/Fission-AI/OpenSpec/commit/db560ae33f565b76ebbc040782ec7007295e8133) [@dwin-gharibi](https://github.com/dwin-gharibi) に感謝します！ - 見出しだけのシナリオを validate が有効と扱う問題を修正しました。archive と共通の `hasScenarioBody` と本文境界で判定し、該当要件名と、本文のない見出しは数えないことを表示します。フェンスやより深い見出しだけの本文は有効です。実体のあるシナリオが1件でもある要件と本仕様の検証は従来どおりです。
+
+- [#1774](https://github.com/Fission-AI/OpenSpec/pull/1774) [`09984b8`](https://github.com/Fission-AI/OpenSpec/commit/09984b824254f9e35bcdf628fdb052a689a57f37) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **チェックボックスのないタスクリストを検出**：追跡対象のタスクファイルにリスト項目はあるのにチェックボックスが1つもない場合、`openspec validate` が警告し、最初の該当行を示します。
+
+- [#1852](https://github.com/Fission-AI/OpenSpec/pull/1852) [`5f5914e`](https://github.com/Fission-AI/OpenSpec/commit/5f5914e7f7a817262c7564ac92694db833564978) [@clay-good](https://github.com/clay-good) に感謝します！ - 各ワークフロースキルの説明に `openspec propose`、`opsx apply` などユーザーが入力する表現を追加しました。CLI で手作業する依頼と誤認せず、対応ワークフローを選べるようにします。`openspec update` で反映できます。生成物を更新する実在の CLI `openspec update` は対象とせず、変更更新ワークフローは `openspec update change` に対応付けます。コマンドのみの導入は変更しません。[#1221](https://github.com/Fission-AI/OpenSpec/issues/1221) を修正。
+
 ## 1.13.0
 
 - **[OpenSpec-J]** upstream v1.13.0 に追従。apply の警告と依存関係の案内、提案前のコンテキスト確認、既存仕様の調査手順、追加ワークフローの案内を日本語化しました。既存の日本語訳と日本語版固有の設定を維持しています。

@@ -30,8 +30,20 @@ export interface PurposePlaceholderIssue {
  * Purposeの先頭にある `TBD` または `TODO`。先読みで `TBDs` や `TODOs` のような
  * 長い単語を除外し、`TODO:` や `TBD -` の句読点は許可する。Purposeはラテン文字以外も
  * 含むため、ASCIIの `\b` だけでなく文字、数字、結合文字をすべて除外対象にする。
+ * 大文字のマーカーは後続内容を問わず検出する。それ以外は句読点または行末が続く場合のみ
+ * 検出し、スペイン語やポルトガル語の通常の文頭にある Todo を誤検出しない。
  */
-const LEADING_MARKER = /^(?:TBD|TODO)(?![\p{L}\p{N}\p{M}_])/iu;
+const WORD_END = '(?![\\p{L}\\p{N}\\p{M}_])';
+const MARKER_PUNCTUATION = '(?=[ \\t]*(?:$|\\n|[:\\-\u2013\u2014.,;()\\[\\]{}]))';
+
+/** `TBD`/`TODO` in capitals: the marker, whatever follows it. */
+const LEADING_MARKER_SHOUTED = new RegExp(`^(?:TBD|TODO)${WORD_END}`, 'u');
+
+/** Any other case: a marker only when punctuation or the line end says so. */
+const LEADING_MARKER_PUNCTUATED = new RegExp(
+  `^(?:TBD|TODO)${WORD_END}${MARKER_PUNCTUATION}`,
+  'iu'
+);
 
 const PURPOSE_HEADER = /^ {0,3}##(?!#)[ \t]+Purpose[ \t]*$/i;
 const TOP_LEVEL_HEADER = /^ {0,3}#{1,2}(?!#)[ \t]+/;
@@ -73,7 +85,8 @@ export function findPurposePlaceholderIssue(
   // 空のPurposeはどちらの規則にも一致せず、nullになる。コードフェンスだけの
   // Purposeも同様に、文字数または空Purposeの規則へ任せる。
   const prose = unfencedLines(overview).join('\n').trim();
-  const leading = LEADING_MARKER.test(prose);
+  const leading =
+    LEADING_MARKER_SHOUTED.test(prose) || LEADING_MARKER_PUNCTUATED.test(prose);
   if (!leading && generatedPlaceholderPrefixIndex(prose) === undefined) return null;
   // どの規則に一致したかで位置が変わる。両方に一致した場合は、読者が先に目にする
   // 先頭マーカーの位置を優先する。

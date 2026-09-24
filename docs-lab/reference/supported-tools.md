@@ -34,7 +34,7 @@
 | Hermes Agent                      | `hermes`         | `.hermes/skills/`                  | `/openspec-apply-change`       | なし                         | なし               |
 | iFlow                             | `iflow`          | `.iflow/skills/`                   | `/openspec-apply-change`       | `.iflow/commands/`           | `/opsx-apply`      |
 | Junie                             | `junie`          | `.junie/skills/`                   | `/openspec-apply-change`       | `.junie/commands/`           | `/opsx-apply`      |
-| Kilo Code                         | `kilocode`       | `.kilocode/skills/`                | `/openspec-apply-change`       | `.kilocode/workflows/`       | `/opsx-apply`      |
+| Kilo Code                         | `kilocode`       | `.kilocode/skills/`                | `/openspec-apply-change`       | `.kilo/command/`       | `/opsx-apply`      |
 | Kimi Code                         | `kimi`           | `.kimi-code/skills/`               | `/skill:openspec-apply-change` | なし                         | なし               |
 | Kiro                              | `kiro`           | `.kiro/skills/`                    | `/openspec-apply-change`       | `.kiro/prompts/`             | `/opsx-apply`      |
 | Lingma                            | `lingma`         | `.lingma/skills/`                  | `/openspec-apply-change`       | `.lingma/commands/opsx/`     | `/opsx:apply`      |
@@ -48,7 +48,7 @@
 | Trae                              | `trae`           | `.trae/skills/`                    | `/openspec-apply-change`       | `.trae/commands/`            | `/opsx-apply`      |
 | ZCode                             | `zcode`          | `.zcode/skills/`                   | `/openspec-apply-change`       | `.zcode/commands/opsx/`      | `/opsx:apply`      |
 | Zoo Code                          | `roocode`        | `.roo/skills/`                     | `/openspec-apply-change`       | `.roo/commands/`             | `/opsx-apply`      |
-| 共有 `.agents` スキル             | `agents`         | `.agents/skills/`                  | `/openspec-apply-change`       | なし                         | なし               |
+| Other / Universal             | `agents`         | `.agents/skills/`                  | `/openspec-apply-change`       | なし                         | なし               |
 
 - **スキルの呼び出し**：ツールがスキルを入力可能な項目として登録するかどうかは、各ツール側の動作です。
   この列は、生成ファイルと init が表示するヒントで OpenSpec が使用する表記を示します。
@@ -79,8 +79,11 @@ Cline は`.cline/`フォルダではなく、`.clinerules/workflows/`からコ�
 
 ### Codex
 
-- **呼び出し**：`$openspec-<skill>`と入力します。Codex は
-  `/openspec-<skill>`形式を認識しません（[上流の Issue](https://github.com/openai/codex/issues/11817)）。
+- **CLI と IDE 拡張機能**：アイデアとともに`$openspec-propose`を指定するか、
+  `/skills`でスキルを選択します。Codex は`/openspec-propose`を認識しません
+  （[上流の Issue](https://github.com/openai/codex/issues/11817)）。
+- **デスクトップアプリ**：サイドバーの Skills を開き、`openspec-propose`を選択します。
+  両方の操作方法は[OpenAI のスキルドキュメント](https://learn.chatgpt.com/docs/build-skills)を参照してください。
 - **コマンドファイルなし**：Codex はスキルを直接実行します。そのため、配布設定にコマンドが含まれていても
   init はコマンドを省略し、`Commands skipped for: codex (uses skills)`と表示します。
 - **共有フォルダ**：Codex のスキルは、Antigravity、Zed Agent、`agents`ターゲットと同じ
@@ -99,8 +102,13 @@ Cline は`.cline/`フォルダではなく、`.clinerules/workflows/`からコ�
 
 ### GitHub Copilot
 
-プロンプトファイルは、Copilot の IDE 拡張機能（VS Code、JetBrains、Visual Studio）で
-スラッシュコマンドとして登録されます。Copilot CLI は`.github/prompts/`を読み込みません。
+- **IDE 拡張機能（コマンド形式）**：VS Code、JetBrains、Visual Studio は
+  `.github/prompts/opsx-<id>.prompt.md`を`/opsx-<id>`として読み込みます。
+  ファイルがあるのにコマンドが消えた場合は、IDE を再起動してください。
+- **Copilot CLI（スキル形式）**：`.github/prompts/`は読み込まず、
+  `.github/skills/openspec-*/SKILL.md`を使います。呼び出しは`/openspec-<skill>`です。
+  ファイルがあるのにスキルが消えた場合は、`/skills reload`を実行し、
+  `/skills info openspec-propose`で認識されたことを確認してください。
 
 ### Hermes Agent
 
@@ -115,10 +123,12 @@ Hermes は既定では`~/.hermes/skills/`からのみスキルを読み込みま
 - **プロジェクト間で安全**：コマンドのみを配布する設定でもグローバルスキルは残ります。
   そのため、あるプロジェクトの設定によって、別のプロジェクトが使用するスキルが削除されることはありません。
 
-### 共有 `.agents` スキル
+### Other / Universal（共有 `.agents` スキル）
 
 - **適しているツール**：共有`.agents/skills/`フォルダを読み込むすべてのツールが対象です。
-  対応一覧に行がないツールも含みます。
+  対応一覧に行がないツールも含みます。一覧にないアシスタントでは、この項目を選びます。
+  init の検索欄では`universal`、`other`、`generic`、`custom`、`proprietary`、
+  `unlisted`、`unsupported`、`vendor-neutral`、`agents.md`で見つかります。
 - **他のターゲットとの併用**：Antigravity、Codex、Zed Agent、このターゲットは、1 つの物理的な
   スキルツリーを共有します。OpenSpec は`.openspec-target`へ書き込み元を 1 つ記録し、実行ごとに
   ツリーを一度だけ書き込みます。各ツール固有のコマンドファイルは引き続き生成されます。

@@ -8,7 +8,7 @@ describe('command-generation/generator', () => {
   const sampleContent: CommandContent = {
     id: 'explore',
     name: 'OpenSpec Explore',
-    description: 'Enter explore mode',
+    description: '探索モードに入ります',
     category: 'Workflow',
     tags: ['workflow'],
     body: 'Command body here.',

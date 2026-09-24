@@ -12,7 +12,11 @@ import {
   isSchemaDir,
   listSchemas,
 } from '../core/artifact-graph/resolver.js';
-import { parseSchema, SchemaValidationError } from '../core/artifact-graph/schema.js';
+import {
+  findApplyTracksWarning,
+  parseSchema,
+  SchemaValidationError,
+} from '../core/artifact-graph/schema.js';
 import type { SchemaYaml, Artifact } from '../core/artifact-graph/types.js';
 import { resolveConfigFilePath } from '../core/project-config.js';
 import { FileSystemUtils } from '../utils/file-system.js';
@@ -227,13 +231,20 @@ function validateSchema(
     }
   }
 
-  // Dependency graph validation is already done by parseSchema
-  // (it throws on cycles and invalid references)
+  // Dependency graph validation is already done by parseSchema (it throws on
+  // cycles, invalid references, and an unknown apply.requires id)
   if (verbose) {
     console.log('  依存グラフの検証に合格しました（parseSchema 経由）');
   }
 
-  return { valid: issues.length === 0, issues };
+  // An apply.tracks value that matches no generates value exactly still loads
+  // (apply reads the path as written), so it is a warning, not an error.
+  const tracksWarning = findApplyTracksWarning(schema);
+  if (tracksWarning) {
+    issues.push({ level: 'warning', path: 'apply.tracks', message: tracksWarning });
+  }
+
+  return { valid: !issues.some((issue) => issue.level === 'error'), issues };
 }
 
 /**
@@ -740,6 +751,9 @@ export function registerSchemaCommand(program: Command): void {
         } else {
           if (result.valid) {
             console.log(`✓ スキーマ '${name}' は有効です`);
+            for (const issue of result.issues) {
+              console.log(`  ${issue.level}: ${issue.message}`);
+            }
           } else {
             console.log(`✗ スキーマ '${name}' にエラーがあります:`);
             for (const issue of result.issues) {
@@ -1407,11 +1421,17 @@ export function registerSchemaCommand(program: Command): void {
 
 /**
  * Create default template content for an artifact.
+ *
+ * Every template opens with a top-level heading so the artifact it produces is
+ * a well-formed markdown document rather than a file whose first line is a
+ * section header (markdownlint MD041, #1138).
  */
 function createDefaultTemplate(artifactId: string): string {
   switch (artifactId) {
     case 'proposal':
-      return `## Why
+      return `# Proposal
+
+## Why
 
 <!-- この変更の動機を説明します -->
 
@@ -1433,7 +1453,9 @@ function createDefaultTemplate(artifactId: string): string {
 `;
 
     case 'specs':
-      return `## ADDED Requirements
+      return `# Spec Delta
+
+## ADDED Requirements
 
 ### Requirement: <!-- 要件名 -->
 
@@ -1445,7 +1467,9 @@ function createDefaultTemplate(artifactId: string): string {
 `;
 
     case 'design':
-      return `## Context
+      return `# Design
+
+## Context
 
 <!-- 背景と現状 -->
 
@@ -1472,7 +1496,9 @@ function createDefaultTemplate(artifactId: string): string {
 `;
 
     case 'tasks':
-      return `## Implementation Tasks
+      return `# Tasks
+
+## Implementation Tasks
 
 - [ ] タスク1
 - [ ] タスク2
@@ -1480,7 +1506,7 @@ function createDefaultTemplate(artifactId: string): string {
 `;
 
     default:
-      return `## ${artifactId}
+      return `# ${artifactId}
 
 <!-- ここに内容を追加 -->
 `;

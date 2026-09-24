@@ -16,6 +16,6 @@ Git に関する質問には 1 行で「はい」と答え、チーム規約を�
 
 ## 使用中のツールで OpenSpec は動作しますか？
 
-[サポート一覧](../reference/supported-tools.md)に掲載されていれば動作します。init でその ID を選んでください。一覧になくても共有`.agents/skills/`フォルダを読み込むツールなら、**Shared `.agents` skills**（`--tools agents`）を選びます。どちらにも該当しない場合は、[OpenSpec リポジトリ](https://github.com/Fission-AI/OpenSpec/issues)で対応をリクエストしてください。
+[サポート一覧](../reference/supported-tools.md)に掲載されていれば動作します。init でその ID を選んでください。一覧になくても共有`.agents/skills/`フォルダを読み込むツールなら、**Other / Universal**（`--tools agents`）を選びます。サポート一覧の Other / Universal の節で説明しています。どちらにも該当しない場合は、[OpenSpec リポジトリ](https://github.com/Fission-AI/OpenSpec/issues)で対応をリクエストしてください。
 
 ## 以前の /openspec:\* コマンドはどこへ移りましたか？

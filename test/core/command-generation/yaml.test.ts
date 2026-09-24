@@ -15,8 +15,8 @@ function roundTrip(value: string): unknown {
 
 describe('command-generation/yaml escapeYamlValue', () => {
   it('quotes plain values for safe string serialization', () => {
-    expect(escapeYamlValue('Enter explore mode for thinking')).toBe(
-      '"Enter explore mode for thinking"'
+    expect(escapeYamlValue('探索モードに入ります for thinking')).toBe(
+      '"探索モードに入ります for thinking"'
     );
   });
 
@@ -55,7 +55,7 @@ describe('command-generation/yaml escapeYamlValue', () => {
 
   describe('round-trips through a real YAML parser', () => {
     const cases: Array<[string, string]> = [
-      ['plain', 'Enter explore mode'],
+      ['plain', '探索モードに入ります'],
       ['colon', 'Fix: regression in parser'],
       ['double quotes', 'Fix the "auth" feature'],
       ['backslash', 'path\\to\\thing'],

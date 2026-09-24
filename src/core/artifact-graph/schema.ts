@@ -38,6 +38,9 @@ export function parseSchema(yamlContent: string): SchemaYaml {
   // Check that all requires references are valid
   validateRequiresReferences(schema.artifacts);
 
+  // Check that the apply phase names artifacts this schema declares
+  validateApplyReferences(schema);
+
   // Check for cycles
   validateNoCycles(schema.artifacts);
 
@@ -72,6 +75,61 @@ function validateRequiresReferences(artifacts: Artifact[]): void {
       }
     }
   }
+}
+
+/**
+ * Validates that every `apply.requires` id is an artifact the schema declares.
+ *
+ * Apply skips an id that no artifact declares, so a typo silently dropped that
+ * artifact from the apply gate. An unknown artifact `requires` is already a
+ * load error, and this is the same kind of reference.
+ *
+ * `apply.tracks` is deliberately not checked here. It is a path, not an id:
+ * apply reads it as written, so a schema whose `tracks` value does not exactly
+ * match any `generates` value (a hand-written `TODO.md`, or `tasks/main.md`
+ * under a glob `generates: tasks/*.md` that really does produce it) works
+ * today, and failing the load would break every command on it.
+ * `openspec schema validate` reports that case as a warning instead
+ * (see `findApplyTracksWarning`).
+ */
+function validateApplyReferences(schema: SchemaYaml): void {
+  const apply = schema.apply;
+  if (!apply) return;
+
+  const validIds = schema.artifacts.map(a => a.id);
+  for (const req of apply.requires) {
+    if (!validIds.includes(req)) {
+      throw new SchemaValidationError(
+        `apply.requires の参照が不正です: '${req}' は存在しません（アーティファクト: ${validIds.join(', ')}）`
+      );
+    }
+  }
+}
+
+/**
+ * Describes an `apply.tracks` value that is not exactly equal to any artifact's
+ * `generates` value, or returns undefined when there is nothing to report.
+ *
+ * The tracked-tasks lookups select the artifact whose `generates` string equals
+ * `tracks`, so this is a progress-discovery problem, not a claim that nothing
+ * produces the file: a glob `generates: tasks/*.md` really does generate
+ * `tracks: tasks/main.md`, yet the strings differ, so the lookup still misses.
+ * Either way apply keeps working (it reads the path directly), but `openspec
+ * list` and `openspec status` fall back to counting the top-level `tasks.md`,
+ * and apply's remedy cannot name an artifact to build. A typo such as
+ * `task.md` is the other usual cause.
+ */
+export function findApplyTracksWarning(schema: SchemaYaml): string | undefined {
+  const tracks = schema.apply?.tracks;
+  if (tracks == null || schema.artifacts.some(a => a.generates === tracks)) return undefined;
+  return (
+    `apply.tracks '${tracks}' は、どのアーティファクトの generates 値とも完全一致しません。` +
+    `（generates: ${schema.artifacts.map(a => a.generates).join(', ')}）。` +
+    `そのため、OpenSpec はどのアーティファクトの進捗を追跡するか判別できません。` +
+    `apply は指定されたファイルを読み取りますが、list と status は代わりに tasks.md を集計します。` +
+    `apply.tracks をいずれかの generates 値と完全に一致させるか、` +
+    `そのファイルをアーティファクトグラフの外で管理していることを確認してください。`
+  );
 }
 
 /**

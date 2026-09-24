@@ -15,8 +15,8 @@ CLI はマシン単位の設定を、macOS と Linux では`~/.config/openspec/c
 | `workflows`    | 文字列のリスト                                 | いいえ | `custom`プロファイルがインストールするワークフロー一覧です                        |
 | `featureFlags` | フラグと真偽値のマップ                         | いいえ | 真偽値で指定する機能フラグです                                                    |
 | `defaultStore` | 文字列                                         | いいえ | ルート解決で使うマシン単位の代替ストアです                                        |
-| `openers`      | リスト                                         | いいえ | workset を開くツールと、各ツールの起動方法です                                    |
-| `telemetry`    | マップ                                         | いいえ | CLI が保持する匿名 ID と通知表示済み状態です                                      |
+| `openers`      | ツール ID と設定のマップ                                         | いいえ | workset を開くツールと、各ツールの起動方法です                                    |
+| `telemetry`    | マップ                                         | いいえ | テレメトリーの停止設定、匿名 ID、通知表示済み状態です                                      |
 
 ### profile
 
@@ -40,11 +40,45 @@ init がワークフローをスキル、スラッシュコマンド、または
 
 ### openers
 
-workset を開けるツールと、各ツールの起動方法です。各項目は手作業で編集し、使用時に検証されます。項目には`style`（`workspace-file`または`attach-dirs`）、`label`、`command`、`args`、`attach_flag`を設定できます。組み込みの既定値へ項目ごとにマージされます。
+workset を開くツールを、ツール ID をキーとして指定します。ターミナルで`openspec config edit`を実行し、グローバル`config.json`の`openers`を編集してください。
+
+| フィールド | 仕様 |
+| --- | --- |
+| `style` | `workspace-file`または`attach-dirs`。新規ツールでは必須、組み込みでは任意です。 |
+| `label` | 選択画面に表示する空でない文字列。新規ツールの既定値は ID です。 |
+| `command` | 空でない実行ファイル名またはパス。新規ツールの既定値は ID です。引数はこの文字列ではなく`args`に指定します。 |
+| `args` | ワークスペースファイルや接続フラグの前に渡す文字列配列。新規ツールの既定値は`[]`です。 |
+| `attach_flag` | `attach-dirs`で各メンバーパスと対にする空でない文字列。新規ツールの既定値は`--add-dir`です。`workspace-file`では無視します。 |
+
+**組み込み設定の上書き**：`code`、`cursor`、`claude`、`codex`で省略したフィールドは既存値を保持します。`args`を設定すると引数一覧全体を置き換え、`[]`なら空にします。
+
+**起動方式**：`workspace-file`は生成した`.code-workspace`のパスを実行ファイルへ渡します。`attach-dirs`は主メンバーを含む各メンバーに、フラグとパスの組を渡します。
+
+**利用可否**：Claude Code と Codex を含む`attach-dirs`は既定で無効です。`--tool`で選択・保存できず、保存済みの workset に指定されていても起動を拒否します。設定の上書きでは有効になりません。
+
+**検証**：不明なフィールド、不正な型、新規ツールの`style`省略は、workset コマンドが設定表を読み取るときにエラーになります。
+
+次の例は VS Code Insiders を追加し、組み込みの VS Code の起動時に`--new-window`を渡します。
+
+```json
+{
+  "openers": {
+    "code-insiders": {
+      "style": "workspace-file",
+      "label": "VS Code Insiders"
+    },
+    "code": {
+      "args": ["--new-window"]
+    }
+  }
+}
+```
+
+対応する`code-insiders`または`code`実行ファイルをインストールし、`PATH`から利用できる必要があります。
 
 ### telemetry
 
-CLI がテレメトリ用に書き込む状態です。匿名 ID と、初回通知を表示済みかどうかを含みます。これはオプトアウト設定ではありません。テレメトリを無効にする環境変数は[環境変数](environment-variables.md)を参照してください。
+CLI は匿名 ID と初回通知の表示済み状態を保存します。テレメトリーを無効にするには`telemetry.enabled`を`false`にします。環境変数`OPENSPEC_TELEMETRY=0`または`DO_NOT_TRACK=1`でも停止できます。
 
 ## 例
 

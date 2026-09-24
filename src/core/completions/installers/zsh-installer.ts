@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import { FileSystemUtils } from '../../../utils/file-system.js';
 import { InstallationResult } from '../factory.js';
+import { shellSingleQuote } from './shell-quote.js';
 
 /**
  * Installer for Zsh completion scripts.
@@ -119,7 +120,7 @@ export class ZshInstaller {
   private generateZshrcConfig(completionsDir: string): string {
     return [
       '# OpenSpec シェル補完の設定',
-      `fpath=("${completionsDir}" $fpath)`,
+      `fpath=(${shellSingleQuote(completionsDir)} $fpath)`,
       'autoload -Uz compinit',
       'compinit',
     ].join('\n');
@@ -377,7 +378,7 @@ export class ZshInstaller {
         '補完を有効にするには、次を ~/.zshrc に追加してください:',
         '',
         `  # 補完ディレクトリを fpath に追加`,
-        `  fpath=(${completionsDir} $fpath)`,
+        `  fpath=(${shellSingleQuote(completionsDir)} $fpath)`,
         '',
         '  # 補完システムを初期化',
         '  autoload -Uz compinit',
