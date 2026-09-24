@@ -885,6 +885,7 @@ export class Validator {
     if (
       msg.includes('Spec must have a Purpose section') ||
       msg.includes('Spec must have a Requirements section') ||
+      msg.includes('Requirements セクションは必須です') ||
       msg.includes(VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY) ||
       msg.includes(VALIDATION_MESSAGES.SPEC_NO_REQUIREMENTS)
     ) {

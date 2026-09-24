@@ -36,6 +36,7 @@ import type {
 } from '../../../src/core/command-generation/types.js';
 import { CommandAdapterRegistry } from '../../../src/core/command-generation/registry.js';
 import { generateCommand } from '../../../src/core/command-generation/generator.js';
+import { ALL_WORKFLOWS } from '../../../src/core/profiles.js';
 import { getCommandContents } from '../../../src/core/shared/skill-generation.js';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
@@ -593,6 +594,19 @@ describe('command-generation/adapters', () => {
     });
   });
 
+  describe.each([piAdapter, ohMyPiAdapter])('$toolId localized input headings', adapter => {
+    it.each(['**Input**:', '**入力**:', '**入力**：'])('passes arguments after %s', heading => {
+      const body = `${heading} 変更名\n\n手順`;
+      const output = adapter.formatFile({ ...sampleContent, body });
+      expect(output).toContain(`${heading} 変更名\n**入力された引数**: $@`);
+      for (const placeholder of ['$@', '$ARGUMENTS']) {
+        const existing = adapter.formatFile({ ...sampleContent, body: `${body}\n${placeholder}` });
+        expect(existing.split(placeholder)).toHaveLength(2);
+        if (placeholder === '$ARGUMENTS') expect(existing).not.toContain('$@');
+      }
+    });
+  });
+
   describe('opencodeAdapter', () => {
     it('should have correct toolId', () => {
       expect(opencodeAdapter.toolId).toBe('opencode');
@@ -666,10 +680,25 @@ describe('command-generation/adapters', () => {
       expect(output).not.toContain('$ARGUMENTS');
     });
 
+    it.each([
+      '**入力**: 不要', '**入力**：不要（選択を求めます）',
+      '**入力**: 指定不要（選択を求めます）', '**入力**：指定不要。',
+      '**入力**: 不要、選択を求めます', '**Input**: None required',
+    ])('does not inject arguments for %s', input => {
+      const output = opencodeAdapter.formatFile({ ...sampleContent, body: `${input}\n\n手順` });
+      expect(output).not.toContain('$ARGUMENTS');
+    });
+
+    it.each(['不要なファイルの名前', '指定不要という名前の変更', '変更名'])('still accepts %s', input => {
+      const output = opencodeAdapter.formatFile({ ...sampleContent, body: `**入力**：${input}\n\n手順` });
+      expect(output.match(/\$ARGUMENTS/g)).toHaveLength(1);
+    });
+
     it('should preserve exactly one argument placeholder for each workflow that accepts input', () => {
-      for (const content of getCommandContents()) {
+      for (const content of getCommandContents(ALL_WORKFLOWS)) {
         const output = generateCommand(content, opencodeAdapter).fileContent;
-        const acceptsInput = /^\*\*(?:Input|入力)\*\*[：:](?!\s*(?:None required|不要)\b)/im.test(content.body);
+        // Explicit workflow contract, independent of the adapter's regex.
+        const acceptsInput = !['bulk-archive', 'onboard'].includes(content.id);
         expect(output.match(/\$ARGUMENTS/g) ?? [], content.id).toHaveLength(acceptsInput ? 1 : 0);
       }
     });

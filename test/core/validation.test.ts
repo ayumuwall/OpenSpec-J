@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { VALIDATION_MESSAGES } from '../../src/core/validation/constants.js';
 import { Validator } from '../../src/core/validation/validator.js';
 import { 
   ScenarioSchema, 
@@ -224,6 +225,20 @@ Then they see an error message`;
       
       expect(report.valid).toBe(true);
       expect(report.summary.errors).toBe(0);
+    });
+
+    it.each([
+      ['Purpose', '# Test\n\n## Requirements\n'],
+      ['Requirements', '# Test\n\n## Purpose\nA meaningful purpose for the specification.\n'],
+    ])('adds guidance to a missing %s section in Japanese', async (section, content) => {
+      const specPath = path.join(testDir, 'spec.md');
+      await fs.writeFile(specPath, content);
+      const report = await new Validator().validateSpec(specPath);
+      expect(report.valid).toBe(false);
+      expect(report.issues.some(issue =>
+        issue.message.includes(`${section} セクションは必須です`) &&
+        issue.message.includes(VALIDATION_MESSAGES.GUIDE_MISSING_SPEC_SECTIONS)
+      )).toBe(true);
     });
 
     it('should detect missing overview section', async () => {
