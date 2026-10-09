@@ -445,8 +445,64 @@ gh release create vX.Y.Z \
 
 ```
 pnpm build
-npm publish --access public
+npm publish --access public && bash scripts/publish-homebrew.sh
 ```
+
+`scripts/publish-homebrew.sh` は npm の対象版と `latest` の反映を待ち、Homebrew 更新ワークフローを起動する。実行前に `gh auth status` で tap を操作できる認証を確認する。npm 公開後にこの工程だけを再実行する場合は `bash scripts/publish-homebrew.sh` を使い、同じ npm バージョンを再公開しない。
+
+### 3.3 Homebrew 配布（npm 公開後）
+
+配布先は `ayumuwall/homebrew-tap`、formula は `Formula/openspec-j.rb` とする。インストールコマンドは次の形式とする。
+
+```sh
+brew install ayumuwall/tap/openspec-j
+```
+
+formula と [更新ワークフロー](https://github.com/ayumuwall/homebrew-tap/actions/workflows/openspec-j.yml) は導入済み。通常のリリースでは §3.2 のコマンドから更新を起動し、下記「自動更新」の完了を確認する。初回設定は再構築時に参照する。
+
+#### 初回設定
+
+1. tap に `Formula/openspec-j.rb` を追加する。
+   - 公開済みの `@ayumuwall/openspec` の npm tarball を使用し、バージョン、取得 URL、SHA256 を指定する。
+   - Node.js の依存関係、`openspec` コマンドの導入、バージョン確認と日本語ヘルプの検査を定義する。
+   - 本家版も `openspec` コマンドを使用するため、同時導入時の競合を確認し、インストール案内に反映する。
+2. tap に更新用の GitHub Actions ワークフローを追加する。
+   - 対象バージョンを入力として受け取り、下記「自動更新」の全工程を実行する。
+   - tap への書き込み権限を設定する。tap 内の更新には `GITHUB_TOKEN` を使用できるが、ブランチ保護が自動 push を許可していることも確認する。
+   - 同時実行を制御し、同じバージョンの再実行では不要なコミットを作成しない。
+3. npm 公開成功後に、公開版の取得を確認してから tap のワークフローを起動するよう、リリース処理を接続する。
+   - ローカルからは `scripts/publish-homebrew.sh` が認証済みの `gh` を使って起動する。CI から別リポジトリを起動する場合は、tap に必要な権限を持つ GitHub App または fine-grained PAT を設定する。OpenSpec-J の `GITHUB_TOKEN` は別リポジトリへの権限を持たない。
+   - 手動起動も用意し、既に npm 公開済みの版や失敗した更新を再実行できるようにする。
+   - 定期チェックを補助として設ける場合も、起動の主経路にはしない。公開リポジトリの定期ワークフローは、60日間活動がないと自動停止する。
+4. 現在の npm 公開済みバージョンで一連の処理を実行し、formula とワークフローの導入を確認する。
+5. Homebrew での導入が成功した後、`README.md` とその他のインストール案内を更新する。
+   - `README.md`、`docs/`、`docs-lab/` とその他の翻訳対象ファイルから、`Homebrew`、`brew install`、`brew upgrade`、`brew uninstall`、インストールオプションへのリンクを検索し、導入・更新・削除の案内を確認する。`website/` と `openspec/` は対象外とする。
+   - OpenSpec-J の Homebrew インストールコマンドを `brew install ayumuwall/tap/openspec-j` に揃え、formula のリンクは `ayumuwall/homebrew-tap` の `Formula/openspec-j.rb` を参照する。
+   - Homebrew でのパッケージ更新は `brew update` の後に `brew upgrade ayumuwall/tap/openspec-j`、削除は `brew uninstall openspec-j` と案内する。CLI コマンド名は引き続き `openspec` とし、各プロジェクトの生成ファイルを更新する `openspec update` とパッケージ更新を区別する。
+   - 「Homebrew（本家版）」などの説明は日本語版の配布に合わせて修正する。本家版の案内を残す場合は、本家版を導入するコマンドであることを明示する。
+   - npm など既存の有効なインストールコマンドは保持し、Homebrew の案内を整合させる。同じ `openspec` を提供する別の導入方法との競合・PATH の確認も記載する。
+   - 記載する Homebrew コマンドを macOS と Linux で確認し、参照先と説明の整合を確認してから公開する。formula の導入前に、利用可能なインストール方法として案内しない。
+
+#### 自動更新
+
+公開済みの npm バージョンを指定して手動で再実行する場合は、次のコマンドを使う。
+
+```sh
+gh workflow run openspec-j.yml --repo ayumuwall/homebrew-tap --ref main -f version=X.Y.Z
+gh run list --repo ayumuwall/homebrew-tap --workflow openspec-j.yml --limit 5
+gh run view <run-id> --repo ayumuwall/homebrew-tap
+```
+
+起動成功だけでは配布完了としない。`prepare`、両 OS の `verify`、`publish` がすべて成功したことを確認する。同じバージョンの再実行では、検査後に変更なしで終了する。
+
+1. 対象バージョンの npm メタデータと tarball が取得できることを確認する。GitHub Release の公開だけを npm 公開完了の判定に使わない。
+2. 安定版の配布では npm の `latest` と対象バージョンの一致を確認する。プレリリースへの更新や、既存 formula より古い版への更新は行わない。
+3. 公開 tarball を取得して SHA256 を計算し、formula のバージョン・URL・SHA256 を更新する。
+4. macOS と Linux で formula のインストール、`openspec --version`、日本語ヘルプを検査する。検査は更新を push する前に同じワークフロー内で実施する。
+5. 全検査が成功した場合だけ、formula の変更を tap に自動コミット・push する。失敗した場合は更新を止め、失敗した工程をログに残す。
+6. push した formula と実行結果を確認し、対象バージョン、tap のコミット、ワークフロー実行 URL、検査結果を `SESSION_MEMO.md` と最終報告に記録する。npm 公開成功と Homebrew 更新成功はそれぞれ確認する。
+
+GitHub Actions の仕様は、[ワークフローの起動方法](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)と [GITHUB_TOKEN の権限範囲](https://docs.github.com/en/actions/concepts/security/github_token)を参照する。
 
 ---
 

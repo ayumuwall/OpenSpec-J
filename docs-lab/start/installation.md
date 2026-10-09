@@ -62,13 +62,15 @@ npm install -g @ayumuwall/openspec@latest
 
 ### Homebrew
 
-Homebrew は macOS / Linux に本家版 OpenSpec と Node.js をインストールします。日本語版は上記の npm コマンドで導入してください。本家版を使う場合はターミナルで次を実行します。
+macOS / Linux では、ターミナルで次を実行します。OpenSpec-J と Node.js がインストールされます。
 
 ```bash
-brew install openspec
+brew install ayumuwall/tap/openspec-j
 ```
 
-formula は[homebrew-core](https://formulae.brew.sh/formula/openspec)で公開されているため、tap の追加は不要です。
+formula は [ayumuwall/homebrew-tap](https://github.com/ayumuwall/homebrew-tap/blob/main/Formula/openspec-j.rb) で公開しています。上記のコマンドで tap も追加されます。
+
+**ほかの方法から切り替える場合**：本家版の Homebrew パッケージや npm などで導入済みの CLI を、その導入方法で削除してから実行してください。CLI コマンド名は同じ `openspec` です。`which -a openspec` で PATH 上のコピーを確認できます。
 
 ### Yarn
 
@@ -142,6 +144,13 @@ openspec --version
 
 ## 更新
 
+Homebrew でインストールした場合は、先に CLI を更新します。
+
+```bash
+brew update
+brew upgrade ayumuwall/tap/openspec-j
+```
+
 init を実行した各プロジェクトで、次のコマンドを実行します。
 
 ```bash
@@ -154,7 +163,7 @@ openspec update
 `✓ All 2 tool(s) up to date (v1.7.0)`と表示されます。
 
 > [!WARNING]
-> Homebrew では`brew upgrade openspec`を実行します。Deno では、[Deno のインストール](#deno)を`-f`付きで再実行してください。このフラグがないと、
+> Deno では、[Deno のインストール](#deno)を`-f`付きで再実行してください。このフラグがないと、
 > インストール済みのコマンドを上書きしません。Nix では`nix profile upgrade openspec`を使用します。
 
 > [!NOTE]
@@ -179,7 +188,7 @@ openspec completion uninstall
 npm uninstall -g @ayumuwall/openspec
 ```
 
-Homebrew では`brew uninstall openspec`、Deno では`deno uninstall --global openspec`、Nix では`nix profile remove openspec`を実行します。
+Homebrew では`brew uninstall openspec-j`、Deno では`deno uninstall --global openspec`、Nix では`nix profile remove openspec`を実行します。
 これでシェルから`openspec`が見つからなくなります。
 
 **3. 残ったファイルを削除するか、そのまま保持する。**

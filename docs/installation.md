@@ -75,6 +75,16 @@
 npm install -g @ayumuwall/openspec@latest
 ```
 
+### Homebrew
+
+macOS / Linux では、OpenSpec-J と Node.js をインストールできます。
+
+```bash
+brew install ayumuwall/tap/openspec-j
+```
+
+更新・削除と別の導入方法からの切り替えは、[Homebrew のインストール案内](../docs-lab/start/installation.md#homebrew)を参照してください。
+
 ### pnpm
 
 ```bash

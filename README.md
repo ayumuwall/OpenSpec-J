@@ -137,10 +137,10 @@ OpenSpec をグローバルにインストールします。
 npm install -g @ayumuwall/openspec@latest
 ```
 
-macOS / Linux では、本家版の公式 [Homebrew formula](https://formulae.brew.sh/formula/openspec) も利用できます。Node.js は依存関係としてインストールされます。
+macOS / Linux では、OpenSpec-J の [Homebrew formula](https://github.com/ayumuwall/homebrew-tap/blob/main/Formula/openspec-j.rb) も利用できます。Node.js は依存関係としてインストールされます。
 
 ```bash
-brew install openspec
+brew install ayumuwall/tap/openspec-j
 ```
 
 次に、プロジェクトディレクトリに移動して初期化します。
@@ -164,7 +164,7 @@ openspec init
 > [!NOTE]
 > 使用しているツールが対応しているか不明ですか？[完全な一覧](docs/supported-tools.md)を参照してください。30以上のツールに対応し、今後も追加していきます。
 >
-> Homebrew（本家版）、pnpm、yarn、bun、Nix でも動作します。[インストールオプション](docs-lab/start/installation.md)を参照してください。
+> Homebrew、pnpm、yarn、bun、Nix でも動作します。[インストールオプション](docs-lab/start/installation.md)を参照してください。
 
 ## ドキュメント
 
@@ -221,10 +221,11 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 npm install -g @ayumuwall/openspec@latest
 ```
 
-Homebrew で本家版をインストールした場合：
+Homebrew でインストールした場合：
 
 ```bash
-brew upgrade openspec
+brew update
+brew upgrade ayumuwall/tap/openspec-j
 ```
 
 **エージェントの指示を更新します**
