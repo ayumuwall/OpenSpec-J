@@ -25,7 +25,13 @@ import {
   type SpecUpdate,
 } from './specs-apply.js';
 import { discoverSpecFiles, findUnreadDeltaFiles, hasAnyFileUnder } from '../utils/spec-discovery.js';
-import { METADATA_FILENAME, readRetireCapabilitiesMarker, readSkipSpecsMarker } from '../utils/change-metadata.js';
+import {
+  METADATA_FILENAME,
+  formatUnknownChangeMetadataKeysMessage,
+  readRetireCapabilitiesMarker,
+  readSkipSpecsMarker,
+  readUnknownChangeMetadataKeys,
+} from '../utils/change-metadata.js';
 import { confirmPrompt, isNonInteractivePromptError } from '../utils/interactive.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { folderStyleNameProblem } from './id.js';
@@ -335,6 +341,14 @@ function toArchiveDiagnostic(error: unknown): ArchiveDiagnostic {
   if (isRootSelectionError(error)) {
     return error.diagnostic;
   }
+  if (error instanceof RetirementCleanupError) {
+    return {
+      severity: 'error',
+      code: 'archive_retirement_cleanup_failed',
+      message: error.message,
+      fix: 'アーカイブ済みの変更と、この診断に含まれる復旧用パスをすべて確認し、クリーンアップ前に必要な内容を保存してください。',
+    };
+  }
   return {
     severity: 'error',
     code: 'archive_error',
@@ -485,7 +499,7 @@ async function assertCopiedDirectoryUnchanged(
  * the source untouched rather than copying through a path we could not claim.
  */
 class MoveDestinationRetainedError extends Error {}
-class RetirementBackupsRetainedError extends Error {}
+class RetirementCleanupError extends Error {}
 
 function isFallbackRenameCode(code: string | undefined): boolean {
   return code === 'EPERM' || code === 'EXDEV';
@@ -1267,14 +1281,14 @@ async function finalizeRetirementBackups(
       snapshot.displacedPath = undefined;
     } catch (error) {
       errors.push(
-        `確定済みの機能廃止バックアップ ${displacedPath} を削除できませんでした` +
+        `機能廃止バックアップ ${displacedPath} の最終処理を完了できませんでした` +
           `（${error instanceof Error ? error.message : String(error)}）。`
       );
     }
   }
   if (errors.length > 0) {
-    throw new RetirementBackupsRetainedError(
-      `${errors.join(' ')} 変更はアーカイブ済みのままですが、列挙したバックアップは復旧用に保持されています。`
+    throw new RetirementCleanupError(
+      `${errors.join(' ')} 変更はアーカイブされましたが、機能廃止のクリーンアップは完了していません。復旧やクリーンアップの前に、報告された復旧用パスをすべて確認してください。`
     );
   }
 }
@@ -1417,6 +1431,15 @@ export class ArchiveCommand {
         `'${changeName}' をアーカイブできません: ${describeNestedChange(nested)}`,
         `openspec/changes/${nested.nested[0]}/ を openspec/changes/ 直下の変更ディレクトリに移動してから、アーカイブしてください。`
       );
+    }
+
+    const unknownMetadataKeys = readUnknownChangeMetadataKeys(changeDir);
+    const unknownMetadataWarning =
+      unknownMetadataKeys.length > 0
+        ? formatUnknownChangeMetadataKeysMessage(unknownMetadataKeys)
+        : undefined;
+    if (unknownMetadataWarning && !json) {
+      console.warn(chalk.yellow(unknownMetadataWarning));
     }
 
     const skipValidation = options.validate === false || options.noValidate === true;
@@ -2204,7 +2227,7 @@ export class ArchiveCommand {
               try {
                 await finalizeRetirementBackups(specSnapshots, mainSpecsDir);
               } catch (cleanupError) {
-                throw new RetirementBackupsRetainedError(
+                throw new RetirementCleanupError(
                   `${error.message} ${
                     cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
                   }`
@@ -2212,7 +2235,7 @@ export class ArchiveCommand {
               }
               throw error;
             }
-            if (error instanceof RetirementBackupsRetainedError) throw error;
+            if (error instanceof RetirementCleanupError) throw error;
             const rollbackErrors: Error[] = [];
             try {
               await restoreSpecSnapshots(
@@ -2276,7 +2299,13 @@ export class ArchiveCommand {
         path: archivePath,
         specsUpdated,
         ...(totals ? { totals } : {}),
-        ...(specWarnings.length > 0 ? { warnings: specWarnings } : {}),
+        ...(specWarnings.length > 0 || unknownMetadataWarning
+          ? {
+              warnings: unknownMetadataWarning
+                ? [...specWarnings, unknownMetadataWarning]
+                : specWarnings,
+            }
+          : {}),
       };
     } finally {
       if (archiveClaim) await releaseArchiveClaim(archiveClaim, claimPath).catch(() => undefined);

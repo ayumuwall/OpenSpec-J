@@ -50,6 +50,7 @@
 
 | コマンド                                      | 動作                                          |
 | --------------------------------------------- | --------------------------------------------- |
+| [`openspec version`](#openspec-version) | インストール済みバージョンを表示し、必要に応じて更新を確認します。 |
 | [`openspec feedback`](#openspec-feedback)     | OpenSpec に関するフィードバックを送信します。 |
 | [`openspec completion`](#openspec-completion) | シェル補完をインストールまたは生成します。    |
 
@@ -77,6 +78,21 @@ openspec init --tools none           # openspec/ 構成だけを作成し、ツ�
 
 `--tools`を指定しない場合、対話式ターミナルではツールの選択を求められます。非対話環境では、プロジェクト内で検出したツールを設定します。ツールが見つからなければ終了コード 1 で終了し、有効な ID を表示します。
 
+**ストアのみのリポジトリ**
+
+`openspec/config.yaml` に `store:` 行があり、リポジトリ内に仕様や変更がない場合は、リポジトリルートで init を実行します。
+
+```bash
+# コードリポジトリに Claude Code の連携ファイルをインストール
+openspec init --tools claude
+```
+
+- **連携ファイル**：コードリポジトリに生成します。
+- **`openspec/config.yaml`**：バイト単位で変更せず保持します。
+- **`openspec/specs/` と `openspec/changes/`**：コードリポジトリには作成しません。
+
+サブディレクトリで実行すると終了コード1で終了し、リポジトリルートでの実行を案内します。`--language` も終了コード1になります。言語は外部ストアの設定に属するため、ストアルートで init を実行するか、その設定を直接編集してください。
+
 **引数**
 
 | 引数   | 内容                                                                                               |
@@ -88,6 +104,7 @@ openspec init --tools none           # openspec/ 構成だけを作成し、ツ�
 | フラグ                | 動作                                                                                                                                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--tools <tools>`     | カンマ区切りのツール ID、`all`、`none`。選択画面を省略します。ID は[対応ツール](supported-tools.md)を参照してください。                      |
+| `--language <language>` | 新規プロジェクト設定に言語の指示を追加します。リポジトリの `store:` 行が外部ストアを指す場合は使用できません。 |
 | `--force`             | 以前の OpenSpec 構成にあるファイルを確認せず削除します。指定しない対話実行では、削除前に確認します。                                         |
 | `--profile <profile>` | この実行だけグローバル設定のプロファイルを上書きします。`core`は標準ワークフローセット、`custom`はグローバル設定へ保存したワークフローです。 |
 | `--no-animation`      | アニメーションの代わりに静止したウェルカム画面を表示します。                                                                                 |
@@ -117,7 +134,7 @@ OpenSpec のセットアップが完了しました
 **終了コード**
 
 - `0`：セットアップが完了しました。
-- `1`：`--tools`または`--profile`の値が無効です。または、非対話実行でツールを検出できず、`--tools`も指定されていません。
+- `1`：`--tools` または `--profile` の値が無効、非対話実行でツールを検出できず `--tools` も未指定、またはストアのみの構成で実行方法が不正です。
 
 ## openspec update
 
@@ -409,12 +426,14 @@ openspec config profile core   # core プリセットを直接適用
 変更を一覧表示します。`--specs`を付けると仕様を表示します。
 
 ```bash
-openspec list           # 変更を更新日時の新しい順に表示
-openspec list --specs   # 仕様と要件数を表示
-openspec list --json    # 解決済みルートを含む機械可読形式
+openspec list                    # 進行中の変更を更新日時の新しい順に表示
+openspec list --archived         # アーカイブ済み変更を表示
+openspec list --all              # 進行中とアーカイブ済みの変更を表示
+openspec list --specs            # 仕様と要件数を表示
+openspec list --json             # 解決済みルートを含む機械可読形式
 ```
 
-各行は、解決済みルートの`openspec/changes/`または`openspec/specs/`から取得します。`archive/`フォルダは除外します。
+各行は、解決済みルートの `openspec/changes/` または `openspec/specs/` から取得します。既定の変更一覧では `openspec/changes/archive/` を除外します。
 
 **オプション**
 
@@ -422,6 +441,8 @@ openspec list --json    # 解決済みルートを含む機械可読形式
 | ---------------- | ---------------------------------------------------------------------------------------------- |
 | `--specs`        | 変更の代わりに仕様を一覧表示します。                                                           |
 | `--changes`      | 変更を一覧表示します。既定の動作です。                                                         |
+| `--archived` | アーカイブ済み変更だけを表示します。`--specs` とは併用できません。 |
+| `--all` | 進行中とアーカイブ済みの変更を表示します。`--specs` とは併用できず、`--archived` より優先します。 |
 | `--sort <order>` | `recent`は更新日時の新しい順、`name`は名前順です。既定値は`recent`です。仕様は常に名前順です。 |
 | `--json`         | 表の代わりに JSON を表示します。                                                               |
 | `--store <id>`   | 現在のプロジェクトではなく、登録済みストアを OpenSpec ルートとして使います。                   |
@@ -433,6 +454,16 @@ openspec list --json    # 解決済みルートを含む機械可読形式
 ```
 変更一覧:
   add-rate-limit     タスクなし      just now
+```
+
+`--all` は進行中とアーカイブ済みの変更を別の見出しで表示します。各グループを指定した順序で並べます。
+
+```
+変更一覧:
+  add-rate-limit     タスクなし      just now
+
+アーカイブ済み変更一覧:
+  2026-08-10-add-login     ✓ 完了    2d ago
 ```
 
 ```
@@ -460,7 +491,9 @@ openspec list --json    # 解決済みルートを含む機械可読形式
 }
 ```
 
-対象がない場合は`進行中の変更はありません。`または`仕様が見つかりません。`と表示し、終了コード 0 で終了します。
+`--archived` または `--all` を指定すると、各変更オブジェクトに真偽値の `archived` が含まれます。結合した配列は指定した順序で並びます。追跡対象のタスクファイルに未完了タスクがあれば、アーカイブ済みでも `in-progress` になる場合があります。どちらのフラグもない場合、JSON の構造は変わりません。
+
+対象がない場合は `進行中の変更はありません。`、`アーカイブ済みの変更はありません。`、`変更はありません。`、または `仕様が見つかりません。` と表示し、終了コード0で終了します。
 
 変更は`openspec/changes/`直下のディレクトリです。仕様とは異なり、名前空間フォルダへ入れ子にできません。`changes/mobile/refresh-token/`だけを含む`changes/mobile/`は「変更ではありません」と表示し、入れ子の場所を警告します。`--json`ではその項目へ`nested`配列、トップレベルへ`warnings`配列を追加します。`show`、`status`、`validate`、`archive`も同じ案内で拒否します。変更を1階層上へ移し、名前に名前空間を含めてください。
 
@@ -541,9 +574,11 @@ MODIFIED の見出しが大文字と小文字、または空白を無視した�
       "operation": "ADDED",
       "description": "要件を追加: API は各クライアントを 1 分あたり 100 リクエストに制限しなければならない。",
       "requirement": {
+        "name": "レート制限",
         "text": "API は各クライアントを 1 分あたり 100 リクエストに制限しなければならない。",
         "scenarios": [
           {
+            "name": "クライアントが制限を超える",
             "rawText": "- **WHEN** クライアントが 1 分以内に 101 件目のリクエストを送信する\n- **THEN** API は 429 を返す"
           }
         ]
@@ -558,9 +593,11 @@ MODIFIED の見出しが大文字と小文字、または空白を無視した�
 }
 ```
 
+各要件の `name` は、見出しの `Requirement:` より後ろの文字列です。archive はこの名前で MODIFIED、REMOVED、RENAMED の項目を照合します。各シナリオの `name` は、見出しの `Scenario:` より後ろの文字列です。どちらも見出し末尾の `#` の並びは名前に含めません。
+
 `--json --diff`でも、このトップレベル構造は変わりません。MODIFIED デルタへ`diff`文字列、`warning`文字列、またはその両方が追加されます。ほかの操作は変わりません。空の`diff`文字列は、本仕様とデルタのブロックが文字上同一であることを示します。
 
-仕様へ`--json`を指定すると、要件とシナリオを一覧にします。
+仕様へ `--json` を指定すると、要件とシナリオを一覧にします。変更の JSON と同じ `name` フィールドを含みます。
 
 ```json
 {
@@ -570,9 +607,11 @@ MODIFIED の見出しが大文字と小文字、または空白を無視した�
   "requirementCount": 1,
   "requirements": [
     {
+      "name": "ヘルスチェック用エンドポイント",
       "text": "API はヘルスチェック用エンドポイントを公開しなければならない。",
       "scenarios": [
         {
+          "name": "ヘルスチェックが成功する",
           "rawText": "- **WHEN** クライアントが GET /health をリクエストする\n- **THEN** API は 200 を返す"
         }
       ]
@@ -638,6 +677,21 @@ OpenSpec ダッシュボード
 ```
 
 タスクを実行中の変更がある場合は、概要へ`タスク進捗`行も表示します。
+
+作業中の各変更は、タスクの進捗バーの下にスキーマとアーティファクトの状態も表示します。
+
+```text
+    └─ [spec-driven] proposal✓ specs→ design→ tasks✓
+```
+
+| 記号 | アーティファクトの状態 |
+|---|---|
+| `✓` | 出力が存在します。tasks アーティファクトも、チェックリストが未完了でもファイルが存在すれば完了です。 |
+| `→` | 作成可能です。 |
+| 記号なし | 必要な依存先がなく、作成できません。 |
+| `(skipped)` | この変更ではスキップしています。 |
+
+ワークフローを読み込めない場合、view は警告を表示し、タスクの進捗は引き続き表示します。`openspec status --change <name>` でワークフローを個別に確認してください。`openspec view --store <id>` を実行した場合は、status にも同じ `--store <id>` を渡します。
 
 **終了コード**
 
@@ -1282,6 +1336,8 @@ openspec instructions archive --change add-rate-limit    # アーカイブ用の
 ```
 
 この後に`outputPath`、`existingOutputPaths`、全文の`instruction`と`template`、`dependencies`、`unlocks`、`root`が続きます。`apply`形式には`contextFiles`、`progress`、`tasks`、`taskTrackingConfigured`、`state`（`blocked`、`ready`、`all_done`）、`instruction`が入ります。
+
+各 `tasks` 項目には `id`、`description`、`done`、`sourcePath`、`line` が含まれます。`sourcePath` はタスクを読み取った追跡対象ファイルの絶対パス、`line` はそのチェックボックスの行番号（1から開始）です。
 
 `taskTrackingConfigured`は常に真偽値です。スキーマの[`apply.tracks`](schemas/schema-yaml.md#tracks)が null 以外なら、一致するファイルがなくても`true`、それ以外は`false`です。一致した追跡対象ファイルを読めなければ、`unavailableTrackingFiles`に絶対パスの`path`とエラーの`reason`が入ります。すべて読める場合はこのフィールドを省略します。読めるファイルは`tasks`と`progress`へ集計しますが、すべて読めるまで`state`は`all_done`になりません。
 
@@ -2124,6 +2180,92 @@ openspec workset remove checkout --yes
 ```
 ワークセット 'checkout' を削除しました。メンバーフォルダーは変更していません。
 ```
+
+## openspec version
+
+実行中の OpenSpec のバージョンと、このコピーのインストール方法を表示します。
+
+```bash
+openspec version                 # ローカルのバージョンとインストール情報
+openspec version --json          # 構造化されたローカル情報
+openspec version --check         # レジストリで更新も確認
+openspec version --check --json  # ローカル情報と更新情報を構造化して表示
+```
+
+`--check` がなければレジストリへ接続せず、ローカルの情報だけを表示します。OpenSpec プロジェクトの外でも動作します。既存の `openspec --version` は、バージョン番号だけを表示する最短の形式として引き続き使えます。
+
+**オプション**
+
+| フラグ | 動作 |
+|---|---|
+| `--json` | テキストの代わりに、形式のバージョンを含む1つの JSON 文書を表示します。 |
+| `--check` | 設定されたレジストリで新しいリリースを確認します。 |
+
+**出力**
+
+npm でグローバルインストールした場合：
+
+```text
+OpenSpec 1.13.2 (npm, global)
+```
+
+インストール範囲は `global`、`project`、npx などの一時実行環境を表す `temporary`、チェックアウトを表す `source` です。判別できない情報は推測せず省略します。
+
+`--json` では、不明な情報を明示的な `null` として保持します。
+
+```json
+{
+  "schemaVersion": 1,
+  "version": "1.13.2",
+  "install": {
+    "location": "/opt/homebrew/lib/node_modules/@ayumuwall/openspec",
+    "packageManager": "npm",
+    "scope": "global"
+  }
+}
+```
+
+`--check` で更新が見つかると、最新バージョンを追加します。そのインストール方法に適した安全な更新コマンドを特定できる場合は、コマンドも表示します。
+
+```text
+OpenSpec 1.13.2 (npm, global)
+更新があります: 1.14.0
+  npm install -g @ayumuwall/openspec@latest
+```
+
+```json
+{
+  "schemaVersion": 1,
+  "version": "1.13.2",
+  "install": {
+    "location": "/opt/homebrew/lib/node_modules/@ayumuwall/openspec",
+    "packageManager": "npm",
+    "scope": "global"
+  },
+  "update": {
+    "status": "available",
+    "latest": "1.14.0",
+    "command": "npm install -g @ayumuwall/openspec@latest",
+    "canSelfUpgrade": true
+  }
+}
+```
+
+更新状態の値：
+
+| 状態 | 意味 |
+|---|---|
+| `available` | レジストリが、実行中より新しい安全なバージョン番号を返しました。 |
+| `current` | 確認が完了し、新しいバージョンは見つかりませんでした。 |
+| `disabled` | 既存のプライバシー設定または更新確認設定により、レジストリへの接続が無効です。`latest` は `null` です。 |
+| `offline` | レジストリを利用できないか、使えない応答が返りました。`latest` は `null` です。 |
+
+`DO_NOT_TRACK`、テレメトリーの無効化、`OPENSPEC_NO_UPDATE_CHECK`、CI の検出、HTTPS 以外のレジストリ上書きの拒否によって確認を無効にします。更新情報は参考情報のため、無効またはオフラインでも終了コードは0です。このコマンドは OpenSpec を更新しません。`canSelfUpgrade` は、既存の `openspec update` の処理でこのコピーを安全に更新できるかを示すだけです。
+
+**終了コード**
+
+- `0`：ローカル情報を表示しました。更新確認が無効またはオフラインの場合も含みます。
+- `1`：未対応の `--upgrade` オプションなど、コマンドの構文が不正です。
 
 ## openspec feedback
 

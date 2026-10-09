@@ -1,58 +1,31 @@
-import { asStatus } from '../commands/shared-output.js';
 import { Command, Option } from 'commander';
 import { createRequire } from 'module';
-import ora from 'ora';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, promises as fs } from 'fs';
 import { AI_TOOLS, TOOL_ID_ALIASES } from '../core/config.js';
-import { UpdateCommand } from '../core/update.js';
-import {
-  getAvailableCliUpdate,
-  displayCliUpdateNote,
-  shouldOfferUpgrade,
-  getInstallDir,
-  offerCliUpgrade,
-  rerunUpdateWithUpgradedCli,
-  displayUpgradeCommand,
-  isSourceCheckout,
-} from '../core/version-check.js';
-import { ListCommand } from '../core/list.js';
-import { ArchiveCommand, type ArchiveOptions } from '../core/archive.js';
-import { ViewCommand } from '../core/view.js';
-import { resolveRootForCommand, toRootOutput } from '../core/root-selection.js';
-import { registerSpecCommand } from '../commands/spec.js';
-import { ChangeCommand } from '../commands/change.js';
-import { ValidateCommand } from '../commands/validate.js';
-import { ShowCommand } from '../commands/show.js';
-import { CompletionCommand } from '../commands/completion.js';
-import { FeedbackCommand } from '../commands/feedback.js';
-import { registerConfigCommand } from '../commands/config.js';
-import { registerSchemaCommand } from '../commands/schema.js';
-import { registerStoreCommand } from '../commands/store.js';
-import { registerDoctorCommand } from '../commands/doctor.js';
-import { registerContextCommand } from '../commands/context.js';
-import { registerWorksetCommand } from '../commands/workset.js';
-import {
-  statusCommand,
-  BATCH_STATUS_FAILURE_PAYLOAD,
-  instructionsCommand,
-  applyInstructionsCommand,
-  archiveInstructionsCommand,
-  templatesCommand,
-  schemasCommand,
-  newChangeCommand,
-  DEFAULT_SCHEMA,
-  type StatusOptions,
-  type InstructionsOptions,
-  type TemplatesOptions,
-  type SchemasOptions,
-  type NewChangeOptions,
+import type { ArchiveOptions } from '../core/archive.js';
+import { registerSpecCommand } from './commands/spec.js';
+import { registerConfigCommand } from './commands/config.js';
+import { registerSchemaCommand } from './commands/schema.js';
+import { registerStoreCommand } from './commands/store.js';
+import { registerDoctorCommand } from './commands/doctor.js';
+import { registerContextCommand } from './commands/context.js';
+import { registerWorksetCommand } from './commands/workset.js';
+import { DEFAULT_SCHEMA } from '../commands/workflow/default-schema.js';
+import type {
+  StatusOptions,
+  InstructionsOptions,
+  TemplatesOptions,
+  SchemasOptions,
+  NewChangeOptions,
 } from '../commands/workflow/index.js';
-import { maybeShowTelemetryNotice, trackCommand, shutdown } from '../telemetry/index.js';
-import { maybeShowCompletionTip } from '../core/completion-tip.js';
 import { COMMON_FLAGS } from '../core/completions/shared-flags.js';
-import { isInteractive } from '../utils/interactive.js';
+
+// Startup cost: every command's implementation, and the packages it uses,
+// loads with `await import()` inside its action. This module and
+// ./commands/ only define commands (names, options, help), so `--version`,
+// `--help`, and each command load no other command's implementation.
 
 const STORE_OPTION_DESCRIPTION = COMMON_FLAGS.store.description;
 
@@ -67,13 +40,14 @@ function hiddenStorePathOption(): Option {
   ).hideHelp();
 }
 
-function failWithError(
+async function failWithError(
   error: unknown,
   json?: { enabled: boolean | undefined; payload?: Record<string, unknown>; fallbackCode?: string }
-): void {
+): Promise<void> {
   // The agent contract: every --json failure leaves exactly one JSON
   // document on stdout (the command's null-shape plus a status array).
   if (json?.enabled) {
+    const { asStatus } = await import('../commands/shared-output.js');
     console.log(
       JSON.stringify(
         { ...(json.payload ?? {}), status: [asStatus(error, json.fallbackCode ?? 'command_error')] },
@@ -84,6 +58,7 @@ function failWithError(
     process.exitCode = 1;
     return;
   }
+  const { default: ora } = await import('ora');
   ora().fail(`エラー: ${(error as Error).message}`);
   // Resolution and store errors carry a pasteable fix - never drop it.
   const fix = (error as { diagnostic?: { fix?: string } }).diagnostic?.fix;
@@ -169,6 +144,48 @@ program
 // Global options
 program.option('--no-color', '色付き出力を無効化');
 
+program
+  .command('version')
+  .description('インストール済みの OpenSpec のバージョンと更新の有無を表示')
+  .option('--json', 'JSON で出力')
+  .option('--check', 'レジストリで新しいバージョンを確認')
+  .action(async (options: { json?: boolean; check?: boolean }) => {
+    const {
+      getCliInstallInfo,
+      checkForCliUpdate,
+      getCliUpdateCommand,
+      canSelfUpgrade,
+      buildVersionReportLines,
+    } = await import('../core/version-check.js');
+    const install = getCliInstallInfo();
+    const update = options.check ? await checkForCliUpdate() : undefined;
+    const command = update?.status === 'available' ? getCliUpdateCommand(install) : null;
+    const output = {
+      schemaVersion: 1,
+      version,
+      install,
+      ...(update
+        ? {
+            update: {
+              ...update,
+              command,
+              canSelfUpgrade:
+                update.status === 'available'
+                  ? canSelfUpgrade(install.location, process.cwd())
+                  : false,
+            },
+          }
+        : {}),
+    };
+
+    if (options.json) {
+      console.log(JSON.stringify(output, null, 2));
+      return;
+    }
+
+    console.log(buildVersionReportLines(version, install, update, command).join('\n'));
+  });
+
 // Apply global flags and telemetry before any command runs
 // Note: preAction receives (thisCommand, actionCommand) where:
 // - thisCommand: the command where hook was added (root program)
@@ -182,6 +199,7 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
   // Show first-run telemetry notice (if not seen). It's written to stderr, so it
   // never pollutes stdout — but --json runs still defer it (see isJsonRun) so the
   // very first invocation stays free of any incidental output on either stream.
+  const { maybeShowTelemetryNotice, trackCommand } = await import('../telemetry/index.js');
   await maybeShowTelemetryNotice({ silent: isJsonRun(actionCommand) });
 
   // Track command execution (use actionCommand to get the actual subcommand)
@@ -199,12 +217,14 @@ program.hook('postAction', async (_thisCommand, actionCommand) => {
   // `openspec completion ...`, and a stderr that is not a terminal (agents and
   // pipes would otherwise silently burn the user's one-shot tip).
   try {
+    const { maybeShowCompletionTip } = await import('../core/completion-tip.js');
     await maybeShowCompletionTip({
       silent: shouldDeferCompletionTip(actionCommand, Boolean(process.stderr.isTTY)),
     });
   } finally {
     // The flush runs even if the hint throws: parse() is synchronous, so a
     // rejection here has no catch anywhere above it.
+    const { shutdown } = await import('../telemetry/index.js');
     await shutdown();
   }
 });
@@ -259,7 +279,7 @@ program
       });
       await initCommand.execute(targetPath);
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -280,7 +300,7 @@ program
       });
       await initCommand.execute('.');
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -291,6 +311,24 @@ program
   .option('--force', 'ファイルが最新でも強制更新')
   .action(async (targetPath = '.', options?: { force?: boolean }) => {
     try {
+      const [
+        {
+          getInstallDir,
+          isSourceCheckout,
+          getAvailableCliUpdate,
+          shouldOfferUpgrade,
+          displayCliUpdateNote,
+          offerCliUpgrade,
+          rerunUpdateWithUpgradedCli,
+          displayUpgradeCommand,
+        },
+        { isInteractive },
+        { UpdateCommand },
+      ] = await Promise.all([
+        import('../core/version-check.js'),
+        import('../utils/interactive.js'),
+        import('../core/update.js'),
+      ]);
       const installDir = getInstallDir();
       // Running from a clone: the version is whatever the branch says, so any
       // upgrade advice would be noise. Decided before the request, so a
@@ -345,7 +383,7 @@ program
         displayCliUpdateNote(latestVersion, targetPath);
       }
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -355,12 +393,21 @@ program
   .description('項目を一覧表示（デフォルトは変更）。仕様は --specs を使用')
   .option('--specs', '変更ではなく仕様を一覧表示')
   .option('--changes', '変更を一覧表示（デフォルト）')
+  .option('--archived', 'アーカイブ済みの変更だけを表示')
+  .option('--all', '進行中とアーカイブ済みの変更を両方表示')
   .option('--sort <order>', '並び順: "recent"（デフォルト）または "name"', 'recent')
   .option('--json', 'JSON で出力（プログラム向け）')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)
   .addOption(hiddenStorePathOption())
-  .action(async (options?: { specs?: boolean; changes?: boolean; sort?: string; json?: boolean; store?: string; storePath?: string }) => {
+  .action(async (options?: { specs?: boolean; changes?: boolean; archived?: boolean; all?: boolean; sort?: string; json?: boolean; store?: string; storePath?: string }) => {
     try {
+      if (options?.specs && (options.archived || options.all)) {
+        throw new Error('--archived と --all は変更を一覧表示する場合だけ使用できます。');
+      }
+      const [{ resolveRootForCommand, toRootOutput }, { ListCommand }] = await Promise.all([
+        import('../core/root-selection.js'),
+        import('../core/list.js'),
+      ]);
       const root = await resolveRootForCommand(options ?? {}, {
         json: options?.json,
         failurePayload: options?.specs ? { specs: [], root: null } : { changes: [], root: null },
@@ -377,10 +424,12 @@ program
       await listCommand.execute(root.path, mode, {
         sort,
         json: options?.json,
+        archived: options?.archived,
+        all: options?.all,
         ...(options?.json ? { root: toRootOutput(root) } : {}),
       });
     } catch (error) {
-      failWithError(error, {
+      await failWithError(error, {
         enabled: options?.json,
         payload: options?.specs ? { specs: [], root: null } : { changes: [], root: null },
         fallbackCode: 'list_error',
@@ -399,6 +448,10 @@ program
       // Implicit cwd fallback stays enabled so `view` keeps accepting the same
       // directories as `list`/`status` — notably pre-config.yaml `openspec/`
       // dirs. ViewCommand still reports a missing openspec/ directory itself.
+      const [{ resolveRootForCommand }, { ViewCommand }] = await Promise.all([
+        import('../core/root-selection.js'),
+        import('../core/view.js'),
+      ]);
       const root = await resolveRootForCommand(options ?? {});
       if (!root) {
         return;
@@ -406,7 +459,7 @@ program
       const viewCommand = new ViewCommand();
       await viewCommand.execute(root.path);
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -431,6 +484,7 @@ changeCmd
   .option('--no-interactive', '対話プロンプトを無効化')
   .action(async (changeName?: string, options?: { json?: boolean; requirementsOnly?: boolean; deltasOnly?: boolean; diff?: boolean; noInteractive?: boolean }) => {
     try {
+      const { ChangeCommand } = await import('../commands/change.js');
       const changeCommand = new ChangeCommand();
       await changeCommand.show(changeName, options);
     } catch (error) {
@@ -447,6 +501,7 @@ changeCmd
   .action(async (options?: { json?: boolean; long?: boolean }) => {
     try {
       console.error('警告: "openspec change list" は非推奨です。"openspec list" を使ってください。');
+      const { ChangeCommand } = await import('../commands/change.js');
       const changeCommand = new ChangeCommand();
       await changeCommand.list(options);
     } catch (error) {
@@ -463,6 +518,7 @@ changeCmd
   .option('--no-interactive', '対話プロンプトを無効化')
   .action(async (changeName?: string, options?: { strict?: boolean; json?: boolean; noInteractive?: boolean }) => {
     try {
+      const { ChangeCommand } = await import('../commands/change.js');
       const changeCommand = new ChangeCommand();
       // validate() already sets process.exitCode, and Node honours it at
       // natural exit. Calling process.exit() here would skip commander's
@@ -487,10 +543,11 @@ program
   .addOption(hiddenStorePathOption())
   .action(async (changeName?: string, options?: ArchiveOptions) => {
     try {
+      const { ArchiveCommand } = await import('../core/archive.js');
       const archiveCommand = new ArchiveCommand();
       await archiveCommand.execute(changeName, options);
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -521,10 +578,11 @@ program
   .addOption(hiddenStorePathOption())
   .action(async (itemName?: string, options?: { all?: boolean; changes?: boolean; specs?: boolean; archived?: boolean; report?: string; type?: string; strict?: boolean; json?: boolean; noInteractive?: boolean; concurrency?: string; store?: string; storePath?: string }) => {
     try {
+      const { ValidateCommand } = await import('../commands/validate.js');
       const validateCommand = new ValidateCommand();
       await validateCommand.execute(itemName, options);
     } catch (error) {
-      failWithError(error, { enabled: options?.json, fallbackCode: 'validate_error' });
+      await failWithError(error, { enabled: options?.json, fallbackCode: 'validate_error' });
       process.exit(1);
     }
   });
@@ -552,10 +610,11 @@ program
   .allowUnknownOption(true)
   .action(async (itemName?: string, options?: { json?: boolean; type?: string; noInteractive?: boolean; [k: string]: any }) => {
     try {
+      const { ShowCommand } = await import('../commands/show.js');
       const showCommand = new ShowCommand();
       await showCommand.execute(itemName, options ?? {});
     } catch (error) {
-      failWithError(error, { enabled: options?.json, fallbackCode: 'show_error' });
+      await failWithError(error, { enabled: options?.json, fallbackCode: 'show_error' });
       process.exit(1);
     }
   });
@@ -567,10 +626,11 @@ program
   .option('--body <text>', 'フィードバックの詳細説明')
   .action(async (message: string, options?: { body?: string }) => {
     try {
+      const { FeedbackCommand } = await import('../commands/feedback.js');
       const feedbackCommand = new FeedbackCommand();
       await feedbackCommand.execute(message, options);
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -585,10 +645,11 @@ completionCmd
   .description('シェル用補完スクリプトを生成（標準出力へ出力）')
   .action(async (shell?: string) => {
     try {
+      const { CompletionCommand } = await import('../commands/completion.js');
       const completionCommand = new CompletionCommand();
       await completionCommand.generate({ shell });
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -599,10 +660,11 @@ completionCmd
   .option('--verbose', 'インストールの詳細出力を表示')
   .action(async (shell?: string, options?: { verbose?: boolean }) => {
     try {
+      const { CompletionCommand } = await import('../commands/completion.js');
       const completionCommand = new CompletionCommand();
       await completionCommand.install({ shell, verbose: options?.verbose });
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -613,10 +675,11 @@ completionCmd
   .option('-y, --yes', '確認プロンプトをスキップ')
   .action(async (shell?: string, options?: { yes?: boolean }) => {
     try {
+      const { CompletionCommand } = await import('../commands/completion.js');
       const completionCommand = new CompletionCommand();
       await completionCommand.uninstall({ shell, yes: options?.yes });
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -627,6 +690,7 @@ program
   .description('機械可読形式で補完データを出力（内部用）')
   .action(async (type: string) => {
     try {
+      const { CompletionCommand } = await import('../commands/completion.js');
       const completionCommand = new CompletionCommand();
       await completionCommand.complete({ type });
     } catch (error) {
@@ -651,13 +715,16 @@ program
   .addOption(hiddenStorePathOption())
   .action(async (options: StatusOptions) => {
     try {
+      const { statusCommand } = await import('../commands/workflow/status.js');
       await statusCommand(options);
     } catch (error) {
-      failWithError(error, {
+      await failWithError(error, {
         enabled: options.json,
         // バッチでは null 値を含む形にする。単一変更の失敗形式は既存契約なので、
         // payload を追加しない。
-        payload: options.all ? BATCH_STATUS_FAILURE_PAYLOAD : undefined,
+        payload: options.all
+          ? (await import('../commands/workflow/status.js')).BATCH_STATUS_FAILURE_PAYLOAD
+          : undefined,
         fallbackCode: 'change_error',
       });
       process.exit(1);
@@ -675,6 +742,8 @@ program
   .addOption(hiddenStorePathOption())
   .action(async (artifactId: string | undefined, options: InstructionsOptions) => {
     try {
+      const { applyInstructionsCommand, archiveInstructionsCommand, instructionsCommand } =
+        await import('../commands/workflow/instructions.js');
       // Workflow instruction surfaces are reserved command branches, not artifacts.
       if (artifactId === 'apply') {
         await applyInstructionsCommand(options);
@@ -684,7 +753,7 @@ program
         await instructionsCommand(artifactId, options);
       }
     } catch (error) {
-      failWithError(error, { enabled: options.json, fallbackCode: 'change_error' });
+      await failWithError(error, { enabled: options.json, fallbackCode: 'change_error' });
       process.exit(1);
     }
   });
@@ -697,9 +766,10 @@ program
   .option('--json', 'アーティファクト ID からテンプレートパスへの対応を JSON で出力')
   .action(async (options: TemplatesOptions) => {
     try {
+      const { templatesCommand } = await import('../commands/workflow/templates.js');
       await templatesCommand(options);
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });
@@ -713,9 +783,10 @@ program
   .addOption(hiddenStorePathOption())
   .action(async (options: SchemasOptions) => {
     try {
+      const { schemasCommand } = await import('../commands/workflow/schemas.js');
       await schemasCommand(options);
     } catch (error) {
-      failWithError(error, {
+      await failWithError(error, {
         enabled: options.json,
         payload: { schemas: [], root: null },
         fallbackCode: 'schemas_error',
@@ -742,9 +813,10 @@ newCmd
   .addOption(new Option('--areas <names>', 'サポート終了').hideHelp())
   .action(async (name: string, options: NewChangeOptions) => {
     try {
+      const { newChangeCommand } = await import('../commands/workflow/new-change.js');
       await newChangeCommand(name, options);
     } catch (error) {
-      failWithError(error);
+      await failWithError(error);
       process.exit(1);
     }
   });

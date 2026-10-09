@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { describe, expect, it } from 'vitest';
@@ -20,6 +21,7 @@ import { getCommandContents } from '../../../src/core/shared/skill-generation.js
 import { MAX_CONTEXT_SIZE } from '../../../src/core/project-config.js';
 import { resolveOptionalWorkflows } from '../../../src/core/templates/optional-workflow.js';
 import { ALL_WORKFLOWS } from '../../../src/core/profiles.js';
+import { parseTaskLines } from '../../../src/utils/task-progress.js';
 
 // Templates carry optional-workflow conditionals; a body only means anything
 // once resolved against a workflow set. Unless a test says otherwise, these are
@@ -80,7 +82,64 @@ describe('propose preamble', () => {
   });
 });
 
+describe('default proposal guidance', () => {
+  it('frames new capabilities as durable behavior boundaries (#1965)', () => {
+    const proposal = defaultSchema.artifacts.find(artifact => artifact.id === 'proposal');
+    expect(proposal).toBeDefined();
+    expect(proposal!.instruction).toContain(
+      '長く使うシステムの振る舞い'
+    );
+    expect(proposal!.instruction).toContain(
+      'この変更の作業'
+    );
+    expect(proposal!.instruction).toContain('システムの発展に伴う関連要件をまとめられる');
+    expect(proposal!.instruction).toContain('広すぎる何でも含む機能名は避ける');
+
+    const template = fs.readFileSync(
+      path.join(repoRoot, 'schemas', 'spec-driven', 'templates', 'proposal.md'),
+      'utf-8'
+    );
+    expect(template).toMatch(
+      /システムの発展に伴う関連要件をまとめられる、一貫した振る舞いを\s+表す名前にします/
+    );
+    expect(template).toMatch(/実装タスクや提案の節の名前にはしません/);
+    expect(template).toContain('広すぎる何でも含む名前は避けます');
+
+    const reference = fs.readFileSync(
+      path.join(repoRoot, 'docs-lab', 'reference', 'schemas', 'spec-driven', 'index.md'),
+      'utf-8'
+    );
+    expect(reference).toMatch(
+      /システムの発展に伴う関連要件をまとめられる、一貫した振る舞いを\s+表す名前にします/
+    );
+    expect(reference).toMatch(/実装タスクや提案の節の名前にはしません/);
+    expect(reference).toContain('広すぎる何でも含む名前は避けます');
+  });
+});
+
 describe('default task guidance', () => {
+  it('keeps tracked tasks within the pre-archive workflow (#1790)', () => {
+    const tasks = defaultSchema.artifacts.find(artifact => artifact.id === 'tasks');
+    expect(tasks).toBeDefined();
+    expect(tasks!.instruction).toMatch(
+      /アーカイブ前に完了できる実装と検証の作業を追跡する/
+    );
+    expect(tasks!.instruction).toMatch(
+      /tasks.md の末尾に任意の `## Workflow follow-up` 節を設け、通常の箇条書きで残す/
+    );
+
+    const examples = [...tasks!.instruction.matchAll(/```\s*([\s\S]*?)```/g)];
+    expect(examples).toHaveLength(2);
+    const implementation = examples[0][1];
+    const followUp = examples[1][1];
+    expect(followUp).toContain('## Workflow follow-up');
+    expect(followUp).toContain('- アーカイブ結果を検証する。');
+    expect(parseTaskLines(followUp)).toEqual([]);
+    expect(parseTaskLines(`${implementation}\n${followUp}`)).toEqual(
+      parseTaskLines(implementation)
+    );
+  });
+
   it('requires a concrete verification method in each task (#345)', () => {
     const tasks = defaultSchema.artifacts.find(artifact => artifact.id === 'tasks');
     expect(tasks).toBeDefined();

@@ -11,55 +11,71 @@
 呼び出し例には apply ワークフローを使用しています。どのワークフローも同じ形式です。
 選択画面を省略するには、ID を`openspec init --tools <id>`へ渡します（[CLI](cli.md)）。
 
-| ツール                            | `--tools` ID     | スキル                             | スキルの呼び出し               | コマンド                     | コマンドの呼び出し |
-| --------------------------------- | ---------------- | ---------------------------------- | ------------------------------ | ---------------------------- | ------------------ |
-| Amazon Q Developer                | `amazon-q`       | `.amazonq/skills/`                 | `/openspec-apply-change`       | `.amazonq/prompts/`          | `@opsx-apply`      |
-| Antigravity                       | `antigravity`    | `.agents/skills/`                  | `/openspec-apply-change`       | `.agents/workflows/`         | `/opsx-apply`      |
-| Auggie (Augment CLI)              | `auggie`         | `.augment/skills/`                 | `/openspec-apply-change`       | `.augment/commands/`         | `/opsx-apply`      |
-| Bob Shell                         | `bob`            | `.bob/skills/`                     | `/openspec-apply-change`       | `.bob/commands/`             | `/opsx-apply`      |
-| Claude Code                       | `claude`         | `.claude/skills/`                  | `/openspec-apply-change`       | `.claude/commands/opsx/`     | `/opsx:apply`      |
-| Cline                             | `cline`          | `.cline/skills/`                   | `/openspec-apply-change`       | `.clinerules/workflows/`     | `/opsx-apply`      |
-| CodeArts                          | `codeartsagent`  | `.codeartsdoer/skills/`            | `/openspec-apply-change`       | なし                         | なし               |
-| CodeBuddy Code (CLI)              | `codebuddy`      | `.codebuddy/skills/`               | `/openspec-apply-change`       | `.codebuddy/commands/opsx/`  | `/opsx:apply`      |
-| Codex                             | `codex`          | `.agents/skills/`                  | `$openspec-apply-change`       | なし                         | なし               |
-| Continue                          | `continue`       | `.continue/skills/`                | `/openspec-apply-change`       | `.continue/prompts/`         | `/opsx-apply`      |
-| CoStrict                          | `costrict`       | `.cospec/skills/`                  | `/openspec-apply-change`       | `.cospec/openspec/commands/` | `/opsx-apply`      |
-| Crush                             | `crush`          | `.crush/skills/`                   | `/openspec-apply-change`       | `.crush/commands/opsx/`      | `/opsx:apply`      |
-| Cursor                            | `cursor`         | `.cursor/skills/`                  | `/openspec-apply-change`       | `.cursor/commands/`          | `/opsx-apply`      |
-| Devin Desktop (formerly Windsurf) | `devin`          | `.devin/skills/`                   | `/openspec-apply-change`       | `.devin/workflows/`          | `/opsx-apply`      |
-| Factory Droid                     | `factory`        | `.factory/skills/`                 | `/openspec-apply-change`       | `.factory/commands/`         | `/opsx-apply`      |
-| ForgeCode                         | `forgecode`      | `.forge/skills/`                   | `/openspec-apply-change`       | なし                         | なし               |
-| Gemini CLI                        | `gemini`         | `.gemini/skills/`                  | `/openspec-apply-change`       | `.gemini/commands/opsx/`     | `/opsx:apply`      |
-| GitHub Copilot                    | `github-copilot` | `.github/skills/`                  | `/openspec-apply-change`       | `.github/prompts/`           | `/opsx-apply`      |
-| Hermes Agent                      | `hermes`         | `.hermes/skills/`                  | `/openspec-apply-change`       | なし                         | なし               |
-| iFlow                             | `iflow`          | `.iflow/skills/`                   | `/openspec-apply-change`       | `.iflow/commands/`           | `/opsx-apply`      |
-| Junie                             | `junie`          | `.junie/skills/`                   | `/openspec-apply-change`       | `.junie/commands/`           | `/opsx-apply`      |
-| Kilo Code                         | `kilocode`       | `.kilocode/skills/`                | `/openspec-apply-change`       | `.kilo/command/`       | `/opsx-apply`      |
-| Kimi Code                         | `kimi`           | `.kimi-code/skills/`               | `/skill:openspec-apply-change` | なし                         | なし               |
-| Kiro                              | `kiro`           | `.kiro/skills/`                    | `/openspec-apply-change`       | `.kiro/prompts/`             | `/opsx-apply`      |
-| Lingma                            | `lingma`         | `.lingma/skills/`                  | `/openspec-apply-change`       | `.lingma/commands/opsx/`     | `/opsx:apply`      |
-| MiniMax Code                      | `minimax-code`   | `~/.minimax/skills/`（グローバル） | `/openspec-apply-change`       | なし                         | なし               |
-| Mistral Vibe                      | `vibe`           | `.vibe/skills/`                    | `/openspec-apply-change`       | なし                         | なし               |
-| Oh My Pi                          | `oh-my-pi`       | `.omp/skills/`                     | `/openspec-apply-change`       | `.omp/commands/`             | `/opsx-apply`      |
-| OpenCode                          | `opencode`       | `.opencode/skills/`                | `/openspec-apply-change`       | `.opencode/commands/`        | `/opsx-apply`      |
-| Pi                                | `pi`             | `.pi/skills/`                      | `/openspec-apply-change`       | `.pi/prompts/`               | `/opsx-apply`      |
-| Qoder                             | `qoder`          | `.qoder/skills/`                   | `/openspec-apply-change`       | `.qoder/commands/opsx/`      | `/opsx:apply`      |
-| Qwen Code                         | `qwen`           | `.qwen/skills/`                    | `/openspec-apply-change`       | `.qwen/commands/`            | `/opsx-apply`      |
-| Trae                              | `trae`           | `.trae/skills/`                    | `/openspec-apply-change`       | `.trae/commands/`            | `/opsx-apply`      |
-| ZCode                             | `zcode`          | `.zcode/skills/`                   | `/openspec-apply-change`       | `.zcode/commands/opsx/`      | `/opsx:apply`      |
-| Zoo Code                          | `roocode`        | `.roo/skills/`                     | `/openspec-apply-change`       | `.roo/commands/`             | `/opsx-apply`      |
-| Other / Universal             | `agents`         | `.agents/skills/`                  | `/openspec-apply-change`       | なし                         | なし               |
+| ツール | `--tools` ID | スキル | スキルの呼び出し | コマンド | コマンドの呼び出し |
+|---|---|---|---|---|---|
+| Amazon Q Developer | `amazon-q` | `.amazonq/skills/` | `/openspec-apply-change` | `.amazonq/prompts/` | `@opsx-apply` |
+| Amp | `amp` | `.agents/skills/` | `/openspec-apply-change` | なし | なし |
+| Antigravity | `antigravity` | `.agents/skills/` | `/openspec-apply-change` | `.agents/workflows/` | `/opsx-apply` |
+| AtomCode | `atomcode` | `.atomcode/skills/` | `/openspec-apply-change` | `.atomcode/commands/` | `/opsx-apply` |
+| Auggie (Augment CLI) | `auggie` | `.augment/skills/` | `/openspec-apply-change` | `.augment/commands/` | `/opsx-apply` |
+| IBM Bob | `bob` | `.bob/skills/` | `/openspec-apply-change` | `.bob/commands/` | `/opsx-apply` |
+| Claude Code | `claude` | `.claude/skills/` | `/openspec-apply-change` | `.claude/commands/opsx/` | `/opsx:apply` |
+| Cline | `cline` | `.cline/skills/` | `/openspec-apply-change` | `.clinerules/workflows/` | `/opsx-apply` |
+| CodeArts | `codeartsagent` | `.codeartsdoer/skills/` | `/openspec-apply-change` | なし | なし |
+| CodeBuddy Code (CLI) | `codebuddy` | `.codebuddy/skills/` | `/openspec-apply-change` | `.codebuddy/commands/opsx/` | `/opsx:apply` |
+| Code Studio | `codestudio` | `.codestudio/skills/` | `/openspec-apply-change` | `.codestudio/prompts/` | `/opsx-apply` |
+| Codex | `codex` | `.agents/skills/` | `$openspec-apply-change` | なし | なし |
+| Continue | `continue` | `.continue/skills/` | `/openspec-apply-change` | `.continue/prompts/` | `/opsx-apply` |
+| CoStrict | `costrict` | `.cospec/skills/` | `/openspec-apply-change` | `.cospec/openspec/commands/` | `/opsx-apply` |
+| Crush | `crush` | `.crush/skills/` | `/openspec-apply-change` | `.crush/commands/opsx/` | `/opsx:apply` |
+| Cursor | `cursor` | `.cursor/skills/` | `/openspec-apply-change` | `.cursor/commands/` | `/opsx-apply` |
+| DeepSeek Harness | `dsh` | `.dsh/skills/` | `/openspec-apply-change` | なし | なし |
+| Devin Desktop (formerly Windsurf) | `devin` | `.devin/skills/` | `/openspec-apply-change` | `.devin/workflows/` | `/opsx-apply` |
+| EasyCode | `easycode` | `.easycode/skills/` | `/openspec-apply-change` | `.easycode/commands/opsx/` | `/opsx:apply` |
+| Factory Droid | `factory` | `.factory/skills/` | `/openspec-apply-change` | `.factory/commands/` | `/opsx-apply` |
+| ForgeCode | `forgecode` | `.forge/skills/` | `/openspec-apply-change` | なし | なし |
+| Gemini CLI | `gemini` | `.gemini/skills/` | `/openspec-apply-change` | `.gemini/commands/opsx/` | `/opsx:apply` |
+| GigaCode | `gigacode` | `.gigacode/skills/` | `/openspec-apply-change` | `.gigacode/commands/` | `/opsx-apply` |
+| GitHub Copilot | `github-copilot` | `.github/skills/` | `/openspec-apply-change` | `.github/prompts/` | `/opsx-apply` |
+| Grok Build | `grok` | `.grok/skills/` | `/openspec-apply-change` | なし | なし |
+| GSD | `gsd` | `.agents/skills/` | `openspec-apply-change` の使用を依頼 | なし | なし |
+| Hermes Agent | `hermes` | `.hermes/skills/` | `/openspec-apply-change` | なし | なし |
+| iFlow | `iflow` | `.iflow/skills/` | `/openspec-apply-change` | `.iflow/commands/` | `/opsx-apply` |
+| Junie | `junie` | `.junie/skills/` | `/openspec-apply-change` | `.junie/commands/` | `/opsx-apply` |
+| Kilo Code | `kilocode` | `.kilocode/skills/` | `/openspec-apply-change` | `.kilo/command/` | `/opsx-apply` |
+| Kimi Code | `kimi` | `.kimi-code/skills/` | `/skill:openspec-apply-change` | なし | なし |
+| Kiro | `kiro` | `.kiro/skills/` | `/openspec-apply-change` | `.kiro/prompts/` | `/opsx-apply` |
+| Lingma | `lingma` | `.lingma/skills/` | `/openspec-apply-change` | `.lingma/commands/opsx/` | `/opsx:apply` |
+| MiniMax Code | `minimax-code` | `~/.minimax/skills/` （グローバル） | `/openspec-apply-change` | なし | なし |
+| Mistral Vibe | `vibe` | `.vibe/skills/` | `/openspec-apply-change` | なし | なし |
+| Oh My Pi | `oh-my-pi` | `.omp/skills/` | `/openspec-apply-change` | `.omp/commands/` | `/opsx-apply` |
+| OpenCode | `opencode` | `.opencode/skills/` | `/openspec-apply-change` | `.opencode/commands/` | `/opsx-apply` |
+| Pi | `pi` | `.pi/skills/` | `/openspec-apply-change` | `.pi/prompts/` | `/opsx-apply` |
+| Qoder | `qoder` | `.qoder/skills/` | `/openspec-apply-change` | `.qoder/commands/opsx/` | `/opsx:apply` |
+| Qwen Code | `qwen` | `.qwen/skills/` | `/openspec-apply-change` | `.qwen/commands/` | `/opsx-apply` |
+| Trae | `trae` | `.trae/skills/` | `/openspec-apply-change` | `.trae/commands/` | `/opsx-apply` |
+| [Veai](https://veai.ru/docs/veai/download) | `veai` | `.veai/skills/` | `/openspec-apply-change` | なし | なし |
+| Warp | `warp` | `.warp/skills/` | `/openspec-apply-change` | なし | なし |
+| ZCode | `zcode` | `.zcode/skills/` | `/openspec-apply-change` | `.zcode/commands/opsx/` | `/opsx:apply` |
+| Zoo Code | `roocode` | `.roo/skills/` | `/openspec-apply-change` | `.roo/commands/` | `/opsx-apply` |
+| Other / Universal | `agents` | `.agents/skills/` | `/openspec-apply-change` | なし | なし |
 
 - **スキルの呼び出し**：ツールがスキルを入力可能な項目として登録するかどうかは、各ツール側の動作です。
   この列は、生成ファイルと init が表示するヒントで OpenSpec が使用する表記を示します。
   入力しても動作しない場合は、使用するツールのドキュメントを確認してください。
 - **コマンドファイルの形式**：ほとんどのツールは`.md`コマンドファイルを使用します。
-  Gemini CLI は`.toml`、Continue は`.prompt`、Kiro と GitHub Copilot は`.prompt.md`を使用します。
+  EasyCode と Gemini CLI は`.toml`、Continue は`.prompt`、Code Studio、Kiro、GitHub Copilot は`.prompt.md`を使用します。
   どの形式でも、入力する表記は同じです。
 
 ## ツール別の注意事項
 
 以下に個別の説明がないツールは、一覧の記載どおりに動作します。
+
+### Amp
+
+- **プロジェクトのスキル**：Amp は `.agents/skills/` から OpenSpec のスキルを読み込みます。
+- **コマンドファイルなし**：Amp はスキルを直接実行するため、init はコマンド生成を省略します。
+- **共有フォルダ**：Amp は `.agents/skills/` を Antigravity、Codex、Zed Agent、`agents` ターゲットと共有します。OpenSpec はスキルツリーを一度だけ書き込みます。
 
 ### Antigravity
 
@@ -68,7 +84,7 @@
 - **旧フォルダ**：OpenSpec は置き換え用ファイルを書き込んだ後、対応する生成ファイルを
   `.agent/`から削除します。カスタムファイルと変更済みの生成ファイルは、確認できるよう
   `.agent/`に残します。
-- **共有スキル**：Antigravity は`.agents/skills/`を Codex、Zed Agent、`agents`ターゲットと
+- **共有スキル**：Antigravity は`.agents/skills/`を Amp、Codex、Zed Agent、`agents`ターゲットと
   共有します。OpenSpec はこのスキルツリーを一度だけ書き込み、Antigravity のコマンドは
   引き続き`.agents/workflows/`へ書き込みます。
 
@@ -86,11 +102,17 @@ Cline は`.cline/`フォルダではなく、`.clinerules/workflows/`からコ�
   両方の操作方法は[OpenAI のスキルドキュメント](https://learn.chatgpt.com/docs/build-skills)を参照してください。
 - **コマンドファイルなし**：Codex はスキルを直接実行します。そのため、配布設定にコマンドが含まれていても
   init はコマンドを省略し、`Commands skipped for: codex (uses skills)`と表示します。
-- **共有フォルダ**：Codex のスキルは、Antigravity、Zed Agent、`agents`ターゲットと同じ
+- **共有フォルダ**：Codex のスキルは、Amp、Antigravity、Zed Agent、`agents`ターゲットと同じ
   `.agents/skills/`ツリーに配置されます。複数を選択しても互換性のあるツリーは 1 つだけ維持され、
   Codex が所有する場合、その引き継ぎには`$openspec-*`と`/openspec-*`の両方が記載されます。
 - **旧パス**：旧バージョンによって`.codex/skills/`へインストールされたスキルは、次回の
   `openspec update`で移行されます。
+
+### DeepSeek Harness
+
+- **プロジェクトルート**：DSH は最も近い祖先の `.git`、Git の外ではカレントディレクトリを使います。その場所で `openspec init --tools dsh` を実行してください。入れ子の OpenSpec プロジェクトでは、`.dsh/skills/` の絶対パスを DSH の `customSkillDirs` に追加します。名前が重なる場合は、Git ルートのスキルが優先されます（[本家の検出ルール](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/skill/skill-filesystem)）。
+- **優先順位**：同名のスキルがある場合、`.dsh/skills/` は `.agents/skills/` より優先されます。
+- **インストール形式**：`skills` または `both` を使います。`commands` では DSH のワークフローをインストールしません。`openspec config profile` で形式を変更し、`openspec init --tools dsh` を再実行してください。
 
 ### Devin Desktop (formerly Windsurf)
 
@@ -110,6 +132,12 @@ Cline は`.cline/`フォルダではなく、`.clinerules/workflows/`からコ�
   ファイルがあるのにスキルが消えた場合は、`/skills reload`を実行し、
   `/skills info openspec-propose`で認識されたことを確認してください。
 
+### GSD
+
+- **プロジェクトのスキル**：GSD は [`.agents/skills/`](https://github.com/open-gsd/gsd-pi/blob/main/docs/user-docs/skills.md) から OpenSpec のワークフローを読み込みます。
+- **呼び出し**：`openspec-<workflow>` スキルを使うよう GSD に依頼します。GSD のスキル検出設定によって、一致するスキルを選ぶこともできます。
+- **サブエージェントファイルなし**：[`.gsd/agents/`](https://github.com/open-gsd/gsd-pi/blob/main/docs/user-docs/subagents.md) は GSD のサブエージェント定義の保存先です。OpenSpec はそこにワークフロースキルを生成しません。
+
 ### Hermes Agent
 
 Hermes は既定では`~/.hermes/skills/`からのみスキルを読み込みます。プロジェクトの
@@ -123,13 +151,18 @@ Hermes は既定では`~/.hermes/skills/`からのみスキルを読み込みま
 - **プロジェクト間で安全**：コマンドのみを配布する設定でもグローバルスキルは残ります。
   そのため、あるプロジェクトの設定によって、別のプロジェクトが使用するスキルが削除されることはありません。
 
+### Warp
+
+- **常にスキルを生成**：Warp はコマンドファイルを使わずスキルを直接呼び出すため、インストール形式が `commands` でも `.warp/skills/` にスキルを生成します。
+- **OpenSpec が管理する範囲**：`.warp/skills/` だけです。Warp の設定と `WARP.md` は作成・編集しません。
+
 ### Other / Universal（共有 `.agents` スキル）
 
 - **適しているツール**：共有`.agents/skills/`フォルダを読み込むすべてのツールが対象です。
   対応一覧に行がないツールも含みます。一覧にないアシスタントでは、この項目を選びます。
   init の検索欄では`universal`、`other`、`generic`、`custom`、`proprietary`、
   `unlisted`、`unsupported`、`vendor-neutral`、`agents.md`で見つかります。
-- **他のターゲットとの併用**：Antigravity、Codex、Zed Agent、このターゲットは、1 つの物理的な
+- **他のターゲットとの併用**：Amp、Antigravity、Codex、Zed Agent、このターゲットは、1 つの物理的な
   スキルツリーを共有します。OpenSpec は`.openspec-target`へ書き込み元を 1 つ記録し、実行ごとに
   ツリーを一度だけ書き込みます。各ツール固有のコマンドファイルは引き続き生成されます。
 - **OpenSpec が管理する範囲**：`openspec-*`フォルダと`.openspec-target`マーカーだけです。

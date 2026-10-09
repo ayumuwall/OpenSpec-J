@@ -39,6 +39,11 @@
 - 追加修正（v1.13.2 追従後）: 日本語の「Requirements セクションは必須です」を判定に追加した。従来の英語判定を維持し、`test/core/validation.test.ts` で Purpose / Requirements の欠落時に日本語診断と補足ガイドが両方出ることを確認する。
 - フォローアップ: upstream でメッセージ文言が増減した場合は、英語/日本語両方のトリガーを見直す。英語/日本語のガイド付与を直接確認するユニットテストを追加すると安全。
 
+### v1.14.1: AtomCode の入力見出し検出
+
+- `src/core/command-generation/adapters/atomcode.ts` は `Input` / `入力` の両方と半角・全角コロンを認識する。日本語見出しだけを翻訳すると `args: none` になり、呼び出し引数が失われるため、英語互換を保った検出が必要。
+- `test/core/command-generation/adapters.test.ts` で両言語の見出しから `args: optional` と `$ARGUMENTS` が生成されることを確認する。全ワークフローの期待値は見出し検出の実装を複製せず、引数不要の `onboard` を明示する。
+
 ### コマンド生成: 入力見出しの検出が英語ラベル依存
 - ファイル: `src/core/command-generation/adapters/command-code.ts`, `src/core/command-generation/adapters/oh-my-pi.ts`, `src/core/command-generation/adapters/opencode.ts`, `src/core/command-generation/adapters/pi.ts`
 - 症状: upstream のコマンド生成アダプターは `**Input**:` 見出しを正規表現で検出し、その直後へ `$ARGUMENTS` または `$@` を挿入する。見出しを `**入力**:` へ翻訳するだけでは検出されず、生成コマンドへ呼び出し引数が渡らなくなる。

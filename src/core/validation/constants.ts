@@ -48,7 +48,7 @@ export const VALIDATION_MESSAGES = {
   PURPOSE_IS_PLACEHOLDER:
     'Purpose セクションが、記述済みの目的ではなくプレースホルダーのままです（新しい機能に対して `openspec archive` が書き込む文、または先頭に残された `TBD` / `TODO` マーカー）。' +
     'この機能の目的へ置き換えるには、メイン仕様を直接編集してください。仕様差分の `## Purpose` は機能の新規作成時にだけ読み込まれるため、既存の Purpose は置き換えられません。',
-  REQUIREMENT_TOO_LONG: `要件文が長すぎます（>${MAX_REQUIREMENT_TEXT_LENGTH} 文字）。分割を検討してください。`,
+  REQUIREMENT_TOO_LONG: `要件文が長すぎます（>${MAX_REQUIREMENT_TEXT_LENGTH} 文字）。例や境界条件をシナリオへ移すか、1つの振る舞いを示す要件に分割してください。`,
   DELTA_DESCRIPTION_TOO_BRIEF: 'デルタの説明が短すぎます',
   DELTA_MISSING_REQUIREMENTS: 'デルタには要件を含めてください',
   DELTA_SECTION_WITHOUT_REQUIREMENTS: (sections: string) =>

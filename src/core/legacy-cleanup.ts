@@ -944,10 +944,10 @@ export function formatDetectionSummary(detection: LegacyDetectionResult): string
   lines.push('動作を維持しつつセットアップが簡素化されます。');
   lines.push('');
 
-  // Section 1: Files to remove (no user content to preserve)
+  // Section 1: Files to remove entirely
   if (removals.length > 0) {
     lines.push(chalk.bold('削除するファイル'));
-    lines.push(chalk.dim('ユーザーコンテンツは含まれません:'));
+    lines.push(chalk.dim('これらのファイルは全体が削除されます。続行前に独自の内容をバックアップしてください:'));
     for (const { path } of removals) {
       lines.push(`  • ${path}`);
     }
@@ -1185,11 +1185,15 @@ export function formatProjectMdMigrationHint(): string {
   lines.push('  • openspec/project.md');
   lines.push(chalk.dim('    このファイルは削除しません。プロジェクトの背景情報が含まれている可能性があります。'));
   lines.push('');
-  lines.push(chalk.dim('    新しい openspec/config.yaml には、計画用の "context:" セクションが'));
-  lines.push(chalk.dim('    あり、すべての OpenSpec リクエストに含まれます。旧 project.md より'));
-  lines.push(chalk.dim('    も確実に機能します。'));
+  lines.push(chalk.dim('    AI アシスタントに次のように依頼してください:'));
   lines.push('');
-  lines.push(chalk.dim('    project.md を確認し、必要な内容を config.yaml の context セクションに移し、'));
-  lines.push(chalk.dim('    準備ができたらファイルを削除してください。'));
+  lines.push(chalk.dim('    openspec/project.md を確認し、有用な内容を openspec/config.yaml に移してください。'));
+  lines.push(chalk.dim('    context は簡潔にし、アーティファクト作成、apply、archive に必要な'));
+  lines.push(chalk.dim('    プロジェクト全体の事実だけを含めてください。アーティファクト固有の指示は、'));
+  lines.push(chalk.dim('    対応するアーティファクトの rules に移してください。'));
+  lines.push(chalk.dim('    apply や archive のガイダンスは、対応する operations の項目に移してください。'));
+  lines.push(chalk.dim('    一般的な内容、古い内容、冗長な内容は省いてください。project.md は削除しないでください。'));
+  lines.push('');
+  lines.push(chalk.dim('    config.yaml を確認し、準備ができたら project.md を削除してください。'));
   return lines.join('\n');
 }

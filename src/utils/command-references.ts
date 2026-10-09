@@ -84,7 +84,7 @@ const SKILL_INVOCATION_PREFIX: Record<string, string> = {
  * スキルの管理専用（docs/supported-tools.md を参照）。skills-only delivery で未登録の
  * コマンドを案内しないよう、これらのツールへのスキル参照は文章で表現する。
  */
-const NATURAL_LANGUAGE_SKILL_TOOLS = new Set<string>(['rovodev', 'codeassistant']);
+const NATURAL_LANGUAGE_SKILL_TOOLS = new Set<string>(['gsd', 'rovodev', 'codeassistant']);
 
 /**
  * Whether a tool references skills by natural language rather than a slash
@@ -170,7 +170,7 @@ export function getSkillReferenceTransformer(toolId: string): (text: string) => 
  * commands — because delivery is skills-only, because the tool has no command
  * surface at all (capability 'none', e.g. Kimi Code or Mistral Vibe), or
  * because the tool invokes skills directly and OpenSpec generates no command
- * files for it (capability 'skills-invocable', i.e. Codex) — so those skills
+ * files for it (capability 'skills-invocable', e.g. Codex or Warp) — so those skills
  * never point at commands that were not generated.
  *
  * When commands are generated, the spelling follows the tool's invocation: a

@@ -33,6 +33,11 @@ export interface ChangeNextStepsInput {
 export interface ActionContextInput {
   projectRoot: string;
   artifactIds: string[];
+  /**
+   * Set when the root is a store: the store holds the planning artifacts,
+   * and `implementationRoot` is the project that declares it, if any.
+   */
+  store?: { id: string; implementationRoot?: string };
 }
 
 export function summarizePlanningHome(
@@ -51,14 +56,48 @@ export function summarizePlanningHome(
 }
 
 export function buildActionContext(input: ActionContextInput): ActionContext {
+  const scope = editScope(input);
+  // Keys stay in the published contract order.
   return {
     mode: 'repo-local',
     sourceOfTruth: 'repo',
     planningArtifacts: input.artifactIds,
     linkedContext: [],
-    allowedEditRoots: [input.projectRoot],
+    allowedEditRoots: scope.allowedEditRoots,
     requiresAffectedAreaSelection: false,
-    constraints: ['リポジトリ内の変更アーティファクトと実装編集は、このプロジェクト内に限定されます。'],
+    constraints: scope.constraints,
+  };
+}
+
+/**
+ * A store holds planning artifacts only. The CLI does not route tasks to
+ * repos, so it names the declaring project on the current path as the edit
+ * root and has the agent ask before going anywhere else (#2013).
+ */
+function editScope(input: ActionContextInput): Pick<ActionContext, 'allowedEditRoots' | 'constraints'> {
+  if (!input.store) {
+    return {
+      allowedEditRoots: [input.projectRoot],
+      constraints: ['リポジトリ内の変更アーティファクトと実装編集は、このプロジェクト内に限定されます。'],
+    };
+  }
+
+  const planning = `変更アーティファクトはストア '${input.store.id}' (${input.projectRoot}) にあります。`;
+  const { implementationRoot } = input.store;
+  if (implementationRoot) {
+    return {
+      allowedEditRoots: [implementationRoot, input.projectRoot],
+      constraints: [
+        `${planning} 実装の編集は、このストアを宣言する現在のパス上のプロジェクト ${implementationRoot} で行います。他のリポジトリを編集する前に、ユーザーへ確認してください。`,
+      ],
+    };
+  }
+
+  return {
+    allowedEditRoots: [input.projectRoot],
+    constraints: [
+      `${planning} OpenSpec は、この変更を実装するリポジトリを特定できませんでした。編集するリポジトリをユーザーに確認し、そこで実装を編集してください。`,
+    ],
   };
 }
 

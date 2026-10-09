@@ -248,6 +248,54 @@ function parseDeclarationList(raw: unknown): DeclarationEntry[] | undefined {
 export const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit, shared with the references index
 
 /**
+ * Build the warning for an artifact whose `rules:` list is not an array of
+ * strings. Names the offending index and what YAML actually produced there, so
+ * a config that silently loses an entire rule set can be fixed without
+ * bisecting the list by hand. A bare `-` item containing an unquoted ": " is the
+ * common cause: YAML reads it as a mapping, so the hint points at quoting.
+ */
+function describeRulesShapeError(artifactId: string, rules: unknown): string {
+  const base = `'${artifactId}' のルールは文字列配列である必要があります。このアーティファクトのルールは無視します`;
+
+  if (!Array.isArray(rules)) {
+    return `${base}。rules.${artifactId} は ${describeYamlType(rules)} です`;
+  }
+
+  const bad = rules
+    .map((rule, index) => ({ rule, index }))
+    .filter(({ rule }) => typeof rule !== 'string');
+
+  if (bad.length === 0) {
+    return base;
+  }
+
+  // Name every offending index with its own shape, so a mixed list does not
+  // have to be re-bisected one item at a time.
+  const details = bad
+    .map(({ rule, index }) => `rules.${artifactId}[${index}] は ${describeYamlType(rule)} です`)
+    .join('; ');
+
+  // A bare `-` item with an unquoted ": " is the common cause: YAML reads it as
+  // a mapping. Say so rather than leaving the reader to work out the quoting.
+  const hasMapping = bad.some(({ rule }) => rule !== null && typeof rule === 'object' && !Array.isArray(rule));
+  const hint = hasMapping
+    ? ' — 引用符で囲まれていない ": " があると、YAML は項目をキーと値の組として読み取ります。文字列として扱うには、スカラー全体を引用符で囲んでください。'
+    : '';
+
+  return `${base}。${details}${hint}`;
+}
+
+/** Name a YAML value's shape in a warning, e.g. "a mapping" or "a number". */
+function describeYamlType(value: unknown): string {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return '入れ子のリスト';
+  const type = typeof value;
+  if (type === 'object') return 'マッピング';
+  if (type === 'number' || type === 'boolean') return `${type}`;
+  return `${type}`;
+}
+
+/**
  * Read and parse openspec/config.yaml from project root.
  * Uses resilient parsing - validates each field independently using Zod safeParse.
  * Returns null if file doesn't exist.
@@ -341,9 +389,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
               );
             }
           } else {
-            console.warn(
-              `'${artifactId}' のルールは文字列配列である必要があります。このアーティファクトのルールは無視します`
-            );
+            console.warn(describeRulesShapeError(artifactId, rules));
           }
         }
 

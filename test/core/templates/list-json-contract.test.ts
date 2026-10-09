@@ -94,4 +94,31 @@ describe('workflow list --json field usage', () => {
       expect(withoutSync).toContain('同期を求められた場合、含めた仕様差分がある各変更について 仕様差分から本仕様へのマージをインラインで実行');
     }
   });
+
+  it('keeps archive sync available with and without the sync workflow', () => {
+    const variants = [
+      [
+        getSkillTemplates(['archive', 'sync']).find((entry) => entry.workflowId === 'archive')!.template.instructions,
+        getSkillTemplates(['archive'])[0].template.instructions,
+        'openspec-sync-specs',
+      ],
+      [
+        getCommandTemplates(['archive', 'sync']).find((entry) => entry.id === 'archive')!.template.content,
+        getCommandTemplates(['archive'])[0].template.content,
+        '/opsx:sync',
+      ],
+    ] as const;
+
+    for (const [withSync, withoutSync, workflow] of variants) {
+      const syncStep = (text: string) => text.slice(
+        text.indexOf('4. **仕様差分の同期状態を評価します**'),
+        text.indexOf('5. **アーカイブを実行します**')
+      );
+
+      expect(syncStep(withSync)).toContain(workflow);
+      expect(withoutSync).not.toContain(workflow);
+      expect(syncStep(withoutSync)).toContain('仕様差分から本仕様へのマージを自分でインライン実行');
+      expect(withoutSync).toContain('同期を求められた場合は、仕様差分から本仕様へのマージをインラインで実行');
+    }
+  });
 });

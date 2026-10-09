@@ -40,28 +40,36 @@ export interface AIToolOption {
 
 export const AI_TOOLS: AIToolOption[] = [
   { name: 'Amazon Q Developer', value: 'amazon-q', available: true, successLabel: 'Amazon Q Developer', skillsDir: '.amazonq', requiresIdeRestart: true },
+  { name: 'Amp', value: 'amp', available: true, successLabel: 'Amp', skillsDir: '.agents', detectionPaths: ['.amp', '.agents/skills'] },
   // Antigravity は v1.20.5 で、ワークスペースのスキルとワークフローを `.agent` から
   // 共有の `.agents` ルートへ移した。`.agents` ルート自体は Codex、Zed、ベンダー非依存の
   // 対象と共有されるため、その存在だけでは Antigravity の利用を判断できない。
   // 検出には `.agent` と `.agents/workflows` を使う。
   { name: 'Antigravity', value: 'antigravity', available: true, successLabel: 'Antigravity', skillsDir: '.agents', legacySkillsDirs: ['.agent'], detectionPaths: ['.agent', '.agents/workflows'], requiresIdeRestart: true },
+  { name: 'AtomCode', value: 'atomcode', available: true, successLabel: 'AtomCode', skillsDir: '.atomcode' },
   { name: 'Auggie (Augment CLI)', value: 'auggie', available: true, successLabel: 'Auggie', skillsDir: '.augment' },
-  { name: 'Bob Shell', value: 'bob', available: true, successLabel: 'Bob Shell', skillsDir: '.bob' },
+  { name: 'IBM Bob', value: 'bob', available: true, successLabel: 'IBM Bob', skillsDir: '.bob' },
   { name: 'Claude Code', value: 'claude', available: true, successLabel: 'Claude Code', skillsDir: '.claude' },
   { name: 'Cline', value: 'cline', available: true, successLabel: 'Cline', skillsDir: '.cline', requiresIdeRestart: true },
   { name: 'Command Code', value: 'command-code', available: true, successLabel: 'Command Code', skillsDir: '.commandcode' },
   { name: 'CodeArts', value: 'codeartsagent', available: true, successLabel: 'CodeArts', skillsDir: '.codeartsdoer' },
   { name: 'Codex', value: 'codex', available: true, successLabel: 'Codex', skillsDir: '.agents', legacySkillsDirs: ['.codex'], detectionPaths: ['.agents/skills', '.codex/skills'] },
+  { name: 'DeepSeek Harness', value: 'dsh', available: true, successLabel: 'DeepSeek Harness', skillsDir: '.dsh' },
   { name: 'Devin Desktop (formerly Windsurf)', value: 'devin', available: true, successLabel: 'Devin Desktop', skillsDir: '.devin', detectionPaths: ['.devin', '.windsurf'], requiresIdeRestart: true },
   { name: 'ForgeCode', value: 'forgecode', available: true, successLabel: 'ForgeCode', skillsDir: '.forge' },
   { name: 'CodeBuddy Code (CLI)', value: 'codebuddy', available: true, successLabel: 'CodeBuddy Code', skillsDir: '.codebuddy' },
+  { name: 'Code Studio', value: 'codestudio', available: true, successLabel: 'Code Studio', skillsDir: '.codestudio', requiresIdeRestart: true },
   { name: 'Continue', value: 'continue', available: true, successLabel: 'Continue (VS Code / JetBrains / Cli)', skillsDir: '.continue', requiresIdeRestart: true },
   { name: 'CoStrict', value: 'costrict', available: true, successLabel: 'CoStrict', skillsDir: '.cospec', requiresIdeRestart: true },
   { name: 'Crush', value: 'crush', available: true, successLabel: 'Crush', skillsDir: '.crush' },
   { name: 'Cursor', value: 'cursor', available: true, successLabel: 'Cursor', skillsDir: '.cursor', requiresIdeRestart: true },
+  { name: 'EasyCode', value: 'easycode', available: true, successLabel: 'EasyCode', skillsDir: '.easycode' },
   { name: 'Factory Droid', value: 'factory', available: true, successLabel: 'Factory Droid', skillsDir: '.factory' },
   { name: 'Gemini CLI', value: 'gemini', available: true, successLabel: 'Gemini CLI', skillsDir: '.gemini' },
   { name: 'GitHub Copilot', value: 'github-copilot', available: true, successLabel: 'GitHub Copilot', skillsDir: '.github', detectionPaths: ['.github/copilot-instructions.md', '.github/instructions', '.github/workflows/copilot-setup-steps.yml', '.github/prompts', '.github/agents', '.github/skills', '.github/.mcp.json'], requiresIdeRestart: true },
+  { name: 'GigaCode', value: 'gigacode', available: true, successLabel: 'GigaCode', skillsDir: '.gigacode' },
+  { name: 'Grok Build', value: 'grok', available: true, successLabel: 'Grok Build', skillsDir: '.grok' },
+  { name: 'GSD', value: 'gsd', available: true, successLabel: 'GSD', skillsDir: '.agents', detectionPaths: ['.gsd'] },
   { name: 'Hermes Agent', value: 'hermes', available: true, successLabel: 'Hermes Agent', skillsDir: '.hermes', detectionPaths: ['.hermes', 'HERMES.md', '.hermes.md'], setupNote: 'Hermes は既定で ~/.hermes/skills/ からのみスキルを読み込みます。生成した OpenSpec スキルを Hermes が利用できるよう、このプロジェクトの .hermes/skills ディレクトリを ~/.hermes/config.yaml の skills.external_dirs に追加してください。' },
   { name: 'iFlow', value: 'iflow', available: true, successLabel: 'iFlow', skillsDir: '.iflow' },
   { name: 'Junie', value: 'junie', available: true, successLabel: 'Junie', skillsDir: '.junie', requiresIdeRestart: true },
@@ -80,6 +88,8 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Rovo Dev CLI', value: 'rovodev', available: true, successLabel: 'Rovo Dev CLI', skillsDir: '.rovodev', detectionPaths: ['.rovodev/skills', '.rovodev'] },
   { name: 'Zoo Code', value: 'roocode', available: true, successLabel: 'Zoo Code', skillsDir: '.roo', requiresIdeRestart: true },
   { name: 'Trae', value: 'trae', available: true, successLabel: 'Trae', skillsDir: '.trae', requiresIdeRestart: true },
+  { name: 'Veai', value: 'veai', available: true, successLabel: 'Veai', skillsDir: '.veai' },
+  { name: 'Warp', value: 'warp', available: true, successLabel: 'Warp', skillsDir: '.warp', detectionPaths: ['.warp', 'WARP.md'] },
   { name: 'Zed Agent', value: 'zed', available: true, successLabel: 'Zed Agent', skillsDir: '.agents', detectionPaths: ['.zed', '.agents/skills'] },
   { name: 'ZCode', value: 'zcode', available: true, successLabel: 'ZCode', skillsDir: '.zcode' },
   // 共有の `.agents` ルートを読むアシスタント向けの、ベンダー非依存の対象。

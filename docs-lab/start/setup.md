@@ -35,6 +35,22 @@ init は安全に再実行できます。
 - init を再実行して新しいツールを選択すると、そのツールが追加されます。
 - `--tools`フラグを指定すると選択画面を省略できます（[CLI リファレンス](../reference/cli.md)）。
 
+### 既存の `project.md` を移行する
+
+init は旧形式の `openspec/project.md` を `config.yaml` へコピーしません。ファイルを保持し、AI に移行を依頼するための文章を表示します。
+
+AI チャットで：
+
+```
+openspec/project.md を確認し、有用な内容を openspec/config.yaml へ移してください。
+context は簡潔にし、アーティファクトの作成、apply、archive に必要なプロジェクト全体の事実だけを含めてください。
+アーティファクト固有の指示は、該当するアーティファクトの rules へ移してください。
+apply または archive の進め方は、該当する operations の項目へ移してください。
+一般論、古い情報、冗長な内容は除外してください。project.md は削除しないでください。
+```
+
+`config.yaml` をレビューし、準備ができたら `project.md` を削除してください。
+
 ## init がインストールするもの
 
 init はプロジェクトに 2 つのものを作成します。

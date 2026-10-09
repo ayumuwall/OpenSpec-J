@@ -946,7 +946,8 @@ ${OPENSPEC_MARKERS.end}`);
       expect(summary).toContain('更新するファイル');
       expect(summary).toContain('• CLAUDE.md');
       // Should NOT be in removals
-      expect(summary).not.toContain('ユーザーコンテンツは含まれません');
+      expect(summary).not.toContain('削除するファイル');
+      expect(summary).not.toContain('カスタマイズした内容をバックアップ');
     });
 
     it('should format files to be updated', () => {
@@ -985,6 +986,7 @@ ${OPENSPEC_MARKERS.end}`);
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('削除するファイル');
       expect(summary).toContain('• .claude/commands/openspec/');
+      expect(summary).toContain('これらのファイルは全体が削除されます。続行前に独自の内容をバックアップしてください:');
     });
 
     it('should format slash command files', () => {
@@ -1003,9 +1005,10 @@ ${OPENSPEC_MARKERS.end}`);
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('削除するファイル');
       expect(summary).toContain('• .cursor/commands/openspec-proposal.md');
+      expect(summary).toContain('これらのファイルは全体が削除されます。続行前に独自の内容をバックアップしてください:');
     });
 
-    it('should format openspec/AGENTS.md', () => {
+    it('should warn that openspec/AGENTS.md will be deleted entirely without claiming it has no user content', () => {
       const detection = {
         configFiles: [],
         configFilesToUpdate: [],
@@ -1021,6 +1024,8 @@ ${OPENSPEC_MARKERS.end}`);
       const summary = formatDetectionSummary(detection);
       expect(summary).toContain('削除するファイル');
       expect(summary).toContain('• openspec/AGENTS.md');
+      expect(summary).toContain('これらのファイルは全体が削除されます。続行前に独自の内容をバックアップしてください:');
+      expect(summary).not.toContain('ユーザーコンテンツは含まれません');
     });
 
     it('should include attention section for project.md', () => {
@@ -1041,7 +1046,8 @@ ${OPENSPEC_MARKERS.end}`);
       expect(summary).toContain('• openspec/project.md');
       expect(summary).toContain('このファイルは削除しません');
       expect(summary).toContain('config.yaml');
-      expect(summary).toContain('"context:"');
+      expect(summary).toContain('AI アシスタントに次のように依頼');
+      expect(summary).toContain('対応するアーティファクトの rules');
     });
 
     it('should include attention section with other legacy artifacts', () => {
@@ -1143,19 +1149,26 @@ ${OPENSPEC_MARKERS.end}`);
       expect(hint).toContain('openspec/project.md');
       expect(hint).toContain('このファイルは削除しません');
       expect(hint).toContain('config.yaml');
-      expect(hint).toContain('"context:"');
+      expect(hint).toContain('AI アシスタントに次のように依頼');
     });
 
-    it('should include actionable instructions', () => {
+    it('should include a pasteable AI-assisted migration request', () => {
       const hint = formatProjectMdMigrationHint();
-      expect(hint).toContain('必要な内容を config.yaml の context セクションに移し');
-      expect(hint).toContain('準備ができたらファイルを削除');
+      expect(hint).toContain('openspec/project.md を確認');
+      expect(hint).toContain('有用な内容を openspec/config.yaml に移して');
+      expect(hint).toContain('project.md は削除しないでください');
+      expect(hint).toContain('config.yaml を確認し、準備ができたら project.md を削除');
     });
 
-    it('should explain the new context section benefits', () => {
+    it('should guide the agent to distill and route the content', () => {
       const hint = formatProjectMdMigrationHint();
-      expect(hint).toContain('すべての OpenSpec リクエストに含まれます');
-      expect(hint).toContain('確実に機能');
+      expect(hint).toContain('context は簡潔に');
+      expect(hint).toContain('プロジェクト全体の事実だけ');
+      expect(hint).toContain('アーティファクト作成、apply、archive');
+      expect(hint).toContain('対応するアーティファクトの rules');
+      expect(hint).toContain('対応する operations の項目');
+      expect(hint).toContain('一般的な内容');
+      expect(hint).toContain('古い内容、冗長な内容は省いて');
     });
   });
 

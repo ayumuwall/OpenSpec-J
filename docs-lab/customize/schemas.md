@@ -167,3 +167,9 @@ $ openspec schema init lite --description "軽量フロー" --artifacts proposal
 - **コミュニティから入手する**：[コミュニティカタログ](https://github.com/Fission-AI/OpenSpec/blob/main/docs/customization.md#community-schemas)に共有スキーマの一覧があります。スキーマを`openspec/schemas/<name>`へコピーすると、独自スキーマと同じように利用できます。
 
 現在、手動でコピーする代わりに名前を指定してインストールできる、公開用と非公開用のスキーマレジストリを開発しています。
+
+### Superpowers と連携する
+
+コミュニティが管理する [`superpowers-bridge`](https://github.com/JiangWay/openspec-schemas/tree/main/superpowers-bridge) スキーマは、OpenSpec のアーティファクトを [Superpowers](https://github.com/obra/superpowers) の実行スキルへつなぎます。プロジェクトへコピーする前に、bridge のインストール手順と互換性に関する注意事項を確認してください。
+
+bridge は OpenSpec とは別にリリースされています。OpenSpec は Superpowers 連携のテストやバージョン管理を行いません。

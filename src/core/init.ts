@@ -18,6 +18,7 @@ import {
   storePointerProblem,
 } from './project-config.js';
 import { findRepoPlanningRootSync } from './planning-home.js';
+import { resolveOpenSpecRoot } from './root-selection.js';
 import { ANCHORED_OPENSPEC_DIRS, ensureDirectoryAnchor } from './openspec-root.js';
 import { getSkillReferenceTransformer, getTransformerForTool, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
 import {
@@ -188,7 +189,7 @@ export class InitCommand {
   }
 
   async execute(targetPath: string): Promise<void> {
-    const projectPath = path.resolve(targetPath);
+    const projectPath = FileSystemUtils.canonicalizeExistingPath(targetPath);
     const openspecDir = OPENSPEC_DIR_NAME;
     const openspecPath = path.join(projectPath, openspecDir);
 
@@ -203,6 +204,7 @@ export class InitCommand {
     // finds the nearest ancestor root (so pointer-repo subdirectories
     // refuse exactly where a normal command would resolve the pointer).
     const guardRoot = findRepoPlanningRootSync(projectPath);
+    let integrationsOnly = false;
     if (guardRoot) {
       const { hasPlanningShape, pointer } = classifyOpenSpecDir(guardRoot);
       if (!hasPlanningShape) {
@@ -214,18 +216,36 @@ export class InitCommand {
           );
         }
         if (pointer.value !== undefined) {
-          throw new Error(
-            `このリポジトリの planning はストア '${pointer.value}' に外部化されています (${pointer.filePath})。` +
-              `このリポジトリをローカル OpenSpec ルートに変換するには、先に store: 行を削除してください。`
-          );
+          if (path.resolve(guardRoot) !== projectPath) {
+            throw new Error(
+              `このリポジトリの planning はストア '${pointer.value}' に外部化されています (${pointer.filePath})。` +
+                '連携機能をインストールするには、ストアを参照するリポジトリのルートで openspec init を実行してください。'
+            );
+          }
+
+          // A valid pointer repo already has its planning root in the declared
+          // store. Init should still be able to install agent integrations in
+          // the code repo, without creating a second local planning root.
+          await resolveOpenSpecRoot({ startPath: projectPath });
+          integrationsOnly = true;
         }
       }
     }
 
-    await this.assertLanguageCanBeApplied(projectPath, openspecPath);
+    if (!integrationsOnly) {
+      await this.assertLanguageCanBeApplied(projectPath, openspecPath);
+    } else if (this.language) {
+      throw new Error(
+        '--language では、ストアを参照するリポジトリを通じて外部ストアを更新できません。' +
+        'ストアのルートで init を実行するか、ストアの設定を直接編集してください。'
+      );
+    }
 
-    // 旧ファイルを検出し、クリーンアップを処理する
-    const deferredLegacyCleanup = await this.handleLegacyCleanup(projectPath, extendMode);
+    // Pointer repos keep their local planning files untouched. Normal init may
+    // still remove OpenSpec-managed artifacts from older layouts.
+    const deferredLegacyCleanup = integrationsOnly
+      ? null
+      : await this.handleLegacyCleanup(projectPath, extendMode);
 
     // 名称変更前のツールディレクトリに残るOpenSpec管理スキルを検出前に移行する。
     migrateLegacyToolDirs(projectPath);
@@ -278,8 +298,11 @@ export class InitCommand {
     // config.yaml exists so future non-interactive updates honor it.
     const copilotDecision = await this.resolveCopilotCloudDecision(projectPath, validatedTools);
 
-    // ディレクトリ構成と設定を作成
-    await this.createDirectoryStructure(openspecPath, extendMode);
+    // Pointer repos only receive integrations. Their planning structure and
+    // config stay in the declared store.
+    if (!integrationsOnly) {
+      await this.createDirectoryStructure(openspecPath, extendMode);
+    }
 
     // 各ツールのスキル/コマンドを生成
     const results = await this.generateSkillsAndCommands(
@@ -294,13 +317,16 @@ export class InitCommand {
       await this.finalizeDeferredLegacyCleanup(projectPath, deferredLegacyCleanup);
     }
 
-    // 必要なら config.yaml を作成
-    const configStatus = await this.createConfig(openspecPath, extendMode);
+    // Create config.yaml if needed. A pointer repo already has the config that
+    // declares its store, so preserve it byte-for-byte.
+    const configStatus = integrationsOnly
+      ? 'exists' as const
+      : await this.createConfig(openspecPath, extendMode);
 
     // Persist an explicit Copilot cloud decision so `openspec update` (which
     // never prompts) honors it. Best-effort: a config-write failure must not
     // fail an otherwise-successful init.
-    if (copilotDecision.persist !== undefined) {
+    if (!integrationsOnly && copilotDecision.persist !== undefined) {
       try {
         await persistCopilotCloudOptIn(projectPath, copilotDecision.persist);
       } catch {

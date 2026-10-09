@@ -24,6 +24,16 @@ const PLANNING_COMPLETE_HANDOFF = optionalWorkflow(
   '実装と追跡対象の作業がすべて完了したら、`openspec archive "<name>"` でアーカイブしてください。'
 );
 
+/**
+ * A glob artifact reads `done` once one matching file exists, so a run
+ * interrupted while writing several files leaves it `done` with files missing,
+ * and the next run would move on without reading its instruction again (#2034).
+ */
+const PARTIAL_ARTIFACT_CHECK = `**最初に、途中まで書かれたアーティファクトを完成させる**:
+   - 出力が glob パターン（例: \`specs/**/*.md\`）のアーティファクトは、一致するファイルが1つあれば \`done\` になる。複数ファイルの作成途中で中断した場合、未作成のファイルがあっても \`done\` のままになる
+   - そのような \`done\` アーティファクトごとに、まず指示を取得し、想定されるファイルを判断するために必要な完了済みの依存アーティファクトを読む。そのファイル群を \`artifactPaths.<id>.existingOutputPaths\` と比較する。spec-driven の \`specs\` では、proposal を読み、記載された各能力について \`specs/<capability-path>/spec.md\` が1つずつあるか確認する。パスが同一か比較する前に、各想定パスを \`changeRoot\` を基準に解決する
+   - 不足があれば、不足するファイルだけを作成して停止する。これが今回の呼び出しで作成する1つのアーティファクトに相当する。意図的な省略か判断できなければ、ユーザーに確認する`;
+
 export function getContinueChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-continue-change',
@@ -65,6 +75,10 @@ ${PROJECT_ROOT_GUARD}
    - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスと対象範囲のコンテキスト。リポジトリ内の固定パスを仮定せず、これらを使用します。
 
 3. **ステータスに基づいて行動**:
+
+   ---
+
+   ${PARTIAL_ARTIFACT_CHECK}
 
    ---
 
@@ -184,6 +198,10 @@ ${PROJECT_ROOT_GUARD}
    - \`planningHome\`、\`changeRoot\`、\`artifactPaths\`、\`actionContext\`: パスと対象範囲のコンテキスト。リポジトリ内の固定パスを仮定せず、これらを使用します。
 
 3. **ステータスに基づいて行動**:
+
+   ---
+
+   ${PARTIAL_ARTIFACT_CHECK}
 
    ---
 

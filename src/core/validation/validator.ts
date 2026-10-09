@@ -31,7 +31,9 @@ import { FileSystemUtils } from '../../utils/file-system.js';
 import { discoverSpecFiles, findUnreadDeltaFiles, hasAnyFileUnder } from '../../utils/spec-discovery.js';
 import {
   METADATA_FILENAME,
+  formatUnknownChangeMetadataKeysMessage,
   readSkipSpecsMarker,
+  readUnknownChangeMetadataKeys,
   resolveSchemaForChange,
 } from '../../utils/change-metadata.js';
 import { resolveTaskFilesForChange } from '../../utils/task-progress.js';
@@ -301,6 +303,17 @@ export class Validator {
               ),
             });
           }
+          // Same limit the main spec enforces after archive (#1976), so
+          // `validate <change> --strict` catches a new overlong requirement
+          // before it lands. MODIFIED is left alone: its text is the existing
+          // requirement, which the specs instruction says to keep whole.
+          if (requirementText && requirementText.length > MAX_REQUIREMENT_TEXT_LENGTH) {
+            issues.push({
+              level: 'WARNING',
+              path: entryPath,
+              message: `ADDED "${block.name}": ${VALIDATION_MESSAGES.REQUIREMENT_TOO_LONG}`,
+            });
+          }
           const scenarioCount = this.countScenarios(block.raw);
           if (scenarioCount < 1) {
             issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" には少なくとも1つのシナリオが必要です${this.emptyScenarioHint(block.raw)}` });
@@ -486,6 +499,15 @@ export class Validator {
     const marker = readSkipSpecsMarker(changeDir);
     if (marker.invalidReason) {
       issues.push({ level: 'ERROR', path: METADATA_FILENAME, message: this.formatInvalidMarkerMessage(marker.invalidReason) });
+    }
+
+    const unknownMetadataKeys = readUnknownChangeMetadataKeys(changeDir);
+    if (unknownMetadataKeys.length > 0) {
+      issues.push({
+        level: 'WARNING',
+        path: METADATA_FILENAME,
+        message: formatUnknownChangeMetadataKeysMessage(unknownMetadataKeys),
+      });
     }
 
     // ANY file under specs/ contradicts the marker - not just parsed deltas.
@@ -804,7 +826,7 @@ export class Validator {
     spec.requirements.forEach((req, index) => {
       if (req.text.length > MAX_REQUIREMENT_TEXT_LENGTH) {
         issues.push({
-          level: 'INFO',
+          level: 'WARNING',
           path: `requirements[${index}]`,
           message: VALIDATION_MESSAGES.REQUIREMENT_TOO_LONG,
         });

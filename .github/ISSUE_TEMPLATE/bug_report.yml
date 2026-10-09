@@ -1,0 +1,67 @@
+name: 不具合報告
+description: OpenSpec が期待どおりに動作しない場合はこちら。
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        不具合の報告ありがとうございます。
+
+        `openspec feedback "報告内容"` を実行すると、バージョンと環境情報を添えて Issue を投稿できます。
+        GitHub CLI が使えない場合や未認証の場合は、投稿用リンクを取得できます。
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: 実際に起きたこと
+      description: 実際の動作を記入してください。実行したコマンドと出力があれば貼り付けてください。
+      placeholder: |
+        `openspec archive add-login` を実行すると、メイン仕様を更新せずに終了コード 0 で終了しました。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待していた動作
+      placeholder: openspec/specs/auth/spec.md のメイン仕様が更新されるはずでした。
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 最小限の再現手順
+      description: 新規プロジェクトから問題を再現するまでの最短の手順を記入してください。原因の調査に最も役立つ情報です。
+      placeholder: |
+        1. 空のディレクトリで `openspec init` を実行
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: OpenSpec のバージョン
+      description: `openspec --version` の出力。インストールに失敗した場合やコマンドを実行できない場合は「不明」と記入してください。
+      placeholder: '1.11.0'
+    validations:
+      required: true
+
+  - type: input
+    id: agent
+    attributes:
+      label: コーディングエージェントとモデル
+      description: OpenSpec を操作したエージェントとモデルを記入してください。使用するエージェントやモデルによって動作が異なる場合があります。
+      placeholder: Claude Code, Opus 4.6
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: OS と Node のバージョン
+      placeholder: macOS 15.6, Node 22.11.0
+    validations:
+      required: false

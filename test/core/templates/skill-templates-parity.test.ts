@@ -78,24 +78,24 @@ function specDrivenTitles(): Record<string, string> {
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: 'ac325295a8ab73d68f4f6049949f536a043ea15e895c970b05913e4ead104398',
   getNewChangeSkillTemplate: 'f867a299c723742a16f70a614b93d9df05ebefaf539b35248689532ff4f0de80',
-  getContinueChangeSkillTemplate: '6a705cd5ef5e810b4d7fcf46e6e76010160b887f36c318da885d84ea0882daef',
-  getApplyChangeSkillTemplate: 'c3753e9a59d34ef1693d2083d205f73148a633b9129bbed0b972003a08175dae',
+  getContinueChangeSkillTemplate: 'dc4052dbb9030e1c8ed3490f1361b3531eceeb23732e763e5382b62663a0fb6e',
+  getApplyChangeSkillTemplate: '5c56dd516a4ddc2fa6e1bf7d0a124880829a4ad757b30107fad8490912aa56be',
   getFfChangeSkillTemplate: '9d5e795b526088a34bbdc5e160d64ccb80c215ab23b5942cabb9ad31e23d7d2a',
   getSyncSpecsSkillTemplate: 'ac3ac7cc7d6873f548abf29707de554d873f61bde297a70e6b8985fb26169378',
   getOnboardSkillTemplate: 'c9a62581b884b0e3cbacadd0590b7654cec9600e7f2b7fa79d783383587a1901',
   getOpsxExploreCommandTemplate: 'f42241c677d017af2be893af727cd39a34a38c556815d4178d092bf2645c8490',
   getOpsxNewCommandTemplate: '9d0ebe3f3408231630508098e52ffbc3aa64b843ba907a2a2f0324c19ac9aec5',
-  getOpsxContinueCommandTemplate: 'd7b63c11ba50d6db1708558d8d9b3290da50b64a25856cf9a9dfd288f0e1d2d4',
-  getOpsxApplyCommandTemplate: 'a5b91debb713b3be6b61190dc78752500ce9fd5a9b971698e0d831f610b3de45',
+  getOpsxContinueCommandTemplate: 'fcd0706f4337b914905aaf57c735b23b442b0709e76f36b67ee6141f45f6f90f',
+  getOpsxApplyCommandTemplate: 'feb56310251264714e44efe1eb949271705056551fe49acae469a18ac43b1698',
   getOpsxFfCommandTemplate: 'bce9a22c838d2aee624b27f26535dec08111fe8c56fbc5fd52e26ac868a87f5d',
-  getArchiveChangeSkillTemplate: '0d7492e2e683272c7adb3668308268b9fb6fae539ac63464d0247e14c9f5ea42',
-  getBulkArchiveChangeSkillTemplate: '09ad640f98b9d301afabc9cff7f090fd0994b946f27054649eb5aaf8ec0905b7',
+  getArchiveChangeSkillTemplate: 'b5f9fcc9e5c3067918263f758f09f19e6630b08006f345ab7d3ac450d1e6e286',
+  getBulkArchiveChangeSkillTemplate: '158811580ecb287c0fd54ea44ca180db31ebb574f1791747218694745ca12ef5',
   getOpsxSyncCommandTemplate: '7a08d2b60651e311f5e9f42401e702adc44fb332ec57051bbe5d7b8b6fadeae5',
-  getVerifyChangeSkillTemplate: 'c6674c8da7c807d7c38339f5175219bba6e441431cb4a038b0425178f1a7436c',
-  getOpsxArchiveCommandTemplate: '28956ee2b3d8c9cfb4d47340a18722b03915f496fdce7e5482af1e11bc44e623',
+  getVerifyChangeSkillTemplate: '4a2dad83efd9727774eeb7072a5d89fbc5abec748ccf4c35571b955ecdb8f13c',
+  getOpsxArchiveCommandTemplate: '93eb2ff21a2d16f35def2fcac9be788b90bd7074e24cae6ad8f49b60e5b89382',
   getOpsxOnboardCommandTemplate: '938caeb782ba5e5daf7e2d68433033dc422caf88f6d200968e5513efa4881179',
-  getOpsxBulkArchiveCommandTemplate: '4e20b8839903d55a3fc821ebd564e9e32d5d1b61009f32b25842d655e0ce379d',
-  getOpsxVerifyCommandTemplate: 'f619656e3c193f2de8aff31396730295a3638d4072104ff5875d80fef7ee7e93',
+  getOpsxBulkArchiveCommandTemplate: '47bd5aabb6a9fa3cbef51b5f826dcded40fec998f3e7eecf47940996b6057950',
+  getOpsxVerifyCommandTemplate: 'a04fd9f04d13f2b6955e560c706477967b4961e2633b0685def73ee8a347b0e8',
   getOpsxProposeSkillTemplate: 'fe47c86b28a9518382347a958c2ac4656d36669d522f294de18c906dfc5fb73c',
   getOpsxProposeCommandTemplate: '2f016cba58927e6394c855d08214e2d3ffbf585b334ee1ad87cd6bf6fe09b4ba',
   getFeedbackSkillTemplate: 'b30b6cf2cd5705c906078d3831fe7fffed8739652da757938ad84f82755a58fd',
@@ -106,13 +106,13 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '843aa6200151f2f8d913ee5f974420b081c1ce031f6b242ee296d5a66bd0431f',
   'openspec-new-change': '2c92d2388f9003a6e886bd9c1c8af11ba579da95e836e3dc6bb0b65b55d22d94',
-  'openspec-continue-change': '575a26846c09c1cc5e414f1d6b4e319671e859fac5a552d00623d1dde0891a82',
-  'openspec-apply-change': 'ddc9e753f0b4313f989090cf024910dec2cfc260ada659cd9fbfed68dc492065',
+  'openspec-continue-change': '0403b767e630d6e8876dc6f3099d45217617e9242afd24b0133fee83f1faaa34',
+  'openspec-apply-change': '193236f66f6a86c7f898d518a952757d0f31d27a28c3be2e035c710ca24af5aa',
   'openspec-ff-change': '968c06d265e6c7ead29ca0cfd4074e837d625e8a1eb55a3c8e7bf7bfdfd5107b',
   'openspec-sync-specs': '88505cf01f65e2c5676ced5be2dc891efc11decec83cb3d46b009eab1d78ca81',
-  'openspec-archive-change': '43f6176311b08fd82d7ba07cb119b95edda797a551467fecf0677ea74d0a0da6',
-  'openspec-bulk-archive-change': '0d1caeb9f17c3a3cda6dd1464b407d003aa7e3280b08f510423ac8bfbb94d80f',
-  'openspec-verify-change': '810e17e1b841a10ed2c14da3e51cde7d404cdd8dd01b5a6fff036aa6eaac113d',
+  'openspec-archive-change': '681fe79b23e60a117410d95705c50db735fb0a714d324ada30f392fd1bea2d32',
+  'openspec-bulk-archive-change': '0a88c429071664f503a36cf26a940bb4ec0158ced1d2c53a4aa6193c0b006622',
+  'openspec-verify-change': '5c4e38b120cb10be8958d3e8dc2cfcaed0f2b92d78195811152ca4783449f250',
   'openspec-onboard': 'd98b8d44105ae40c367a257c87af1a2f3c310694a2dbabcd7ffae3a98f3b5b69',
   'openspec-propose': '8266268a09516d96b19e8d35f1973ed5e1959a0410bf0d36de4f12e510b6fb94',
   'openspec-update-change': 'caeefd866849be16f66c62401bf78c4bfeb77f1104c48729a0c92019ed68a073',
@@ -598,6 +598,10 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain('バックグラウンドタスクへ委任しないでください');
       expect(content, variant).toContain('仕様同期の実行中にarchiveしない');
 
+      expect(content, variant).toContain('同期が停止条件やブロック条件を報告した場合は、同期失敗として扱');
+      expect(content, variant).toContain('同期後の内容比較は行わず');
+      expect(content, variant).toContain('`changeRoot` も移動し');
+
       // Verification must follow delta semantics.
       expect(content, variant).toContain('MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映');
       expect(content, variant).toContain('REMOVED 要件が存在しない');
@@ -608,6 +612,29 @@ describe('skill templates split parity', () => {
 
       // Main spec paths are store-root aware
       expect(content, variant).toContain('<planningHome.root>/openspec/specs/<capability-path>/spec.md');
+
+      // Semantic main-spec structure contract.
+      expect(content, variant).toContain('新しい本仕様は `# <capability> Specification` で始める。既存の本仕様のタイトルはそのまま維持する');
+      expect(content, variant).not.toContain('必ず `# <capability> Specification` で始めなければならない');
+      expect(content, variant).toContain('既存の本仕様の `## Purpose` セクションには一切変更を加えない');
+      expect(content, variant).toContain('新しい本仕様では、仕様差分の `## Purpose` をそのままコピーする');
+      expect(content, variant).toContain('使用できる `## Purpose` がなければ、既存の TBD Purpose の動作と警告を使用する');
+      expect(content, variant).toContain('同期が作成・変更した要件は、仕様の `## Requirements` の下で `### Requirement:`');
+      expect(content, variant).toContain('仕様差分が言及しない内容はそのまま維持する');
+
+      // Every canonical delta header must be rejected.
+      const deltaHeaders = [
+          '## ADDED Requirements',
+          '## MODIFIED Requirements',
+          '## REMOVED Requirements',
+          '## RENAMED Requirements',
+      ];
+
+      expect(content, variant).toContain('仕様差分用の見出し（`## ADDED Requirements`、`## MODIFIED Requirements`、`## REMOVED Requirements`、`## RENAMED Requirements`）が本仕様に残っていないことを確認する');
+
+      for (const header of deltaHeaders) {
+          expect(content, variant).toContain(header);
+      }
     }
   });
 
@@ -620,7 +647,7 @@ describe('skill templates split parity', () => {
     // never written. Assertions are scoped to the sync-assessment step so they
     // cannot pass on unrelated text elsewhere in the body.
     const archiveVariants: Array<[string, string]> = [
-      ['archive skill', generateSkillContent(getArchiveChangeSkillTemplate(), 'PARITY-BASELINE')],
+      ['archive skill', generateSkillContent(asDeployed(getArchiveChangeSkillTemplate()), 'PARITY-BASELINE')],
       ['archive opsx command', getOpsxArchiveCommandTemplate().content],
     ];
 
@@ -769,6 +796,10 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain('MODIFIED 要件には delta で示したシナリオおよび説明の変更が反映');
       expect(content, variant).toContain('REMOVED 要件が存在しない');
       expect(content, variant).toContain('RENAMED 要件は新しい名前で存在し、古い名前では存在しない');
+
+      expect(content, variant).toContain('同期が停止条件やブロック条件を報告した場合は、同期失敗として扱');
+      expect(content, variant).toContain('同期後の内容比較は行わず');
+      expect(content, variant).toContain('`changeRoot` も移動し');
 
       // Main spec paths are store-root aware
       expect(content, variant).toContain('<planningHome.root>/openspec/specs/<capability-path>/spec.md');
@@ -1255,6 +1286,13 @@ describe('apply skill/command shared instruction core', () => {
     const core = getApplyInstructions();
     expect(getApplyChangeSkillTemplate().instructions).toBe(core);
     expect(getOpsxApplyCommandTemplate().content).toBe(core);
+  });
+
+  it('keeps task completion distinct from archive readiness (#1790)', () => {
+    const core = getApplyInstructions();
+    expect(core).toContain('追跡対象のタスクがすべて完了しました');
+    expect(core).toMatch(/アーカイブ前に必要なレビューや検証を行ってください/);
+    expect(core).not.toContain('すべてのタスクが完了しました！アーカイブできます');
   });
 });
 

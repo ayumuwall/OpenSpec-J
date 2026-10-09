@@ -22,14 +22,14 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   } else {
   // Context section with comments
   lines.push('# プロジェクトの文脈（任意）');
-  lines.push('# アーティファクト作成時に AI に提示されます。');
-  lines.push('# 技術スタック、慣習、スタイルガイド、ドメイン知識などを追加します。');
+  lines.push('# OpenSpec のアーティファクトとワークフローを導く制約だけを追加します。');
+  lines.push('# エージェントがコードを読んでも分からない制約を含めます。');
+  lines.push('# 一般的なプロジェクト文書やコードから分かる事実は含めません。');
   lines.push('# 例:');
   lines.push('#   context: |');
   lines.push('#     言語：日本語');
-  lines.push('#     技術スタック: TypeScript, React, Node.js');
-  lines.push('#     Conventional Commits を使用');
-  lines.push('#     ドメイン: EC プラットフォーム');
+  lines.push('#     設計とタスクは Windows、macOS、Linux を対象にする');
+  lines.push('#     すべてのアーティファクトを日本語で書く');
   lines.push('#');
   lines.push('#     規範語ルール:');
   lines.push('#     - 規範要件は SHALL/MUST を使う（SHOULD/MAY は避ける）');
@@ -49,7 +49,7 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('#   rules:');
   lines.push('#     proposal:');
   lines.push('#       - 提案は 500 語以内にする');
-  lines.push('#       - "Non-goals" セクションを必ず含める');
+  lines.push('#       - スコープ外の内容を必ず明示する');
   lines.push('#     tasks:');
   lines.push('#       - タスクは最大 2 時間の粒度に分割する');
   lines.push('');

@@ -7,7 +7,6 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { Command, Option } from 'commander';
 
 import {
   resolveRootForCommand,
@@ -22,8 +21,6 @@ import {
   type WorkingSetMember,
 } from '../core/working-set.js';
 import { StoreError } from '../core/store/errors.js';
-import { COMMAND_REGISTRY } from '../core/completions/command-registry.js';
-import { COMMON_FLAGS } from '../core/completions/shared-flags.js';
 import { emitFailure, printJson } from './shared-output.js';
 import { gatherRelationshipData } from './shared-gather.js';
 
@@ -157,56 +154,40 @@ function writeCodeWorkspace(
   console.error(summary);
 }
 
-export function registerContextCommand(program: Command): void {
-  const description =
-    COMMAND_REGISTRY.find((entry) => entry.name === 'context')?.description ??
-    '解決済みの OpenSpec ルートに対する作業コンテキストを表示';
+export interface ContextOptions {
+  store?: string;
+  storePath?: string;
+  json?: boolean;
+  codeWorkspace?: string;
+  force?: boolean;
+}
 
-  program
-    .command('context')
-    .description(description)
-    .option('--store <id>', COMMON_FLAGS.store.description)
-    .addOption(
-      new Option('--store-path <path>', '削除済みです。ストアを登録して --store を使ってください').hideHelp()
-    )
-    .option('--json', 'エージェント向け概要を JSON として出力')
-    .option('--code-workspace <path>', 'このセットの VS Code ワークスペースファイルも書き出す')
-    .option('--force', '既存の --code-workspace ファイルを上書き')
-    .action(
-      async (options: {
-        store?: string;
-        storePath?: string;
-        json?: boolean;
-        codeWorkspace?: string;
-        force?: boolean;
-      }) => {
-        try {
-          const root = await resolveRootForCommand(
-            { store: options.store, storePath: options.storePath },
-            { json: options.json, failurePayload: FAILURE_PAYLOAD, allowImplicitRoot: false }
-          );
-          if (!root) {
-            return;
-          }
-
-          const { workingSet, declaredReferenceCount } = await gatherWorkingSet(root);
-
-          if (options.json) {
-            // The write runs FIRST: a write failure must leave stdout
-            // holding exactly one JSON document (the failure payload).
-            if (options.codeWorkspace) {
-              writeCodeWorkspace(workingSet, options.codeWorkspace, options.force === true);
-            }
-            printJson(workingSet);
-          } else {
-            printHumanWorkingSet(workingSet, declaredReferenceCount);
-            if (options.codeWorkspace) {
-              writeCodeWorkspace(workingSet, options.codeWorkspace, options.force === true);
-            }
-          }
-        } catch (error) {
-          emitFailure(options.json, FAILURE_PAYLOAD, error, 'context_failed');
-        }
-      }
+export async function contextCommand(options: ContextOptions): Promise<void> {
+  try {
+    const root = await resolveRootForCommand(
+      { store: options.store, storePath: options.storePath },
+      { json: options.json, failurePayload: FAILURE_PAYLOAD, allowImplicitRoot: false }
     );
+    if (!root) {
+      return;
+    }
+
+    const { workingSet, declaredReferenceCount } = await gatherWorkingSet(root);
+
+    if (options.json) {
+      // The write runs FIRST: a write failure must leave stdout
+      // holding exactly one JSON document (the failure payload).
+      if (options.codeWorkspace) {
+        writeCodeWorkspace(workingSet, options.codeWorkspace, options.force === true);
+      }
+      printJson(workingSet);
+    } else {
+      printHumanWorkingSet(workingSet, declaredReferenceCount);
+      if (options.codeWorkspace) {
+        writeCodeWorkspace(workingSet, options.codeWorkspace, options.force === true);
+      }
+    }
+  } catch (error) {
+    emitFailure(options.json, FAILURE_PAYLOAD, error, 'context_failed');
+  }
 }

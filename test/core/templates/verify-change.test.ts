@@ -14,6 +14,17 @@ const bodies: Array<[string, string]> = [
 ];
 
 describe('verify-change templates', () => {
+  it('finds spec and design artifacts by output path, not by hardcoded artifact id', () => {
+    for (const [label, body] of bodies) {
+      expect(body, label).not.toContain('`contextFiles.specs`');
+      expect(body, label).not.toContain('`contextFiles.design`');
+      expect(body, label).toContain('`artifactPaths.<id>.outputPath`');
+      expect(body, label).toContain('`specs/` 配下');
+      expect(body, label).toContain('`contextFiles.<id>`');
+      expect(body, label).toContain('`design.md` または末尾が `design.md`');
+    }
+  });
+
   it('keeps active no-task changes eligible for ambiguous selection', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('一覧に返されたすべてのアクティブな変更を表示');

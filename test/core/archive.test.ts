@@ -6,7 +6,7 @@ import { MarkdownParser } from '../../src/core/parsers/markdown-parser.js';
 import { findMainSpecStructureIssues } from '../../src/core/parsers/spec-structure.js';
 import { VALIDATION_MESSAGES } from '../../src/core/validation/constants.js';
 import { formatLocalDate } from '../../src/utils/date.js';
-import { promises as fs } from 'fs';
+import { promises as fs, realpathSync } from 'fs';
 import path from 'path';
 import os from 'os';
 
@@ -44,8 +44,10 @@ describe('ArchiveCommand', () => {
   }
 
   beforeEach(async () => {
-    // Create temp directory
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-archive-test-'));
+    // Match archive's canonical root across temporary-directory aliases.
+    tempDir = realpathSync.native(
+      await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-archive-test-'))
+    );
 
     // Change to temp directory
     process.chdir(tempDir);
@@ -125,6 +127,30 @@ describe('ArchiveCommand', () => {
       
       // Verify original change directory no longer exists
       await expect(fs.access(changeDir)).rejects.toThrow();
+    });
+
+    it('includes a sanitized unknown-metadata warning in JSON output', async () => {
+      const changeName = 'unknown-metadata-json';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n');
+      await fs.writeFile(
+        path.join(changeDir, '.openspec.yaml'),
+        'schema: spec-driven\n"owner\\u001b[31m\\u2028FORGED\\u202etxt": team-a\n'
+      );
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true, json: true });
+
+      const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls
+        .flat()
+        .map(String);
+      const jsonLine = logCalls.find((entry) => entry.trimStart().startsWith('{'));
+      expect(jsonLine).toBeDefined();
+      const warning = JSON.parse(jsonLine!).archive.warnings[0] as string;
+      expect(warning).toContain('owner [31m FORGED txt');
+      expect(warning).not.toMatch(
+        /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028-\u202e\u2066-\u206f]/
+      );
     });
 
     describe('a namespace folder holding nested changes (#1846)', () => {
@@ -1271,7 +1297,7 @@ The system SHALL support logo and backgroundColor fields for gift cards.
       expect(updatedContent).not.toContain('### Requirement: Image Field');
       expect(updatedContent).not.toContain('### Requirement: Thumbnail Field');
       
-      // Verify change was archived successfully
+      // Verify 変更はアーカイブされました successfully
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
       expect(archives.length).toBeGreaterThan(0);
@@ -2347,7 +2373,7 @@ New feature description.
         expect.stringContaining('未完了タスク')
       );
       
-      // Verify change was archived
+      // Verify 変更はアーカイブされました
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
       expect(archives.length).toBe(1);
@@ -2366,7 +2392,7 @@ New feature description.
         expect.stringContaining('更新する仕様')
       );
       
-      // Verify change was archived
+      // Verify 変更はアーカイブされました
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
       expect(archives.length).toBe(1);
@@ -3886,7 +3912,7 @@ The system SHALL do the thing differently.
           ])
         }));
 
-        // Verify the selected change was archived
+        // Verify the selected 変更はアーカイブされました
         const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
         const archives = await fs.readdir(archiveDir);
         expect(archives[0]).toContain(change1);
@@ -6541,7 +6567,7 @@ The system SHALL provide a replacement behavior.
         });
 
         await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-          /退避した仕様が変更されました.*バックアップは復旧用に保持されています/s
+          /退避した仕様が変更されました.*変更はアーカイブされました/s
         );
 
         expect(edited).toBe(true);
@@ -7334,7 +7360,7 @@ The system SHALL provide a new behavior.
       await expect(fs.access(changeDir)).resolves.not.toThrow();
     });
 
-    it('keeps committed retirement state when one backup cleanup fails', async () => {
+    it.each([false, true])('keeps committed retirement state when one backup cleanup fails (json=%s)', async (json) => {
       const changeName = 'retire-backup-cleanup-failure';
       const changeDir = await createChange(changeName, 'a-layer', REMOVE_ALL);
       const secondDelta = path.join(changeDir, 'specs', 'z-layer');
@@ -7361,9 +7387,24 @@ The system SHALL provide a new behavior.
         return realUnlink(candidate);
       });
 
-      await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
-        /変更はアーカイブ済みのまま.*バックアップは復旧用に保持されています/s
-      );
+      if (json) {
+        await archiveCommand.execute(changeName, { yes: true, json: true });
+        expect(process.exitCode).toBe(1);
+        expect(console.log).toHaveBeenCalledTimes(1);
+        const payload = JSON.parse((console.log as any).mock.calls[0][0]);
+        expect(payload.archive).toBeNull();
+        expect(payload.root).toBeDefined();
+        expect(payload.status).toEqual([{
+          severity: 'error',
+          code: 'archive_retirement_cleanup_failed',
+          message: expect.stringMatching(/変更はアーカイブされました.*報告された復旧用パスをすべて確認/s),
+          fix: 'アーカイブ済みの変更と、この診断に含まれる復旧用パスをすべて確認し、クリーンアップ前に必要な内容を保存してください。',
+        }]);
+      } else {
+        await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
+          /変更はアーカイブされました.*報告された復旧用パスをすべて確認/s
+        );
+      }
 
       await expect(fs.access(changeDir)).rejects.toThrow();
       await expect(
@@ -7381,11 +7422,198 @@ The system SHALL provide a new behavior.
         await expect(fs.access(target)).rejects.toThrow();
       }
       await expect(fs.access(path.dirname(targets[0]))).rejects.toThrow();
-      expect(
-        (await fs.readdir(path.dirname(targets[1]))).some((entry) =>
+      const backups = (await fs.readdir(path.dirname(targets[1]))).filter((entry) =>
+        entry.includes('.openspec-retire-')
+      );
+      expect(backups).toHaveLength(1);
+      await expect(
+        fs.readFile(path.join(path.dirname(targets[1]), backups[0]), 'utf-8')
+      ).resolves.toBe(mainSpec('z-layer'));
+    });
+
+    it('keeps a pre-mutation archive failure generic in JSON', async () => {
+      const changeName = 'retire-claim-denied-json';
+      const changeDir = await createChange(changeName, 'legacy-layer', REMOVE_ALL);
+      const target = path.join(tempDir, 'openspec', 'specs', 'legacy-layer', 'spec.md');
+      await fs.mkdir(path.dirname(target), { recursive: true });
+      await fs.writeFile(target, mainSpec('legacy-layer'));
+      const delta = await fs.readFile(path.join(changeDir, 'specs', 'legacy-layer', 'spec.md'), 'utf-8');
+
+      const realOpen = fs.open.bind(fs);
+      onTestFinished(() => vi.restoreAllMocks());
+      let claimDenied = false;
+      vi.spyOn(fs, 'open').mockImplementation(async (candidate, flags, mode) => {
+        if (String(candidate) === archiveClaimPath(changeName)) {
+          claimDenied = true;
+          throw Object.assign(new Error('claim open denied'), { code: 'EACCES' });
+        }
+        return realOpen(candidate, flags, mode);
+      });
+
+      await archiveCommand.execute(changeName, { yes: true, json: true });
+
+      expect(claimDenied).toBe(true);
+      expect(process.exitCode).toBe(1);
+      expect(console.log).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse((console.log as any).mock.calls[0][0]);
+      expect(payload.archive).toBeNull();
+      expect(payload.status).toEqual([{
+        severity: 'error',
+        code: 'archive_error',
+        message: expect.stringContaining('claim open denied'),
+      }]);
+      await expect(fs.readFile(target, 'utf-8')).resolves.toBe(mainSpec('legacy-layer'));
+      await expect(
+        fs.readFile(path.join(changeDir, 'specs', 'legacy-layer', 'spec.md'), 'utf-8')
+      ).resolves.toBe(delta);
+      expect(await fs.readdir(path.dirname(target))).toEqual(['spec.md']);
+      expect(await fs.readdir(path.join(tempDir, 'openspec', 'changes', 'archive'))).toEqual([]);
+    });
+
+    it.each(['edited', 'replaced', 'removed'] as const)(
+      'reports a concurrently %s retirement backup in JSON without losing surviving content',
+      async (backupChange) => {
+      const changeName = 'retire-backup-edited-json';
+      const changeDir = await createChange(changeName, 'legacy-layer', REMOVE_ALL);
+      const targetDir = path.join(tempDir, 'openspec', 'specs', 'legacy-layer');
+      const target = path.join(targetDir, 'spec.md');
+      await fs.mkdir(targetDir, { recursive: true });
+      await fs.writeFile(target, mainSpec('legacy-layer'));
+
+      const archivePath = path.join(
+        tempDir, 'openspec', 'changes', 'archive', `${formatLocalDate()}-${changeName}`
+      );
+      const realRename = fs.rename.bind(fs);
+      onTestFinished(() => vi.restoreAllMocks());
+      let editedBackup: string | undefined;
+      let backupChanged = false;
+      vi.spyOn(fs, 'rename').mockImplementation(async (source, destination) => {
+        const result = await realRename(source, destination);
+        if (String(source) === changeDir && String(destination) === archivePath) {
+          const backup = (await fs.readdir(targetDir)).find((entry) =>
+            entry.includes('.openspec-retire-')
+          );
+          expect(backup).toBeDefined();
+          editedBackup = path.join(targetDir, backup!);
+          if (backupChange !== 'edited') await fs.unlink(editedBackup);
+          if (backupChange !== 'removed') {
+            await fs.writeFile(editedBackup, 'concurrent content in retirement backup\n');
+          }
+          backupChanged = true;
+        }
+        return result;
+      });
+
+      await archiveCommand.execute(changeName, { yes: true, json: true });
+
+      expect(backupChanged).toBe(true);
+      expect(process.exitCode).toBe(1);
+      expect(console.log).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse((console.log as any).mock.calls[0][0]);
+      expect(payload.archive).toBeNull();
+      if (backupChange === 'removed') {
+        expect(payload.status[0].message).not.toContain('each listed backup was retained');
+      }
+      expect(payload.status).toEqual([{
+        severity: 'error',
+        code: 'archive_retirement_cleanup_failed',
+        message: expect.stringMatching(/退避した仕様が変更されました.*変更はアーカイブされました/s),
+        fix: 'アーカイブ済みの変更と、この診断に含まれる復旧用パスをすべて確認し、クリーンアップ前に必要な内容を保存してください。',
+      }]);
+      expect(editedBackup).toBeDefined();
+      expect(payload.status[0].message).toContain(editedBackup);
+      if (backupChange === 'removed') {
+        await expect(fs.access(editedBackup!)).rejects.toThrow();
+      } else {
+        await expect(fs.readFile(editedBackup!, 'utf-8')).resolves.toBe(
+          'concurrent content in retirement backup\n'
+        );
+      }
+      await expect(fs.access(target)).rejects.toThrow();
+      await expect(fs.access(changeDir)).rejects.toThrow();
+      await expect(fs.access(archivePath)).resolves.not.toThrow();
+    });
+
+    it('reports 復旧用パスをすべて when fallback source and multiple backup cleanups fail', async () => {
+      const changeName = 'retire-combined-cleanup-failure';
+      const changeDir = await createChange(changeName, 'a-layer', REMOVE_ALL);
+      const secondDelta = path.join(changeDir, 'specs', 'z-layer');
+      await fs.mkdir(secondDelta, { recursive: true });
+      await fs.writeFile(path.join(secondDelta, 'spec.md'), REMOVE_ALL);
+      const targets = ['a-layer', 'z-layer'].map((capability) =>
+        path.join(tempDir, 'openspec', 'specs', capability, 'spec.md')
+      );
+      for (const [index, target] of targets.entries()) {
+        await fs.mkdir(path.dirname(target), { recursive: true });
+        await fs.writeFile(target, mainSpec(index === 0 ? 'a-layer' : 'z-layer'));
+      }
+
+      const archivePath = path.join(
+        tempDir, 'openspec', 'changes', 'archive', `${formatLocalDate()}-${changeName}`
+      );
+      const realRename = fs.rename.bind(fs);
+      const realRmdir = fs.rmdir.bind(fs);
+      const realUnlink = fs.unlink.bind(fs);
+      onTestFinished(() => vi.restoreAllMocks());
+      let stagedSource: string | undefined;
+      let fallbackInjected = false;
+      let sourceCleanupDenied = false;
+      let backupCleanupsDenied = 0;
+      vi.spyOn(fs, 'rename').mockImplementation(async (source, destination) => {
+        if (String(source) === changeDir && String(destination) === archivePath) {
+          fallbackInjected = true;
+          throw Object.assign(new Error('cross-device move'), { code: 'EXDEV' });
+        }
+        return realRename(source, destination);
+      });
+      // Source removal claims and deletes each verified entry, then removes the
+      // staged root last; deny that final step so a partly removed staged
+      // source is left behind.
+      vi.spyOn(fs, 'rmdir').mockImplementation(async (candidate, options) => {
+        if (path.basename(String(candidate)).startsWith('.openspec-move-')) {
+          stagedSource = String(candidate);
+          sourceCleanupDenied = true;
+          throw Object.assign(new Error('partial source cleanup'), { code: 'EACCES' });
+        }
+        return realRmdir(candidate, options);
+      });
+      vi.spyOn(fs, 'unlink').mockImplementation(async (candidate) => {
+        if (String(candidate).includes('.openspec-retire-')) {
+          backupCleanupsDenied += 1;
+          throw Object.assign(new Error('backup cleanup denied'), { code: 'EACCES' });
+        }
+        return realUnlink(candidate);
+      });
+
+      await archiveCommand.execute(changeName, { yes: true, json: true });
+
+      expect(fallbackInjected).toBe(true);
+      expect(sourceCleanupDenied).toBe(true);
+      expect(backupCleanupsDenied).toBe(2);
+      expect(process.exitCode).toBe(1);
+      expect(console.log).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse(vi.mocked(console.log).mock.calls[0][0]);
+      expect(payload.archive).toBeNull();
+      expect(payload.status).toHaveLength(1);
+      expect(payload.status[0].fix).toContain('復旧用パスをすべて');
+      expect(stagedSource).toBeDefined();
+      expect(payload.status[0].message).toContain(stagedSource);
+      expect(payload.status[0].message).toContain('完全なコピー先は復旧用に保持されています');
+      await expect(fs.access(path.join(stagedSource!, 'tasks.md'))).rejects.toThrow();
+      await expect(fs.readFile(path.join(archivePath, 'tasks.md'), 'utf-8')).resolves.toContain('[x]');
+      for (const [index, target] of targets.entries()) {
+        await expect(fs.access(target)).rejects.toThrow();
+        const backup = (await fs.readdir(path.dirname(target))).find((entry) =>
           entry.includes('.openspec-retire-')
-        )
-      ).toBe(true);
+        );
+        expect(backup).toBeDefined();
+        const backupPath = path.join(path.dirname(target), backup!);
+        expect(payload.status[0].message).toContain(backupPath);
+        await expect(fs.readFile(backupPath, 'utf-8')).resolves.toBe(
+          mainSpec(index === 0 ? 'a-layer' : 'z-layer')
+        );
+      }
+      await expect(fs.access(changeDir)).rejects.toThrow();
     });
 
     it.skipIf(process.platform === 'win32')(

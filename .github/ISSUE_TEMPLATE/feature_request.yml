@@ -1,0 +1,44 @@
+name: 機能リクエスト
+description: OpenSpec に追加してほしい機能を提案します。
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        OpenSpec の基本設計を変える提案は、
+        [Discussion](https://github.com/ayumuwall/OpenSpec-J/discussions) から始めてください。
+        詳しくは [CONTRIBUTING.md](https://github.com/ayumuwall/OpenSpec-J/blob/ja-docs/CONTRIBUTING.md) を参照してください。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 解決したい問題（1〜2 文）
+      description: 何をしようとして、OpenSpec のどの点で困ったかを記入してください。解決策より先に問題を説明してください。
+      placeholder: アーカイブ後に、仕様がどの変更から作られたかを確認できません。
+    validations:
+      required: true
+
+  - type: textarea
+    id: who
+    attributes:
+      label: 影響を受ける利用者
+      description: 自分だけ、特定のエージェントやワークフローを使う人、すべての利用者など、影響範囲を記入してください。OpenSpec は多くのエージェントとモデルに対応しているため、変更の適否を判断する材料になります。
+      placeholder: 多くの変更をアーカイブする利用者。
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 試したこと
+      description: 試した既存のコマンド、フラグ、回避策と、それでは解決できなかった理由を記入してください。
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案する方法
+      description: 任意です。概要だけでも構いません。実装を始める前に方針を相談します。
+    validations:
+      required: false

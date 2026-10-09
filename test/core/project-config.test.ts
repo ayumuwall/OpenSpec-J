@@ -459,6 +459,80 @@ rules:
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("'specs' のルールは文字列配列")
         );
+        // Names the offending index and the shape YAML produced there.
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("rules.specs は string です")
+        );
+      });
+
+      it('should name the offending index and shape for a rule that YAML reads as a mapping', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - Valid rule
+    - Keep the "Why" section concrete: what breaks today without the change
+    - Another valid rule
+  specs:
+    - Requirements are declarative SHALL statements
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        // Unchanged behavior: the malformed artifact's whole rule set is still
+        // dropped, and its well-formed siblings are untouched.
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          rules: {
+            specs: ['Requirements are declarative SHALL statements'],
+          },
+        });
+
+        const warned = consoleWarnSpy.mock.calls
+          .map((call) => call[0] as string)
+          .find((message) => message.includes("'proposal' のルール")) as string;
+        // Points at the exact index instead of making the reader bisect by hand.
+        expect(warned).toContain('rules.proposal[1] は マッピング です');
+        // And says why, plus how to fix it.
+        expect(warned).toContain('引用符で囲まれていない ": "');
+        expect(warned).toContain('スカラー全体を引用符で囲んで');
+        // The well-formed artifact is not implicated.
+        expect(warned).not.toContain('rules.specs');
+      });
+
+      it('should list every offending index when a rules list has more than one bad item', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+rules:
+  proposal:
+    - First: bad mapping
+    - Valid rule
+    - Second: also a mapping
+    - 42
+    - null
+    - [nested, list]
+`
+        );
+
+        readProjectConfig(tempDir);
+
+        const warned = consoleWarnSpy.mock.calls
+          .map((call) => call[0] as string)
+          .find((message) => message.includes("'proposal' のルール")) as string;
+        expect(warned).toContain('rules.proposal[0] は マッピング です');
+        expect(warned).toContain('rules.proposal[2] は マッピング です');
+        expect(warned).toContain('rules.proposal[3] は number です');
+        expect(warned).toContain('rules.proposal[4] は null です');
+        expect(warned).toContain('rules.proposal[5] は 入れ子のリスト です');
+        // The valid sibling between them is not reported.
+        expect(warned).not.toContain('rules.proposal[1]');
       });
 
       it('should filter out empty string rules', () => {

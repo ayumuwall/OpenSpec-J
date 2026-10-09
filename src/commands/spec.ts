@@ -1,4 +1,3 @@
-import { program } from 'commander';
 import { existsSync, readFileSync } from 'fs';
 import path, { join } from 'path';
 import { MarkdownParser } from '../core/parsers/markdown-parser.js';
@@ -32,7 +31,7 @@ function assertSpecPath(specsDir: string, specPath: string): void {
   }
 }
 
-interface ShowOptions {
+export interface ShowOptions {
   json?: boolean;
   // JSON-only filters (raw-first text has no filters)
   requirements?: boolean;
@@ -66,6 +65,7 @@ function filterSpec(spec: Spec, options: ShowOptions): Spec {
     ? [spec.requirements[requirementIndex]]
     : spec.requirements
   ).map(req => ({
+    name: req.name,
     text: req.text,
     scenarios: includeScenarios ? req.scenarios : [],
   }));
@@ -147,142 +147,116 @@ export class SpecCommand {
   }
 }
 
-export function registerSpecCommand(rootProgram: typeof program) {
-  const specCommand = rootProgram
-    .command('spec')
-    .description('OpenSpec の仕様を閲覧・管理');
+export async function specShowCommand(
+  specId: string | undefined,
+  options: ShowOptions & { noInteractive?: boolean }
+): Promise<void> {
+  try {
+    const cmd = new SpecCommand();
+    await cmd.show(specId, options as any);
+  } catch (error) {
+    console.error(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    process.exitCode = 1;
+  }
+}
 
-  // Deprecation notice for noun-based commands
-  specCommand.hook('preAction', () => {
-    console.error('警告: "openspec spec ..." コマンドは非推奨です。"openspec show" や "openspec validate --specs" など動詞先行のコマンドを使ってください。');
-  });
+export async function specListCommand(options: { json?: boolean; long?: boolean }): Promise<void> {
+  try {
+    if (!existsSync(SPECS_DIR)) {
+      console.log('項目が見つかりません');
+      return;
+    }
 
-  specCommand
-    .command('show [spec-id]')
-    .description('特定の仕様を表示')
-    .option('--json', 'JSON で出力')
-    .option('--requirements', 'JSON専用: 要件のみ表示（シナリオ除外）')
-    .option('--no-scenarios', 'JSON専用: シナリオを除外')
-    .option('-r, --requirement <id>', 'JSON専用: 指定 ID(1始まり) の要件のみ表示')
-    .option('--no-interactive', '対話プロンプトを無効化')
-    .action(async (specId: string | undefined, options: ShowOptions & { noInteractive?: boolean }) => {
-      try {
-        const cmd = new SpecCommand();
-        await cmd.show(specId, options as any);
-      } catch (error) {
-        console.error(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
-        process.exitCode = 1;
+    const discovered = await discoverSpecFiles(SPECS_DIR);
+    const specs = discovered
+      .map(({ id, specFile }) => {
+        try {
+          assertSpecPath(SPECS_DIR, specFile);
+          const spec = parseSpecFromFile(SPECS_DIR, specFile, id);
+
+          return {
+            id,
+            title: spec.name,
+            requirementCount: spec.requirements.length
+          };
+        } catch {
+          return {
+            id,
+            title: id,
+            requirementCount: 0
+          };
+        }
+      })
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    if (options.json) {
+      console.log(JSON.stringify(specs, null, 2));
+    } else {
+      if (specs.length === 0) {
+        console.log('項目が見つかりません');
+        return;
       }
-  });
-
-  specCommand
-    .command('list')
-    .description('利用可能な仕様を一覧表示')
-    .option('--json', 'JSON で出力')
-    .option('--long', 'ID とタイトルを件数付きで表示')
-    .action(async (options: { json?: boolean; long?: boolean }) => {
-      try {
-        if (!existsSync(SPECS_DIR)) {
-          console.log('項目が見つかりません');
-          return;
-        }
-
-        const discovered = await discoverSpecFiles(SPECS_DIR);
-        const specs = discovered
-          .map(({ id, specFile }) => {
-            try {
-              assertSpecPath(SPECS_DIR, specFile);
-              const spec = parseSpecFromFile(SPECS_DIR, specFile, id);
-
-              return {
-                id,
-                title: spec.name,
-                requirementCount: spec.requirements.length
-              };
-            } catch {
-              return {
-                id,
-                title: id,
-                requirementCount: 0
-              };
-            }
-          })
-          .sort((a, b) => a.id.localeCompare(b.id));
-
-        if (options.json) {
-          console.log(JSON.stringify(specs, null, 2));
-        } else {
-          if (specs.length === 0) {
-            console.log('項目が見つかりません');
-            return;
-          }
-          if (!options.long) {
-            specs.forEach(spec => console.log(spec.id));
-            return;
-          }
-          specs.forEach(spec => {
-            console.log(`${spec.id}: ${spec.title} [要件 ${spec.requirementCount}件]`);
-          });
-        }
-      } catch (error) {
-        console.error(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
-        process.exitCode = 1;
+      if (!options.long) {
+        specs.forEach(spec => console.log(spec.id));
+        return;
       }
-  });
+      specs.forEach(spec => {
+        console.log(`${spec.id}: ${spec.title} [要件 ${spec.requirementCount}件]`);
+      });
+    }
+  } catch (error) {
+    console.error(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    process.exitCode = 1;
+  }
+}
 
-  specCommand
-    .command('validate [spec-id]')
-    .description('仕様の構造を検証')
-    .option('--strict', '厳密検証モードを有効化')
-    .option('--json', '検証レポートを JSON 出力')
-    .option('--no-interactive', '対話プロンプトを無効化')
-    .action(async (specId: string | undefined, options: { strict?: boolean; json?: boolean; noInteractive?: boolean }) => {
-      try {
-        if (!specId) {
-          const canPrompt = isInteractive(options);
-          const specIds = await getSpecIds();
-          if (canPrompt && specIds.length > 0) {
-            const { select } = await import('@inquirer/prompts');
-            specId = await select({
-              message: '検証する仕様を選んでください',
-              choices: specIds.map(id => ({ name: id, value: id })),
-            });
-          } else {
-            throw new Error('必須引数 <spec-id> がありません');
-          }
-        }
-
-        const specPath = join(SPECS_DIR, specId, 'spec.md');
-        assertSpecPath(SPECS_DIR, specPath);
-        
-        if (!existsSync(specPath)) {
-          throw new Error(`仕様 '${specId}' が見つかりません (openspec/specs/${specId}/spec.md)`);
-        }
-
-        const validator = new Validator(options.strict);
-        assertSpecPath(SPECS_DIR, specPath);
-        const report = await validator.validateSpec(specPath);
-
-        if (options.json) {
-          console.log(JSON.stringify(report, null, 2));
-        } else {
-          if (report.valid) {
-            console.log(`仕様 '${specId}' は有効です`);
-          } else {
-            console.error(`仕様 '${specId}' に問題があります`);
-            report.issues.forEach(issue => {
-              const label = issue.level === 'ERROR' ? 'ERROR' : issue.level;
-              const prefix = issue.level === 'ERROR' ? '✗' : issue.level === 'WARNING' ? '⚠' : 'ℹ';
-              console.error(`${prefix} [${label}] ${issue.path}: ${issue.message}`);
-            });
-          }
-        }
-        process.exitCode = report.valid ? 0 : 1;
-      } catch (error) {
-        console.error(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
-        process.exitCode = 1;
+export async function specValidateCommand(
+  specId: string | undefined,
+  options: { strict?: boolean; json?: boolean; noInteractive?: boolean }
+): Promise<void> {
+  try {
+    if (!specId) {
+      const canPrompt = isInteractive(options);
+      const specIds = await getSpecIds();
+      if (canPrompt && specIds.length > 0) {
+        const { select } = await import('@inquirer/prompts');
+        specId = await select({
+          message: '検証する仕様を選んでください',
+          choices: specIds.map(id => ({ name: id, value: id })),
+        });
+      } else {
+        throw new Error('必須引数 <spec-id> がありません');
       }
-  });
+    }
 
-  return specCommand;
+    const specPath = join(SPECS_DIR, specId, 'spec.md');
+    assertSpecPath(SPECS_DIR, specPath);
+
+    if (!existsSync(specPath)) {
+      throw new Error(`仕様 '${specId}' が見つかりません (openspec/specs/${specId}/spec.md)`);
+    }
+
+    const validator = new Validator(options.strict);
+    assertSpecPath(SPECS_DIR, specPath);
+    const report = await validator.validateSpec(specPath);
+
+    if (options.json) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      if (report.valid) {
+        console.log(`仕様 '${specId}' は有効です`);
+      } else {
+        console.error(`仕様 '${specId}' に問題があります`);
+        report.issues.forEach(issue => {
+          const label = issue.level === 'ERROR' ? 'ERROR' : issue.level;
+          const prefix = issue.level === 'ERROR' ? '✗' : issue.level === 'WARNING' ? '⚠' : 'ℹ';
+          console.error(`${prefix} [${label}] ${issue.path}: ${issue.message}`);
+        });
+      }
+    }
+    process.exitCode = report.valid ? 0 : 1;
+  } catch (error) {
+    console.error(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    process.exitCode = 1;
+  }
 }

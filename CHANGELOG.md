@@ -2,6 +2,112 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.14.1
+
+- **[OpenSpec-J]** OpenSpec v1.14.0・v1.14.1 の変更を取り込み、ドキュメント、CLI、スキーマ、生成スキル・コマンドの追加・変更文言を日本語化
+- **[OpenSpec-J]** AtomCode の引数判定を日本語の `**入力**` 見出しと半角・全角コロンに対応させ、引数を受け取るワークフローへ `$ARGUMENTS` を挿入
+
+### パッチ変更
+
+- [#2047](https://github.com/Fission-AI/OpenSpec/pull/2047) [`7358306`](https://github.com/Fission-AI/OpenSpec/commit/73583067dd6d5e774a2567741e37b2ccc3334395) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **Apply のアーカイブ案内を修正**：すべての管理対象タスクにチェックが付いた場合、`openspec instructions apply` はタスクの完了を伝え、アーカイブ前に変更をレビューまたは検証するよう案内します。アーカイブ後にしか行えない作業は、任意の `## Workflow follow-up` 節に通常の箇条書きで記載するようになり、タスク完了を妨げません。
+  - **アーカイブ後の後処理エラーを正確に表示**：変更のアーカイブ後、機能の廃止に伴う後処理に失敗した場合、変更はアーカイブ済みで後処理が未完了であると表示します。すべてのバックアップを保持したという誤った案内を修正しました。`--json` は汎用の `archive_error` に代わり、新しいコード `archive_retirement_cleanup_failed` を返します。
+
+- [#2025](https://github.com/Fission-AI/OpenSpec/pull/2025) [`bfa670e`](https://github.com/Fission-AI/OpenSpec/commit/bfa670eda91c6cd998d42248ceab2b565db932ff) [@TabishB](https://github.com/TabishB) に感謝します！ - CLI の起動を高速化しました。各コマンドの実装は実行時に読み込みます。`openspec --version` と `--help` が読み込むモジュールは485個から24個に減り、`config list`、`store list`、`doctor` なども必要なものだけを読み込みます。Windows など Node のモジュール読み込みが遅い環境で特に効果があります。出力、ヘルプ、シェル補完、終了コード、テレメトリーは変更していません。
+
+- [#2020](https://github.com/Fission-AI/OpenSpec/pull/2020) [`760584b`](https://github.com/Fission-AI/OpenSpec/commit/760584ba9a6e2aa5906edf082ecd465a53cf6618) [@clay-good](https://github.com/clay-good) に感謝します！ - 500文字を超える要件の説明を、情報提示から警告へ変更しました。`openspec validate --strict` が失敗するため、CI で上限を適用できます。変更提案の ADDED 要件も検査し、`openspec validate <change> --strict` でアーカイブ前に長すぎる新規要件を検出できます。通常の検証とアーカイブは、この指摘だけなら引き続き成功します。specs の指示には、シナリオを失わずに既存の長い要件を分割する方法も記載しました。
+
+- [#2037](https://github.com/Fission-AI/OpenSpec/pull/2037) [`852a073`](https://github.com/Fission-AI/OpenSpec/commit/852a0738832645f0549aa035f836ae09bea71ee2) [@vyhuholl](https://github.com/vyhuholl) に感謝します！ - specs の指示を変更し、各機能の仕様は作成開始を伝えたうえで、下書きができ次第ファイルに保存するようにしました。すべての仕様を計画し終えるまで無言で待つ状態をなくし、中断時も保存済みのファイルが残ります。仕様ファイルが1つでも存在すると `specs` は `done` になるため、`/opsx:continue` は提案に記載された機能のうち仕様ファイルがないものを確認し、作成してから次へ進みます。
+
+- [#2028](https://github.com/Fission-AI/OpenSpec/pull/2028) [`43d23cc`](https://github.com/Fission-AI/OpenSpec/commit/43d23ccb96495d1a2ac910ae74b44020f4f5c188) [@drakeo338](https://github.com/drakeo338) に感謝します！ - verify ワークフローは、固定のアーティファクト ID `specs` と `design` に代わり、出力パス（`specs/` と `design.md`）で仕様と設計のアーティファクトを見つけます。別の ID を使うカスタムスキーマでも動作します。
+
+- [#2031](https://github.com/Fission-AI/OpenSpec/pull/2031) [`2500d6d`](https://github.com/Fission-AI/OpenSpec/commit/2500d6da971336167548b53731a35b2127df35ac) [@TabishB](https://github.com/TabishB) に感謝します！ - `openspec view` でアーカイブ済み変更を表示・集計しないようにしました。アーカイブが多いプロジェクトでも現在の作業が画面に収まります。アーカイブ済み変更は引き続き `openspec list --archived` で確認できます。
+
+## 1.14.0
+
+### マイナー変更
+
+- [#883](https://github.com/Fission-AI/OpenSpec/pull/883) [`c879d13`](https://github.com/Fission-AI/OpenSpec/commit/c879d13d5f5d045c532a08523316d2d74f2db99a) [@Code-Studio-Team](https://github.com/Code-Studio-Team) に感謝します！ - Code Studio を `init` と `update` の対象に追加しました。`.codestudio/` 配下にプロジェクトのスキルと `.prompt.md` コマンドを生成します。
+
+- [#1672](https://github.com/Fission-AI/OpenSpec/pull/1672) [`297092c`](https://github.com/Fission-AI/OpenSpec/commit/297092cb25d9831a408d2ce9bfd55daec1431b74) [@DarkskyX15](https://github.com/DarkskyX15) に感謝します！ - **DeepSeek Harness**：`openspec init --tools dsh`（コマンドライン ID は `dsh`）で、OpenSpec のワークフロースキルを `.dsh/skills/` にインストールできます。スキルのみを提供し、コマンドアダプターやコマンドファイルは生成しません。dsh は生成された `SKILL.md` を優先順位が最も高いプロジェクトのスキル配置先から検出し、スキルカタログ、`skill` ツール、`/openspec-*` の呼び出しで利用できるようにします。
+
+- [#1961](https://github.com/Fission-AI/OpenSpec/pull/1961) [`3c3e6e3`](https://github.com/Fission-AI/OpenSpec/commit/3c3e6e3d423625ffe554ff050c09bb530f17dc5e) [@fresh-fx59](https://github.com/fresh-fx59) に感謝します！ - `--tools` の対象に GigaCode を追加しました。スキルは `.gigacode/skills/openspec-*/SKILL.md`、Markdown コマンドは `.gigacode/commands/opsx-<id>.md` に生成します。
+
+- [#1211](https://github.com/Fission-AI/OpenSpec/pull/1211) [`3de7c72`](https://github.com/Fission-AI/OpenSpec/commit/3de7c72c267c40ff89809d2ae08b7bf6ac6faf8c) [@hu-qi](https://github.com/hu-qi) に感謝します！ - `openspec init --tools atomcode` で AtomCode を利用できます。プロジェクトのスキルは `.atomcode/skills/`、`/opsx-<id>` コマンドは `.atomcode/commands/` に生成します。呼び出し時の入力を読むワークフローには `args: optional` と `$ARGUMENTS`、入力を読まないものには `args: none` を設定するため、スラッシュメニューから直接実行できます。選択したワークフロープロファイルとインストール形式に従います。
+
+- [#1082](https://github.com/Fission-AI/OpenSpec/pull/1082) [`a7f08b8`](https://github.com/Fission-AI/OpenSpec/commit/a7f08b8a462db5eeddae4e0b03f427987e3806a2) [@Storm-Chaser](https://github.com/Storm-Chaser) に感謝します！ - ### 新機能
+
+  - **GSD 対応**：`openspec init --tools gsd` で OpenSpec のワークフローをプロジェクトのスキルとしてインストールできます。
+
+- [#420](https://github.com/Fission-AI/OpenSpec/pull/420) [`070de01`](https://github.com/Fission-AI/OpenSpec/commit/070de01dfac4ea343747fbd37b9bb9e77acdf7d0) [@jeanduplessis](https://github.com/jeanduplessis) に感謝します！ - ### 新機能
+
+  - **Amp 対応**：init で `amp` を選ぶと、`.agents/skills/` に OpenSpec のワークフローをプロジェクトのスキルとしてインストールできます。
+
+- [#2001](https://github.com/Fission-AI/OpenSpec/pull/2001) [`56528ea`](https://github.com/Fission-AI/OpenSpec/commit/56528ea454a926159d05eb7c9ec1b687d7544b56) [@clay-good](https://github.com/clay-good) に感謝します！ - ### 新機能
+
+  - **バージョン情報**：`openspec version` でインストール済みバージョンとインストール方法を確認できます。`--check` と `--json` を追加すると、ツールが読み取れる構造化された更新情報を取得できます。
+
+- [#1352](https://github.com/Fission-AI/OpenSpec/pull/1352) [`d1642cb`](https://github.com/Fission-AI/OpenSpec/commit/d1642cb58cb4ce2cda0a140cf2322aded53f4e46) [@redknox](https://github.com/redknox) に感謝します！ - init と update に EasyCode 対応を追加しました。プロジェクト内のスキルと、`/opsx:<id>` で呼び出す TOML コマンドを生成します。
+
+- [#399](https://github.com/Fission-AI/OpenSpec/pull/399) [`ded99e2`](https://github.com/Fission-AI/OpenSpec/commit/ded99e27de71c32647ae7fc2f51112219420b5d5) [@ZEDce](https://github.com/ZEDce) に感謝します！ - `openspec list --archived` と `--all` を追加し、アーカイブ済み変更の一覧表示、JSON 出力、並べ替えに対応しました。`openspec view` のダッシュボードではアーカイブ済み変更を別枠で表示します。
+
+- [#848](https://github.com/Fission-AI/OpenSpec/pull/848) [`5a360c2`](https://github.com/Fission-AI/OpenSpec/commit/5a360c2088ad3094a092c34993eab97b43c25124) [@Columpio](https://github.com/Columpio) に感謝します！ - ### 新機能
+
+  - **Veai 対応**：init で `veai` を選ぶと、`.veai/skills/` に OpenSpec のワークフローをプロジェクトのスキルとしてインストールできます。
+
+- [#1439](https://github.com/Fission-AI/OpenSpec/pull/1439) [`f197804`](https://github.com/Fission-AI/OpenSpec/commit/f197804a38057eee2272952b74d89884a9d3b7a4) [@jmuchovej](https://github.com/jmuchovej) に感謝します！ - `overlays.default` を通して OpenSpec を再利用可能な Nix overlay として提供します。
+
+- [#1349](https://github.com/Fission-AI/OpenSpec/pull/1349) [`e232080`](https://github.com/Fission-AI/OpenSpec/commit/e232080d0943bd535388bdc2304b3301f1496226) [@0x6d6e647a](https://github.com/0x6d6e647a) に感謝します！ - Grok Build をスキルのみのツールとして追加しました。`openspec init --tools grok` で `.grok/skills` にインストールし、`/openspec-propose` などのスキル名で呼び出せます。既存の Grok 環境は `openspec update` で更新できます。
+
+- [#1738](https://github.com/Fission-AI/OpenSpec/pull/1738) [`781c7f9`](https://github.com/Fission-AI/OpenSpec/commit/781c7f9447b4eeb6fdc69fa745ff46f6168f3edf) [@clay-good](https://github.com/clay-good) に感謝します！ - プロジェクト内のスキルによる Warp 対応を追加しました。init で `warp` を選ぶと `.warp/skills` に OpenSpec のワークフローをインストールできます。`/openspec-*` で呼び出し、`openspec update` で更新します。どのインストール形式でもスキルを利用できます。
+
+- [#807](https://github.com/Fission-AI/OpenSpec/pull/807) [`c21d897`](https://github.com/Fission-AI/OpenSpec/commit/c21d897261b5daf0c61c49ccd0862288d4664db4) [@Million-mo](https://github.com/Million-mo) に感謝します！ - ### 新機能
+
+  - **ダッシュボードのワークフロー状態**：`openspec view` で各作業中の変更のスキーマと、各アーティファクトが完了・作成可能・依存待ち・スキップのどの状態にあるかを表示します。ワークフローを読み込めない場合もタスクの進捗は表示します。原案を提供した [#807](https://github.com/Fission-AI/OpenSpec/issues/807) の @Million-mo に感謝します。
+
+### パッチ変更
+
+- [#1977](https://github.com/Fission-AI/OpenSpec/pull/1977) [`7728194`](https://github.com/Fission-AI/OpenSpec/commit/772819417a2aa8a90cd50743139f402261628d21) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec-archive-change` スキルで、未インストールの `openspec-sync-specs` スキルを実行するよう案内する問題を修正しました。`/opsx:archive` コマンドと同様に、自身で仕様差分を本仕様へ統合します（[#1975](https://github.com/Fission-AI/OpenSpec/issues/1975)）。
+
+- [#1722](https://github.com/Fission-AI/OpenSpec/pull/1722) [`817cdb6`](https://github.com/Fission-AI/OpenSpec/commit/817cdb64be744d4ee65d1a9922b23edc0c4699b8) [@caseyg](https://github.com/caseyg) に感謝します！ - ### バグ修正
+
+  - ツールの選択画面と成功メッセージで IBM Bob を正式な製品名で表示します。既存の `bob` の選択、設定、スキル、スラッシュコマンドのパスはそのまま動作します。
+
+- [#1999](https://github.com/Fission-AI/OpenSpec/pull/1999) [`bda8556`](https://github.com/Fission-AI/OpenSpec/commit/bda85565ef974d07c1c202c0ac4b2613241dd184) [@clay-good](https://github.com/clay-good) に感謝します！ - 旧形式の `project.md` から `config.yaml` へ、AI を使って移行する手順を案内します。
+
+- [#1997](https://github.com/Fission-AI/OpenSpec/pull/1997) [`e70dcc7`](https://github.com/Fission-AI/OpenSpec/commit/e70dcc7c82a3b100145795d32ea9930dca7b4073) [@clay-good](https://github.com/clay-good) に感謝します！ - 変更提案の作成者に、長く使え、振る舞いを表す機能名を付けるよう案内します。
+
+- [#2018](https://github.com/Fission-AI/OpenSpec/pull/2018) [`81c2f9f`](https://github.com/Fission-AI/OpenSpec/commit/81c2f9fce30d103bd22377042af1d428453b0bbc) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **Apply が正しいタスクを更新**：`openspec instructions apply --json` の各タスクに `sourcePath` と `line` を追加しました。apply ワークフローは完了にする前にその位置のチェックボックスを確認し、更新後に進捗を再確認します。タスクが複数ファイルに分かれていても正しい項目を更新できます。
+  - **仕様同期の失敗時にアーカイブを停止**：`/opsx:archive` 内の仕様同期で、機能の廃止を完了できないなどの停止条件が報告された場合、変更を元の場所に残して停止します。本仕様が未更新のままアーカイブすることを防ぎます。一括アーカイブも同様です。
+  - **`openspec view` の進捗バーを整列**：作業中の変更名が48文字以内なら、進捗バーの位置が揃うようにしました。
+
+- [#1969](https://github.com/Fission-AI/OpenSpec/pull/1969) [`9557b43`](https://github.com/Fission-AI/OpenSpec/commit/9557b43aaff05af8bd9862c4755f7ac7b7f43cf1) [@flcrom](https://github.com/flcrom) に感謝します！ - ### バグ修正
+
+  - ストアのみを使うリポジトリでも、リポジトリルートで `openspec init` を実行してツール連携をインストールできます。外部ストアの設定は変更せず、ローカルの計画ディレクトリも作成しません。
+
+- [#2004](https://github.com/Fission-AI/OpenSpec/pull/2004) [`d4e1c77`](https://github.com/Fission-AI/OpenSpec/commit/d4e1c77ebae0bd96a7c649fa35edef997989450a) [@clay-good](https://github.com/clay-good) に感謝します！ - 旧形式のクリーンアップ対象として表示したファイルは、ファイル全体を削除すると警告し、独自の内容を先にバックアップするよう案内します。`openspec/AGENTS.md` は存在するだけで検出対象になります。
+
+- [#1995](https://github.com/Fission-AI/OpenSpec/pull/1995) [`baad449`](https://github.com/Fission-AI/OpenSpec/commit/baad4494b48f1497ec2f73a457210c5567176942) [@clay-good](https://github.com/clay-good) に感謝します！ - `config.yaml` の context にプロジェクトのドキュメントやコードベースの事実を書かないよう、エージェントに案内します。
+
+- [#1978](https://github.com/Fission-AI/OpenSpec/pull/1978) [`1872982`](https://github.com/Fission-AI/OpenSpec/commit/187298289dc5a7a63df87425151981586cbe5d7e) [@clay-good](https://github.com/clay-good) に感謝します！ - specs の指示に、`openspec validate` が情報として指摘する要件の長さの目安（500文字）と、既存要件を分割せずに新規要件を目安内に収める方法を記載しました。検証時の長すぎる要件へのメッセージにも、分割方法を追加しました。
+
+- [#1972](https://github.com/Fission-AI/OpenSpec/pull/1972) [`d28fb49`](https://github.com/Fission-AI/OpenSpec/commit/d28fb49c1ca901fe19fa443a56ede37ff8b8c61a) [@ryandemelo](https://github.com/ryandemelo) に感謝します！ - `show --json` に各要件とシナリオの `name` を追加しました。archive が使う見出し名と一致するため、JSON を読むツールは Markdown を再解析せずに要件を参照できます（[#1971](https://github.com/Fission-AI/OpenSpec/issues/1971)）。
+
+- [#2014](https://github.com/Fission-AI/OpenSpec/pull/2014) [`cf2859a`](https://github.com/Fission-AI/OpenSpec/commit/cf2859a52089dd6dd37f9b3388db90c2ca3f06e7) [@clay-good](https://github.com/clay-good) に感謝します！ - ストア内の変更に対する `status --json` を修正しました。`actionContext.allowedEditRoots` は、現在のパス上でストアを宣言するプロジェクトもストアと併せて含むようになり、apply がストア内だけを編集できる状態で停止する問題を解消します。現在のパス上にそのストアを宣言するプロジェクトがない場合、制約はストアを編集先に指定せず、編集対象のリポジトリを利用者に確認するよう案内します。
+
+- [#1984](https://github.com/Fission-AI/OpenSpec/pull/1984) [`42671df`](https://github.com/Fission-AI/OpenSpec/commit/42671df890fab730058fee108a2090e7c1e491b9) [@Yi-111-a](https://github.com/Yi-111-a) に感謝します！ - `rules:` のリストが文字列配列でない場合、不正な項目のインデックスを表示します。
+
+  引用符なしの `": "` を含むルールは、一見正しい YAML でもマッピングとして解析されます。従来はアーティファクト名だけを stderr の警告に表示し、ルール全体を破棄していました。警告にインデックス、解析された YAML の構造、引用符による修正方法を追加し、リストを手作業で切り分けずに問題の項目を見つけられるようにしました。
+
+- [#1925](https://github.com/Fission-AI/OpenSpec/pull/1925) [`88692b3`](https://github.com/Fission-AI/OpenSpec/commit/88692b3bb42262d30172819936847ed10f42a98f) [@kevin9327](https://github.com/kevin9327) に感謝します！ - ### バグ修正
+
+  - **変更メタデータ**：`.openspec.yaml` に `skip_design` など認識できないキーがある場合、警告します。従来は何も表示せずキーを除外し、`status` が設計アーティファクトを要求し続ける一方で `validate --strict` は終了コード0を返していました。`status`、`validate`、`archive` は無視したキーを表示し、`validate --strict` は失敗します。
+
+- [#2016](https://github.com/Fission-AI/OpenSpec/pull/2016) [`cd4f9e4`](https://github.com/Fission-AI/OpenSpec/commit/cd4f9e4a5f99e7b48f2c452ef0fa3769db4dde4a) [@huiq777](https://github.com/huiq777) に感謝します！ - `openspec completion uninstall zsh` が `.zshrc` を `completion install zsh` の実行前と完全に同じ状態に戻すよう修正しました。従来は先頭の空行をすべて削除しており、OpenSpec のブロックを下へ移動していても先頭の空行が失われていました。bash のインストーラーと同様に、ブロックがファイルの先頭にある場合だけ、インストール時に追加した区切りの空行を削除します。
+
 ## 1.13.2
 
 - **[OpenSpec-J]** OpenSpec v1.13.1・v1.13.2 の変更を取り込み、ドキュメント、CLI、スキーマ、生成スキル・コマンドの追加・変更文言を日本語化

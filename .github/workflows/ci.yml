@@ -184,6 +184,11 @@ jobs:
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
+        with:
+          # Dependabot は通常の CI で使用する FlakeHub の認証情報にアクセスできないため、
+          # GitHub Actions のキャッシュを使う。
+          use-flakehub: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && 'disabled' || 'no-preference' }}
+          use-gha-cache: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && 'enabled' || 'no-preference' }}
 
       # nix build より先に更新スクリプトを実行する。pnpm-lock.yaml からハッシュを
       # 再計算して flake.nix を更新するため、古い場合は置き換える値をここで示せる。
@@ -207,6 +212,42 @@ jobs:
       - name: Restore flake.nix
         if: always()
         run: git checkout -- flake.nix || true
+
+      - name: 下流の overlay 合成を検証
+        run: |
+          # 変数展開はシェルではなく Nix が行う。
+          # shellcheck disable=SC2016
+          nix eval --impure --expr '
+            let
+              flake = builtins.getFlake (toString ./.);
+              system = builtins.currentSystem;
+              pkgs = import flake.inputs.nixpkgs {
+                inherit system;
+                overlays = [ flake.overlays.default ];
+              };
+              composed = import flake.inputs.nixpkgs {
+                inherit system;
+                overlays = [
+                  flake.overlays.default
+                  (_final: prev: {
+                    nodejs_22 = prev.nodejs_22.overrideAttrs (_: {
+                      pname = "openspec-test-nodejs";
+                    });
+                  })
+                ];
+              };
+              overridden = pkgs.openspec.overrideAttrs (_: { version = "0.0.0-test"; });
+            in
+            assert pkgs.openspec.drvPath == flake.packages.${system}.default.drvPath;
+            assert pkgs.openspec.drvPath == flake.packages.${system}.openspec.drvPath;
+            # stdenv は複数の出力を持つ native build input の dev 出力を選択する。
+            assert builtins.any (input: input.drvPath == composed.nodejs_22.drvPath)
+              composed.openspec.nativeBuildInputs;
+            assert composed.openspec.drvPath != pkgs.openspec.drvPath;
+            assert overridden.version == "0.0.0-test";
+            assert overridden.pnpmDeps.version == "0.0.0-test";
+            true
+          '
 
       - name: Build with Nix
         run: nix build

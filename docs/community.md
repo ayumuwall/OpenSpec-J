@@ -7,6 +7,7 @@ OpenSpec のために、または OpenSpec を使って作られたプロジェ�
 ## プロジェクトとリソース
 
 - **[OpenSpec Workbench](https://github.com/VeryComplexAndLongName/OpenSpec-UI)**：OpenSpec の変更に取り組むエージェントを実行・監督します。
+- **[MySpec](https://myspec.dev)**：仕様について質問しながら要件を整理し、4ファイルの一式または OpenSpec 互換の変更を出力するクラウドのベータサービスです（アカウントが必要）。送信した内容を第三者の AI プロバイダーへ送るため、機密データの利用は想定していません。
 - **[openspec-guard](https://github.com/guillaume-flambard/spec-guard)**：テストを実行せずに、OpenSpec のどのシナリオが Vitest や Jest のテストでカバーされているかを報告する CLI と GitHub Action です。
 
 ## プロジェクトを追加する

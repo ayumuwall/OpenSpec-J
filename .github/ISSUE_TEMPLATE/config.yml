@@ -1,0 +1,12 @@
+# `openspec feedback` が生成する入力済み Issue の URL を利用できる状態に保つ。
+blank_issues_enabled: true
+contact_links:
+  - name: 基本設計の変更
+    url: https://github.com/ayumuwall/OpenSpec-J/discussions/categories/ideas
+    about: OpenSpec の基本的な動作を変える提案は、CONTRIBUTING の手順 1 に従って Discussion から始めてください。
+  - name: 質問・設定の相談
+    url: https://github.com/ayumuwall/OpenSpec-J/discussions/categories/q-a
+    about: 不具合かどうか判断できない場合は、こちらで質問してください。原因の切り分けをお手伝いします。
+  - name: Discord
+    url: https://discord.gg/YctCnvvshC
+    about: コミュニティやメンテナーと話せます。
