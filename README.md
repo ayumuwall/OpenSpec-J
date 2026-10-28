@@ -124,7 +124,7 @@ OpenSpec自身もOpenSpecを使って開発されています。実際の大規�
 
 ## クイックスタート
 
-**Node.js 20.19.0 以降が必要です。**
+**npm 版は Node.js 20.19.0 以降が必要です。**
 
 OpenSpec をグローバルにインストールします。
 
@@ -138,18 +138,24 @@ macOS / Linux では、OpenSpec-J の [Homebrew formula](https://github.com/ayum
 brew install ayumuwall/tap/openspec-j
 ```
 
-本家版には、Node.js 不要の単体実行バイナリもあります（Alpine Linux は先に `apk add libstdc++ libgcc` を実行）。以下は本家版を導入するコマンドです。
+Node.js 不要の単体実行バイナリで OpenSpec-J を導入することもできます（Alpine Linux は先に `apk add libstdc++ libgcc` を実行）。
 
 macOS / Linux：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.sh | sh
 ```
 
 Windows（PowerShell）：
 
 ```powershell
-irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+$installer = Join-Path $env:TEMP ([Guid]::NewGuid().ToString('N') + '.ps1')
+try {
+    Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.ps1 -OutFile $installer
+    powershell -NoProfile -ExecutionPolicy Bypass -File $installer
+} finally {
+    Remove-Item -LiteralPath $installer -Force -ErrorAction SilentlyContinue
+}
 ```
 
 同じ `openspec` コマンドを提供するため、別の導入方法から切り替える際は競合と PATH の優先順位を確認してください。
