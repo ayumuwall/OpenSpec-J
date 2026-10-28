@@ -2,6 +2,76 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 1.15.0
+
+- **[OpenSpec-J]** OpenSpec v1.15.0 までの変更を取り込み、CLI、更新計画、仕様差分の警告、ワークフロー、ドキュメントの追加・変更文言を日本語化
+- **[OpenSpec-J]** 単体実行版のインストーラーと切り替え案内を日本語版の配布先・パッケージ名に対応させ、Homebrew の削除案内と Windows PowerShell 向けの文字コードを調整
+- **[OpenSpec-J]** CLI の標準ヘルプを日本語化し、アーカイブの再同期案内、計画更新の説明文と応答言語の指示を修正
+
+### マイナー変更
+
+- [#2137](https://github.com/Fission-AI/OpenSpec/pull/2137) [`31c6d1c`](https://github.com/Fission-AI/OpenSpec/commit/31c6d1c43468754332d1ab16de6dff1e1e92419c) [@clay-good](https://github.com/clay-good) に感謝します！ - 本家版では Node.js 不要の単一ファイルでインストールできるようになりました。macOS・Linux は `curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh`、Windows は `irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex` を使います。各リリースに macOS、Linux（glibc・musl）、Windows 向けの x64・arm64 バイナリと `SHA256SUMS` が含まれます。npm など従来のパッケージマネージャーも引き続き使えます。
+
+- [#2109](https://github.com/Fission-AI/OpenSpec/pull/2109) [`c230424`](https://github.com/Fission-AI/OpenSpec/commit/c2304240c5b671d86eb6756743ab921fe20270e1) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec update --dry-run`（`--json` 併用可）を追加しました。書き込みを行わず、更新時に追加・変更・削除されるファイルを確認できます。
+
+### パッチ変更
+
+- [#2044](https://github.com/Fission-AI/OpenSpec/pull/2044) [`f988c52`](https://github.com/Fission-AI/OpenSpec/commit/f988c526edfe9748ced5d18512976974ac10e089) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec feedback` がバグ報告フォームの見出しに沿った Issue を作成し、未記入の再現手順も明示するようになりました。手動送信用リンクも、メッセージ・バージョン・環境を入力済みのバグ報告フォームを開きます。
+
+- [#2116](https://github.com/Fission-AI/OpenSpec/pull/2116) [`15b3b50`](https://github.com/Fission-AI/OpenSpec/commit/15b3b50f15dc7210b2ae6189b5d76f74fd528b0f) [@surlymochan](https://github.com/surlymochan) に感謝します！ - `--json` 指定時の起動を高速化しました。`status`、`instructions`、`new change`、`templates`、`validate`、`schema` は、スピナーを表示しない JSON 出力時に `ora` を読み込みません。`openspec status --json` の読み込みモジュール数は186個から163個になり、出力形式は従来どおりです。
+
+- [#2120](https://github.com/Fission-AI/OpenSpec/pull/2120) [`832e2cf`](https://github.com/Fission-AI/OpenSpec/commit/832e2cf836b8c8cdefa2f5e500145bd55323ea06) [@surlymochan](https://github.com/surlymochan) に感謝します！ - ### バグ修正
+
+  - `openspec/config.yaml` で別のスキーマを選んだ場合、`openspec new change` の進捗表示も作成時と同じスキーマ名を表示します。従来のように `spec-driven` と表示することはありません。
+
+- [#2114](https://github.com/Fission-AI/OpenSpec/pull/2114) [`6b15619`](https://github.com/Fission-AI/OpenSpec/commit/6b15619931472f4b6bf9c91cafd4c76bd72d72b5) [@surlymochan](https://github.com/surlymochan) に感謝します！ - ### バグ修正
+
+  - `/opsx:verify` は REMOVED 要件の元の仕様を、要件名の完全一致で照合します。同期後に似た名前の ADDED 要件が置き換えとして存在しても、削除対象と取り違えて「実装が残っている」と報告しません。
+
+## 1.14.3
+
+### パッチ変更
+
+- [#2101](https://github.com/Fission-AI/OpenSpec/pull/2101) [`87a69a2`](https://github.com/Fission-AI/OpenSpec/commit/87a69a2bf8eb3315a8c042d001520eb7766ab580) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **プロジェクト内を参照する仕様ファイルのシンボリックリンクに対応**：`openspec/specs/<capability>/spec.md` がプロジェクト内へのリンクでも、`list --specs`、`show`、`validate`、`archive` はエラーにしません。シンボリックリンクを使う構成は正式サポートの対象外です。プロジェクト外を参照するリンクは引き続き拒否します。
+
+- [#2103](https://github.com/Fission-AI/OpenSpec/pull/2103) [`e33245d`](https://github.com/Fission-AI/OpenSpec/commit/e33245d22ba6f994596a1747baf17130fe04515d) [@surlymochan](https://github.com/surlymochan) に感謝します！ - ### バグ修正
+
+  - 未修正の `braces` パッケージをインストール時に取り込まなくなり、このパッケージ経由で GHSA-vfj7-8cjw-p6xm が監査に報告される問題を解消しました。深く入れ子になった、または1,024個を超えるパスに展開される `generates` の波括弧パターンは、明確なメッセージで拒否します。`openspec status` がスタックオーバーフローやメモリ不足で異常終了することを防ぎます。
+
+- [#2104](https://github.com/Fission-AI/OpenSpec/pull/2104) [`276d015`](https://github.com/Fission-AI/OpenSpec/commit/276d015090965791d8be3d02daf6bfd71de884c3) [@CRYPTONIKAV](https://github.com/CRYPTONIKAV) に感謝します！ - propose、ff-change、continue-change ワークフローで、glob アーティファクトの出力パスを変更ディレクトリ内に制限しました。
+
+- [#2108](https://github.com/Fission-AI/OpenSpec/pull/2108) [`5251f2e`](https://github.com/Fission-AI/OpenSpec/commit/5251f2ef5e9e83eac68dd6950091928c4324b127) [@clay-good](https://github.com/clay-good) に感謝します！ - 端末の幅が0の場合に `openspec validate --all` が停止しなくなる問題を修正しました。lefthook などから引き継いだ疑似端末や `script -qec` では、`columns === 0` となることがあります。ora の消去行数計算が `Infinity` になり、CPU を占有して大量のカーソル制御文字を出力し続けていました。描画できない場合はスピナーを使わず通常の出力に切り替えます。`--no-interactive` に加え、`OPEN_SPEC_INTERACTIVE=0` と `CI` の指定でもスピナーを無効にします。
+
+- [#2110](https://github.com/Fission-AI/OpenSpec/pull/2110) [`c9a8ade`](https://github.com/Fission-AI/OpenSpec/commit/c9a8adef5021e9793ed9e104f65834fce0fb16cb) [@clay-good](https://github.com/clay-good) に感謝します！ - ビルド済みドキュメントサイトのプレビューを `serve` から専用の静的サーバーに切り替えました。`website/` の `pnpm start` は、外部依存のない `scripts/preview.mjs` を実行し、Next の静的エクスポートのルートを解決します（`out/_redirects` は適用しません）。公開サイトに含まれないにもかかわらず、推移的依存の脆弱性（brace-expansion 3件、fast-uri、compression）のため手動固定が必要だった `serve` の開発依存を削除しました。
+
+## 1.14.2
+
+### パッチ変更
+
+- [#2052](https://github.com/Fission-AI/OpenSpec/pull/2052) [`90c95c2`](https://github.com/Fission-AI/OpenSpec/commit/90c95c2a235e0d4088006a879c19cd1febff2a9e) [@drakeo338](https://github.com/drakeo338) に感謝します！ - ### バグ修正
+
+  - **プロジェクト内のシンボリックリンクを使ったアーカイブに対応**：`openspec/`、`openspec/changes`、`openspec/specs` がプロジェクト所有の別ディレクトリへのリンクでも、`openspec archive` はエラーにしません。シンボリックリンクを使う構成は正式サポートの対象外です。変更ディレクトリ外へ解決される `archive/` は引き続き拒否します。
+
+- [#2061](https://github.com/Fission-AI/OpenSpec/pull/2061) [`7acf282`](https://github.com/Fission-AI/OpenSpec/commit/7acf282050c0b2a27bd18f30c48fbcc0986bfc45) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **深く入れ子になった波括弧パターンを拒否**：アーティファクトの `generates` や `apply.tracks` で波括弧・丸括弧の入れ子が16段を超えると、glob 照合前に明確なエラーを返します。未修正の `braces` の脆弱性 GHSA-vfj7-8cjw-p6xm を通じたスタックオーバーフローを防ぎます。
+
+- [#2086](https://github.com/Fission-AI/OpenSpec/pull/2086) [`9cb5ba8`](https://github.com/Fission-AI/OpenSpec/commit/9cb5ba8cec4bc47227dcac4974a74b4adf1819f6) [@clay-good](https://github.com/clay-good) に感謝します！ - ### バグ修正
+
+  - **カスタムスキーマで既定スキーマのファイルを作成する案内を修正**：explore の記録先一覧と提案例に、既定の spec-driven スキーマ向けであることを明記しました。別のスキーマでは、気付きをそのスキーマが定義するアーティファクトへ記録し、提案時にも名前を示します。スキーマにない `design.md` などは作成しません。
+
+- [#2064](https://github.com/Fission-AI/OpenSpec/pull/2064) [`76d49a1`](https://github.com/Fission-AI/OpenSpec/commit/76d49a1d8176ad2bdb3696e29c4ffe222402f2da) [@ryandemelo](https://github.com/ryandemelo) に感謝します！ - シェルの Tab 補完を高速化しました。毎回の Tab 入力で呼ばれる `openspec __complete` は、変更や仕様の補完時の読み込みモジュール数が344個から48個になりました。利用状況も記録しないため、テレメトリー通信を待たず、画面に表示されない場所で初回通知を消費しません。補完出力は従来どおりです。
+
+- [#2083](https://github.com/Fission-AI/OpenSpec/pull/2083) [`3fea2a9`](https://github.com/Fission-AI/OpenSpec/commit/3fea2a96b2e04e01097f4617573734c47a57589b) [@clay-good](https://github.com/clay-good) に感謝します！ - update ワークフローの手順2とガードレールの両方に、glob アーティファクトで新しいファイルを作成できる例外を明記しました。従来は `existingOutputPaths` にあるファイルだけを編集する指示により、手順4で未作成部分を補うファイルの新規作成が拒否される場合がありました。
+
+- [#2083](https://github.com/Fission-AI/OpenSpec/pull/2083) [`3fea2a9`](https://github.com/Fission-AI/OpenSpec/commit/3fea2a96b2e04e01097f4617573734c47a57589b) [@clay-good](https://github.com/clay-good) に感謝します！ - verify ワークフローは REMOVED 要件の元の仕様を本仕様から読み取り、その内容に基づいてコードを検索します。REMOVED 差分には名前と Reason・Migration しかなく、見出しだけの検索では、別の語彙で実装された機能を見落として削除済みと判定していました。本仕様やその履歴から元の仕様を復元できない場合（内容が見出しの言い換えだけの場合を含む）は、検索せず、その要件の Spec Coverage を未検証として報告します。
+
+- [#2054](https://github.com/Fission-AI/OpenSpec/pull/2054) [`1bce87f`](https://github.com/Fission-AI/OpenSpec/commit/1bce87f858c2591b2cb58108597ae6f0a9bb5d7c) [@runsonmypc](https://github.com/runsonmypc) に感謝します！ - `openspec validate` と `openspec archive` は、本仕様へ統合されない差分仕様の文章を警告します。対象は Purpose と4種類の差分セクション以外の `## ` セクション、最初の `## ` より前の文章、ADDED・MODIFIED の最初の要件より前の文章です。従来は通知せずに破棄していました。他の警告と同様、`openspec validate --strict` は失敗します。アーカイブで統合する内容自体は変更していません。
+
+- [#2063](https://github.com/Fission-AI/OpenSpec/pull/2063) [`e0a2f00`](https://github.com/Fission-AI/OpenSpec/commit/e0a2f00f95731af7cf22a30c2c4a8b7ff910b509) [@gkinter](https://github.com/gkinter) に感謝します！ - 変更の `.openspec.yaml` で小文字の `x-` から始まるキー（`x-goal: G-12`、`x-jiraKey` など）を拡張メタデータとして扱います。未知のキーとして報告しないため、これらを含む変更でも `openspec validate --strict` に成功します。`X-Tracker` や単独の `x-` を含む、その他の未知のキーは引き続き報告します。
+
 ## 1.14.1
 
 - **[OpenSpec-J]** OpenSpec v1.14.0・v1.14.1 の変更を取り込み、ドキュメント、CLI、スキーマ、生成スキル・コマンドの追加・変更文言を日本語化

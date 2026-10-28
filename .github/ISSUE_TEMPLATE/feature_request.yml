@@ -5,9 +5,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        OpenSpec の基本設計を変える提案は、
-        [Discussion](https://github.com/ayumuwall/OpenSpec-J/discussions) から始めてください。
-        詳しくは [CONTRIBUTING.md](https://github.com/ayumuwall/OpenSpec-J/blob/ja-docs/CONTRIBUTING.md) を参照してください。
+        解決策だけでなく、問題、影響を受ける利用者、OpenSpec が対応すべきかを知りたいと考えています。
+        制限が意図した設計である場合もあるため、まず議論します。
+
+        すべての答えを用意する必要はありません。エージェントが下書きした場合は、先に読み直してください。
+        エージェントは、利用者自身のワークフローだけを根拠に提案することがあるためです。
 
   - type: textarea
     id: problem
@@ -30,8 +32,16 @@ body:
   - type: textarea
     id: tried
     attributes:
-      label: 試したこと
-      description: 試した既存のコマンド、フラグ、回避策と、それでは解決できなかった理由を記入してください。
+      label: 検討した代替策
+      description: 試した既存のコマンド、フラグ、回避策と、それぞれで解決できなかった理由を記入してください。
+    validations:
+      required: false
+
+  - type: textarea
+    id: tradeoff
+    attributes:
+      label: 複雑さが増しても追加する価値がある理由
+      description: 任意です。オプションやフラグは、多くのエージェント・モデル・ワークフローにわたり保守します。追加する価値と、必要としない利用者への負担を説明してください。
     validations:
       required: false
 
@@ -39,6 +49,6 @@ body:
     id: proposal
     attributes:
       label: 提案する方法
-      description: 任意です。概要だけでも構いません。実装を始める前に方針を相談します。
+      description: 省略して構いません。解決する価値があると合意した後に対応方法を設計するため、ここに解決策を書いても議論が早く進むわけではありません。
     validations:
       required: false

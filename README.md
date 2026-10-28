@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.14.1 です。**<br>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.15.0 です。**<br>
 > 生成物だけ日本語にできれば十分な場合は、本家版の [Multi-Language](docs/multi-language.md) を利用できます。
 
 <details>
@@ -36,11 +36,6 @@
 → 新規開発だけでなく既存コードベースにも対応
 → 個人プロジェクトからエンタープライズまで拡張可能
 ```
-
-> [!TIP]
-> **新しいワークフローが利用可能になりました!** 新しいアーティファクトに基づいたワークフローを使用して OpenSpec を再構築しました。
->
-> `/opsx:propose "あなたのアイデア"` を実行して開始します。 → [詳しくはこちら](docs/opsx.md)
 
 <p align="center">
 最新情報については、<a href="https://x.com/0xTab">@0xTab on X</a> をフォローしてください。ヘルプや質問については、<a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> に参加してください。
@@ -117,13 +112,13 @@ OpenSpec自身もOpenSpecを使って開発されています。実際の大規�
 
 個人利用では、OpenSpec は 1 つのリポジトリ上で人間と AI の認識をそろえます。チームでは、難しさの中心が変わります。機能は API サーバー、Web アプリ、共有ライブラリにまたがります。要件を所有するチームと、それを利用するチームが分かれることもあります。計画は、コードが存在する前から始まります。
 
-そのための仕組みが **[Stores](docs/stores-beta/user-guide.md)** です。計画を専用リポジトリに置き、すでに見慣れた `openspec/` の構造（仕様と変更）を `git push` で共有します。複数リポジトリにまたがる作業でも、チーム全体とすべてのコーディングエージェントが読める、信頼できる 1 つの情報源を持てます。
+そのための仕組みが **[Stores](https://openspec.dev/docs/stores)** です。計画を専用リポジトリに置き、すでに見慣れた `openspec/` の構造（仕様と変更）を `git push` で共有します。複数リポジトリにまたがる作業でも、チーム全体とすべてのコーディングエージェントが読める、信頼できる 1 つの情報源を持てます。
 
 - **クロスリポジトリ機能** — コードが 3 つのリポジトリにある場合でも、1 つの変更、1 つの計画。
 - **共有要件** — プラットフォームチームが仕様を所有し、製品チームはコーディングエージェントが読める場所から読み取り専用で参照します。Wiki と実装がずれていく状態を避けられます。
 - **コードの前に計画を立てる** — まずストアに計画を置き、コードリポジトリは後から追従できます。
 
-> ストアは **ベータ版** です。まずは [Stores ユーザーガイド](docs/stores-beta/user-guide.md) を参照してください。
+> ストアは **ベータ版** です。まずは [Stores ユーザーガイド](https://openspec.dev/docs/stores) を参照してください。
 
 <a id="quick-start"></a>
 
@@ -143,6 +138,22 @@ macOS / Linux では、OpenSpec-J の [Homebrew formula](https://github.com/ayum
 brew install ayumuwall/tap/openspec-j
 ```
 
+本家版には、Node.js 不要の単体実行バイナリもあります（Alpine Linux は先に `apk add libstdc++ libgcc` を実行）。以下は本家版を導入するコマンドです。
+
+macOS / Linux：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh
+```
+
+Windows（PowerShell）：
+
+```powershell
+irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+```
+
+同じ `openspec` コマンドを提供するため、別の導入方法から切り替える際は競合と PATH の優先順位を確認してください。
+
 次に、プロジェクトディレクトリに移動して初期化します。
 
 ```bash
@@ -150,44 +161,33 @@ cd your-project
 openspec init
 ```
 
-> **AIに任せたい場合は、** [セットアップ用プロンプト](docs-lab/start/installation.md#ai-アシスタントでインストールする)をコーディングアシスタントへ貼り付けてください。CLIのインストール、`openspec init` の実行、結果の確認まで行います。
+> **AIに任せたい場合は、** [セットアップ用プロンプト](https://openspec.dev/docs/installation#install-with-your-ai-assistant)をコーディングアシスタントへ貼り付けてください。CLIのインストール、`openspec init` の実行、結果の確認まで行います。
 
 次にAIへ話しかけます。
 
-- **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、コードを書く前に計画の形へ整理してくれる安全な相談相手です。([探索ガイド](docs/explore.md))
+- **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、コードを書く前に計画の形へ整理してくれる安全な相談相手です。([クイックスタート](https://openspec.dev/docs/quickstart))
 - **欲しいものはもう決まっていますか?** `/opsx:propose <what-you-want-to-build>` へ直接進んでください。
 
 どちらもデフォルトのプロファイルに含まれています。拡張ワークフロー（`/opsx:new`、`/opsx:continue`、`/opsx:ff`、`/opsx:verify`、`/opsx:bulk-archive`、`/opsx:onboard`）が必要な場合は、`openspec config profile`で選択し、`openspec update`で適用します。
 
-`/opsx:propose` is the canonical name; your tool may spell it `/opsx-propose` (Cursor, GitHub Copilot), `@opsx-propose` (Amazon Q) or `$openspec-propose` (Codex). `openspec init` prints the right form for the tools you picked — see [How To Invoke](docs/supported-tools.md#how-to-invoke).
+`/opsx:propose` が標準表記です。ツールによって `/opsx-propose`（Cursor、GitHub Copilot）、`@opsx-propose`（Amazon Q）、`$openspec-propose`（Codex）となります。`openspec init` は選択したツールの表記を表示します。[対応ツール](https://openspec.dev/docs/supported-tools)を参照してください。
 
 > [!NOTE]
-> 使用しているツールが対応しているか不明ですか？[完全な一覧](docs/supported-tools.md)を参照してください。30以上のツールに対応し、今後も追加していきます。
+> 使用しているツールが対応しているか不明ですか？[完全な一覧](https://openspec.dev/docs/supported-tools)を参照してください。30以上のツールに対応し、今後も追加していきます。
 >
-> Homebrew、pnpm、yarn、bun、Nix でも動作します。[インストールオプション](docs-lab/start/installation.md)を参照してください。
+> npm、Homebrew、pnpm、yarn、bun、Nix でも動作します。[インストールオプション](https://openspec.dev/docs/installation)を参照してください。
 
 ## ドキュメント
 
-**ここから始めてください:** **[ドキュメントホーム](docs/README.md)** に全体像をまとめています。OpenSpec が初めてなら、まず [はじめに](docs/getting-started.md) を読み、次に [コマンドの仕組み](docs/how-commands-work.md) で `/opsx:propose` をどこに入力するか確認してください。
+本家のドキュメント全体は **[openspec.dev/docs](https://openspec.dev/docs)** にあります。日本語版の一覧は [ドキュメントホーム](docs/README.md) を参照してください。
 
-→ **[はじめに](docs/getting-started.md)**: 最初のステップ<br>
-→ **[まずは探索する](docs/explore.md)**: コミットする前に `/opsx:explore` で考えを整理する<br>
-→ **[コマンドの仕組み](docs/how-commands-work.md)**: スラッシュコマンドを実行する場所と CLI との違い<br>
-→ **[コアコンセプトの概要](docs/overview.md)**: メンタルモデル全体、1 ページ<br>
-→ **[例とレシピ](docs/examples.md)**: 実際の変更の開始から終了まで<br>
-→ **[ワークフロー](docs/workflows.md)**: コンボとパターン<br>
-→ **[既存プロジェクト](docs/existing-projects.md)**: ブラウンフィールドのコードベースに OpenSpec を導入する<br>
-→ **[変更の編集](docs/editing-changes.md)**: アーティファクトの更新、戻り作業、手動編集との整合<br>
-→ **[コマンド](docs/commands.md)**: スラッシュコマンドとスキル<br>
-→ **[CLI](docs/cli.md)**: 端末リファレンス<br>
-→ **[Stores](docs/stores-beta/user-guide.md)**: 別のリポジトリで計画し、チーム全体で共有します (ベータ版)<br>
-→ **[サポートされているツール](docs/supported-tools.md)**: ツール統合とインストール先<br>
-→ **[コンセプト](docs/concepts.md)**: それぞれの要素がどうつながるか<br>
-→ **[多言語](docs/multi-language.md)**: 多言語サポート<br>
-→ **[カスタマイズ](docs/customization.md)**: 自分の環境に合わせる<br>
-→ **[コミュニティショーケース](docs/community.md)**: OpenSpec のために、または OpenSpec を使って作られたプロジェクトやリソース<br>
-→ **[FAQ](docs/faq.md)** · **[トラブルシューティング](docs/troubleshooting.md)** · **[用語集](docs/glossary.md)**: クイックヘルプ
-
+→ **[クイックスタート](https://openspec.dev/docs/quickstart)**: 最初の変更を開始から完了まで<br>
+→ **[プロジェクトのセットアップ](https://openspec.dev/docs/setup)**: `openspec init` がインストールするもの<br>
+→ **[CLI](https://openspec.dev/docs/cli)**: 端末リファレンス<br>
+→ **[対応ツール](https://openspec.dev/docs/supported-tools)**: ツール連携とインストール先<br>
+→ **[カスタマイズ](https://openspec.dev/docs/customize)**: プロファイル、プロジェクト設定、スキーマ<br>
+→ **[Stores](https://openspec.dev/docs/stores)**: 別のリポジトリで計画し、チーム全体で共有（ベータ版）<br>
+→ **[コミュニティショーケース](docs/community.md)**: OpenSpec を使った、または OpenSpec 向けのプロジェクトやリソース
 
 ## コミュニティスキーマ
 
@@ -215,7 +215,9 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 
 ## OpenSpec の更新
 
-**パッケージをアップグレードします**
+**CLI をアップグレードします**
+
+単体実行バイナリで導入した場合は `openspec install` を実行します。npm で導入した日本語版は次のコマンドで更新します。
 
 ```bash
 npm install -g @ayumuwall/openspec@latest
@@ -244,7 +246,7 @@ openspec update
 
 ## 貢献する
 
-PR を作成する前に、基本設計の変更はディスカッション、それ以外は Issue を作成し、PR からリンクしてください。新機能、大規模なリファクタリング、アーキテクチャの変更には、先に OpenSpec の変更提案が必要です。
+すべての変更は Issue から始めます。そこで議論し、対応することで合意したら、メンテナーが実装するか、投稿者を共同実装に招待します。
 
 → **[CONTRIBUTING.md](CONTRIBUTING.md)**: 最初の Issue から PR のマージまでの手順
 

@@ -13,6 +13,7 @@ import {
   extractRequirementsSection,
   diffScenarioNames,
   describeScenarioBalance,
+  describeUnappliedContent,
   foldRequirementName,
   parseDeltaSpec,
   normalizeRequirementName,
@@ -29,6 +30,7 @@ import {
 } from './validation/constants.js';
 import { discoverSpecFiles } from '../utils/spec-discovery.js';
 import { FileSystemUtils } from '../utils/file-system.js';
+import { assertSpecFileWithin } from '../utils/spec-path-containment.js';
 import { matchLineEnding } from '../utils/line-endings.js';
 
 // -----------------------------------------------------------------------------
@@ -71,7 +73,7 @@ function resolveTrustedSpecPath(
 
   try {
     // Preserve spec.md links that remain inside the overall specs tree.
-    FileSystemUtils.assertPathWithin(specsRoot, specPath);
+    assertSpecFileWithin(specsRoot, specPath);
     const root = FileSystemUtils.canonicalizeExistingPath(specsRoot);
     return {
       root,
@@ -96,7 +98,7 @@ function resolveTrustedSpecPath(
       );
     }
     const file = path.join(root, path.basename(specPath));
-    FileSystemUtils.assertPathWithin(root, file);
+    assertSpecFileWithin(root, file);
     return { root, file };
   }
 }
@@ -105,7 +107,7 @@ function assertTrustedSpecPath(root: string, specPath: string): void {
   if (FileSystemUtils.canonicalizeExistingPath(root) !== path.resolve(root)) {
     throw new Error(`パスが許可されたディレクトリ外にあります: ${specPath}`);
   }
-  FileSystemUtils.assertPathWithin(root, specPath);
+  assertSpecFileWithin(root, specPath);
 }
 
 // -----------------------------------------------------------------------------
@@ -152,7 +154,7 @@ export async function findSpecUpdates(changeDir: string, mainSpecsDir: string): 
       targetRoot: target.root,
       target: target.file,
       exists,
-  });
+    });
   }
 
   return updates;
@@ -249,6 +251,11 @@ export async function buildUpdatedSpec(
         `差分セクション内ではないため適用されませんでした。` +
         `ADDED/MODIFIED/REMOVED/RENAMED Requirements の下へ移動してください。`
     );
+  }
+
+  // Archive carries requirement blocks only; name any other text it leaves behind.
+  for (const lost of plan.unappliedContent) {
+    warn(`${specName} - ${describeUnappliedContent(lost)}（${lost.line} 行目）はメイン仕様に引き継がれません。`);
   }
 
   // Pre-validate duplicates within sections
@@ -1188,6 +1195,14 @@ export async function writeUpdatedSpec(
   } = {}
 ): Promise<void> {
   assertTrustedSpecPath(update.targetRoot, update.target);
+  // Pin what the assertion just checked. A capability's spec.md may be a link
+  // to the file the project keeps elsewhere, so the write follows a link by
+  // design - and resolving it once, here, is what keeps that from becoming a
+  // redirect: a link repointed after this line, including from inside
+  // `beforeMutate`, cannot send the write to a file nothing verified. The
+  // bytes still land in the same place a path-based write would have put them,
+  // which keeps the in-place semantics below intact.
+  const verifiedTarget = FileSystemUtils.canonicalizeExistingPath(update.target);
 
   // Create target directory if needed
   const targetDir = path.dirname(update.target);
@@ -1199,17 +1214,28 @@ export async function writeUpdatedSpec(
   // requirement moved. A spec that does not exist yet stays LF.
   // Only a missing file means "no convention to match". Swallowing every error
   // would read an existing but unreadable spec as absent and rewrite it as LF.
-  const previous = await fs.readFile(update.target, 'utf-8').catch((error) => {
+  const previous = await fs.readFile(verifiedTarget, 'utf-8').catch((error) => {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
     throw error;
   });
   const toWrite = previous === undefined ? rebuilt : matchLineEnding(rebuilt, previous);
 
   await options.beforeMutate?.();
+  // `beforeMutate` awaits arbitrary work, so it is the widest gap between the
+  // check above and the write below. Re-check there, and refuse unless the
+  // target still resolves to the very file that was verified: pinning a
+  // pathname is not enough on its own, because the pinned path can itself be
+  // replaced by a link to somewhere else.
+  assertTrustedSpecPath(update.targetRoot, update.target);
+  if (FileSystemUtils.canonicalizeExistingPath(update.target) !== verifiedTarget) {
+    throw new Error(
+      `'${update.id}' の仕様の書き込み先が、書き込む前に変更されました: ${update.target}`
+    );
+  }
   // Preserve the established in-place write semantics: symlink referents,
   // hard-linked specs, ACLs, extended attributes, and filesystems without hard
   // links must continue to behave as they did before capability retirement.
-  await fs.writeFile(update.target, toWrite);
+  await fs.writeFile(verifiedTarget, toWrite);
   if (options.silent) return;
 
   const specName = update.id;

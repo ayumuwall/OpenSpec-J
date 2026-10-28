@@ -1,24 +1,84 @@
 # インストール
 
-## 前提条件
+## Install
 
-- **Node.js 20.19.0 以上** — バージョン確認: `node --version`
+本家版は Node.js 不要の単一ファイル `openspec` としてインストールできます。以下のバイナリ導入手順は本家版向けです。日本語版は[パッケージマネージャー](#パッケージマネージャー)から導入してください。
+
+macOS / Linux のターミナルで実行します。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh
+```
+
+Windows の PowerShell で実行します。
+
+```powershell
+irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+```
+
+- **保存先**：`~/.local/bin`。Windows は `%LOCALAPPDATA%\Programs\openspec` で、ユーザーの PATH にも追加します。
+- **検証**：実行環境に合うファイルを選び、インストール前にリリースの `SHA256SUMS` と照合します。
+- **対象リリース**：全ファイルが揃った最新リリース。公開直後のアップロード中は、直前のリリースを導入してその旨を表示します。
+- **Alpine Linux**：先に `apk add libstdc++ libgcc` を実行します。
+- **オプション**：保存先は `OPENSPEC_INSTALL_DIR`、バージョン固定は `OPENSPEC_VERSION=v1.15.0` で指定します。
+
+保存先が PATH にないと表示されたら、案内に従って追加し、[インストールを確認](#インストール確認)してください。
+
+ワークフロー自体は、Claude Code、Cursor、または[対応ツール一覧](supported-tools.md)にある
+AI コーディングツール内で実行します。
+
+### 手動でダウンロードする
+
+本家の各[リリース](https://github.com/Fission-AI/OpenSpec/releases/latest)には、環境ごとのファイルがあります。
+
+| 環境 | ファイル |
+|---|---|
+| macOS 13+（Apple silicon / Intel） | `openspec-darwin-arm64` / `openspec-darwin-x64` |
+| Linux、glibc 2.17+（arm64 / x64） | `openspec-linux-arm64` / `openspec-linux-x64` |
+| Alpine 3.17+（arm64 / x64） | `openspec-linux-arm64-musl` / `openspec-linux-x64-musl` |
+| Windows 10+（arm64 / x64） | `openspec-windows-arm64.exe` / `openspec-windows-x64.exe` |
+
+`openspec`（Windows は `openspec.exe`）へ改名し、macOS / Linux では `chmod +x openspec` を実行して、PATH 上のフォルダに置きます。
+
+> [!NOTE]
+> macOS では、ブラウザーでダウンロードしたファイルは `xattr -d com.apple.quarantine openspec` を実行するまでブロックされます。上記のインストールコマンドでは不要です。Windows では Explorer からの初回実行時に SmartScreen の警告が出る場合があります。
+
+### ダウンロードを検証する
+
+各リリースバイナリには、ビルドしたワークフロー実行の署名付き記録があります。[GitHub CLI](https://cli.github.com) を使い、ターミナルで実行します。
+
+```bash
+gh attestation verify openspec-darwin-arm64 --repo Fission-AI/OpenSpec
+```
+
+リリースのワークフローがビルドしたファイルであることを確認し、一致しなければ失敗します。任意の追加検証です。インストーラーはすべてのダウンロードで `SHA256SUMS` を確認しています。
+
 
 ## AIアシスタントでインストール
 
 手作業を避けたい場合は、以下のプロンプトをシェルコマンドを実行できるコーディングアシスタントへ貼り付けてください。Claude Code、Codex、Cursor、Gemini CLI、Copilotなどの[対応ツール](supported-tools.md)で利用できます。CLIをインストールしてプロジェクトを初期化し、実際の結果を報告します。
 
-正しい手順は後述の手動手順です。このプロンプトは、その手順を代行するだけです。アシスタントが途中で停止して確認を求めるのは意図した動作です。権限が必要な操作は事前確認し、シェルの起動ファイルを編集しません。残りは[パッケージマネージャー](#パッケージマネージャー)と[トラブルシューティング](troubleshooting.md)を参照して手動で完了してください。
+正しい手順は後述の手動手順です。このプロンプトは、その手順を代行するだけです。アシスタントが途中で停止して確認を求めるのは意図した動作です。権限が必要な操作は事前確認し、シェルの起動ファイルを編集しません。残りは[インストール](#install)と[トラブルシューティング](troubleshooting.md)を参照して手動で完了してください。
 
 ```text
 このプロジェクトにOpenSpecをインストールしてセットアップしてください。以下の順序に従い、
 停止するよう指示された手順では停止してください。
 
-1. ランタイム。`node --version` を実行します。OpenSpecにはNode.js 20.19.0以上が必要です。
-   Nodeがない、または古い場合はその旨を伝えて停止してください。Nodeのインストール、
-   バージョン切り替え、バージョンマネージャーの再設定を代行しないでください。
+1. インストール状況。先に `openspec --version` を実行します。バージョンが表示されたら、
+   `openspec version --check` で既存の導入方法の更新コマンドを確認し、実行を提案して
+   手順3へ進んでください。判別できなければ元の導入方法で更新します。
+   パッケージマネージャー版なら `openspec install` で単体実行版へ切り替えられることを
+   一度だけ案内し、依頼された場合だけ切り替えてください。独断で導入方法を変えないでください。
+   未導入なら、日本語版は手順2で導入します。本家版の単体実行バイナリを希望する場合は、
+   OSに応じた次のコマンドを示し、確認を得てから実行して手順3へ進んでください。
+     macOS / Linux:        curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh
+     Windows (PowerShell): irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+   インストーラーが失敗した場合も手順2へ進みます。
 
-2. インストール。PATH上にあるパッケージマネージャーを使い、npmを優先します。
+2. パッケージマネージャー（手順1で未導入の場合のみ）。`node --version` を実行します。
+   Node.js 20.19.0以上が必要です。Nodeがない、または古い場合はその旨を伝えて停止し、
+   Nodeのインストール、バージョン切り替え、バージョンマネージャーの再設定を代行しないでください。
+   PATH上にあるパッケージマネージャーを使い、npmを優先します。
      npm install -g @ayumuwall/openspec@latest
      pnpm add -g @ayumuwall/openspec@latest
      bun add -g @ayumuwall/openspec@latest
@@ -35,8 +95,8 @@
    ユーザー自身に適用してもらいます。
 
 3. PATH。`openspec --version` を実行します。コマンドが見つからない場合は、パッケージ
-   マネージャーのインストール先と、利用中のシェル・OSでそのディレクトリをPATHへ追加する
-   方法を伝え、確認されるまで停止してください。インストール直後に報告されたものより古い
+   インストール先（単体実行版は通常 ~/.local/bin）と、利用中のシェル・OSでそのディレクトリをPATHへ追加する
+   方法を伝え、確認されるまで停止してください。Windowsの単体実行版はPATHを追加するため、新しいターミナルで反映されます。インストール直後に報告されたものより古い
    バージョンが表示された場合は、PATH上の古いコピーが優先されています。続行せず両方の
    バージョンを伝えてください。バージョンマネージャーを使っている場合はPATHを迂回して
    編集せず、その旨を伝えます。nvmやfnmではインストール時に有効だったNodeバージョンへ
@@ -68,6 +128,8 @@
 このプロンプトはベンダー固有ではなく、平易な指示とこのページに掲載したコマンドだけで構成されています。macOS、Linux、Windowsで利用でき、許可が必要な手順では独断で進めず停止します。シェルコマンドを実行できるアシスタントが必要で、一部のIDE連携では利用できません。
 
 ## パッケージマネージャー
+
+パッケージマネージャー版には **Node.js 20.19.0 以降**が必要です（`node --version` で確認）。
 
 ### npm
 
@@ -162,13 +224,20 @@ nix profile install github:ayumuwall/OpenSpec-J
 openspec --version
 ```
 
+## npm 版から単体実行版へ切り替える
+
+設定とプロジェクトは保持し、プログラムだけを変更します。
+
+1. `openspec install` を実行します。単体実行版を導入し、旧版を削除するコマンドを表示します。
+2. 表示されたコマンドを実行します。例は `npm uninstall -g @ayumuwall/openspec`（Homebrew は `brew uninstall openspec-j`）。削除するまでは、PATH の前方にある旧版が実行されます。
+3. 新しいターミナルで `openspec version` を実行し、`OpenSpec <version> (standalone)` を確認します。パッケージマネージャー名が出る場合は、`which -a openspec`（Windows は `where.exe openspec`）で他のコピーを確認してください。
+
 ## 更新
 
-パッケージをアップグレードしてから、各プロジェクトで生成済みファイルを更新します。
+単体実行版は [インストールコマンド](#install)を再実行して CLI を更新します。パッケージマネージャー版は `npm install -g @ayumuwall/openspec@latest` か、pnpm・yarn・bun の同等のコマンドを使います。その後、各プロジェクトの生成済みファイルを更新します。
 
 ```bash
-npm install -g @ayumuwall/openspec@latest   # pnpm/yarn/bun でも同等のコマンドを使えます
-openspec update                              # 各プロジェクト内で実行します
+openspec update   # 各プロジェクト内で実行します
 ```
 
 `openspec update` は設定済みツール向けのスキルファイルとコマンドファイルを再生成し、インストール済みバージョンに合わせて最新化します。また、新しいCLIが公開されていないか確認し、アップグレードを提案します。新しいワークフローを利用するにはCLI自体の更新が必要です。詳しくは[CLIリファレンス](cli.md#openspec-update)を参照してください。
@@ -177,13 +246,15 @@ openspec update                              # 各プロジェクト内で実行
 
 ## アンインストール
 
-`openspec uninstall` コマンドはありません。OpenSpec はグローバルパッケージと、プロジェクト内に生成されたいくつかのファイルで構成されているだけだからです。削除は手動で数ステップ行います。ここで説明する操作がソースコードに触れることはありません。
+`openspec uninstall` コマンドはありません。OpenSpec はプログラムと、プロジェクト内のファイルで構成されています。削除は手動で行い、ソースコードには触れません。
 
-**1. グローバルパッケージを削除します。**
+**1. CLI を削除する。** 単体実行版は `~/.local/bin/openspec`、Windows は `%LOCALAPPDATA%\Programs\openspec\openspec.exe` とユーザー PATH のそのフォルダを削除します。パッケージマネージャー版は次を実行します。
 
 ```bash
 npm uninstall -g @ayumuwall/openspec   # または pnpm rm -g / yarn global remove / bun rm -g
 ```
+
+単体実行版は、書き込み可能な場合、組み込みスキーマをデータディレクトリへ保存します。macOS / Linux は `~/.local/share/openspec/binary-schemas`、Windows は `%LOCALAPPDATA%\openspec\binary-schemas` です。これも削除できます。
 
 **2. プロジェクトから OpenSpec を削除します（任意）。** 仕様と変更が不要であれば、`openspec/` ディレクトリを削除します。
 

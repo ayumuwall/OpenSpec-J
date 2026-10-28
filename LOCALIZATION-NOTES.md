@@ -8,6 +8,15 @@
 
 ## 既知の事例 / 注意点
 
+### v1.15.0: 単体実行版への切り替えとインストーラー
+
+- `src/commands/install-standalone.ts` の Homebrew 判定は日本語版の `Cellar/openspec-j/` を認識し、削除には `brew uninstall openspec-j` を案内する。本家の `openspec` 判定へ戻すと日本語版の導入方法を識別できない。
+- インストーラーの取得先は日本語版の `ja-docs` ブランチ、バイナリーの取得先は `ayumuwall/OpenSpec-J/releases` とする。`main` は本家タグと完全一致させるため、日本語版スクリプトの取得元には使わない。
+- `scripts/binary/install.ps1` は UTF-8 BOM 付きで保存する。Windows PowerShell 5.1 が日本語文字列を含むローカルスクリプトを正しく読み込めるようにするためで、BOM を除去する整形を行わない。
+- `src/commands/install-standalone.ts` の Windows ランナーは、`Invoke-WebRequest -OutFile` で取得したバイト列を一時 `.ps1` ファイルへ保存して実行し、子プロセスの出力を UTF-8 にする。`irm | iex` で HTTP 応答を文字列として実行すると、charset のない応答で BOM と日本語を誤読する。本家のスクリプトは ASCII のみ・BOM なしで、この問題は日本語化後に表面化する。
+- 回帰検査は `test/commands/install-standalone.test.ts` の Windows 限定ケースで行う。charset のない HTTP 応答から BOM 付きスクリプトを実行し、日本語出力を確認する。単体実行版の自己更新も Windows x64・arm64 の CI で検証する。文字コードの背景は [Windows PowerShell 5.1 の説明](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1)を参照する。
+- インストーラーの動作検査で成功・フォールバック・入力エラーの文言を判定する箇所は、日本語メッセージに合わせる。エラーコード、引数、ダウンロードの検証条件は本家と共通に保つ。
+
 ### v1.13.2: 診断文を参照する判定とテンプレートの回帰検査
 
 - `src/utils/nested-change.ts` の `NESTED_CHANGE_ISSUE_MARKER` は表示文と `validate` の次の操作案内で共有する。表示文だけを変更すると、入れ子の変更に対する案内を選べなくなるため、定数を介した対応を維持する。
@@ -28,7 +37,7 @@
 - ワークフローの説明を「仕様差分」「本仕様」「機能」に統一。提案の見出し `New Capabilities` / `Modified Capabilities` はスキーマ指示との対応を保つため英語に戻した。
 - `explore` の図の説明を日本語化し、図そのものは ASCII 文字だけに保った。
 - 日本語の検証エラーと補足の区切りを句点に変更。`変更ルート`、`アーカイブ完了`、利用統計の停止案内も修正した。
-- 本家と共通のプロファイル動作、共有参照の併記、Commander の標準見出し、Node.js の生エラー、言語コンテキストの英語出力は変更しない。
+- 本家と共通のプロファイル動作、共有参照の併記、Node.js の生エラー、言語コンテキストの英語出力は変更しない。Commander の標準表示は v1.15.0 の動作確認後に日本語化した（下記参照）。
 
 ### バリデーション: ガイド付与が英語メッセージ依存
 - ファイル: `src/core/validation/validator.ts` (`enrichTopLevelError`)
@@ -59,7 +68,7 @@
 ### Feedback: 日本語タイトルをUnicode書記素単位で短縮
 - ファイル: `src/commands/feedback.ts` (`formatTitle`, `formatBody`)
 - 症状: GitHub Issueタイトルを単純なUTF-16コード単位やバイト数で切ると、結合文字・絵文字・サロゲートペアを途中で分断する可能性がある。また英語のような空白区切りを前提にすると、空白のない日本語タイトルを適切に短縮できない。
-- 対応（v1.10.0、2026-09-06 に実装照合）: 接頭辞と省略記号を含め Unicode コードポイント数で72以内へ短縮し、切断位置は `Intl.Segmenter` の書記素境界に合わせる。「72書記素まで」ではない。空白がある場合は最後の語境界を優先し、空白がない日本語では安全な書記素境界までの本文を使う。短縮前のメッセージ全文はIssue本文の「概要」に保持する。
+- 対応（v1.10.0、2026-09-06 に実装照合）: 接頭辞と省略記号を含め Unicode コードポイント数で72以内へ短縮し、切断位置は `Intl.Segmenter` の書記素境界に合わせる。「72書記素まで」ではない。空白がある場合は最後の語境界を優先し、空白がない日本語では安全な書記素境界までの本文を使う。短縮前のメッセージ全文は Issue 本文に保持する（v1.15.0 以降は「発生したこと」）。
 - 互換性: `Feedback: ` はGitHub上で既存Issueを識別する接頭辞として維持し、タイトル表示だけを理由に翻訳しない。
 - フォローアップ: タイトル上限や接頭辞を変更するときは、`test/commands/feedback.test.ts` のASCII、日本語、絵文字、本文への全文保持の期待値を同時に更新する。
 
@@ -111,10 +120,11 @@
 - 対応（v1.11.0）: HTML の言語を `ja`、リポジトリを `ayumuwall/OpenSpec-J`、同期ブランチを `ja-docs`、npm パッケージを `@ayumuwall/openspec` に統一する。
 - フォローアップ: Webサイト同期設定を取り込んだ後は、トップページ、ドキュメントの「編集」、GitHub、npm、sitemap、redirect の参照先をまとめて確認する。
 
-### CLI ヘルプ: Commander の既定英語が残る
-- 現状（v1.11.0）: コマンドとオプションの説明は日本語化されているが、Commander が生成する `Usage`, `Options`, `Commands`, `display help for command`, `output the version number` は英語のまま表示される。
-- 影響: 機能動作には影響しないが、利用者向けヘルプでは日本語と英語が混在する。パッケージの手動確認では、動作成功と翻訳未完了を分けて記録する。
-- フォローアップ: 完全に日本語化する場合は出力文字列の後処理ではなく、Commander の Help 設定で見出しと組み込み説明を差し替える。`--help` の全体表示と各サブコマンド表示を確認する。
+### CLI ヘルプ: Commander の標準表示を日本語化
+- 対応（v1.15.0 動作確認後）: `src/cli/help.ts` の `configureJapaneseHelp` で、見出し、組み込みヘルプの説明、選択肢・既定値・引数省略時の値・環境変数のラベルを日本語化する。`src/cli/index.ts` で子コマンド登録前に適用し、バージョンオプションの説明も日本語で指定する。
+- 互換性: コマンド名、フラグ、引数シグネチャ、設定値、環境変数名、JSON 出力は変更しない。ヘルプ全体への文字列置換は行わず、説明文や選択肢に含まれる英語もそのまま表示する。
+- 注意点: `optionDescription` と `argumentDescription` は Commander と同じ条件で付加情報を表示する。Commander 更新時は、真偽値オプションの既定値を表示する条件や、新しい付加情報の有無を確認する。
+- 検証: `test/cli-help.test.ts` で子・孫コマンドへの継承、値と引数解析の維持を確認し、`test/cli-e2e/basic.test.ts` で実 CLI のヘルプを確認する。
 
 ## テスト期待値の更新が必要だった事例
 

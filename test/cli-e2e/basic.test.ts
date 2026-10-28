@@ -3,7 +3,7 @@ import { promises as fs, realpathSync } from 'fs';
 import path from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'node:child_process';
-import { runCLI, cliProjectRoot } from '../helpers/run-cli.js';
+import { runCLI, cliProjectRoot, testBinary } from '../helpers/run-cli.js';
 import { isolatedGitEnv } from '../helpers/store-git.js';
 import { AI_TOOLS } from '../../src/core/config.js';
 import { getGlobalDataDir, registerStore } from '../../src/core/index.js';
@@ -76,7 +76,11 @@ describe('openspec CLI e2e basics', () => {
   it('shows help output', async () => {
     const result = await runCLI(['--help']);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Usage: openspec');
+    expect(result.stdout).toContain('使用方法: openspec');
+    expect(result.stdout).toContain('オプション:');
+    expect(result.stdout).toContain('コマンド:');
+    expect(result.stdout).toContain('バージョンを表示');
+    expect(result.stdout).not.toContain('display help for command');
     expect(result.stderr).toBe('');
 
   });
@@ -93,6 +97,8 @@ describe('openspec CLI e2e basics', () => {
       `対話なしで AI ツールを設定します。"all"、"none"、または次の ID をカンマ区切りで指定してください: ${expectedTools}`
     );
     expect(normalizedOutput).toContain('--language <language>');
+    expect(result.stdout).toContain('ヘルプを表示');
+    expect(result.stdout).not.toContain('Usage:');
   });
 
   it('reports the package version', async () => {
@@ -104,6 +110,10 @@ describe('openspec CLI e2e basics', () => {
   });
 
   describe('version command', () => {
+    // From this checkout the CLI is a source install; the binary knows it is one.
+    const scope = testBinary ? 'standalone' : 'source';
+    const installRoot = testBinary ? path.dirname(testBinary) : cliProjectRoot;
+
     it('reports local version and source install details outside an OpenSpec project', async () => {
       const cwd = await fs.mkdtemp(path.join(tmpdir(), 'openspec-version-empty-'));
       tempRoots.push(cwd);
@@ -113,7 +123,7 @@ describe('openspec CLI e2e basics', () => {
       const result = await runCLI(['version'], { cwd });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toBe(`OpenSpec ${pkg.version} (source)\n`);
+      expect(result.stdout).toBe(`OpenSpec ${pkg.version} (${scope})\n`);
       expect(result.stderr).toBe('');
     });
 
@@ -129,10 +139,10 @@ describe('openspec CLI e2e basics', () => {
         install: {
           location: expect.any(String),
           packageManager: null,
-          scope: 'source',
+          scope,
         },
       });
-      expect(await fs.realpath(output.install.location)).toBe(await fs.realpath(cliProjectRoot));
+      expect(await fs.realpath(output.install.location)).toBe(await fs.realpath(installRoot));
     });
 
     it('reports a disabled update check as data and exits successfully', async () => {
@@ -158,7 +168,7 @@ describe('openspec CLI e2e basics', () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toMatch(/^OpenSpec \S+ \(source\)\n更新確認は無効です。\n$/);
+      expect(result.stdout).toMatch(new RegExp(`^OpenSpec \\S+ \\(${scope}\\)\\n更新確認は無効です。\\n$`));
       expect(result.stderr).toBe('');
     });
 

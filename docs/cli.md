@@ -177,6 +177,8 @@ openspec update [path] [options]
 | オプション | 説明 |
 |--------|-------------|
 | `--force` | ファイルが最新でも強制更新 |
+| `--dry-run` | 更新内容を表示し、書き込まない |
+| `--json` | `--dry-run` と併用して計画を JSON で出力 |
 
 **例:**
 
@@ -185,6 +187,31 @@ openspec update [path] [options]
 npm install -g @ayumuwall/openspec@latest
 openspec update
 ```
+
+**更新内容を事前確認する：**
+
+`--dry-run` は追加・変更・削除するファイルを表示し、書き込みません。パスはプロジェクトからの相対パスです。ホーム配下のスキルなど、プロジェクト外のファイルは `~/` で表示します。
+
+```bash
+openspec update --dry-run --json
+```
+
+```json
+{
+  "changes": [
+    { "path": ".claude/skills/openspec-explore/SKILL.md", "action": "update", "tool": "claude" },
+    { "path": "~/.minimax/skills/openspec-propose/SKILL.md", "action": "add", "tool": "minimax-code" }
+  ],
+  "notes": [],
+  "failures": []
+}
+```
+
+非対話実行で触れる全ファイルを計画に含めます。ツールの旧ディレクトリからの移動、プロファイル導入前のインストールへのグローバル設定の保存、Copilot クラウドエージェントファイル、`--force` 指定時の旧ファイルの削除も対象です。
+
+OpenSpec 自身に属するファイルは `tool: "openspec"` です。`notes` は対話実行で確認する手順を、安定した `code` とともに示します。`legacy-tool-directories` は移動済みとして計画する移動、`legacy-artifacts` は `--force` なしでは触れない旧形式のファイルです。`failures` は、ファイルの位置にディレクトリがある、書き込み権限がないなど、実際の更新で失敗するツールを示します。そのツールの計画は停止位置までで、他のツールの計画は保持します。通常の更新では両配列は空です。詳細は [openspec.dev/docs/cli](https://openspec.dev/docs/cli) を参照してください。
+
+`--dry-run --json` が失敗しても、空の計画と `status` 配列を持つ JSON を1つだけ出力し、0以外の終了コードで終了します。
 
 先にパッケージをアップグレードしてください。指示ファイルはインストール済みの CLI で生成されるため、古いインストールに対して `openspec update` を実行しても、より新しいリリースが提供するワークフローを追加せず、すべて最新と報告します。
 
@@ -656,6 +683,17 @@ retire_capabilities: true
 ```bash
 openspec archive retire-legacy --yes
 ```
+
+**独自のメタデータを保存する：** 小文字の `x-` で始まるトップレベルキーを使えます。OpenSpec は内容を読み取り・変更・報告しないため、ツール固有の情報を含む変更も `openspec validate --strict` に成功します。
+
+```yaml
+# openspec/changes/add-dark-mode/.openspec.yaml
+schema: spec-driven
+x-tracker: SB-5497
+x-jiraKey: ABC-1
+```
+
+接頭辞の後は、空でなく空白を含まなければ任意の名前を使えます。大文字・小文字も問いません。ただし接頭辞自体は小文字なので、`X-Tracker` は引き続き報告します。拡張キーはトップレベルだけで、`initiative:` 内のキーは名前にかかわらず拒否します。その他の未知のトップレベルキーは、効果がないことを引き続き報告します。
 
 変更によって機能の最後の要件が削除されると、OpenSpec はその機能の本仕様 `spec.md` を削除します。同じ変更に含まれる他の機能の仕様差分は、引き続きそれぞれの本仕様へ反映されます。マーカーがない場合、archive はファイルを変更する前に停止し、マーカーを追加するよう案内します。
 

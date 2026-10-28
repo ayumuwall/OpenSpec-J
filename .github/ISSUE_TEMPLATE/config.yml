@@ -1,9 +1,10 @@
-# `openspec feedback` が生成する入力済み Issue の URL を利用できる状態に保つ。
-blank_issues_enabled: true
+# すべての変更を Issue から始める方針に合わせ、3種類のフォームを入口にする。
+# 方針: https://openspec.dev/blog/openspec-contribution-policy/
+# フォームに合わない相談は以下の連絡先へ案内する。
+# feedback は入力済みバグフォーム、docs は文書用フォームへリンクする。
+# この設定は Web の選択画面だけに作用し、feedback の API 投稿には影響しない。
+blank_issues_enabled: false
 contact_links:
-  - name: 基本設計の変更
-    url: https://github.com/ayumuwall/OpenSpec-J/discussions/categories/ideas
-    about: OpenSpec の基本的な動作を変える提案は、CONTRIBUTING の手順 1 に従って Discussion から始めてください。
   - name: 質問・設定の相談
     url: https://github.com/ayumuwall/OpenSpec-J/discussions/categories/q-a
     about: 不具合かどうか判断できない場合は、こちらで質問してください。原因の切り分けをお手伝いします。

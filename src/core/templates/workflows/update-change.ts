@@ -9,6 +9,8 @@ import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
+const RESPONSE_LANGUAGE_GUIDANCE = '**応答の言語:** 利用者への説明・進捗・確認・要約は、利用者が指定した言語で統一します。指定がなければ日本語を使います。コマンド・パス・識別子と OpenSpec の構造トークンは翻訳しません。';
+
 /**
  * Passages that hand off to `/opsx:continue` or `/opsx:new`. Neither workflow
  * is in the `core` profile, so each is authored with a CLI fallback and
@@ -76,12 +78,14 @@ const INTENT_CHANGE_GUARDRAIL = optionalWorkflow(
 export function getUpdateChangeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-update-change',
-    description: '既存の 計画アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。「openspec update change」または「opsx update」と依頼された場合にも使用します。生成済みファイルを更新する openspec update CLI コマンドを意図している場合は、代わりにそのコマンドを実行します。コードは編集しません。',
+    description: '既存の計画アーティファクトを修正し、相互の一貫性を保ちながら OpenSpec 変更を更新します。変更計画の見直し、新しい決定の反映、編集後のアーティファクト整合に使用します。「openspec update change」または「opsx update」と依頼された場合にも使用します。生成済みファイルを更新する openspec update CLI コマンドを意図している場合は、代わりにそのコマンドを実行します。コードは編集しません。',
     instructions: `変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
 
 ${STORE_SELECTION_GUIDANCE}
 
 ${PROJECT_ROOT_GUARD}
+
+${RESPONSE_LANGUAGE_GUIDANCE}
 
 **入力**: 必要に応じて、変更名を指定します。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
@@ -117,7 +121,7 @@ ${CONTINUE_SCOPE_NOTE}
 
 アーティファクト ID とパスはアクティブなスキーマから取得されます。これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください。カスタム スキーマは変更せずに機能する必要があります。
 
-編集するファイルは \`artifactPaths.<id>.existingOutputPaths\` です。ディスク上に存在する具体的なファイルで、グロブ アーティファクト用にすでにグロブ展開されています (例: \`specs/**/*.md\`)。 \`resolvedOutputPath\` には書き込まないでください。グロブ アーティファクトの場合、それは依然としてグロブ パターンであり、実際のファイルではありません。
+   編集するファイルは \`artifactPaths.<id>.existingOutputPaths\` と、一部だけ作成済みの glob アーティファクト配下で許可された、確認済みの具体的なパス（手順4）です。ディスク上に存在する具体的なファイルで、グロブ アーティファクト用にすでにグロブ展開されています (例: \`specs/**/*.md\`)。 \`resolvedOutputPath\` には書き込まないでください。グロブ アーティファクトの場合、それは依然としてグロブ パターンであり、実際のファイルではありません。
 
 3. **リクエストを理解する**
 - ユーザーが特定のリビジョン (「デザインは現在 X を使用しています」) を要求した場合、それが編集の開始点となります。
@@ -161,7 +165,7 @@ ${CONTINUE_SCOPE_NOTE}
 **ガードレール**
 - 計画アーティファクトだけを扱い、実装コードは決して編集しません。改訂後の計画がコード変更を必要とする場合は${APPLY_GUARDRAIL}。
 - \`openspec status\` が報告したアーティファクト ID とパスを使用し、ハードコードされたアーティファクト名で分岐しません。
-- \`existingOutputPaths\` にある具体的なファイルだけを編集し、グロブの \`resolvedOutputPath\` には決して書き込みません。
+- \`existingOutputPaths\` にある具体的なファイルと、一部だけ作成済みの glob アーティファクト配下で許可された、確認済みの具体的なパス（手順4）だけを編集し、グロブの \`resolvedOutputPath\` には決して書き込みません。
 - ビルドの進行地点を先に進めません。\`existingOutputPaths\` が空で、状態が \`ready\` または \`blocked\` のアーティファクトの作成は、${CONTINUE_FRONTIER}。\`skipped\` のアーティファクトは変更しません。新規ファイルを作成できるのは、\`existingOutputPaths\` が空でないグロブ アーティファクト配下の、確認済みの具体的なパスだけです。
 - 書き込む前に、すべての編集についてユーザーの確認を得ます。
 - 要求が変更の詳細化ではなく *意図* 自体を変える場合は、${INTENT_CHANGE_GUARDRAIL}。`,
@@ -174,7 +178,7 @@ ${CONTINUE_SCOPE_NOTE}
 export function getOpsxUpdateCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Update',
-    description: '変更を更新し、既存の 計画アーティファクトを修正して一貫性を保つ（実験的）',
+    description: '変更を更新し、既存の計画アーティファクトを修正して一貫性を保つ（実験的）',
     category: 'Workflow',
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `変更の既存の計画成果物を改訂し、一貫性を保ちます。コードは決して編集しないでください。
@@ -182,6 +186,8 @@ export function getOpsxUpdateCommandTemplate(): CommandTemplate {
 ${STORE_SELECTION_GUIDANCE}
 
 ${PROJECT_ROOT_GUARD}
+
+${RESPONSE_LANGUAGE_GUIDANCE}
 
 **入力**: オプションで、\`/opsx:update\` の後に変更名を指定します (例: \`/opsx:update add-auth\`)。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
 
@@ -217,7 +223,7 @@ ${CONTINUE_SCOPE_NOTE}
 
 アーティファクト ID とパスはアクティブなスキーマから取得されます。これらを仮定したり、ハードコードされたアーティファクト名に基づいて分岐したりしないでください。カスタム スキーマは変更せずに機能する必要があります。
 
-編集するファイルは \`artifactPaths.<id>.existingOutputPaths\` です。ディスク上に存在する具体的なファイルで、グロブ アーティファクト用にすでにグロブ展開されています (例: \`specs/**/*.md\`)。 \`resolvedOutputPath\` には書き込まないでください。グロブ アーティファクトの場合、それは依然としてグロブ パターンであり、実際のファイルではありません。
+   編集するファイルは \`artifactPaths.<id>.existingOutputPaths\` と、一部だけ作成済みの glob アーティファクト配下で許可された、確認済みの具体的なパス（手順4）です。ディスク上に存在する具体的なファイルで、グロブ アーティファクト用にすでにグロブ展開されています (例: \`specs/**/*.md\`)。 \`resolvedOutputPath\` には書き込まないでください。グロブ アーティファクトの場合、それは依然としてグロブ パターンであり、実際のファイルではありません。
 
 3. **リクエストを理解する**
 - ユーザーが特定のリビジョン (「デザインは現在 X を使用しています」) を要求した場合、それが編集の開始点となります。
@@ -261,7 +267,7 @@ ${CONTINUE_SCOPE_NOTE}
 **ガードレール**
 - 計画アーティファクトだけを扱い、実装コードは決して編集しません。改訂後の計画がコード変更を必要とする場合は${APPLY_GUARDRAIL}。
 - \`openspec status\` が報告したアーティファクト ID とパスを使用し、ハードコードされたアーティファクト名で分岐しません。
-- \`existingOutputPaths\` にある具体的なファイルだけを編集し、グロブの \`resolvedOutputPath\` には決して書き込みません。
+- \`existingOutputPaths\` にある具体的なファイルと、一部だけ作成済みの glob アーティファクト配下で許可された、確認済みの具体的なパス（手順4）だけを編集し、グロブの \`resolvedOutputPath\` には決して書き込みません。
 - ビルドの進行地点を先に進めません。\`existingOutputPaths\` が空で、状態が \`ready\` または \`blocked\` のアーティファクトの作成は、${CONTINUE_FRONTIER}。\`skipped\` のアーティファクトは変更しません。新規ファイルを作成できるのは、\`existingOutputPaths\` が空でないグロブ アーティファクト配下の、確認済みの具体的なパスだけです。
 - 書き込む前に、すべての編集についてユーザーの確認を得ます。
 - 要求が変更の詳細化ではなく *意図* 自体を変える場合は、${INTENT_CHANGE_GUARDRAIL}。`

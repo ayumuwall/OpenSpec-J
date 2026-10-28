@@ -70,3 +70,23 @@ test file mid-suite.
 ## pack-version-check.mjs
 
 Validates package version consistency before publishing.
+
+## binary/
+
+Node.js 不要の単体実行版 `openspec` をビルドします。本家では標準の導入方法です。`.github/workflows/binaries.yml` は Linux で全配布ファイルをクロスコンパイルし、それぞれの OS・CPU で検証して、`SHA256SUMS`、`install.sh`、`install.ps1` とともに公開リリースへ添付します。
+
+| ファイル | 用途 |
+|---|---|
+| `build.mjs` | `dist-bin/` へビルド（先に `pnpm build` を実行） |
+| `entry.mjs` | バイナリの起点。スキーマの埋め込みと更新案内 |
+| `install.sh` / `install.ps1` | 利用者向けインストーラー（macOS・Linux / Windows） |
+| `smoke.sh` | バイナリ1個の簡易検証 |
+| `e2e.sh` | Node の代わりにバイナリ1個で CLI の全テストを実行 |
+
+```bash
+pnpm build
+bun scripts/binary/build.mjs                    # 現在の環境
+bun scripts/binary/build.mjs --all              # 全配布ファイル
+bash scripts/binary/smoke.sh dist-bin/openspec-<asset>
+bash scripts/binary/e2e.sh dist-bin/openspec-<asset>
+```

@@ -7,14 +7,26 @@ body:
       value: |
         不具合の報告ありがとうございます。
 
+        再現できる情報が調査に役立ちます。エージェントが報告を書いた場合も、
+        自分で読み直し、実際に起きた内容と一致することを確認してください。
+
         `openspec feedback "報告内容"` を実行すると、バージョンと環境情報を添えて Issue を投稿できます。
         GitHub CLI が使えない場合や未認証の場合は、投稿用リンクを取得できます。
 
   - type: textarea
+    id: goal
+    attributes:
+      label: 試していた操作
+      description: 症状ではなく、何をしようとしていたかを記入してください。バグなのか、意図したトレードオフなのかを判断するために使います。
+      placeholder: 完了した変更をアーカイブして、仕様を openspec/specs/ へ統合する。
+    validations:
+      required: true
+
+  - type: textarea
     id: what_happened
     attributes:
-      label: 実際に起きたこと
-      description: 実際の動作を記入してください。実行したコマンドと出力があれば貼り付けてください。
+      label: 発生したこと
+      description: 実際の動作を記入してください。実行したコマンドと出力全体、エラーメッセージやログがあれば添付してください。投稿前に認証情報、トークン、個人情報、非公開の内容を除いてください。
       placeholder: |
         `openspec archive add-login` を実行すると、メイン仕様を更新せずに終了コード 0 で終了しました。
     validations:
@@ -31,8 +43,8 @@ body:
   - type: textarea
     id: repro
     attributes:
-      label: 最小限の再現手順
-      description: 新規プロジェクトから問題を再現するまでの最短の手順を記入してください。原因の調査に最も役立つ情報です。
+      label: 最短の再現手順
+      description: 新規プロジェクトから再現する最短の手順を、可能なら最小限の例とともに記入してください。再現できなければ修正できないため、調査に最も役立つ情報です。
       placeholder: |
         1. 空のディレクトリで `openspec init` を実行
         2. ...
@@ -55,6 +67,14 @@ body:
       label: コーディングエージェントとモデル
       description: OpenSpec を操作したエージェントとモデルを記入してください。使用するエージェントやモデルによって動作が異なる場合があります。
       placeholder: Claude Code, Opus 4.6
+    validations:
+      required: false
+
+  - type: textarea
+    id: agent_trace
+    attributes:
+      label: エージェントのセッション記録
+      description: エージェントを使った場合は、セッション記録を添付するかリンクし、別セッションでも再現するかを記入してください。認証情報、個人情報、非公開のコードやコンテキストは投稿前に除いてください。読んだファイル、呼び出したツール、コンテキストの内容が原因の絞り込みに役立ちます。
     validations:
       required: false
 

@@ -5,11 +5,10 @@
  */
 
 import path from 'path';
-import * as fs from 'fs';
 import { AI_TOOLS, OPENSPEC_SKILL_NAMES } from '../config.js';
 import { CommandAdapterRegistry, generateCommands } from '../command-generation/index.js';
 import { getCommandContents } from './skill-generation.js';
-import { getGlobalConfig } from '../global-config.js';
+import { getGlobalConfig, type Delivery } from '../global-config.js';
 import { getProfileWorkflows, ALL_WORKFLOWS } from '../profiles.js';
 import {
   isSharedSkillTargetActive,
@@ -27,6 +26,7 @@ import {
   resolveToolSkillsDir,
   toolSupportsSkills,
 } from './skill-paths.js';
+import { DISK_VIEW, type FileView } from '../file-view.js';
 
 /**
  * openspec init で作成されるスキルディレクトリ名。
@@ -97,12 +97,16 @@ export function getToolsWithSkillsDir(): string[] {
 /**
  * ツールに存在するスキルファイルを確認する。
  */
-export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSkillStatus {
+export function getToolSkillStatus(
+  projectRoot: string,
+  toolId: string,
+  view: FileView = DISK_VIEW
+): ToolSkillStatus {
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool || !toolSupportsSkills(tool)) {
     return { configured: false, fullyConfigured: false, skillCount: 0 };
   }
-  if (tool.skillsDir && !isSharedSkillTargetActive(projectRoot, toolId)) {
+  if (tool.skillsDir && !isSharedSkillTargetActive(projectRoot, toolId, view)) {
     return { configured: false, fullyConfigured: false, skillCount: 0 };
   }
 
@@ -116,7 +120,7 @@ export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSki
 
   for (const skillName of SKILL_NAMES) {
     if (skillsDirs.some((skillsDir) =>
-      fs.existsSync(path.join(skillsDir, skillName, 'SKILL.md'))
+      view.exists(path.join(skillsDir, skillName, 'SKILL.md'))
     )) {
       skillCount++;
     }
@@ -132,14 +136,18 @@ export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSki
 /**
  * ツールに生成済みOpenSpecコマンドファイルが1つ以上あるか確認する。
  */
-export function toolHasAnyConfiguredCommand(projectPath: string, toolId: string): boolean {
+export function toolHasAnyConfiguredCommand(
+  projectPath: string,
+  toolId: string,
+  view: FileView = DISK_VIEW
+): boolean {
   const adapter = CommandAdapterRegistry.get(toolId);
   if (!adapter) return false;
 
   for (const commandId of COMMAND_IDS) {
     const cmdPath = adapter.getFilePath(commandId);
     const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-    if (fs.existsSync(fullPath)) {
+    if (view.exists(fullPath)) {
       return true;
     }
   }
@@ -165,10 +173,13 @@ export function areCommandFilesUpToDate(
   toolId: string,
   options?: {
     workflows?: readonly string[];
+    /** The tree to read; the disk unless an update is planning. */
+    view?: FileView;
   }
 ): boolean {
   const adapter = CommandAdapterRegistry.get(toolId);
   if (!adapter) return false;
+  const view = options?.view ?? DISK_VIEW;
 
   let workflows: readonly string[];
   if (options?.workflows) {
@@ -196,11 +207,11 @@ export function areCommandFilesUpToDate(
 
   for (const cmd of generatedCommands) {
     const cmdPath = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectRoot, cmd.path);
-    if (!fs.existsSync(cmdPath)) {
+    if (!view.exists(cmdPath)) {
       return false;
     }
     try {
-      const existingContent = fs.readFileSync(cmdPath, 'utf-8');
+      const existingContent = view.read(cmdPath);
       if (normalizeCommandContent(existingContent) !== normalizeCommandContent(cmd.fileContent)) {
         return false;
       }
@@ -215,7 +226,7 @@ export function areCommandFilesUpToDate(
     if (desiredWorkflowSet.has(workflow)) continue;
     const cmdPath = adapter.getFilePath(workflow);
     const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectRoot, cmdPath);
-    if (fs.existsSync(fullPath)) {
+    if (view.exists(fullPath)) {
       return false;
     }
   }
@@ -262,13 +273,16 @@ export function getToolStates(projectRoot: string): Map<string, ToolSkillStatus>
  * スキルファイルの YAML フロントマターから generatedBy を抽出する。
  * フィールドが無い、またはファイルが無い場合は null を返す。
  */
-export function extractGeneratedByVersion(skillFilePath: string): string | null {
+export function extractGeneratedByVersion(
+  skillFilePath: string,
+  view: FileView = DISK_VIEW
+): string | null {
   try {
-    if (!fs.existsSync(skillFilePath)) {
+    if (!view.exists(skillFilePath)) {
       return null;
     }
 
-    const content = fs.readFileSync(skillFilePath, 'utf-8');
+    const content = view.read(skillFilePath);
 
     // YAML フロントマター内の generatedBy を探す
     // ファイル形式:
@@ -309,8 +323,13 @@ export function getToolVersionStatus(
   currentVersion: string,
   options?: {
     workflows?: readonly string[];
+    /** The tree to read; the disk unless an update is planning. */
+    view?: FileView;
+    /** Effective delivery; read from the global config when omitted. */
+    delivery?: Delivery;
   }
 ): ToolVersionStatus {
+  const view = options?.view ?? DISK_VIEW;
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool || !toolSupportsSkills(tool)) {
     return {
@@ -335,8 +354,8 @@ export function getToolVersionStatus(
   for (const skillName of SKILL_NAMES) {
     for (const skillsDir of skillsDirs) {
       const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
-      if (fs.existsSync(skillFile)) {
-        generatedByVersion = extractGeneratedByVersion(skillFile);
+      if (view.exists(skillFile)) {
+        generatedByVersion = extractGeneratedByVersion(skillFile, view);
         foundSkill = true;
         break;
       }
@@ -344,11 +363,11 @@ export function getToolVersionStatus(
     if (foundSkill) break;
   }
 
-  const skillConfigured = getToolSkillStatus(projectRoot, toolId).configured;
-  const commandConfigured = toolHasAnyConfiguredCommand(projectRoot, toolId);
+  const skillConfigured = getToolSkillStatus(projectRoot, toolId, view).configured;
+  const commandConfigured = toolHasAnyConfiguredCommand(projectRoot, toolId, view);
   const markerConfigured =
     Boolean(tool.skillsDir) &&
-    readSharedSkillTarget(projectRoot, tool.skillsDir!) === toolId;
+    readSharedSkillTarget(projectRoot, tool.skillsDir!, view) === toolId;
   const configured = skillConfigured || commandConfigured || markerConfigured;
 
   // 2. Commands-only installs have no skill file to read a version from, so fall
@@ -358,7 +377,7 @@ export function getToolVersionStatus(
     generatedByVersion = currentVersion;
   }
   if (!skillConfigured && !commandConfigured && markerConfigured) {
-    const delivery = getGlobalConfig().delivery ?? 'both';
+    const delivery = options?.delivery ?? getGlobalConfig().delivery ?? 'both';
     if (
       !shouldGenerateSkillsForTool(toolId, delivery) &&
       !shouldGenerateCommandsForTool(toolId, delivery)
@@ -378,7 +397,7 @@ export function getToolVersionStatus(
     try {
       generatesCommands = shouldGenerateCommandsForTool(
         toolId,
-        getGlobalConfig().delivery ?? 'both'
+        options?.delivery ?? getGlobalConfig().delivery ?? 'both'
       );
     } catch {
       generatesCommands = true;
@@ -405,35 +424,36 @@ export function getToolVersionStatus(
 /**
  * プロジェクトで設定済みの全ツール（スキルまたはコマンド）を取得する。
  */
-export function getConfiguredTools(projectRoot: string): string[] {
+export function getConfiguredTools(projectRoot: string, view: FileView = DISK_VIEW): string[] {
   const configured = AI_TOOLS
     .filter((t) => {
       if (!toolSupportsSkills(t)) return false;
       return (
-        getToolSkillStatus(projectRoot, t.value).configured ||
-        toolHasAnyConfiguredCommand(projectRoot, t.value) ||
+        getToolSkillStatus(projectRoot, t.value, view).configured ||
+        toolHasAnyConfiguredCommand(projectRoot, t.value, view) ||
         (
           resolveCommandSurfaceCapability(t.value) === 'adapter-backed' &&
-          hasLegacySkills(projectRoot, t)
+          hasLegacySkills(projectRoot, t, view)
         ) ||
         (Boolean(t.skillsDir) &&
-          readSharedSkillTarget(projectRoot, t.skillsDir!) === t.value)
+          readSharedSkillTarget(projectRoot, t.skillsDir!, view) === t.value)
       );
-  });
+    });
   const activeProjectTools = new Set(
     reconcileSharedSkillTargets(
       projectRoot,
-      configured.filter((tool) => tool.skillsDir)
+      configured.filter((tool) => tool.skillsDir),
+      view
     ).map((tool) => tool.value)
   );
   return configured
     .filter(
       (tool) =>
         tool.globalSkillsDir ||
-        toolHasAnyConfiguredCommand(projectRoot, tool.value) ||
+        toolHasAnyConfiguredCommand(projectRoot, tool.value, view) ||
         (
           resolveCommandSurfaceCapability(tool.value) === 'adapter-backed' &&
-          hasLegacySkills(projectRoot, tool)
+          hasLegacySkills(projectRoot, tool, view)
         ) ||
         activeProjectTools.has(tool.value)
     )

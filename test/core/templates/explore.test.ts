@@ -340,8 +340,10 @@ describe('explore templates', () => {
     /依頼済みの内容を再確認する必要はありません/,
     /ユーザーの承認なしに、要求されていない前提条件を作成してはいけません/,
     /通常の前提条件として扱い、記録範囲を広げる前に確認します/,
-    /選択した出力が存在することを確認します/,
+    /選択した出力パスにファイルが存在することを確認します/,
     /その依存関係を説明してから範囲を広げるか確認します/,
+    // パスの確認はユーザーの承認条件ではない。
+    /親ディレクトリと既存ファイル自体のシンボリックリンクを解決しても `changeRoot` 内に収まることを確認します/,
     // The guardrail: the rule, and a pointer back to the branch.
     /`openspec new change` など、ファイルへ書き込むコマンドを含む最初の書き込み可能な操作の前に/,
     /こちらから記録を提案する場合は、`openspec new change` にもこの規則を適用します/,
@@ -459,10 +461,10 @@ describe('explore templates', () => {
         'アーティファクトを作成するたびに `openspec status --change "<name>" --json` を再実行'
       );
       expect(transition, label).toContain(
-        '指示が特定のスキルまたはコマンドへ作成を委譲している場合'
+        'スキルやコマンドへ作成を委任する指示なら'
       );
       expect(transition, label).toContain(
-        '選択した出力が存在することを確認します'
+        '選択した出力パスにファイルが存在することを確認します'
       );
     }
   });
@@ -478,7 +480,7 @@ describe('explore templates', () => {
         '`ready` の各アーティファクトでは `openspec instructions'
       );
       const verifyOutput = transition.indexOf(
-        '選択した出力が存在することを確認します'
+        '選択した出力パスにファイルが存在することを確認します'
       );
       const refreshStatus = transition.indexOf(
         'アーティファクトを作成するたびに `openspec status'
@@ -503,7 +505,7 @@ describe('explore templates', () => {
         label
       ).toBe(1);
       expect(
-        occurrenceCount(transition, '選択した出力が存在することを確認します'),
+        occurrenceCount(transition, '選択した出力パスにファイルが存在することを確認します'),
         label
       ).toBe(1);
       expect(
@@ -549,9 +551,9 @@ describe('explore templates', () => {
       const transition = newChangeTransition(body, label);
 
       expect(transition, label).toContain(
-        '`dependencies` に列挙された完了済み依存ファイルを読み'
+        '`dependencies` の完了済みファイルを読み'
       );
-      expect(transition, label).toContain('`context` と `rules` はアーティファクトへコピーせず制約として適用');
+      expect(transition, label).toContain('`context` と `rules` はコピーせず制約として適用');
     }
   });
 

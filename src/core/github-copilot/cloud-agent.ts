@@ -337,14 +337,29 @@ function isManagedCopilotCloudFile(
   return isCurrentCopilotCloudFile(relPath, content) || isLegacyCopilotCloudFile(relPath, content);
 }
 
+/**
+ * Every change the cloud-file sync makes on disk. `update --dry-run` passes a
+ * recorder, so the plan comes from this same code rather than a description.
+ */
+export interface CopilotCloudFileOps {
+  writeFile(filePath: string, content: string): Promise<void>;
+  removeFile(filePath: string): Promise<void>;
+}
+
+const DIRECT_CLOUD_FILE_OPS: CopilotCloudFileOps = {
+  writeFile: (filePath, content) => FileSystemUtils.writeFile(filePath, content),
+  removeFile: (filePath) => fs.unlink(filePath),
+};
+
 async function reconcileCopilotCloudFile(
   fullPath: string,
-  relPath: CopilotCloudFile
+  relPath: CopilotCloudFile,
+  ops: CopilotCloudFileOps
 ): Promise<boolean> {
   const currentContent = COPILOT_CLOUD_FILE_CONTENTS[relPath];
 
   if (!(await FileSystemUtils.fileExists(fullPath))) {
-    await FileSystemUtils.writeFile(fullPath, currentContent);
+    await ops.writeFile(fullPath, currentContent);
     return true;
   }
 
@@ -356,7 +371,7 @@ async function reconcileCopilotCloudFile(
     return false;
   }
 
-  await FileSystemUtils.writeFile(fullPath, currentContent);
+  await ops.writeFile(fullPath, currentContent);
   return true;
 }
 
@@ -426,7 +441,8 @@ async function classifyCopilotAgentReconciliation(
  * @returns Object indicating which files were written.
  */
 export async function writeCopilotCloudFiles(
-  projectPath: string
+  projectPath: string,
+  ops: CopilotCloudFileOps = DIRECT_CLOUD_FILE_OPS
 ): Promise<{ setupStepsWritten: boolean; agentWritten: boolean }> {
   const setupStepsPath = FileSystemUtils.resolveProjectArtifactPath(
     projectPath,
@@ -453,13 +469,14 @@ export async function writeCopilotCloudFiles(
 
   const setupStepsWritten = await reconcileCopilotCloudFile(
     setupStepsPath,
-    COPILOT_CLOUD_FILES.setupSteps
+    COPILOT_CLOUD_FILES.setupSteps,
+    ops
   );
   let agentWritten = false;
   if (agentReconciliation === 'reconcile') {
-    agentWritten = await reconcileCopilotCloudFile(agentPath, COPILOT_CLOUD_FILES.agent);
+    agentWritten = await reconcileCopilotCloudFile(agentPath, COPILOT_CLOUD_FILES.agent, ops);
   } else if (agentReconciliation === 'remove-managed') {
-    await fs.unlink(agentPath);
+    await ops.removeFile(agentPath);
   }
 
   return { setupStepsWritten, agentWritten };
@@ -471,7 +488,10 @@ export async function writeCopilotCloudFiles(
  *
  * @returns Number of files removed.
  */
-export async function removeCopilotCloudFiles(projectPath: string): Promise<number> {
+export async function removeCopilotCloudFiles(
+  projectPath: string,
+  ops: CopilotCloudFileOps = DIRECT_CLOUD_FILE_OPS
+): Promise<number> {
   let removed = 0;
   const managedPaths = Object.values(COPILOT_CLOUD_FILES).map((relPath) => ({
     relPath,
@@ -488,7 +508,7 @@ export async function removeCopilotCloudFiles(projectPath: string): Promise<numb
         continue;
       }
 
-      await fs.unlink(fullPath);
+      await ops.removeFile(fullPath);
       removed++;
     }
   }
