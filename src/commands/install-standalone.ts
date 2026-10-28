@@ -104,13 +104,19 @@ export function installerBase(env: NodeJS.ProcessEnv = process.env): string {
 // environment variable), never as part of the command text.
 const POSIX_RUNNER =
   'f=$(mktemp) || exit 1; { curl -fsSL "$1" -o "$f" 2>/dev/null || wget -q -O "$f" "$1"; } && sh "$f"; s=$?; rm -f "$f"; exit $s';
-const WINDOWS_RUNNER = 'irm $env:OPENSPEC_INSTALLER_URL | iex';
+const WINDOWS_RUNNER = [
+  "$ErrorActionPreference = 'Stop';",
+  '[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false);',
+  "$installerFile = Join-Path ([IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString('N') + '.ps1');",
+  'try { Invoke-WebRequest -UseBasicParsing -Uri $env:OPENSPEC_INSTALLER_URL -OutFile $installerFile; & $installerFile }',
+  'finally { Remove-Item -LiteralPath $installerFile -Force -ErrorAction SilentlyContinue }',
+].join(' ');
 
 /**
- * Downloads and runs the installer with the same tools as the documented
- * one-liners (curl or wget; PowerShell's irm), so proxies and certificates
- * behave as they do for those. Saved to a file first on macOS and Linux:
- * piped straight into sh, a failed download would look like a successful run.
+ * インストーラーを curl/wget または PowerShell で取得し、一時ファイルから実行する。
+ * Windows PowerShell 5.1 は保存したファイルの BOM で UTF-8 を判定するため、
+ * HTTP 応答の charset に依存せず日本語を読み込める。macOS/Linux でも先に保存し、
+ * ダウンロード失敗がパイプの末尾で成功扱いになることを避ける。
  */
 function runInstaller(scriptUrl: string, env: NodeJS.ProcessEnv): Promise<number> {
   const windows = process.platform === 'win32';

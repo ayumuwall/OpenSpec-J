@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import {
   installStandalone,
   checkSource,
@@ -10,8 +12,42 @@ import {
   resolveInstallTarget,
 } from '../../src/commands/install-standalone.js';
 import { findCopiesOnPath } from '../../src/utils/executable-path.js';
+import { runCLI } from '../helpers/run-cli.js';
 
 describe('openspec install', () => {
+  it.skipIf(process.platform !== 'win32')('charsetのないHTTP応答でもBOM付きインストーラーと日本語出力を保持する', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-install-encoding-'));
+    const message = '日本語のインストーラーを実行しました';
+    const script = Buffer.from('\uFEFF# UTF-8 installer (no Node.js needed)\nWrite-Output "' + message + '"\n', 'utf8');
+    const server = http.createServer((request, response) => {
+      if (request.url !== '/install.ps1') {
+        response.writeHead(404).end();
+        return;
+      }
+      response.writeHead(200, { 'Content-Type': 'application/octet-stream' }).end(script);
+    });
+    try {
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const port = (server.address() as AddressInfo).port;
+      const result = await runCLI(['install'], {
+        cwd: root,
+        env: {
+          XDG_CONFIG_HOME: path.join(root, 'config'),
+          XDG_DATA_HOME: path.join(root, 'data'),
+          OPENSPEC_DOWNLOAD_URL: `http://127.0.0.1:${port}`,
+          OPENSPEC_INSTALL_DIR: path.join(root, 'bin'),
+        },
+      });
+      expect(result.exitCode, result.stdout + result.stderr).toBe(0);
+      expect(result.stdout).toContain(message);
+      expect(result.stderr).not.toContain('CommandNotFoundException');
+      expect(result.stdout + result.stderr).not.toContain('ï»¿');
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   describe('resolveInstallTarget', () => {
     it('uses the installers\' default folder', () => {
       expect(resolveInstallTarget({}, 'darwin', null)).toEqual({
