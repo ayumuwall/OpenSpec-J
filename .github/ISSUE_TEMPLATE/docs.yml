@@ -1,0 +1,28 @@
+name: ドキュメント
+description: ドキュメントの誤り、不足、分かりにくい説明の報告。
+labels: ['documentation', 'needs-triage']
+body:
+  - type: input
+    id: where
+    attributes:
+      label: 対象ページ
+      description: openspec.dev のページへのリンクか、docs-lab/ 配下のファイルを指定してください。
+      placeholder: https://openspec.dev/docs/cli の openspec archive 節
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 誤りや不足している内容
+      placeholder: `--yes` は仕様の同期を省略すると書いてありますが、省略するのは確認プロンプトだけです。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 記載してほしい内容
+      description: 任意です。期待していた説明や、調査して分かった正しい内容を記入してください。
+    validations:
+      required: false

@@ -55,7 +55,7 @@ const SANCTIONED_OUTSIDE_STEP_FIVE = [
   STEP_FOUR_DRAFT_RULE,
   'ユーザーが特定のリビジョン (「デザインは現在 X を使用しています」) を要求した場合、それが編集の開始点となります。',
   '`resolvedOutputPath` には書き込まないでください。',
-  '- `existingOutputPaths` にある具体的なファイルだけを編集し、グロブの `resolvedOutputPath` には決して書き込みません。',
+  '- `existingOutputPaths` にある具体的なファイルと、一部だけ作成済みの glob アーティファクト配下で許可された、確認済みの具体的なパス（手順4）だけを編集し、グロブの `resolvedOutputPath` には決して書き込みません。',
   'グロブの `resolvedOutputPath` は書き込み先にできません。',
   '書き込み先がすでに存在すれば失敗する作成操作を使います。',
   '書き込む前に、すべての編集についてユーザーの確認を得ます。',
@@ -294,6 +294,49 @@ describe('update-change templates', () => {
       expect(writeGuard, label).toContain('引き続き対象範囲内で、スキップされておらず、一部のファイルがすでに存在する');
       expect(writeGuard, label).toContain('上記の具体的なパスの確認も繰り返します');
       expect(body, label).toContain('既存内容の置き換えや別パスの選択をせずに停止し、ユーザーと調整します');
+    }
+  });
+
+  // #2068: the first guardrail read "Edit only the concrete files in
+  // existingOutputPaths", and a file step 4 creates is by definition not in
+  // that list. The exception sat two bullets below, so an agent applying the
+  // blanket rule refused the very operation the glob-gap flow exists to
+  // perform. Every place that states the scope rule has to carry the
+  // exception - a slice of the Guardrails section alone would miss step 2,
+  // which states the same rule two steps before the exception appears.
+  it('carries the glob new-file exception wherever the scope rule is stated (#2068)', () => {
+    for (const [label, body] of bodies) {
+      const scopeLines = body
+        .split('\n')
+        .filter((line) =>
+          /- `existingOutputPaths` にある具体的なファイル|編集するファイルは `artifactPaths/.test(line)
+        );
+      // Both sites: step 2's prose and the Guardrails bullet.
+      expect(scopeLines.length, `${label}: expected both scope-rule sites`).toBe(2);
+
+      for (const line of scopeLines) {
+        expect(line, `${label}: unqualified scope rule: ${line}`).toContain(
+          '一部だけ作成済みの glob アーティファクト配下で許可された、確認済みの具体的なパス（手順4）'
+        );
+      }
+
+      // A reword must not be able to restore the unqualified prohibition.
+      expect(body, label).not.toMatch(/existingOutputPaths`;\s*never write to a glob/);
+      expect(body, label).not.toMatch(/existingOutputPaths` - the concrete files that exist on disk[^.]*\.\s*Do NOT write/);
+
+      // The prohibition itself and the frontier rule must survive the fix.
+      const guardrails = body.slice(body.indexOf('**ガードレール**'));
+      expect(guardrails, label).toContain('グロブの `resolvedOutputPath` には決して書き込みません');
+      expect(guardrails, label).toContain(
+        '新規ファイルを作成できるのは、`existingOutputPaths` が空でないグロブ アーティファクト配下の、確認済みの具体的なパスだけです。'
+      );
+
+      // "(step 4)" is a cross-reference; pin that step 4 is still the step
+      // that owns the confirmation and the path checks, so renumbering or
+      // moving the flow cannot leave a dangling pointer.
+      const stepFour = section(body, '4. **読んで調整**', '5. **一度に 1 つのアーティファクトを確認して適用します', `${label} step 4`);
+      expect(stepFour, label).toContain('`existingOutputPaths` が空でない');
+      expect(stepFour, label).toContain('ユーザーの確認後にだけ作成');
     }
   });
 

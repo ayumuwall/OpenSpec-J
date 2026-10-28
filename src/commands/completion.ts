@@ -1,4 +1,3 @@
-import ora from 'ora';
 import { CompletionFactory } from '../core/completions/factory.js';
 import { COMMAND_REGISTRY } from '../core/completions/command-registry.js';
 import { detectShell, SupportedShell } from '../utils/shell-detection.js';
@@ -125,6 +124,8 @@ export class CompletionCommand {
     const generator = CompletionFactory.createGenerator(shell);
     const installer = CompletionFactory.createInstaller(shell);
 
+    // Tab 補完でも読み込むモジュールのため、スピナーは必要なときだけ読み込む。
+    const { default: ora } = await import('ora');
     const spinner = ora(`${shell} の補完スクリプトをインストール中...`).start();
 
     try {
@@ -231,6 +232,7 @@ export class CompletionCommand {
       }
     }
 
+    const { default: ora } = await import('ora');
     const spinner = ora(`${shell} の補完スクリプトをアンインストール中...`).start();
 
     try {

@@ -4,7 +4,7 @@
 
 ## 含まれるもの
 
-- **Node.js 20 LTS** (>=20.19.0) — TypeScript/JavaScript ランタイム
+- **Node.js 22 LTS** — TypeScript/JavaScript ランタイム（OpenSpec 自体は Node.js 20.19.0 以降に対応）
 - **pnpm** — 高速・省ディスクなパッケージマネージャ
 - **Git + GitHub CLI** — バージョン管理ツール
 - **VS Code 拡張機能**:

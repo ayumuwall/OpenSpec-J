@@ -53,7 +53,22 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'force',
         description: 'ツールが最新でも強制的に更新',
       },
+      {
+        name: 'dry-run',
+        description: '書き込まずに更新内容を表示',
+      },
+      {
+        name: 'json',
+        description: '--dry-run と併用して更新計画を JSON で出力',
+      },
     ],
+  },
+  {
+    name: 'install',
+    description: 'Node.js 不要の単体実行版 openspec をインストール（[version] 省略時は最新リリース）',
+    acceptsPositional: true,
+    positionals: [{ name: 'version', optional: true }],
+    flags: [],
   },
   {
     name: 'version',

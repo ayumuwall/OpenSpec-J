@@ -42,6 +42,26 @@ initiative:
 
 archive が機能（capability）を廃止することを許可します。この変更の REMOVED デルタによって機能から最後の要件がなくなる場合、archive は処理を停止せず、その機能の本仕様を削除します。削除内容は Git からしか復元できないため、このフラグによって作成者が明示的に判断します。
 
+<a id="extension-keys"></a>
+
+### 拡張キー
+
+小文字の `x-` で始まるトップレベルキーは、トラッカー ID や担当者など、チームや他のツールが変更と一緒に保存する情報に使えます。
+
+```yaml
+schema: spec-driven
+x-tracker: SB-5497
+x-jiraKey: ABC-1
+x-owner:
+  team: payments
+```
+
+- **名前**：小文字の `x-` の後に1文字以上が必要です。名前のどこにも空白を含められません。接頭辞の後は大文字・小文字を問わないため、`x-jiraKey` と `x-trackerID` は有効です。`X-Tracker`、単独の `x-`、`x- tracker` は未知のキーとして報告します。
+- **値**：任意の YAML 値を使えます。OpenSpec は読み取り・検証せず、動作にも影響しません。
+- **適用範囲**：トップレベルだけです。`initiative` 内の `x-` キーは、他の未知のキーと同様に拒否します。
+- **検証**：拡張キーを未知のキーとして報告しないため、それらを含む変更も `openspec validate --strict` に成功します。
+- **アーカイブ**：拡張キーを含め、ファイルを変更せずに移動します。
+
 ## 例
 
 設定済みの`.openspec.yaml`：
@@ -61,5 +81,5 @@ affected_areas:
 
 [config.yaml](config-yaml.md)とは異なり、不正な値を警告だけで除外することはありません。メタデータにエラーがあるとコマンドを停止します。
 
-- **不明なトップレベルキー**：OpenSpec は無視します。`status`、`instructions`、`validate`、`archive` は、そのキーに効果がないことを報告します。JSON 出力では構造化された結果に警告を含めます。
-- **厳密検証**：`openspec validate --strict` は、不明なキーの警告を失敗として扱います。
+- **不明なトップレベルキー**：OpenSpec は無視します。`status`、`instructions`、`validate`、`archive` は、そのキーに効果がないことを報告します。JSON 出力では構造化された結果に警告を含めます。[拡張キー](#extension-keys)は未知のキーとして報告しません。
+- **厳密検証**：`openspec validate --strict` は、不明なキーの警告を失敗として扱います。追加キーが拡張キーだけなら成功します。

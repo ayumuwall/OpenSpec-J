@@ -1,5 +1,8 @@
 # OpenSpec ドキュメント
 
+> [!WARNING]
+> ここは旧ドキュメントで、一部の情報は古くなっています。最新版は **[openspec.dev/docs](https://openspec.dev/docs)** にあります（ソースは [`docs-lab/`](../docs-lab/)）。
+
 OpenSpec ドキュメントの入口です。
 
 OpenSpec は、あなたと AI コーディングアシスタントが **コードを書く前に、何を作るか合意する**ための道具です。あなたが変更内容を説明し、AI が短い仕様とタスクリストを下書きし、同じ計画を確認してから実装に入ります。途中で「AI が違うものを作っていた」と気づくリスクを減らします。
@@ -104,7 +107,7 @@ OpenSpec は、あなたと AI コーディングアシスタントが **コー�
 6. アーカイブ     (AI チャットで)  /opsx:archive
 ```
 
-ステップ 1 と 2 はターミナルで実行します。残りは AI アシスタントのチャットで実行します。この分割だけは覚えてください。理由は [コマンドの仕組み](how-commands-work.md) で説明しています。ステップ 3 は任意ですが、迷ったときに `/opsx:explore` から始めるのは強い習慣です。
+ステップ 1 と 2 はターミナルで実行します（Windows や本家の単体実行版は[インストール](installation.md)を参照）。残りは AI アシスタントのチャットで実行します。この分割だけは覚えてください。理由は [コマンドの仕組み](how-commands-work.md) で説明しています。ステップ 3 は任意ですが、迷ったときに `/opsx:explore` から始めるのは強い習慣です。
 
 ## 他に助けが必要な場合
 
@@ -112,4 +115,4 @@ OpenSpec は、あなたと AI コーディングアシスタントが **コー�
 - **GitHub Issues:** [github.com/ayumuwall/OpenSpec-J/issues](https://github.com/ayumuwall/OpenSpec-J/issues) — バグ報告と機能リクエスト。
 - **`openspec feedback "メッセージ"`** — ターミナルから直接フィードバックを送信します（GitHub Issue が作成されます）。
 
-このドキュメントに誤り、古い情報、分かりにくい説明を見つけた場合は、それもバグです。Issue または PR を送ってください。ドキュメント改善は価値の高い貢献です。
+誤り、古い情報、分かりにくい説明を見つけた場合は、[ドキュメントの Issue](https://github.com/ayumuwall/OpenSpec-J/issues/new?template=docs.yml) を作成してください。

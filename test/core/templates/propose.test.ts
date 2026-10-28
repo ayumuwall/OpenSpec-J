@@ -290,7 +290,7 @@ describe('planning code inspection (#339)', () => {
       const instructions = body.indexOf('openspec instructions <artifact-id>');
       const dependencies = body.indexOf('完了済みの依存ファイルをコンテキストとして読みます');
       const inspection = body.indexOf('**下書き前に関連プロジェクトを調査します**');
-      const delegation = body.indexOf('`instruction` フィールドが特定の skill またはコマンドへ作成を委譲');
+      const delegation = body.indexOf('`instruction` がスキルやコマンドへ作成を委任');
       expect(instructions, label).toBeGreaterThanOrEqual(0);
       expect(dependencies, label).toBeGreaterThan(instructions);
       expect(inspection, label).toBeGreaterThan(dependencies);
@@ -323,7 +323,7 @@ describe('planning code inspection (#339)', () => {
       for (const adapter of CommandAdapterRegistry.getAll()) {
         const generated = generateCommand(command, adapter).fileContent;
         const inspection = generated.indexOf('**下書き前に関連プロジェクトを調査します**');
-        const delegation = generated.indexOf('`instruction` フィールドが特定の skill またはコマンドへ作成を委譲');
+        const delegation = generated.indexOf('`instruction` がスキルやコマンドへ作成を委任');
         const label = `${adapter.toolId} ${command.id}`;
         expect(inspection, label).toBeGreaterThanOrEqual(0);
         expect(delegation, label).toBeGreaterThan(inspection);
@@ -678,7 +678,7 @@ describe('artifact loop guards (propose and ff)', () => {
   it('tells the agent how to resolve a glob output path', () => {
     for (const [label, body] of loopBodies) {
       expect(body, label).toContain(
-        'が glob の場合は、`instruction` に従って具体的なファイルパスを選びます'
+        'が glob の場合は、`instruction` に従って glob に一致する `changeRoot` 内の具体的なパスを選びます'
       );
     }
   });

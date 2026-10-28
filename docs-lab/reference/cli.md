@@ -51,6 +51,7 @@
 | コマンド                                      | 動作                                          |
 | --------------------------------------------- | --------------------------------------------- |
 | [`openspec version`](#openspec-version) | インストール済みバージョンを表示し、必要に応じて更新を確認します。 |
+| [`openspec install`](#openspec-install) | Node.js 不要の単体実行版 `openspec` をインストールします。 |
 | [`openspec feedback`](#openspec-feedback)     | OpenSpec に関するフィードバックを送信します。 |
 | [`openspec completion`](#openspec-completion) | シェル補完をインストールまたは生成します。    |
 
@@ -141,8 +142,9 @@ OpenSpec のセットアップが完了しました
 インストール済みの OpenSpec 指示ファイルを更新します。
 
 ```bash
-openspec update           # CLI より古いツールファイルを更新
-openspec update --force   # 最新でもファイルを書き直す
+openspec update             # CLI より古いツールファイルを更新
+openspec update --force     # 最新でもファイルを書き直す
+openspec update --dry-run   # 変更するファイルを表示し、書き込まない
 ```
 
 update は init で設定したツールを検出し、生成済みファイルを現在の CLI バージョンと比較します。新しい OpenSpec リリースがある場合は、最初に CLI のアップグレードを提案し、更新後のバージョンで再実行します。確認を省くには`OPENSPEC_NO_UPDATE_CHECK=1`を設定してください。
@@ -158,6 +160,50 @@ update は init で設定したツールを検出し、生成済みファイル�
 | フラグ    | 動作                                                       |
 | --------- | ---------------------------------------------------------- |
 | `--force` | 最新の場合も、設定済みの全ツールのファイルを書き直します。 |
+| `--dry-run` | 追加・変更・削除する全ファイルを表示し、書き込みません。CLI の更新確認や質問も行いません。`--force` と併用すると強制更新を事前確認できます。 |
+| `--json` | `--dry-run` と併用すると計画を JSON で出力します。`--dry-run` なしでは終了コード1です。 |
+
+**更新内容を事前確認する**
+
+`--dry-run` は非対話実行と同じ処理を通り、書き込みと削除を実行せずに記録します。実際の更新が触れるすべてのファイルを表示します。
+
+- ツールの旧ディレクトリからの移動（`.kimi/` → `.kimi-code/`、`.windsurf/` → `.devin/`、`.codex/`・`.agent/` → `.agents/`）
+- プロファイル導入前のインストールにグローバル設定を保存する処理
+- GitHub Copilot クラウドエージェントファイルの同期
+- `--force` 指定時の、旧形式だけに存在するツールの設定と旧ファイルの削除（廃止されたグローバル Codex プロンプトを含む）
+
+```bash
+openspec update --dry-run
+```
+
+```
+2 個のファイルを変更する予定です:
+  update  .claude/skills/openspec-propose/SKILL.md  (claude)
+  add     ~/.config/openspec/config.json  (openspec)
+```
+
+`--dry-run --json` は、同じ計画を1つの JSON として出力します。
+
+```json
+{
+  "changes": [
+    { "path": ".claude/skills/openspec-propose/SKILL.md", "action": "update", "tool": "claude" },
+    { "path": "~/.config/openspec/config.json", "action": "add", "tool": "openspec" }
+  ],
+  "notes": [],
+  "failures": []
+}
+```
+
+| フィールド | 内容 |
+|---|---|
+| `changes[].path` | プロジェクトからの相対パス。グローバルスキルやグローバル設定などのプロジェクト外のファイルは、ホーム配下なら `~/...`、ホーム外なら絶対パスです。 |
+| `changes[].action` | `add`、`update`、`delete`。更新前後のバイト列が同じファイルは含みません。 |
+| `changes[].tool` | `claude` など、ファイルが属する設定済みツール。グローバル設定や旧ファイルの削除など、OpenSpec 自身に属するものは `openspec` です。 |
+| `notes[]` | 対話実行なら確認を求める手順の `{ code, message }`。`legacy-tool-directories` は確認が必要な移動で、`changes` には移動するものとして含みます。`legacy-artifacts` は、旧形式の `openspec-proposal.md` コマンドや `AGENTS.md` のマーカーブロックなどが見つかったことを示します。`--force` なしの非対話更新では触れないため、計画にも含みません。`--dry-run --force` では削除も表示します。通常の更新では空です。 |
+| `failures[]` | 実際の更新で失敗するツールごとの `{ tool, error }`。ファイルの位置にディレクトリがある、ディレクトリの位置にファイルがある、書き込み権限がないなども含みます。そのツールの `changes` は実際に停止する位置までで、他のツールの計画は続けます。ディスク容量不足など、書き込み時にだけ判明する失敗は予測できません。 |
+
+OpenSpec ディレクトリがないなど、計画前の失敗でも JSON を1つだけ出力します。空の計画に `severity`、`code`（`update_error`）、`message` を持つ `status` 配列を追加し、終了コード1で終了します。
 
 **出力**
 
@@ -2209,7 +2255,7 @@ npm でグローバルインストールした場合：
 OpenSpec 1.13.2 (npm, global)
 ```
 
-インストール範囲は `global`、`project`、npx などの一時実行環境を表す `temporary`、チェックアウトを表す `source` です。判別できない情報は推測せず省略します。
+インストール範囲は `global`、`project`、npx などの一時実行環境を表す `temporary`、チェックアウトを表す `source`、[単体実行版](../start/installation.md#install)を表す `standalone` です。判別できない情報は推測せず省略します。
 
 `--json` では、不明な情報を明示的な `null` として保持します。
 
@@ -2260,12 +2306,43 @@ OpenSpec 1.13.2 (npm, global)
 | `disabled` | 既存のプライバシー設定または更新確認設定により、レジストリへの接続が無効です。`latest` は `null` です。 |
 | `offline` | レジストリを利用できないか、使えない応答が返りました。`latest` は `null` です。 |
 
+単体実行版の更新コマンドは `openspec install` です。
+
 `DO_NOT_TRACK`、テレメトリーの無効化、`OPENSPEC_NO_UPDATE_CHECK`、CI の検出、HTTPS 以外のレジストリ上書きの拒否によって確認を無効にします。更新情報は参考情報のため、無効またはオフラインでも終了コードは0です。このコマンドは OpenSpec を更新しません。`canSelfUpgrade` は、既存の `openspec update` の処理でこのコピーを安全に更新できるかを示すだけです。
 
 **終了コード**
 
 - `0`：ローカル情報を表示しました。更新確認が無効またはオフラインの場合も含みます。
 - `1`：未対応の `--upgrade` オプションなど、コマンドの構文が不正です。
+
+## openspec install
+
+Node.js 不要の単一ファイルとして動く `openspec` をインストールします。npm・Homebrew 版からの切り替えにも、単体実行版の更新にも使えます。
+
+```bash
+openspec install          # 最新リリース
+openspec install 1.15.0   # バージョンを指定
+```
+
+[インストールスクリプト](../start/installation.md#install)が、配布ファイルがすべて揃った最新リリースと実行環境に合うファイルを選び、そのリリースの `SHA256SUMS` と照合します。
+
+- **パッケージマネージャー版から**：`~/.local/bin`（Windows は `%LOCALAPPDATA%\Programs\openspec`）へ導入し、`npm uninstall -g @ayumuwall/openspec` など旧版を削除するコマンドを表示します。自動では削除しません。
+- **単体実行版から**：実行中のファイルを同じ場所・同じ名前で置き換えます。
+
+完了後に `openspec` がどのコピーを実行するか表示します。PATH の前方にパッケージマネージャー版がある場合、それを削除するまでそちらが使われます。
+
+**引数**
+
+| 引数 | 内容 |
+|---|---|
+| `version` | `1.15.0` などのリリースバージョン。省略時は最新版です。 |
+
+`OPENSPEC_INSTALL_DIR` と `OPENSPEC_INSTALL_NAME` で別の保存先・ファイル名を選べます。
+
+**終了コード**
+
+- `0`：インストール成功。
+- `1`：リリースバージョンの形式が不正、またはダウンロード・インストール失敗。現在のコピーは保持します。
 
 ## openspec feedback
 
@@ -2276,7 +2353,7 @@ openspec feedback "validate の出力を確認しづらい"
 openspec feedback "Windows で archive が失敗する" --body "手順: init、propose、archive。エラー: EPERM。"
 ```
 
-CLI は`gh` CLI を介して、メッセージを`ayumuwall/OpenSpec-J`リポジトリの GitHub Issue として登録します。タイトルは`Feedback: <message>`です。本文には`--body`の内容と、CLI バージョン、プラットフォーム、タイムスタンプを示すフッターが入ります。Issue には`feedback`ラベルが付きます。リポジトリにこのラベルがない場合は、ラベルなしで再試行し、その旨を表示します。
+CLI は `gh` CLI を介して、メッセージを `ayumuwall/OpenSpec-J` リポジトリの GitHub Issue として登録します。タイトルは `Feedback: <message>` です。本文はバグ報告フォームの見出しに沿い、`発生したこと` にメッセージ、`詳細` に `--body` の内容を入れます。`最短の再現手順` には、CLI が補完できない再現手順の追記を求める案内を入れます。フッターには CLI バージョン、プラットフォーム、タイムスタンプを追加します。Issue には `feedback` ラベルが付きます。ラベルがない場合は、ラベルなしで再試行し、その旨を表示します。
 
 **引数**
 
@@ -2299,7 +2376,7 @@ CLI は`gh` CLI を介して、メッセージを`ayumuwall/OpenSpec-J`リポジ
 Issue URL（課題 URL）: https://github.com/ayumuwall/OpenSpec-J/issues/1234
 ```
 
-`gh`がインストールされていない場合や、`gh`にログインしていない場合は送信されません。CLI は`--- 整形済みフィードバック ---`と`--- フィードバック終わり ---`の間に整形済みの内容を表示し、続いて入力済みの新規 Issue URL を表示します。ログインしていない場合は`自動送信するには: gh auth login`も表示します。
+`gh` が未インストールか未ログインの場合は送信しません。`--- 整形済みフィードバック ---` と `--- フィードバック終わり ---` の間に内容を表示し、タイトル、発生したこと（メッセージと `--body`）、CLI バージョン、環境（プラットフォームと Node バージョン）を入力したバグ報告フォームへのリンクを表示します。残りの項目はブラウザーで記入してください。未ログインの場合は `自動送信するには: gh auth login` も表示します。
 
 **終了コード**
 
