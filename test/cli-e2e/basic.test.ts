@@ -76,7 +76,11 @@ describe('openspec CLI e2e basics', () => {
   it('shows help output', async () => {
     const result = await runCLI(['--help']);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Usage: openspec');
+    expect(result.stdout).toContain('使用方法: openspec');
+    expect(result.stdout).toContain('オプション:');
+    expect(result.stdout).toContain('コマンド:');
+    expect(result.stdout).toContain('バージョンを表示');
+    expect(result.stdout).not.toContain('display help for command');
     expect(result.stderr).toBe('');
 
   });
@@ -93,6 +97,8 @@ describe('openspec CLI e2e basics', () => {
       `対話なしで AI ツールを設定します。"all"、"none"、または次の ID をカンマ区切りで指定してください: ${expectedTools}`
     );
     expect(normalizedOutput).toContain('--language <language>');
+    expect(result.stdout).toContain('ヘルプを表示');
+    expect(result.stdout).not.toContain('Usage:');
   });
 
   it('reports the package version', async () => {

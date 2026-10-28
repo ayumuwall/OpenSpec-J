@@ -21,6 +21,7 @@ import type {
   NewChangeOptions,
 } from '../commands/workflow/index.js';
 import { COMMON_FLAGS } from '../core/completions/shared-flags.js';
+import { configureJapaneseHelp } from './help.js';
 
 // Startup cost: every command's implementation, and the packages it uses,
 // loads with `await import()` inside its action. This module and
@@ -147,7 +148,9 @@ export function shouldDeferCompletionTip(command: Command, stderrIsTty: boolean)
 program
   .name('openspec')
   .description('仕様駆動開発のための AI ネイティブシステム')
-  .version(version);
+  .version(version, '-V, --version', 'バージョンを表示');
+
+configureJapaneseHelp(program);
 
 // Global options
 program.option('--no-color', '色付き出力を無効化');
