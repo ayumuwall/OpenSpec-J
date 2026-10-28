@@ -13,6 +13,8 @@
 - `src/commands/install-standalone.ts` の Homebrew 判定は日本語版の `Cellar/openspec-j/` を認識し、削除には `brew uninstall openspec-j` を案内する。本家の `openspec` 判定へ戻すと日本語版の導入方法を識別できない。
 - インストーラーの取得先は日本語版の `ja-docs` ブランチ、バイナリーの取得先は `ayumuwall/OpenSpec-J/releases` とする。`main` は本家タグと完全一致させるため、日本語版スクリプトの取得元には使わない。
 - `scripts/binary/install.ps1` は UTF-8 BOM 付きで保存する。Windows PowerShell 5.1 が日本語文字列を含むローカルスクリプトを正しく読み込めるようにするためで、BOM を除去する整形を行わない。
+- `src/commands/install-standalone.ts` の Windows ランナーは、`Invoke-WebRequest -OutFile` で取得したバイト列を一時 `.ps1` ファイルへ保存して実行し、子プロセスの出力を UTF-8 にする。`irm | iex` で HTTP 応答を文字列として実行すると、charset のない応答で BOM と日本語を誤読する。本家のスクリプトは ASCII のみ・BOM なしで、この問題は日本語化後に表面化する。
+- 回帰検査は `test/commands/install-standalone.test.ts` の Windows 限定ケースで行う。charset のない HTTP 応答から BOM 付きスクリプトを実行し、日本語出力を確認する。単体実行版の自己更新も Windows x64・arm64 の CI で検証する。文字コードの背景は [Windows PowerShell 5.1 の説明](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1)を参照する。
 - インストーラーの動作検査で成功・フォールバック・入力エラーの文言を判定する箇所は、日本語メッセージに合わせる。エラーコード、引数、ダウンロードの検証条件は本家と共通に保つ。
 
 ### v1.13.2: 診断文を参照する判定とテンプレートの回帰検査
