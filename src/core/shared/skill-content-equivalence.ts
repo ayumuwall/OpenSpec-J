@@ -1,42 +1,10 @@
 import { OPENSPEC_SKILL_NAMES } from '../config.js';
+import {
+  isReleasedGeneratedContent,
+  normalizeGeneratedContent as normalizeGeneratedSkill,
+} from './generated-fingerprint.js';
 
-const GENERATED_VERSION =
-  /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 const OPENSPEC_SKILL_NAME_SET = new Set<string>(OPENSPEC_SKILL_NAMES);
-
-/**
- * Normalizes checkout line endings and a valid generated version inside the
- * YAML frontmatter. Free-form `generatedBy` text in the instructions remains
- * material.
- */
-function normalizeGeneratedSkill(content: string): string {
-  const normalized = content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
-  const frontmatter = normalized.match(/^---\n[\s\S]*?\n---(?:\n|$)/)?.[0];
-  if (!frontmatter) return normalized;
-
-  // `[ \t]` rather than `\s` so a leading/trailing whitespace run can never
-  // cross a newline: an `m`-anchored `\s*` re-scans from every line start,
-  // which is quadratic on a whitespace-heavy frontmatter. YAML indentation is
-  // spaces and tabs only, so matching is unchanged.
-  const versionLine =
-    /^([ \t]*generatedBy:[ \t]*)(?:"([^"\n]+)"|'([^'\n]+)'|([^\s"'#]+))[ \t]*$/m;
-  const normalizedFrontmatter = frontmatter.replace(
-    versionLine,
-    (
-      line: string,
-      prefix: string,
-      doubleQuoted: string | undefined,
-      singleQuoted: string | undefined,
-      bare: string | undefined
-    ) => {
-      const version = doubleQuoted ?? singleQuoted ?? bare;
-      return version && GENERATED_VERSION.test(version)
-        ? `${prefix}"<generated-version>"`
-        : line;
-    }
-  );
-  return normalizedFrontmatter + normalized.slice(frontmatter.length);
-}
 
 /**
  * Converts only known generated dual references in current Codex content back
@@ -64,5 +32,22 @@ export function isLegacyCodexSkillEquivalentToCurrent(
   return (
     normalizedLegacy === normalizedCurrent ||
     toLegacyCodexReferences(normalizedLegacy) === toLegacyCodexReferences(normalizedCurrent)
+  );
+}
+
+/**
+ * 現行の置き換え先ができた後、旧管理ファイルのコピーを削除できるか。
+ * 置き換え先と一致するか、公開済み版の未編集出力であれば編集内容を失わない。
+ * それ以外は利用者の変更を含む可能性があるため保持する。
+ */
+export function isRedundantLegacyCopy(
+  legacyContent: string,
+  currentContent: string,
+  isSkillFile: boolean
+): boolean {
+  return (
+    legacyContent === currentContent ||
+    (isSkillFile && isLegacyCodexSkillEquivalentToCurrent(legacyContent, currentContent)) ||
+    isReleasedGeneratedContent(legacyContent)
   );
 }

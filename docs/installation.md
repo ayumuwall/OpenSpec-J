@@ -76,7 +76,7 @@ gh attestation verify openspec-darwin-arm64 --repo Fission-AI/OpenSpec
    インストーラーが失敗した場合も手順2へ進みます。
 
 2. パッケージマネージャー（手順1で未導入の場合のみ）。`node --version` を実行します。
-   Node.js 20.19.0以上が必要です。Nodeがない、または古い場合はその旨を伝えて停止し、
+   Node.js 22.12.0以上が必要です。Nodeがない、または古い場合はその旨を伝えて停止し、
    Nodeのインストール、バージョン切り替え、バージョンマネージャーの再設定を代行しないでください。
    PATH上にあるパッケージマネージャーを使い、npmを優先します。
      npm install -g @ayumuwall/openspec@latest
@@ -129,7 +129,7 @@ gh attestation verify openspec-darwin-arm64 --repo Fission-AI/OpenSpec
 
 ## パッケージマネージャー
 
-パッケージマネージャー版には **Node.js 20.19.0 以降**が必要です（`node --version` で確認）。
+パッケージマネージャー版には **Node.js 22.12.0 以降**が必要です（`node --version` で確認）。
 
 ### npm
 
@@ -181,7 +181,7 @@ deno install --global \
 ### bun
 
 Bun で OpenSpec をグローバルインストールできますが、OpenSpec の実行には現在 Node.js が必要です。
-`PATH` 上で Node.js 20.19.0 以上を利用できる必要があります。
+`PATH` 上で Node.js 22.12.0 以上を利用できる必要があります。
 
 ```bash
 bun add -g @ayumuwall/openspec@latest

@@ -72,12 +72,68 @@ export interface ParsedTask {
  * losing a real task is a silent one.
  */
 export function parseTaskLines(content: string): ParsedTask[] {
-  const tasks: ParsedTask[] = [];
+  return parseLocatedTaskLines(content).map(({ done, description }) => ({ done, description }));
+}
 
-  for (const line of content.split('\n')) {
+/** 解析済みタスクと、チェックボックスがある1始まりの行番号。 */
+export interface LocatedParsedTask extends ParsedTask {
+  line: number;
+}
+
+/**
+ * 前のタスク本文を継続せず、段落を終了する Markdown 構造。順に、空行、
+ * ATX 見出し（# と空白。折り返した #2227 は継続）、コードフェンス、引用、
+ * HTML コメント・宣言（<!--、<!X、<?。<Widget> や <= 5 は継続）、
+ * setext の下線、区切り線、あらゆるリスト項目を対象とする。
+ * 完全な Markdown 解析にはしない。番号付き行はすべてタスクを終了する。
+ * 折り返した 2. ... と別項目の区別には入れ子の追跡が必要なため、
+ * まれな継続を短く切る方を、別項目を混ぜるより優先する。
+ */
+const TASK_TEXT_BREAK_PATTERN = new RegExp(
+  [
+    /^\s*$/,
+    /^\s*#{1,6}(?:\s|$)/,
+    /^\s*(?:```|~~~)/,
+    /^\s*>/,
+    /^\s*<[!?]/,
+    /^\s*(?:=+|-+)\s*$/,
+    /^\s*([-*_])(?:\s*\1){2,}\s*$/,
+    /^\s*(?:[-*+]|\d{1,9}[.)])(?:\s|$)/,
+  ]
+    .map((part) => part.source)
+    .join('|')
+);
+
+/** 末尾の奇数個の \ は Markdown の強制改行、偶数個はエスケープ済み文字。 */
+const HARD_BREAK_PATTERN = /(?<!\\)(?:\\\\)*\\$/;
+
+/**
+ * parseTaskLines と同じ解析に行番号を加える。
+ * タスク本文は折り返したリストと同じく最初の段落全体とし、
+ * 段落を終了しない後続行を1つの空白で結合する。チェックボックス行だけでは
+ * instructions apply が途中で切れた文を渡してしまう（#2227）。
+ * 結合前に強制改行の末尾の \ を除く。継続行は別タスクに数えない。
+ */
+export function parseLocatedTaskLines(content: string): LocatedParsedTask[] {
+  const tasks: LocatedParsedTask[] = [];
+  let current: LocatedParsedTask | undefined;
+
+  for (const [index, line] of content.split('\n').entries()) {
     const match = line.match(TASK_LINE_PATTERN);
     if (match) {
-      tasks.push({ done: (match[1] ?? '').toLowerCase() === 'x', description: match[2].trim() });
+      current = {
+        done: (match[1] ?? '').toLowerCase() === 'x',
+        description: match[2].trim(),
+        line: index + 1,
+      };
+      tasks.push(current);
+    } else if (current && !TASK_TEXT_BREAK_PATTERN.test(line)) {
+      const head = HARD_BREAK_PATTERN.test(current.description)
+        ? current.description.slice(0, -1).trimEnd()
+        : current.description;
+      current.description = head ? `${head} ${line.trim()}` : line.trim();
+    } else {
+      current = undefined;
     }
   }
 

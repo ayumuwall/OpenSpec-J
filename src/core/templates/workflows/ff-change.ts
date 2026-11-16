@@ -19,7 +19,7 @@ import { PROJECT_ROOT_GUARD } from './project-root.js';
  */
 const SKILL_APPLY_HANDOFF = optionalWorkflow(
   'apply',
-  'タスクに着手するには、`/opsx:apply` を実行するか、実装を依頼してください。',
+  'タスクに着手するには、`/opsx:apply` スキルを使うか、実装を依頼してください。',
   'タスクに着手するには、実装を依頼してください。'
 );
 

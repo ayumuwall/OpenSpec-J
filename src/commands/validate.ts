@@ -23,6 +23,7 @@ import { promises as fs } from 'fs';
 import { getTaskProgressDetailForChange, type SchemaGlobCache } from '../utils/task-progress.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { folderStyleNameProblem } from '../core/id.js';
+import { readConfigParseError } from '../core/project-config.js';
 
 type ItemType = 'change' | 'spec';
 
@@ -114,6 +115,28 @@ export class ValidateCommand {
       ...(bulk ? { allowImplicitRoot: false } : {}),
     });
     if (!root) {
+      return;
+    }
+
+    // 他のコマンドは読めない・解析できない設定を警告だけで無視するため、
+    // CI では validate で検出する（#1892）。
+    const configError = readConfigParseError(root.path);
+    if (configError) {
+      const unreadable = configError.kind === 'read';
+      const message = unreadable
+        ? `${configError.filePath} を読み取れませんでした（${configError.message}）。`
+        : `${configError.filePath} を解析できませんでした（${configError.message}）。`;
+      const fix = unreadable
+        ? `${configError.filePath} を読み取り可能なファイルにするか、削除してください。`
+        : `${configError.filePath} の YAML 構文を修正してください。`;
+      const code = unreadable ? 'unreadable_config' : 'unparseable_config';
+      if (options.json) {
+        console.log(JSON.stringify({ status: [{ severity: 'error', code, message, fix }] }, null, 2));
+      } else {
+        console.error(`エラー: ${message}`);
+        console.error(`修正: ${fix}`);
+      }
+      process.exitCode = 1;
       return;
     }
 

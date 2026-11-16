@@ -6,24 +6,24 @@
  */
 
 import { AI_TOOLS, type AIToolOption } from './config.js';
-import { getGlobalConfig, getGlobalConfigPath, isGlobalConfigUnreadable, saveGlobalConfig, type Delivery, type GlobalConfig, type Profile } from './global-config.js';
+import { getGlobalConfig, getGlobalConfigPath, isGlobalConfigUnreadable, saveGlobalConfig, type GlobalConfig, type Profile } from './global-config.js';
 import { CommandAdapterRegistry } from './command-generation/index.js';
-import {
-  resolveCommandInvocation,
-  resolveCommandSurfaceCapability,
-  shouldGenerateCommandsForTool,
-} from './command-surface.js';
 import { WORKFLOW_TO_SKILL_DIR } from './profile-sync-drift.js';
 import { COMMAND_IDS } from './shared/tool-detection.js';
-import { ALL_WORKFLOWS } from './profiles.js';
-import { getSkillReferenceTransformer, getTransformerForTool } from '../utils/command-references.js';
+import { ALL_WORKFLOWS, CORE_WORKFLOWS } from './profiles.js';
+import { getSkillReferenceTransformer } from '../utils/command-references.js';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { isSharedSkillTargetActive } from './shared-skill-target.js';
+import { isToolListed, readKeptSharedSkills } from './shared-skill-target.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
-import { isLegacyCodexSkillEquivalentToCurrent } from './shared/skill-content-equivalence.js';
+import { isRedundantLegacyCopy } from './shared/skill-content-equivalence.js';
 import path from 'path';
 import * as fs from 'fs';
-import { resolveToolSkillsDir, toolSupportsSkills } from './shared/skill-paths.js';
+import {
+  resolveFormerOwnSkillsDir,
+  resolveToolSkillsDir,
+  toolSupportsSkills,
+  usesSharedSkills,
+} from './shared/skill-paths.js';
 
 export interface LegacyToolRoot {
   /** Former tool root, e.g. '.kimi' */
@@ -116,11 +116,9 @@ function classifyManagedFile(
   try {
     const sourceContent = fs.readFileSync(source, 'utf-8');
     const destinationContent = view.read(destination);
-    const equivalentGeneratedSkills =
-      path.basename(source) === 'SKILL.md' &&
-      path.basename(destination) === 'SKILL.md' &&
-      isLegacyCodexSkillEquivalentToCurrent(sourceContent, destinationContent);
-    return sourceContent === destinationContent || equivalentGeneratedSkills
+    const isSkillFile =
+      path.basename(source) === 'SKILL.md' && path.basename(destination) === 'SKILL.md';
+    return isRedundantLegacyCopy(sourceContent, destinationContent, isSkillFile)
       ? 'drop'
       : 'keep';
   } catch {
@@ -137,7 +135,7 @@ function classifyManagedFile(
  * command files) or do not start at the tool root — neither can be relocated
  * by swapping a leading segment.
  */
-function legacyCommandPath(
+export function legacyCommandPath(
   commandPath: string,
   currentRoot: string,
   legacyRoot: string
@@ -513,6 +511,7 @@ function scanInstalledWorkflowArtifacts(
   view: FileView = DISK_VIEW
 ): InstalledWorkflowArtifacts {
   const installed = new Set<string>();
+  const kept = readKeptSharedSkills(projectPath, view);
   let hasSkills = false;
   let hasCommands = false;
 
@@ -522,8 +521,15 @@ function scanInstalledWorkflowArtifacts(
     const skillsDirs: string[] = [];
     if (tool.globalSkillsDir) {
       skillsDirs.push(resolveToolSkillsDir(projectPath, tool));
-    } else if (isSharedSkillTargetActive(projectPath, tool.value, view)) {
+    } else if (!usesSharedSkills(tool)) {
       skillsDirs.push(resolveToolSkillsDir(projectPath, tool));
+    } else {
+      // 一覧にあるツールには共有コピーが属する。固有フォルダには2.0より前のコピーかリンクがある。
+      if (isToolListed(projectPath, tool.value, view)) {
+        skillsDirs.push(resolveToolSkillsDir(projectPath, tool));
+      }
+      const own = resolveFormerOwnSkillsDir(projectPath, tool);
+      if (own) skillsDirs.push(own);
       if (includeLegacyRoots) {
         skillsDirs.push(
           ...(tool.legacySkillsDirs ?? []).map((root) =>
@@ -537,7 +543,8 @@ function scanInstalledWorkflowArtifacts(
       for (const workflowId of ALL_WORKFLOWS) {
         const skillDirName = WORKFLOW_TO_SKILL_DIR[workflowId];
         const skillFile = path.join(skillsDir, skillDirName, 'SKILL.md');
-        if (view.exists(skillFile)) {
+        // 共有フォルダで利用者のものとして保持したスキルは、インストール済みとは数えない。
+        if (view.exists(skillFile) && !kept.has(skillDirName)) {
           installed.add(workflowId);
           hasSkills = true;
         }
@@ -595,22 +602,13 @@ export function scanInstalledWorkflows(
   return scanInstalledWorkflowArtifacts(projectPath, tools, false, view).workflows;
 }
 
-function inferDelivery(artifacts: InstalledWorkflowArtifacts): Delivery {
-  if (artifacts.hasSkills && artifacts.hasCommands) {
-    return 'both';
-  }
-  if (artifacts.hasCommands) {
-    return 'commands';
-  }
-  return 'skills';
-}
-
 /**
  * Performs one-time migration if the global config does not yet have a profile field.
  * Called by both init and update before profile resolution.
  *
- * - If no profile field exists and workflows are installed: sets profile to 'custom'
- *   with the detected workflows, preserving the user's existing setup.
+ * - profile 未設定で導入済みワークフローがある場合、既存構成を保持する。
+ *   コアセットと完全一致すれば core、それ以外は custom とする。
+ *   廃止された delivery は書き込まない。
  * - If no profile field exists and no workflows are installed: no-op (defaults apply).
  * - If profile field already exists: no-op.
  */
@@ -651,14 +649,13 @@ export function computeProfileMigration(
     return null;
   }
 
-  return {
-    profile: 'custom',
-    workflows: installedWorkflows,
-    ...(rawConfig.delivery === undefined ? { delivery: inferDelivery(artifacts) } : {}),
-  };
+  const isCore =
+    installedWorkflows.length === CORE_WORKFLOWS.length &&
+    CORE_WORKFLOWS.every((workflow) => installedWorkflows.includes(workflow));
+  return { profile: isCore ? 'core' : 'custom', workflows: installedWorkflows };
 }
 
-export type ProfileMigration = { profile: Profile; workflows: string[]; delivery?: Delivery };
+export type ProfileMigration = { profile: Profile; workflows: string[] };
 
 /** The global config the one-time profile migration saves. */
 export function applyProfileMigration(migration: ProfileMigration): GlobalConfig {
@@ -666,9 +663,14 @@ export function applyProfileMigration(migration: ProfileMigration): GlobalConfig
   // Migrate: set profile to custom with detected workflows
   config.profile = migration.profile;
   config.workflows = migration.workflows;
-  if (migration.delivery !== undefined) {
-    config.delivery = migration.delivery;
+  // 廃止された delivery は書き込まないが、利用者が設定した値は保持する。
+  let rawDelivery: unknown;
+  try {
+    rawDelivery = JSON.parse(fs.readFileSync(getGlobalConfigPath(), 'utf-8'))?.delivery;
+  } catch {
+    rawDelivery = undefined;
   }
+  if (rawDelivery === undefined) delete config.delivery;
   return config;
 }
 
@@ -682,28 +684,14 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   const installedWorkflows = migration.workflows;
   saveGlobalConfig(config);
 
+  // コアセットと完全一致する場合は、利用者への案内は不要。
+  // 例: グローバル設定の作成前に2.0で初期化したプロジェクト。
+  if (migration.profile === 'core') return;
   console.log(`グローバル設定にプロファイルが未指定のため、既存の ${installedWorkflows.length} 個のワークフローを custom プロファイルとして保存しました。`);
-  // Each detected tool resolves to a propose reference for its surface: the
-  // command name its generated files answer to when commands will exist for it
-  // under the effective delivery (/opsx:propose when namespaced under opsx/,
-  // /opsx-propose when the filename is the command), its documented skill
-  // invocation otherwise. When the tools disagree — including command tools
-  // mixed with skill-only tools — stay syntax-neutral rather than advertise a
-  // form that is wrong for one of them.
-  const effectiveDelivery: Delivery = config.delivery ?? 'both';
+  // 各ツールで使える propose スキルの表記を選ぶ。
+  // 表記が一致しなければ、どのツールでも使えるスキル名で案内する。
   const proposeReferences = new Set(
-    tools.map((tool) => {
-      if (shouldGenerateCommandsForTool(tool.value, effectiveDelivery)) {
-        const transformer = getTransformerForTool(
-          tool.value,
-          effectiveDelivery,
-          resolveCommandSurfaceCapability(tool.value),
-          resolveCommandInvocation(tool.value)
-        );
-        return transformer ? transformer('/opsx:propose') : '/opsx:propose';
-      }
-      return getSkillReferenceTransformer(tool.value)('/opsx:propose');
-    })
+    tools.map((tool) => getSkillReferenceTransformer(tool.value)('/opsx:propose'))
   );
   const proposeReference =
     proposeReferences.size === 1 ? [...proposeReferences][0] : 'openspec-propose スキル';

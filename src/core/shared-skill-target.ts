@@ -1,87 +1,150 @@
 import path from 'path';
-import * as fs from 'fs';
 import { AI_TOOLS, OPENSPEC_SKILL_NAMES, type AIToolOption } from './config.js';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { resolveCommandSurfaceCapability } from './command-surface.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
+import { isReleasedGeneratedContent } from './shared/generated-fingerprint.js';
+import { SHARED_SKILLS_ROOT, resolveFormerOwnSkillsDir } from './shared/skill-paths.js';
 
-const TARGET_MARKER = '.openspec-target';
+/**
+ * `.agents/skills/.openspec-target` に設定済みツールを1行1 IDで記録する。
+ * 全ツールのスキルが1か所にあるため、update はこの一覧で保持するツールを判定する。
+ * 2.0 より前は共有フォルダを生成した1つの ID を記録しており、その形式も同じように読む。
+ */
+const TOOL_LIST_FILE = '.openspec-target';
 
-/** Returns the ownership-marker path for one shared skills root. */
-function markerPath(projectPath: string, skillsDir: string): string {
-  return path.join(projectPath, skillsDir, 'skills', TARGET_MARKER);
-}
-
-/** Reads a valid-looking marker value without letting linked roots escape. */
-export function readSharedSkillTarget(
-  projectPath: string,
-  skillsDir: string,
-  view: FileView = DISK_VIEW
-): string | undefined {
-  try {
-    const target = markerPath(projectPath, skillsDir);
-    FileSystemUtils.assertProjectArtifactPath(projectPath, target);
-    return view.read(target).trim() || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Whether a tool still has an allowlisted managed skill under an old root. */
-export function hasLegacySkills(
-  projectPath: string,
-  tool: AIToolOption,
-  view: FileView = DISK_VIEW
-): boolean {
-  return (tool.legacySkillsDirs ?? []).some((root) => {
-    const skillsDir = path.join(projectPath, root, 'skills');
-    return OPENSPEC_SKILL_NAMES.some((skillName) => {
-      try {
-        const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
-        FileSystemUtils.assertProjectArtifactPath(projectPath, skillFile);
-        return view.exists(skillFile);
-      } catch {
-        return false;
-      }
-    });
-  });
+/** プロジェクトの設定済みツール一覧のパス。 */
+export function skillToolListPath(projectPath: string): string {
+  return path.join(projectPath, SHARED_SKILLS_ROOT, 'skills', TOOL_LIST_FILE);
 }
 
 /**
- * Infers pre-marker ownership from generated invocation syntax. This preserves
- * both existing generic `.agents` trees and Codex trees users moved manually.
+ * ツール ID をソートして1行ずつ出力する。続いて、OpenSpec が使う前から
+ * `.agents/skills/` にあった独自の `openspec-*` スキルを `keep <skill>` として記録。
+ * このスキルは上書き・削除しない。
  */
-function inferSharedSkillTarget(
-  projectPath: string,
-  skillsDir: string,
-  view: FileView = DISK_VIEW
-): string | undefined {
-  let foundGenericReference = false;
+export function formatSkillToolList(
+  toolIds: Iterable<string>,
+  keptSkills: Iterable<string> = [],
+  toolsWithOwnFiles: ReadonlySet<string> = new Set()
+): string {
+  return [
+    // own-files はツール固有のコマンドやリンクを生成済みであることを示す。
+    // それらをすべて削除すれば、そのツールも削除する。
+    ...[...new Set(toolIds)].sort().map((id) => (toolsWithOwnFiles.has(id) ? `${id} own-files` : id)),
+    ...[...new Set(keptSkills)].sort().map((name) => `keep ${name}`),
+  ].map((line) => `${line}\n`).join('');
+}
 
+/** 一覧内で、固有のコマンドやリンクを生成済みのツール。 */
+export function readListedToolsWithOwnFiles(projectPath: string, view: FileView = DISK_VIEW): Set<string> {
+  const listPath = skillToolListPath(projectPath);
+  try {
+    FileSystemUtils.assertProjectArtifactPath(projectPath, listPath);
+    if (!view.exists(listPath)) return new Set();
+    return new Set(
+      view
+        .read(listPath)
+        .split(/\r?\n/)
+        .map((line) => line.trim().split(/\s+/))
+        .filter((tokens) => tokens[1] === 'own-files')
+        .map((tokens) => tokens[0])
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+/** `.agents/skills/` で利用者のものとして記録した openspec-* スキル。 */
+export function readKeptSharedSkills(projectPath: string, view: FileView = DISK_VIEW): Set<string> {
+  const listPath = skillToolListPath(projectPath);
+  try {
+    FileSystemUtils.assertProjectArtifactPath(projectPath, listPath);
+    if (!view.exists(listPath)) return new Set();
+    const names = new Set<string>(OPENSPEC_SKILL_NAMES);
+    return new Set(
+      view
+        .read(listPath)
+        .split(/\r?\n/)
+        .map((line) => line.trim().match(/^keep\s+(\S+)$/)?.[1])
+        .filter((name): name is string => name !== undefined && names.has(name))
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * 一覧ファイル導入前の共有フォルダについて、呼び出し表記から生成元ツールを推定する。
+ * 汎用の `.agents` ツリーや、利用者が手動で移した Codex ツリーを保持する。
+ */
+function inferPreListTool(projectPath: string, view: FileView): string | undefined {
+  // 全ツールの確認で呼ばれるため、読むものがなければパス検査の前に終了する。
+  if (!view.exists(path.join(projectPath, SHARED_SKILLS_ROOT, 'skills'))) return undefined;
+  let foundGenericReference = false;
   for (const skillName of OPENSPEC_SKILL_NAMES) {
-    const skillFile = path.join(projectPath, skillsDir, 'skills', skillName, 'SKILL.md');
+    const skillFile = path.join(projectPath, SHARED_SKILLS_ROOT, 'skills', skillName, 'SKILL.md');
+    if (!view.exists(skillFile)) continue;
     try {
       FileSystemUtils.assertProjectArtifactPath(projectPath, skillFile);
       const content = view.read(skillFile);
+      // 生成元ツールの根拠にするのは公開版の出力だけ。
+      // 独自スキルや npx skills で導入したスキルは根拠にならない。
+      if (!isReleasedGeneratedContent(content)) continue;
       if (content.includes('$openspec-')) return 'codex';
       if (content.includes('/openspec-')) foundGenericReference = true;
     } catch {
-      // Missing, unreadable, or out-of-project files provide no ownership signal.
+      // 存在しない、読めない、プロジェクト外のファイルは根拠にしない。
     }
   }
-
   return foundGenericReference ? 'agents' : undefined;
 }
 
-/** Whether the canonical shared root already contains an OpenSpec skill. */
-function hasCurrentSkills(
-  projectPath: string,
-  skillsDir: string,
-  view: FileView = DISK_VIEW
-): boolean {
+/** 一覧ファイルに記載された既知のツール。ファイルがなければ空。 */
+function readListFileTools(projectPath: string, view: FileView): string[] {
+  const listPath = skillToolListPath(projectPath);
+  try {
+    FileSystemUtils.assertProjectArtifactPath(projectPath, listPath);
+    if (!view.exists(listPath)) return [];
+    const known = new Set(AI_TOOLS.map((tool) => tool.value));
+    return view
+      .read(listPath)
+      .split(/\r?\n/)
+      .map((line) => line.trim().split(/\s+/)[0])
+      .filter((id) => known.has(id));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 一覧にツールが載っているか確認する。その場合だけ共有フォルダを管理対象とする。
+ * スキルの文面から所有者を推測してはならない。
+ */
+export function hasSkillToolList(projectPath: string, view: FileView = DISK_VIEW): boolean {
+  return readListFileTools(projectPath, view).length > 0;
+}
+
+/**
+ * プロジェクトの設定済みツール。一覧導入前のプロジェクトでは、
+ * 共有フォルダを生成したツールを特定できれば返す。
+ */
+export function readSkillToolList(projectPath: string, view: FileView = DISK_VIEW): string[] {
+  const listed = readListFileTools(projectPath, view);
+  // 空または認識できない一覧は根拠にせず、従来どおりフォルダ内の文面で判定する。
+  if (listed.length > 0) return listed;
+  const inferred = inferPreListTool(projectPath, view);
+  return inferred ? [inferred] : [];
+}
+
+/** ツールがプロジェクトの設定済み一覧にあるか。 */
+export function isToolListed(projectPath: string, toolId: string, view: FileView = DISK_VIEW): boolean {
+  return readSkillToolList(projectPath, view).includes(toolId);
+}
+
+function hasOpenSpecSkillIn(projectPath: string, skillsDir: string, view: FileView): boolean {
   return OPENSPEC_SKILL_NAMES.some((skillName) => {
-    const skillFile = path.join(projectPath, skillsDir, 'skills', skillName, 'SKILL.md');
     try {
+      const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
       FileSystemUtils.assertProjectArtifactPath(projectPath, skillFile);
       return view.exists(skillFile);
     } catch {
@@ -90,199 +153,26 @@ function hasCurrentSkills(
   });
 }
 
-/**
- * 物理的な各スキルルートを描画できる、選択済みツールを1つ決定する。
- * コマンドファイルはこの調停の対象外。スキルルートを共有するツールも、
- * そのルート配下の別の場所に固有のコマンドインターフェースを書き込める。
- *
- * 互換性のある既存所有者を優先する。新しいルートでは、共有ツリーを利用する
- * すべてのツールで参照を使えるように、アダプター経由の描画元よりスキルネイティブな
- * 描画元を優先する。Codex の描画元は Codex 用と汎用の両方のスキル呼び出し形式を
- * 含むため、新規ルートの所有者として最適。
- */
-export function resolveSharedSkillWriters(
+/** 旧ルートに許可リスト内の管理対象スキルが残っているか。 */
+export function hasLegacySkills(
   projectPath: string,
-  tools: AIToolOption[],
-  view: FileView = DISK_VIEW
-): Set<string> {
-  const byRoot = new Map<string, AIToolOption[]>();
-  const writers = new Set<string>();
-
-  for (const tool of tools) {
-    if (!tool.skillsDir) continue;
-    const group = byRoot.get(tool.skillsDir) ?? [];
-    group.push(tool);
-    byRoot.set(tool.skillsDir, group);
-  }
-
-  for (const [root, unsortedGroup] of byRoot) {
-    const group = [...unsortedGroup].sort(
-      (left, right) => AI_TOOLS.indexOf(left) - AI_TOOLS.indexOf(right)
-    );
-    if (group.length === 1) {
-      writers.add(group[0].value);
-      continue;
-    }
-
-    const skillsNative = group.filter(
-      (tool) => resolveCommandSurfaceCapability(tool.value) !== 'adapter-backed'
-    );
-    const preferredPool = skillsNative.length > 0 ? skillsNative : group;
-    const marked = readSharedSkillTarget(projectPath, root, view);
-    const inferred = inferSharedSkillTarget(projectPath, root, view);
-    const owner =
-      preferredPool.find((tool) => tool.value === marked) ??
-      preferredPool.find((tool) => tool.value === inferred) ??
-      (hasCurrentSkills(projectPath, root, view)
-        ? preferredPool.find((tool) => tool.value === 'agents')
-        : undefined) ??
-      preferredPool.find((tool) => tool.value === 'codex') ??
-      preferredPool[0];
-
-    writers.add(owner.value);
-  }
-
-  return writers;
-}
-
-/**
- * A shared skill root can only hold one rendered variant of each skill.
- * Keep the writer recorded so later updates do not infer every tool that
- * happens to use the same directory.
- */
-export function reconcileSharedSkillTargets(
-  projectPath: string,
-  tools: AIToolOption[],
-  view: FileView = DISK_VIEW
-): AIToolOption[] {
-  const byRoot = new Map<string, AIToolOption[]>();
-  for (const tool of tools) {
-    if (!tool.skillsDir) continue;
-    const group = byRoot.get(tool.skillsDir) ?? [];
-    group.push(tool);
-    byRoot.set(tool.skillsDir, group);
-  }
-
-  const reconciled: AIToolOption[] = [];
-  for (const group of byRoot.values()) {
-    if (group.length === 1) {
-      reconciled.push(group[0]);
-      continue;
-    }
-
-    const root = group[0].skillsDir!;
-    const marked = readSharedSkillTarget(projectPath, root, view);
-    const markedTool = group.find((tool) => tool.value === marked);
-    if (markedTool) {
-      reconciled.push(markedTool);
-      continue;
-    }
-
-    const inferred = inferSharedSkillTarget(projectPath, root, view);
-    const legacyCodex = group.find(
-      (tool) => tool.value === 'codex' && hasLegacySkills(projectPath, tool, view)
-    );
-    if (inferred === 'agents' && legacyCodex) {
-      // Before ownership markers existed, selecting both targets produced a
-      // generic canonical tree plus a Codex-only legacy tree. Codex now emits
-      // a dual-syntax canonical tree, so it can safely consolidate that state.
-      reconciled.push(legacyCodex);
-      continue;
-    }
-    const inferredTool = group.find((tool) => tool.value === inferred);
-    if (inferredTool) {
-      reconciled.push(inferredTool);
-      continue;
-    }
-
-    // An unmarked canonical tree predates Codex's move into `.agents`; keep
-    // that established agents target instead of overwriting it from `.codex`.
-    if (hasCurrentSkills(projectPath, root, view)) {
-      reconciled.push(group.find((tool) => tool.value === 'agents') ?? group[0]);
-      continue;
-    }
-
-    const legacyTool = group.find((tool) => hasLegacySkills(projectPath, tool, view));
-    if (legacyTool) {
-      reconciled.push(legacyTool);
-      continue;
-    }
-
-    // `.agents` existed as the vendor-neutral target before Codex adopted it.
-    // Unmarked trees therefore retain that established meaning.
-    reconciled.push(group.find((tool) => tool.value === 'agents') ?? group[0]);
-  }
-
-  return reconciled;
-}
-
-/**
- * Returns whether a tool is the active writer for its physical skills root.
- * Non-shared roots are always active.
- */
-export function isSharedSkillTargetActive(
-  projectPath: string,
-  toolId: string,
+  tool: AIToolOption,
   view: FileView = DISK_VIEW
 ): boolean {
-  const tool = AI_TOOLS.find((candidate) => candidate.value === toolId);
-  if (!tool?.skillsDir) return false;
-  const sharingRoot = AI_TOOLS.filter((candidate) => candidate.skillsDir === tool.skillsDir);
-  if (sharingRoot.length < 2) return true;
-  return reconcileSharedSkillTargets(projectPath, sharingRoot, view)
-    .some((candidate) => candidate.value === toolId);
+  return (tool.legacySkillsDirs ?? []).some((root) =>
+    hasOpenSpecSkillIn(projectPath, path.join(projectPath, root, 'skills'), view)
+  );
 }
 
 /**
- * The tool that already owns `toolId`'s shared skills root, when a DIFFERENT
- * one does. Returns the owner's tool id only when the root already carries an
- * ownership signal (a marker or generated skills) AND reconciliation resolves
- * it to another tool. An empty or unclaimed root returns undefined, so a
- * genuine first-time legacy upgrade — e.g. a Codex-only user with no `.agents`
- * yet — is never reported as owned.
+ * 固有の skills/ フォルダに OpenSpec スキルがあるか。
+ * 旧版のコピー、またはリンクを受け取るツールのリンクが対象。
  */
-export function sharedSkillRootOwner(projectPath: string, toolId: string): string | undefined {
-  const tool = AI_TOOLS.find((candidate) => candidate.value === toolId);
-  if (!tool?.skillsDir) return undefined;
-  const sharingRoot = AI_TOOLS.filter((candidate) => candidate.skillsDir === tool.skillsDir);
-  if (sharingRoot.length < 2) return undefined;
-
-  const hasOwnerSignal =
-    readSharedSkillTarget(projectPath, tool.skillsDir) !== undefined ||
-    hasCurrentSkills(projectPath, tool.skillsDir);
-  if (!hasOwnerSignal) return undefined;
-
-  const owner = reconcileSharedSkillTargets(projectPath, sharingRoot)[0]?.value;
-  return owner && owner !== toolId ? owner : undefined;
-}
-
-/**
- * Whether generating `toolId` into its shared skills root would clobber a tree
- * a DIFFERENT tool already owns — the guard the legacy-upgrade path uses before
- * writing skills. See {@link sharedSkillRootOwner} for the ownership rules.
- */
-export function sharedSkillRootOwnedByOther(projectPath: string, toolId: string): boolean {
-  return sharedSkillRootOwner(projectPath, toolId) !== undefined;
-}
-
-/**
- * ツールの共有スキルルートの所有者マーカーのパスを返す。共有ルートがなければ null。
- * 呼び出し元でマーカーを書き込めるようにし、`update` の dry run でも
- * 書き込み予定として表示できるようにする。
- */
-export function sharedSkillTargetMarkerPath(projectPath: string, toolId: string): string | null {
-  const tool = AI_TOOLS.find((candidate) => candidate.value === toolId);
-  if (!tool?.skillsDir) return null;
-  const sharingRoot = AI_TOOLS.filter((candidate) => candidate.skillsDir === tool.skillsDir);
-  if (sharingRoot.length < 2) return null;
-  return markerPath(projectPath, tool.skillsDir);
-}
-
-export function writeSharedSkillTarget(projectPath: string, toolId: string): void {
-  const target = sharedSkillTargetMarkerPath(projectPath, toolId);
-  if (!target) return;
-
-  FileSystemUtils.assertProjectArtifactPath(projectPath, target);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, `${toolId}\n`, 'utf-8');
+export function hasOwnFolderSkills(
+  projectPath: string,
+  tool: AIToolOption,
+  view: FileView = DISK_VIEW
+): boolean {
+  const ownDir = resolveFormerOwnSkillsDir(projectPath, tool);
+  return ownDir !== undefined && hasOpenSpecSkillIn(projectPath, ownDir, view);
 }

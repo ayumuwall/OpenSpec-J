@@ -452,6 +452,34 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
   }
 }
 
+/**
+ * 設定ファイルの読み取り不能・YAML 構文不正を、警告を出さずに調べる。
+ * readProjectConfig は警告して無視するため、validate ではこの結果で失敗とし、
+ * CI に非ゼロの終了コードを返す（#1892）。
+ */
+export function readConfigParseError(
+  projectRoot: string
+): { kind: 'read' | 'parse'; filePath: string; message: string } | null {
+  const filePath = resolveConfigFilePath(projectRoot);
+  if (filePath === null) {
+    return null;
+  }
+  const firstLine = (error: unknown) =>
+    error instanceof Error ? error.message.split('\n')[0] : String(error);
+  let content: string;
+  try {
+    content = readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    return { kind: 'read', filePath, message: firstLine(error) };
+  }
+  try {
+    parseYaml(content);
+    return null;
+  } catch (error) {
+    return { kind: 'parse', filePath, message: firstLine(error) };
+  }
+}
+
 function configPathForWarnings(projectRoot: string): string {
   return resolveConfigFilePath(projectRoot) ?? path.join(projectRoot, 'openspec', 'config.yaml');
 }

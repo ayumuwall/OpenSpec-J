@@ -9,7 +9,8 @@ import { promises as fs, constants as fsConstants } from 'fs';
 import type { FileHandle } from 'fs/promises';
 import chalk from 'chalk';
 import { FileSystemUtils, removeMarkerBlock as removeMarkerBlockUtil } from '../utils/file-system.js';
-import { OPENSPEC_MARKERS } from './config.js';
+import { OPENSPEC_MARKERS, findRetiredTool } from './config.js';
+import { hasReleasedOpenSpecBlock, isReleasedGeneratedContent } from './shared/generated-fingerprint.js';
 import { ALL_WORKFLOWS, type WorkflowId } from './profiles.js';
 
 /**
@@ -29,6 +30,9 @@ export const LEGACY_CONFIG_FILES = [
 
 /** The three commands the old SlashCommandRegistry wrote into each directory. */
 const LEGACY_DIRECTORY_COMMAND_FILES = ['proposal.md', 'apply.md', 'archive.md'] as const;
+
+/** OPSX より前の全リリースが生成した3つのコマンド。 */
+const LEGACY_THREE_COMMAND_NAMES = ['proposal', 'apply', 'archive'] as const;
 
 /** Exact Kilo workflow files written by OpenSpec before the command path moved. */
 const LEGACY_KILOCODE_COMMAND_FILES = [
@@ -72,7 +76,15 @@ export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPatter
   'kiro': { type: 'files', pattern: '.kiro/prompts/openspec-*.prompt.md' },
   'github-copilot': { type: 'files', pattern: '.github/prompts/openspec-*.prompt.md' },
   'amazon-q': { type: 'files', pattern: '.amazonq/prompts/openspec-*.md' },
-  'cline': { type: 'files', pattern: '.clinerules/workflows/openspec-*.md' },
+  // 0.15 より前の Cline と Qwen は、1階層上へ3つの Markdown コマンドを生成した。
+  // `.clinerules/` には独自ルールもあるため、ワイルドカードではなく正確な名前を列挙。
+  'cline': {
+    type: 'files',
+    pattern: [
+      '.clinerules/workflows/openspec-*.md',
+      ...LEGACY_THREE_COMMAND_NAMES.map((name) => `.clinerules/openspec-${name}.md`),
+    ],
+  },
   'roocode': { type: 'files', pattern: '.roo/commands/openspec-*.md' },
   'auggie': { type: 'files', pattern: '.augment/commands/openspec-*.md' },
   'factory': { type: 'files', pattern: '.factory/commands/openspec-*.md' },
@@ -86,7 +98,14 @@ export const LEGACY_SLASH_COMMAND_PATHS: Record<string, LegacySlashCommandPatter
   // OpenSpec がそこに `openspec-*` ファイルを書き込んだことはなく、ユーザー作成の可能性がある。
   'antigravity': { type: 'files', pattern: '.agent/workflows/openspec-*.md' },
   'iflow': { type: 'files', pattern: '.iflow/commands/openspec-*.md' },
-  'qwen': { type: 'files', pattern: ['.qwen/commands/opsx-*.toml', '.qwen/commands/openspec-*.toml'] },
+  'qwen': {
+    type: 'files',
+    pattern: [
+      '.qwen/commands/opsx-*.toml',
+      '.qwen/commands/openspec-*.toml',
+      ...LEGACY_THREE_COMMAND_NAMES.map((name) => `.qwen/commands/openspec-${name}.md`),
+    ],
+  },
   'codex': { type: 'files', pattern: '.codex/prompts/openspec-*.md' },
   // Keep this file-scoped: the CoStrict adapter writes `opsx-*.md` into the
   // same folder, so a directory entry removes the live command files — and
@@ -347,6 +366,10 @@ export async function detectLegacySlashCommands(
       if (!(await FileSystemUtils.directoryExists(dirPath))) {
         continue;
       }
+      // リンク先のフォルダは別プロジェクトの可能性があるため、管理対象にしない。
+      if (!(await reachesWithoutLink(projectPath, pattern.path))) {
+        continue;
+      }
       const entries = await readLegacyCommandDir(dirPath, pattern.managedFileNames ?? []);
       if (!entries) {
         continue;
@@ -458,22 +481,50 @@ async function settleLegacyCommandDir(
  * a same-named file without them is the user's.
  */
 async function isGeneratedLegacyCommand(filePath: string): Promise<boolean> {
-  // Judge the opened handle, not the path, so the file checked is the file
-  // read. O_NOFOLLOW refuses a link and O_NONBLOCK keeps a FIFO from hanging;
-  // Windows has neither flag, so a link is refused there by lstat instead.
+  const content = await readRegularFileNoFollow(filePath);
+  return content !== undefined && hasOpenSpecMarkers(content);
+}
+
+/**
+ * プロジェクトルートから対象自身まで、途中にリンクがないか確認する。
+ * 旧ファイルの検索・判定・削除はフォルダ名を連結するため、途中に別プロジェクトへの
+ * リンクがあるとプロジェクト外へ到達してしまう。プロジェクト自体をリンク経由で
+ * 開いた場合も実際の場所から確認する。存在しない要素があれば、その先はないため終了。
+ */
+export async function reachesWithoutLink(projectPath: string, relativePath: string): Promise<boolean> {
+  let current = FileSystemUtils.canonicalizeExistingPath(projectPath);
+  for (const segment of relativePath.split(/[\\/]+/).filter(Boolean)) {
+    if (segment === '..' || segment === '.') return false;
+    current = path.join(current, segment);
+    try {
+      if ((await fs.lstat(current)).isSymbolicLink()) return false;
+    } catch {
+      return true;
+    }
+  }
+  return true;
+}
+
+/**
+ * リンクをたどらず通常ファイルを読み、読めなければ undefined を返す。
+ * パスではなく開いたハンドルを検査し、検査したファイルを確実に読み取る。
+ * O_NOFOLLOW でリンクを拒否し、O_NONBLOCK で FIFO の停止を防ぐ。
+ * 両フラグがない Windows では lstat でリンクを拒否する。
+ */
+async function readRegularFileNoFollow(filePath: string): Promise<string | undefined> {
   const { O_RDONLY, O_NOFOLLOW, O_NONBLOCK } = fsConstants;
   let handle: FileHandle | undefined;
   try {
     handle = await fs.open(filePath, O_RDONLY | (O_NOFOLLOW ?? 0) | (O_NONBLOCK ?? 0));
     if (O_NOFOLLOW === undefined && (await fs.lstat(filePath)).isSymbolicLink()) {
-      return false;
+      return undefined;
     }
     if (!(await handle.stat()).isFile()) {
-      return false;
+      return undefined;
     }
-    return hasOpenSpecMarkers(await handle.readFile('utf-8'));
+    return await handle.readFile('utf-8');
   } catch {
-    return false;
+    return undefined;
   } finally {
     await handle?.close();
   }
@@ -500,17 +551,44 @@ async function detectLegacyGlobalPromptFiles(): Promise<LegacyGlobalPromptMatch[
         if (entry.isFile() && pattern.managedFileNames.includes(entry.name)) {
           const fullPath = path.join(promptDir, entry.name);
           const match = getManagedGlobalLegacyPromptMetadata(fullPath);
-          if (match) {
+          // 全プロジェクトが共有するため、公開版の生成内容と完全一致するものだけ削除する。
+          // 編集済みは削除候補にせず、--force でも削除しない。
+          const content = match ? await readRegularFileNoFollow(fullPath) : undefined;
+          if (match && content !== undefined && isReleasedGeneratedContent(content)) {
             foundFiles.push(match);
           }
         }
       }
     } catch {
-      // Directory does not exist or cannot be read.
+      // ディレクトリが存在しないか、読み取れない。
     }
   }
 
   return foundFiles;
+}
+
+/**
+ * ホーム内の OpenSpec 名のプロンプトで、どの公開版の生成内容とも一致しないもの。
+ * 編集済みとして保持し、update が他のプロンプトを削除するときに一覧に表示する。
+ */
+export async function findEditedLegacyGlobalPrompts(): Promise<string[]> {
+  const edited: string[] = [];
+  for (const pattern of Object.values(LEGACY_GLOBAL_SLASH_COMMAND_PATHS)) {
+    const promptDir = pattern.resolvePromptDir();
+    try {
+      const entries = await fs.readdir(promptDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isFile() || !pattern.managedFileNames.includes(entry.name)) continue;
+        const fullPath = path.join(promptDir, entry.name);
+        if (!getManagedGlobalLegacyPromptMetadata(fullPath)) continue;
+        const content = await readRegularFileNoFollow(fullPath);
+        if (content !== undefined && !isReleasedGeneratedContent(content)) edited.push(fullPath);
+      }
+    } catch {
+      // ディレクトリが存在しないか、読み取れない。
+    }
+  }
+  return edited;
 }
 
 /**
@@ -539,13 +617,20 @@ async function findLegacySlashCommandFiles(
   if (!(await FileSystemUtils.directoryExists(dirPath))) {
     return foundFiles;
   }
+  // リンク先のフォルダは別プロジェクトの可能性があるため、管理対象にしない。
+  if (!(await reachesWithoutLink(projectPath, dirPart))) {
+    return foundFiles;
+  }
 
   try {
-    const entries = await fs.readdir(dirPath);
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
     const regex = globToRegex(filePart);
 
-    for (const entry of entries) {
+    for (const dirent of entries) {
+      const entry = dirent.name;
+      // 通常ファイルだけを管理対象とし、リンクは利用者のものとして扱う。
+      if (!dirent.isFile()) continue;
       if (regex.test(entry)) {
         // Use forward slashes for consistency in relative paths (cross-platform)
         const normalizedDir = dirPart.replace(/\\/g, '/');
@@ -578,7 +663,9 @@ export async function detectLegacyStructureFiles(
 
   // Check for openspec/AGENTS.md
   const openspecAgentsPath = FileSystemUtils.joinPath(projectPath, 'openspec', 'AGENTS.md');
-  hasOpenspecAgents = await FileSystemUtils.fileExists(openspecAgentsPath);
+  hasOpenspecAgents =
+    (await FileSystemUtils.fileExists(openspecAgentsPath)) &&
+    (await reachesWithoutLink(projectPath, 'openspec/AGENTS.md'));
 
   // Check for openspec/project.md (for migration messaging, not deleted)
   const projectMdPath = FileSystemUtils.joinPath(projectPath, 'openspec', 'project.md');
@@ -718,6 +805,11 @@ export async function cleanupLegacyArtifacts(
   // when it holds nothing else, but a file the user added since is still kept.
   for (const dirPath of detection.slashCommandDirs) {
     const fullPath = FileSystemUtils.joinPath(projectPath, dirPath);
+    // 検出時だけでなくここでも再確認し、検出元にかかわらずリンク経由で削除しない。
+    if (!(await reachesWithoutLink(projectPath, dirPath))) {
+      result.keptFiles!.push(dirPath);
+      continue;
+    }
     try {
       const managedFileNames = legacyManagedFileNamesForDir(dirPath);
       const entries = await readLegacyCommandDir(fullPath, managedFileNames);
@@ -747,6 +839,10 @@ export async function cleanupLegacyArtifacts(
   const partlyCleanedDirs = new Set<string>();
   for (const filePath of detection.slashCommandFiles) {
     const fullPath = FileSystemUtils.joinPath(projectPath, filePath);
+    if (!(await reachesWithoutLink(projectPath, filePath))) {
+      result.keptFiles!.push(filePath);
+      continue;
+    }
     try {
       const commandDir = legacyCommandDirForFile(filePath);
       if (commandDir) {
@@ -799,7 +895,9 @@ export async function cleanupLegacyArtifacts(
   // Delete openspec/AGENTS.md (this is inside openspec/, it's OpenSpec-managed)
   if (detection.hasOpenspecAgents) {
     const agentsPath = FileSystemUtils.joinPath(projectPath, 'openspec', 'AGENTS.md');
-    if (await FileSystemUtils.fileExists(agentsPath)) {
+    if (!(await reachesWithoutLink(projectPath, 'openspec/AGENTS.md'))) {
+      result.keptFiles!.push('openspec/AGENTS.md');
+    } else if (await FileSystemUtils.fileExists(agentsPath)) {
       try {
         await ops.removeFile(agentsPath);
         result.deletedFiles.push('openspec/AGENTS.md');
@@ -845,7 +943,7 @@ export function formatCleanupSummary(result: CleanupResult): string {
     }
 
     for (const dir of result.deletedDirs) {
-      lines.push(`  ✓ ${dir}/ を削除（OpenSpec のスキルとコマンドに置き換え）`);
+      lines.push(`  ✓ ${dir}/ を削除（OpenSpec のスキルに置き換え）`);
     }
 
     for (const entry of keptFiles) {
@@ -917,6 +1015,41 @@ function buildRemovalsList(detection: LegacyDetectionResult): Array<{ path: stri
   // They always go to the updates list where only markers are removed
 
   return removals;
+}
+
+/**
+ * プロジェクト内の削除対象がすべて公開版の未編集出力で、編集内容が失われないか確認。
+ * ファイル全体の削除と、CLAUDE.md や AGENTS.md 内の OpenSpec ブロック除去の両方を含む。
+ * 通常ファイルとして読めないものは未認識として扱う。
+ */
+export async function legacyCleanupDeletesOnlyReleasedOutput(
+  projectPath: string,
+  detection: LegacyDetectionResult
+): Promise<boolean> {
+  // ホーム内のプロンプトは全プロジェクトが共有するため、ここでは判定しない。
+  // --force なしのクリーンアップでは保持する。
+  const files: string[] = [];
+  for (const dirPath of detection.slashCommandDirs) {
+    const fullPath = FileSystemUtils.joinPath(projectPath, dirPath);
+    const entries = await readLegacyCommandDir(fullPath, legacyManagedFileNamesForDir(dirPath));
+    if (!entries) return false;
+    files.push(...entries.managed.map((name) => path.join(fullPath, name)));
+  }
+  files.push(...detection.slashCommandFiles.map((file) => FileSystemUtils.joinPath(projectPath, file)));
+  if (detection.hasOpenspecAgents) {
+    files.push(FileSystemUtils.joinPath(projectPath, 'openspec', 'AGENTS.md'));
+  }
+
+  for (const file of files) {
+    if (!(await reachesWithoutLink(projectPath, path.relative(projectPath, file)))) return false;
+    const content = await readRegularFileNoFollow(file);
+    if (content === undefined || !isReleasedGeneratedContent(content)) return false;
+  }
+  for (const file of detection.configFilesToUpdate) {
+    const content = await readRegularFileNoFollow(FileSystemUtils.joinPath(projectPath, file));
+    if (content === undefined || !hasReleasedOpenSpecBlock(content)) return false;
+  }
+  return true;
 }
 
 /**
@@ -1036,7 +1169,8 @@ export function getToolsFromLegacyArtifacts(detection: LegacyDetectionResult): s
     tools.add(prompt.toolId);
   }
 
-  return Array.from(tools);
+  // 対応終了ツールの旧ファイルは整理するが、再設定しない（src/core/retired-tools.ts）。
+  return Array.from(tools).filter((toolId) => !findRetiredTool(toolId));
 }
 
 /** The tool that owns a repo-local legacy slash-command directory, if any. */
@@ -1121,6 +1255,19 @@ function hasLegacyArtifacts(detection: LegacyDetectionResult): boolean {
     detection.hasOpenspecAgents ||
     detection.hasRootAgentsWithMarkers ||
     detection.hasProjectMd
+  );
+}
+
+/**
+ * 旧ファイルの整理で、プロジェクト内の何かを削除・変更するか判定する。
+ * `openspec/project.md` は移行案内用で、ホーム内プロンプトはプロジェクト外のため除外。
+ */
+export function hasRepoLocalLegacyRemovals(detection: LegacyDetectionResult): boolean {
+  return (
+    detection.slashCommandDirs.length > 0 ||
+    detection.slashCommandFiles.length > 0 ||
+    detection.hasOpenspecAgents ||
+    detection.configFilesToUpdate.length > 0
   );
 }
 

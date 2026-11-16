@@ -7,10 +7,6 @@
  */
 
 import { AI_TOOLS } from '../config.js';
-import {
-  shouldGenerateCommandsForTool,
-  shouldGenerateSkillsForTool,
-} from '../command-surface.js';
 import type { Delivery } from '../global-config.js';
 
 /** 再起動案内で示すサーフェス。案内が不要な場合は存在しない。 */
@@ -23,27 +19,16 @@ function isIdeResident(toolId: string): boolean {
 }
 
 /**
- * 2つの条件は同じツールに結び付けたままにする。サーフェスが常駐エディター
- * プロセスに読み込まれること（CLI は即座に読み込むため再起動案内は誤り。#1067）と、
- * 現在の delivery で生成サーフェスに対応すること。CLI ツールのコマンドを、
- * スキルだけに対応する IDE ツールの案内判定に使ってはならない。現在の delivery で
- * 両方に対応する場合はコマンドを優先する。
+ * スキルを常駐エディタープロセスで読み込むツールだけに再起動を案内する。
+ * CLI は即座に読み込むため再起動案内は不要（#1067）。
+ * 2.0 はスキルだけを導入するので、delivery は判定に影響しない。
  */
 export function resolveIdeRestartSurface(
   toolIds: readonly string[],
-  delivery: Delivery
+  _delivery: Delivery
 ): IdeRestartSurface | null {
   const ideTools = [...new Set(toolIds)].filter(isIdeResident);
-
-  if (ideTools.some((toolId) => shouldGenerateCommandsForTool(toolId, delivery))) {
-    return 'commands';
-  }
-
-  if (ideTools.some((toolId) => shouldGenerateSkillsForTool(toolId, delivery))) {
-    return 'skills';
-  }
-
-  return null;
+  return ideTools.length > 0 ? 'skills' : null;
 }
 
 /**

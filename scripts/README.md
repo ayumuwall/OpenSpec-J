@@ -73,7 +73,10 @@ Validates package version consistency before publishing.
 
 ## binary/
 
-Node.js 不要の単体実行版 `openspec` をビルドします。本家では標準の導入方法です。`.github/workflows/binaries.yml` は Linux で全配布ファイルをクロスコンパイルし、それぞれの OS・CPU で検証して、`SHA256SUMS`、`install.sh`、`install.ps1` とともに公開リリースへ添付します。
+Node.js 不要の単体実行版 `openspec` をビルドします。本家では標準の導入方法です。
+`.github/workflows/binaries.yml` は Linux で全配布ファイルをクロスコンパイルし、
+それぞれの OS・CPU で検証します。公開リリースには `.tar.gz`（Windows は `.zip`）
+と `SHA256SUMS` を添付します。日本語版のインストーラーは `ja-docs` から配布します。
 
 | ファイル | 用途 |
 |---|---|
@@ -90,3 +93,25 @@ bun scripts/binary/build.mjs --all              # 全配布ファイル
 bash scripts/binary/smoke.sh dist-bin/openspec-<asset>
 bash scripts/binary/e2e.sh dist-bin/openspec-<asset>
 ```
+
+## capture-released-fingerprints.mjs
+
+公開済み OpenSpec が生成した全ファイルのハッシュとツールフォルダ内のパスを
+`src/core/shared/released-generated-fingerprints.ts` に記録します。`openspec update` は、
+不要になったときに削除できる未編集出力と、保持すべき編集済みファイルを判別します。
+
+**実行時期**: npm 公開後に実行し、次版でその生成内容を認識できるようにします。
+記録にない版の出力は編集済みと同様に保持され、削除されません。
+
+**使い方**:
+
+```bash
+pnpm build
+node scripts/capture-released-fingerprints.mjs [--cache DIR] [--only 1.15.0]
+pnpm build
+```
+
+日本語版の npm パッケージをキャッシュへ導入し、一時プロジェクトと一時 HOME で
+`init --tools all` を実行します。各版が対応するプロファイル、過去の既定ワークフローセット、
+delivery ごとの内容を採取し、既存の本家・日本語版の記録へ追加します。
+非対話の `init` がない版は採取しません。

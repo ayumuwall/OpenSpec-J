@@ -14,7 +14,10 @@ import { ALL_WORKFLOWS, type WorkflowId } from './profiles.js';
 
 export type OnboardingCommand = {
   workflow: WorkflowId;
+  /** update.ts がツールごとのスキル形式へ変換する、1.x のコマンド表記。 */
   command: string;
+  /** ツール選択前に表示するスキル名。 */
+  skill: string;
   description: string;
 };
 
@@ -32,10 +35,10 @@ export const DESCRIPTION_BUDGET = 17;
  * then implement.
  */
 const ONBOARDING_COMMANDS: readonly OnboardingCommand[] = [
-  { workflow: 'propose', command: '/opsx:propose', description: '変更を開始' },
-  { workflow: 'new', command: '/opsx:new', description: '変更のひな形を作成' },
-  { workflow: 'continue', command: '/opsx:continue', description: '次のアーティファクト' },
-  { workflow: 'apply', command: '/opsx:apply', description: 'タスクを実装' },
+  { workflow: 'propose', command: '/opsx:propose', skill: 'openspec-propose', description: '変更を開始' },
+  { workflow: 'new', command: '/opsx:new', skill: 'openspec-new-change', description: '変更のひな形を作成' },
+  { workflow: 'continue', command: '/opsx:continue', skill: 'openspec-continue-change', description: '次のアーティファクト' },
+  { workflow: 'apply', command: '/opsx:apply', skill: 'openspec-apply-change', description: 'タスクを実装' },
 ];
 
 /**

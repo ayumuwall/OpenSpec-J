@@ -41,7 +41,7 @@ function matchSupportedShell(name: string): SupportedShell | undefined {
  * @returns The supported shell running as the parent process, or undefined
  */
 function detectShellFromParentProcess(): SupportedShell | undefined {
-  // `ps` is POSIX-only; Windows shells are handled via PSModulePath/COMSPEC.
+  // ps は POSIX 専用。Windows は isInsidePowerShellOnWindows/COMSPEC で判定する。
   if (process.platform === 'win32') {
     return undefined;
   }
@@ -67,6 +67,39 @@ function detectShellFromParentProcess(): SupportedShell | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Windows で PowerShell から起動されたか。PSModulePath はマシン全体に設定され、
+ * cmd.exe も継承するため、存在だけでは判定できない。PowerShell が起動時に加える
+ * 利用者用 <Documents>\WindowsPowerShell\Modules（5.1）または
+ * <Documents>\PowerShell\Modules（7以降）を探す。
+ * Documents のリダイレクトに対応するため末尾の形を見て、マシン用・導入時追加の
+ * モジュールが置かれる Program Files を除外する。
+ * 制限: PowerShell から起動した cmd.exe も継承するため PowerShell と判定される。
+ */
+function isInsidePowerShellOnWindows(): boolean {
+  const psModulePath = process.env.PSModulePath;
+  if (!psModulePath) {
+    return false;
+  }
+
+  const normalize = (dir: string) => dir.trim().toLowerCase().replace(/\//g, '\\').replace(/\\+$/, '');
+  const programFilesDirs = [
+    process.env.ProgramFiles,
+    process.env['ProgramFiles(x86)'],
+    process.env.ProgramW6432,
+  ]
+    .filter((dir): dir is string => Boolean(dir))
+    .map((dir) => normalize(dir) + '\\');
+
+  return psModulePath.split(';').some((entry) => {
+    const dir = normalize(entry);
+    return (
+      /\\(windows)?powershell\\modules$/.test(dir) &&
+      !programFilesDirs.some((programFiles) => dir.startsWith(programFiles))
+    );
+  });
 }
 
 /**
@@ -98,20 +131,23 @@ export function detectShell(): ShellDetectionResult {
     return { shell: undefined, detected: detectedName };
   }
 
-  // Check for PowerShell on Windows
-  // PSModulePath is a reliable PowerShell-specific environment variable
-  if (process.env.PSModulePath || process.platform === 'win32') {
-    const comspec = process.env.COMSPEC?.toLowerCase();
-
-    // If PSModulePath exists, we're definitely in PowerShell
-    if (process.env.PSModulePath) {
+  if (process.platform === 'win32') {
+    if (isInsidePowerShellOnWindows()) {
       return { shell: 'powershell', detected: 'powershell' };
     }
 
-    // On Windows without PSModulePath, we might be in cmd.exe
-    if (comspec?.includes('cmd.exe')) {
+    // PowerShell でなければ、通常は COMSPEC の既定値 cmd.exe。
+    if (process.env.COMSPEC?.toLowerCase().includes('cmd.exe')) {
       return { shell: undefined, detected: 'cmd.exe' };
     }
+
+    return { shell: undefined, detected: undefined };
+  }
+
+  // Windows 以外は PSModulePath がマシン全体に設定されないため、
+  // 存在すれば PowerShell（pwsh）からの起動と判定できる。
+  if (process.env.PSModulePath) {
+    return { shell: 'powershell', detected: 'powershell' };
   }
 
   return { shell: undefined, detected: undefined };

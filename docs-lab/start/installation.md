@@ -4,56 +4,21 @@
 
 ## Install
 
-本家版は Node.js 不要の単一ファイル `openspec` としてインストールできます。以下のバイナリ導入手順は本家版向けです。日本語版は[パッケージマネージャー](#package-managers)から導入してください。
+以下のバイナリ導入手順は本家版向けです。日本語版は[パッケージマネージャー](#package-managers)から導入してください。
 
 macOS / Linux のターミナルで実行します。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh
+curl -fsSL https://openspec.dev/cli/install.sh | sh
 ```
 
 Windows の PowerShell で実行します。
 
 ```powershell
-irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+irm https://openspec.dev/cli/install.ps1 | iex
 ```
 
-- **保存先**：`~/.local/bin`。Windows は `%LOCALAPPDATA%\Programs\openspec` で、ユーザーの PATH にも追加します。
-- **検証**：実行環境に合うファイルを選び、インストール前にリリースの `SHA256SUMS` と照合します。
-- **対象リリース**：全ファイルが揃った最新リリース。公開直後のアップロード中は、直前のリリースを導入してその旨を表示します。
-- **Alpine Linux**：先に `apk add libstdc++ libgcc` を実行します。
-- **オプション**：保存先は `OPENSPEC_INSTALL_DIR`、バージョン固定は `OPENSPEC_VERSION=v1.15.0` で指定します。
-
-保存先が PATH にないと表示されたら、案内に従って追加し、[インストールを確認](#check-it-worked)してください。
-
-ワークフロー自体は、Claude Code、Cursor、または[対応ツール一覧](../reference/supported-tools.md)にある
-AI コーディングツール内で実行します。
-
-### 手動でダウンロードする
-
-本家の各[リリース](https://github.com/Fission-AI/OpenSpec/releases/latest)には、環境ごとのファイルがあります。
-
-| 環境 | ファイル |
-|---|---|
-| macOS 13+（Apple silicon / Intel） | `openspec-darwin-arm64` / `openspec-darwin-x64` |
-| Linux、glibc 2.17+（arm64 / x64） | `openspec-linux-arm64` / `openspec-linux-x64` |
-| Alpine 3.17+（arm64 / x64） | `openspec-linux-arm64-musl` / `openspec-linux-x64-musl` |
-| Windows 10+（arm64 / x64） | `openspec-windows-arm64.exe` / `openspec-windows-x64.exe` |
-
-`openspec`（Windows は `openspec.exe`）へ改名し、macOS / Linux では `chmod +x openspec` を実行して、PATH 上のフォルダに置きます。
-
-> [!NOTE]
-> macOS では、ブラウザーでダウンロードしたファイルは `xattr -d com.apple.quarantine openspec` を実行するまでブロックされます。上記のインストールコマンドでは不要です。
-
-### ダウンロードを検証する
-
-各リリースバイナリには、ビルドしたワークフロー実行の署名付き記録があります。[GitHub CLI](https://cli.github.com) を使い、ターミナルで実行します。
-
-```bash
-gh attestation verify openspec-darwin-arm64 --repo Fission-AI/OpenSpec
-```
-
-リリースのワークフローがビルドしたファイルであることを確認し、一致しなければ失敗します。任意の追加検証です。インストーラーはすべてのダウンロードで `SHA256SUMS` を確認しています。
+インストーラーが `export PATH=...` を表示した場合は、その行を実行してから[インストールを確認](#check-it-worked)してください。
 
 ## AI アシスタントでインストールする
 
@@ -74,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/instal
 一部の IDE 統合では実行できません。アシスタントは次の手順を進めます。
 
 1. CLI があればインストールを省略し、既存の導入方法での更新を案内します。npm・Homebrew 版の場合は、`openspec install` で単体実行版へ切り替えられることを一度だけ案内します。未導入の場合はインストールコマンドを示し、確認を待ってから実行します。
-2. npm を選ぶ場合は Node.js が20.19.0未満なら停止します。日本語版は npm・Homebrew を使い、本家の単体実行版を希望した場合だけそちらへ切り替えます。
+2. npm を選ぶ場合は Node.js が22.12.0未満なら停止します。日本語版は npm・Homebrew を使い、本家の単体実行版を希望した場合だけそちらへ切り替えます。
 3. `openspec` が PATH に含まれることを確認します。
 4. 対象と判断したフォルダ名と、会話中の AI ツールを候補として示します。ほかに使用するツールを確認し、そのフォルダで `openspec init` を実行します（[プロジェクトのセットアップ](setup.md)）。
 5. init が作成した内容と、使用するツールで OpenSpec を呼び出す正確な表記を報告します。
@@ -88,13 +53,13 @@ curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/instal
 
 ## パッケージマネージャー
 
-Node.js パッケージとして導入するため、Node.js 20.19.0 以降が必要です（Homebrew と Nix は実行環境を含みます）。ターミナルで確認します。
+Node.js パッケージとして導入するため、Node.js 22.12.0 以降が必要です（Homebrew と Nix は実行環境を含みます）。ターミナルで確認します。
 
 ```bash
 node --version
 ```
 
-`v20.19.0` 以降なら npm でインストールします。
+`v22.12.0` 以降なら npm でインストールします。
 
 ```npm
 npm install -g @ayumuwall/openspec@latest
@@ -186,6 +151,58 @@ openspec --version
 次に[プロジェクトをセットアップ](setup.md)します。アシスタントがすでに init を実行した場合も、
 作成された内容と調整方法をリンク先のページで確認できます。
 
+<a id="install-options"></a>
+
+## インストールオプション
+
+本家の単体実行版でバージョンやフォルダを指定するには、`sh` の前に変数を設定します。
+
+```bash
+curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v1.15.0 sh
+```
+
+- **`OPENSPEC_VERSION`**：`v1.15.0` など、導入するリリース。既定は最新版です。
+- **`OPENSPEC_INSTALL_DIR`**：導入先フォルダ。既定は `~/.local/bin`（Windows は `%LOCALAPPDATA%\Programs\openspec`）です。
+
+Windows では先に変数を設定します。
+
+```powershell
+$env:OPENSPEC_VERSION = 'v1.15.0'
+irm https://openspec.dev/cli/install.ps1 | iex
+```
+
+Alpine Linux では、導入前に `apk add libstdc++ libgcc` を実行します。
+
+### 手動でダウンロードする
+
+本家の各リリースには、実行環境ごとのファイルがあります。
+
+| 実行環境 | ファイル |
+|---|---|
+| Mac、Apple silicon | `openspec-darwin-arm64.tar.gz` |
+| Mac、Intel | `openspec-darwin-x64.tar.gz` |
+| Linux、arm64 | `openspec-linux-arm64.tar.gz` |
+| Linux、x64 | `openspec-linux-x64.tar.gz` |
+| Alpine、arm64 | `openspec-linux-arm64-musl.tar.gz` |
+| Alpine、x64 | `openspec-linux-x64-musl.tar.gz` |
+| Windows、arm64 | `openspec-windows-arm64.zip` |
+| Windows、x64 | `openspec-windows-x64.zip` |
+
+1. **[本家の最新リリース](https://github.com/Fission-AI/OpenSpec/releases/latest)から対象ファイルを取得する。** ファイルはリリース公開後、数分で添付されます。まだなければ待って再読み込みするか、前のリリースから取得してください。
+2. **展開する。** ターミナルで `tar -xzf openspec-darwin-arm64.tar.gz` を実行します。Windows では `.zip` を右クリックし、「すべて展開」を選びます。
+3. **macOS ではブロックを解除する。** 展開先で `xattr -d com.apple.quarantine openspec` を実行します。ブラウザーから取得したファイルは、これを実行するまで macOS にブロックされます。
+4. **PATH 上のフォルダへ移す。** `openspec` を `~/.local/bin` などへ置きます。Windows では `openspec.exe` を `%LOCALAPPDATA%\Programs\openspec` など、ユーザー PATH 上のフォルダへ置きます。
+
+### ダウンロードを検証する
+
+OpenSpec のリリースワークフローがビルドしたファイルか確認するには、[GitHub CLI](https://cli.github.com) で実行します。
+
+```bash
+gh attestation verify openspec-darwin-arm64.tar.gz --repo Fission-AI/OpenSpec
+```
+
+そのワークフローがビルドしたファイルでなければ失敗します。インストールコマンドはすでにリリースの `SHA256SUMS` と照合するため、この手順は任意です。
+
 ## npm 版から単体実行版へ切り替える
 
 切り替えは任意です。npm も引き続き使えます。設定とプロジェクトは保持し、プログラムだけを変更します。
@@ -231,7 +248,7 @@ openspec update
 
 新しい CLI が公開されている場合、[`openspec update`](../reference/cli.md#openspec-update)が通知し、
 そのままインストールできます。CLI の更新はマシンごとに一度だけ必要です。実行するたびに、
-自動では更新されないプロジェクトの生成済みスキルとコマンドも更新します。最新状態のプロジェクトでは
+自動では更新されないプロジェクトの生成済みスキルも更新します。最新状態のプロジェクトでは
 `✓ All 2 tool(s) up to date (v1.7.0)`と表示されます。
 
 > [!WARNING]
@@ -266,9 +283,7 @@ Homebrew では`brew uninstall openspec-j`、Deno では`deno uninstall --global
 
 **3. 残ったファイルを削除するか、そのまま保持する。**
 
-- 生成されたエージェントファイル：プロジェクトごとに`.claude/`や`.agents/`などへ作成された、
-  `openspec-*`スキルと`opsx`コマンドです。[対応ツール](../reference/supported-tools.md)に各ツールの
-  パスを掲載しています。MiniMax Code のスキルは`~/.minimax/skills`にあります。
+- 生成されたエージェントファイル：プロジェクトごとの `.agents/skills/` 内の `openspec-*` スキルと `.openspec-target`、`.claude/skills/` などのツール固有フォルダ内の `openspec-*` リンクです。[対応ツール](../reference/supported-tools.md)にリンクを作成するツールを掲載しています。MiniMax Code のスキルは `~/.minimax/skills` にあります。
 - 旧バージョンの残存ファイル：`CLAUDE.md`または`AGENTS.md`内のマーカーブロックと、
   `~/.codex/prompts`内の`opsx-*.md`プロンプトです。マーカーブロックだけを削除し、ファイルは残します。
 - `openspec/`フォルダ：削除する前に内容を確認してください。`specs/`と`changes/archive/`は

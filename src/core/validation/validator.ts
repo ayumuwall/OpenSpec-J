@@ -18,7 +18,10 @@ import {
   extractRequirementsSection,
   diffScenarioNames,
   describeScenarioBalance,
+  parseScenarioBlocks,
+  isScenarioLabeledHeader,
   describeUnappliedContent,
+  isUnrecognizedDeltaSection,
   type RequirementBlock,
 } from '../parsers/requirement-blocks.js';
 import {
@@ -26,6 +29,8 @@ import {
   containsShallOrMust as containsShallOrMustShared,
   countScenarios as countScenariosShared,
   countEmptyScenarios,
+  hasScenarioBody,
+  scenarioStepCoverage,
 } from '../parsers/requirement-text.js';
 import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
@@ -152,8 +157,8 @@ export class Validator {
    * Validate delta-formatted spec files under a change directory.
    * Enforces:
    * - At least one delta across all files
-   * - ADDED/MODIFIED: each requirement has at least one scenario; missing
-   *   English SHALL/MUST keywords are guidance unless strict mode is enabled
+   * - ADDED/MODIFIED: 各要件に1つ以上のシナリオが必要。WHEN/GIVEN や THEN の
+   *   不足と、英語の SHALL/MUST の欠落は通常は警告、strict では失敗とする。
    * - REMOVED: names only; no scenario/description required
    * - RENAMED: pairs well-formed
    * - No duplicates within sections; no cross-section conflicts per spec
@@ -246,12 +251,14 @@ export class Validator {
         // ignored - reported as a WARNING rather than an ERROR because a
         // handful of pre-format archived changes still carry this shape, and
         // the fix is to move the block, not to reject the change outright.
+        // 不明な ## ... Requirements 配下は差分操作の意図があるため ERROR とし、
+        // archive も拒否する（#2195）。
         for (const orphan of plan.orphanedRequirements) {
           const where = orphan.section
             ? `"## ${orphan.section}" の下`
             : '最初の "## " セクションより前';
           issues.push({
-            level: 'WARNING',
+            level: isUnrecognizedDeltaSection(orphan.section) ? 'ERROR' : 'WARNING',
             path: entryPath,
             line: orphan.line,
             message: `要件 "${orphan.name}" は ${where} にあり、差分セクション内ではないため無視されます。"## ADDED Requirements"、"## MODIFIED Requirements"、"## REMOVED Requirements"、または "## RENAMED Requirements" の下へ移動してください。`,
@@ -331,6 +338,7 @@ export class Validator {
           if (scenarioCount < 1) {
             issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" には少なくとも1つのシナリオが必要です${this.emptyScenarioHint(block.raw)}` });
           }
+          issues.push(...this.findScenarioStepIssues(block.raw, `ADDED "${block.name}"`, entryPath));
         }
 
         // Validate MODIFIED
@@ -366,6 +374,7 @@ export class Validator {
           if (scenarioCount < 1) {
             issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" には少なくとも1つのシナリオが必要です${this.emptyScenarioHint(block.raw)}` });
           }
+          issues.push(...this.findScenarioStepIssues(block.raw, `MODIFIED "${block.name}"`, entryPath));
         }
 
         // Run archive's scenario-loss check here too, so the change fails at
@@ -804,6 +813,11 @@ export class Validator {
   });
   }
 
+  /**
+   * 本仕様の構造、Purpose の未記入・短すぎる本文、要件の長さ、シナリオ不足、
+   * SHALL/MUST 不足、シナリオの条件・結果不足を検査する（#1156、#243）。
+   * 手順検査は差分仕様と同じ #### ブロックを使い、記述場所によらず報告する。
+   */
   private applySpecRules(spec: Spec, content: string): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
 
@@ -878,7 +892,15 @@ export class Validator {
           ),
         });
       }
-  });
+      // 差分仕様と同じブロック・手順検査を使い、結果を確認しないシナリオを場所によらず報告する。
+      issues.push(
+        ...this.findScenarioStepIssues(
+          block.raw,
+          `要件 "${block.name}"`,
+          `requirements[${index}].scenarios`
+        )
+      );
+    });
 
     return issues;
   }
@@ -1092,6 +1114,36 @@ export class Validator {
     return '（本文のないシナリオ見出しは数に含まれません。"- **WHEN** ..." と "- **THEN** ..." などのステップを追加してください）';
   }
 
+  /**
+   * WHEN/GIVEN の条件と THEN の結果がなければ、何も検証しないシナリオになる（#2078）。
+   * シナリオ欠落検査と同じブロックを読み、認識を一致させる。
+   * 欠落検査ではレベル4の子をすべて数えるが、手順検査は Scenario: 付きだけに限定し、
+   * 説明用の #### Notes には警告しない。SHALL/MUST 不足と同じく WARNING として
+   * 通常の validate/archive の判定を保ち、--strict で必須にする。
+   */
+  private findScenarioStepIssues(blockRaw: string, label: string, issuePath: string): ValidationIssue[] {
+    const issues: ValidationIssue[] = [];
+    for (const scenario of parseScenarioBlocks(blockRaw)) {
+      // 本文のない見出しには別の ERROR が出るため重複させない。
+      // raw は見出しを含み、hasScenarioBody は本文だけを受け取る。
+      const bodyLines = scenario.raw.split('\n').slice(1).join('\n');
+      if (!hasScenarioBody(bodyLines)) continue;
+      if (!isScenarioLabeledHeader(scenario.raw.split('\n')[0])) continue;
+      const { hasTrigger, hasOutcome } = scenarioStepCoverage(scenario.raw);
+      if (hasTrigger && hasOutcome) continue;
+      const missing = [!hasTrigger && 'WHEN/GIVEN の手順', !hasOutcome && 'THEN の手順']
+        .filter((part): part is string => part !== false)
+        .join(' と ');
+      issues.push({
+        level: 'WARNING',
+        path: issuePath,
+        message: `${label}: シナリオ "${scenario.name}" に ${missing} がありません。シナリオには条件と結果が必要です。例: "- **WHEN** 請求書を無効にしたとき" と "- **THEN** クレジットノートを発行する"。`,
+      });
+    }
+    return issues;
+  }
+
+  /** セクション名の一覧を文章に整形する。 */
   private formatSectionList(sections: string[]): string {
     if (sections.length === 0) return '';
     if (sections.length === 1) return sections[0];

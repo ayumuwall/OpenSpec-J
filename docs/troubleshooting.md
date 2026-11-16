@@ -17,15 +17,17 @@ openspec --version
 
 [AI支援インストール](installation.md#aiアシスタントでインストール)を使った場合、ここで手動作業へ引き継がれるのは正常です。プロンプトはシェルの起動ファイルを直接編集せず、必要な `PATH` 変更を示すよう指示しています。
 
-### 「Node.js 20.19.0 以降が必要」
+### 「Node.js 22.12.0 以降が必要」
 
-OpenSpec は Node.js 20.19.0 以降で動作します。バージョンを確認し、必要に応じてアップグレードします。
+OpenSpec は Node.js 22.12.0 以降で動作します（Node 20 は2026年4月にサポートが終了し、対象外となりました）。バージョンを確認し、必要に応じてアップグレードします。
 
 ```bash
 node --version
 ```
 
-bun で OpenSpec をインストールする場合でも、OpenSpec 自体は Node.js 上で実行されます。そのため、`PATH` 上で Node.js 20.19.0 以降を利用できる必要があります。詳しくは [インストール](installation.md) を参照してください。
+bun で OpenSpec をインストールする場合でも、OpenSpec 自体は Node.js 上で実行されます。そのため、`PATH` 上で Node.js 22.12.0 以降を利用できる必要があります。詳しくは [インストール](installation.md) を参照してください。
+
+Node.js を更新できない場合は、Node.js 不要の[単体実行版](installation.md)を利用できます。Homebrew も選択肢です。Node.js 上で実行しますが、依存関係として現行版の Node.js を導入・管理します。
 
 ### `openspec init` が AI ツールを構成しませんでした
 

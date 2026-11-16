@@ -28,10 +28,35 @@ env:
   REF: ${{ github.event.release.tag_name || inputs.tag || github.sha }}
 
 jobs:
+  # ドキュメントだけの PR ではバイナリーを作らない。
+  # ci.yml と同じ一覧を使う（test/ci-docs-only.test.ts で検査）。
+  changes:
+    name: 変更を検出
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.code.outputs.code || 'true' }}
+    steps:
+      - name: ドキュメント以外の変更を確認
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
+        id: code
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!docs-lab/**'
+              - '!website/**'
+              - '!assets/**'
+              - '!*.md'
+
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,9 +65,9 @@ jobs:
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       # No dependency caches: this job builds release binaries, and a cache
       # written by a pull request run could poison them.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20.19.0'
+          node-version: '22.12.0'
           package-manager-cache: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
@@ -65,13 +90,27 @@ jobs:
             echo "::error::package.json version $version does not match tag $REF"
             exit 1
           }
-      - name: Checksums and installer
+      # 配布するのは .tar.gz（Windows は .zip）。
+      # 展開前のバイナリーも下のテスト用に dist-bin へ残す。
+      - name: アーカイブ・チェックサム・インストーラーを作成
         run: |
           cd dist-bin
-          sha256sum openspec-* > SHA256SUMS
+          for bin in openspec-*; do
+            name=${bin%.exe}
+            rm -rf pack && mkdir pack && cp ../LICENSE pack/
+            if [ "$bin" != "$name" ]; then
+              cp "$bin" pack/openspec.exe
+              (cd pack && zip -q "../$name.zip" openspec.exe LICENSE)
+            else
+              cp "$bin" pack/openspec && chmod 755 pack/openspec
+              tar -czf "$name.tar.gz" -C pack openspec LICENSE
+            fi
+          done
+          rm -rf pack
+          sha256sum openspec-*.tar.gz openspec-*.zip > SHA256SUMS
           cp ../scripts/binary/install.sh ../scripts/binary/install.ps1 .
           cat SHA256SUMS
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: binaries
           path: dist-bin/
@@ -107,7 +146,7 @@ jobs:
         with:
           ref: ${{ env.REF }}
           persist-credentials: false
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: binaries
           path: dist-bin
@@ -158,6 +197,17 @@ jobs:
         shell: pwsh
         run: |
           Invoke-ScriptAnalyzer -Path scripts/binary/install.ps1 -Severity Warning,Error -ExcludeRule PSAvoidUsingWriteHost -EnableExit
+          # RuntimeInformation が空でも代替判定が働くよう、install.ps1 の各 CPU 情報源が
+          # 単独でこのランナーのアセットを示すことを確認する（#2220）。
+          $want = ($env:ASSET -split '-')[1]
+          foreach ($shell in 'pwsh', 'powershell') {
+            $probe = "try { [string][System.Runtime.InteropServices.RuntimeInformation, mscorlib]::OSArchitecture } catch { 'unresolved' }; [Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE', 'Machine')"
+            $runtime, $machine = & $shell -NoProfile -Command $probe
+            Write-Host "$shell : RuntimeInformation=$runtime PROCESSOR_ARCHITECTURE=$machine"
+            if ($runtime -notin 'unresolved', '' -and $runtime -ne $want) { throw "$shell の RuntimeInformation は $runtime です。期待値: $want" }
+            $mapped = if ($machine -eq 'AMD64') { 'x64' } else { "$machine".ToLowerInvariant() }
+            if ($mapped -ne $want) { throw "$shell の PROCESSOR_ARCHITECTURE は $machine です。期待値: $want" }
+          }
           $server = Start-Process python -ArgumentList '-m', 'http.server', '8765', '--directory', 'dist-bin' -PassThru -WindowStyle Hidden
           foreach ($i in 1..40) { try { Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8765/SHA256SUMS | Out-Null; break } catch { Start-Sleep -Milliseconds 500 } }
           # A user PATH entry that relies on expansion must survive untouched.
@@ -168,7 +218,7 @@ jobs:
             foreach ($shell in 'pwsh', 'powershell') {
               $dir = Join-Path $env:RUNNER_TEMP "install $shell"
               foreach ($run in 1, 2) {
-                & $shell -NoProfile -Command "`$env:OPENSPEC_DOWNLOAD_URL='http://127.0.0.1:8765'; `$env:OPENSPEC_INSTALL_DIR='$dir'; irm http://127.0.0.1:8765/install.ps1 | iex"
+                & $shell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); `$env:OPENSPEC_DOWNLOAD_URL='http://127.0.0.1:8765'; `$env:OPENSPEC_INSTALL_DIR='$dir'; Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8765/install.ps1 -OutFile '$dir-installer.ps1'; & '$dir-installer.ps1'"
                 if ($LASTEXITCODE -ne 0) { throw "$shell install run $run failed" }
               }
               $exe = Join-Path $dir 'openspec.exe'
@@ -182,7 +232,7 @@ jobs:
             }
             # A relative folder is saved to PATH as an absolute one; a custom name is kept.
             Push-Location $env:RUNNER_TEMP
-            pwsh -NoProfile -Command "`$env:OPENSPEC_DOWNLOAD_URL='http://127.0.0.1:8765'; `$env:OPENSPEC_INSTALL_DIR='relative install'; `$env:OPENSPEC_INSTALL_NAME='openspec-renamed.exe'; irm http://127.0.0.1:8765/install.ps1 | iex"
+            pwsh -NoProfile -Command "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); `$env:OPENSPEC_DOWNLOAD_URL='http://127.0.0.1:8765'; `$env:OPENSPEC_INSTALL_DIR='relative install'; `$env:OPENSPEC_INSTALL_NAME='openspec-renamed.exe'; Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8765/install.ps1 -OutFile '$dir-installer.ps1'; & '$dir-installer.ps1'"
             Pop-Location
             if ($LASTEXITCODE -ne 0) { throw 'relative install failed' }
             $abs = Join-Path $env:RUNNER_TEMP 'relative install'
@@ -196,18 +246,18 @@ jobs:
             foreach ($tag in 'v1.1.0', 'v1.2.0') {
               $d = Join-Path $site "releases/download/$tag"
               New-Item -ItemType Directory -Force -Path $d | Out-Null
-              Copy-Item "dist-bin/openspec-$env:ASSET.exe" $d
+              Copy-Item "dist-bin/openspec-$env:ASSET.zip" $d
               if ($tag -eq 'v1.1.0') { Copy-Item dist-bin/SHA256SUMS $d }
             }
             Set-Content -Path (Join-Path $site 'releases.atom') -Value ('<feed>' + (('v1.2.0', 'v1.1.0' | ForEach-Object { "<link href=""https://github.com/ayumuwall/OpenSpec-J/releases/tag/$_""/>" }) -join '') + '</feed>')
             foreach ($shell in 'pwsh', 'powershell') {
               $dir = Join-Path $env:RUNNER_TEMP "fallback $shell"
-              $out = & $shell -NoProfile -Command "`$env:OPENSPEC_RELEASES_URL='http://127.0.0.1:8765/site/releases'; `$env:OPENSPEC_INSTALL_DIR='$dir'; irm http://127.0.0.1:8765/install.ps1 | iex" 2>&1 | Out-String
+              $out = & $shell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); `$env:OPENSPEC_RELEASES_URL='http://127.0.0.1:8765/site/releases'; `$env:OPENSPEC_INSTALL_DIR='$dir'; Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8765/install.ps1 -OutFile '$dir-installer.ps1'; & '$dir-installer.ps1'" 2>&1 | Out-String
               if ($LASTEXITCODE -ne 0) { throw "$shell fallback install failed: $out" }
               if ($out -notmatch 'v1\.2\.0 は準備中のため、v1\.1\.0 をインストールします。') { throw "$shell did not fall back with a note: $out" }
               if ((Get-FileHash (Join-Path $dir 'openspec.exe')).Hash -ne (Get-FileHash "dist-bin/openspec-$env:ASSET.exe").Hash) { throw "$shell fallback installed the wrong file" }
               # A localhost-looking URL whose real host is remote is refused before any download.
-              $out = & $shell -NoProfile -Command "`$env:OPENSPEC_DOWNLOAD_URL='http://localhost:80@evil.example/x'; `$env:OPENSPEC_INSTALL_DIR='$dir-evil'; irm http://127.0.0.1:8765/install.ps1 | iex" 2>&1 | Out-String
+              $out = & $shell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); `$env:OPENSPEC_DOWNLOAD_URL='http://localhost:80@evil.example/x'; `$env:OPENSPEC_INSTALL_DIR='$dir-evil'; Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8765/install.ps1 -OutFile '$dir-installer.ps1'; & '$dir-installer.ps1'" 2>&1 | Out-String
               if ($LASTEXITCODE -eq 0 -or $out -notmatch 'https.*使用してください') { throw "$shell accepted a remote host behind localhost: $out" }
               if (Test-Path "$dir-evil/openspec.exe") { throw "$shell installed from a refused source" }
             }
@@ -220,10 +270,10 @@ jobs:
       # The repo's own CLI tests, run against this binary instead of Node.
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         if: matrix.alpine == ''
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: matrix.alpine == ''
         with:
-          node-version: '20.19.0'
+          node-version: '22.12.0'
           package-manager-cache: false
       - name: CLI test suite and `openspec install` against the binary
         run: |
@@ -262,7 +312,7 @@ jobs:
       attestations: write # store it
       artifact-metadata: write # record the attested files
     steps:
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: binaries
           path: dist-bin
@@ -283,13 +333,14 @@ jobs:
           # SHA256SUMS goes last: installers treat a release that has it as
           # complete and keep installing the previous one until then. The
           # installers themselves are served from main, not from releases.
-          gh release upload "$tag" openspec-* --clobber --repo "$GITHUB_REPOSITORY"
+          gh release upload "$tag" openspec-*.tar.gz openspec-*.zip --clobber --repo "$GITHUB_REPOSITORY"
           gh release upload "$tag" SHA256SUMS --clobber --repo "$GITHUB_REPOSITORY"
-      # Signed proof each binary was built by this workflow from this tag, which
-      # anyone can check with `gh attestation verify`. The binaries are not
-      # notarized or code-signed yet, so this is the verifiable trail meanwhile.
-      # After the upload, so a first-time problem here never holds binaries back.
+      # 各アーカイブがこのタグからこのワークフローで作られたことを署名で証明する。
+      # gh attestation verify で誰でも確認できる。コード署名・公証は未対応のため、
+      # 当面はこの証跡を使う。初回の問題で配布が止まらないようアップロード後に行う。
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         continue-on-error: true
         with:
-          subject-path: 'dist-bin/openspec-*'
+          subject-path: |
+            dist-bin/openspec-*.tar.gz
+            dist-bin/openspec-*.zip

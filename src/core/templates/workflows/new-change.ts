@@ -15,7 +15,7 @@ import { PROJECT_ROOT_GUARD } from './project-root.js';
  */
 const FIRST_ARTIFACT_PROMPT = optionalWorkflow(
   'continue',
-  '`/opsx:continue` を実行するか、この変更の内容を説明してください。下書きします。',
+  '`/opsx:continue` スキルを使うか、この変更の内容を説明してください。下書きします。',
   'この変更の内容を説明してください。下書きします。'
 );
 

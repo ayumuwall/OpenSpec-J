@@ -110,6 +110,45 @@ export function countScenarios(bodyLines: string[]): number {
   return readScenarioBodies(bodyLines).filter(hasScenarioBody).length;
 }
 
+/**
+ * 手順キーワードは大文字小文字を問わない太字（**WHEN**、**Given:**）か、
+ * 装飾のない大文字（WHEN）を認める。太字は手順を明示するが、
+ * 通常の when/then は説明文なので数えない。SHALL/MUST 検査も同じ理由で大文字のみ。
+ * 太字は ** と __ に対応する。_ は単語文字なので、\b を使う通常語の式では
+ * __WHEN__ を検出できない。
+ */
+const BOLD_TRIGGER_STEP = /(?:\*\*|__)(?:WHEN|GIVEN):?(?:\*\*|__)/i;
+const BARE_TRIGGER_STEP = /\b(?:WHEN|GIVEN)\b/;
+const BOLD_OUTCOME_STEP = /(?:\*\*|__)THEN:?(?:\*\*|__)/i;
+const BARE_OUTCOME_STEP = /\bTHEN\b/;
+
+/** フェンス外の本文から判定する、シナリオの条件と結果。 */
+export interface ScenarioStepCoverage {
+  hasTrigger: boolean;
+  hasOutcome: boolean;
+}
+
+/**
+ * parseScenarioBlocks が返す見出し付きブロックに、フェンス外の
+ * 条件（WHEN/GIVEN）と結果（THEN）があるか判定する。
+ * AND は既存の手順を続けるだけなので、どちらの代わりにもならない。
+ * フェンス内は例として除外し、要件本文の抽出と同じマスクを使う。
+ */
+export function scenarioStepCoverage(scenarioRaw: string): ScenarioStepCoverage {
+  const lines = scenarioRaw.replace(/\r\n?/g, '\n').split('\n');
+  const mask = buildCodeFenceMask(lines);
+  let hasTrigger = false;
+  let hasOutcome = false;
+  // 0行目はシナリオ名なので、見出し内の THEN などを手順として数えない。
+  for (let i = 1; i < lines.length; i++) {
+    if (mask[i]) continue;
+    const line = lines[i];
+    if (BOLD_TRIGGER_STEP.test(line) || BARE_TRIGGER_STEP.test(line)) hasTrigger = true;
+    if (BOLD_OUTCOME_STEP.test(line) || BARE_OUTCOME_STEP.test(line)) hasOutcome = true;
+  }
+  return { hasTrigger, hasOutcome };
+}
+
 /** Count the `#### ` headers in a requirement block that have no body under them. */
 export function countEmptyScenarios(bodyLines: string[]): number {
   return readScenarioBodies(bodyLines).filter((body) => !hasScenarioBody(body)).length;

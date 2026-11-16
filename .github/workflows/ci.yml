@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       nix: ${{ steps.filter.outputs.nix }}
+      # PR・マージグループがドキュメントだけを変更する場合は false。
+      # main への push と手動実行では常に CLI をテストする。
+      code: ${{ steps.code.outputs.code || 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,11 +50,29 @@ jobs:
               - 'src/commands/completion.ts'
               - 'src/core/completions/**'
 
+      # 以下のドキュメントパス以外はコードとして扱う。
+      # binaries.yml と同じ一覧にする（test/ci-docs-only.test.ts で検査）。
+      - name: ドキュメント以外の変更を確認
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
+        id: code
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!docs-lab/**'
+              - '!website/**'
+              - '!assets/**'
+              - '!*.md'
+
   test_matrix:
     name: Test (${{ matrix.label }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
-    if: github.event_name == 'pull_request' || github.event_name == 'merge_group' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -61,17 +82,17 @@ jobs:
           - os: ubuntu-latest
             shell: bash
             label: linux-bash
-            node: '20.19.0'
+            node: '22.12.0'
             vitest_workers: 4
           - os: macos-latest
             shell: bash
             label: macos-bash
-            node: '20.19.0'
+            node: '22.12.0'
             vitest_workers: 4
           - os: windows-latest
             shell: pwsh
             label: windows-pwsh
-            node: '20.19.0'
+            node: '22.12.0'
             vitest_workers: 2
           - os: ubuntu-latest
             shell: bash
@@ -120,30 +141,21 @@ jobs:
         run: pnpm test
 
       - name: Upload test coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20.19.0'
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22.12.0'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-report-${{ github.event_name }}
           path: coverage/
           retention-days: 7
 
-  test_pr_required:
-    name: Test
+  # ドキュメントだけの変更では CLI テストを省略し、ドキュメントを読むテストだけ実行する。
+  # 該当テストを追加したらここにも列挙する（test/ci-docs-only.test.ts で検査）。
+  docs:
+    name: Docs checks
     runs-on: ubuntu-latest
-    needs: [test_matrix]
-    if: always() && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
-    steps:
-      - name: Verify matrix tests passed
-        run: |
-          if [[ "${{ needs.test_matrix.result }}" != "success" ]]; then
-            echo "Matrix test job failed"
-            exit 1
-          fi
-          echo "All matrix tests passed!"
-
-  lint:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.code == 'false'
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -156,7 +168,75 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20.19.0'
+          node-version: '22.12.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: ドキュメントのテストを実行
+        run: >-
+          pnpm exec vitest run
+          test/apply-docs-claims.test.ts
+          test/upgrade-to-2-docs-claims.test.ts
+          test/explore-docs-claims.test.ts
+          test/init-store-docs-claims.test.ts
+          test/setup-docs-claims.test.ts
+          test/skills-docs-claims.test.ts
+          test/vocabulary-sweep.test.ts
+          test/website-preview.test.ts
+          test/pnpm-workspace-config.test.ts
+          test/ci-docs-only.test.ts
+          test/core/templates/propose.test.ts
+          test/core/templates/schema-docs-instruction-parity.test.ts
+
+  test_pr_required:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [changes, test_matrix, docs]
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
+    steps:
+      - name: テストの成功を確認
+        run: |
+          if [[ "${{ needs.changes.result }}" != "success" ]]; then
+            echo "変更の検出に失敗しました"
+            exit 1
+          fi
+          if [[ "${{ needs.changes.outputs.code }}" == "false" ]]; then
+            if [[ "${{ needs.docs.result }}" != "success" ]]; then
+              echo "ドキュメントの検査に失敗しました"
+              exit 1
+            fi
+            echo "ドキュメントのみの変更: CLI テストを省略し、ドキュメントの検査に成功しました"
+            exit 0
+          fi
+          if [[ "${{ needs.test_matrix.result }}" != "success" ]]; then
+            echo "Matrix test job failed"
+            exit 1
+          fi
+          echo "All matrix tests passed!"
+
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22.12.0'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -181,6 +261,44 @@ jobs:
             echo "Error: CLI entry point not found"
             exit 1
           fi
+
+  # 途中の版を飛ばす更新に備え、npm 公開版の実生成プロジェクトから
+  # 現行ビルドへの直接更新を確認する（test/cli-e2e/upgrade-from-releases）。
+  release-upgrades:
+    name: Upgrade from releases (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22.12.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: 公開版のプロジェクトを更新
+        env:
+          OPENSPEC_RELEASE_UPGRADES: '1'
+        run: pnpm exec vitest run test/cli-e2e/upgrade-from-releases.test.ts
 
   nix-flake-validate:
     name: Nix Flake Validation
@@ -360,11 +478,23 @@ jobs:
   required-checks-pr:
     name: All checks passed
     runs-on: ubuntu-latest
-    needs: [test_matrix, lint, nix-flake-validate]
+    needs: [changes, test_matrix, lint, nix-flake-validate, docs]
     if: always() && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
     steps:
       - name: Verify all checks passed
         run: |
+          if [[ "${{ needs.changes.result }}" != "success" ]]; then
+            echo "変更の検出に失敗しました"
+            exit 1
+          fi
+          if [[ "${{ needs.changes.outputs.code }}" == "false" ]]; then
+            if [[ "${{ needs.docs.result }}" != "success" ]]; then
+              echo "ドキュメントの検査に失敗しました"
+              exit 1
+            fi
+            echo "ドキュメントのみの変更: CLI テスト・lint・バイナリーを省略し、ドキュメントの検査に成功しました"
+            exit 0
+          fi
           if [[ "${{ needs.test_matrix.result }}" != "success" ]]; then
             echo "Matrix test job failed"
             exit 1

@@ -23,25 +23,31 @@ TODO:
 
 最初に `openspec --version` を実行します。すでにバージョンが表示される場合は導入済みです。その旨を伝え、`openspec version --check` で導入方法に合う更新コマンドを確認し、実行を提案して手順3へ進みます。判別できなければ元の導入方法で更新します。日本語版の Homebrew は `brew update` の後に `brew upgrade ayumuwall/tap/openspec-j` です。
 
-npm などで導入した場合は、Node.js 不要の単体実行版へ `openspec install` で切り替えられることを一度だけ提案します。利用者が選んだ導入方法を尊重し、繰り返し勧めたり、依頼なしに切り替えたりしないでください。PATH 上で2つのコピーが競合するためです。
+npm などで導入した場合は、単体実行版へ `openspec install` で切り替えられることを一度だけ提案します。利用者が選んだ導入方法を尊重し、繰り返し勧めたり、依頼なしに切り替えたりしないでください。PATH 上で2つのコピーが競合するためです。
 
-未導入の場合、日本語版は手順2で導入します。本家版の単体実行バイナリを希望する場合は、次の OS 別コマンドを示し、確認を得てから実行して手順3へ進みます。Node.js は不要です（Alpine Linux は先に `apk add libstdc++ libgcc` を実行）。以下は本家版の導入コマンドです。
+単体実行版を導入します（Alpine Linux は先に `apk add libstdc++ libgcc` を実行）。利用者の OS に合うコマンドを示し、確認を得てから実行して手順3へ進みます。
 
 ```bash
 # macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.sh | sh
 ```
 
 ```powershell
 # Windows（PowerShell）
-irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+$installer = Join-Path ([System.IO.Path]::GetTempPath()) ('openspec-install-' + [guid]::NewGuid() + '.ps1')
+try {
+  Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.ps1 -OutFile $installer
+  & $installer
+} finally {
+  Remove-Item -LiteralPath $installer -ErrorAction SilentlyContinue
+}
 ```
 
 パッケージマネージャーを希望する場合や、インストーラーが失敗した場合は手順2へ進みます。
 
 ## 2. パッケージマネージャー（手順1で未導入の場合のみ）
 
-`node --version` を実行します。Node.js 20.19.0 以降が必要です。Node.js がないか古い場合は、自分で導入・切り替え・バージョンマネージャーの再設定を行わず、停止してください。次の手順として https://nodejs.org または nvm などで新しいバージョンへ切り替えるコマンドを案内します。
+`node --version` を実行します。Node.js 22.12.0 以降が必要です。Node.js がないか古い場合は、自分で導入・切り替え・バージョンマネージャーの再設定を行わず、停止してください。次の手順として https://nodejs.org または nvm などで新しいバージョンへ切り替えるコマンドを案内します。
 
 PATH に含まれているパッケージマネージャーを使用し、npm を優先します。
 
@@ -90,8 +96,9 @@ init は指定先に`openspec/`を作成し、その場所が誤っていても�
 次に、利用者が使用する AI コーディングツールを判断します。ここでも自由回答の質問から始めず、推測した
 候補を先に示してください。あなたはおそらくそのいずれかのツール上で動作しているため、そのツール名を示し、
 ほかに使用するツールがあるか確認します。Claude Code、Cursor、Copilot、Codex など、一般的な候補も
-いくつか提示してください。回答によって何が変わるかも説明します。指定した各ツールには、プロジェクト内に
-専用のスキルファイルとコマンドファイルが作成されます。後から init を再実行して追加できるため、現時点では
+いくつか提示してください。回答によって何が変わるかも説明します。各ツールは共有の
+`.agents/skills/` を読みます。一部は専用フォルダのリンクを経由し、MiniMax Code は
+代わりに `~/.minimax/skills/` を使います。後から init を再実行して追加できるため、現時点では
 短い一覧で問題ありません。各ツールを`openspec init --help`にある ID へ対応付けます。Copilot は
 `github-copilot`、Zoo Code は`roocode`です。`--tools`にはカンマ区切りの一覧を渡すため、使用する
 ツールをすべて指定します。
@@ -108,17 +115,13 @@ init はフォルダを更新しますが、仕様と変更提案には手を加
 
 ## 5. 報告
 
-作成されるはずの内容を推測せず、init が実際に表示した内容を伝えてください。作成したスキルやコマンドの
-数と場所、設定ファイルの行、「Setup required」という注意事項、再起動または再読み込みが必要な対象を
-報告します。一部のツールはスキル専用で、コマンドファイルが 0 件でも正常です。そのため、コマンドがない
-ことだけを失敗と判断しないでください。何も生成されなかったと init が報告した場合は、再試行せず、
-提案された解決方法を伝えます。
+作成されるはずの内容を推測せず、init が実際に表示したスキルの数と場所、設定ファイルの行、
+「セットアップが必要」という注意事項、再起動や再読み込みが必要な対象を報告します。
+OpenSpec はスキルだけを導入するため、コマンドファイルが 0 件でも正常です。
 
-最後に、利用者のツールで OpenSpec を呼び出す方法を伝えます。要約行ではなく、init が作成したファイルから
-正確な表記を取得してください。句読記号はツールごとに異なり、一部では`/opsx:propose`、ほかでは
-`/opsx-propose`、Amazon Q では`@opsx-propose`を使用します。コマンドではなくスキルを受け取る
-ツールでは、スキル名で呼び出します。`/openspec-propose`、Codex では`$openspec-propose`、
-Kimi Code では`/skill:openspec-propose`です。
+最後に、init の「はじめに」に表示された呼び出し方を伝えます。多くのツールでは
+`/openspec-propose`、Codex では `$openspec-propose`、Kimi Code では
+`/skill:openspec-propose` です。通常の言葉で作業を依頼することもできます。
 
 今すぐ実行：上記の TODO を完了し、OpenSpec CLI のインストール、このプロジェクトの初期化、
 利用者が AI コーディングツールで OpenSpec を呼び出す正確な方法の案内を達成してください。

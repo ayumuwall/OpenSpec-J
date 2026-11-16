@@ -45,7 +45,7 @@ export interface GlobalConfig {
 const DEFAULT_CONFIG: GlobalConfig = {
   featureFlags: {},
   profile: 'core',
-  delivery: 'both',
+  delivery: 'skills',
 };
 
 /**
@@ -256,7 +256,23 @@ export function saveGlobalConfig(config: GlobalConfig, options: SaveGlobalConfig
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  fs.writeFileSync(configPath, serializeGlobalConfig(config), 'utf-8');
+  fs.writeFileSync(configPath, serializeGlobalConfig(withoutUnsetRetiredDelivery(config, configPath)), 'utf-8');
+}
+
+/**
+ * 廃止された delivery は保存時に新設しない。利用者が指定した値は保持し、
+ * 既定値は元のファイルにキーがあった場合だけ書き込む。
+ */
+function withoutUnsetRetiredDelivery(config: GlobalConfig, configPath: string): GlobalConfig {
+  if (config.delivery !== DEFAULT_CONFIG.delivery) return config;
+  try {
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
+    if (raw && typeof raw === 'object' && 'delivery' in raw) return config;
+  } catch {
+    // ファイルがないか読めず、利用者の指定は確認できない。
+  }
+  const { delivery: _delivery, ...rest } = config;
+  return rest as GlobalConfig;
 }
 
 /** The bytes `saveGlobalConfig` writes, for a caller that only plans the write. */

@@ -63,12 +63,17 @@ function standaloneUpgradeCommand(): string | null {
  * tests, an explicit escape hatch for anyone offline or air-gapped, and the
  * same privacy signals telemetry already honors — a user who set DO_NOT_TRACK
  * or telemetry.enabled false did not agree to a different outbound request.
+ *
+ * requested は利用者が明示した openspec version --check を表す。
+ * この1回の通信には telemetry の無効設定や CI 判定を適用せず、
+ * 更新確認の無効設定とテスト用ガードだけを適用する。
  */
-function isCheckEnabled(): boolean {
+function isCheckEnabled(requested: boolean): boolean {
   if (process.env.OPENSPEC_NO_UPDATE_CHECK !== undefined) return false;
-  if (isTelemetryOptedOutByEnv()) return false;
-  if (isCiEnvironment()) return false;
   if (process.env.NODE_ENV === 'test') return false;
+  if (requested) return true;
+  if (isCiEnvironment()) return false;
+  if (isTelemetryOptedOutByEnv()) return false;
   // Same config opt-out as telemetry (env remains the hard override above).
   if (getGlobalConfig().telemetry?.enabled === false) return false;
   // A config that cannot be parsed may be hiding that opt-out.
@@ -180,39 +185,31 @@ export function compareVersions(a: string, b: string): number {
   return comparePrerelease(left.prerelease, right.prerelease);
 }
 
+interface HttpsResponse {
+  status: number;
+  body: string;
+}
+
 /**
- * Reads the `latest` dist-tag. Sends no custom Accept header: the registry
- * answers `/<pkg>/latest` with 406 for npm's abbreviated-metadata type, which
- * it only serves on the full packument.
- *
- * Uses node:http(s) rather than fetch so the timeout can destroy the socket.
- * Aborting a fetch that is still completing its TCP handshake — a firewall
- * dropping packets, a captive portal — leaves the connect handle open and the
- * CLI cannot exit until the OS gives up, long after the hint has printed.
+ * deadline までに GET を1回行う。タイムアウトでソケットを破棄できるよう
+ * fetch でなく node:http(s) を使う。TCP 接続中の fetch を中断しても
+ * 接続ハンドルが残り、OS のタイムアウトまで CLI が終了できない場合がある。
+ * 最終ステータスと、200 の場合だけ本文を返す。通信失敗・過大な本文・
+ * 追跡不能のリダイレクトは null。followRedirects が false なら転送先を読まず返す。
  */
-function fetchLatestVersion(): Promise<string | null> {
+function httpsGet(
+  url: URL,
+  options: { deadline: number; followRedirects: boolean }
+): Promise<HttpsResponse | null> {
   return new Promise((resolve) => {
     let settled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const finish = (version: string | null) => {
+    const finish = (result: HttpsResponse | null) => {
       if (settled) return;
       settled = true;
       if (timer) clearTimeout(timer);
-      resolve(version);
+      resolve(result);
     };
-
-    let url: URL;
-    try {
-      const resolved = registryUrl();
-      if (resolved === null) {
-        resolve(null);
-        return;
-      }
-      url = new URL(resolved);
-    } catch {
-      resolve(null);
-      return;
-    }
 
     // Mirrors and corporate front-ends redirect; without following one the
     // check would be permanently and silently dead for them.
@@ -235,6 +232,10 @@ function fetchLatestVersion(): Promise<string | null> {
           if (status >= 300 && status < 400 && location) {
             response.resume();
             request.destroy();
+            if (!options.followRedirects) {
+              finish({ status, body: '' });
+              return;
+            }
             if (redirectsLeft <= 0) {
               finish(null);
               return;
@@ -262,7 +263,7 @@ function fetchLatestVersion(): Promise<string | null> {
           if (status !== 200) {
             response.resume();
             request.destroy();
-            finish(null);
+            finish({ status, body: '' });
             return;
           }
 
@@ -270,21 +271,13 @@ function fetchLatestVersion(): Promise<string | null> {
           response.setEncoding('utf-8');
           response.on('data', (chunk: string) => {
             body += chunk;
-            // The dist-tag document is small; refuse to buffer a firehose.
+            // バージョン情報は小さいため、大量の応答は蓄積しない。
             if (body.length > MAX_RESPONSE_BYTES) {
               request.destroy();
               finish(null);
             }
           });
-          response.on('end', () => {
-            try {
-              const parsed = JSON.parse(body) as { version?: unknown };
-              const version = parsed.version;
-              finish(typeof version === 'string' && SAFE_VERSION.test(version) ? version : null);
-            } catch {
-              finish(null);
-            }
-          });
+          response.on('end', () => finish({ status, body }));
           response.on('error', () => finish(null));
         }
       );
@@ -302,12 +295,76 @@ function fetchLatestVersion(): Promise<string | null> {
         timer = setTimeout(() => {
           activeRequest?.destroy();
           finish(null);
-        }, REQUEST_TIMEOUT_MS);
+        }, Math.max(0, options.deadline - Date.now()));
       }
     };
 
     send(url);
   });
+}
+
+/**
+ * latest dist-tag を読む。専用 Accept ヘッダーは送らない。npm の簡略メタデータ形式は
+ * packument 全体にだけ対応し、/<pkg>/latest では 406 になる。
+ */
+async function fetchLatestVersion(): Promise<string | null> {
+  let url: URL;
+  try {
+    const resolved = registryUrl();
+    if (resolved === null) return null;
+    url = new URL(resolved);
+  } catch {
+    return null;
+  }
+
+  const response = await httpsGet(url, {
+    deadline: Date.now() + REQUEST_TIMEOUT_MS,
+    followRedirects: true,
+  });
+  if (!response || response.status !== 200) return null;
+  try {
+    const version = (JSON.parse(response.body) as { version?: unknown }).version;
+    return typeof version === 'string' && SAFE_VERSION.test(version) ? version : null;
+  } catch {
+    return null;
+  }
+}
+
+/** install.sh/install.ps1 が既定で使う、単体実行版の配布ページ。 */
+const RELEASES_URL = 'https://github.com/ayumuwall/OpenSpec-J/releases';
+
+/**
+ * インストーラーと同じく、リリースフィードを新しい安定版から調べ、
+ * 最後に公開される SHA256SUMS が存在する最初の版を返す。npm の latest は
+ * 配布ファイルより先に公開されるため、その値を案内すると旧版を再導入する場合がある。
+ * 現行 CLI より新しくないタグで打ち切り、最新版ならフィードの取得だけで済ませる。
+ * 取得失敗・時間切れ、または新しい版がすべて準備中なら null。
+ */
+async function fetchLatestStandaloneRelease(): Promise<string | null> {
+  // 全リクエストを合わせ、レジストリ確認と同じ制限時間に収める。
+  const deadline = Date.now() + REQUEST_TIMEOUT_MS;
+  const feed = await httpsGet(new URL(`${RELEASES_URL}.atom`), { deadline, followRedirects: true });
+  if (!feed || feed.status !== 200) return null;
+
+  const versions = [
+    ...new Set(Array.from(feed.body.matchAll(/\/releases\/tag\/v(\d+\.\d+\.\d+)"/g), (m) => m[1])),
+  ].filter((version) => SAFE_VERSION.test(version));
+
+  for (const version of versions) {
+    if (compareVersions(version, OPENSPEC_VERSION) <= 0) return version;
+    // GitHub の添付ファイルは保存先へのリダイレクトを返すため、本体の取得は不要。
+    const probe = await httpsGet(new URL(`${RELEASES_URL}/download/v${version}/SHA256SUMS`), {
+      deadline,
+      followRedirects: false,
+    });
+    if (!probe) return null;
+    if (probe.status === 200 || (probe.status >= 300 && probe.status < 400)) return version;
+    // 準備中ならインストーラーと同じく次のリリースを調べる。
+    if (probe.status === 404) continue;
+    // レート制限や失敗時は、誤った版を案内せず不明とする。
+    return null;
+  }
+  return null;
 }
 
 export type CliUpdateStatus = 'available' | 'current' | 'disabled' | 'offline';
@@ -318,16 +375,21 @@ export interface CliUpdateCheck {
 }
 
 /**
- * Checks the registry while preserving enough detail for callers to explain
- * why no newer version was reported. Never throws.
+ * 更新が見つからない理由を説明できる情報とともに確認結果を返す。例外は投げない。
+ * requested は利用者が明示的に確認を求めた場合だけ渡す。
  */
-export async function checkForCliUpdate(): Promise<CliUpdateCheck> {
-  if (!isCheckEnabled() || registryUrl() === null) {
+export async function checkForCliUpdate(
+  options: { requested?: boolean } = {}
+): Promise<CliUpdateCheck> {
+  // 単体実行版は npm ではなく GitHub Release から更新するため、
+  // レジストリの値や無効設定はこの確認に使わない。
+  const standalone = standaloneBinaryPath !== null;
+  if (!isCheckEnabled(options.requested === true) || (!standalone && registryUrl() === null)) {
     return { status: 'disabled', latest: null };
   }
 
   try {
-    const latest = await fetchLatestVersion();
+    const latest = standalone ? await fetchLatestStandaloneRelease() : await fetchLatestVersion();
     if (!latest) return { status: 'offline', latest: null };
     return {
       status: compareVersions(latest, OPENSPEC_VERSION) > 0 ? 'available' : 'current',

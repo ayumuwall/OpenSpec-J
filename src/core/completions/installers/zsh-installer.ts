@@ -6,6 +6,23 @@ import { InstallationResult } from '../factory.js';
 import { shellSingleQuote } from './shell-quote.js';
 
 /**
+ * zsh は ZDOTDIR があればそこから、なければ HOME から起動ファイルを読む。
+ * XDG 形式の ZDOTDIR を使う環境では ~/.zshrc に書いても読まれない（#2138）。
+ */
+function zshrcDir(homeDir: string): string {
+  const zdotdir = process.env.ZDOTDIR;
+  // zsh は ZDOTDIR 内の ~ を展開しない。相対値を path.join で解決すると
+  // プロジェクト内に誤って .zshrc を作るため、絶対パスのときだけ変更する。
+  return zdotdir && path.isAbsolute(zdotdir) ? zdotdir : homeDir;
+}
+
+/** zsh が読む .zshrc の表示パス。ZDOTDIR で変わらなければ ~/.zshrc。 */
+export function zshrcDisplayPath(homeDir: string = os.homedir()): string {
+  const zshrcPath = path.join(zshrcDir(homeDir), '.zshrc');
+  return zshrcPath === path.join(homeDir, '.zshrc') ? '~/.zshrc' : zshrcPath;
+}
+
+/**
  * Installer for Zsh completion scripts.
  * Supports both Oh My Zsh and standard Zsh configurations.
  */
@@ -108,7 +125,15 @@ export class ZshInstaller {
    * @returns Path to .zshrc
    */
   private getZshrcPath(): string {
-    return path.join(this.homeDir, '.zshrc');
+    return path.join(zshrcDir(this.homeDir), '.zshrc');
+  }
+
+  /**
+   * 管理ブロックがあり得る .zshrc。現在の読み込み先と、
+   * #2138 以前に ZDOTDIR があっても書き込んでいた ~/.zshrc を含む。
+   */
+  private getZshrcCandidates(): string[] {
+    return [...new Set([this.getZshrcPath(), path.join(this.homeDir, '.zshrc')])];
   }
 
   /**
@@ -170,9 +195,8 @@ export class ZshInstaller {
    *
    * @returns true if .zshrc exists and has markers
    */
-  private async hasZshrcConfig(): Promise<boolean> {
+  private async hasZshrcConfig(zshrcPath: string = this.getZshrcPath()): Promise<boolean> {
     try {
-      const zshrcPath = this.getZshrcPath();
       const content = await fs.readFile(zshrcPath, 'utf-8');
       return content.includes(this.ZSHRC_MARKERS.start) && content.includes(this.ZSHRC_MARKERS.end);
     } catch {
@@ -184,12 +208,11 @@ export class ZshInstaller {
    * Remove .zshrc configuration
    * Used during uninstallation
    *
+   * @param zshrcPath - 整理する .zshrc。既定は zsh の読み込み先
    * @returns true if removed successfully, false otherwise
    */
-  async removeZshrcConfig(): Promise<boolean> {
+  async removeZshrcConfig(zshrcPath: string = this.getZshrcPath()): Promise<boolean> {
     try {
-      const zshrcPath = this.getZshrcPath();
-
       // Check if file exists
       try {
         await fs.access(zshrcPath);
@@ -253,16 +276,24 @@ export class ZshInstaller {
       try {
         const existingContent = await fs.readFile(targetPath, 'utf-8');
         if (existingContent === completionScript) {
-          // Already installed and up to date
+          // 最新でも現在の .zshrc にブロックがあることを確認する。
+          // #2138 以前に ZDOTDIR 環境で ~/.zshrc へ書いた構成を、再導入で修復する。
+          const zshrcConfigured = isOhMyZsh
+            ? false
+            : await this.configureZshrc(path.dirname(targetPath));
           return {
             success: true,
             installedPath: targetPath,
             isOhMyZsh,
+            zshrcConfigured,
             message: '補完スクリプトは既にインストール済みです（最新）',
-            instructions: [
-              '補完スクリプトは既にインストール済みで最新です。',
-              '補完が動かない場合は exec zsh を試してください。',
-            ],
+            instructions:
+              isOhMyZsh || zshrcConfigured
+                ? [
+                    '補完スクリプトは既にインストール済みで最新です。',
+                    '補完が動かない場合は exec zsh を試してください。',
+                  ]
+                : this.generateInstructions(false, targetPath),
           };
         }
         // File exists but content is different - this is an update
@@ -372,12 +403,12 @@ export class ZshInstaller {
       ];
     } else {
       const completionsDir = path.dirname(installedPath);
-      const zshrcPath = path.join(this.homeDir, '.zshrc');
+      const zshrcPath = this.getZshrcPath();
 
       return [
         '補完スクリプトを ~/.zsh/completions/ にインストールしました。',
         '',
-        '補完を有効にするには、次を ~/.zshrc に追加してください:',
+        `補完を有効にするには、次を ${zshrcDisplayPath(this.homeDir)} に追加してください:`,
         '',
         `  # 補完ディレクトリを fpath に追加`,
         `  fpath=(${shellSingleQuote(completionsDir)} $fpath)`,
@@ -414,11 +445,18 @@ export class ZshInstaller {
 
       // Try to remove .zshrc configuration (only for standard Zsh)
       let zshrcWasPresent = false;
-      let zshrcCleaned = false;
+      const cleanedZshrcs: string[] = [];
+      const failedZshrcs: string[] = [];
       if (!isOhMyZsh) {
-        zshrcWasPresent = await this.hasZshrcConfig();
-        if (zshrcWasPresent) {
-          zshrcCleaned = await this.removeZshrcConfig();
+        for (const zshrcPath of this.getZshrcCandidates()) {
+          if (await this.hasZshrcConfig(zshrcPath)) {
+            zshrcWasPresent = true;
+            if (await this.removeZshrcConfig(zshrcPath)) {
+              cleanedZshrcs.push(zshrcPath);
+            } else {
+              failedZshrcs.push(zshrcPath);
+            }
+          }
         }
       }
 
@@ -433,12 +471,20 @@ export class ZshInstaller {
       if (scriptRemoved) {
         messages.push(`補完スクリプトを削除しました: ${targetPath}`);
       }
-      if (zshrcCleaned && !isOhMyZsh) {
-        messages.push('~/.zshrc から OpenSpec の設定を削除しました');
+      const label = (zshrcPath: string) =>
+        zshrcPath === path.join(this.homeDir, '.zshrc') ? '~/.zshrc' : zshrcPath;
+      for (const zshrcPath of cleanedZshrcs) {
+        messages.push(`${label(zshrcPath)} から OpenSpec の設定を削除しました`);
+      }
+      // ブロックが残ると補完も読み込まれるため、完全に削除できなかったことを伝える。
+      for (const zshrcPath of failedZshrcs) {
+        messages.push(
+          `${label(zshrcPath)} の OpenSpec ブロックを削除できませんでした。# OPENSPEC:START から # OPENSPEC:END までの行を手動で削除してください`
+        );
       }
 
       return {
-        success: true,
+        success: failedZshrcs.length === 0,
         message: messages.join('. '),
       };
     } catch (error) {

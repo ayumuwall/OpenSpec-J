@@ -454,9 +454,9 @@ describe('openspec CLI e2e basics', () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('OpenSpec 構成を作成しました');
 
-      // Check that skills were created for multiple tools
+      // One shared copy every tool reads; Claude reaches it through a link.
       const claudeSkillPath = path.join(emptyProjectDir, '.claude/skills/openspec-explore/SKILL.md');
-      const cursorSkillPath = path.join(emptyProjectDir, '.cursor/skills/openspec-explore/SKILL.md');
+      const cursorSkillPath = path.join(emptyProjectDir, '.agents/skills/openspec-explore/SKILL.md');
       const minimaxSkillPath = path.join(
         testHome,
         '.minimax/skills/openspec-explore/SKILL.md'
@@ -521,8 +521,10 @@ describe('openspec CLI e2e basics', () => {
         'utf-8'
       )).toBe('zed\n');
       const updatedSkill = await fs.readFile(skillPath, 'utf-8');
-      expect(updatedSkill).toContain('/openspec-explore');
-      expect(updatedSkill).not.toContain('$openspec-explore');
+      // The shared copy names skills plainly, right for every tool reading it.
+      expect(updatedSkill).toContain('`openspec-propose`');
+      expect(updatedSkill).not.toContain('$openspec-');
+      expect(updatedSkill).not.toContain('/openspec-');
     });
 
     it('initializes with --tools none option', async () => {
@@ -536,7 +538,7 @@ describe('openspec CLI e2e basics', () => {
 
       // With --tools none, no tool skills should be created
       const claudeSkillPath = path.join(emptyProjectDir, '.claude/skills/openspec-explore/SKILL.md');
-      const cursorSkillPath = path.join(emptyProjectDir, '.cursor/skills/openspec-explore/SKILL.md');
+      const cursorSkillPath = path.join(emptyProjectDir, '.agents/skills/openspec-explore/SKILL.md');
 
       expect(await fileExists(claudeSkillPath)).toBe(false);
       expect(await fileExists(cursorSkillPath)).toBe(false);

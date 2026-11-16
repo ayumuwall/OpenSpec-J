@@ -38,3 +38,9 @@ overrides:
   # in the published CLI. Remove once transitive launch-editor is >=2.14.2
   # (check: pnpm why launch-editor).
   launch-editor@<2.14.2: '>=2.14.2 <3'
+  # GHSA-g3hv-75wg-m249 / CVE-2026-118764: minimatch の firstPhasePreProcess() で
+  # globParts が増幅し、その後のペア処理が二乗時間になる問題。開発時のみ。
+  # eslint・@eslint/config-array・@typescript-eslint/typescript-estree が ^10.x を
+  # 間接参照し、公開 CLI には含まれない。参照範囲が >=11.0.1 を許容したら削除する。
+  # 確認: pnpm why minimatch。
+  minimatch@<11.0.1: '>=11.0.1'

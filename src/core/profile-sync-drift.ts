@@ -5,20 +5,18 @@ import type { Delivery } from './global-config.js';
 import { ALL_WORKFLOWS } from './profiles.js';
 import { CommandAdapterRegistry } from './command-generation/index.js';
 import { getConfiguredTools } from './shared/index.js';
-import {
-  shouldGenerateCommandsForTool,
-  shouldGenerateSkillsForTool,
-  shouldReconcileCommandFilesForTool,
-  shouldRemoveSkillsForTool,
-} from './command-surface.js';
-import { readSharedSkillTarget } from './shared-skill-target.js';
+import { classifyCommandFiles } from './shared/command-reconcile.js';
+import { shouldReconcileCommandFilesForTool } from './command-surface.js';
+import { isToolListed, readKeptSharedSkills } from './shared-skill-target.js';
+import { ownSkillFolderNeedsWork } from './shared/shared-skill-install.js';
+import { classifyOwnSkill } from './shared/own-skill-texts.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
-import { isLegacyCodexSkillEquivalentToCurrent } from './shared/skill-content-equivalence.js';
+import { isRedundantLegacyCopy } from './shared/skill-content-equivalence.js';
 import {
-  hasGlobalSkillTarget,
   resolveToolSkillsDir,
   toolSupportsSkills,
+  usesSharedSkills,
 } from './shared/skill-paths.js';
 
 type WorkflowId = (typeof ALL_WORKFLOWS)[number];
@@ -70,7 +68,7 @@ export function hasToolProfileOrDeliveryDrift(
   projectPath: string,
   toolId: string,
   desiredWorkflows: readonly string[],
-  delivery: Delivery,
+  _delivery: Delivery,
   view: FileView = DISK_VIEW
 ): boolean {
   const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -80,12 +78,9 @@ export function hasToolProfileOrDeliveryDrift(
   const desiredWorkflowSet = new Set<WorkflowId>(knownDesiredWorkflows);
   const skillsDir = resolveToolSkillsDir(projectPath, tool);
   const adapter = CommandAdapterRegistry.get(toolId);
-  const shouldGenerateSkills = shouldGenerateSkillsForTool(toolId, delivery);
-  const shouldGenerateCommands = shouldGenerateCommandsForTool(toolId, delivery);
 
-  const sharedTarget = tool.skillsDir
-    ? readSharedSkillTarget(projectPath, tool.skillsDir, view)
-    : undefined;
+  const shared = usesSharedSkills(tool);
+  const listed = shared && isToolListed(projectPath, toolId, view);
   for (const root of tool.legacySkillsDirs ?? []) {
     for (const workflow of knownDesiredWorkflows) {
       const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
@@ -93,7 +88,7 @@ export function hasToolProfileOrDeliveryDrift(
       if (!view.exists(legacySkill)) continue;
 
       const currentSkill = path.join(skillsDir, dirName, 'SKILL.md');
-      if (!view.exists(currentSkill) || sharedTarget !== toolId) {
+      if (!view.exists(currentSkill) || (shared && !listed)) {
         return true;
       }
       try {
@@ -103,13 +98,9 @@ export function hasToolProfileOrDeliveryDrift(
         ) {
           continue;
         }
-        // Equivalent generated copies are actionable: migration can safely
-        // remove the redundant legacy file even when version, line endings,
-        // or supported invocation syntax changed. Materially divergent copies
-        // stay in place without forcing an update on every run.
-        if (
-          isLegacyCodexSkillEquivalentToCurrent(view.read(legacySkill), view.read(currentSkill))
-        ) {
+        // 現行内容と一致するコピー、または旧公開版の未編集出力は安全に削除できる。
+        // 編集済みは保持し、実行のたびに更新対象として扱わない。
+        if (isRedundantLegacyCopy(view.read(legacySkill), view.read(currentSkill), true)) {
           return true;
         }
       } catch {
@@ -118,59 +109,47 @@ export function hasToolProfileOrDeliveryDrift(
     }
   }
 
-  if (shouldGenerateSkills) {
-    for (const workflow of knownDesiredWorkflows) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
-      if (!view.exists(skillFile)) {
-        return true;
-      }
-    }
+  if (shared) {
+    // 共有コピーは全設定済みツールに共通なので、
+    // ここでは一覧への登録と固有スキルフォルダだけを確認する。
+    if (!listed) return true;
+    const linked = new Set<string>(
+      knownDesiredWorkflows.map((workflow) => WORKFLOW_TO_SKILL_DIR[workflow])
+    );
+    if (ownSkillFolderNeedsWork(projectPath, tool, linked, view)) return true;
+  }
 
-    // Deselecting workflows in a profile should trigger sync.
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredWorkflowSet.has(workflow)) continue;
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      const skillDir = path.join(skillsDir, dirName);
-      if (view.exists(skillDir)) {
-        return true;
-      }
-    }
-  } else if (shouldRemoveSkillsForTool(toolId, delivery) && !hasGlobalSkillTarget(tool)) {
-    for (const workflow of ALL_WORKFLOWS) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      const skillDir = path.join(skillsDir, dirName);
-      if (view.exists(skillDir)) {
-        return true;
-      }
+  // 共有フォルダで保持した独自スキルはインストール・削除しない。
+  const kept = shared ? readKeptSharedSkills(projectPath, view) : new Set<string>();
+  for (const workflow of knownDesiredWorkflows) {
+    const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+    // 保持したスキルを利用者が削除すると、OpenSpec が自身のスキルを再導入する。
+    const keptSpot = path.join(skillsDir, dirName);
+    if (kept.has(dirName) && (view.exists(keptSpot) || view.linkTarget?.(keptSpot) !== undefined)) continue;
+    // MiniMax の固有フォルダのリンクは、リンク切れでも利用者のものとして扱う。
+    if (!shared && view.linkTarget?.(keptSpot) !== undefined) continue;
+    const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
+    if (!view.exists(skillFile)) {
+      return true;
     }
   }
 
-  if (shouldGenerateCommands && adapter) {
-    for (const workflow of knownDesiredWorkflows) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (!view.exists(fullPath)) {
-        return true;
-      }
-    }
+  // プロファイルで選択を解除したワークフローがあれば同期する。
+  for (const workflow of ALL_WORKFLOWS) {
+    if (desiredWorkflowSet.has(workflow)) continue;
+    const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+    const skillDir = path.join(skillsDir, dirName);
+    if (!view.exists(path.join(skillDir, 'SKILL.md')) || kept.has(dirName)) continue;
+    // MiniMax の固有フォルダでは、OpenSpec 自身の SKILL.md だけを削除する。
+    if (!shared && classifyOwnSkill(skillDir, toolId, dirName, view) !== 'ours') continue;
+    return true;
+  }
 
-    // Deselecting workflows in a profile should trigger sync.
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredWorkflowSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (view.exists(fullPath)) {
-        return true;
-      }
-    }
-  } else if (shouldReconcileCommandFilesForTool(toolId, delivery) && adapter) {
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (view.exists(fullPath)) {
-        return true;
-      }
+  if (shouldReconcileCommandFilesForTool(toolId) && adapter) {
+    // 生成出力だけを同期の必要な差分とする。編集済み・旧版・読めない項目は
+    // 意図的に保持するため、それらを数えて毎回同期しないようにする。
+    if (classifyCommandFiles(projectPath, toolId, knownDesiredWorkflows, view).generated.length > 0) {
+      return true;
     }
   }
 
@@ -195,37 +174,25 @@ export function getToolsNeedingProfileSync(
   );
 }
 
-function getInstalledWorkflowsForTool(
-  projectPath: string,
-  toolId: string,
-  options: { includeSkills: boolean; includeCommands: boolean }
-): WorkflowId[] {
+function getInstalledWorkflowsForTool(projectPath: string, toolId: string): WorkflowId[] {
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool || !toolSupportsSkills(tool)) return [];
 
   const installed = new Set<WorkflowId>();
   const skillsDir = resolveToolSkillsDir(projectPath, tool);
+  // 利用者のものとして保持したスキルは同期しない。
+  const shared = usesSharedSkills(tool);
+  const kept = shared ? readKeptSharedSkills(projectPath) : new Set<string>();
 
-  if (options.includeSkills) {
-    for (const workflow of ALL_WORKFLOWS) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
-      if (fs.existsSync(skillFile)) {
-        installed.add(workflow);
-      }
+  for (const workflow of ALL_WORKFLOWS) {
+    const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+    if (kept.has(dirName)) continue;
+    const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
+    if (!shared && fs.existsSync(skillFile) && classifyOwnSkill(path.dirname(skillFile), toolId, dirName, DISK_VIEW) !== 'ours') {
+      continue;
     }
-  }
-
-  if (options.includeCommands) {
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (adapter) {
-      for (const workflow of ALL_WORKFLOWS) {
-        const cmdPath = adapter.getFilePath(workflow);
-        const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-        if (fs.existsSync(fullPath)) {
-          installed.add(workflow);
-        }
-      }
+    if (fs.existsSync(skillFile)) {
+      installed.add(workflow);
     }
   }
 
@@ -248,9 +215,7 @@ export function hasProjectConfigDrift(
   const desiredSet = new Set(toKnownWorkflows(desiredWorkflows));
 
   for (const toolId of configuredTools) {
-    const includeSkills = shouldGenerateSkillsForTool(toolId, delivery);
-    const includeCommands = shouldGenerateCommandsForTool(toolId, delivery);
-    const installed = getInstalledWorkflowsForTool(projectPath, toolId, { includeSkills, includeCommands });
+    const installed = getInstalledWorkflowsForTool(projectPath, toolId);
     if (installed.some((workflow) => !desiredSet.has(workflow))) {
       return true;
     }

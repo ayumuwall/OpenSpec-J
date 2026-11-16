@@ -1,3 +1,5 @@
+import { promises as fs } from 'fs';
+import path from 'path';
 import { ensureCliBuilt, terminateActiveCliChildren } from './test/helpers/run-cli.js';
 
 // Silence noisy CLI deprecation warnings during test runs.
@@ -10,4 +12,8 @@ export async function setup() {
 
 export async function teardown() {
   terminateActiveCliChildren();
+  const testHome = process.env.OPENSPEC_TEST_HOME;
+  if (testHome && path.basename(testHome).startsWith('openspec-test-home-')) {
+    await fs.rm(testHome, { recursive: true, force: true });
+  }
 }

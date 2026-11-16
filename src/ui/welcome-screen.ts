@@ -25,16 +25,15 @@ function getWelcomeText(workflows: readonly string[]): string[] {
   const quickStart: string[] = [];
 
   if (onboardingCommands.length > 0) {
-    const commandWidth = Math.max(...onboardingCommands.map((c) => c.command.length));
     quickStart.push(chalk.white('セットアップ後のクイックスタート:'));
-    for (const { command, description } of onboardingCommands) {
-      quickStart.push(`  ${chalk.yellow(command.padEnd(commandWidth + 1))} ${chalk.dim(description)}`);
+    // 60桁のアニメーション幅に収めるため、長いスキル名の下に説明を置く。
+    for (const { skill, description } of onboardingCommands) {
+      quickStart.push(`  ${chalk.yellow(skill)}`);
+      quickStart.push(`    ${chalk.dim(description)}`);
     }
-    // These are the canonical names. How each tool spells them differs
-    // (/opsx-propose, @opsx-propose, $openspec-propose ...) and cannot be known
-    // until tools are picked, one prompt later — so flag it rather than let the
-    // canonical form read as the literal thing to type. "Getting started"
-    // prints the real spelling once the selection is known.
+    // ここではスキル名を示す。/openspec-propose や $openspec-propose など、
+    // 呼び出し方は次のツール選択まで分からないため、表記が異なる旨を添える。
+    // 選択後の「はじめに」で実際の入力方法を案内する。
     quickStart.push(chalk.dim('  （表記はツールによって異なります）'));
     quickStart.push('');
   }
@@ -44,8 +43,8 @@ function getWelcomeText(workflows: readonly string[]): string[] {
     chalk.dim('軽量な仕様駆動フレームワーク'),
     '',
     chalk.white('このセットアップで次を構成します:'),
+    // 2.0 はスキルのみ。ツールごとの呼び出し方は「はじめに」で案内する。
     chalk.dim('  • AI ツール向けの Agent Skills'),
-    chalk.dim('  • 対応している場合はワークフローコマンド'),
     '',
     ...quickStart,
     chalk.cyan('Enterでツールを選択...'),

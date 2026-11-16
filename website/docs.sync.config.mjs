@@ -34,6 +34,7 @@ export const sections = [
       { source: 'start/installation.md', slug: 'installation' },
       { source: 'start/setup.md', slug: 'setup' },
       { source: 'start/quickstart.md', slug: 'quickstart' },
+      { source: 'help/upgrade-to-2.md', slug: 'upgrade-to-2' },
     ],
   },
   // ガイドは執筆完了まで公開しない。公開時はフォルダ構造を維持したまま項目を

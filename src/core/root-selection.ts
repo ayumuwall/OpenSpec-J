@@ -34,6 +34,8 @@ import {
   validateStoreId,
 } from './store/foundation.js';
 import { getStoreRootForBackend } from './store/registry.js';
+import { gitOriginUrl, repoNameFromGitUrl } from './store/git.js';
+import { toKebabCase, isKebabId } from './id.js';
 import { inspectOpenSpecRoot } from './openspec-root.js';
 import { findRepoPlanningRootSync, type PlanningHome } from './planning-home.js';
 import { classifyOpenSpecDir, storePointerProblem } from './project-config.js';
@@ -389,6 +391,34 @@ async function resolveDefaultStoreRoot(
   }
 }
 
+/**
+ * origin の名前と一致する登録済みストアを候補として返す（#2076）。なければ null。
+ * ルート未検出のエラーで案内するだけで、自動選択はしない。
+ * company-a/api と company-b/api はどちらも api に一致するため、
+ * 末尾の名前だけでは書き込み先を変更する根拠にならない。
+ */
+async function suggestStoreFromGitRemote(
+  startPath: string,
+  registeredIds: string[]
+): Promise<string | null> {
+  // git -C はディレクトリを必要とするため、ファイルの指定も canonicalDirectory で解決する。
+  const url = await gitOriginUrl(canonicalDirectory(startPath));
+  if (!url) return null;
+
+  const repoName = repoNameFromGitUrl(url);
+  if (!repoName) return null;
+
+  const candidateId = toKebabCase(repoName);
+  if (!candidateId || !isKebabId(candidateId)) return null;
+
+  return registeredIds.includes(candidateId) ? candidateId : null;
+}
+
+/**
+ * コマンドのルートを、--store、最寄りの openspec/、グローバルの defaultStore の
+ * 優先順で解決する。次に登録済みストアの候補（あれば origin 名と一致するもの）を
+ * 案内するか、暗黙のルートを使う。
+ */
 export async function resolveOpenSpecRoot(
   options: ResolveOpenSpecRootOptions = {}
 ): Promise<ResolvedOpenSpecRoot> {
@@ -434,6 +464,18 @@ export async function resolveOpenSpecRoot(
     : [];
 
   if (registeredIds.length > 0) {
+    // この失敗経路でだけ Git を呼び、origin 名に一致するストアを選択せず候補として案内する。
+    const suggested = await suggestStoreFromGitRemote(startPath, registeredIds);
+    if (suggested) {
+      throw new RootSelectionError(
+        `現在のディレクトリまたは親ディレクトリに OpenSpec ルートが見つかりません。origin の名前が登録済みストア "${suggested}" と一致します。使用するには --store ${suggested} を指定するか、openspec/config.yaml に "store: ${suggested}" を追加して、この場所の全コマンドで使用してください。`,
+        'no_root_with_registered_stores',
+        {
+          target: 'openspec.root',
+          fix: `--store ${suggested} を指定するか、openspec/config.yaml に "store: ${suggested}" を追加してください。`,
+        }
+      );
+    }
     throw new RootSelectionError(
       `現在のディレクトリまたは親ディレクトリに OpenSpec ルートが見つかりません。登録済みストア: ${registeredIds.join(', ')}。使用するには --store <id> を指定するか、openspec init でローカルルートを作成してください。`,
       'no_root_with_registered_stores',

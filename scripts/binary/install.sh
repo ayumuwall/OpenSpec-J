@@ -46,7 +46,7 @@ main() {
   case "$(uname -s)" in
     Linux) os=linux ;;
     Darwin) os=darwin ;;
-    *) fail "未対応の OS です: $(uname -s)。Windows はリリースページから openspec-windows-x64.exe をダウンロードしてください。" ;;
+    *) fail "未対応の OS です: $(uname -s)。Windows は install.ps1 を使用してください。" ;;
   esac
   case "$(uname -m)" in
     x86_64 | amd64) arch=x64 ;;
@@ -108,7 +108,7 @@ main() {
     fi
   }
 
-  npm_hint="または npm で導入してください（Node.js 20.19 以降）: npm install -g @ayumuwall/openspec"
+  npm_hint="または npm で導入してください（Node.js 22.12 以降）: npm install -g @ayumuwall/openspec"
   if [ -n "${OPENSPEC_DOWNLOAD_URL:-}" ]; then
     base=${OPENSPEC_DOWNLOAD_URL%/}
   elif [ "$version" != latest ]; then
@@ -138,21 +138,33 @@ main() {
     base="$releases/download/$version"
   fi
 
-  echo "$asset ($version) をダウンロード中..."
-  download "$base/$asset" "$tmp/$asset" || fail "$base/$asset をダウンロードできませんでした。$npm_hint"
   if [ ! -s "$tmp/SHA256SUMS" ]; then
     download "$base/SHA256SUMS" "$tmp/SHA256SUMS" || fail "$base/SHA256SUMS をダウンロードできませんでした。$npm_hint"
   fi
 
-  expected=$(awk -v f="$asset" '$2 == f { print $1 }' "$tmp/SHA256SUMS")
-  [ -n "$expected" ] || fail "$asset が SHA256SUMS にありません"
-  if command -v sha256sum >/dev/null 2>&1; then
-    actual=$(sha256sum "$tmp/$asset" | awk '{ print $1 }')
-  else
-    actual=$(shasum -a 256 "$tmp/$asset" | awk '{ print $1 }')
+  # 現行版は .tar.gz、v1.15.0 以前はバイナリーを直接配布する。
+  file="$asset.tar.gz"
+  expected=$(awk -v f="$file" '$2 == f { print $1 }' "$tmp/SHA256SUMS")
+  if [ -z "$expected" ]; then
+    file=$asset
+    expected=$(awk -v f="$file" '$2 == f { print $1 }' "$tmp/SHA256SUMS")
   fi
-  [ "$actual" = "$expected" ] || fail "$asset のチェックサムが一致しないため、インストールを中止します"
+  [ -n "$expected" ] || fail "$asset が SHA256SUMS にありません"
 
+  echo "$file ($version) をダウンロード中..."
+  download "$base/$file" "$tmp/$file" || fail "$base/$file をダウンロードできませんでした。$npm_hint"
+  if command -v sha256sum >/dev/null 2>&1; then
+    actual=$(sha256sum "$tmp/$file" | awk '{ print $1 }')
+  else
+    actual=$(shasum -a 256 "$tmp/$file" | awk '{ print $1 }')
+  fi
+  [ "$actual" = "$expected" ] || fail "$file のチェックサムが一致しないため、インストールを中止します"
+
+  if [ "$file" != "$asset" ]; then
+    mkdir "$tmp/unpacked"
+    tar -xzf "$tmp/$file" -C "$tmp/unpacked" openspec || fail "$file を展開できませんでした"
+    mv "$tmp/unpacked/openspec" "$tmp/$asset"
+  fi
   chmod 755 "$tmp/$asset"
   if ! installed=$("$tmp/$asset" --version); then
     case "$asset" in

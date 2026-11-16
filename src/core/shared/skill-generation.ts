@@ -80,7 +80,61 @@ export interface CommandTemplateEntry {
  * @param workflowFilter - 指定した場合、workflowId がこの配列に含まれるテンプレートのみ返す
  */
 export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemplateEntry[] {
-  const all: SkillTemplateEntry[] = [
+  const all = allSkillTemplates();
+  const installed = resolveInstalledWorkflows(workflowFilter);
+  const selected = workflowFilter ? all.filter(entry => installed.has(entry.workflowId)) : all;
+
+  return selected.map(entry => ({
+    ...entry,
+    template: {
+      ...entry.template,
+      instructions: resolveOptionalWorkflows(entry.template.instructions, installed),
+    },
+  }));
+}
+
+/**
+ * 他に導入されたワークフローの組み合わせによらず、現行版が生成し得るスキル本文。
+ * 本文は条件分岐で参照するワークフローだけに依存するため、
+ * 参照するワークフローが k 個なら 2^k 通りを生成する。
+ */
+export function everySkillRendering(
+  dirName: string,
+  generatedByVersion: string,
+  transformInstructions?: (instructions: string) => string
+): string[] {
+  // 副作用がなくツール・スキルごとに繰り返し呼ばれるため、
+  // 変換関数・バージョン・スキルごとにキャッシュする。
+  const byTransformer = renderingCache.get(transformInstructions ?? NO_TRANSFORM) ?? new Map<string, string[]>();
+  renderingCache.set(transformInstructions ?? NO_TRANSFORM, byTransformer);
+  const key = `${generatedByVersion}\0${dirName}`;
+  const cached = byTransformer.get(key);
+  if (cached) return cached;
+  const entry = allSkillTemplates().find((candidate) => candidate.dirName === dirName);
+  if (!entry) return [];
+  const named = [
+    ...new Set([...entry.template.instructions.matchAll(/\[\[opsx:if-workflow ([a-z-]+)\]\]/g)].map((match) => match[1])),
+  ];
+  const texts: string[] = [];
+  for (let mask = 0; mask < 2 ** named.length; mask += 1) {
+    const installed = new Set(named.filter((_, index) => mask & (2 ** index)));
+    texts.push(
+      generateSkillContent(
+        { ...entry.template, instructions: resolveOptionalWorkflows(entry.template.instructions, installed) },
+        generatedByVersion,
+        transformInstructions
+      )
+    );
+  }
+  byTransformer.set(key, texts);
+  return texts;
+}
+
+const NO_TRANSFORM = (text: string) => text;
+const renderingCache = new WeakMap<(text: string) => string, Map<string, string[]>>();
+
+function allSkillTemplates(): SkillTemplateEntry[] {
+  return [
     { template: getExploreSkillTemplate(), dirName: 'openspec-explore', workflowId: 'explore' },
     { template: getNewChangeSkillTemplate(), dirName: 'openspec-new-change', workflowId: 'new' },
     { template: getContinueChangeSkillTemplate(), dirName: 'openspec-continue-change', workflowId: 'continue' },
@@ -94,17 +148,6 @@ export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemp
     { template: getOnboardSkillTemplate(), dirName: 'openspec-onboard', workflowId: 'onboard' },
     { template: getOpsxProposeSkillTemplate(), dirName: 'openspec-propose', workflowId: 'propose' },
   ];
-
-  const installed = resolveInstalledWorkflows(workflowFilter);
-  const selected = workflowFilter ? all.filter(entry => installed.has(entry.workflowId)) : all;
-
-  return selected.map(entry => ({
-    ...entry,
-    template: {
-      ...entry.template,
-      instructions: resolveOptionalWorkflows(entry.template.instructions, installed),
-    },
-  }));
 }
 
 /**

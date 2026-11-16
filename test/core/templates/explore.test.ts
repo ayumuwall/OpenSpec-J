@@ -452,7 +452,7 @@ describe('explore templates', () => {
       );
       expect(transition, label).toContain('ユーザーが求めたアーティファクトを記録します');
       expect(transition, label).toContain(
-        '別のワークフローコマンドを実行するようユーザーへ求めず'
+        '別のワークフローを実行するようユーザーへ求めず'
       );
       expect(transition, label).toContain(
         '求められたアーティファクトを依存順に処理します'
@@ -638,7 +638,7 @@ describe('explore handoff to the propose workflow (#869)', () => {
   it('names the propose workflow where discovery ends', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain(
-        '**提案へ移る**：「始めますか？ `/opsx:propose` を実行すると、これを変更にまとめられます。」'
+        '**提案へ移る**：「始めますか？ `/opsx:propose` スキルを使うと、これを変更にまとめられます。」'
       );
       expect(body, label).not.toContain('I can create a change proposal');
     }

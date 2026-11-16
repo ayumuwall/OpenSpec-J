@@ -2,6 +2,81 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 2.0.0
+
+- **[OpenSpec-J]** OpenSpec v2.0.0 を取り込み、スキルへの一本化、共有フォルダへの移行、Node.js 22.12.0 以降への対応に関するドキュメント・CLI・生成テンプレートを日本語化
+- **[OpenSpec-J]** 公開済み日本語版20リリースの生成内容を識別できるようにし、未編集ファイルの整理と編集済みファイルの保持を本家と同じ判定で実施
+- **[OpenSpec-J]** 日本語版 v1.15.0 からの移行テストを追加し、日本語出力の期待値と生成テンプレートの比較用ハッシュを更新
+- **[OpenSpec-J]** 翻訳棚卸し: GitHub Copilot 未選択時にクラウド設定フラグを無視する案内を日本語化
+
+### メジャー変更
+
+- [#2223](https://github.com/Fission-AI/OpenSpec/pull/2223) [`d97d7e2`](https://github.com/Fission-AI/OpenSpec/commit/d97d7e2dfdf5919b0017da220158ede1be464660) [@clay-good](https://github.com/clay-good) に感謝します！ - OpenSpec 2.0 は、共有フォルダ1か所にスキルだけをインストールします。各プロジェクトで `openspec update` を実行して移行してください。編集した旧コマンドファイルや旧スキルのコピーは保持されます。`.agents/skills/` に OpenSpec がインストールしたスキル内の編集は、1.x と同様に上書きされるため、先に保存してください。[2.0 へのアップグレード](https://openspec.dev/docs/upgrade-to-2)を参照してください。
+
+  - **スキルに一本化。** `/opsx:*` コマンドファイルは生成しなくなりました。各コマンドと同じ指示を持つスキルを利用できます。たとえば `/opsx:propose` は `openspec-propose` に置き換わり、`/openspec-propose`（Codex では `$openspec-propose`）で呼び出します。`openspec update` は旧版が生成したコマンドファイルを削除し、編集済みのものは保持して一覧に表示します。
+  - **共有コピーを1つに統一。** ツールごとに複製せず、`.agents/skills/` にスキルを一度だけ書き込みます。Claude Code、Continue、ForgeCode、Kiro、CodeBuddy、EasyCode、iFlow、CodeArts、Lingma、GigaCode、Veai、Rovo Dev、Code Studio、Hermes Agent の各 `skills/` フォルダにはリンクを作成します（リンクを作れない場合は通常のコピー）。MiniMax Code は例外で、`~/.minimax/skills/` に配置します。旧ツール別コピーは削除し、編集済みのものは保持して報告します。
+  - **`delivery` の廃止。** 古い設定やスクリプトとの互換性のため引き続き受け付けますが、動作には影響しません。
+  - **Amazon Q Developer の対応終了。** スキルを読み込めないため対応を終了しました。`openspec update` は `.amazonq/` 内の OpenSpec が生成したファイルを削除します（編集済みのものは保持）。`--tools amazon-q` は Kiro を案内します。
+  - **Windows。** コミット済みのリンクをチェックアウトするには、`git config --global core.symlinks true` を実行するか、`git clone -c core.symlinks=true <url>` でクローンし、リンクを作成できるよう開発者モードを有効にしてください。設定しない場合、リンクは小さなテキストファイルとしてチェックアウトされ、`openspec update` がスキルの通常のコピーに置き換えます。
+
+### パッチ変更
+
+- [#2229](https://github.com/Fission-AI/OpenSpec/pull/2229) [`5cd4f7f`](https://github.com/Fission-AI/OpenSpec/commit/5cd4f7f27050a9cf2ad0edeab87cc250caaa1852) [@clay-good](https://github.com/clay-good) に感謝します！ - Windows の cmd.exe から `openspec completion install` を実行しても、PowerShell のプロファイルを変更しなくなりました。cmd.exe と PowerShell を区別し、cmd.exe が非対応であることを案内します。cmd.exe では補完設定のヒントも表示しません。
+
+- [#2228](https://github.com/Fission-AI/OpenSpec/pull/2228) [`a959be7`](https://github.com/Fission-AI/OpenSpec/commit/a959be77cf045ea3156dc5089c9e2f1d6ce9ce70) [@clay-good](https://github.com/clay-good) に感謝します！ - `tasks.md` で複数行に折り返したタスクを、1つのタスクとして読み取るようにしました。`openspec instructions apply` は最初の改行で切り捨てず、末尾の `\` で継続した行も含めて全文を返します。
+
+## 1.17.0
+
+### マイナー変更
+
+- [#2213](https://github.com/Fission-AI/OpenSpec/pull/2213) [`9ca6b77`](https://github.com/Fission-AI/OpenSpec/commit/9ca6b77cd250dcf0e0a5038d3e4b99244ef18053) [@clay-good](https://github.com/clay-good) に感謝します！ - コマンドファイルは非推奨となり、OpenSpec 2.0 で廃止されます。スキルは引き続き同じ処理を行います。`openspec update` にこの案内と、先に移行するためのコマンド `openspec config set delivery skills && openspec update` を表示します。詳細は [#2022](https://github.com/Fission-AI/OpenSpec/issues/2022) を参照してください。
+
+### パッチ変更
+
+- [#2213](https://github.com/Fission-AI/OpenSpec/pull/2213) [`9ca6b77`](https://github.com/Fission-AI/OpenSpec/commit/9ca6b77cd250dcf0e0a5038d3e4b99244ef18053) [@clay-good](https://github.com/clay-good) に感謝します！ - スキルのみの構成へ切り替えた場合（`openspec config set delivery skills`）も、編集済みのコマンドファイルを削除しなくなりました。OpenSpec が生成した未編集のファイルだけを削除し、編集済みファイルは保持して一覧に表示します。
+
+- [#2213](https://github.com/Fission-AI/OpenSpec/pull/2213) [`9ca6b77`](https://github.com/Fission-AI/OpenSpec/commit/9ca6b77cd250dcf0e0a5038d3e4b99244ef18053) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec update` を1回実行すれば、0.12 以降のどのリリースのプロジェクトも更新できるようになりました。`--force` なしで未編集の旧 OpenSpec ファイルを削除し、編集済みファイルは保持します。リンクされたフォルダを経由する場合も、プロジェクト外のファイルには触れません。
+
+## 1.16.1
+
+### パッチ変更
+
+- [#2205](https://github.com/Fission-AI/OpenSpec/pull/2205) [`c887ab0`](https://github.com/Fission-AI/OpenSpec/commit/c887ab073e0fd27dbce28e51aff078efe238e457) [@clay-good](https://github.com/clay-good) に感謝します！ - `validate`、`show`、`list`、`view`、`archive` が、CommonMark 形式の末尾の `#` を持つ節見出し（`## Purpose ##`、`## Why ##`、`## What Changes ##`、`## Requirements ##`、`## ADDED Requirements ##`）を、末尾の `#` がない見出しと同じように読み取るようになりました。
+
+- [#2206](https://github.com/Fission-AI/OpenSpec/pull/2206) [`a1ae536`](https://github.com/Fission-AI/OpenSpec/commit/a1ae53669d25e7ffc6946f623f18abb7fecd3bce) [@clay-good](https://github.com/clay-good) に感謝します！ - 単体実行版の `openspec version --check` は、GitHub にファイルが添付されたリリースだけを案内するようになりました。npm で公開されていてもインストーラーがまだ取得できない版は案内せず、`openspec install` が導入する版と揃えます。
+
+- [#2207](https://github.com/Fission-AI/OpenSpec/pull/2207) [`83053dd`](https://github.com/Fission-AI/OpenSpec/commit/83053dd821f03fbc63374d793aa5dfa185ac5600) [@clay-good](https://github.com/clay-good) に感謝します！ - 仕様差分で `## DEPRECATED Requirements` などの未対応の `## ... Requirements` セクションに要件がある場合、`validate` が失敗し、`archive` も処理を拒否するようになりました。警告だけで検証を通過し、その要件が黙って失われることを防ぎます。
+
+- [#2204](https://github.com/Fission-AI/OpenSpec/pull/2204) [`ef170fa`](https://github.com/Fission-AI/OpenSpec/commit/ef170faa2912fc642d59b9e82e7932d4aa9e71c3) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec version --check` は、テレメトリが無効な場合や CI でも新版を確認するようになりました。確認を省略するのは `OPENSPEC_NO_UPDATE_CHECK` を指定した場合だけです。`openspec update` のバックグラウンド確認は、引き続きテレメトリの無効化と CI の設定に従います。
+
+## 1.16.0
+
+### マイナー変更
+
+- [#2159](https://github.com/Fission-AI/OpenSpec/pull/2159) [`33c6f93`](https://github.com/Fission-AI/OpenSpec/commit/33c6f93e3deeb6f26f0526f0f8577e30241db40f) [@clay-good](https://github.com/clay-good) に感謝します！ - **破壊的変更:** npm パッケージの要件を Node.js 22.12.0 以降へ引き上げました。Node 20 は2026年4月30日にサポートが終了しました。影響するのは Node 20 での npm インストールだけです。v1.15.0 から既定の導入方法となった単体実行版は Node.js を使わず、CLI のその他の動作も変わりません。Node.js を更新できない場合は、本家の単体実行版（`curl -fsSL https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh | sh`、Windows は `irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex`）を利用できます。本家 Homebrew 版（`brew install openspec`）は引き続き Node.js を使いますが、依存関係として現行版の Node.js を導入・管理します。
+
+- [#2079](https://github.com/Fission-AI/OpenSpec/pull/2079) [`dc37609`](https://github.com/Fission-AI/OpenSpec/commit/dc37609827c8c3aba49e49347745f47aaa65cb1b) [@artemasmith](https://github.com/artemasmith) に感謝します！ - `openspec validate` が、仕様差分と本仕様の `Scenario:` に WHEN/GIVEN または THEN のステップがない場合に警告するようになりました。通常の `validate` と `archive` の動作は変わりませんが、`--strict` では失敗します。
+
+- [#2077](https://github.com/Fission-AI/OpenSpec/pull/2077) [`18a75a5`](https://github.com/Fission-AI/OpenSpec/commit/18a75a5d17c0711586dee1af171033dd632a4f78) [@micromagicman](https://github.com/micromagicman) に感謝します！ - ### 機能追加
+
+  - コマンドが OpenSpec ルートを見つけられず、登録済みストアがある場合、`origin` リモートのリポジトリ名と ID が一致するストアをエラーで案内するようになりました。選択に使う `--store` フラグと `store:` 行も示します。組織が異なると同名のリポジトリがあり得るため、名前だけでストアを自動選択することはありません。
+
+### パッチ変更
+
+- [#2131](https://github.com/Fission-AI/OpenSpec/pull/2131) [`a6cd3bc`](https://github.com/Fission-AI/OpenSpec/commit/a6cd3bc926c6151b89d3e0fbdf3676f8fc416ecb) [@kevin9327](https://github.com/kevin9327) に感謝します！ - 行頭のバッククォート3つを使ったインラインコード（```` ```npm test``` ````）を、コードフェンスの開始として扱わなくなりました。この誤判定で、それ以降の要件がすべて読み取られなくなる問題を修正しました。
+
+- [#2160](https://github.com/Fission-AI/OpenSpec/pull/2160) [`d68fc51`](https://github.com/Fission-AI/OpenSpec/commit/d68fc51262a95957e4280756b10c61843ecb900b) [@clay-good](https://github.com/clay-good) に感謝します！ - 本家版を openspec.dev から導入できるようになりました。`curl -fsSL https://openspec.dev/cli/install.sh | sh`（Windows は `irm https://openspec.dev/cli/install.ps1 | iex`）を使います。リリースファイルは `.tar.gz` アーカイブ（Windows は `.zip`）へ変更しました。
+
+- [#2133](https://github.com/Fission-AI/OpenSpec/pull/2133) [`cb1adee`](https://github.com/Fission-AI/OpenSpec/commit/cb1adee51a472f872999afdafb68e0cc348b7935) [@kevin9327](https://github.com/kevin9327) に感謝します！ - `validate` が、空白のない `###Requirement:` 形式の本仕様要件についても、重複や配置の誤りを報告するようになりました。`archive` の読み取り方と揃えています。
+
+- [#2127](https://github.com/Fission-AI/OpenSpec/pull/2127) [`ae7ad75`](https://github.com/Fission-AI/OpenSpec/commit/ae7ad75025b5b84f605e9616692ec97f9fb09f28) [@clay-good](https://github.com/clay-good) に感謝します！ - ### 不具合修正
+
+  - `openspec/config.yaml` を読み取れない場合や YAML が不正な場合、`openspec validate` は終了コード1を返すようになりました。設定内のルールをすべて無視したまま成功することを防ぎます。ほかのコマンドは引き続き警告を表示して処理を続けます。
+
+- [#2172](https://github.com/Fission-AI/OpenSpec/pull/2172) [`05cc75f`](https://github.com/Fission-AI/OpenSpec/commit/05cc75f265d9233814f83364e390e54d5c2c8a3d) [@clay-good](https://github.com/clay-good) に感謝します！ - ### 不具合修正
+
+  - `ZDOTDIR` が絶対パスの場合、`openspec completion install zsh` は zsh が実際に読み込む `$ZDOTDIR/.zshrc` へ設定を書き込むようになりました。相対パスや `~` で始まる `ZDOTDIR` は無視します。従来は zsh が読まない `~/.zshrc` を作成するため、Home Manager の `xdg.enable` など XDG 形式の構成では補完が動作しませんでした。`completion uninstall zsh` も同じファイルを処理し、旧版が `~/.zshrc` に残したブロックも削除します。該当する場合は `openspec completion install zsh` を再実行してください。補完スクリプトが最新でも、正しいファイルへ設定ブロックを追加します。
+
 ## 1.15.0
 
 - **[OpenSpec-J]** OpenSpec v1.15.0 までの変更を取り込み、CLI、更新計画、仕様差分の警告、ワークフロー、ドキュメントの追加・変更文言を日本語化

@@ -11,9 +11,9 @@ OpenSpec には、Git、CI、エージェントツールでは別の意味を持
 | **Artifact**        | 変更提案に含まれる計画文書です。`proposal.md`、デルタ仕様、`design.md`、`tasks.md`が該当します。ビルド成果物ではありません。                                                  | [アーティファクト](schemas/spec-driven/index.md#アーティファクト) |
 | **Capability**      | システムの振る舞いを分けた 1 つの領域です。各 capability には`openspec/specs/<capability>/spec.md`に仕様が 1 つあります。                                                     | [機能](schemas/spec-driven/index.md#proposalmd) |
 | **Change proposal** | 1 つの作業単位です。`openspec/changes/<name>/`配下のフォルダに計画アーティファクトを置きます。多くの場合は「change」と略します。Git コミットではありません。                  | [提案する](../start/quickstart.md#ステップ-2propose) |
-| **Command**         | ワークフローを起動する入力項目です。表記はツールによって異なります（`/opsx:propose`、`/opsx-propose`）。ドキュメントでは代わりにスキル名でワークフローを示します。            | [対応ツール](supported-tools.md)                              |
+| **Command**         | OpenSpec 1.x でワークフローを起動する入力項目です（`/opsx:propose`、`/opsx-propose`）。OpenSpec 2.0 はスキルだけをインストールします。            | [対応ツール](supported-tools.md)                              |
 | **Continue**        | 既存の変更提案で次の計画アーティファクトを作成します。スキル：`openspec-continue-change`。                                                                                    | [スキル](skills.md)                                           |
-| **Delivery**        | ワークフローのインストール方法です。スキル、コマンド、またはその両方を選べます。                                                                                              | [プロジェクトをセットアップする](../start/setup.md)           |
+| **Delivery**        | 1.x でワークフローをスキル、コマンド、その両方のどれでインストールするかを選ぶ設定です。2.0 で廃止されました。                                                                                              | [2.0 へのアップグレード](../help/upgrade-to-2.md)           |
 | **Delta spec**      | 変更提案内で、変わる内容だけを`ADDED`、`MODIFIED`、`REMOVED`、`RENAMED`見出しの下に記載する仕様です。                                                                         | [デルタ仕様](schemas/spec-driven/index.md#delta-specs-specmd) |
 | **Explore**         | 提案前にエージェントとアイデアを検討します。コードは書きません。スキル：`openspec-explore`。                                                                                  | [アイデアを探索する](skills.md#openspec-explore) |
 | **Fast-forward**    | すべての計画アーティファクトを 1 回で作成し、実装可能な変更提案にします。スキル：`openspec-ff-change`。Git の fast-forward ではありません。                                   | [スキル](skills.md)                                           |
@@ -21,7 +21,7 @@ OpenSpec には、Git、CI、エージェントツールでは別の意味を持
 | **Loop**            | 変更提案が進むサイクルです。explore、propose、review、apply、archive の順に進みます。                                                                                         | [クイックスタート](../start/quickstart.md)                    |
 | **Main specs**      | `openspec/specs/`ツリーです。現在合意されているシステムの振る舞いを表します。archive するとデルタがここへマージされます。まだ仕様がない機能では`ADDED`要件から作成します。                                                     | [アーカイブする](../start/quickstart.md#ステップ-5archive) |
 | **OpenSpec root**   | コマンドが解決して操作する`openspec/`ツリーです。自分のリポジトリまたはストアのツリーを使います。                                                                             | [ストア](../multi-repo/stores.md#where-artifacts-get-created-when-using-stores) |
-| **OPSX**            | 現在の OpenSpec ワークフローシステムと、インストールするコマンド接頭辞（`/opsx:`）です。                                                                                      |  |
+| **OPSX**            | 現在の OpenSpec ワークフローシステムです。1.x のコマンドは `/opsx:` 接頭辞を使っていました。                                                                                      |  |
 | **Profile**         | init がインストールするワークフローを決めます。`core`または`custom`です。                                                                                                     | [プロファイル](../customize/profiles.md)                      |
 | **Propose**         | 変更提案を作成し、すべての計画アーティファクトを 1 手順で生成します。スキル：`openspec-propose`。                                                                             | [クイックスタート](../start/quickstart.md)                    |
 | **Registry**        | `registry.yaml`に保存される、マシン単位の登録済みストア一覧です。パッケージレジストリではありません。                                                                         | [CLI](cli.md#openspec-store)                                 |
@@ -36,5 +36,5 @@ OpenSpec には、Git、CI、エージェントツールでは別の意味を持
 | **Template**        | スキーマが各アーティファクトへ提供する開始時の内容です。                                                                                                                      | [スキーマ](../customize/schemas.md)                           |
 | **Update**          | スキル（`openspec-update-change`）では、変更提案の計画アーティファクトを修正します。CLI コマンド（`openspec update`）では、インストール済みの OpenSpec ファイルを更新します。 | [変更を更新する](skills.md#openspec-update-change)、[CLI](cli.md) |
 | **Verify**          | archive 前に、実装が変更提案のアーティファクトと一致するか確認します。スキル：`openspec-verify-change`。                                                                      | [スキル](skills.md)                                           |
-| **Workflow**        | OpenSpec の名前付き操作です（propose、apply、archive など）。AI ツールへスキルまたはコマンドとしてインストールします。                                                        | [プロジェクトをセットアップする](../start/setup.md)           |
+| **Workflow**        | OpenSpec の名前付き操作です（propose、apply、archive など）。AI ツールへスキルとしてインストールします。                                                        | [プロジェクトをセットアップする](../start/setup.md)           |
 | **Workset**         | 1 つのツールでまとめて開く、個人用かつローカルなフォルダ群です。ストアではなく、何も共有しません。                                                                            | [workset（ベータ）](../multi-repo/worksets.md)                |

@@ -437,6 +437,22 @@ export class FileSystemUtils {
 }
 
 /**
+ * removeMarkerBlock と同じ独立行のマーカー規則で、削除する範囲を
+ * マーカーごと取得する。なければ undefined。削除される内容の確認に使う。
+ */
+export function findMarkerBlock(
+  content: string,
+  startMarker: string,
+  endMarker: string
+): string | undefined {
+  const startIndex = findMarkerIndex(content, startMarker);
+  if (startIndex === -1) return undefined;
+  const endIndex = findMarkerIndex(content, endMarker, startIndex + startMarker.length);
+  if (endIndex === -1) return undefined;
+  return content.slice(startIndex, endIndex + endMarker.length);
+}
+
+/**
  * Removes a marker block from file content.
  * Only removes markers that are on their own lines (ignores inline mentions).
  * Cleans up double blank lines that may result from removal.

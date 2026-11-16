@@ -1532,6 +1532,35 @@ The system SHALL award loyalty points on each completed order.
       expect(updatedContent).toContain('### Requirement: Earn Points');
     });
 
+    it('should carry a closed delta Purpose heading into a new main spec (issue #2145)', async () => {
+      const changeName = 'new-spec-with-closed-purpose';
+      const changeSpecDir = path.join(tempDir, 'openspec', 'changes', changeName, 'specs', 'loyalty');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+
+      const specContent = `## Purpose ##
+
+Tracks loyalty points earned and redeemed across the storefront.
+
+## ADDED Requirements ##
+
+### Requirement: Earn Points
+The system SHALL award loyalty points on each completed order.
+
+#### Scenario: Order completes
+- **WHEN** an order completes
+- **THEN** points are credited to the customer
+`;
+      await fs.writeFile(path.join(changeSpecDir, 'spec.md'), specContent);
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'loyalty', 'spec.md');
+      const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
+      expect(updatedContent).toContain('Tracks loyalty points earned and redeemed across the storefront.');
+      expect(updatedContent).not.toContain('TBD - created by archiving change');
+      expect(updatedContent).toContain('### Requirement: Earn Points');
+    });
+
     it('should keep fenced code inside a real delta Purpose (issue #1413)', async () => {
       const changeName = 'new-spec-with-fenced-purpose';
       const changeSpecDir = path.join(tempDir, 'openspec', 'changes', changeName, 'specs', 'config-format');
@@ -3663,6 +3692,59 @@ The system SHALL do B differently.
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
       expect(archives.some(a => a.includes(changeName))).toBe(false);
+    });
+
+    it('should abort instead of dropping a block when the target spec duplicates a requirement as ###Requirement:', async () => {
+      const changeName = 'unspaced-duplicate-target';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const changeSpecDir = path.join(changeDir, 'specs', 'delta-target');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'delta-target');
+      await fs.mkdir(mainSpecDir, { recursive: true });
+      const malformedMain = `# delta-target Specification
+
+## Purpose
+Delta target purpose.
+
+## Requirements
+
+###Requirement: A
+The system SHALL do A one way.
+
+#### Scenario: A first
+- **WHEN** foo
+- **THEN** bar
+
+### Requirement: A
+The system SHALL do A another way.
+
+#### Scenario: A second
+- **WHEN** baz
+- **THEN** qux
+`;
+      await fs.writeFile(path.join(mainSpecDir, 'spec.md'), malformedMain);
+
+      const deltaContent = `# Delta Target Changes
+
+## MODIFIED Requirements
+
+### Requirement: A
+The system SHALL do A differently.
+
+#### Scenario: A changes
+- **WHEN** foo changes
+- **THEN** bar changes`;
+      await fs.writeFile(path.join(changeSpecDir, 'spec.md'), deltaContent);
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('delta-target: 対象仕様の構造が無効です。修正するまで更新できません:')
+      );
+      expect(console.log).toHaveBeenCalledWith('中止しました。ファイルは変更されませんでした。');
+      const still = await fs.readFile(path.join(mainSpecDir, 'spec.md'), 'utf-8');
+      expect(still).toBe(malformedMain);
     });
 
     it('should require MODIFIED to reference the NEW header when a rename exists (error format)', async () => {

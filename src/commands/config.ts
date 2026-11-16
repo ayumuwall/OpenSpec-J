@@ -147,7 +147,7 @@ function reportEditorFailure(editor: string, outcome: EditorOutcome): void {
   }
 }
 
-type ProfileAction = 'both' | 'delivery' | 'workflows' | 'keep';
+type ProfileAction = 'workflows' | 'keep';
 
 /**
  * A config file that exists but cannot be parsed is still the user's file:
@@ -375,10 +375,9 @@ export function configListCommand(options: { json?: boolean }): void {
 
     // Annotate profile settings
     const profileSource = rawConfig.profile !== undefined ? '(明示指定)' : '(既定値)';
-    const deliverySource = rawConfig.delivery !== undefined ? '(明示指定)' : '(既定値)';
     console.log(`\nプロファイル設定:`);
     console.log(`  profile: ${config.profile} ${profileSource}`);
-    console.log(`  delivery: ${config.delivery} ${deliverySource}`);
+    console.log(`  delivery: ${config.delivery} (2.0 で廃止、無視されます)`);
     if (config.profile === 'core') {
       console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} (core プロファイル由来)`);
     } else if (config.workflows && config.workflows.length > 0) {
@@ -447,7 +446,16 @@ export function configSetCommand(key: string, value: string, options: { string?:
   const displayValue =
     typeof coercedValue === 'string' ? `"${coercedValue}"` : String(coercedValue);
   console.log(`${key} = ${displayValue} を設定しました`);
+  if (key === 'delivery') {
+    // 1.x の案内にある config set delivery skills && openspec update を
+    // 引き続き実行できるよう、設定自体は受け付ける。
+    console.log(DELIVERY_RETIRED_NOTE);
+  }
 }
+
+/** 全ツールがスキルだけを使う現在の delivery の意味。 */
+export const DELIVERY_RETIRED_NOTE =
+  '注: delivery の設定は動作に影響しません。OpenSpec 2.0 はスキルだけをインストールします。';
 
 export function configUnsetCommand(key: string): void {
   if (refuseUnreadableConfig()) {
@@ -587,25 +595,13 @@ export async function configProfileCommand(preset?: string): Promise<void> {
     const currentState = resolveCurrentProfileState(config);
 
     console.log(chalk.bold('\n現在のプロファイル設定'));
-    console.log(`  インストール形式: ${currentState.delivery}`);
     console.log(`  ワークフロー: ${formatWorkflowSummary(currentState.workflows, currentState.profile)}`);
-    console.log(chalk.dim('  インストール形式: スキル（skills）、スラッシュコマンド（commands）、両方（both）'));
     console.log(chalk.dim('  ワークフロー: 利用する操作（propose, explore, apply など）'));
     console.log();
 
     const action = await select<ProfileAction>({
       message: '何を設定しますか？',
       choices: [
-        {
-          value: 'both',
-          name: 'インストール形式とワークフロー',
-          description: 'インストール形式と利用するワークフローをまとめて変更',
-        },
-        {
-          value: 'delivery',
-          name: 'インストール形式のみ',
-          description: 'スキルとスラッシュコマンドのどちらをインストールするか変更',
-        },
         {
           value: 'workflows',
           name: 'ワークフローのみ',
@@ -632,38 +628,7 @@ export async function configProfileCommand(preset?: string): Promise<void> {
     };
     let workflowSelectionChanged = false;
 
-    if (action === 'both' || action === 'delivery') {
-      const deliveryChoices: { value: Delivery; name: string; description: string }[] = [
-        {
-          value: 'both' as Delivery,
-          name: '両方（スキルとスラッシュコマンド）',
-          description: 'ワークフローをスキルとスラッシュコマンドの両方としてインストール',
-        },
-        {
-          value: 'skills' as Delivery,
-          name: 'スキルのみ',
-          description: 'ワークフローをスキルとしてのみインストール',
-        },
-        {
-          value: 'commands' as Delivery,
-          name: 'スラッシュコマンドのみ',
-          description: 'ワークフローをスラッシュコマンドとしてのみインストール',
-        },
-      ];
-      for (const choice of deliveryChoices) {
-        if (choice.value === currentState.delivery) {
-          choice.name += ' [現在]';
-        }
-      }
-
-      nextState.delivery = await select<Delivery>({
-        message: 'ワークフローのインストール形式を選択してください:',
-        choices: deliveryChoices,
-        default: currentState.delivery,
-      });
-    }
-
-    if (action === 'both' || action === 'workflows') {
+    if (action === 'workflows') {
       const formatWorkflowChoice = (workflow: string) => {
         const metadata = WORKFLOW_PROMPT_META[workflow] ?? {
           name: workflow,

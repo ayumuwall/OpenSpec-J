@@ -1,6 +1,5 @@
 import { CommandAdapterRegistry } from './command-generation/index.js';
 import { getInvocationForAdapter, type CommandInvocation } from './command-generation/invocation.js';
-import type { Delivery } from './global-config.js';
 
 export type CommandSurfaceCapability = 'adapter-backed' | 'skills-invocable' | 'none';
 
@@ -26,18 +25,13 @@ export function resolveCommandSurfaceCapability(toolId: string): CommandSurfaceC
   return 'none';
 }
 
-export function shouldGenerateSkillsForTool(toolId: string, delivery: Delivery): boolean {
-  return delivery !== 'commands' || resolveCommandSurfaceCapability(toolId) === 'skills-invocable';
-}
-
-export function shouldRemoveSkillsForTool(toolId: string, delivery: Delivery): boolean {
-  return delivery === 'commands' && resolveCommandSurfaceCapability(toolId) !== 'skills-invocable';
-}
-
-export function shouldGenerateCommandsForTool(toolId: string, delivery: Delivery): boolean {
-  return delivery !== 'skills' && resolveCommandSurfaceCapability(toolId) === 'adapter-backed';
-}
-
-export function shouldReconcileCommandFilesForTool(toolId: string, delivery: Delivery): boolean {
-  return delivery === 'skills' && resolveCommandSurfaceCapability(toolId) === 'adapter-backed';
+/**
+ * 2.0 はスキルだけを導入する。旧設定に残る delivery は読み取るが、
+ * ツールや設定値にかかわらず生成コマンドは廃止する。
+ * 旧生成物の場所を把握して整理するため、コマンドアダプターは残す。
+ * 生成コマンドは削除し、編集済みのものは保持して列挙する
+ * （reconcileCommandFiles を参照）。
+ */
+export function shouldReconcileCommandFilesForTool(toolId: string): boolean {
+  return resolveCommandSurfaceCapability(toolId) === 'adapter-backed';
 }

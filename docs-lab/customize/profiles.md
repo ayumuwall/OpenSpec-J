@@ -1,8 +1,8 @@
 # プロファイル
 
-> インストールするワークフローと、スキル、コマンド、その両方のどの形式でインストールするかを選びます。
+> インストールするワークフローを選びます。
 
-プロファイルは、AI ツール用の OpenSpec ワークフロー（[スキルとコマンド](../start/setup.md#the-workflow-files-skills-and-commands)）のうち、どれをマシン全体へインストールするかを定める設定です。既定のプロファイルは`core`です。ワークフローを追加または除外すると、その選択は`custom`プロファイルとして保存されます。
+プロファイルは、AI ツール用の OpenSpec ワークフロー（[スキル](../start/setup.md#the-workflow-files-skills)）のうち、どれをマシン全体へインストールするかを定める設定です。既定のプロファイルは`core`です。ワークフローを追加または除外すると、その選択は`custom`プロファイルとして保存されます。
 
 ## コアセット
 
@@ -38,37 +38,13 @@
 openspec config profile
 ```
 
-ピッカーでは、設定対象（[配信方式](#delivery-skills-commands-or-both)、ワークフロー、または両方）を選びます。続いて、12 個のワークフローがチェックボックスで表示され、インストール済みのものは選択状態になります。選択がコアの 6 個と完全に一致しなければ`custom`プロファイルとして保存されるため、使わないコアワークフローを外すこともできます。
+ピッカーには12個のワークフローがチェックボックスで表示され、インストール済みのものは選択状態になります。選択がコアの6個と完全に一致しなければ `custom` プロファイルとして保存されるため、使わないコアワークフローを外すこともできます。
 
-<a id="delivery-skills-commands-or-both"></a>
+## 配信方式（2.0 で廃止）
 
-## 配信方式：スキル、コマンド、またはその両方
+OpenSpec 2.0 はスキルだけをインストールするため、`delivery` 設定は動作に影響しません。既存の値は保持されます。`openspec config set delivery <value>` でも引き続き値を保存できますが、効果がない旨を表示します。
 
-配信方式は、ワークフローをスキルのみ、コマンドのみ、その両方のどの形式でインストールするかを選ぶプロファイル設定です。既定値は`both`です。[プロジェクトのセットアップ](../start/setup.md#the-workflow-files-skills-and-commands)では、2 つの形式と両方が存在する理由を説明しています。このフィールドの正確な仕様は[CLI 設定（config.json）](../reference/configuration/config-json.md#delivery)を参照してください。
-
-変更する方法は 2 通りあります。
-
-**対話形式**：`openspec config profile`を実行し、「Delivery のみ」を選択します。次の例ではスキルのみに切り替えます。
-
-```
-現在の profile 設定
-  配信方式: both
-
-? 何を設定しますか？ Delivery のみ
-? Delivery mode（workflows のインストール方法）: Skills のみ
-
-設定変更:
-  delivery: both -> skills
-? このプロジェクトに今すぐ変更を適用しますか？ (Y/n) y
-```
-
-**直接指定**：プロンプトを表示せず、1 つのコマンドで変更します。
-
-```bash
-openspec config set delivery skills   # または: both, commands
-```
-
-配信方式を変えてもプロファイル名は変わりません。`core`と`custom`が表すのはワークフローセットだけなので、`core`へ戻しても配信方式の設定は維持されます。
+1.x では、配信方式でスキル、コマンド、その両方を選択していました。コマンドファイルの扱いは[2.0 へのアップグレード](../help/upgrade-to-2.md)を参照してください。
 
 ## プロファイルの切り替え
 
@@ -78,7 +54,7 @@ openspec config set delivery skills   # または: both, commands
 
    ```bash
    openspec config profile        # 対話形式で実行
-   openspec config profile core   # コアの 6 つにリセット（delivery は保持）
+   openspec config profile core   # コアの 6 つにリセット
    ```
 
 2. 作業している各プロジェクトで更新します。

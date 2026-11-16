@@ -39,7 +39,7 @@ export const GIT_WRITE_EXEC_OPTIONS = {
 function execFileAsync(
   file: string,
   args: string[],
-  options: { cwd?: string } = {}
+  options: { cwd?: string; env?: NodeJS.ProcessEnv } = {}
 ): Promise<{ stdout: string; stderr: string }> {
   return rawExecFileAsync(file, args, { ...GIT_EXEC_OPTIONS, ...options });
 }
@@ -190,9 +190,13 @@ export function isProbeResourceFailure(error: unknown): boolean {
   );
 }
 
-async function gitProbe(storeRoot: string, args: string[]): Promise<string | null> {
+async function gitProbe(
+  storeRoot: string,
+  args: string[],
+  options: { env?: NodeJS.ProcessEnv } = {}
+): Promise<string | null> {
   try {
-    const { stdout } = await execFileAsync('git', ['-C', storeRoot, ...args]);
+    const { stdout } = await execFileAsync('git', ['-C', storeRoot, ...args], options);
     return stdout;
   } catch (error) {
     // "git is absent" and "this is not a repository" are expected answers and
@@ -233,13 +237,71 @@ export async function gitHasRemote(storeRoot: string): Promise<boolean | null> {
 }
 
 /**
- * The configured origin URL, read from local Git config only — never a
- * network touch. Null when there is no repository or no origin.
+ * -C と別のリポジトリを参照させる環境変数。
+ * Git がフックに設定するものがあり、フックからの CLI 実行で継承される。
+ */
+export const GIT_REPO_LOCATION_ENV_VARS = [
+  'GIT_DIR',
+  'GIT_WORK_TREE',
+  'GIT_INDEX_FILE',
+  'GIT_OBJECT_DIRECTORY',
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+  'GIT_COMMON_DIR',
+] as const;
+
+/** {@link GIT_REPO_LOCATION_ENV_VARS} を除いた env のコピー。 */
+export function envWithoutGitRepoLocation(
+  env: NodeJS.ProcessEnv = process.env
+): NodeJS.ProcessEnv {
+  const clean = { ...env };
+  for (const key of GIT_REPO_LOCATION_ENV_VARS) {
+    delete clean[key];
+  }
+  return clean;
+}
+
+/**
+ * ローカルの Git 設定だけから origin URL を読み、ネットワークには接続しない。
+ * リポジトリや origin がなければ null。別リポジトリのフック内から呼ばれても
+ * storeRoot を調べるよう、継承したリポジトリ指定の環境変数を除く。
  */
 export async function gitOriginUrl(storeRoot: string): Promise<string | null> {
-  const stdout = await gitProbe(storeRoot, ['remote', 'get-url', 'origin']);
+  const stdout = await gitProbe(storeRoot, ['remote', 'get-url', 'origin'], {
+    env: envWithoutGitRepoLocation(),
+  });
   const url = stdout?.trim();
   return url ? url : null;
+}
+
+/**
+ * origin URL からホストと .git 接尾辞を除いてリポジトリ名を得る。
+ * 次の3形式に対応する:
+ *
+ * - `git@github.com:user/repo.git`
+ * - `https://github.com/user/repo.git`
+ * - `ssh://git@github.com/user/repo.git`
+ *
+ * パスの最後の部分を返し、名前を解析できなければ null。
+ */
+export function repoNameFromGitUrl(url: string): string | null {
+  const cleaned = url.trim().replace(/\.git\/?$/i, '');
+  let path: string | null = null;
+
+  // URL 形式 scheme://host[/user/repo]。:// が必須なので、
+  // スキームのない scp 形式 git@host:user/repo はこの分岐に入らない。
+  const urlLike = cleaned.match(/^[a-z][a-z0-9+.-]*:\/\/[^/]+(?:\/(.*))?$/i);
+  if (urlLike) {
+    path = urlLike[1] ?? null;
+  } else {
+    // scp 形式: git@host:user/repo
+    const scpLike = cleaned.match(/^(?:[\w.-]+@)?[\w.-]+:(.+)$/);
+    path = scpLike ? scpLike[1] : null;
+  }
+
+  if (!path) return null;
+  const segments = path.split('/').filter(Boolean);
+  const last = segments[segments.length - 1];
+  return last && last !== '.' && last !== '..' ? last : null;
 }
 
 export interface GitTrackingDrift {

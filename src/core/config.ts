@@ -38,8 +38,66 @@ export interface AIToolOption {
   requiresIdeRestart?: boolean; // IDE やエディターのプロセスがスラッシュコマンドを読み込む場合は true。CLI は即座に認識するため再起動案内は不要（#1067 を参照）
 }
 
+/**
+ * プロジェクトスキルは .agents/skills/ に1つだけ置く。ここを読まない、
+ * または読むか未確認のツールには、npx skills と同じく専用 skills/ へリンクする。
+ * 導入して確認済み: claude、continue、forgecode（利用者フォルダのみ）、kiro、
+ * codebuddy、easycode、iflow、codeartsagent。アカウントがなく未確認:
+ * lingma、gigacode、veai、rovodev、codestudio。Hermes は専用・設定済みの場所だけを読む。
+ */
+export const SKILL_LINKED_TOOL_IDS: ReadonlySet<string> = new Set([
+  'claude',
+  'continue',
+  'forgecode',
+  'kiro',
+  'codebuddy',
+  'easycode',
+  'iflow',
+  'codeartsagent',
+  'lingma',
+  'gigacode',
+  'veai',
+  'rovodev',
+  'codestudio',
+  'hermes',
+]);
+
+/** 対応終了したツール。retired-tools.ts で旧出力を整理する。 */
+export interface RetiredTool {
+  /** 旧版が --tools で受け付けた ID。 */
+  id: string;
+  name: string;
+  /** 旧版の書き込み先プロジェクトフォルダ。 */
+  folder: string;
+  /** 対応終了の案内に付ける理由。 */
+  reason: string;
+  /** 代わりに使う --tools の ID。 */
+  successor: string;
+  /** 代替ツールの名前。 */
+  successorName: string;
+}
+
+export const RETIRED_TOOLS: readonly RetiredTool[] = [
+  {
+    id: 'amazon-q',
+    name: 'Amazon Q Developer',
+    folder: '.amazonq',
+    reason: "スキルを読み込めず、AWS が Kiro へ移行するため",
+    successor: 'kiro',
+    successorName: 'Kiro',
+  },
+];
+
+export function findRetiredTool(toolId: string): RetiredTool | undefined {
+  return RETIRED_TOOLS.find((tool) => tool.id === toolId);
+}
+
+/** 対応終了した ID を init --tools に指定した場合のエラー。 */
+export function formatRetiredToolError(tool: RetiredTool): string {
+  return `${tool.name} の対応は終了しました。${tool.reason}です。代わりに ${tool.successorName} を設定してください: openspec init --tools ${tool.successor}`;
+}
+
 export const AI_TOOLS: AIToolOption[] = [
-  { name: 'Amazon Q Developer', value: 'amazon-q', available: true, successLabel: 'Amazon Q Developer', skillsDir: '.amazonq', requiresIdeRestart: true },
   { name: 'Amp', value: 'amp', available: true, successLabel: 'Amp', skillsDir: '.agents', detectionPaths: ['.amp', '.agents/skills'] },
   // Antigravity は v1.20.5 で、ワークスペースのスキルとワークフローを `.agent` から
   // 共有の `.agents` ルートへ移した。`.agents` ルート自体は Codex、Zed、ベンダー非依存の
@@ -70,7 +128,7 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'GigaCode', value: 'gigacode', available: true, successLabel: 'GigaCode', skillsDir: '.gigacode' },
   { name: 'Grok Build', value: 'grok', available: true, successLabel: 'Grok Build', skillsDir: '.grok' },
   { name: 'GSD', value: 'gsd', available: true, successLabel: 'GSD', skillsDir: '.agents', detectionPaths: ['.gsd'] },
-  { name: 'Hermes Agent', value: 'hermes', available: true, successLabel: 'Hermes Agent', skillsDir: '.hermes', detectionPaths: ['.hermes', 'HERMES.md', '.hermes.md'], setupNote: 'Hermes は既定で ~/.hermes/skills/ からのみスキルを読み込みます。生成した OpenSpec スキルを Hermes が利用できるよう、このプロジェクトの .hermes/skills ディレクトリを ~/.hermes/config.yaml の skills.external_dirs に追加してください。' },
+  { name: 'Hermes Agent', value: 'hermes', available: true, successLabel: 'Hermes Agent', skillsDir: '.hermes', detectionPaths: ['.hermes', 'HERMES.md', '.hermes.md'], setupNote: "Hermes がこのプロジェクトの .hermes/skills を読むには、リポジトリを信頼する必要があります。プロジェクト内で `hermes skills trust` を実行してください（Hermes v2026.6.5 以降）。古い版では、代わりに .hermes/skills を ~/.hermes/config.yaml の skills.external_dirs に追加してください。" },
   { name: 'iFlow', value: 'iflow', available: true, successLabel: 'iFlow', skillsDir: '.iflow' },
   { name: 'Junie', value: 'junie', available: true, successLabel: 'Junie', skillsDir: '.junie', requiresIdeRestart: true },
   { name: 'Kilo Code', value: 'kilocode', available: true, successLabel: 'Kilo Code', skillsDir: '.kilocode', requiresIdeRestart: true },

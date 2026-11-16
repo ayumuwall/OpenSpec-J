@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { VALIDATION_MESSAGES } from '../../src/core/validation/constants.js';
 import { Validator } from '../../src/core/validation/validator.js';
 import {
   MAX_REQUIREMENT_TEXT_LENGTH,

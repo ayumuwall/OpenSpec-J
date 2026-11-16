@@ -112,7 +112,7 @@ openspec init --tools claude
 
 **出力**
 
-選択したツールごとのディレクトリへ、OpenSpec のスキルとコマンドを作成します。
+OpenSpec は `.agents/skills/` にスキルを一度だけ書き込みます。必要なツールには固有フォルダからのリンクを作成します。MiniMax Code は例外で、`~/.minimax/skills/` にコピーを配置します。
 
 ```
 ▌ OpenSpec 構成を作成しました
@@ -121,13 +121,11 @@ openspec init --tools claude
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-.claude/ にスキル 6 個とコマンド 6 個を作成しました
+.agents/skills/ にスキル6個を作成しました（.claude/skills/ からリンク）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 
 はじめに:
-  最初の変更を開始: /opsx:propose "あなたのアイデア"
-
-新しいコマンドを有効にするにはIDEを再起動してください。
+  最初の変更を開始: /openspec-propose "あなたのアイデア"
 ```
 
 `--tools none`は`openspec/config.yaml`だけを作成します。初期化済みのプロジェクトでは、インストール済みファイルをその場で書き直します。概要には`更新: Claude Code`と`設定: openspec/config.yaml（既存）`が表示されます。
@@ -178,7 +176,7 @@ openspec update --dry-run
 
 ```
 2 個のファイルを変更する予定です:
-  update  .claude/skills/openspec-propose/SKILL.md  (claude)
+  update  .agents/skills/openspec-propose/SKILL.md  (openspec)
   add     ~/.config/openspec/config.json  (openspec)
 ```
 
@@ -187,7 +185,7 @@ openspec update --dry-run
 ```json
 {
   "changes": [
-    { "path": ".claude/skills/openspec-propose/SKILL.md", "action": "update", "tool": "claude" },
+    { "path": ".agents/skills/openspec-propose/SKILL.md", "action": "update", "tool": "openspec" },
     { "path": "~/.config/openspec/config.json", "action": "add", "tool": "openspec" }
   ],
   "notes": [],
@@ -199,8 +197,8 @@ openspec update --dry-run
 |---|---|
 | `changes[].path` | プロジェクトからの相対パス。グローバルスキルやグローバル設定などのプロジェクト外のファイルは、ホーム配下なら `~/...`、ホーム外なら絶対パスです。 |
 | `changes[].action` | `add`、`update`、`delete`。更新前後のバイト列が同じファイルは含みません。 |
-| `changes[].tool` | `claude` など、ファイルが属する設定済みツール。グローバル設定や旧ファイルの削除など、OpenSpec 自身に属するものは `openspec` です。 |
-| `notes[]` | 対話実行なら確認を求める手順の `{ code, message }`。`legacy-tool-directories` は確認が必要な移動で、`changes` には移動するものとして含みます。`legacy-artifacts` は、旧形式の `openspec-proposal.md` コマンドや `AGENTS.md` のマーカーブロックなどが見つかったことを示します。`--force` なしの非対話更新では触れないため、計画にも含みません。`--dry-run --force` では削除も表示します。通常の更新では空です。 |
+| `changes[].tool` | `claude` など、ファイルが属する設定済みツール。共有の `.agents/skills/` 内のスキル、グローバル設定、旧ファイルの削除など、特定のツールに属さないものは `openspec` です。 |
+| `notes[]` | 対話実行なら確認や警告を表示する手順の `{ code, message }`。`legacy-tool-directories` は確認が必要な移動で、`changes` には移動するものとして含みます。`legacy-artifacts` は、旧形式の `openspec-proposal.md` コマンドや `AGENTS.md` のマーカーブロックなどが見つかったことを示します。`--force` なしの非対話更新では触れないため、計画にも含みません。`--dry-run --force` では削除も表示します。`edited-skills` は、インストール済みスキル内の編集が更新で上書きされることを示し、対象ファイルをメッセージに表示します。通常の更新では空です。 |
 | `failures[]` | 実際の更新で失敗するツールごとの `{ tool, error }`。ファイルの位置にディレクトリがある、ディレクトリの位置にファイルがある、書き込み権限がないなども含みます。そのツールの `changes` は実際に停止する位置までで、他のツールの計画は続けます。ディスク容量不足など、書き込み時にだけ判明する失敗は予測できません。 |
 
 OpenSpec ディレクトリがないなど、計画前の失敗でも JSON を1つだけ出力します。空の計画に `severity`、`code`（`update_error`）、`message` を持つ `status` 配列を追加し、終了コード1で終了します。
@@ -225,9 +223,9 @@ OpenSpec ディレクトリがないなど、計画前の失敗でも JSON を1�
 
 ✓ 更新: Claude Code（v1.7.0）
 ツール: Claude Code
-
-変更を有効にするには IDE を再起動してください。
 ```
+
+Cursor や Kiro など IDE ベースのツールを更新した場合は、最後に `IDEを再起動してスキルを再読み込みしてください。` と表示します。
 
 OpenSpec がないディレクトリでは更新しません。
 
@@ -246,7 +244,7 @@ OpenSpec がないディレクトリでは更新しません。
 
 ```bash
 openspec config list                  # 現在の設定を表示
-openspec config set delivery skills   # 1 つの値を変更
+openspec config set profile core   # 1 つの値を変更
 openspec config profile               # 対話式ワークフローピッカー
 ```
 
@@ -259,7 +257,7 @@ openspec config profile               # 対話式ワークフローピッカー
 | `unset <key>`       | キーを削除し、既定値へ戻します。                           |
 | `reset`             | すべての設定を既定値へ戻します。                           |
 | `edit`              | 設定ファイルを`$EDITOR`で開きます。                        |
-| `profile [preset]`  | 配信方式とワークフローを設定します。                       |
+| `profile [preset]`  | インストールするワークフローを設定します。                       |
 
 設定はマシン全体へ適用され、`config path`が示す場所に JSON で保存されます。`$XDG_CONFIG_HOME`を設定している場合は`$XDG_CONFIG_HOME/openspec/config.json`です。それ以外は、macOS と Linux では`~/.config/openspec/config.json`、Windows では`%APPDATA%\openspec\config.json`です。すべてのサブコマンドで`--scope <scope>`を指定できますが、現在使えるのは`global`だけです。ほかのスコープを指定すると終了コード 1 で終了し、`エラー: project-local config はまだ実装されていません`と表示します。
 
@@ -288,23 +286,23 @@ openspec config list --json   # 未加工の設定を JSON で表示
 
 **出力**
 
-各設定に続いて、値が明示指定か既定値かを示すプロファイル概要を表示します。
+各設定に続いてプロファイル概要を表示します。プロファイルが明示指定か既定値かを示し、`delivery` は廃止済みと表示します。
 
 ```
 featureFlags: {}
 profile: core
-delivery: both
+delivery: skills
 
-Profile settings:
-  profile: core (default)
-  delivery: both (default)
-  workflows: propose, explore, apply, update, sync, archive (from core profile)
+プロファイル設定:
+  profile: core (既定値)
+  delivery: skills (2.0 で廃止、無視されます)
+  workflows: propose, explore, apply, update, sync, archive (core プロファイル由来)
 ```
 
 ### openspec config get
 
 ```bash
-openspec config get delivery
+openspec config get profile
 ```
 
 **引数**
@@ -318,7 +316,7 @@ openspec config get delivery
 スクリプトでそのまま使える値だけを表示します。オブジェクトは 1 行の JSON で表示します。
 
 ```
-both
+core
 ```
 
 **終了コード**
@@ -329,7 +327,7 @@ both
 ### openspec config set
 
 ```bash
-openspec config set delivery skills
+openspec config set profile core
 openspec config set featureFlags.workspaces true
 ```
 
@@ -353,7 +351,14 @@ openspec config set featureFlags.workspaces true
 featureFlags.workspaces = true を設定しました
 ```
 
-未知のキーまたは無効な値を指定すると、保存せず終了コード 1 で終了します。
+古いスクリプトとの互換性のため `delivery` も受け付けますが、動作には影響しません（[2.0 へのアップグレード](../help/upgrade-to-2.md)）。
+
+```
+delivery = "skills" を設定しました
+注: delivery の設定は動作に影響しません。OpenSpec 2.0 はスキルだけをインストールします。
+```
+
+未知のキーまたは無効な値を指定すると、保存せず終了コード1で終了します。
 
 ```
 エラー: 無効な設定キー "bogus.key" です。 Unknown top-level key "bogus".
@@ -362,7 +367,7 @@ featureFlags.workspaces = true を設定しました
 ```
 
 ```
-エラー: 無効な設定です - delivery: Invalid option: expected one of "both"|"skills"|"commands"
+エラー: 無効な設定です - profile: Invalid option: expected one of "core"|"custom"
 ```
 
 設定ファイルが不正な JSON、またはルートが`null`や配列など JSON オブジェクト以外の場合、`config set`、`config unset`、`config profile`はファイルを変更せず終了コード 1 で終了します。`openspec config edit`で修正するか、`openspec config reset --all`で置き換えてください。
@@ -372,18 +377,18 @@ featureFlags.workspaces = true を設定しました
 "openspec config edit" で修正するか、"openspec config reset --all" でリセットしてください。
 ```
 
-修正するまで、テレメトリーと更新確認は停止します。
+修正するまで、テレメトリーと `openspec update` のバックグラウンド更新確認は停止します。明示的な `openspec version --check` は引き続き実行できます。
 
 ### openspec config unset
 
 ```bash
-openspec config unset delivery
+openspec config unset profile
 ```
 
 キーを削除し、既定値へ戻します。組み込みの既定値があるキーは常に設定済みとして扱うため、一度も明示設定していない場合も成功と表示されます。
 
 ```
-delivery を削除しました（デフォルトへ戻しました）
+profile を削除しました（デフォルトへ戻しました）
 ```
 
 値がまったくないキーでは、`キー "featureFlags.nothere" は設定されていません`と表示します。どちらの場合も終了コードは 0 です。設定ファイルを解析できない場合は、`config set`と同じく終了コード 1 で終了します。
@@ -445,9 +450,9 @@ openspec config profile core   # core プリセットを直接適用
 
 | 引数     | 内容                                                                                                     |
 | -------- | -------------------------------------------------------------------------------------------------------- |
-| `preset` | 任意のプリセット名。現在使えるのは`core`だけです。コアワークフローを選択し、配信方式の設定は維持します。 |
+| `preset` | 任意のプリセット名。現在使えるのは`core`だけです。コアワークフローを選択します。 |
 
-プリセットを指定しない場合は、対話式ピッカーに現在の配信方式とワークフローが表示されます。配信方式は both、skills のみ、commands のみから選べます。ワークフローはチェックボックスで選びます。変更差分を表示し、OpenSpec プロジェクト内であれば`openspec update`の実行も提案します。非対話環境では終了コード 1 で終了します。
+プリセットを指定しない場合は、対話式ピッカーに現在のワークフローが表示されます。ワークフローはチェックボックスで選びます。変更差分を表示し、OpenSpec プロジェクト内であれば`openspec update`の実行も提案します。非対話環境では終了コード 1 で終了します。
 
 ```
 対話モードが必要です。`openspec config profile core` を使うか、環境変数 / フラグで設定してください。
@@ -864,7 +869,7 @@ openspec validate --all            # すべての変更と仕様
 **終了コード**
 
 - `0`：空の一括範囲を含め、検証した全項目が成功しました。
-- `1`：項目の検証に失敗した、レポート要求が無効、または実行に失敗しました（名前が不明、OpenSpec ルートがない場合など）。
+- `1`：項目の検証に失敗した、レポート要求が無効、`openspec/config.yaml` を読み取れないか YAML が不正、または実行に失敗しました（名前が不明、OpenSpec ルートがない場合など）。 設定を読み取り・解析できない場合は、どの項目も検証せずに停止します。`--json` では、コード `unreadable_config` または `unparseable_config` を持つ1件の `status` として報告します。
 
 ### --report full|findings
 
@@ -1383,7 +1388,7 @@ openspec instructions archive --change add-rate-limit    # アーカイブ用の
 
 この後に`outputPath`、`existingOutputPaths`、全文の`instruction`と`template`、`dependencies`、`unlocks`、`root`が続きます。`apply`形式には`contextFiles`、`progress`、`tasks`、`taskTrackingConfigured`、`state`（`blocked`、`ready`、`all_done`）、`instruction`が入ります。
 
-各 `tasks` 項目には `id`、`description`、`done`、`sourcePath`、`line` が含まれます。`sourcePath` はタスクを読み取った追跡対象ファイルの絶対パス、`line` はそのチェックボックスの行番号（1から開始）です。
+各 `tasks` 項目には `id`、`description`、`done`、`sourcePath`、`line` が含まれます。`sourcePath` はタスクを読み取った追跡対象ファイルの絶対パス、`line` はそのチェックボックスの行番号（1から開始）です。 `description` はタスクの全文です。複数行に折り返したタスクは1行にまとめ、末尾の `\` による改行も取り除きます。
 
 `taskTrackingConfigured`は常に真偽値です。スキーマの[`apply.tracks`](schemas/schema-yaml.md#tracks)が null 以外なら、一致するファイルがなくても`true`、それ以外は`false`です。一致した追跡対象ファイルを読めなければ、`unavailableTrackingFiles`に絶対パスの`path`とエラーの`reason`が入ります。すべて読める場合はこのフィールドを省略します。読めるファイルは`tasks`と`progress`へ集計しますが、すべて読めるまで`state`は`all_done`になりません。
 
@@ -2234,18 +2239,18 @@ openspec workset remove checkout --yes
 ```bash
 openspec version                 # ローカルのバージョンとインストール情報
 openspec version --json          # 構造化されたローカル情報
-openspec version --check         # レジストリで更新も確認
+openspec version --check         # 更新も確認
 openspec version --check --json  # ローカル情報と更新情報を構造化して表示
 ```
 
-`--check` がなければレジストリへ接続せず、ローカルの情報だけを表示します。OpenSpec プロジェクトの外でも動作します。既存の `openspec --version` は、バージョン番号だけを表示する最短の形式として引き続き使えます。
+`--check` がなければネットワーク通信を行わず、ローカルの情報だけを表示します。OpenSpec プロジェクトの外でも動作します。既存の `openspec --version` は、バージョン番号だけを表示する最短の形式として引き続き使えます。
 
 **オプション**
 
 | フラグ | 動作 |
 |---|---|
 | `--json` | テキストの代わりに、形式のバージョンを含む1つの JSON 文書を表示します。 |
-| `--check` | 設定されたレジストリで新しいリリースを確認します。 |
+| `--check` | 新しいリリースを確認します。npm・プロジェクト・ソースからの導入では設定済み npm レジストリ、単体実行版では GitHub Releases を確認します（後述）。 |
 
 **出力**
 
@@ -2301,14 +2306,14 @@ OpenSpec 1.13.2 (npm, global)
 
 | 状態 | 意味 |
 |---|---|
-| `available` | レジストリが、実行中より新しい安全なバージョン番号を返しました。 |
+| `available` | 実行中より新しい安全なバージョンをインストールできます。 |
 | `current` | 確認が完了し、新しいバージョンは見つかりませんでした。 |
-| `disabled` | 既存のプライバシー設定または更新確認設定により、レジストリへの接続が無効です。`latest` は `null` です。 |
-| `offline` | レジストリを利用できないか、使えない応答が返りました。`latest` は `null` です。 |
+| `disabled` | `OPENSPEC_NO_UPDATE_CHECK` が設定されているか、npm 版でレジストリの上書きが拒否されました。`latest` は `null` です。 |
+| `offline` | レジストリまたは GitHub を利用できない、レート制限などで要求が拒否された、または使えない応答が返りました。`latest` は `null` です。 |
 
-単体実行版の更新コマンドは `openspec install` です。
+単体実行版の更新コマンドは `openspec install` です。このコマンドで取得できる版に合わせ、GitHub で `SHA256SUMS` が添付された最新の安定版を確認します。公開直後でファイルが未添付の版は案内しません。npm レジストリ設定はこの確認に影響しません。
 
-`DO_NOT_TRACK`、テレメトリーの無効化、`OPENSPEC_NO_UPDATE_CHECK`、CI の検出、HTTPS 以外のレジストリ上書きの拒否によって確認を無効にします。更新情報は参考情報のため、無効またはオフラインでも終了コードは0です。このコマンドは OpenSpec を更新しません。`canSelfUpgrade` は、既存の `openspec update` の処理でこのコピーを安全に更新できるかを示すだけです。
+`--check` は明示的な要求なので、テレメトリーが無効（`DO_NOT_TRACK`、`OPENSPEC_TELEMETRY=0`、`telemetry.enabled: false`）な場合や CI でも実行します。無効にするのは `OPENSPEC_NO_UPDATE_CHECK` が設定されている場合、または npm 版で HTTPS 以外のレジストリ上書きが拒否された場合だけです。`openspec update` のバックグラウンド確認は、これらの条件すべてで引き続き停止します。更新情報は参考情報のため、無効またはオフラインでも終了コードは0です。このコマンドは OpenSpec を更新しません。`canSelfUpgrade` は、既存の `openspec update` の処理でこのコピーを安全に更新できるかを示すだけです。
 
 **終了コード**
 
@@ -2317,7 +2322,7 @@ OpenSpec 1.13.2 (npm, global)
 
 ## openspec install
 
-Node.js 不要の単一ファイルとして動く `openspec` をインストールします。npm・Homebrew 版からの切り替えにも、単体実行版の更新にも使えます。
+単体実行版の `openspec` をインストールします。npm・Homebrew 版からの切り替えにも、単体実行版の更新にも使えます。
 
 ```bash
 openspec install          # 最新リリース
@@ -2425,12 +2430,14 @@ _openspec() {
 
 | シェル     | スクリプトの場所                                      | 編集する設定                      |
 | ---------- | ----------------------------------------------------- | --------------------------------- |
-| zsh        | `~/.zsh/completions/_openspec`                        | `~/.zshrc`                        |
+| zsh | `~/.zsh/completions/_openspec` | `ZDOTDIR` が絶対パスなら `$ZDOTDIR/.zshrc`、それ以外は `~/.zshrc` |
 | bash       | `~/.local/share/bash-completion/completions/openspec` | `~/.bashrc`                       |
 | fish       | `~/.config/fish/completions/openspec.fish`            | なし。fish が自動で読み込みます。 |
 | powershell | プロファイルと同じ場所の`OpenSpecCompletion.ps1`      | `$PROFILE`                        |
 
 Oh My Zsh がインストールされている場合、スクリプトは代わりに`$ZSH_CUSTOM/completions/_openspec`へ配置されます（既定は`~/.oh-my-zsh/custom/completions/_openspec`）。
+
+相対パスや `~` で始まる `ZDOTDIR` は無視し、`~/.zshrc` を編集します。スクリプトが最新でも、install を再実行すると zsh が読み込む `.zshrc` へブロックを追加します。
 
 **オプション**
 
@@ -2449,6 +2456,8 @@ Oh My Zsh がインストールされている場合、スクリプトは代わ�
 ### openspec completion uninstall
 
 スクリプトと、マーカーで囲まれた設定ブロックを削除します。設定を変更する前に確認します（既定は No）。
+
+zsh では install が編集する `.zshrc` を処理します。旧版が `ZDOTDIR` 使用時に `~/.zshrc` へブロックを残していた場合は、そちらも削除します。削除できないブロックがある場合は、ファイル名を表示し終了コード1で終了します。
 
 **オプション**
 

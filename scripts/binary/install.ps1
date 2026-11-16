@@ -1,6 +1,7 @@
 ﻿# Installs the standalone `openspec.exe` (no Node.js needed) on Windows.
 #
-#   irm https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.ps1 | iex
+#   Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.ps1 -OutFile openspec-install.ps1
+#   & ./openspec-install.ps1
 #
 # $env:OPENSPEC_VERSION      release to install (default: the newest complete one), e.g. v1.15.0
 # $env:OPENSPEC_INSTALL_DIR  where to put it (default: %LOCALAPPDATA%\Programs\openspec)
@@ -17,10 +18,14 @@
   [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
   $ProgressPreference = 'SilentlyContinue'
 
-  # The OS architecture, not this PowerShell's: an x64 shell on an ARM PC
-  # should still get the native ARM build.
-  $arch = switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
-    'X64' { 'x64' }
+  # PowerShell 自体ではなく OS の CPU を判定し、ARM PC の x64 シェルでも ARM 版を使う。
+  # Windows PowerShell 5.1 では RuntimeInformation の OSArchitecture が空になる
+  # 場合がある（#2220）。mscorlib の型を使い、取得できなければマシン全体の
+  # PROCESSOR_ARCHITECTURE を使う。こちらはエミュレーション中も OS の CPU を示す。
+  $osArch = try { [System.Runtime.InteropServices.RuntimeInformation, mscorlib]::OSArchitecture } catch { $null }
+  if (-not $osArch) { $osArch = [Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE', 'Machine') }
+  $arch = switch ("$osArch") {
+    { $_ -in 'X64', 'AMD64' } { 'x64' }
     'Arm64' { 'arm64' }
     default { throw "openspec install: 未対応の CPU です: $_。代わりに npm で導入してください: npm install -g @ayumuwall/openspec" }
   }
@@ -41,7 +46,7 @@
   $releases = if ($env:OPENSPEC_RELEASES_URL) { $env:OPENSPEC_RELEASES_URL.TrimEnd('/') } else { 'https://github.com/ayumuwall/OpenSpec-J/releases' }
   Assert-Source 'OPENSPEC_RELEASES_URL' $releases
   if ($env:OPENSPEC_DOWNLOAD_URL) { Assert-Source 'OPENSPEC_DOWNLOAD_URL' $env:OPENSPEC_DOWNLOAD_URL }
-  $npmHint = 'または npm で導入してください（Node.js 20.19 以降）: npm install -g @ayumuwall/openspec'
+  $npmHint = 'または npm で導入してください（Node.js 22.12 以降）: npm install -g @ayumuwall/openspec'
   $dir = if ($env:OPENSPEC_INSTALL_DIR) { $env:OPENSPEC_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\openspec' }
   # Absolute, so the user PATH entry works from any directory.
   $dir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($dir)
@@ -84,19 +89,36 @@
       $base = "$releases/download/$version"
     }
 
-    Write-Host "$asset ($version) をダウンロード中..."
     try {
-      Invoke-WebRequest -UseBasicParsing -Uri "$base/$asset" -OutFile $exe
       if (-not (Test-Path $sums)) { Invoke-WebRequest -UseBasicParsing -Uri "$base/SHA256SUMS" -OutFile $sums }
     } catch {
       throw "openspec install: ${base} からダウンロードできませんでした: $($_.Exception.Message)。$npmHint"
     }
 
-    $line = Get-Content $sums | Where-Object { ($_ -split '\s+')[1] -eq $asset } | Select-Object -First 1
-    if (-not $line) { throw "openspec install: $asset が SHA256SUMS にありません" }
-    $expected = ($line -split '\s+')[0]
-    $actual = (Get-FileHash -Algorithm SHA256 -Path $exe).Hash
-    if ($actual -ne $expected) { throw "openspec install: $asset のチェックサムが一致しないため、インストールを中止します" }
+    # 現行版は .zip、v1.15.0 以前は .exe を直接配布する。
+    $lines = Get-Content $sums
+    $file = $null
+    $expected = $null
+    foreach ($candidate in "$($asset -replace '\.exe$', '.zip')", $asset) {
+      $line = $lines | Where-Object { ($_ -split '\s+')[1] -eq $candidate } | Select-Object -First 1
+      if ($line) { $file = $candidate; $expected = ($line -split '\s+')[0]; break }
+    }
+    if (-not $file) { throw "openspec install: $asset が SHA256SUMS にありません" }
+
+    Write-Host "$file ($version) をダウンロード中..."
+    $download = Join-Path $tmp $file
+    try {
+      Invoke-WebRequest -UseBasicParsing -Uri "$base/$file" -OutFile $download
+    } catch {
+      throw "openspec install: ${base} からダウンロードできませんでした: $($_.Exception.Message)。$npmHint"
+    }
+    $actual = (Get-FileHash -Algorithm SHA256 -Path $download).Hash
+    if ($actual -ne $expected) { throw "openspec install: $file のチェックサムが一致しないため、インストールを中止します" }
+    if ($file -ne $asset) {
+      $unpacked = Join-Path $tmp 'unpacked'
+      Expand-Archive -Path $download -DestinationPath $unpacked
+      Move-Item -Path (Join-Path $unpacked 'openspec.exe') -Destination $exe
+    }
 
     $installed = $null
     # A binary that cannot start at all throws instead of setting an exit code.

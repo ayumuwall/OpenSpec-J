@@ -14,8 +14,17 @@ interface ActiveFence {
 }
 
 function getFenceMarker(line: string): ActiveFence | null {
-  const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
+  // . は \r に一致しないため末尾を固定しない。
+  // (.*)$ にすると、CRLF が残る行の開始フェンスを認識できない。
+  const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(.*)/);
   if (!fenceMatch) {
+    return null;
+  }
+
+  // CommonMark ではバッククォートフェンスの情報文字列に同じ文字を含められない。
+  // ```npm test``` はインラインコードであり、開始フェンスとすると
+  // 後続すべてが隠され、その後の要件を見失う。
+  if (fenceMatch[1][0] === '`' && fenceMatch[2].includes('`')) {
     return null;
   }
 

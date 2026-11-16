@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import path from 'path';
 
 /**
  * How a check reads the files it inspects. Normally the disk. `update
@@ -10,6 +11,13 @@ export interface FileView {
   /** Throws, like `fs.readFileSync`, when the file is absent. */
   read(filePath: string): string;
   isDirectory(filePath: string): boolean;
+  /**
+   * このパスのリンクが指すフォルダの絶対パス。リンクでなければ undefined。
+   * リンクを持たない view では省略できる。
+   */
+  linkTarget?(filePath: string): string | undefined;
+  /** フォルダ直下の項目名。linkTarget と同様に省略可能。 */
+  listDirectory?(dirPath: string): string[];
 }
 
 export const DISK_VIEW: FileView = {
@@ -20,6 +28,15 @@ export const DISK_VIEW: FileView = {
       return fs.statSync(filePath).isDirectory();
     } catch {
       return false;
+    }
+  },
+  listDirectory: (dirPath) => fs.readdirSync(dirPath),
+  linkTarget: (filePath) => {
+    try {
+      if (!fs.lstatSync(filePath).isSymbolicLink()) return undefined;
+      return path.resolve(path.dirname(filePath), fs.readlinkSync(filePath));
+    } catch {
+      return undefined;
     }
   },
 };

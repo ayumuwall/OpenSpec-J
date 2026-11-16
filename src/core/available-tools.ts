@@ -7,9 +7,9 @@
 
 import path from 'path';
 import { AI_TOOLS, type AIToolOption } from './config.js';
-import { reconcileSharedSkillTargets } from './shared-skill-target.js';
-import { SKILL_NAMES } from './shared/tool-detection.js';
-import { resolveToolSkillsDir, toolSupportsSkills } from './shared/skill-paths.js';
+import { readSkillToolList } from './shared-skill-target.js';
+import { SKILL_NAMES, isListedToolPresent } from './shared/tool-detection.js';
+import { SHARED_SKILLS_ROOT, resolveToolSkillsDir, toolSupportsSkills, usesSharedSkills } from './shared/skill-paths.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
 
 /**
@@ -20,9 +20,15 @@ import { DISK_VIEW, type FileView } from './file-view.js';
  * ディレクトリ）を確認する。それ以外では、プロジェクトの `skillsDir` を確認する。
  * グローバルスキルが対象なら、ユーザーのホームディレクトリにある管理対象の
  * スキルファイルを確認する。
+ *
+ * すべてのスキルが `.agents/skills/` にあるため、`.agents` の内容だけでは
+ * Amp、Codex、Zed、GSD、agents の検出根拠にならない。設定済み一覧にあるか、
+ * `.amp`、`.codex/skills`、`.agents/workflows` など固有のパスが必要。
  */
 export function getAvailableTools(projectPath: string, view: FileView = DISK_VIEW): AIToolOption[] {
-  const available = AI_TOOLS.filter((tool) => {
+  const isSharedPath = (p: string) => p === SHARED_SKILLS_ROOT || p.startsWith(`${SHARED_SKILLS_ROOT}/skills`);
+  const listed = readSkillToolList(projectPath, view);
+  return AI_TOOLS.filter((tool) => {
     if (!toolSupportsSkills(tool)) return false;
 
     if (tool.globalSkillsDir) {
@@ -34,31 +40,22 @@ export function getAvailableTools(projectPath: string, view: FileView = DISK_VIE
 
     if (!tool.skillsDir) return false;
 
-    if (tool.detectionPaths && tool.detectionPaths.length > 0) {
+    const hasOwnPath = tool.detectionPaths && tool.detectionPaths.length > 0
       // 検出パスはファイルとディレクトリの両方を許すため、存在だけを確認する
-      return tool.detectionPaths.some((p) => view.exists(path.join(projectPath, p)));
-    }
-
-    return view.isDirectory(path.join(projectPath, tool.skillsDir));
+      ? tool.detectionPaths
+        .filter((p) => tool.skillsDir !== SHARED_SKILLS_ROOT || !isSharedPath(p))
+        .some((p) => {
+          if (!view.exists(path.join(projectPath, p))) return false;
+          // 設定済み一覧から外れているツールの固有フォルダは、
+          // OpenSpec スキルがある場合だけ検出する。独自スキルは根拠にしない。
+          if (p.endsWith('/skills') && listed.length > 0 && !listed.includes(tool.value)) {
+            return SKILL_NAMES.some((skillName) => view.exists(path.join(projectPath, p, skillName, 'SKILL.md')));
+          }
+          return true;
+        })
+      : tool.skillsDir !== SHARED_SKILLS_ROOT && view.isDirectory(path.join(projectPath, tool.skillsDir));
+    // 設定済み一覧にあれば、固有フォルダがないツールも検出する。
+    // 例: Cursor は `.agents/skills` を読み、`.cursor` を必要としない。
+    return hasOwnPath || (usesSharedSkills(tool) && listed.includes(tool.value) && isListedToolPresent(projectPath, tool.value, view));
   });
-  const activeProjectTools = new Set(
-    reconcileSharedSkillTargets(
-      projectPath,
-      available.filter((tool) => tool.skillsDir),
-      view
-    ).map((tool) => tool.value)
-  );
-  const hasIndependentDetectionPath = (tool: AIToolOption): boolean =>
-    (tool.detectionPaths ?? []).some((detectionPath) => {
-      // スキルルートは、この後も管理対象コンテンツの照合を通す。
-      // ディレクトリが存在するだけでは、ツールを独立に検出した根拠にはしない。
-      if (detectionPath.endsWith('/skills')) return false;
-      return view.exists(path.join(projectPath, detectionPath));
-    });
-  return available.filter(
-    (tool) =>
-      tool.globalSkillsDir ||
-      hasIndependentDetectionPath(tool) ||
-      activeProjectTools.has(tool.value)
-  );
 }

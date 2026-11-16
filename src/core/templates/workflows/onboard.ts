@@ -22,9 +22,8 @@ const EXPLORE_MODE_NOTE = optionalWorkflow(
 );
 
 /**
- * The command-reference tables. Every row is dropped along with its line when
- * the profile does not install that workflow, so the table lists exactly the
- * commands the reader can run — and stays a valid table either way.
+ * スキルの参照表。プロファイルに含まれないワークフローの行は、行ごと除外する。
+ * 利用できるスキルだけを列挙し、どの構成でも有効な表として出力する。
  */
 const COMMAND_REFERENCE_ROWS = [
   onlyWithWorkflow('propose', ' | `/opsx:propose` | change を作成し、全アーティファクトを生成 |'),
@@ -38,7 +37,7 @@ const COMMAND_REFERENCE_ROWS = [
 ].join('\n');
 
 const QUICK_REFERENCE_ROWS = [
-  onlyWithWorkflow('propose', ' | `/opsx:propose <name>`  | change を作成し、全アーティファクトを生成 |'),
+  onlyWithWorkflow('propose', ' | `/opsx:propose <idea>`  | change を作成し、全アーティファクトを生成 |'),
   onlyWithWorkflow('explore', ' | `/opsx:explore`         | 問題を考える（コード変更なし）   |'),
   onlyWithWorkflow('apply', ' | `/opsx:apply <name>`    | タスクを実装                            |'),
   onlyWithWorkflow('archive', ' | `/opsx:archive <name>`  | 完了時にアーカイブ                          |'),
@@ -557,11 +556,11 @@ OpenSpec の完全なサイクルを完了しました:
 
 ---
 
-## コマンドリファレンス
+## スキルリファレンス
 
-**インストール済みのコマンド:**
+**インストール済みのスキル:**
 
- | コマンド         | 役割                                       |
+ | スキル           | 役割                                       |
  |------------------|--------------------------------------------|
 ${COMMAND_REFERENCE_ROWS}
 
@@ -591,16 +590,16 @@ ${RESUME_HINTS}
 
 圧をかけずに穏やかに終了します。
 
-### ユーザーがコマンドリファレンスだけを求める場合
+### ユーザーがスキルリファレンスだけを求める場合
 
-ユーザーがコマンドだけ見たい、またはチュートリアルをスキップしたいと言った場合:
+ユーザーがスキルだけ見たい、またはチュートリアルをスキップしたいと言った場合:
 
 \`\`\`
 ## OpenSpec クイックリファレンス
 
-**インストール済みのコマンド:**
+**インストール済みのスキル:**
 
- | コマンド                 | 役割                                       |
+ | スキル                   | 役割                                       |
  |--------------------------|--------------------------------------------|
 ${QUICK_REFERENCE_ROWS}
 

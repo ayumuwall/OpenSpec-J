@@ -11,17 +11,12 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences } from '../utils/command-references.js';
+import { getSkillReferenceTransformer, getTransformerForTool, transformToSharedSkillReferences, transformToSkillReferences } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
-import {
-  generateCommands,
-  CommandAdapterRegistry,
-} from './command-generation/index.js';
 import {
   getToolSkillStatus,
   getToolVersionStatus,
   getSkillTemplates,
-  getCommandContents,
   generateSkillContent,
   getToolsWithSkillsDir,
   hasGlobalSkillTarget,
@@ -30,6 +25,7 @@ import {
   type ToolVersionStatus,
   formatIdeRestart,
 } from './shared/index.js';
+import { reconcileCommandFiles, formatKeptCommandFiles } from './shared/command-reconcile.js';
 import {
   detectLegacyArtifacts,
   cleanupLegacyArtifacts,
@@ -37,15 +33,20 @@ import {
   formatDeferredGlobalPromptSummary,
   formatCleanupSummary,
   formatDetectionSummary,
+  findEditedLegacyGlobalPrompts,
   getLegacyGlobalPromptMatches,
   getLegacyWorkflowIdsForTool,
   getToolsFromLegacyArtifacts,
+  legacyCleanupDeletesOnlyReleasedOutput,
+  hasRepoLocalLegacyRemovals,
   omitGlobalLegacyPromptFiles,
   omitToolLegacyArtifacts,
   pickGlobalLegacyPromptFiles,
   type LegacyDetectionResult,
 } from './legacy-cleanup.js';
 import { isInteractive } from '../utils/interactive.js';
+import { findStaleReleasedFiles, pruneEmptyParents } from './released-output-sweep.js';
+import { cleanUpRetiredTools, formatRetiredToolCleanup } from './retired-tools.js';
 import { getGlobalConfig, getGlobalConfigPath, serializeGlobalConfig, type Delivery, type Profile } from './global-config.js';
 import { getProfileWorkflows, ALL_WORKFLOWS, CORE_WORKFLOWS } from './profiles.js';
 import { formatOptionalWorkflowsNote, getOnboardingCommands } from './onboarding-commands.js';
@@ -67,20 +68,18 @@ import {
   legacyMigrationNotice,
   keptInPlaceNotice,
   hasMovableContent,
+  LEGACY_TOOL_ROOTS,
   type LegacyToolMigration,
 } from './migration.js';
 import {
   resolveCommandSurfaceCapability,
   resolveCommandInvocation,
-  shouldGenerateCommandsForTool,
-  shouldGenerateSkillsForTool,
   shouldReconcileCommandFilesForTool,
-  shouldRemoveSkillsForTool,
 } from './command-surface.js';
-import {
-  resolveSharedSkillWriters,
-  sharedSkillTargetMarkerPath,
-} from './shared-skill-target.js';
+import { usesSharedSkills } from './shared/skill-paths.js';
+import { isToolListed, readKeptSharedSkills } from './shared-skill-target.js';
+import { formatKeptSkills, installSharedSkills, type SharedSkillInstallResult } from './shared/shared-skill-install.js';
+import { classifyOwnSkill } from './shared/own-skill-texts.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
 import {
   realFileOps,
@@ -110,7 +109,7 @@ type LegacyUpgradeResult = {
   skippedSharedSkillTools?: string[];
 };
 
-type ToolFailure = { name: string; error: string };
+type ToolFailure = { name: string; error: string; toolId?: string };
 
 function throwIfUpdateFailed(failedTools: readonly ToolFailure[]): void {
   if (failedTools.length > 0) {
@@ -160,6 +159,11 @@ export function scanInstalledWorkflows(
 export class UpdateCommand {
   private readonly force: boolean;
   private readonly dryRun: boolean;
+  /** 利用者のものとして保持した専用フォルダ（MiniMax）のスキル。 */
+  private keptOwnSkills: string[] = [];
+  /** 今回更新した専用スキルの編集内容のバックアップ。 */
+  private savedOwnSkills: string[] = [];
+  private editedGlobalPromptsReported = false;
   private recorder: UpdatePlanRecorder | null = null;
   private ops: UpdateFileOps = realFileOps;
 
@@ -209,6 +213,7 @@ export class UpdateCommand {
   async execute(projectPath: string): Promise<void> {
     const resolvedProjectPath = path.resolve(projectPath);
     const openspecPath = path.join(resolvedProjectPath, OPENSPEC_DIR_NAME);
+    this.legacyCleanupSkipped = false;
 
     if (this.dryRun) {
       this.recorder = new UpdatePlanRecorder(resolvedProjectPath);
@@ -284,6 +289,21 @@ export class UpdateCommand {
       failedTools: legacyUpgradeFailures = [],
     } = legacyUpgrade;
 
+    // 4b. 対応終了ツールの旧生成物を削除し、編集済みファイルは保持して報告する。
+    for (const retired of await cleanUpRetiredTools(resolvedProjectPath, {
+      view: this.view,
+      remove: (fullPath) => this.ops.removeFile(fullPath, 'openspec'),
+      prune: !this.dryRun,
+    })) {
+      // 削除したときか --force のときだけ表示する。編集済みだけが残るプロジェクトで
+      // 毎回同じ案内を出さない。
+      if (retired.removed.length === 0 && !this.force) continue;
+      const successorSetUp = getConfiguredToolsForProfileSync(resolvedProjectPath, this.view).includes(retired.tool.successor);
+      const [headline, ...detail] = formatRetiredToolCleanup(retired, successorSetUp);
+      this.log(chalk.yellow(headline));
+      for (const line of detail) this.log(chalk.dim(line));
+    }
+
     // 5. Find configured tools
     const configuredTools = getConfiguredToolsForProfileSync(resolvedProjectPath, this.view);
     const configuredAndNewTools = [...new Set([...configuredTools, ...newlyConfiguredTools])];
@@ -320,7 +340,6 @@ export class UpdateCommand {
     const toolStatuses = configuredTools.map((toolId) =>
       getToolVersionStatus(resolvedProjectPath, toolId, OPENSPEC_VERSION, {
         workflows: legacyWorkflowOverrides[toolId] ?? desiredWorkflows,
-        delivery,
         view: this.view,
       })
     );
@@ -328,14 +347,7 @@ export class UpdateCommand {
 
     // 7. Smart update detection
     const toolsNeedingVersionUpdate = toolStatuses
-      .filter((s) => {
-        if (!s.needsUpdate || delivery !== 'commands') {
-          return s.needsUpdate;
-        }
-
-        const tool = AI_TOOLS.find((candidate) => candidate.value === s.toolId);
-        return !tool || !hasGlobalSkillTarget(tool);
-      })
+      .filter((s) => s.needsUpdate)
       .map((s) => s.toolId);
     const toolsNeedingConfigSync = getToolsNeedingProfileSync(
       resolvedProjectPath,
@@ -361,13 +373,21 @@ export class UpdateCommand {
       if (deferredGlobalCleanup) {
         await this.performDeferredGlobalPromptCleanup(resolvedProjectPath, deferredGlobalCleanup);
       }
+      // ツールが最新でも、旧公開版の不要なファイルが残っている場合がある。
+      // 保持対象は初回に報告済みなので、最新状態の実行では繰り返し案内しない。
+      await this.removeEarlierReleaseLeftovers(
+        resolvedProjectPath,
+        [],
+        legacyUpgradeFailures.length > 0,
+        false
+      );
       // All tools are up to date
       this.displayUpToDateMessage(toolStatuses);
       await this.syncCopilotCloudFiles(resolvedProjectPath, configuredAndNewTools);
 
       // Still check for new tool directories and extra workflows
       this.detectNewTools(resolvedProjectPath, configuredTools);
-      this.displayProfileNotes(resolvedProjectPath, configuredTools, desiredWorkflows, profile, delivery);
+      this.displayProfileNotes(resolvedProjectPath, configuredTools, desiredWorkflows, profile);
       this.displaySetupNotes(configuredTools);
       this.stopIfUpdateFailed(legacyUpgradeFailures);
       return;
@@ -388,27 +408,32 @@ export class UpdateCommand {
     }
     this.log();
 
-    // 9. Determine what to generate based on delivery
-    const deliveryIncludesCommands = delivery !== 'skills';
-    // 10. Update tools (all if force, otherwise only those needing update)
+    // 9. スキルのみのため、配布方式の選択は不要。
+    // 10. 更新対象のツールを処理する（force ならすべて）。
     const toolsToUpdate = this.force ? configuredTools : [...toolsToUpdateSet];
-    const sharedSkillWriters = resolveSharedSkillWriters(
-      resolvedProjectPath,
-      configuredAndNewTools
-        .map((toolId) => AI_TOOLS.find((tool) => tool.value === toolId))
-        .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined),
-      // A legacy upgrade earlier in this run may have claimed the root.
-      this.view
-    );
     const updatedTools: string[] = [];
     const updatedToolIds: string[] = [];
     const failedTools: ToolFailure[] = [...legacyUpgradeFailures];
-    const skillsInvocableCommandSkips: string[] = [];
-    const zeroArtifactTools: string[] = [];
     let removedCommandCount = 0;
+    const leftCommandFiles = { kept: [] as string[], unchecked: [] as string[] };
     let removedSkillCount = 0;
-    let removedDeselectedCommandCount = 0;
     let removedDeselectedSkillCount = 0;
+    this.keptOwnSkills = [];
+    this.savedOwnSkills = [];
+
+    // 全ツールで共有する .agents/skills/ を1回書き込む。
+    // 共有コピーを必要とする旧ルート移行より前に実行する。
+    const sharedInstall = await this.installSharedSkillsForRun(
+      resolvedProjectPath,
+      configuredAndNewTools,
+      toolsToUpdate,
+      (toolId) => legacyWorkflowOverrides[toolId] ?? desiredWorkflows
+    );
+    if (sharedInstall.writtenSkillCount === 0) {
+      removedSkillCount += sharedInstall.removedSkillCount;
+    } else {
+      removedDeselectedSkillCount += sharedInstall.removedSkillCount;
+    }
 
     for (const toolId of toolsToUpdate) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -419,15 +444,15 @@ export class UpdateCommand {
       try {
         const skillsDir = resolveToolSkillsDir(resolvedProjectPath, tool);
         const skillsRoot = hasGlobalSkillTarget(tool) ? skillsDir : resolvedProjectPath;
-        const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
-        const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
-        const writesSkills = !tool.skillsDir || sharedSkillWriters.has(tool.value);
+        // 共有フォルダのスキルは上で1回書き込み済み。
+        const writesSkills = !usesSharedSkills(tool);
         const toolWorkflows = legacyWorkflowOverrides[tool.value] ?? desiredWorkflows;
+        const ownFolderError = sharedInstall.toolFailures.get(tool.value);
+        if (ownFolderError) throw ownFolderError;
         const skillTemplates = getSkillTemplates(toolWorkflows);
-        const commandContents = getCommandContents(toolWorkflows);
 
-        // 配信にスキルが含まれる場合はスキルファイルを生成する
-        if (shouldGenerateSkills && writesSkills) {
+        // 専用フォルダのスキルファイルを生成する。
+        if (writesSkills) {
           for (const { template, dirName } of skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
@@ -439,11 +464,25 @@ export class UpdateCommand {
               resolveCommandInvocation(tool.value)
             );
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+            // リンク切れも他のリンクと同じく利用者のものとして扱う。
+            if (this.view.exists(skillDir) || this.view.linkTarget?.(skillDir) !== undefined) {
+              const spot = classifyOwnSkill(skillDir, tool.value, dirName, this.view, OPENSPEC_VERSION);
+              // 利用者のリンク先や、フォルダの位置にあるファイルへは書き込まない。
+              if (spot === 'link' || (spot === 'user' && !this.view.isDirectory(skillDir))) {
+                this.keptOwnSkills.push(skillDir);
+                continue;
+              }
+              FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
+              // 1.x と同様にその場で更新するが、編集済み SKILL.md は先に隣へ保存する。
+              if (spot === 'user') {
+                const backup = this.freeBackupPath(skillFile);
+                await this.ops.writeFile(backup, this.view.read(skillFile), tool.value);
+                this.savedOwnSkills.push(backup);
+              }
+            }
             FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
             await this.ops.writeFile(skillFile, skillContent, tool.value);
           }
-          await this.writeSharedSkillTarget(resolvedProjectPath, tool.value);
-
           removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(
             skillsRoot,
             skillsDir,
@@ -452,52 +491,19 @@ export class UpdateCommand {
           );
         }
 
-        // コマンドのみの配信ではスキルディレクトリを削除する
-        if (
-          shouldRemoveSkillsForTool(tool.value, delivery) &&
-          writesSkills &&
-          !hasGlobalSkillTarget(tool)
-        ) {
-          removedSkillCount += await this.removeSkillDirs(skillsRoot, skillsDir, tool.value);
-          // Persist the selected owner even when commands-only delivery leaves
-          // this target with no generated skills.
-          await this.writeSharedSkillTarget(resolvedProjectPath, tool.value);
-          // A tool with no command adapter now has zero OpenSpec artifacts;
-          // say so like init does, rather than deleting its skills silently
-          // and letting tool detection re-suggest an init that would also
-          // generate nothing under this delivery setting.
-          if (!shouldGenerateCommandsForTool(tool.value, delivery)) {
-            zeroArtifactTools.push(tool.name);
+        // 旧生成コマンドを整理する。
+        if (shouldReconcileCommandFilesForTool(tool.value)) {
+          const reconciled = await reconcileCommandFiles(resolvedProjectPath, toolId, toolWorkflows, {
+            view: this.view,
+            remove: (fullPath) => this.ops.removeFile(fullPath, toolId),
+          });
+          removedCommandCount += reconciled.removed.length;
+          leftCommandFiles.kept.push(...reconciled.kept);
+          leftCommandFiles.unchecked.push(...reconciled.unchecked);
+          // 削除後に空になった親フォルダも整理する。
+          if (!this.dryRun) {
+            await pruneEmptyParents(resolvedProjectPath, reconciled.removed.map((rel) => FileSystemUtils.toPosixPath(rel)));
           }
-        }
-
-        // デリバリーにコマンドが含まれる場合はコマンドを生成する
-        if (shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = FileSystemUtils.resolveProjectArtifactPath(
-                resolvedProjectPath,
-                cmd.path
-              );
-              await this.ops.writeFile(commandFile, cmd.fileContent, tool.value);
-            }
-
-            removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
-              resolvedProjectPath,
-              toolId,
-              toolWorkflows
-            );
-          }
-        } else if (deliveryIncludesCommands && resolveCommandSurfaceCapability(tool.value) === 'skills-invocable') {
-          skillsInvocableCommandSkips.push(tool.value);
-        }
-
-        // Delete command files if delivery is skills-only
-        if (shouldReconcileCommandFilesForTool(tool.value, delivery)) {
-          removedCommandCount += await this.removeCommandFiles(resolvedProjectPath, toolId);
         }
 
         spinner.succeed(`${tool.name} を更新しました`);
@@ -527,6 +533,12 @@ export class UpdateCommand {
       }
     }
 
+    await this.removeEarlierReleaseLeftovers(
+      resolvedProjectPath,
+      updatedToolIds,
+      failedTools.length > 0
+    );
+
     if (deferredGlobalCleanup) {
       await this.performDeferredGlobalPromptCleanup(resolvedProjectPath, deferredGlobalCleanup);
     }
@@ -539,54 +551,46 @@ export class UpdateCommand {
     if (failedTools.length > 0) {
       this.log(chalk.red(`✗ 失敗: ${failedTools.map(f => `${f.name}（${f.error}）`).join(', ')}`));
     }
-    if (skillsInvocableCommandSkips.length > 0) {
-      this.log(chalk.dim(`コマンド生成をスキップ: ${skillsInvocableCommandSkips.join(', ')}（スキルを使用）`));
-    }
     if (removedCommandCount > 0) {
-      this.log(chalk.dim(`削除: コマンドファイル ${removedCommandCount} 件（delivery: skills）`));
+      this.log(chalk.dim(`削除: コマンドファイル ${removedCommandCount} 件（OpenSpec 2.0 はスキルだけをインストールします）`));
+    }
+    for (const [headline, ...detail] of formatKeptCommandFiles(leftCommandFiles)) {
+      this.log(chalk.yellow(headline));
+      for (const line of detail) {
+        this.log(chalk.dim(line));
+      }
     }
     if (removedSkillCount > 0) {
-      this.log(chalk.dim(`削除: スキルディレクトリ ${removedSkillCount} 件（delivery: commands）`));
+      this.log(chalk.dim(`削除: スキルディレクトリ ${removedSkillCount} 件`));
     }
-    if (zeroArtifactTools.length > 0) {
-      const names = zeroArtifactTools.join(', ');
+    if (this.keptOwnSkills.length > 0) {
+      const count = this.keptOwnSkills.length;
       this.log(
         chalk.yellow(
-          `${names} にスキルもコマンドも残っていません。delivery が 'commands' に設定されていますが、` +
-            `対象ツールはスキルだけに対応しています。スキルを生成するには ` +
-            `'openspec config set delivery both' を実行してください。`
+          `OpenSpec の生成内容と異なるスキルフォルダ${count}件を保持しました（編集済み、またはリンク）: ` +
+            `${this.keptOwnSkills.join(', ')}。書き込んでいません。不要になったら削除してください。`
         )
       );
     }
-    if (removedDeselectedCommandCount > 0) {
-      this.log(chalk.dim(`削除: コマンドファイル ${removedDeselectedCommandCount} 件（選択解除されたワークフロー）`));
+    if (this.savedOwnSkills.length > 0) {
+      const count = this.savedOwnSkills.length;
+      this.log(
+        chalk.yellow(
+          `編集済みのスキル${count}件を更新しました。編集内容のコピーは ${this.savedOwnSkills.join(', ')} に保存しました。`
+        )
+      );
     }
     if (removedDeselectedSkillCount > 0) {
       this.log(chalk.dim(`削除: スキルディレクトリ ${removedDeselectedSkillCount} 件（選択解除されたワークフロー）`));
     }
 
-    // 12. Show onboarding message for newly configured tools from legacy upgrade.
-    // Command tools get the command name their files answer to, skill-only
-    // tools their documented skill invocation, and disagreements fall back to
-    // naming the skill.
+    // 12. 旧構成から新規設定したツールの開始案内。
+    // 各ツールのスキル呼び出し方を使い、一致しなければスキル名を案内する。
     if (newlyConfiguredTools.length > 0) {
       const referenceFor = (command: string): string => {
         const neutralForm = `${transformToSkillReferences(command).slice(1)} スキル`;
         const forms = new Set(
-          newlyConfiguredTools.map((toolId) => {
-            if (shouldGenerateCommandsForTool(toolId, delivery)) {
-              // Name the command the tool's files actually answer to:
-              // /opsx-<id> where the filename is the command name.
-              const transformer = getTransformerForTool(
-                toolId,
-                delivery,
-                resolveCommandSurfaceCapability(toolId),
-                resolveCommandInvocation(toolId)
-              );
-              return transformer ? transformer(command) : command;
-            }
-            return getSkillReferenceTransformer(toolId)(command);
-          })
+          newlyConfiguredTools.map((toolId) => getSkillReferenceTransformer(toolId)(command))
         );
         return forms.size === 1 ? [...forms][0] : neutralForm;
       };
@@ -620,7 +624,7 @@ export class UpdateCommand {
     this.detectNewTools(resolvedProjectPath, configuredAndNewTools);
 
     // 14. プロファイルの補足を表示
-    this.displayProfileNotes(resolvedProjectPath, configuredAndNewTools, desiredWorkflows, profile, delivery);
+    this.displayProfileNotes(resolvedProjectPath, configuredAndNewTools, desiredWorkflows, profile);
     this.displaySetupNotes(configuredAndNewTools);
 
     // 15. List affected tools
@@ -639,14 +643,70 @@ export class UpdateCommand {
   }
 
   /**
-   * Records the shared-skills-root owner through the write seam, so a dry run
-   * lists the marker file a real update would write.
+   * 共有フォルダを使うツールの更新時に、共有コピー・リンク・旧コピーを1回整備する。
+   * 共有コピーに書き込めない場合は、共有する全ツールを同じエラーで失敗とし、
+   * 今回はそれらの旧ファイルを整理しない。
    */
-  private async writeSharedSkillTarget(projectPath: string, toolId: string): Promise<void> {
-    const marker = sharedSkillTargetMarkerPath(projectPath, toolId);
-    if (!marker) return;
-    FileSystemUtils.assertProjectArtifactPath(projectPath, marker);
-    await this.ops.writeFile(marker, `${toolId}\n`, toolId);
+  private async installSharedSkillsForRun(
+    projectPath: string,
+    setUpToolIds: readonly string[],
+    toolsToRefresh: readonly string[],
+    workflowsFor: (toolId: string) => readonly string[]
+  ): Promise<SharedSkillInstallResult> {
+    const toolOptions = (ids: readonly string[]) =>
+      ids
+        .map((toolId) => AI_TOOLS.find((tool) => tool.value === toolId))
+        .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined);
+    const empty: SharedSkillInstallResult = {
+      writtenSkillCount: 0,
+      removedSkillCount: 0,
+      replacedOldCopyCount: 0,
+      kept: [],
+      linkedOutside: [],
+      refreshedEdited: [],
+      toolFailures: new Map(),
+    };
+    if (!toolOptions(toolsToRefresh).some(usesSharedSkills)) return empty;
+    try {
+      const result = await installSharedSkills({
+        projectPath,
+        tools: toolOptions(setUpToolIds),
+        version: OPENSPEC_VERSION,
+        workflowsFor,
+        ops: this.ops,
+        view: this.view,
+        writesToDisk: !this.dryRun,
+      });
+      if (result.replacedOldCopyCount > 0) {
+        this.log(
+          chalk.dim(
+            `ツールフォルダ内の未編集スキルのコピー${result.replacedOldCopyCount}件を、` +
+              '.agents/skills の共有コピーに置き換えました。'
+          )
+        );
+      }
+      for (const line of formatKeptSkills(result.kept, result.linkedOutside, result.refreshedEdited)) this.log(chalk.yellow(line));
+      // dry-run の案内が、編集内容を保存できる最後の機会になる。
+      if (result.refreshedEdited.length > 0) {
+        this.recorder?.addNote(
+          'edited-skills',
+          `更新すると ${result.refreshedEdited.join(', ')} の編集内容を上書きし、コピーは残しません。` +
+            'OpenSpec が導入するスキルは毎回再生成されます。先に編集内容を保存し、継続して使う変更は別名の独自スキルへ移してください。'
+        );
+      }
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // 共有する各ツールの失敗として計画に載るため、別の失敗項目は追加しない。
+      this.log(chalk.red(`✗ .agents/skills の共有スキルに書き込めませんでした: ${message}`));
+      const failure = new Error(`.agents/skills の共有スキルに書き込めませんでした: ${message}`);
+      return {
+        ...empty,
+        toolFailures: new Map(
+          toolOptions(setUpToolIds).filter(usesSharedSkills).map((tool) => [tool.value, failure])
+        ),
+      };
+    }
   }
 
   /**
@@ -663,6 +723,13 @@ export class UpdateCommand {
   }
 
   /** The tree as the real update would see it at this point. */
+  /**
+   * 旧ファイルを検出しても整理しなかった場合に設定する。
+   * 非対話で --force がない場合や利用者が拒否した場合は、
+   * 同意のない旧公開版の残存ファイル削除も行わない。
+   */
+  private legacyCleanupSkipped = false;
+
   private get view(): FileView {
     return this.recorder?.view ?? DISK_VIEW;
   }
@@ -769,10 +836,7 @@ export class UpdateCommand {
    * Skill freshness was decided solely by the `generatedBy:` line, so a body
    * edited after generation — a "helpful" PR touching `.claude/skills/**`, a
    * dotfile sync, another agent — left `update` reporting the install healthy.
-   * Command files never had that gap: `areCommandFilesUpToDate` content-
-   * compares them, and the same comparison belongs on the higher-authority
-   * surface. A missing skill file is left to the profile-sync check, which
-   * already knows what a partial install means.
+   * 不足しているスキルファイルは、部分的な導入を扱うプロファイル同期で確認する。
    */
   private findToolsWithDriftedSkills(
     projectPath: string,
@@ -783,22 +847,32 @@ export class UpdateCommand {
     return toolIds.filter((toolId) => {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (!tool || !toolSupportsSkills(tool)) return false;
-      if (!shouldGenerateSkillsForTool(tool.value, delivery)) return false;
-      // A shared skills root is generated with its owner's transformer, so
-      // only the owner may compare it. getToolSkillStatus settles ownership.
       if (!getToolSkillStatus(projectPath, tool.value, this.view).configured) return false;
+      // 一覧に記録した後だけ共有コピーをこのツールのものとする。
+      // それまでは専用フォルダのスキルを設定同期で移行する。
+      if (usesSharedSkills(tool) && !isToolListed(projectPath, tool.value, this.view)) return false;
 
       const skillsDir = resolveToolSkillsDir(projectPath, tool);
-      const transformer = getTransformerForTool(
-        tool.value,
-        delivery,
-        resolveCommandSurfaceCapability(tool.value),
-        resolveCommandInvocation(tool.value)
-      );
+      // 共有コピーは全ツールで同じ文面。専用フォルダのツールだけ固有の文面を使う。
+      const transformer = usesSharedSkills(tool)
+        ? transformToSharedSkillReferences
+        : getTransformerForTool(
+          tool.value,
+          delivery,
+          resolveCommandSurfaceCapability(tool.value),
+          resolveCommandInvocation(tool.value)
+        );
 
+      const kept = usesSharedSkills(tool) ? readKeptSharedSkills(projectPath, this.view) : new Set<string>();
       return getSkillTemplates(workflowsForTool(toolId)).some(({ template, dirName }) => {
+        // 保持した独自スキルの変更は利用者に任せる。
+        if (kept.has(dirName)) return false;
         const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
         if (!this.view.exists(skillFile)) return false;
+        // 専用フォルダでも利用者のリンク先へは書き込まない。
+        if (!usesSharedSkills(tool) && classifyOwnSkill(path.dirname(skillFile), tool.value, dirName, this.view) === 'link') {
+          return false;
+        }
         try {
           const existing = this.view.read(skillFile);
           const generated = generateSkillContent(template, OPENSPEC_VERSION, transformer);
@@ -808,6 +882,74 @@ export class UpdateCommand {
         }
       });
     });
+  }
+
+  /**
+   * 現行版が書かない旧ルートのコピーや、読まれなくなったパスの旧生成物を整理する。
+   * 未編集の公開版出力だけを削除し、それ以外は保持する。旧ルートの保持対象は
+   * reportKept が有効な場合に報告する。
+   */
+  private async removeEarlierReleaseLeftovers(
+    projectPath: string,
+    updatedToolIds: readonly string[],
+    anyToolFailed: boolean,
+    reportKept = true
+  ): Promise<void> {
+    // Codex と Antigravity のようにルートを共有するツールは、以前は別ツールの
+    // 所有により処理を省略され、旧コピーが残る場合があった。生成後の移行は
+    // 共有先に現行ファイルがある場合だけ働くため、ここでは重複の削除か
+    // 差異の報告だけを行い、別ツールのルートへ移動することはない。
+    const sharedRootStragglers = Object.entries(LEGACY_TOOL_ROOTS)
+      .filter(([toolId, roots]) =>
+        !updatedToolIds.includes(toolId) &&
+        roots.some((root) => root.timing === 'after-generation')
+      )
+      .map(([toolId]) => toolId);
+    // ツール失敗時は旧ファイルを消さない。整理を拒否した場合でも、
+    // 共有先にすでにある重複コピーだけは各ツールの移行と同様に削除できる。
+    if (sharedRootStragglers.length > 0 && !anyToolFailed) {
+      if (!this.dryRun) {
+        for (const migration of migrateLegacyToolDirs(
+          projectPath,
+          sharedRootStragglers,
+          'after-generation'
+        )) {
+          if (hasMovableContent(migration)) {
+            this.log(chalk.dim(`${migration.from} の旧${describeLegacyMigration(migration)}を削除しました`));
+          }
+          if (reportKept) this.reportKeptInPlace(migration);
+        }
+      } else {
+        await this.planLegacyToolMoves(projectPath, 'after-generation', sharedRootStragglers);
+      }
+    }
+
+    // 読まれなくなった旧公開版の未編集出力には利用者の内容がない。
+    // ただし整理の拒否後や更新失敗後は、旧ファイルが必要な場合があるため残す。
+    const staleReleasedFiles = this.legacyCleanupSkipped || anyToolFailed
+      ? []
+      : await findStaleReleasedFiles(projectPath, this.view);
+    const removed: string[] = [];
+    for (const rel of staleReleasedFiles) {
+      // findStaleReleasedFiles が途中にリンクのない実ファイルと確認済み。
+      try {
+        await this.ops.removeFile(path.join(projectPath, ...rel.split('/')), 'earlier-release');
+        removed.push(rel);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.log(chalk.yellow(`${rel} を削除できませんでした: ${message}`));
+      }
+    }
+    if (removed.length > 0) {
+      if (!this.dryRun) {
+        await pruneEmptyParents(projectPath, removed);
+      }
+      this.log(
+        chalk.dim(
+          `旧 OpenSpec が残した、現在はどのツールも読まない未編集ファイル${removed.length}件を削除しました。`
+        )
+      );
+    }
   }
 
   /**
@@ -893,8 +1035,7 @@ export class UpdateCommand {
     projectPath: string,
     configuredTools: string[],
     desiredWorkflows: readonly string[] | undefined,
-    profile: Profile,
-    delivery: Delivery
+    profile: Profile
   ): void {
     const printedExtraNote = this.displayExtraWorkflowsNote(
       projectPath,
@@ -905,7 +1046,6 @@ export class UpdateCommand {
     this.displayOptionalWorkflowsNote(
       configuredTools,
       desiredWorkflows,
-      delivery,
       printedExtraNote || printedMissingCoreNote
     );
   }
@@ -953,26 +1093,19 @@ export class UpdateCommand {
 
   /**
    * 他の補足が出ない場合も、プロファイルに含まれないワークフローを案内する (#1076)。
-   * 既定の core でも、未導入のコマンドの追加方法が分かるようにする。
-   * 設定方法をすでに案内した場合や、現在の配布モードではどのツールにも
-   * スキル・コマンドを生成できない場合は省略する。
+   * 既定の core でも未導入のワークフローの追加方法を分かるようにする。
+   * 設定方法をすでに案内した場合や、ツールが未設定の場合は省略する。
    */
   private displayOptionalWorkflowsNote(
     configuredTools: string[],
     workflows: readonly string[] | undefined,
-    delivery: Delivery,
     alreadyPointedAtProfileConfig: boolean
   ): void {
     if (alreadyPointedAtProfileConfig || !workflows) {
       return;
     }
 
-    const anyToolHasASurface = configuredTools.some(
-      (toolId) =>
-        shouldGenerateSkillsForTool(toolId, delivery) ||
-        shouldGenerateCommandsForTool(toolId, delivery)
-    );
-    if (!anyToolHasASurface) {
+    if (configuredTools.length === 0) {
       return;
     }
 
@@ -983,31 +1116,6 @@ export class UpdateCommand {
     for (const line of note) {
       this.log(chalk.dim(line));
     }
-  }
-
-  /**
-   * Removes skill directories for workflows when delivery changed to commands-only.
-   * Returns the number of directories removed.
-   */
-  private async removeSkillDirs(skillsRoot: string, skillsDir: string, toolId: string): Promise<number> {
-    let removed = 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      if (!dirName) continue;
-
-      const skillDir = path.join(skillsDir, dirName);
-      if (!this.view.exists(skillDir)) continue;
-      FileSystemUtils.assertPathWithin(skillsRoot, skillDir);
-      try {
-        await this.ops.removeDirectory(skillDir, toolId);
-        removed++;
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
   }
 
   /**
@@ -1030,9 +1138,25 @@ export class UpdateCommand {
 
       const skillDir = path.join(skillsDir, dirName);
       if (!this.view.exists(skillDir)) continue;
+      // OpenSpec の SKILL.md だけを削除する。リンク、フォルダ位置のファイル、
+      // 編集済み SKILL.md、隣の別ファイルは利用者のもの。
+      // リンクをたどるパス検査より前に分類する。
+      const spot = classifyOwnSkill(skillDir, toolId, dirName, this.view, OPENSPEC_VERSION);
+      if (spot === 'link' || spot === 'user') {
+        this.keptOwnSkills.push(skillDir);
+        continue;
+      }
+      if (spot === 'missing') continue;
       FileSystemUtils.assertPathWithin(skillsRoot, skillDir);
       try {
-        await this.ops.removeDirectory(skillDir, toolId);
+        await this.ops.removeFile(path.join(skillDir, 'SKILL.md'), toolId);
+        if (!this.dryRun) {
+          try {
+            fs.rmdirSync(skillDir);
+          } catch {
+            // 利用者の別ファイルが残っている。
+          }
+        }
         removed++;
       } catch {
         // Ignore errors
@@ -1042,68 +1166,13 @@ export class UpdateCommand {
     return removed;
   }
 
-  /**
-   * Removes command files for workflows when delivery changed to skills-only.
-   * Returns the number of files removed.
-   */
-  private async removeCommandFiles(
-    projectPath: string,
-    toolId: string,
-  ): Promise<number> {
-    let removed = 0;
-
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmdPath);
-
-      try {
-        if (this.view.exists(fullPath)) {
-          await this.ops.removeFile(fullPath, toolId);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
+  /** 未使用の SKILL.md.bak、または最初の SKILL.md.bak<n>。 */
+  private freeBackupPath(skillFile: string): string {
+    for (let n = 0; ; n += 1) {
+      const candidate = `${skillFile}.bak${n === 0 ? '' : n}`;
+      // リンク切れも使用済みとし、リンク先へ書き込まない。
+      if (!this.view.exists(candidate) && this.view.linkTarget?.(candidate) === undefined) return candidate;
     }
-
-    return removed;
-  }
-
-  /**
-   * Removes command files for workflows that are no longer selected in the active profile.
-   * Returns the number of files removed.
-   */
-  private async removeUnselectedCommandFiles(
-    projectPath: string,
-    toolId: string,
-    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][]
-  ): Promise<number> {
-    let removed = 0;
-
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
-    const desiredSet = new Set(desiredWorkflows);
-
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmdPath);
-
-      try {
-        if (this.view.exists(fullPath)) {
-          await this.ops.removeFile(fullPath, toolId);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
   }
 
   /**
@@ -1194,6 +1263,10 @@ export class UpdateCommand {
     // Detect legacy artifacts
     const detection = await detectLegacyArtifacts(projectPath);
 
+    // 編集済みプロンプトは整理対象外なので別途案内する。
+    // 削除対象がなくても、--force の実行ごとに報告する。
+    if (this.force) await this.reportEditedGlobalPrompts();
+
     if (!detection.hasLegacyArtifacts) {
       return { newlyConfiguredTools: [], workflowOverrides: {} }; // No legacy artifacts found
     }
@@ -1216,19 +1289,50 @@ export class UpdateCommand {
     // A dry run plans a non-interactive update, so it never prompts.
     const canPrompt = !this.dryRun && isInteractive();
 
-    if (this.force) {
+    // 未編集の旧公開版出力は確認や --force なしで削除できる。
+    // ホーム内のプロンプトは他プロジェクトと共有するため、
+    // このプロジェクトの設定には使わず、--force または同意があるときだけ整理する。
+    const projectDetection = omitGlobalLegacyPromptFiles(detection);
+    const hasProjectRemovals = hasRepoLocalLegacyRemovals(detection);
+    const hasGlobalPrompts = detection.globalSlashCommandFiles.length > 0;
+    const onlyReleasedOutput =
+      !this.force &&
+      hasProjectRemovals &&
+      !(canPrompt && hasGlobalPrompts) &&
+      (await legacyCleanupDeletesOnlyReleasedOutput(projectPath, detection));
+    if (onlyReleasedOutput) {
+      this.log(
+        chalk.dim('旧 OpenSpec の生成内容から変更されていないファイルのため、更新時に削除します。')
+      );
+      this.log();
+    }
+
+    if (this.force || onlyReleasedOutput) {
+      // 確認なしの整理では検出した全ツールの置き換え先が必要なので、選択画面を出さない。
       const legacyUpgrade = await this.upgradeLegacyTools(
         projectPath,
-        detection,
-        canPrompt,
+        onlyReleasedOutput ? projectDetection : detection,
+        canPrompt && !onlyReleasedOutput,
         desiredWorkflows,
         delivery
       );
-      await this.performImmediateLegacyCleanup(
-        projectPath,
-        detection,
-        legacyUpgrade.skippedSharedSkillTools
-      );
+      // 確認なしの整理は全体で成功した場合だけ実行する。失敗したツールの旧コマンドが
+      // openspec/AGENTS.md を必要とする可能性があるため、失敗時はすべて残す。
+      if (onlyReleasedOutput && (legacyUpgrade.failedTools ?? []).length > 0) {
+        this.legacyCleanupSkipped = true;
+        this.log(chalk.yellow('⚠ ツールの設定に失敗したため、旧版のファイルを保持しました。問題を修正して update を再実行してください。'));
+        return legacyUpgrade;
+      }
+      await this.performImmediateLegacyCleanup(projectPath, detection, legacyUpgrade);
+      if (onlyReleasedOutput && hasGlobalPrompts) {
+        this.log(
+          chalk.dim(
+            `ホームフォルダの OpenSpec プロンプトファイル${detection.globalSlashCommandFiles.length}件を保持しました。` +
+              '他のプロジェクトで使用している可能性があります。削除するには "openspec update --force" を実行してください。'
+          )
+        );
+        return legacyUpgrade;
+      }
       return {
         ...legacyUpgrade,
         deferredGlobalCleanup: pickGlobalLegacyPromptFiles(
@@ -1241,6 +1345,7 @@ export class UpdateCommand {
     if (!canPrompt) {
       // Non-interactive mode without --force: warn and continue
       // (Unlike init, update doesn't abort - user may just want to update skills)
+      this.legacyCleanupSkipped = hasProjectRemovals;
       this.log(chalk.yellow('⚠ --force で旧ファイルを自動クリーンアップするか、対話モードで実行してください。'));
       this.log();
       this.recorder?.addNote(
@@ -1265,11 +1370,7 @@ export class UpdateCommand {
         desiredWorkflows,
         delivery
       );
-      await this.performImmediateLegacyCleanup(
-        projectPath,
-        detection,
-        legacyUpgrade.skippedSharedSkillTools
-      );
+      await this.performImmediateLegacyCleanup(projectPath, detection, legacyUpgrade);
       return {
         ...legacyUpgrade,
         deferredGlobalCleanup: pickGlobalLegacyPromptFiles(
@@ -1278,6 +1379,7 @@ export class UpdateCommand {
         ),
       };
     } else {
+      this.legacyCleanupSkipped = hasProjectRemovals;
       this.log(chalk.dim('旧ファイルのクリーンアップをスキップし、スキル更新を続行します...'));
       this.log();
       return { newlyConfiguredTools: [], workflowOverrides: {} };
@@ -1290,13 +1392,16 @@ export class UpdateCommand {
   private async performImmediateLegacyCleanup(
     projectPath: string,
     detection: LegacyDetectionResult,
-    skippedSharedSkillTools: readonly string[] = []
+    legacyUpgrade: LegacyUpgradeResult
   ): Promise<void> {
-    // Tools whose upgrade was skipped (shared root owned by another) had no
-    // replacement written, so their repo-local legacy files must be preserved.
+    // 設定を省略または失敗したツールには代替がないため、プロジェクト内の旧ファイルを残す。
+    const toolsWithoutReplacement = [
+      ...(legacyUpgrade.skippedSharedSkillTools ?? []),
+      ...(legacyUpgrade.failedTools ?? []).flatMap((failure) => failure.toolId ?? []),
+    ];
     const immediateDetection = omitToolLegacyArtifacts(
       omitGlobalLegacyPromptFiles(detection),
-      skippedSharedSkillTools
+      toolsWithoutReplacement
     );
     if (immediateDetection.hasLegacyArtifacts) {
       await this.performLegacyCleanup(projectPath, immediateDetection);
@@ -1332,6 +1437,8 @@ export class UpdateCommand {
     const blockedMatches = getLegacyGlobalPromptMatches(detection)
       .filter((prompt) => !removableMatches.some((match) => match.path === prompt.path));
 
+    if (removableMatches.length > 0) await this.reportEditedGlobalPrompts();
+
     if (blockedMatches.length > 0) {
       this.log(chalk.yellow('代替スキルがないため、保留中のグローバルプロンプトを維持しました:'));
       for (const prompt of blockedMatches) {
@@ -1339,6 +1446,25 @@ export class UpdateCommand {
       }
       this.log();
     }
+  }
+
+  /**
+   * 利用者が編集した、OpenSpec と同名のホーム内プロンプトを列挙する。
+   * どの整理でも保持されるため、案内は1回の実行につき1回だけにする。
+   */
+  private async reportEditedGlobalPrompts(): Promise<void> {
+    if (this.editedGlobalPromptsReported) return;
+    this.editedGlobalPromptsReported = true;
+    const edited = await findEditedLegacyGlobalPrompts();
+    if (edited.length === 0) return;
+    this.log(
+      chalk.yellow(
+        `OpenSpec の生成内容と異なるホーム内のプロンプトファイル${edited.length}件を保持しました（編集済みの可能性があります）:`
+      )
+    );
+    for (const file of edited) this.log(chalk.dim(`  ${file}`));
+    this.log(chalk.dim('必要な内容をスキルへ移してから、手動で削除してください。'));
+    this.log();
   }
 
   /**
@@ -1452,10 +1578,15 @@ export class UpdateCommand {
     const skippedSharedSkillTools: string[] = [];
     const failedTools: ToolFailure[] = [];
     const workflowOverrides: LegacyUpgradeResult['workflowOverrides'] = {};
-    const arbitrationTools = [...new Set([...configuredTools, ...selectedTools])]
-      .map((toolId) => AI_TOOLS.find((tool) => tool.value === toolId))
-      .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined);
-    const sharedSkillWriters = resolveSharedSkillWriters(projectPath, arbitrationTools, this.view);
+    const workflowsForLegacyTool = (toolId: string) =>
+      toolId === 'codex' && inferredCodexWorkflows.length > 0 ? inferredCodexWorkflows : desiredWorkflows;
+    // 設定済み・新規追加の全ツールの共有コピーを、旧ルート移行より先に作る。
+    const sharedInstall = await this.installSharedSkillsForRun(
+      projectPath,
+      [...new Set([...configuredTools, ...selectedTools])],
+      selectedTools,
+      workflowsForLegacyTool
+    );
 
     for (const toolId of selectedTools) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -1466,44 +1597,18 @@ export class UpdateCommand {
       try {
         const skillsDir = resolveToolSkillsDir(projectPath, tool);
         const skillsRoot = hasGlobalSkillTarget(tool) ? skillsDir : projectPath;
-        const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
-        const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
-        const writesSkills = !tool.skillsDir || sharedSkillWriters.has(tool.value);
-        const toolWorkflows = (
-          tool.value === 'codex' && inferredCodexWorkflows.length > 0
-            ? inferredCodexWorkflows
-            : desiredWorkflows
-        );
+        // 共有フォルダのスキルは上で1回書き込み済み。
+        const writesSkills = !usesSharedSkills(tool);
+        const ownFolderError = sharedInstall.toolFailures.get(tool.value);
+        if (ownFolderError) throw ownFolderError;
+        const toolWorkflows = workflowsForLegacyTool(tool.value);
         if (tool.value === 'codex' && inferredCodexWorkflows.length > 0) {
           workflowOverrides[tool.value] = inferredCodexWorkflows;
         }
         const skillTemplates = getSkillTemplates(toolWorkflows);
-        const commandContents = getCommandContents(toolWorkflows);
 
-        // 別のツールが所有する共有スキルルートは上書きしない。固有のコマンドインターフェースを
-        // 持つツールは、そのコマンドだけをインストールできる。この仕組みにより、旧構成の
-        // Antigravity は Codex 所有の `.agents/skills` と並んで `.agents/workflows` を追加できる。
-        // スキルのみのツールには安全にインストールできる成果物がないため、旧ファイルを保持し、
-        // 次回も移行対象として提示する。
-        const sharedOwner = shouldGenerateSkills && !writesSkills
-          ? arbitrationTools.find(
-              (candidate) =>
-                candidate.skillsDir === tool.skillsDir &&
-                sharedSkillWriters.has(candidate.value)
-            )?.value
-          : undefined;
-        if (sharedOwner && !shouldGenerateCommands) {
-          const ownerName =
-            AI_TOOLS.find((candidate) => candidate.value === sharedOwner)?.name ?? sharedOwner;
-          spinner.info(
-            `${tool.name} をスキップしました: ${tool.skillsDir}/skills は別のツール（${ownerName}）が管理しています。`
-          );
-          skippedSharedSkillTools.push(tool.value);
-          continue;
-        }
-
-        // 配信にスキルが含まれる場合はスキルファイルを作成する
-        if (shouldGenerateSkills && writesSkills) {
+        // 専用フォルダのスキルファイルを作成する。
+        if (writesSkills) {
           for (const { template, dirName } of skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
@@ -1517,23 +1622,6 @@ export class UpdateCommand {
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
             FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
             await this.ops.writeFile(skillFile, skillContent, tool.value);
-          }
-          await this.writeSharedSkillTarget(projectPath, tool.value);
-        }
-
-        // Create commands when delivery includes commands
-        if (shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = FileSystemUtils.resolveProjectArtifactPath(
-                projectPath,
-                cmd.path
-              );
-              await this.ops.writeFile(commandFile, cmd.fileContent, tool.value);
-            }
           }
         }
 
@@ -1557,7 +1645,7 @@ export class UpdateCommand {
         spinner.fail(`${tool.name} のセットアップに失敗しました`);
         const message = error instanceof Error ? error.message : String(error);
         this.log(chalk.red(`  ${message}`));
-        failedTools.push({ name: tool.name, error: message });
+        failedTools.push({ name: tool.name, error: message, toolId: tool.value });
         this.recorder?.addFailure(tool.value, message);
       }
     }

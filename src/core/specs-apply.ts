@@ -15,6 +15,7 @@ import {
   describeScenarioBalance,
   describeUnappliedContent,
   foldRequirementName,
+  isUnrecognizedDeltaSection,
   parseDeltaSpec,
   normalizeRequirementName,
   type RequirementBlock,
@@ -238,10 +239,17 @@ export async function buildUpdatedSpec(
     );
   }
 
-  // A well-formed requirement written outside every delta section is not
-  // applied. Say so here as well as in validate: archive is the last point at
-  // which the author can still notice, and the block reads exactly like one
-  // that would have applied.
+  // 差分セクション外の要件は適用されない。archive は気づける最後の段階なので、
+  // validate と同じくここでも案内する。不明な ## ... Requirements 配下は
+  // 差分操作の意図があるとみなし、黙って除外せず拒否する（#2195）。
+  const misplaced = plan.orphanedRequirements.find((o) => isUnrecognizedDeltaSection(o.section));
+  if (misplaced) {
+    throw new Error(
+      `${specName} の検証に失敗しました。要件 "${misplaced.name}"（${misplaced.line} 行目）は ` +
+        `"## ${misplaced.section}" の下にあります。差分セクションではないため適用されません。` +
+        `ADDED/MODIFIED/REMOVED/RENAMED Requirements の下へ移してください。`
+    );
+  }
   for (const orphan of plan.orphanedRequirements) {
     const where = orphan.section
       ? `"## ${orphan.section}" の下`
@@ -1294,7 +1302,7 @@ function extractPurposeSection(content: string): string | undefined {
   const fenceMask = buildCodeFenceMask(masked);
   const isStructural = (i: number) => !fenceMask[i];
 
-  const start = masked.findIndex((line, i) => isStructural(i) && /^##\s+Purpose\s*$/i.test(line));
+  const start = masked.findIndex((line, i) => isStructural(i) && /^##\s+Purpose(?:[ \t]+#+)?\s*$/i.test(line));
   if (start === -1) return undefined;
 
   let end = masked.length;

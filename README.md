@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v1.15.0 です。**<br>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v2.0.0 です。**<br>
 > 生成物だけ日本語にできれば十分な場合は、本家版の [Multi-Language](docs/multi-language.md) を利用できます。
 
 <details>
@@ -41,12 +41,12 @@
 最新情報については、<a href="https://x.com/0xTab">@0xTab on X</a> をフォローしてください。ヘルプや質問については、<a href="https://discord.gg/YctCnvvshC">OpenSpec Discord</a> に参加してください。
 </p>
 
-<!-- TODO: Add GIF demo of /opsx:propose → /opsx:archive workflow -->
+<!-- TODO: /openspec-propose → /openspec-archive-change のワークフローの GIF デモを追加 -->
 
 ## 実際の流れ
 
 ```text
-You: /opsx:explore
+You: /openspec-explore
 AI:  何を調べたいですか？
 You: ダークモードを入れたいけれど、きれいな実装方法がまだ分かりません。
 AI:  スタイル周りの構成を確認します...
@@ -55,7 +55,7 @@ AI:  スタイル周りの構成を確認します...
      新しい依存関係は不要です。この範囲で進めますか？
 You: はい、それで進めましょう。
 
-You: /opsx:propose add-dark-mode
+You: /openspec-propose add-dark-mode
 AI:  openspec/changes/add-dark-mode/ を作成しました
      ✓ proposal.md — 目的と変更内容
      ✓ specs/       — 要件とシナリオ
@@ -63,7 +63,7 @@ AI:  openspec/changes/add-dark-mode/ を作成しました
      ✓ tasks.md     — 実装チェックリスト
      実装に進めます。
 
-You: /opsx:apply
+You: /openspec-apply-change
 AI:  タスクを実装しています...
      ✓ 1.1 テーマコンテキストプロバイダーを追加
      ✓ 1.2 トグルコンポーネントを作成
@@ -71,7 +71,7 @@ AI:  タスクを実装しています...
      ✓ 2.2 localStorage と連携
      すべてのタスクが完了しました。
 
-You: /opsx:archive
+You: /openspec-archive-change
 AI:  openspec/changes/archive/2025-01-23-add-dark-mode/ にアーカイブしました
      仕様を更新しました。次の機能に進めます。
 ```
@@ -124,7 +124,7 @@ OpenSpec自身もOpenSpecを使って開発されています。実際の大規�
 
 ## クイックスタート
 
-**npm 版は Node.js 20.19.0 以降が必要です。**
+**npm 版は Node.js 22.12.0 以降が必要です。**
 
 OpenSpec をグローバルにインストールします。
 
@@ -171,12 +171,12 @@ openspec init
 
 次にAIへ話しかけます。
 
-- **まだ何を作るべきか固まっていませんか?** `/opsx:explore` から始めてください。コードを読み、選択肢を比べ、コードを書く前に計画の形へ整理してくれる安全な相談相手です。([クイックスタート](https://openspec.dev/docs/quickstart))
-- **欲しいものはもう決まっていますか?** `/opsx:propose <what-you-want-to-build>` へ直接進んでください。
+- **まだ何を作るべきか固まっていませんか?** `/openspec-explore` から始めてください。コードを読み、選択肢を比べ、コードを書く前に計画の形へ整理してくれる安全な相談相手です。([クイックスタート](https://openspec.dev/docs/quickstart))
+- **欲しいものはもう決まっていますか?** `/openspec-propose <what-you-want-to-build>` へ直接進んでください。
 
-どちらもデフォルトのプロファイルに含まれています。拡張ワークフロー（`/opsx:new`、`/opsx:continue`、`/opsx:ff`、`/opsx:verify`、`/opsx:bulk-archive`、`/opsx:onboard`）が必要な場合は、`openspec config profile`で選択し、`openspec update`で適用します。
+どちらもデフォルトのプロファイルに含まれています。拡張ワークフロー（`openspec-new-change`、`openspec-continue-change`、`openspec-ff-change`、`openspec-verify-change`、`openspec-bulk-archive-change`、`openspec-onboard`）が必要な場合は、`openspec config profile`で選択し、`openspec update`で適用します。
 
-`/opsx:propose` が標準表記です。ツールによって `/opsx-propose`（Cursor、GitHub Copilot）、`@opsx-propose`（Amazon Q）、`$openspec-propose`（Codex）となります。`openspec init` は選択したツールの表記を表示します。[対応ツール](https://openspec.dev/docs/supported-tools)を参照してください。
+これらはスキルです。多くのツールでは `/openspec-propose`、Codex では `$openspec-propose` で呼び出します。通常の言葉で作業を依頼することもできます。`openspec init` は選択したツールの表記を表示します。[対応ツール](https://openspec.dev/docs/supported-tools)を参照してください。1.x の `/opsx:*` コマンドから移行する場合は、[2.0 へのアップグレード](docs-lab/help/upgrade-to-2.md)を参照してください。
 
 > [!NOTE]
 > 使用しているツールが対応しているか不明ですか？[完全な一覧](https://openspec.dev/docs/supported-tools)を参照してください。30以上のツールに対応し、今後も追加していきます。
@@ -209,7 +209,7 @@ AI コーディングアシスタントは強力ですが、要件がチャッ�
 - **構築する前に合意する** — コードを書く前に人間と AI が仕様をすり合わせます
 - **整理しやすい** — 変更ごとに、提案、仕様、設計、タスクを含む専用フォルダーが作成されます
 - **流動的に作業** — 厳格なフェーズ ゲートを使用せず、いつでもアーティファクトを更新できます
-- **普段のツールで使える** — スラッシュコマンドを通じて 30 以上の AI アシスタントと連携します
+- **普段のツールで使える** — スキルを通じて 30 以上の AI アシスタントと連携します
 
 ### 比較方法
 
@@ -238,7 +238,7 @@ brew upgrade ayumuwall/tap/openspec-j
 
 **エージェントの指示を更新します**
 
-各プロジェクト内でこれを実行して AI ガイダンスを再生成し、最新のスラッシュコマンドが有効になっていることを確認します。
+各プロジェクト内で次のコマンドを実行し、AI 向けの指示を再生成して、インストール済みスキルを更新します。
 
 ```bash
 openspec update

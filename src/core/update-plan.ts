@@ -12,7 +12,8 @@ import path from 'path';
 import * as fs from 'fs';
 import os from 'os';
 import { FileSystemUtils } from '../utils/file-system.js';
-import type { FileView } from './file-view.js';
+import { DISK_VIEW, type FileView } from './file-view.js';
+import { createSkillLink, skillLinkText } from './shared/skill-links.js';
 
 export type UpdatePlanAction = 'add' | 'update' | 'delete';
 
@@ -32,7 +33,7 @@ export interface UpdatePlanChange {
  * about, which the plan lists as a non-interactive run makes it. Stable
  * identifiers, for a caller that branches on them.
  */
-export type UpdatePlanNoteCode = 'legacy-tool-directories' | 'legacy-artifacts';
+export type UpdatePlanNoteCode = 'legacy-tool-directories' | 'legacy-artifacts' | 'edited-skills';
 
 export interface UpdatePlanNote {
   code: UpdatePlanNoteCode;
@@ -65,6 +66,11 @@ export interface UpdateFileOps {
   removeDirectory(dirPath: string, tool: string): Promise<void>;
   /** Removes a directory already known to be empty. */
   removeEmptyDirectory(dirPath: string): Promise<void>;
+  /**
+   * 専用 skills/ フォルダへスキルをリンクする。作成不能ならコピーする。
+   * 作成先が利用者のものでないことを、呼び出し元で確認しておく。
+   */
+  linkSkill(linkPath: string, targetDir: string, tool: string): Promise<void>;
 }
 
 export const realFileOps: UpdateFileOps = {
@@ -80,6 +86,9 @@ export const realFileOps: UpdateFileOps = {
   async removeEmptyDirectory(dirPath) {
     await fs.promises.rmdir(dirPath);
   },
+  async linkSkill(linkPath, targetDir) {
+    createSkillLink(linkPath, targetDir);
+  },
 };
 
 export class UpdatePlanRecorder implements UpdateFileOps {
@@ -94,6 +103,8 @@ export class UpdatePlanRecorder implements UpdateFileOps {
   private readonly staged = new Map<string, string | null | typeof STAGED_DIRECTORY>();
   /** Every file path the plan has touched, with the tool that touched it last. */
   private readonly touched = new Map<string, string>();
+  /** 計画で作るリンク。リンクの絶対パスと参照先フォルダの絶対パス。 */
+  private readonly links = new Map<string, string>();
 
   constructor(private readonly projectPath: string) {}
 
@@ -114,8 +125,53 @@ export class UpdatePlanRecorder implements UpdateFileOps {
     this.staged.set(path.resolve(dirPath), null);
   }
 
+  async linkSkill(linkPath: string, targetDir: string, tool: string): Promise<void> {
+    const to = path.resolve(linkPath);
+    const from = path.resolve(targetDir);
+    let existing: fs.Stats | undefined;
+    try {
+      existing = fs.lstatSync(to);
+    } catch {
+      existing = undefined;
+    }
+    if (existing?.isSymbolicLink() && !this.links.has(to) && this.stagedEntry(to) === undefined) {
+      if (path.resolve(path.dirname(to), fs.readlinkSync(to)) === from) return; // 同じリンクがすでにある
+      this.stage(to, null, tool);
+    } else if (this.entryKind(to).kind !== 'missing') {
+      // 作成先のコピーは実際のリンク作成時に置き換わるため、配下をすべて削除する。
+      for (const filePath of this.filesUnder(to)) this.stage(filePath, null, tool);
+      this.staged.set(to, null);
+    }
+    this.probeCreatableIn(path.dirname(to));
+    this.links.set(to, from);
+    this.touched.set(to, tool);
+  }
+
+  /**
+   * 計画中のリンク配下のパスを参照先へ変換する。
+   * 読み取りや確認で、実際のリンクと同じように計画中のリンクをたどる。
+   */
+  private throughLinks(target: string): string {
+    for (let current = target; ; current = path.dirname(current)) {
+      const linked = this.links.get(current);
+      if (linked !== undefined) {
+        return this.throughLinks(path.join(linked, path.relative(current, target)));
+      }
+      if (path.dirname(current) === current) return target;
+    }
+  }
+
+  /** 実更新で作るリンク文字列。配置先の実フォルダからの相対パス。 */
+  private linkText(linkPath: string): string {
+    return skillLinkText(linkPath, this.links.get(linkPath)!);
+  }
+
   async removeDirectory(dirPath: string, tool: string): Promise<void> {
     const target = path.resolve(dirPath);
+    if (this.links.delete(target)) {
+      this.stage(target, null, tool);
+      return;
+    }
     // A symlinked skills directory - what a dotfile manager leaves behind - is
     // removed as the link itself: `fs.rm` with `recursive` unlinks it and never
     // touches the tree it points at, so the link is the one entry that goes.
@@ -169,11 +225,42 @@ export class UpdatePlanRecorder implements UpdateFileOps {
    * plan has not touched answers exactly as the disk does.
    */
   readonly view: FileView = {
-    exists: (filePath: string): boolean => this.entryKind(path.resolve(filePath)).kind !== 'missing',
+    exists: (filePath: string): boolean =>
+      this.entryKind(this.throughLinks(path.resolve(filePath))).kind !== 'missing',
     isDirectory: (filePath: string): boolean =>
-      this.entryKind(path.resolve(filePath)).kind === 'directory',
-    read: (filePath: string): string => {
+      this.entryKind(this.throughLinks(path.resolve(filePath))).kind === 'directory',
+    listDirectory: (dirPath: string): string[] => {
+      const directory = this.throughLinks(path.resolve(dirPath));
+      const names = new Set<string>();
+      const prefix = directory + path.sep;
+      for (const filePath of this.filesUnder(directory)) {
+        names.add(path.relative(directory, filePath).split(path.sep)[0]);
+      }
+      // 空フォルダやリンク切れも、削除予定でなければ実際の一覧と同様に含める。
+      try {
+        for (const name of fs.readdirSync(directory)) {
+          if (this.stagedEntry(path.join(directory, name)) !== null) names.add(name);
+        }
+      } catch {
+        // ディスク上にはまだフォルダがない。
+      }
+      for (const key of [...this.staged.keys(), ...this.links.keys()]) {
+        if (key.startsWith(prefix) && this.stagedEntry(key) !== null) {
+          names.add(path.relative(directory, key).split(path.sep)[0]);
+        }
+      }
+      return [...names];
+    },
+    linkTarget: (filePath: string): string | undefined => {
       const target = path.resolve(filePath);
+      const planned = this.links.get(target);
+      if (planned !== undefined) return planned;
+      // 削除・置換予定なら、元のリンクは残らない。
+      if (this.stagedEntry(target) !== undefined) return undefined;
+      return DISK_VIEW.linkTarget!(target);
+    },
+    read: (filePath: string): string => {
+      const target = this.throughLinks(path.resolve(filePath));
       const staged = this.stagedEntry(target);
       if (staged === undefined) return fs.readFileSync(target, 'utf-8');
       if (staged === null) throw errnoError('ENOENT', 'no such file or directory', 'open', target);
@@ -202,7 +289,9 @@ export class UpdatePlanRecorder implements UpdateFileOps {
     const byPath = new Map<string, UpdatePlanChange>();
     for (const [filePath, tool] of this.touched) {
       const before = originalEntry(filePath);
-      const after = this.stagedEntry(filePath);
+      const after = this.links.has(filePath)
+        ? `symlink:${this.linkText(filePath)}`
+        : this.stagedEntry(filePath);
       if (after === undefined || after === STAGED_DIRECTORY) continue;
       let action: UpdatePlanAction | undefined;
       if (after === null) {
@@ -420,7 +509,7 @@ function listFilesRecursively(dirPath: string): string[] {
 export function formatUpdatePlan(plan: UpdatePlan): string {
   const lines: string[] = [];
   if (plan.changes.length === 0) {
-    lines.push('変更はありません。スキルとコマンドは最新です。');
+    lines.push('変更はありません。スキルは最新です。');
   } else {
     lines.push(`${plan.changes.length} 個のファイルを変更する予定です:`);
     const width = Math.max(...plan.changes.map((change) => change.action.length));

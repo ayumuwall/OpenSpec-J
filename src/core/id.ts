@@ -8,6 +8,21 @@ export function isKebabId(value: string): boolean {
   return KEBAB_ID_REGEX.test(value);
 }
 
+/**
+ * 任意の名前を可能な範囲で kebab-case にする。camelCase/PascalCase の境界を分け、
+ * 連続する非英数字を1つのハイフンに置換して小文字にする。
+ * Git リポジトリ名からストア ID の候補を作るための処理であり、
+ * 使用前に {@link isKebabId} で検証する。
+ */
+export function toKebabCase(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+}
+
 /** Human rendering of the grammar, shared so the wording never forks. */
 export const KEBAB_ID_DESCRIPTION =
   'は小文字、数字、単一のハイフン区切りによる kebab-case でなければなりません';

@@ -390,7 +390,7 @@ describe('propose implementation boundary', () => {
     expect(proposeCommandBody).not.toContain('この変更の適用を依頼');
 
     expect(proposeSkillBody).toContain(
-      '`/opsx:apply` を実行するか、この変更の適用を依頼してください'
+      '`/opsx:apply` スキルを使うか、この変更の適用を依頼してください'
     );
     expect(proposeSkillBody).not.toContain('実装するよう依頼');
   });

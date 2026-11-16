@@ -1,6 +1,6 @@
 {
   "name": "@ayumuwall/openspec",
-  "version": "1.15.0",
+  "version": "2.0.0",
   "description": "仕様駆動開発のための AI ネイティブな仕組み",
   "keywords": [
     "openspec",
@@ -57,20 +57,20 @@
     "changeset": "changeset"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.12.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.1",
-    "@types/node": "^20.19.43",
+    "@types/node": "^22.12.0",
     "@types/picomatch": "^4.0.3",
-    "@vitest/ui": "^4.1.12",
+    "@vitest/ui": "^5.0.3",
     "eslint": "^10.5.0",
     "smol-toml": "^1.7.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
-    "vite": "^7.3.7",
-    "vitest": "^4.1.12"
+    "vite": "^8.3.5",
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "@inquirer/core": "^12.0.0",

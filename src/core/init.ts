@@ -20,9 +20,10 @@ import {
 import { findRepoPlanningRootSync } from './planning-home.js';
 import { resolveOpenSpecRoot } from './root-selection.js';
 import { ANCHORED_OPENSPEC_DIRS, ensureDirectoryAnchor } from './openspec-root.js';
-import { getSkillReferenceTransformer, getTransformerForTool, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
+import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
 import {
   AI_TOOLS,
+  SKILL_LINKED_TOOL_IDS,
   getUniversalTool,
   universalToolFallbackHint,
   OPENSPEC_DIR_NAME,
@@ -32,10 +33,6 @@ import {
 import { PALETTE } from './styles/palette.js';
 import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
-import {
-  generateCommands,
-  CommandAdapterRegistry,
-} from './command-generation/index.js';
 import {
   detectLegacyArtifacts,
   cleanupLegacyArtifacts,
@@ -51,9 +48,9 @@ import {
   SKILL_NAMES,
   getToolsWithSkillsDir,
   getToolSkillStatus,
+  getConfiguredTools,
   getToolStates,
   getSkillTemplates,
-  getCommandContents,
   generateSkillContent,
   hasGlobalSkillTarget,
   resolveToolSkillsDir,
@@ -61,23 +58,28 @@ import {
   type ToolSkillStatus,
   formatIdeRestart,
 } from './shared/index.js';
+import { reconcileCommandFiles, formatKeptCommandFiles } from './shared/command-reconcile.js';
+import {
+  cleanUpRetiredTools,
+  findRetiredTool,
+  formatRetiredToolCleanup,
+  formatRetiredToolError,
+} from './retired-tools.js';
+import { pruneEmptyParents } from './released-output-sweep.js';
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
-import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
+import { getProfileWorkflows, CORE_WORKFLOWS } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
 import { formatOptionalWorkflowsNote } from './onboarding-commands.js';
-import {
-  resolveSharedSkillWriters,
-  sharedSkillRootOwner,
-  writeSharedSkillTarget,
-} from './shared-skill-target.js';
+import { usesSharedSkills } from './shared/skill-paths.js';
+import { formatKeptSkills, installSharedSkills } from './shared/shared-skill-install.js';
+import { realFileOps } from './update-plan.js';
+import { DISK_VIEW } from './file-view.js';
+import { classifyOwnSkill } from './shared/own-skill-texts.js';
 import { migrateIfNeeded, migrateLegacyToolDirs, describeLegacyMigration, keptInPlaceNotice, hasMovableContent, scanInstalledWorkflows as scanInstalledWorkflowsShared } from './migration.js';
 import {
   resolveCommandSurfaceCapability,
   resolveCommandInvocation,
-  shouldGenerateCommandsForTool,
-  shouldGenerateSkillsForTool,
   shouldReconcileCommandFilesForTool,
-  shouldRemoveSkillsForTool,
 } from './command-surface.js';
 import {
   writeCopilotCloudFiles,
@@ -109,21 +111,6 @@ function formatLanguageContext(language: string): string {
 const PROGRESS_SPINNER = {
   interval: 80,
   frames: ['░░░', '▒░░', '▒▒░', '▒▒▒', '▓▒▒', '▓▓▒', '▓▓▓', '▒▓▓', '░▒▓'],
-};
-
-const WORKFLOW_TO_SKILL_DIR: Record<string, string> = {
-  'explore': 'openspec-explore',
-  'new': 'openspec-new-change',
-  'continue': 'openspec-continue-change',
-  'apply': 'openspec-apply-change',
-  'update': 'openspec-update-change',
-  'ff': 'openspec-ff-change',
-  'sync': 'openspec-sync-specs',
-  'archive': 'openspec-archive-change',
-  'bulk-archive': 'openspec-bulk-archive-change',
-  'verify': 'openspec-verify-change',
-  'onboard': 'openspec-onboard',
-  'propose': 'openspec-propose',
 };
 
 // -----------------------------------------------------------------------------
@@ -421,7 +408,7 @@ export class InitCommand {
       if (this.copilotCloudOption !== undefined) {
         console.log(
           chalk.yellow(
-            '--copilot-cloud/--no-copilot-cloud was ignored because the github-copilot tool was not selected.'
+            'github-copilot ツールが選択されていないため、--copilot-cloud/--no-copilot-cloud を無視しました。'
           )
         );
       }
@@ -780,6 +767,12 @@ export class InitCommand {
       throw new Error('予約値 "all" / "none" を特定のツールIDと併用できません。');
     }
 
+    // 対応終了ツールには、汎用一覧ではなく理由と移行先を案内する。
+    const retired = normalizedTokens.map(findRetiredTool).find((tool) => tool !== undefined);
+    if (retired) {
+      throw new Error(formatRetiredToolError(retired));
+    }
+
     const invalidTokens = tokens.filter(
       (_token, index) => !availableSet.has(normalizedTokens[index])
     );
@@ -827,46 +820,7 @@ export class InitCommand {
       selectedTools.push(tool);
     }
 
-    // 選択したツールが、設定済みの担当ツールと物理スキルルートを共有する場合がある。
-    // 選択したツールには独立したコマンド面がある可能性があるため除外せず、担当ツールも
-    // 更新対象に加える。
     const generationTools = [...selectedTools];
-    const delivery: Delivery = getGlobalConfig().delivery ?? 'both';
-    for (const selected of selectedTools) {
-      if (!selected.skillsDir) continue;
-      const selectedOwner = selected.value === 'codex' ||
-        !shouldGenerateSkillsForTool(selected.value, delivery)
-        ? undefined
-        : sharedSkillRootOwner(projectPath, selected.value);
-      for (const candidate of AI_TOOLS) {
-        if (
-          candidate.skillsDir === selected.skillsDir &&
-          toolStates.get(candidate.value)?.configured &&
-          candidate.value === selectedOwner &&
-          !generationTools.includes(candidate)
-        ) {
-          generationTools.push(candidate);
-        }
-      }
-    }
-
-    const skillWriters = resolveSharedSkillWriters(projectPath, generationTools);
-    const sharedRoots = new Map<string, AIToolOption[]>();
-    for (const tool of generationTools) {
-      if (!tool.skillsDir) continue;
-      const group = sharedRoots.get(tool.skillsDir) ?? [];
-      group.push(tool);
-      sharedRoots.set(tool.skillsDir, group);
-    }
-    for (const [root, group] of sharedRoots) {
-      if (group.length < 2) continue;
-      const owner = group.find((tool) => skillWriters.has(tool.value));
-      console.log(
-        chalk.dim(
-          `${group.map((tool) => tool.name).join(', ')} は ${root}/skills を共有するため、${owner?.value} 用の単一ツリーを書き込みます。`
-        )
-      );
-    }
 
     const validatedTools: ValidatedInitTool[] = [];
     for (const tool of generationTools) {
@@ -882,7 +836,8 @@ export class InitCommand {
         skillsRoot: isGlobalSkillTarget ? skillsPath : projectPath,
         isGlobalSkillTarget,
         wasConfigured: preState?.configured ?? false,
-        writesSkills: !tool.skillsDir || skillWriters.has(tool.value),
+        // 全ツール用の共有スキルは、ツールごとに複製せず一度だけ書く。
+        writesSkills: !usesSharedSkills(tool),
       });
     }
 
@@ -937,8 +892,7 @@ export class InitCommand {
   // ═══════════════════════════════════════════════════════════
 
   /**
-   * Generates skill files and slash commands for each selected tool,
-   * honoring the configured delivery mode (skills, commands, or both).
+   * 選択したツール用のスキルだけを生成し、旧版の生成コマンドファイルを削除する。
    *
    * @param projectPath - Absolute path to the project root
    * @param tools - Selected tools with their skill directory metadata
@@ -952,17 +906,15 @@ export class InitCommand {
     createdTools: typeof tools;
     refreshedTools: typeof tools;
     failedTools: Array<{ name: string; error: Error }>;
-    commandsSkipped: string[];
-    skillsInvocableCommandSkips: string[];
     removedCommandCount: number;
+    leftCommandFiles: { kept: string[]; unchecked: string[] };
     removedSkillCount: number;
   }> {
     const createdTools: typeof tools = [];
     const refreshedTools: typeof tools = [];
     const failedTools: Array<{ name: string; error: Error }> = [];
-    const commandsSkipped: string[] = [];
-    const skillsInvocableCommandSkips: string[] = [];
     let removedCommandCount = 0;
+    const leftCommandFiles = { kept: [] as string[], unchecked: [] as string[] };
     let removedSkillCount = 0;
 
     // グローバル設定からプロファイル・デリバリー設定を読み込む（--profile オーバーライドを優先）
@@ -971,21 +923,69 @@ export class InitCommand {
     const delivery: Delivery = globalConfig.delivery ?? 'both';
     const workflows = getProfileWorkflows(profile, globalConfig.workflows);
 
-    // Get skill and command templates filtered by profile workflows
-    const deliveryIncludesCommands = delivery !== 'skills';
+    // プロファイルのワークフローで絞り込んだスキルテンプレートを取得
     const skillTemplates = getSkillTemplates(workflows);
-    const commandContents = getCommandContents(workflows);
 
+    // プロジェクトのスキルは `.agents/skills/` に一度だけ書く。
+    // 選択したツールと既存の設定済みツールを含め、再 init で他のツールを外さない。
+    // `--tools none` では新規・設定済みのどちらのツールも変更しない。
+    const sharedToolIds =
+      tools.length === 0
+        ? []
+        : [...new Set([...tools.map((tool) => tool.value), ...getConfiguredTools(projectPath)])];
+    let ownFolderErrors = new Map<string, Error>();
+    try {
+      const shared = await installSharedSkills({
+        projectPath,
+        tools: AI_TOOLS.filter((tool) => sharedToolIds.includes(tool.value)),
+        version: OPENSPEC_VERSION,
+        workflowsFor: () => workflows,
+        ops: realFileOps,
+        view: DISK_VIEW,
+        writesToDisk: true,
+      });
+      if (shared.writtenSkillCount === 0) removedSkillCount += shared.removedSkillCount;
+      ownFolderErrors = shared.toolFailures;
+      if (shared.replacedOldCopyCount > 0) {
+        console.log(
+          chalk.dim(
+            `ツール固有フォルダ内の未編集のスキルコピー${shared.replacedOldCopyCount}件を、.agents/skills の共有コピーに置き換えました。`
+          )
+        );
+      }
+      for (const line of formatKeptSkills(shared.kept, shared.linkedOutside, shared.refreshedEdited)) console.log(chalk.yellow(line));
+    } catch (error) {
+      // フォルダを共有する全ツールを同じエラーで失敗にする。
+      const message = error instanceof Error ? error.message : String(error);
+      const failure = new Error(`.agents/skills の共有スキルを書き込めませんでした: ${message}`);
+      ownFolderErrors = new Map(
+        AI_TOOLS.filter((tool) => sharedToolIds.includes(tool.value) && usesSharedSkills(tool))
+          .map((tool) => [tool.value, failure])
+      );
+    }
+
+    // 対応終了ツールの旧生成物を削除する。編集済みのものは保持して報告する。
+    for (const retired of await cleanUpRetiredTools(projectPath, {
+      view: DISK_VIEW,
+      remove: (fullPath) => fs.promises.unlink(fullPath),
+      prune: true,
+    })) {
+      const [headline, ...detail] = formatRetiredToolCleanup(retired, sharedToolIds.includes(retired.tool.successor));
+      console.log(chalk.yellow(headline));
+      for (const line of detail) console.log(chalk.dim(line));
+    }
+
+    const keptOwnSkills: string[] = [];
+    const savedOwnSkills: string[] = [];
     // ツールごとに処理する
     for (const tool of tools) {
       const spinner = ora(`${tool.name} をセットアップ中...`).start();
 
       try {
-        const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
-        const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
-
-        // 選択したデリバリーとツール機能で許可され、書き込み担当である場合にスキルを生成
-        if (shouldGenerateSkills && tool.writesSkills) {
+        const ownFolderError = ownFolderErrors.get(tool.value);
+        if (ownFolderError) throw ownFolderError;
+        // 固有のスキルを書き込むツールでは、スキルファイルを生成する
+        if (tool.writesSkills) {
           // スキルディレクトリと SKILL.md を作成
           for (const { template, dirName } of skillTemplates) {
             const skillDir = path.join(tool.skillsPath, dirName);
@@ -1000,43 +1000,37 @@ export class InitCommand {
             );
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
+            if (fs.existsSync(skillDir) || DISK_VIEW.linkTarget?.(skillDir) !== undefined) {
+              const spot = classifyOwnSkill(skillDir, tool.value, dirName, DISK_VIEW, OPENSPEC_VERSION);
+              // 利用者のリンクや、フォルダの位置にある独自ファイルには書き込まない。
+              if (spot === 'link' || (spot === 'user' && !DISK_VIEW.isDirectory(skillDir))) {
+                keptOwnSkills.push(skillDir);
+                continue;
+              }
+              // 同じ場所で更新する前に、編集済み SKILL.md を隣へ保存する。
+              if (spot === 'user') {
+                // リンク切れも使用済みとみなし、既存のものを上書きしない。
+                const taken = (candidate: string) => fs.existsSync(candidate) || DISK_VIEW.linkTarget?.(candidate) !== undefined;
+                let backup = `${skillFile}.bak`;
+                for (let n = 1; taken(backup); n += 1) backup = `${skillFile}.bak${n}`;
+                FileSystemUtils.assertPathWithin(tool.skillsRoot, backup);
+                await FileSystemUtils.writeFile(backup, fs.readFileSync(skillFile, 'utf-8'));
+                savedOwnSkills.push(backup);
+              }
+            }
+
             // スキルファイルを書き込む
             FileSystemUtils.assertPathWithin(tool.skillsRoot, skillFile);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
-          writeSharedSkillTarget(projectPath, tool.value);
         }
-        if (
-          shouldRemoveSkillsForTool(tool.value, delivery) &&
-          tool.writesSkills &&
-          !tool.isGlobalSkillTarget
-        ) {
-          removedSkillCount += await this.removeSkillDirs(tool.skillsRoot, tool.skillsPath);
-          // このデリバリーモードでスキルを生成しない場合も選択を明示的に保持し、
-          // 内容が異なる旧ルート側へ書き込み担当が戻らないようにする。
-          writeSharedSkillTarget(projectPath, tool.value);
-        }
-
-        // デリバリーにコマンドが含まれる場合はコマンドを生成する
-        if (shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmd.path);
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-          }
-        } else if (deliveryIncludesCommands) {
-          if (resolveCommandSurfaceCapability(tool.value) === 'skills-invocable') {
-            skillsInvocableCommandSkips.push(tool.value);
-          } else {
-            commandsSkipped.push(tool.value);
-          }
-        }
-        if (shouldReconcileCommandFilesForTool(tool.value, delivery)) {
-          removedCommandCount += await this.removeCommandFiles(projectPath, tool.value);
+        if (shouldReconcileCommandFilesForTool(tool.value)) {
+          const reconciled = await reconcileCommandFiles(projectPath, tool.value, workflows);
+          removedCommandCount += reconciled.removed.length;
+          leftCommandFiles.kept.push(...reconciled.kept);
+          leftCommandFiles.unchecked.push(...reconciled.unchecked);
+          // 削除したファイルの親フォルダが空なら削除する。
+          await pruneEmptyParents(projectPath, reconciled.removed.map((rel) => FileSystemUtils.toPosixPath(rel)));
         }
         if (tool.value === 'github-copilot' && writeCopilotCloud) {
           await writeCopilotCloudFiles(projectPath);
@@ -1053,6 +1047,42 @@ export class InitCommand {
         spinner.fail(`${tool.name} のセットアップに失敗しました`);
         failedTools.push({ name: tool.name, error: error as Error });
       }
+    }
+    // 未選択の設定済みツールも共有インストールの対象。
+    // update と同様にフォルダの失敗を報告し、旧生成コマンドも整理する。
+    // 編集済みコマンドは保持する。
+    const selectedIds = new Set(tools.map((tool) => tool.value));
+    for (const other of AI_TOOLS.filter((tool) => sharedToolIds.includes(tool.value) && !selectedIds.has(tool.value))) {
+      const failure = ownFolderErrors.get(other.value);
+      if (failure) {
+        // update と同様、フォルダの更新に失敗したツールのコマンドは保持する。
+        failedTools.push({ name: `${other.name}（このプロジェクトで設定済み）`, error: failure });
+        continue;
+      }
+      if (!shouldReconcileCommandFilesForTool(other.value)) continue;
+      try {
+        const reconciled = await reconcileCommandFiles(projectPath, other.value, workflows);
+        removedCommandCount += reconciled.removed.length;
+        leftCommandFiles.kept.push(...reconciled.kept);
+        leftCommandFiles.unchecked.push(...reconciled.unchecked);
+        await pruneEmptyParents(projectPath, reconciled.removed.map((rel) => FileSystemUtils.toPosixPath(rel)));
+      } catch (error) {
+        failedTools.push({ name: other.name, error: error as Error });
+      }
+    }
+    if (keptOwnSkills.length > 0) {
+      console.log(
+        chalk.yellow(
+          `利用者が作成したスキルフォルダ${keptOwnSkills.length}件（リンクまたはファイル）を保持しました: ${keptOwnSkills.join(', ')}。この場所には書き込んでいません。`
+        )
+      );
+    }
+    if (savedOwnSkills.length > 0) {
+      console.log(
+        chalk.yellow(
+          `編集済みスキル${savedOwnSkills.length}件を更新し、編集内容を ${savedOwnSkills.join(', ')} に保存しました。`
+        )
+      );
     }
 
     for (const tool of [...createdTools, ...refreshedTools]) {
@@ -1073,9 +1103,8 @@ export class InitCommand {
       createdTools,
       refreshedTools,
       failedTools,
-      commandsSkipped,
-      skillsInvocableCommandSkips,
       removedCommandCount,
+      leftCommandFiles,
       removedSkillCount,
     };
   }
@@ -1183,9 +1212,8 @@ export class InitCommand {
       createdTools: typeof tools;
       refreshedTools: typeof tools;
       failedTools: Array<{ name: string; error: Error }>;
-      commandsSkipped: string[];
-      skillsInvocableCommandSkips: string[];
       removedCommandCount: number;
+      leftCommandFiles: { kept: string[]; unchecked: string[] };
       removedSkillCount: number;
     },
     configStatus: 'created' | 'exists' | 'skipped',
@@ -1218,69 +1246,24 @@ export class InitCommand {
     if (successfulTools.length > 0) {
       const globalConfig = getGlobalConfig();
       const profile: Profile = (this.profileOverride as Profile) ?? globalConfig.profile ?? 'core';
-      const delivery: Delivery = globalConfig.delivery ?? 'both';
       const workflows = getProfileWorkflows(profile, globalConfig.workflows);
-      const usesGlobalSkillTarget = successfulTools.some((tool) => tool.isGlobalSkillTarget);
 
-      if (!usesGlobalSkillTarget) {
-        const toolDirs = [
-          ...new Set(
-            successfulTools
-              .map((tool) => tool.skillsDir)
-              .filter((skillsDir): skillsDir is string => Boolean(skillsDir))
-          ),
-        ].join(', ');
-        const skillCount = successfulTools.some((tool) =>
-          shouldGenerateSkillsForTool(tool.value, delivery)
-        )
-          ? getSkillTemplates(workflows).length
-          : 0;
-        const commandCount = successfulTools.some((tool) =>
-          shouldGenerateCommandsForTool(tool.value, delivery)
-        )
-          ? getCommandContents(workflows).length
-          : 0;
-        if (skillCount > 0 && commandCount > 0) {
-          console.log(`${toolDirs}/ にスキル ${skillCount} 個とコマンド ${commandCount} 個を作成しました`);
-        } else if (skillCount > 0) {
-          console.log(`${toolDirs}/ にスキル ${skillCount} 個を作成しました`);
-        } else if (commandCount > 0) {
-          console.log(`${toolDirs}/ にコマンド ${commandCount} 個を作成しました`);
+      // スキルは共有フォルダに配置し、必要なツールへリンクする。
+      // MiniMax Code はホーム内の固有フォルダを使用。件数はフォルダ単位で数える。
+      const toolOption = (id: string) => AI_TOOLS.find((candidate) => candidate.value === id);
+      const skillDirs = [...new Set(successfulTools.map((tool) => {
+        const option = toolOption(tool.value);
+        if (tool.isGlobalSkillTarget && option?.globalSkillsDir) {
+          return `~/${option.globalSkillsDir}/skills/`;
         }
-      } else {
-        const skillTools = successfulTools.filter((tool) =>
-          shouldGenerateSkillsForTool(tool.value, delivery)
-        );
-        const skillCount = skillTools.length * getSkillTemplates(workflows).length;
-        if (skillCount > 0) {
-          const skillDirs = [...new Set(skillTools.map((tool) => tool.skillsPath))];
-          console.log(`${skillDirs.join(', ')} にスキル ${skillCount} 個を作成しました`);
-        }
-
-        const commandContents = getCommandContents(workflows);
-        const commandTools = successfulTools.filter((tool) =>
-          shouldGenerateCommandsForTool(tool.value, delivery)
-        );
-        const commandCount = commandTools.length * commandContents.length;
-        if (commandCount > 0) {
-          const commandDirs = [
-            ...new Set(
-              commandTools.flatMap((tool) => {
-                const adapter = CommandAdapterRegistry.get(tool.value);
-                if (!adapter) return [];
-                return commandContents.map((command) => {
-                  const commandPath = adapter.getFilePath(command.id);
-                  const absolutePath = path.isAbsolute(commandPath)
-                    ? commandPath
-                    : path.join(projectPath, commandPath);
-                  return path.dirname(absolutePath);
-                });
-              })
-            ),
-          ];
-          console.log(`${commandDirs.join(', ')} にコマンド ${commandCount} 個を作成しました`);
-        }
-      }
+        return option && usesSharedSkills(option) ? '.agents/skills/' : `${tool.skillsDir}/skills/`;
+      }))];
+      const linkedFrom = [...new Set(successfulTools.flatMap((tool) => {
+        const option = toolOption(tool.value);
+        return option && SKILL_LINKED_TOOL_IDS.has(option.value) ? [`${option.skillsDir}/skills/`] : [];
+      }))];
+      const links = linkedFrom.length > 0 ? `（${linkedFrom.join(', ')} からリンク）` : '';
+      console.log(`${skillDirs.join(', ')} にスキル${getSkillTemplates(workflows).length}個を作成しました${links}`);
     }
 
     // 失敗を表示
@@ -1288,18 +1271,18 @@ export class InitCommand {
       console.log(chalk.red(`失敗: ${results.failedTools.map((f) => `${f.name} (${f.error.message})`).join(', ')}`));
     }
 
-    // スキップされたコマンドを表示
-    if (results.commandsSkipped.length > 0) {
-      console.log(chalk.dim(`コマンド生成をスキップ: ${results.commandsSkipped.join(', ')}（アダプタなし）`));
-    }
-    if (results.skillsInvocableCommandSkips.length > 0) {
-      console.log(chalk.dim(`コマンドをスキップしたツール: ${results.skillsInvocableCommandSkips.join(', ')}（スキルを使用）`));
-    }
+    // 旧版の生成コマンドファイルの削除結果
     if (results.removedCommandCount > 0) {
-      console.log(chalk.dim(`削除: ${results.removedCommandCount} 個のコマンドファイル（delivery: skills）`));
+      console.log(chalk.dim(`削除: コマンドファイル${results.removedCommandCount}件（OpenSpec 2.0 はスキルだけをインストールします）`));
+    }
+    for (const [headline, ...detail] of formatKeptCommandFiles(results.leftCommandFiles)) {
+      console.log(chalk.yellow(headline));
+      for (const line of detail) {
+        console.log(chalk.dim(line));
+      }
     }
     if (results.removedSkillCount > 0) {
-      console.log(chalk.dim(`削除: ${results.removedSkillCount} 個のスキルディレクトリ（delivery: commands）`));
+      console.log(chalk.dim(`削除: スキルディレクトリ${results.removedSkillCount}件`));
     }
 
     // GitHub Copilot cloud files are opt-in — report what is actually on disk:
@@ -1355,49 +1338,28 @@ export class InitCommand {
     // When no tool got /opsx:* commands, point at the skill instead of a
     // command that does not exist.
     const activeDelivery: Delivery = getGlobalConfig().delivery ?? 'both';
-    const commandsGenerated = successfulTools.some((tool) => shouldGenerateCommandsForTool(tool.value, activeDelivery));
-    const skillsGenerated = successfulTools.some((tool) => shouldGenerateSkillsForTool(tool.value, activeDelivery));
-    // Each hint line must be a usable instruction for the tool it serves.
-    // Tools that generated commands are told the command name their files
-    // answer to (/opsx:* when namespaced under opsx/, /opsx-* when the
-    // filename is the command); tools that only got skills are told their
-    // documented skill invocation (Kimi Code: /skill:openspec-*; Codex CLI:
-    // $openspec-*; others: /openspec-*). Tools that got no artifacts are
-    // covered by the configuration correction instead. When the selection
-    // disagrees, print one line per distinct instruction, labeled with the
-    // tools it applies to.
+    // 各ツールで使えるスキルの呼び出し形式を案内する。
+    // Kimi Code: /skill:openspec-*、Codex CLI: $openspec-*、その他: /openspec-*。
+    // 表記が異なる場合は、対象ツール名を付けて別々の行に表示する。
     const startHintLines = (command: string): string[] => {
       const hintToTools = new Map<string, string[]>();
       for (const tool of successfulTools) {
         let hint: string;
-        if (shouldGenerateCommandsForTool(tool.value, activeDelivery)) {
-          const transformer = getTransformerForTool(
-            tool.value,
-            activeDelivery,
-            resolveCommandSurfaceCapability(tool.value),
-            resolveCommandInvocation(tool.value)
-          );
-          hint = `最初の変更を開始: ${transformer ? transformer(command) : command} "あなたのアイデア"`;
-        } else if (shouldGenerateSkillsForTool(tool.value, activeDelivery)) {
-          const skillReference = getSkillReferenceTransformer(tool.value)(command);
-          // Tools with no slash surface (e.g. Rovo Dev) reference skills as
-          // prose ("the openspec-propose skill"); phrase the hint so it reads
-          // as an instruction rather than a dead command with an argument.
-          if (usesNaturalLanguageSkillReferences(tool.value)) {
-            hint = `最初の変更を開始: ${tool.name} に ${skillReference}を使って「あなたのアイデア」を扱うよう依頼してください`;
-          } else if (tool.value === 'codex') {
-            hint = `最初の変更を開始: ${skillReference} "あなたのアイデア"（Codex CLI または IDE）。Codex デスクトップアプリでは、サイドバーの Skills から ${skillReference.slice(1)} を選択してください`;
-          } else {
-            hint = `最初の変更を開始: ${skillReference} "あなたのアイデア"`;
-          }
+        const skillReference = getSkillReferenceTransformer(tool.value)(command);
+        // Rovo Dev などスラッシュ形式がないツールは、
+        // 実行できないコマンドではなくスキルを使う依頼として案内する。
+        if (usesNaturalLanguageSkillReferences(tool.value)) {
+          hint = `最初の変更を開始: ${tool.name} に ${skillReference}を使って「あなたのアイデア」を扱うよう依頼してください`;
+        } else if (tool.value === 'codex') {
+          hint = `最初の変更を開始: ${skillReference} "あなたのアイデア"（Codex CLI または IDE）。Codex デスクトップアプリでは、サイドバーの Skills から ${skillReference.slice(1)} を選択してください`;
         } else {
-          continue;
+          hint = `最初の変更を開始: ${skillReference} "あなたのアイデア"`;
         }
         hintToTools.set(hint, [...(hintToTools.get(hint) ?? []), tool.name]);
       }
       if (hintToTools.size === 0) {
-        // No successful tools: keep the generic command hint
-        return [`最初の変更を開始: ${command} "あなたのアイデア"`];
+        // 成功したツールがなければ、既定のスキル表記で案内する。
+        return [`最初の変更を開始: ${transformToSkillReferences(command)} "あなたのアイデア"`];
       }
       if (hintToTools.size === 1) {
         return [[...hintToTools.keys()][0]];
@@ -1411,31 +1373,8 @@ export class InitCommand {
       }
     };
     console.log();
-    // delivery=commands with tools that only support skills: those tools get
-    // no artifacts at all, so print a per-tool configuration correction
-    // rather than leave them with a dead (or missing) instruction — even
-    // when other selected tools did get commands or skills.
-    const zeroArtifactTools = successfulTools.filter(
-      (tool) =>
-        !shouldGenerateSkillsForTool(tool.value, activeDelivery) &&
-        !shouldGenerateCommandsForTool(tool.value, activeDelivery)
-    );
-    if (zeroArtifactTools.length > 0) {
-      const names = zeroArtifactTools.map((tool) => tool.name).join(', ');
-      console.log(
-        chalk.yellow(
-          `${names} 向けのスキルまたはコマンドは生成されませんでした。deliveryが 'commands' ですが、` +
-            `対象ツールはスキルだけに対応しています。スキルを生成するには ` +
-            `'openspec config set delivery both' を実行してください。`
-        )
-      );
-    }
     let advertisedAnInvocation = true;
-    if (successfulTools.length > 0 && !commandsGenerated && !skillsGenerated) {
-      // Nothing was generated for any tool: the correction above is the
-      // whole story, so don't advertise an invocation that doesn't exist.
-      advertisedAnInvocation = false;
-    } else if (activeWorkflows.includes('propose')) {
+    if (activeWorkflows.includes('propose')) {
       printStartHints('/opsx:propose');
     } else if (activeWorkflows.includes('new')) {
       printStartHints('/opsx:new');
@@ -1444,11 +1383,11 @@ export class InitCommand {
       advertisedAnInvocation = false;
     }
 
-    // プロファイルに含まれないワークフローを案内し、未導入のコマンドを
+    // プロファイルに含まれないワークフローを案内し、未導入のスキルを
     // インストール不備と誤認するのを防ぐ (#1076)。上ですでに設定方法を
-    // 案内した場合や、どのツールにもスキル・コマンドを生成していない場合は省略する。
+    // 案内した場合や、どのツールにもスキルを生成していない場合は省略する。
     // 後者ではワークフローを追加してもファイルが生成されず、解決策にならない。
-    if (advertisedAnInvocation && (commandsGenerated || skillsGenerated)) {
+    if (advertisedAnInvocation && successfulTools.length > 0) {
       const optionalWorkflowsNote = formatOptionalWorkflowsNote(activeWorkflows);
       if (optionalWorkflowsNote) {
         console.log();
@@ -1487,46 +1426,4 @@ export class InitCommand {
     }).start();
   }
 
-  private async removeSkillDirs(skillsRoot: string, skillsDir: string): Promise<number> {
-    let removed = 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      if (!dirName) continue;
-
-      const skillDir = path.join(skillsDir, dirName);
-      if (!fs.existsSync(skillDir)) continue;
-      FileSystemUtils.assertPathWithin(skillsRoot, skillDir);
-      try {
-        await fs.promises.rm(skillDir, { recursive: true, force: true });
-        removed++;
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  private async removeCommandFiles(projectPath: string, toolId: string): Promise<number> {
-    let removed = 0;
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmdPath);
-
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
 }

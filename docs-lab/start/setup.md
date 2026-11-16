@@ -23,11 +23,11 @@ init は使用する AI ツールを確認し、選択したツールのワー�
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-.claude/ にスキル 6 個とコマンド 6 個を作成しました
+.agents/skills/ にスキル6個を作成しました（.claude/skills/ からリンク）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 ```
 
-新しいコマンドを有効にするため、IDE を再起動してください。
+IDE で動くツールを使う場合は、新しいスキルを読み込むために再起動してください。
 
 init は安全に再実行できます。
 
@@ -55,12 +55,12 @@ apply または archive の進め方は、該当する operations の項目へ�
 
 init はプロジェクトに 2 つのものを作成します。
 
-- リポジトリのルートに`openspec/`フォルダ
-- AI ツールのフォルダ（`.agents/`、`.claude/`など）にワークフローファイル（スキルとコマンド）
+- リポジトリのルートに `openspec/` フォルダ
+- 共有の `.agents/skills/` フォルダにスキル。必要なツールには、`.claude/skills/` など固有フォルダからのリンク
 
 ほかのソースと同様に、すべてコミットしてください。
-init はリポジトリ内のほかの内容を変更しません。旧バージョンの OpenSpec が残したファイルを
-見つけた場合は、削除前に確認します。
+
+init は旧版が生成したコマンドファイルも削除しますが、編集済みのものは保持します。1.0 より前に初期化したプロジェクトには、`.claude/commands/openspec/` などのフォルダや、`CLAUDE.md`・`AGENTS.md` 内の OpenSpec マーカーブロックも残っています。対話実行の init は削除前に確認します。`--force` や `--tools` を指定した場合、または非対話実行では、ブロック内の編集も含めて確認なしで削除するため、先にバックアップしてください。
 
 ### `openspec/`フォルダ
 
@@ -76,10 +76,11 @@ openspec/
 
 [プロジェクト設定](../customize/project-config.md)で`config.yaml`を説明しています。
 
-### The workflow files (skills and commands)
+<a id="the-workflow-files-skills"></a>
 
-これらは、作業中に使う操作を定義した OpenSpec ワークフローです。次は、多くのツールが使用する
-共有`.agents/`フォルダへ、スキルとしてインストールした場合の構成です。
+### ワークフローファイル（スキル）
+
+これらは、作業中に使う操作を定義した OpenSpec ワークフローです。次は、共有の `.agents/skills/` フォルダへスキルとしてインストールした場合の構成です。
 
 ```
 .agents/skills/
@@ -96,65 +97,28 @@ openspec/
 これは既定のセットに、任意のワークフローを 2 つ加えたものです。
 [プロファイル](../customize/profiles.md)に全 12 ワークフローを掲載しています。
 
-既定では、各ワークフローを 2 つの形式でインストールします。
+設定したツールの数にかかわらず、各スキルはここに一度だけ書き込みます。Claude Code や Kiro など `.agents/skills/` を読まないツールには、`.claude/skills/openspec-propose` など固有フォルダ内にスキルごとのリンクを作成します。MiniMax Code だけは例外で、ホーム内の `~/.minimax/skills/` に配置します。配置とリンクを作成するツールは[対応ツール](../reference/supported-tools.md#where-skills-go)を参照してください。
 
-- **スキル**（`openspec-apply-change`）：作業を依頼すると、エージェントが自動的に読み取る手順です。
-- **コマンド**（Claude Code では`/opsx:apply`）：同じワークフローを短い名前で入力して開始する方法です。
+各ワークフローは**スキル**です。作業を依頼するとエージェントが読み取る指示であり、名前でも呼び出せます（Claude Code は `/openspec-apply-change`、Codex は `$openspec-apply-change`）。ツールごとの表記は[対応ツール](../reference/supported-tools.md#support-matrix)を参照してください。
 
-2 つの形式は機能的に同じです。ワークフローのスキルとコマンドには、同じ手順が含まれます。
-
-2 つの形式があるのは、コマンドが先に登場し、ツールごとに表記が異なるためです。スキルはツール間で
-共有される新しい標準ですが、すべてのツールがスキルを直接呼び出せるわけではありません。
-そのため、コマンドは該当するツールの開始方法として残っています。
-
-一部のツールはスキル形式だけをインストールします。スキルを直接実行するツールでは、init が
-コマンドを省略し、その旨を表示します（`コマンドをスキップしたツール: codex（skill を使用）`）。
-
-OpenSpec はスキルを推奨しており、将来的にはコマンドを廃止する予定です。
+OpenSpec 1.x はワークフローごとのコマンドファイル（`/opsx:apply`）も生成していました。OpenSpec 2.0 はスキルだけをインストールします。変更点は[2.0 へのアップグレード](../help/upgrade-to-2.md)を参照してください。
 
 #### インストール内容を変更する
 
-対話式の選択画面で、配布形式とワークフローセットを変更できます
+対話式の選択画面で、ワークフローセットを変更できます
 （[プロファイル](../customize/profiles.md)）。ターミナルで次を実行します。
 
 ```bash
 openspec config profile
 ```
 
-次はスキルだけに切り替える例です。
-
-```
-現在の profile 設定
-  配信方式: both
-
-? 何を設定しますか？ Delivery のみ
-? Delivery mode（workflows のインストール方法）: Skills のみ
-
-設定変更:
-  delivery: both -> skills
-? このプロジェクトに今すぐ変更を適用しますか？ (Y/n) y
-```
-
-「はい」と答えると、現在のプロジェクトへその場で適用します。ほかのプロジェクトでは、次回の
-`openspec update`時に適用されます。この設定はマシンごとのグローバル設定です。
+「このプロジェクトに今すぐ変更を適用しますか？」に「はい」と答えると、その場で適用します。ほかのプロジェクトでは、次回の `openspec update` 時に適用されます。この設定はマシンごとのグローバル設定です。
 
 #### Claude Code にワークフローが表示されない
 
-Claude Code は配布設定に応じて、次の一方または両方から OpenSpec ワークフローを読み込みます。
-
-- **スキル**：`.claude/skills/openspec-*/SKILL.md`
-- **コマンド**：`.claude/commands/opsx/<id>.md`
-
-ファイルがなければ、ターミナルでプロジェクトを更新します。
+Claude Code は `.agents/skills/openspec-*` へのリンクである `.claude/skills/openspec-*` からスキルを読み込みます。ファイルがなければ、ターミナルでプロジェクトを更新します。
 
 ```bash
-openspec update
-```
-
-コマンドファイルがあるのに`/opsx:`で表示されなければ、Claude Code を更新して再起動します。それでも読み込まれなければ、ターミナルでスキルも有効にします。
-
-```bash
-openspec config set delivery both
 openspec update
 ```
 

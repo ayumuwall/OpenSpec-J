@@ -20,7 +20,7 @@ import { PROJECT_ROOT_GUARD } from './project-root.js';
  */
 const SKILL_APPLY_HANDOFF = optionalWorkflow(
   'apply',
-  '`/opsx:apply` を実行するか、この変更の適用を依頼してください',
+  '`/opsx:apply` スキルを使うか、この変更の適用を依頼してください',
   'この変更の適用を依頼してください'
 );
 
