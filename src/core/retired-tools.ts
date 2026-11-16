@@ -84,7 +84,7 @@ export function formatRetiredToolCleanup(result: RetiredToolCleanup, successorSe
   const advice = successorSetUp
     ? ''
     : `代わりに ${tool.successorName} を設定してください: openspec init --tools ${tool.successor}`;
-  const lines = [`${tool.name} の対応は終了しました: ${tool.reason}。${advice}`];
+  const lines = [`${tool.name} の対応は終了しました。${tool.reason}です。${advice}`];
   if (removed.length > 0) {
     lines.push(
       `  ${tool.folder}/ から OpenSpec のファイル${removed.length}件を削除しました。`

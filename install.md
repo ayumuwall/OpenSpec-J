@@ -14,7 +14,7 @@ OpenSpec をインストールし、私のプロジェクトをセットアッ�
 
 TODO:
 
-- [ ] 利用者の確認を得て CLI をインストールする（日本語版はパッケージマネージャー、本家版は単体実行版も選択可能）
+- [ ] 利用者の確認を得て、日本語版の CLI をインストールする
 - [ ] `openspec` が PATH に含まれていることを確認する
 - [ ] セットアップするフォルダを確認し、そこで `openspec init --tools <ids>` を実行する
 - [ ] init が実際に作成した内容と呼び出し方法を報告する
@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/script
 $installer = Join-Path ([System.IO.Path]::GetTempPath()) ('openspec-install-' + [guid]::NewGuid() + '.ps1')
 try {
   Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.ps1 -OutFile $installer
-  & $installer
+  powershell -NoProfile -ExecutionPolicy Bypass -File $installer
 } finally {
   Remove-Item -LiteralPath $installer -ErrorAction SilentlyContinue
 }

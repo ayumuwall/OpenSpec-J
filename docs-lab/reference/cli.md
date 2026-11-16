@@ -869,7 +869,14 @@ openspec validate --all            # すべての変更と仕様
 **終了コード**
 
 - `0`：空の一括範囲を含め、検証した全項目が成功しました。
-- `1`：項目の検証に失敗した、レポート要求が無効、`openspec/config.yaml` を読み取れないか YAML が不正、または実行に失敗しました（名前が不明、OpenSpec ルートがない場合など）。 設定を読み取り・解析できない場合は、どの項目も検証せずに停止します。`--json` では、コード `unreadable_config` または `unparseable_config` を持つ1件の `status` として報告します。
+- `1`：項目の検証に失敗した、レポート要求が無効、`openspec/config.yaml` を読み取れないか YAML が不正、または実行に失敗しました（名前が不明、OpenSpec ルートがない場合など）。
+
+**設定ファイルのエラー**
+
+設定を読み取り・解析できない場合は、どの項目も検証せずに停止します。`--json` の診断コードは、ルート解決の前後で異なります。
+
+- **ルート解決後**：`unreadable_config` または `unparseable_config` を持つ1件の `status` として報告します。`specs/` または `changes/` がある構成が該当します。
+- **設定しかないディレクトリからルートを探索する場合**：ルート解決が先に失敗し、`invalid_store_pointer` を持つ1件の `status` として報告します。
 
 ### --report full|findings
 

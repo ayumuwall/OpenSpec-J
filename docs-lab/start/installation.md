@@ -4,18 +4,24 @@
 
 ## Install
 
-以下のバイナリ導入手順は本家版向けです。日本語版は[パッケージマネージャー](#package-managers)から導入してください。
+日本語版の単体実行版をインストールします。Node.js は不要です。npm・Homebrew などを使う場合は[パッケージマネージャー](#package-managers)を参照してください。
 
 macOS / Linux のターミナルで実行します。
 
 ```bash
-curl -fsSL https://openspec.dev/cli/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.sh | sh
 ```
 
 Windows の PowerShell で実行します。
 
 ```powershell
-irm https://openspec.dev/cli/install.ps1 | iex
+$installer = Join-Path $env:TEMP ([Guid]::NewGuid().ToString('N') + '.ps1')
+try {
+    Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.ps1 -OutFile $installer
+    powershell -NoProfile -ExecutionPolicy Bypass -File $installer
+} finally {
+    Remove-Item -LiteralPath $installer -Force -ErrorAction SilentlyContinue
+}
 ```
 
 インストーラーが `export PATH=...` を表示した場合は、その行を実行してから[インストールを確認](#check-it-worked)してください。
@@ -35,11 +41,11 @@ curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/instal
 ```
 
 これは、シェルコマンドを実行できるエージェント向けのプロンプトである
-[リポジトリ直下の install.md](https://github.com/ayumuwall/OpenSpec-J/blob/main/install.md)を取得します。
+[リポジトリ直下の install.md](https://github.com/ayumuwall/OpenSpec-J/blob/ja-docs/install.md)を取得します。
 一部の IDE 統合では実行できません。アシスタントは次の手順を進めます。
 
 1. CLI があればインストールを省略し、既存の導入方法での更新を案内します。npm・Homebrew 版の場合は、`openspec install` で単体実行版へ切り替えられることを一度だけ案内します。未導入の場合はインストールコマンドを示し、確認を待ってから実行します。
-2. npm を選ぶ場合は Node.js が22.12.0未満なら停止します。日本語版は npm・Homebrew を使い、本家の単体実行版を希望した場合だけそちらへ切り替えます。
+2. パッケージマネージャーを希望する場合や、インストーラーが失敗した場合は、パッケージマネージャーで導入します。Node.js が22.12.0未満なら停止します。
 3. `openspec` が PATH に含まれることを確認します。
 4. 対象と判断したフォルダ名と、会話中の AI ツールを候補として示します。ほかに使用するツールを確認し、そのフォルダで `openspec init` を実行します（[プロジェクトのセットアップ](setup.md)）。
 5. init が作成した内容と、使用するツールで OpenSpec を呼び出す正確な表記を報告します。
@@ -65,7 +71,7 @@ node --version
 npm install -g @ayumuwall/openspec@latest
 ```
 
-古い場合は [nodejs.org](https://nodejs.org) またはバージョンマネージャー（nvm、fnm、asdf、volta）で新しい Node.js を導入してください。本家版なら[単体実行版](#install)も選べます。
+古い場合は [nodejs.org](https://nodejs.org) またはバージョンマネージャー（nvm、fnm、asdf、volta）で新しい Node.js を導入してください。Node.js を更新せずに使う場合は、[単体実行版](#install)を選べます。
 
 ### Homebrew
 
@@ -155,27 +161,26 @@ openspec --version
 
 ## インストールオプション
 
-本家の単体実行版でバージョンやフォルダを指定するには、`sh` の前に変数を設定します。
+単体実行版でバージョンやフォルダを指定するには、`sh` の前に変数を設定します。
 
 ```bash
-curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v1.15.0 sh
+curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/scripts/binary/install.sh | OPENSPEC_VERSION=v1.15.0 sh
 ```
 
 - **`OPENSPEC_VERSION`**：`v1.15.0` など、導入するリリース。既定は最新版です。
 - **`OPENSPEC_INSTALL_DIR`**：導入先フォルダ。既定は `~/.local/bin`（Windows は `%LOCALAPPDATA%\Programs\openspec`）です。
 
-Windows では先に変数を設定します。
+Windows では先に変数を設定し、[上記のインストールコマンド](#install)を実行します。
 
 ```powershell
 $env:OPENSPEC_VERSION = 'v1.15.0'
-irm https://openspec.dev/cli/install.ps1 | iex
 ```
 
 Alpine Linux では、導入前に `apk add libstdc++ libgcc` を実行します。
 
 ### 手動でダウンロードする
 
-本家の各リリースには、実行環境ごとのファイルがあります。
+各リリースには、実行環境ごとのファイルがあります。
 
 | 実行環境 | ファイル |
 |---|---|
@@ -188,7 +193,7 @@ Alpine Linux では、導入前に `apk add libstdc++ libgcc` を実行します
 | Windows、arm64 | `openspec-windows-arm64.zip` |
 | Windows、x64 | `openspec-windows-x64.zip` |
 
-1. **[本家の最新リリース](https://github.com/Fission-AI/OpenSpec/releases/latest)から対象ファイルを取得する。** ファイルはリリース公開後、数分で添付されます。まだなければ待って再読み込みするか、前のリリースから取得してください。
+1. **[日本語版の最新リリース](https://github.com/ayumuwall/OpenSpec-J/releases/latest)から対象ファイルを取得する。** ファイルはリリース公開後、数分で添付されます。まだなければ待って再読み込みするか、前のリリースから取得してください。
 2. **展開する。** ターミナルで `tar -xzf openspec-darwin-arm64.tar.gz` を実行します。Windows では `.zip` を右クリックし、「すべて展開」を選びます。
 3. **macOS ではブロックを解除する。** 展開先で `xattr -d com.apple.quarantine openspec` を実行します。ブラウザーから取得したファイルは、これを実行するまで macOS にブロックされます。
 4. **PATH 上のフォルダへ移す。** `openspec` を `~/.local/bin` などへ置きます。Windows では `openspec.exe` を `%LOCALAPPDATA%\Programs\openspec` など、ユーザー PATH 上のフォルダへ置きます。
@@ -198,7 +203,7 @@ Alpine Linux では、導入前に `apk add libstdc++ libgcc` を実行します
 OpenSpec のリリースワークフローがビルドしたファイルか確認するには、[GitHub CLI](https://cli.github.com) で実行します。
 
 ```bash
-gh attestation verify openspec-darwin-arm64.tar.gz --repo Fission-AI/OpenSpec
+gh attestation verify openspec-darwin-arm64.tar.gz --repo ayumuwall/OpenSpec-J
 ```
 
 そのワークフローがビルドしたファイルでなければ失敗します。インストールコマンドはすでにリリースの `SHA256SUMS` と照合するため、この手順は任意です。
@@ -249,7 +254,7 @@ openspec update
 新しい CLI が公開されている場合、[`openspec update`](../reference/cli.md#openspec-update)が通知し、
 そのままインストールできます。CLI の更新はマシンごとに一度だけ必要です。実行するたびに、
 自動では更新されないプロジェクトの生成済みスキルも更新します。最新状態のプロジェクトでは
-`✓ All 2 tool(s) up to date (v1.7.0)`と表示されます。
+`✓ 設定済みのツール2件はすべて最新です（v2.0.0）`と表示されます（2ツールを設定した場合）。
 
 > [!WARNING]
 > 単体実行版は `openspec install` で同じ場所へ更新します。`openspec update` が新版を通知します。
