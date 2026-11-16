@@ -124,13 +124,25 @@ git remote -v
 
 ### 2.1 upstream を main に取り込む（タグ同期）
 
+タグは次のように使い分ける。
+
+- `upstream-vX.Y.Z`: 本家のリリースコミットを保存するタグ。日本語版の公開後も変更しない。
+- `vX.Y.Z`: 取り込み時には本家のタグとして取得し、§3.1 の日本語版公開時に、ローカルのタグだけを日本語版のコミットへ付け替える。
+- `main`: 本家のリリースコミットを指すブランチ。日本語版の変更は `ja-docs` に保持し、§2.3 で通常マージする。
+
+過去の公開済み `vA.B.C` は日本語版を指すため、本家の同名タグとは一致しない。**`git fetch upstream --tags` は使わず、今回必要な本家タグだけを明示的に取得する。** `--no-tags` で他のタグの自動取得も抑える。
+
 ```
+git fetch --no-tags upstream refs/tags/vX.Y.Z:refs/tags/vX.Y.Z
+git rev-parse vX.Y.Z^{}
 git checkout main
-git fetch upstream --tags
-git merge vX.Y.Z
+git merge vX.Y.Z^{}
 git tag -a upstream-vX.Y.Z -m "upstream vX.Y.Z" vX.Y.Z^{}
 ```
 
+- 再開時に今回のタグが既にある場合は、`git ls-remote upstream refs/tags/vX.Y.Z 'refs/tags/vX.Y.Z^{}'` とローカルの実コミットを照合する。注釈タグは `^{}` の行、軽量タグはタグ自体の行を実コミットとして比較する。本家と一致する場合だけ再利用する。
+- `upstream-vX.Y.Z` も既にある場合は、本家の実コミットと一致することを確認して再利用し、作成コマンドを省略する。
+- タグ取得が拒否された場合や参照先が一致しない場合は、強制取得・削除・付け替えをせず停止して利用者へ確認する。過去の日本語版タグを本家タグで上書きしない。
 - **必ずリリースタグで取り込む。** `upstream/main` は使わない。
 - `vX.Y.Z^{}` を使い、注釈タグでも確実にコミットを指すようにする。
 - **main は本家リリースタグと内容が完全一致している必要がある。**
@@ -428,8 +440,15 @@ vX.Y.Z - <リリース内容を表す短い日本語の概要>
 - 過去の OpenSpec-J Release の命名粒度も参考にし、長すぎる列挙や抽象的な「更新」「改善」だけのタイトルを避ける。
 - 例: `v1.10.0 - Zed、言語指定、安全なインストール`
 
+日本語版のタグを作成する前に、§2.1 で取得した本家タグを次の手順で扱う。
+
+1. `git rev-parse vX.Y.Z^{}` と `git rev-parse upstream-vX.Y.Z^{}` が一致し、本家のコミットが保存されていることを確認する。
+2. `git ls-remote --tags origin refs/tags/vX.Y.Z` が成功し、出力が空であることを確認する。既に origin にある場合は公開済みとして停止し、上書きしない。通信や認証の失敗を「タグなし」と判断しない。
+3. 上記を確認できた場合だけ、ローカルの `vX.Y.Z` を削除し、検証済みの日本語版コミットに同名の注釈タグを作る。`upstream-vX.Y.Z` は保持する。
+
 ```
 git checkout ja-docs
+git tag -d vX.Y.Z
 git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin vX.Y.Z
 
@@ -438,6 +457,7 @@ gh release create vX.Y.Z \
   --notes-file /tmp/openspec-j-release-vX.Y.Z.md
 ```
 
+- ローカルの `vX.Y.Z` がない場合は削除を省略する。既に検証済みの日本語版コミットを指している場合は、付け替えず再利用する。いずれも本家保存タグと origin 側の状態は確認する。
 - リリースタグは `vX.Y.Z` 形式を使う（`openspec-j-vX.Y.Z` は使わない）。
 - 作成後に `gh release view vX.Y.Z --repo ayumuwall/OpenSpec-J --json name,tagName,url` を実行し、保存されたタイトルが `vX.Y.Z - <概要>` 形式で意図した文言と一致することを確認する。
 
