@@ -31,7 +31,8 @@
 
 ### Codex の共有スキル参照: 日本語化と旧形式の互換性
 
-- `src/utils/command-references.ts` は `$スキル名（Codex）、/スキル名（その他の対応エージェント）` を生成する。共有される `.agents/skills` のため、両方の呼び出し方を残す。
+- `src/utils/command-references.ts` の `transformToCodexCompatibleSkillReferences` は `$スキル名（Codex）、/スキル名（その他の対応エージェント）` を生成する。旧 Codex 出力の再現・照合に使う表記として維持する。
+- 追加確認（v2.0.0）: 新規の共有スキルは `src/core/shared/shared-skill-install.ts` から `transformToSharedSkillReferences` を使い、本文中の参照を `openspec-propose` のような接頭辞なしのスキル名にする。呼び出し構文はツールごとに異なるため、共有スキル本文を旧形式の `$...` / `/...` の併記へ戻さない。
 - `src/core/shared/skill-content-equivalence.ts` は、既知の OpenSpec スキルに限り、旧単独参照・英語の併記・日本語の併記を同等と判定する。独自スキル、左右の名前が異なる参照、本文への追記は同等とみなさない。
 - 文言変更時は参照変換・同等性判定・旧 `.codex` からの移行テストを一緒に確認する。
 - 追加確認（v1.12.0）: 同等性判定では、両側の既知参照を旧単独形式へ正規化する。文書全体を翻訳して比較する処理ではなく、本文の翻訳差分やユーザーの追記は引き続き差異として扱う。BOM・CRLF・有効な `metadata.generatedBy` のバージョン差だけは従来どおり許容する。
@@ -115,8 +116,9 @@
 ### 生成スキルと仕様: 構造トークンを翻訳しない
 - ファイル: `src/core/shared/skill-generation.ts`, `src/core/templates/workflows/`, `schemas/spec-driven/schema.yaml`, `skills/`
 - 翻訳対象: `description` の値、スキル本文、質問、警告、操作案内、生成するアーティファクトの説明文。
-- 翻訳しない対象: YAML frontmatter のキー、`allowed-tools`, `metadata`, `generatedBy`, `## Why`, `## What Changes`, `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`, `### Requirement:`, `#### Scenario:`, `SHALL`, `MUST`, `WHEN`, `THEN`。
+- 翻訳しない対象: YAML frontmatter のキー、`allowed-tools`, `metadata`, `generatedBy`, `## Why`, `## What Changes`, `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`, `### Requirement:`, `#### Scenario:`, `SHALL`, `MUST`, `GIVEN`, `WHEN`, `THEN`。
 - 理由: これらは英語表示ではなく、パーサー、ツール、検証規則が読む構造トークン。翻訳するとファイルが自然な日本語に見えても、status、validate、archive が認識できなくなる。
+- 追加確認（v2.0.0 追従時）: 本仕様・仕様差分のシナリオで、`WHEN` または `GIVEN` の条件、`THEN` の結果が欠けると `validate` が警告し、`--strict` では失敗する。ステップの説明文を日本語化するときも、これらのラベルは英語のまま保持する。
 - フォローアップ: テンプレート文面を翻訳した後は静的 `skills/` を再生成し、parity ハッシュを更新する。生成物の本文が日本語で、構造トークンだけが英語で残ることを確認する。
 
 ### ドキュメントサイト: 日本語版の参照先を維持
