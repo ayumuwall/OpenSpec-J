@@ -40,6 +40,11 @@ export interface GlobalConfig {
   completionTipSeen?: boolean;
   /** Whether the one-time note about the standalone install has been shown. */
   standaloneTipSeen?: boolean;
+  /**
+   * 独自スキルのないプロジェクトで `openspec init` がスキルを配置する場所。
+   * マシン全体に1回（`global`）またはプロジェクト内（`project`）。
+   */
+  skillsScope?: 'global' | 'project';
 }
 
 const DEFAULT_CONFIG: GlobalConfig = {

@@ -17,13 +17,27 @@ cd <your-project>
 openspec init
 ```
 
-init は使用する AI ツールを確認し、選択したツールのワークフローファイルを書き込んで結果を報告します。
+使用するツールを選んでください。新しいプロジェクトではスキルをグローバルにインストールします。プロジェクトのリポジトリ内に保持する場合は `openspec init --scope project` を実行してください。
+
+**セットアップスクリプトの互換性に関する変更。** 2.0 では `openspec init --tools claude` が新しいリポジトリ内にスキルを書き込んでいました。今後は既定でマシンにインストールします。チームや CI のためにスキルをコミットするスクリプトでは、`openspec init --scope project --tools claude` を使ってください。
+
+既定のマシン全体へのインストールでは、次のように表示します。
 
 ```
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-.agents/skills/ にスキル6個を作成しました（.claude/skills/ からリンク）
+~/.agents/skills/ にスキル6個を作成しました（このマシンの全プロジェクトで利用可能）
+設定: openspec/config.yaml（スキーマ: spec-driven）
+```
+
+プロジェクト内にスキルを置く場合：
+
+```
+OpenSpec のセットアップが完了しました
+
+新規作成: Claude Code
+.agents/skills/ にスキル6個を作成しました（.claude/skills/ にも配置）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 ```
 
@@ -31,7 +45,7 @@ IDE で動くツールを使う場合は、新しいスキルを読み込むた�
 
 init は安全に再実行できます。
 
-- セットアップ済みのツールには、`新規作成`ではなく`更新`と表示されます。
+- スキルをプロジェクト内に置く場合、セットアップ済みのツールには `新規作成` ではなく `更新` と表示されます。
 - init を再実行して新しいツールを選択すると、そのツールが追加されます。
 - `--tools`フラグを指定すると選択画面を省略できます（[CLI リファレンス](../reference/cli.md)）。
 
@@ -53,12 +67,17 @@ apply または archive の進め方は、該当する operations の項目へ�
 
 ## init がインストールするもの
 
-init はプロジェクトに 2 つのものを作成します。
+どのプロジェクトにも、リポジトリルートに `openspec/` フォルダを作成します。スキルの保存先は選択によって異なります。
 
-- リポジトリのルートに `openspec/` フォルダ
-- 共有の `.agents/skills/` フォルダにスキル。必要なツールには、`.claude/skills/` など固有フォルダからのリンク
+| | マシン全体 | プロジェクト内 |
+|---|---|---|
+| スキル | ホームフォルダの `~/.agents/skills/` | プロジェクトの `.agents/skills/` |
+| 固有フォルダを読むツール用のリンク | 例：`~/.claude/skills/` | 例：`.claude/skills/` |
+| コミットするもの | `openspec/` | `openspec/`、スキル、ツール用の項目 |
 
-ほかのソースと同様に、すべてコミットしてください。
+この節の以降の説明は、プロジェクト内へのインストールを扱います。マシン全体への導入は[全プロジェクト用のスキルを一度だけインストールする](#install-the-skills-once-for-every-project)を参照してください。
+
+Vercel のインストーラーは、CLI のバージョンに対応する OpenSpec の GitHub タグからスキルを取得します。スキルのインストールと更新には Git と GitHub へのアクセスが必要です。プロジェクト内へのインストールでは `skills-lock.json` を変更しません。
 
 init は旧版が生成したコマンドファイルも削除しますが、編集済みのものは保持します。1.0 より前に初期化したプロジェクトには、`.claude/commands/openspec/` などのフォルダや、`CLAUDE.md`・`AGENTS.md` 内の OpenSpec マーカーブロックも残っています。対話実行の init は削除前に確認します。`--force` や `--tools` を指定した場合、または非対話実行では、ブロック内の編集も含めて確認なしで削除するため、先にバックアップしてください。
 
@@ -97,7 +116,7 @@ openspec/
 これは既定のセットに、任意のワークフローを 2 つ加えたものです。
 [プロファイル](../customize/profiles.md)に全 12 ワークフローを掲載しています。
 
-設定したツールの数にかかわらず、各スキルはここに一度だけ書き込みます。Claude Code や Kiro など `.agents/skills/` を読まないツールには、`.claude/skills/openspec-propose` など固有フォルダ内にスキルごとのリンクを作成します。MiniMax Code だけは例外で、ホーム内の `~/.minimax/skills/` に配置します。配置とリンクを作成するツールは[対応ツール](../reference/supported-tools.md#where-skills-go)を参照してください。
+設定したツールの数にかかわらず、各スキルはここに一度だけ書き込みます。Claude Code や Kiro など `.agents/skills/` を読まないツールには、`.claude/skills/openspec-propose` など固有フォルダ内にスキルごとのリンクを作成します。Windows のプロジェクト内インストールでは、Git で別のチェックアウトへ渡せるコピーを使います。配置とリンクを作成するツールは[対応ツール](../reference/supported-tools.md#where-skills-go)を参照してください。
 
 各ワークフローは**スキル**です。作業を依頼するとエージェントが読み取る指示であり、名前でも呼び出せます（Claude Code は `/openspec-apply-change`、Codex は `$openspec-apply-change`）。ツールごとの表記は[対応ツール](../reference/supported-tools.md#support-matrix)を参照してください。
 
@@ -123,5 +142,27 @@ openspec update
 ```
 
 Claude Code を再起動し、チャットで`/openspec-propose`を実行してください。一部のワークフローだけがない場合は、[プロファイルを変更](../customize/profiles.md#セットの拡張オプションのワークフロー)してください。
+
+<a id="install-the-skills-once-for-every-project"></a>
+
+### 全プロジェクト用のスキルを一度だけインストールする
+
+新しいプロジェクトは、マシン上のスキルを使います。後からツールを追加するには、次を実行します。
+
+```bash
+openspec init --scope global --tools claude
+```
+
+`openspec update` を実行すると、[ワークフロープロファイル](../customize/profiles.md)に応じてスキルを更新します。CLI をダウングレードした場合は、そのバージョンの指示をインストールします。
+
+<a id="move-an-existing-project-to-the-global-skills"></a>
+
+#### 既存プロジェクトをグローバルスキルへ移行する
+
+1. 組み込みスキルの編集内容を保存し、そのフォルダ内に追加したファイルを外へ移してください。update はフォルダ全体を置き換えます。チーム向けの指示は `openspec/config.yaml` の `rules` や `context` に置くか、独自スキルを別名で作成します。
+2. ターミナルで `openspec update` を実行します。**グローバルに切り替え**を選ぶと、マシンへスキルをインストールし、リポジトリ内のコピーを削除します。リポジトリ内に保持する場合は、**このプロジェクトに保持**で Enter を押し、更新された `openspec/config.yaml` をコミットします。選択内容は `skillsScope: project` として保存され、他のチェックアウトでも保持されます。後から `openspec init --scope global` で切り替えられます。
+3. グローバルへ切り替えた場合は、ファイルの削除をコミットします。他のメンバーはそのコミットを pull 後、ターミナルで `openspec update` を実行します。マシンへのスキル導入に**はい**と答え、ツールを選択します。スクリプトやエージェントからは、代わりに `openspec init --tools <ids>` を実行します。
+
+GitHub 上の Copilot エージェントには、プロジェクト内のスキルを保持してください。コミット済みのファイルは読めますが、個人のホームフォルダは読めません。`openspec validate` だけを実行する CI ジョブにスキルは不要です。スキルを導入するジョブは [OPENSPEC_SKILLS_SCOPE](../reference/configuration/environment-variables.md#openspec_skills_scope)を参照してください。
 
 セットアップは完了です。[クイックスタート](quickstart.md)で、最初の変更提案をここから進めます。

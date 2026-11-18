@@ -2,6 +2,8 @@
 name: write-openspec-docs
 description: OpenSpec ドキュメント執筆モードへ切り替え、文体ガイドを読み込み、その文体（操作を先に示す、前置きを省く、拾い読みしやすい）でページを新規作成または修正します。OpenSpec のドキュメントツリー内でページを執筆または編集する場合に使用します。
 argument-hint: ページまたは節
+metadata:
+  internal: true
 ---
 
 # OpenSpec ドキュメントを書く

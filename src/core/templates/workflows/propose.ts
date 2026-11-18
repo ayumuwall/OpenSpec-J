@@ -5,30 +5,14 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
-/**
- * The implementation handoff. `apply` is not guaranteed to be installed, so
- * the prompt is resolved at generation time (see optional-workflow.ts) rather
- * than naming a workflow that may not exist.
- *
- * The two surfaces word this differently on purpose (#258): a command-only
- * tool has no conversational agent to ask, so its prompt names a command or
- * the CLI and never invites "ask me to implement".
- */
-const SKILL_APPLY_HANDOFF = optionalWorkflow(
-  'apply',
-  '`/opsx:apply` スキルを使うか、この変更の適用を依頼してください',
-  'この変更の適用を依頼してください'
-);
+const SKILL_APPLY_HANDOFF =
+  '計画の適用を依頼してください';
 
-const COMMAND_APPLY_HANDOFF = optionalWorkflow(
-  'apply',
-  '`/opsx:apply` を実行してください',
-  '`openspec instructions apply --change "<name>" --json` を実行してタスクを取得してください'
-);
+const COMMAND_APPLY_HANDOFF =
+  '`openspec instructions apply --change "<name>" --json` を実行してタスクを取得してください';
 
 export function getOpsxProposeSkillTemplate(): SkillTemplate {
   return {
@@ -168,7 +152,7 @@ CLI が特定した OpenSpec ルートの \`openspec/changes/\` 配下に変更�
 - 変更名と場所
 - 作成したアーティファクトと簡単な説明、およびスキップした条件付きアーティファクトとその理由
 - 準備状況: 「実装に必要な全アーティファクトの準備ができました。」
-- 案内: 「アーティファクトはレビューの準備ができました。準備ができたら ${SKILL_APPLY_HANDOFF}。」
+- 案内: 「計画のレビュー準備ができました。準備が整ったら、${SKILL_APPLY_HANDOFF}。」
 
 **アーティファクト作成ガイドライン**
 

@@ -15,6 +15,7 @@ CLI はマシン単位の設定を、macOS と Linux では`~/.config/openspec/c
 | `workflows`    | 文字列のリスト                                 | いいえ | `custom`プロファイルがインストールするワークフロー一覧です                        |
 | `featureFlags` | フラグと真偽値のマップ                         | いいえ | 真偽値で指定する機能フラグです                                                    |
 | `defaultStore` | 文字列                                         | いいえ | ルート解決で使うマシン単位の代替ストアです                                        |
+| `skillsScope` | 文字列：`global` または `project` | いいえ | スキルがまだないプロジェクトで `openspec init` がスキルを置く場所です |
 | `openers`      | ツール ID と設定のマップ                                         | いいえ | workset を開くツールと、各ツールの起動方法です                                    |
 | `telemetry`    | マップ                                         | いいえ | テレメトリーの停止設定、匿名 ID、通知表示済み状態です                                      |
 
@@ -37,6 +38,10 @@ OpenSpec 2.0 で廃止され、スキルだけをインストールするよう�
 ### defaultStore
 
 ルート解決で使うマシン単位の代替ストア ID です。`--store`フラグ、ローカルの`openspec/`、プロジェクトの`store:`ポインターのいずれでも解決できない場合だけ参照します。完全な優先順位は[ルート解決](../../multi-repo/stores.md#where-artifacts-get-created-when-using-stores)を参照してください。
+
+### skillsScope
+
+`openspec config set skillsScope project` を設定すると、このマシンで新しく作るリポジトリ内にスキルを保持します。既定値は `global` です。スキルがすでにあるプロジェクトでは、その保存先を保持します。リポジトリの保存先を切り替える方法は[セットアップ](../../start/setup.md#install-the-skills-once-for-every-project)を参照してください。
 
 ### openers
 

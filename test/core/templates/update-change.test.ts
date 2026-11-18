@@ -6,26 +6,18 @@ import {
 } from '../../../src/core/templates/skill-templates.js';
 import { STORE_SELECTION_GUIDANCE } from '../../../src/core/templates/workflows/store-selection.js';
 import { PROJECT_ROOT_GUARD } from '../../../src/core/templates/workflows/project-root.js';
-import { resolveOptionalWorkflows } from '../../../src/core/templates/optional-workflow.js';
-import { ALL_WORKFLOWS, CORE_WORKFLOWS } from '../../../src/core/profiles.js';
 
 const skill = getUpdateChangeSkillTemplate();
 const command = getOpsxUpdateCommandTemplate();
 
-const render = (workflows: readonly string[]): Array<[string, string]> => {
-  const installed = new Set<string>(workflows);
-  return [
-    ['skill', resolveOptionalWorkflows(skill.instructions, installed)],
-    ['command', resolveOptionalWorkflows(command.content, installed)],
-  ];
-};
-
 // Both delivery surfaces must carry the same contract; every behavioral
-// assertion below runs against each body. Templates carry optional-workflow
-// conditionals, so a body is only meaningful once resolved against a workflow
-// set — these are the bodies a profile with every workflow installed receives.
-const bodies = render(ALL_WORKFLOWS);
-const coreBodies = render(CORE_WORKFLOWS);
+// assertion below runs against each body. The text is the same for every
+// workflow profile: each handoff names the skill "if installed" and gives the
+// CLI path otherwise.
+const bodies: Array<[string, string]> = [
+  ['skill', skill.instructions],
+  ['command', command.content],
+];
 
 // The load-bearing sentence of step 4 and the whole of step 5 are pinned
 // verbatim. #1836 happened because a single verb ("Apply") in step 4 silently
@@ -104,7 +96,7 @@ function section(
 }
 
 function stepFive(body: string, label: string): string {
-  return section(body, '5. **一度に 1 つのアーティファクトを確認して適用します', '6. **次のステップを指示します', `${label} step 5`);
+  return section(body, '5. **一度に 1 つのアーティファクトを確認して適用します', '6. **次の手順を示す', `${label} step 5`);
 }
 
 // Everything the agent reads except step 5 and the shared store and project-root
@@ -189,7 +181,7 @@ describe('update-change write gate (#1836)', () => {
     ["2. **変更の成果物を取得します**", '   The requested edit goes straight into the file.'],
     ['3. **リクエストを理解する**', '   - Apply the requested edit immediately.'],
     ['4. **読んで調整**', '   - Update the artifact with the requested edit now.'],
-    ['6. **次のステップを指示します', '   - Save the revisions first.'],
+    ['6. **次の手順を示す', '   - Save the revisions first.'],
     ['**出力**', '- The requested edit, already applied during step 4'],
     ['**ガードレール**', '- The requested edit is exempt from confirmation.'],
     ['- 書き込む前に、すべての編集についてユーザーの確認を得ます。', '- The user\'s revision needs no confirmation.'],
@@ -244,14 +236,8 @@ describe('update-change templates', () => {
     for (const [label, body] of bodies) {
       expect(body, label).toContain('コードは決して編集しないでください');
       expect(body, label).toContain('実装コードは決して編集しません');
-      expect(body, label).toContain('停止し、`/opsx:apply` を案内します');
+      expect(body, label).toContain('計画の修正後に停止');
       expect(body, label).toContain('ビルドの進行地点を先に進めません');
-      expect(body, label).toContain(
-        '既存の出力ファイルがなく、状態が `ready` または `blocked` のアーティファクトは、その旨を記録し、作成用の `/opsx:continue` をユーザーに案内します'
-      );
-      expect(body, label).toContain(
-        '`existingOutputPaths` が空で、状態が `ready` または `blocked` のアーティファクトの作成は、`/opsx:continue` の役目です'
-      );
       expect(body, label).toContain('`skipped` のアーティファクトは変更せず');
       expect(body, label).toContain('不足として扱ったり continue ワークフローに回したりしません');
     }
@@ -351,45 +337,16 @@ describe('update-change templates', () => {
 
   it('ends with next-step guidance and never acts on it (3.5)', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain('ガイダンスのみ - 決して行動しないでください');
-      expect(body, label).toContain(
-        '`existingOutputPaths` が空で、状態が `ready` または `blocked` のアーティファクト -> `/opsx:continue` で作成することを提案します'
-      );
-      expect(body, label).toContain('`/opsx:continue` で作成することを提案します');
-      expect(body, label).toContain('`/opsx:apply` を提案します');
-      expect(body, label).toContain('`/opsx:archive` を提案します');
+      expect(body, label).toContain('案内だけを行い、実行しない');
+      expect(body, label).toContain('openspec archive "<name>"');
       expect(body, label).toContain('コードが修正後の計画と一致しなくなる可能性があります');
     }
   });
 
-  it('hands off to /opsx:continue when that workflow is installed', () => {
+  it('shows the next ready artifact and how to get its instructions', () => {
     for (const [label, body] of bodies) {
-      expect(body, label).toContain(
-        'まだ存在しないアーティファクトの作成は `/opsx:continue` で行います'
-      );
-      expect(body, label).toContain('`/opsx:continue` で作成することを提案します');
-      expect(body, label).toContain("`/opsx:continue` の役目です");
-      // The handoff is stated outright, not deferred to a runtime availability
-      // check the model has to perform (#1734).
-      expect(body, label).not.toContain('may not be installed');
-      expect(body, label).not.toContain('verify that it is available');
-    }
-  });
-
-  it('never names /opsx:continue on a profile that does not install it', () => {
-    for (const [label, body] of coreBodies) {
-      expect(body, label).not.toContain('/opsx:continue');
-      expect(body, label).toContain('未作成のアーティファクトは作成しません');
-      expect(body, label).toContain(
-        '`openspec status --change "<name>" --json` で次のアーティファクトを'
-      );
-      expect(body, label).toContain(
-        '`openspec instructions "<artifact-id>" --change "<name>" --json` で作成方法を'
-      );
-      expect(body, label).toContain(
-        '未作成のため見送ったもの'
-      );
-      expect(body, label).toContain('このワークフローの外で別の手順として行います');
+      expect(body, label).toContain('openspec status --change "<name>" --json');
+      expect(body, label).toContain('openspec instructions "<artifact-id>" --change "<name>" --json');
     }
   });
 
@@ -400,19 +357,18 @@ describe('update-change templates', () => {
       expect(reconciliation, label).not.toContain('Apply the requested edit');
       expect(body, label).toContain('ユーザーの確認後にだけ書き込みます');
       expect(body, label).toContain('ユーザーがリビジョンを拒否した場合は、リビジョンを書き込まないでください');
-      expect(body, label).toContain('`/opsx:new` で新しく始めることを提案します');
-      expect(body, label).toContain('更新か新規開始か');
+      expect(body, label).toContain('他と重ならない未使用の名前を確認');
       expect(body, label).not.toContain('first verify whether the optional');
     }
   });
 
   it('routes intent changes to the CLI when /opsx:new is not installed', () => {
-    for (const [label, body] of coreBodies) {
-      expect(body, label).not.toContain('/opsx:new');
-      expect(body, label).toContain('未使用で区別できる変更名を確認');
+    for (const [label, body] of bodies) {
+      expect(body, label).toContain(
+        '他と重ならない未使用の名前を確認'
+      );
       expect(body, label).toContain('openspec new change "<new-change-name>"');
       expect(body, label).not.toContain('openspec new change "<name>"');
-      expect(body, label).toContain('更新か新規開始か');
     }
   });
 });

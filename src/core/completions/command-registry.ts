@@ -40,6 +40,12 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'no-copilot-cloud',
         description: 'GitHub Copilot クラウドコーディングエージェント用ファイルの生成をスキップ',
       },
+      {
+        name: 'scope',
+        description: 'スキルの保存先: global（このマシンの全プロジェクト）または project',
+        takesValue: true,
+        values: ['global', 'project'],
+      },
     ],
   },
   {

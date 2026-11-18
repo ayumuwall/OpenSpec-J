@@ -35,7 +35,7 @@ PR の作成はメンテナーに限定されています。作成前に Issue �
 
 ## 開発環境を準備する
 
-Node 22.12 以降と pnpm が必要です。
+Node 22.20.0 以降と pnpm が必要です。
 
 ```bash
 pnpm install

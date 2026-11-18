@@ -46,7 +46,7 @@
   $releases = if ($env:OPENSPEC_RELEASES_URL) { $env:OPENSPEC_RELEASES_URL.TrimEnd('/') } else { 'https://github.com/ayumuwall/OpenSpec-J/releases' }
   Assert-Source 'OPENSPEC_RELEASES_URL' $releases
   if ($env:OPENSPEC_DOWNLOAD_URL) { Assert-Source 'OPENSPEC_DOWNLOAD_URL' $env:OPENSPEC_DOWNLOAD_URL }
-  $npmHint = 'または npm で導入してください（Node.js 22.12 以降）: npm install -g @ayumuwall/openspec'
+  $npmHint = 'または npm で導入してください（Node.js 22.20.0 以降）: npm install -g @ayumuwall/openspec'
   $dir = if ($env:OPENSPEC_INSTALL_DIR) { $env:OPENSPEC_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\openspec' }
   # Absolute, so the user PATH entry works from any directory.
   $dir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($dir)
@@ -124,7 +124,12 @@
     # A binary that cannot start at all throws instead of setting an exit code.
     try { $installed = & $exe --version } catch { Write-Verbose "openspec --version が失敗しました: $_" }
     if ($LASTEXITCODE -ne 0 -or -not $installed) {
-      throw "openspec install: ダウンロードした $asset はこの環境で動作しません（Windows 10 以降が必要です）"
+      # ウイルス対策ソフトがファイルを削除・実行阻止する場合がある（#2243）。
+      # Windows のバージョンの問題と誤解させないよう区別する。
+      if (-not (Test-Path -LiteralPath $exe)) {
+        throw "openspec install: $asset が実行前に削除されました。ウイルス対策ソフトによる削除の可能性があります。$npmHint"
+      }
+      throw "openspec install: ダウンロードした $asset はこの環境で動作しません。Windows 10 以降が必要です。対応バージョンの場合はウイルス対策ソフトに実行を阻止されている可能性があります。$npmHint"
     }
 
     $target = Join-Path $dir $name

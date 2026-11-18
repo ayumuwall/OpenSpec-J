@@ -32,30 +32,7 @@ import {
   type SkillTemplate,
 } from '../templates/skill-templates.js';
 import type { CommandContent } from '../command-generation/index.js';
-import {
-  assertWorkflowConditionalsResolved,
-  resolveOptionalWorkflows,
-} from '../templates/optional-workflow.js';
-import { ALL_WORKFLOWS } from '../profiles.js';
 import { OPENSPEC_CLI_ALLOWED_TOOLS } from './allowed-tools.js';
-
-/**
- * The workflow set a template body is rendered against.
- *
- * `workflowFilter` is both the list of workflows to install and the set a
- * template may refer to, so resolving optional-workflow conditionals here —
- * the one place every generation path (init, update, migration, the skills.sh
- * distribution) already funnels through — keeps a reference to an uninstalled
- * workflow out of every generated file (#1734, umbrella #919).
- *
- * With no filter, every workflow is installed (that is what an unfiltered call
- * means), so the installed branch is kept.
- */
-function resolveInstalledWorkflows(
-  workflowFilter?: readonly string[]
-): ReadonlySet<string> {
-  return new Set<string>(workflowFilter ?? ALL_WORKFLOWS);
-}
 
 /**
  * スキルテンプレートとディレクトリ名・ワークフロー ID の対応。
@@ -77,61 +54,26 @@ export interface CommandTemplateEntry {
 /**
  * スキルテンプレートとディレクトリ名を取得する。ワークフロー ID でフィルタ可能。
  *
+ * フィルターで変わるのは返すスキルだけで、本文は変わらない。
+ * どのワークフロー一覧でも同じスキル本文を使う。
+ *
  * @param workflowFilter - 指定した場合、workflowId がこの配列に含まれるテンプレートのみ返す
  */
 export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemplateEntry[] {
   const all = allSkillTemplates();
-  const installed = resolveInstalledWorkflows(workflowFilter);
-  const selected = workflowFilter ? all.filter(entry => installed.has(entry.workflowId)) : all;
-
-  return selected.map(entry => ({
-    ...entry,
-    template: {
-      ...entry.template,
-      instructions: resolveOptionalWorkflows(entry.template.instructions, installed),
-    },
-  }));
+  if (!workflowFilter) return all;
+  const wanted = new Set<string>(workflowFilter);
+  return all.filter(entry => wanted.has(entry.workflowId));
 }
 
 /**
- * 他に導入されたワークフローの組み合わせによらず、現行版が生成し得るスキル本文。
- * 本文は条件分岐で参照するワークフローだけに依存するため、
- * 参照するワークフローが k 個なら 2^k 通りを生成する。
+ * リリースごとに変わる frontmatter の generatedBy 行を除去する。
+ * 残るのはリポジトリの skills/ とプロジェクトの .agents/skills に置く公開形式。
+ * スキルを変更しないリリース間では同じ本文になる。
  */
-export function everySkillRendering(
-  dirName: string,
-  generatedByVersion: string,
-  transformInstructions?: (instructions: string) => string
-): string[] {
-  // 副作用がなくツール・スキルごとに繰り返し呼ばれるため、
-  // 変換関数・バージョン・スキルごとにキャッシュする。
-  const byTransformer = renderingCache.get(transformInstructions ?? NO_TRANSFORM) ?? new Map<string, string[]>();
-  renderingCache.set(transformInstructions ?? NO_TRANSFORM, byTransformer);
-  const key = `${generatedByVersion}\0${dirName}`;
-  const cached = byTransformer.get(key);
-  if (cached) return cached;
-  const entry = allSkillTemplates().find((candidate) => candidate.dirName === dirName);
-  if (!entry) return [];
-  const named = [
-    ...new Set([...entry.template.instructions.matchAll(/\[\[opsx:if-workflow ([a-z-]+)\]\]/g)].map((match) => match[1])),
-  ];
-  const texts: string[] = [];
-  for (let mask = 0; mask < 2 ** named.length; mask += 1) {
-    const installed = new Set(named.filter((_, index) => mask & (2 ** index)));
-    texts.push(
-      generateSkillContent(
-        { ...entry.template, instructions: resolveOptionalWorkflows(entry.template.instructions, installed) },
-        generatedByVersion,
-        transformInstructions
-      )
-    );
-  }
-  byTransformer.set(key, texts);
-  return texts;
+export function stripVolatileFrontmatter(content: string): string {
+  return content.replace(/^ {2}generatedBy: .*\n/m, '');
 }
-
-const NO_TRANSFORM = (text: string) => text;
-const renderingCache = new WeakMap<(text: string) => string, Map<string, string[]>>();
 
 function allSkillTemplates(): SkillTemplateEntry[] {
   return [
@@ -171,16 +113,9 @@ export function getCommandTemplates(workflowFilter?: readonly string[]): Command
     { template: getOpsxProposeCommandTemplate(), id: 'propose' },
   ];
 
-  const installed = resolveInstalledWorkflows(workflowFilter);
-  const selected = workflowFilter ? all.filter(entry => installed.has(entry.id)) : all;
-
-  return selected.map(entry => ({
-    ...entry,
-    template: {
-      ...entry.template,
-      content: resolveOptionalWorkflows(entry.template.content, installed),
-    },
-  }));
+  if (!workflowFilter) return all;
+  const wanted = new Set<string>(workflowFilter);
+  return all.filter(entry => wanted.has(entry.id));
 }
 
 /**
@@ -215,11 +150,6 @@ export function generateSkillContent(
   const instructions = transformInstructions
     ? transformInstructions(template.instructions)
     : template.instructions;
-
-  assertWorkflowConditionalsResolved(
-    instructions,
-    `スキル '${template.name}' が任意ワークフローのブロックを未解決のまま生成されました`
-  );
 
   return `---
 name: ${template.name}

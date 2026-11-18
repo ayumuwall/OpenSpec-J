@@ -108,7 +108,7 @@ main() {
     fi
   }
 
-  npm_hint="または npm で導入してください（Node.js 22.12 以降）: npm install -g @ayumuwall/openspec"
+  npm_hint="または npm で導入してください（Node.js 22.20.0 以降）: npm install -g @ayumuwall/openspec"
   if [ -n "${OPENSPEC_DOWNLOAD_URL:-}" ]; then
     base=${OPENSPEC_DOWNLOAD_URL%/}
   elif [ "$version" != latest ]; then

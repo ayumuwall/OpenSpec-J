@@ -16,6 +16,7 @@
 | `operations` | 操作とガイダンスリストのマップ             | いいえ | apply と archive の作業に使う補足ガイダンスです                |
 | `store`      | 文字列                                     | いいえ | `openspec/`に設定しかない場合に使う代替 OpenSpec ルートです    |
 | `references` | リスト                                     | いいえ | 指示へ仕様索引を追加するストアです                             |
+| `skillsScope` | 文字列：`project` | いいえ | チームで OpenSpec スキルをこのリポジトリに保持します |
 
 各フィールドを個別に検証し、不正な値は警告を表示して除外します。
 
@@ -71,6 +72,10 @@ references:
   - id: billing-specs
     remote: git@github.com:acme/billing-specs.git
 ```
+
+### skillsScope
+
+`skillsScope: project` は、チームがこのリポジトリ内に OpenSpec スキルを保持することを記録します。`openspec update` で**このプロジェクトに保持**を選ぶと書き込まれます。このファイルをコミットして他のメンバーが pull すると、同じ質問は表示されません。後から[グローバルスキル](../../start/setup.md#move-an-existing-project-to-the-global-skills)へ切り替えるには、`openspec init --scope global` を実行します。この行も削除されます。手動で行を削除してもスキルは移動せず、update が再び保存先を確認します。
 
 ## 例
 

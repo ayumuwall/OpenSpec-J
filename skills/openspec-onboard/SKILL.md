@@ -38,7 +38,7 @@ openspec --version 2>&1 || echo "CLI_NOT_INSTALLED"
 ```
 
 **CLI が未インストールの場合:**
-> OpenSpec CLI がインストールされていません。先にインストールしてから、`/openspec-onboard` に戻ってください。
+> OpenSpec CLI がインストールされていません。先にインストールしてから、`openspec-onboard` に戻ってください。
 
 未インストールの場合はここで停止します。
 
@@ -165,7 +165,7 @@ git log --oneline -10 2>/dev/null || echo "Git 履歴なし"
 │   [必要なら ASCII 図]                  │
 └─────────────────────────────────────────┘
 
-explore モード（`/openspec-explore`）は、実装前にこうした調査・思考をするためのものです。必要なときにいつでも使えます。
+変更を実装する前に、探索を通じて疑問点を整理してください。
 
 では、この作業を入れるための change を作成します。
 ```
@@ -495,24 +495,13 @@ OpenSpec の完全なサイクルを完了しました:
 
 ## スキルリファレンス
 
-**インストール済みのスキル:**
-
- | スキル           | 役割                                       |
- |------------------|--------------------------------------------|
- | `/openspec-propose` | change を作成し、全アーティファクトを生成 |
- | `/openspec-explore` | 作業前/作業中に問題を考える  |
- | `/openspec-apply-change`   | change のタスクを実装              |
- | `/openspec-archive-change` | 完了した変更をアーカイブ                 |
- | `/openspec-new-change`     | 新しい change を始め、アーティファクトを1つずつ進める |
- | `/openspec-continue-change` | 既存 change の作業を続ける    |
- | `/openspec-ff-change`      | fast-forward: 全アーティファクトを一度に作成 |
- | `/openspec-verify-change`  | 実装がアーティファクトと一致するか検証    |
+このセッションで利用できる OpenSpec ワークフローを、それぞれ1行の説明付きで一覧にしてください。呼び出せないワークフローは省略します。
 
 ---
 
 ## 次にやること
 
-実際に作りたいものに対して `/openspec-propose` を試してください。流れはもう掴めています。
+作りたいものについて、変更の開始を依頼してください。
 ```
 
 ---
@@ -527,8 +516,7 @@ OpenSpec の完全なサイクルを完了しました:
 問題ありません。変更は `openspec status --change "<name>" --json` が返す `changeRoot` に保存されています。
 
 後で続きから再開する際は、`openspec status --change "<name>" --json` で変更の現在の状態を確認できます。
-- `/openspec-continue-change <name>` - アーティファクト作成を再開
-- `/openspec-apply-change <name>` - 実装へ進む（tasks がある場合）
+利用可能なワークフローの中から、次の手順を1つ提案してください。
 
 作業は失われません。準備ができたらいつでも戻ってください。
 ```
@@ -542,20 +530,9 @@ OpenSpec の完全なサイクルを完了しました:
 ```
 ## OpenSpec クイックリファレンス
 
-**インストール済みのスキル:**
+このセッションで利用できる OpenSpec ワークフローを、それぞれ1行の説明付きで一覧にしてください。呼び出せないワークフローは省略します。
 
- | スキル                   | 役割                                       |
- |--------------------------|--------------------------------------------|
- | `/openspec-propose <idea>`  | change を作成し、全アーティファクトを生成 |
- | `/openspec-explore`         | 問題を考える（コード変更なし）   |
- | `/openspec-apply-change <name>`    | タスクを実装                            |
- | `/openspec-archive-change <name>`  | 完了時にアーカイブ                          |
- | `/openspec-new-change <name>`      | 新しい change を段階的に開始           |
- | `/openspec-continue-change <name>` | 既存 change を続行                |
- | `/openspec-ff-change <name>`       | fast-forward: 全アーティファクトを一括作成        |
- | `/openspec-verify-change <name>`   | 実装を検証                      |
-
-`/openspec-propose` で最初の change を始めてみてください。
+最初の変更の開始を依頼してください。
 ```
 
 穏やかに終了します。

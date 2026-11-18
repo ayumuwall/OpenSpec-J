@@ -66,6 +66,8 @@ describe('workflow list --json field usage', () => {
     }
   });
 
+  // One text for every profile: it names the sync workflow "if installed"
+  // and the inline merge otherwise, whether or not sync sits beside it.
   it('keeps bulk archive sync available with and without the sync workflow', () => {
     const variants = [
       [
@@ -86,12 +88,16 @@ describe('workflow list --json field usage', () => {
         text.indexOf('b. **`changeRoot` を移動する前に、含めた仕様差分を検証')
       );
 
-      expect(syncStep(withSync)).toContain(workflow);
-      expect(syncStep(withoutSync)).not.toContain(workflow);
-      expect(syncStep(withoutSync)).toContain('仕様差分から本仕様へのマージを自分でインライン実行');
-      expect(syncStep(withoutSync)).toContain('`includedDeltas`');
-      expect(syncStep(withoutSync)).toContain('`excludedDeltas`');
-      expect(withoutSync).toContain('同期を求められた場合、含めた仕様差分がある各変更について 仕様差分から本仕様へのマージをインラインで実行');
+      expect(withoutSync).toBe(withSync);
+      expect(syncStep(withSync)).toContain('なければ自身で仕様差分を本仕様へ統合');
+      expect(syncStep(withSync)).toContain(
+        `\`${workflow}\` が導入済みならそのワークフローをインラインで実行`
+      );
+      expect(syncStep(withSync)).toContain('`includedDeltas`');
+      expect(syncStep(withSync)).toContain('`excludedDeltas`');
+      expect(withSync).toContain(
+        `\`${workflow}\` が導入済みならそのワークフローをインラインで実行`
+      );
     }
   });
 
@@ -115,10 +121,14 @@ describe('workflow list --json field usage', () => {
         text.indexOf('5. **アーカイブを実行します**')
       );
 
-      expect(syncStep(withSync)).toContain(workflow);
-      expect(withoutSync).not.toContain(workflow);
-      expect(syncStep(withoutSync)).toContain('仕様差分から本仕様へのマージを自分でインライン実行');
-      expect(withoutSync).toContain('同期を求められた場合は、仕様差分から本仕様へのマージをインラインで実行');
+      expect(withoutSync).toBe(withSync);
+      expect(syncStep(withSync)).toContain('なければ自身で仕様差分を本仕様へ統合');
+      expect(syncStep(withSync)).toContain(
+        `\`${workflow}\` が導入済みならそのワークフローをインラインで実行`
+      );
+      expect(withSync).toContain(
+        `\`${workflow}\` が導入済みならそのワークフローをインラインで実行`
+      );
     }
   });
 });

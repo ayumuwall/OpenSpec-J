@@ -5,69 +5,23 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { onlyWithWorkflow, optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
 /**
  * The tutorial names other workflows throughout. Which of them exist depends
- * on the profile, so each mention is resolved at generation time (see
- * optional-workflow.ts) instead of being listed with an "if installed" caveat
- * the reader has to check for themselves.
+ * on the profile, but the text is the same for every profile, so each mention
+ * says what to do when that skill is not installed.
  */
-const EXPLORE_MODE_NOTE = optionalWorkflow(
-  'explore',
-  'explore モード（`/opsx:explore`）は、実装前にこうした調査・思考をするためのものです。必要なときにいつでも使えます。',
-  '問題をじっくり考える必要があるときは、実装前に調査しましょう。'
-);
-
-/**
- * スキルの参照表。プロファイルに含まれないワークフローの行は、行ごと除外する。
- * 利用できるスキルだけを列挙し、どの構成でも有効な表として出力する。
- */
-const COMMAND_REFERENCE_ROWS = [
-  onlyWithWorkflow('propose', ' | `/opsx:propose` | change を作成し、全アーティファクトを生成 |'),
-  onlyWithWorkflow('explore', ' | `/opsx:explore` | 作業前/作業中に問題を考える  |'),
-  onlyWithWorkflow('apply', ' | `/opsx:apply`   | change のタスクを実装              |'),
-  onlyWithWorkflow('archive', ' | `/opsx:archive` | 完了した変更をアーカイブ                 |'),
-  onlyWithWorkflow('new', ' | `/opsx:new`     | 新しい change を始め、アーティファクトを1つずつ進める |'),
-  onlyWithWorkflow('continue', ' | `/opsx:continue` | 既存 change の作業を続ける    |'),
-  onlyWithWorkflow('ff', ' | `/opsx:ff`      | fast-forward: 全アーティファクトを一度に作成 |'),
-  onlyWithWorkflow('verify', ' | `/opsx:verify`  | 実装がアーティファクトと一致するか検証    |'),
-].join('\n');
-
-const QUICK_REFERENCE_ROWS = [
-  onlyWithWorkflow('propose', ' | `/opsx:propose <idea>`  | change を作成し、全アーティファクトを生成 |'),
-  onlyWithWorkflow('explore', ' | `/opsx:explore`         | 問題を考える（コード変更なし）   |'),
-  onlyWithWorkflow('apply', ' | `/opsx:apply <name>`    | タスクを実装                            |'),
-  onlyWithWorkflow('archive', ' | `/opsx:archive <name>`  | 完了時にアーカイブ                          |'),
-  onlyWithWorkflow('new', ' | `/opsx:new <name>`      | 新しい change を段階的に開始           |'),
-  onlyWithWorkflow('continue', ' | `/opsx:continue <name>` | 既存 change を続行                |'),
-  onlyWithWorkflow('ff', ' | `/opsx:ff <name>`       | fast-forward: 全アーティファクトを一括作成        |'),
-  onlyWithWorkflow('verify', ' | `/opsx:verify <name>`   | 実装を検証                      |'),
-].join('\n');
-
-/**
- * Resume hints for a user stopping mid-tutorial. Both are optional, so the
- * sentence that introduces them stands on its own without either.
- */
-const RESUME_HINTS = [
-  onlyWithWorkflow('continue', '- `/opsx:continue <name>` - アーティファクト作成を再開'),
-  onlyWithWorkflow('apply', '- `/opsx:apply <name>` - 実装へ進む（tasks がある場合）'),
-].join('\n');
+const EXPLORE_MODE_NOTE =
+  '変更を実装する前に、探索を通じて疑問点を整理してください。';
 
 /** Where the tutorial points once it is over. */
-const NEXT_STEP_INVITE = optionalWorkflow(
-  'propose',
-  '実際に作りたいものに対して `/opsx:propose` を試してください。流れはもう掴めています。',
-  '実際に作りたいもので試してください。流れはもう掴めています。'
-);
+const NEXT_STEP_INVITE =
+  '作りたいものについて、変更の開始を依頼してください。';
 
-const QUICK_REFERENCE_INVITE = optionalWorkflow(
-  'propose',
-  '`/opsx:propose` で最初の change を始めてみてください。',
-  '準備ができたら、最初の change を始めるよう依頼してください。'
-);
+const QUICK_REFERENCE_INVITE =
+  '最初の変更の開始を依頼してください。';
 
 export function getOnboardSkillTemplate(): SkillTemplate {
   return {
@@ -558,11 +512,7 @@ OpenSpec の完全なサイクルを完了しました:
 
 ## スキルリファレンス
 
-**インストール済みのスキル:**
-
- | スキル           | 役割                                       |
- |------------------|--------------------------------------------|
-${COMMAND_REFERENCE_ROWS}
+このセッションで利用できる OpenSpec ワークフローを、それぞれ1行の説明付きで一覧にしてください。呼び出せないワークフローは省略します。
 
 ---
 
@@ -583,7 +533,7 @@ ${NEXT_STEP_INVITE}
 問題ありません。変更は \`openspec status --change "<name>" --json\` が返す \`changeRoot\` に保存されています。
 
 後で続きから再開する際は、\`openspec status --change "<name>" --json\` で変更の現在の状態を確認できます。
-${RESUME_HINTS}
+利用可能なワークフローの中から、次の手順を1つ提案してください。
 
 作業は失われません。準備ができたらいつでも戻ってください。
 \`\`\`
@@ -597,11 +547,7 @@ ${RESUME_HINTS}
 \`\`\`
 ## OpenSpec クイックリファレンス
 
-**インストール済みのスキル:**
-
- | スキル                   | 役割                                       |
- |--------------------------|--------------------------------------------|
-${QUICK_REFERENCE_ROWS}
+このセッションで利用できる OpenSpec ワークフローを、それぞれ1行の説明付きで一覧にしてください。呼び出せないワークフローは省略します。
 
 ${QUICK_REFERENCE_INVITE}
 \`\`\`

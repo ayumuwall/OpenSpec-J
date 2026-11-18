@@ -6,7 +6,7 @@
  */
 import path from 'path';
 import { promises as fs } from 'fs';
-import { AI_TOOLS, SKILL_LINKED_TOOL_IDS } from './config.js';
+import { AI_TOOLS, installerAgent, SKILL_LINKED_TOOL_IDS } from './config.js';
 import { CommandAdapterRegistry } from './command-generation/index.js';
 import { ALL_WORKFLOWS } from './profiles.js';
 import { WORKFLOW_TO_SKILL_DIR } from './profile-sync-drift.js';
@@ -33,16 +33,10 @@ function toolSpecificPathsForTool(toolId: string): string[] {
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool) return [];
   const paths: string[] = [];
-  const ownSkillsRoot = !tool.skillsDir || tool.globalSkillsDir
-    ? undefined
-    : !usesSharedSkills(tool)
-      ? tool.skillsDir
-      : SKILL_LINKED_TOOL_IDS.has(tool.value) && tool.skillsDir !== SHARED_SKILLS_ROOT
-        ? tool.skillsDir
-        : undefined;
+  const ownSkillsRoot = SKILL_LINKED_TOOL_IDS.has(tool.value) ? installerAgent(tool.value).projectSkillsDir : undefined;
   if (ownSkillsRoot) {
     for (const workflow of ALL_WORKFLOWS) {
-      const skillDir = `${ownSkillsRoot}/skills/${WORKFLOW_TO_SKILL_DIR[workflow]}`;
+      const skillDir = `${ownSkillsRoot}/${WORKFLOW_TO_SKILL_DIR[workflow]}`;
       // リンク、またはリンクを作成できない場合の通常コピー。
       paths.push(skillDir, `${skillDir}/SKILL.md`);
     }
@@ -219,6 +213,8 @@ export async function pruneEmptyParents(projectPath: string, removed: readonly s
     let dir = path.dirname(path.join(root, ...rel.split('/')));
     while (dir !== root && dir.startsWith(root + path.sep)) {
       try {
+        // Windows はリンク先にスキルがあってもジャンクションを削除できるため、ここで止める。
+        if ((await fs.lstat(dir)).isSymbolicLink()) break;
         await fs.rmdir(dir); // 空でなければ失敗する
       } catch {
         break;

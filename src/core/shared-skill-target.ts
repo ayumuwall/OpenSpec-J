@@ -1,5 +1,5 @@
 import path from 'path';
-import { AI_TOOLS, OPENSPEC_SKILL_NAMES, type AIToolOption } from './config.js';
+import { AI_TOOLS, resolveToolIdAlias, OPENSPEC_SKILL_NAMES, type AIToolOption } from './config.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
 import { isReleasedGeneratedContent } from './shared/generated-fingerprint.js';
@@ -17,56 +17,33 @@ export function skillToolListPath(projectPath: string): string {
   return path.join(projectPath, SHARED_SKILLS_ROOT, 'skills', TOOL_LIST_FILE);
 }
 
-/**
- * ツール ID をソートして1行ずつ出力する。続いて、OpenSpec が使う前から
- * `.agents/skills/` にあった独自の `openspec-*` スキルを `keep <skill>` として記録。
- * このスキルは上書き・削除しない。
- */
+function readMarker(projectPath: string, view: FileView): string {
+  const marker = skillToolListPath(projectPath);
+  FileSystemUtils.assertProjectArtifactPath(projectPath, marker);
+  return view.exists(marker) ? view.read(marker) : '';
+}
+
+/** 公開ツール ID をソートし、該当するものに 2.0 の own-files マーカーを付ける。 */
 export function formatSkillToolList(
   toolIds: Iterable<string>,
-  keptSkills: Iterable<string> = [],
   toolsWithOwnFiles: ReadonlySet<string> = new Set()
 ): string {
   return [
     // own-files はツール固有のコマンドやリンクを生成済みであることを示す。
     // それらをすべて削除すれば、そのツールも削除する。
     ...[...new Set(toolIds)].sort().map((id) => (toolsWithOwnFiles.has(id) ? `${id} own-files` : id)),
-    ...[...new Set(keptSkills)].sort().map((name) => `keep ${name}`),
   ].map((line) => `${line}\n`).join('');
 }
 
 /** 一覧内で、固有のコマンドやリンクを生成済みのツール。 */
 export function readListedToolsWithOwnFiles(projectPath: string, view: FileView = DISK_VIEW): Set<string> {
-  const listPath = skillToolListPath(projectPath);
   try {
-    FileSystemUtils.assertProjectArtifactPath(projectPath, listPath);
-    if (!view.exists(listPath)) return new Set();
     return new Set(
-      view
-        .read(listPath)
+      readMarker(projectPath, view)
         .split(/\r?\n/)
         .map((line) => line.trim().split(/\s+/))
         .filter((tokens) => tokens[1] === 'own-files')
-        .map((tokens) => tokens[0])
-    );
-  } catch {
-    return new Set();
-  }
-}
-
-/** `.agents/skills/` で利用者のものとして記録した openspec-* スキル。 */
-export function readKeptSharedSkills(projectPath: string, view: FileView = DISK_VIEW): Set<string> {
-  const listPath = skillToolListPath(projectPath);
-  try {
-    FileSystemUtils.assertProjectArtifactPath(projectPath, listPath);
-    if (!view.exists(listPath)) return new Set();
-    const names = new Set<string>(OPENSPEC_SKILL_NAMES);
-    return new Set(
-      view
-        .read(listPath)
-        .split(/\r?\n/)
-        .map((line) => line.trim().match(/^keep\s+(\S+)$/)?.[1])
-        .filter((name): name is string => name !== undefined && names.has(name))
+        .map((tokens) => resolveToolIdAlias(tokens[0]))
     );
   } catch {
     return new Set();
@@ -101,15 +78,11 @@ function inferPreListTool(projectPath: string, view: FileView): string | undefin
 
 /** 一覧ファイルに記載された既知のツール。ファイルがなければ空。 */
 function readListFileTools(projectPath: string, view: FileView): string[] {
-  const listPath = skillToolListPath(projectPath);
   try {
-    FileSystemUtils.assertProjectArtifactPath(projectPath, listPath);
-    if (!view.exists(listPath)) return [];
     const known = new Set(AI_TOOLS.map((tool) => tool.value));
-    return view
-      .read(listPath)
+    return readMarker(projectPath, view)
       .split(/\r?\n/)
-      .map((line) => line.trim().split(/\s+/)[0])
+      .map((line) => resolveToolIdAlias(line.trim().split(/\s+/)[0]))
       .filter((id) => known.has(id));
   } catch {
     return [];

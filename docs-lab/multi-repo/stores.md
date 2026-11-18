@@ -236,10 +236,10 @@ OpenSpec ルートを使用: team-plans (/Users/you/openspec/team-plans)
 
 ```bash
 # web-app のリポジトリルートで実行
-openspec init --tools claude
+openspec init --scope project --tools claude
 ```
 
-- **連携ファイル**：コードリポジトリに生成します。
+- **連携ファイル**：コードリポジトリに生成します。新規セットアップ時に `--scope project` を付けないと、スキルはマシン上へインストールされ、リポジトリ内には生成されません。
 - **`openspec/config.yaml`**：`store:` 行を含め、バイト単位で変更せず保持します。
 - **`openspec/specs/` と `openspec/changes/`**：コードリポジトリには作成しません。
 

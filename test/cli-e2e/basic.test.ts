@@ -94,7 +94,7 @@ describe('openspec CLI e2e basics', () => {
       .join(', ');
     const normalizedOutput = result.stdout.replace(/\s+/g, ' ').trim();
     expect(normalizedOutput).toContain(
-      `対話なしで AI ツールを設定します。"all"、"none"、または次の ID をカンマ区切りで指定してください: ${expectedTools}`
+      `"all"、"none"、または次の ID をカンマ区切りで指定してください: ${expectedTools}`
     );
     expect(normalizedOutput).toContain('--language <language>');
     expect(result.stdout).toContain('ヘルプを表示');
@@ -458,7 +458,7 @@ describe('openspec CLI e2e basics', () => {
       const claudeSkillPath = path.join(emptyProjectDir, '.claude/skills/openspec-explore/SKILL.md');
       const cursorSkillPath = path.join(emptyProjectDir, '.agents/skills/openspec-explore/SKILL.md');
       const minimaxSkillPath = path.join(
-        testHome,
+        emptyProjectDir,
         '.minimax/skills/openspec-explore/SKILL.md'
       );
       expect(await fileExists(claudeSkillPath)).toBe(true);
@@ -522,7 +522,7 @@ describe('openspec CLI e2e basics', () => {
       )).toBe('zed\n');
       const updatedSkill = await fs.readFile(skillPath, 'utf-8');
       // The shared copy names skills plainly, right for every tool reading it.
-      expect(updatedSkill).toContain('`openspec-propose`');
+      expect(updatedSkill).toContain('議論を変更として記録');
       expect(updatedSkill).not.toContain('$openspec-');
       expect(updatedSkill).not.toContain('/openspec-');
     });

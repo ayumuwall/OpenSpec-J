@@ -41,7 +41,7 @@ metadata:
 
    選択を求める際は、`specs/` ディレクトリ配下に仕様差分がある変更を表示します。
 
-   必ず「使用する変更: <name>」と、切り替える方法（例: `/openspec-sync-specs <other>`）を通知します。
+   必ず「使用する変更: <name>」と、切り替える方法（例: `openspec-sync-specs <other>`）を通知します。
 
 2. **変更コンテキストの解決**
 

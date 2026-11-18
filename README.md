@@ -15,7 +15,7 @@
 </p>
 
 > [!NOTE]
-> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v2.0.0 です。**<br>
+> このリポジトリは、Fission-AI/OpenSpec をベースにした日本語ローカライズ版（[OpenSpec-J](https://github.com/ayumuwall/OpenSpec-J)）です。仕様と構成は本家を尊重しつつ、日本語利用者向けにドキュメントとメッセージを最適化しています。**現在の同期元は OpenSpec v2.1.0 です。**<br>
 > 生成物だけ日本語にできれば十分な場合は、本家版の [Multi-Language](docs/multi-language.md) を利用できます。
 
 <details>
@@ -124,7 +124,7 @@ OpenSpec自身もOpenSpecを使って開発されています。実際の大規�
 
 ## クイックスタート
 
-**npm 版は Node.js 22.12.0 以降が必要です。**
+**npm 版は Node.js 22.20.0 以降が必要です。**
 
 OpenSpec をグローバルにインストールします。
 
@@ -238,7 +238,7 @@ brew upgrade ayumuwall/tap/openspec-j
 
 **エージェントの指示を更新します**
 
-各プロジェクト内で次のコマンドを実行し、AI 向けの指示を再生成して、インストール済みスキルを更新します。
+次のコマンドを一度実行して、マシンにインストールしたスキルを更新します。チームでスキルを Git 管理している場合は、スキルをコミットしている各プロジェクトで実行してください。
 
 ```bash
 openspec update

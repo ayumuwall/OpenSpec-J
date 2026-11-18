@@ -1,4 +1,7 @@
-export const OPENSPEC_DIR_NAME = 'openspec';
+import path from 'node:path';
+import { getSupportedAgents } from 'skills';
+
+export { OPENSPEC_DIR_NAME } from './project-dir.js';
 
 export const OPENSPEC_SKILL_NAMES = [
   'openspec-explore',
@@ -38,30 +41,6 @@ export interface AIToolOption {
   requiresIdeRestart?: boolean; // IDE やエディターのプロセスがスラッシュコマンドを読み込む場合は true。CLI は即座に認識するため再起動案内は不要（#1067 を参照）
 }
 
-/**
- * プロジェクトスキルは .agents/skills/ に1つだけ置く。ここを読まない、
- * または読むか未確認のツールには、npx skills と同じく専用 skills/ へリンクする。
- * 導入して確認済み: claude、continue、forgecode（利用者フォルダのみ）、kiro、
- * codebuddy、easycode、iflow、codeartsagent。アカウントがなく未確認:
- * lingma、gigacode、veai、rovodev、codestudio。Hermes は専用・設定済みの場所だけを読む。
- */
-export const SKILL_LINKED_TOOL_IDS: ReadonlySet<string> = new Set([
-  'claude',
-  'continue',
-  'forgecode',
-  'kiro',
-  'codebuddy',
-  'easycode',
-  'iflow',
-  'codeartsagent',
-  'lingma',
-  'gigacode',
-  'veai',
-  'rovodev',
-  'codestudio',
-  'hermes',
-]);
-
 /** 対応終了したツール。retired-tools.ts で旧出力を整理する。 */
 export interface RetiredTool {
   /** 旧版が --tools で受け付けた ID。 */
@@ -97,7 +76,7 @@ export function formatRetiredToolError(tool: RetiredTool): string {
   return `${tool.name} の対応は終了しました。${tool.reason}です。代わりに ${tool.successorName} を設定してください: openspec init --tools ${tool.successor}`;
 }
 
-export const AI_TOOLS: AIToolOption[] = [
+const existingTools: AIToolOption[] = [
   { name: 'Amp', value: 'amp', available: true, successLabel: 'Amp', skillsDir: '.agents', detectionPaths: ['.amp', '.agents/skills'] },
   // Antigravity は v1.20.5 で、ワークスペースのスキルとワークフローを `.agent` から
   // 共有の `.agents` ルートへ移した。`.agents` ルート自体は Codex、Zed、ベンダー非依存の
@@ -135,7 +114,7 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Kimi Code', value: 'kimi', available: true, successLabel: 'Kimi Code', skillsDir: '.kimi-code', detectionPaths: ['.kimi-code', '.kimi'] },
   { name: 'Kiro', value: 'kiro', available: true, successLabel: 'Kiro', skillsDir: '.kiro', requiresIdeRestart: true },
   { name: 'Lingma', value: 'lingma', available: true, successLabel: 'Lingma', skillsDir: '.lingma', requiresIdeRestart: true },
-  { name: 'MiniMax Code', value: 'minimax-code', available: true, successLabel: 'MiniMax Code', globalSkillsDir: '.minimax' },
+  { name: 'MiniMax Code', value: 'minimax-code', available: true, successLabel: 'MiniMax Code', skillsDir: '.minimax' },
   { name: 'Mistral Vibe', value: 'vibe', available: true, successLabel: 'Mistral Vibe', skillsDir: '.vibe' },
   { name: 'Oh My Pi', value: 'oh-my-pi', available: true, successLabel: 'Oh My Pi', skillsDir: '.omp' },
   { name: 'OpenCode', value: 'opencode', available: true, successLabel: 'OpenCode', skillsDir: '.opencode' },
@@ -161,6 +140,44 @@ export const AI_TOOLS: AIToolOption[] = [
   // space bar toggles a selection rather than typing into the search box.
   { name: 'Other / Universal (shared .agents skills)', value: 'agents', available: true, successLabel: 'shared .agents skills', skillsDir: '.agents', detectionPaths: ['.agents/skills'], searchAliases: ['universal', 'other', 'generic', 'custom', 'proprietary', 'unlisted', 'unsupported', 'vendor-neutral', 'agents.md'] }
 ];
+
+// Keep public OpenSpec IDs at the CLI boundary, including the retired windsurf alias.
+const installerAliases: Record<string, string> = {
+  agents: 'universal', auggie: 'augment', claude: 'claude-code', codeartsagent: 'codearts-agent',
+  factory: 'droid', gemini: 'gemini-cli', hermes: 'hermes-agent', iflow: 'iflow-cli',
+  kilocode: 'kilo', kimi: 'kimi-code-cli', kiro: 'kiro-cli', qwen: 'qwen-code',
+  roocode: 'roo', vibe: 'mistral-vibe',
+};
+const agents = getSupportedAgents();
+const agentsById = new Map(agents.map(agent => [agent.id, agent]));
+export function installerAgent(toolId: string) {
+  return agentsById.get(installerAliases[toolId] ?? toolId) ?? agentsById.get('universal')!;
+}
+const existingIds = new Set(existingTools.map(tool => installerAgent(tool.value).id));
+export const AI_TOOLS: AIToolOption[] = [
+  ...existingTools.map(tool => {
+    if (installerAgent(tool.value).id !== 'universal' || tool.value === 'agents') return tool;
+    return { ...tool, setupNote: 'スキルは共通のスキルフォルダにあります。専用フォルダが必要なツールは https://github.com/ayumuwall/OpenSpec-J/blob/ja-docs/docs-lab/reference/supported-tools.md#link-another-tool を参照してください。' };
+  }),
+  ...agents.filter(agent => !existingIds.has(agent.id) && agent.id !== 'windsurf').map(agent => ({
+    value: agent.id, name: agent.name, available: true, successLabel: agent.name,
+    skillsDir: path.dirname(agent.projectSkillsDir),
+    detectionPaths: [agent.projectSkillsDir],
+  })),
+];
+export const SKILL_LINKED_TOOL_IDS: ReadonlySet<string> = new Set(
+  AI_TOOLS.filter(tool => !installerAgent(tool.value).universal).map(tool => tool.value)
+);
+
+/** Some regional agent variants read exactly the same project folder. */
+export const agentsByProjectFolder = new Map<string, string[]>();
+for (const tool of AI_TOOLS) {
+  const agent = installerAgent(tool.value);
+  if (agent.universal) continue;
+  const ids = agentsByProjectFolder.get(agent.projectSkillsDir) ?? [];
+  ids.push(tool.value);
+  agentsByProjectFolder.set(agent.projectSkillsDir, ids);
+}
 
 /**
  * The vendor-neutral target every assistant that is not listed above can use.

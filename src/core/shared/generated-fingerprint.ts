@@ -6,12 +6,20 @@ const GENERATED_VERSION =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 
 /**
+ * 内容の編集とはみなさない UTF-8 BOM と改行を正規化する。
+ * Windows で core.autocrlf によりチェックアウト時に戻る CRLF も対象。
+ */
+export function normalizeGeneratedFile(content: string): string {
+  return content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+}
+
+/**
  * 改行、BOM、YAML frontmatter 内の有効な生成バージョンを正規化する。
  * 利用者が編集しなくてもリリースやチェックアウトで変わる部分だけを扱い、
  * 自由記述の generatedBy は内容の一部として保持する。
  */
 export function normalizeGeneratedContent(content: string): string {
-  const normalized = content.replace(/^﻿/, '').replace(/\r\n/g, '\n');
+  const normalized = normalizeGeneratedFile(content);
   const frontmatter = normalized.match(/^---\n[\s\S]*?\n---(?:\n|$)/)?.[0];
   if (!frontmatter) return normalized;
 

@@ -45,7 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/instal
 一部の IDE 統合では実行できません。アシスタントは次の手順を進めます。
 
 1. CLI があればインストールを省略し、既存の導入方法での更新を案内します。npm・Homebrew 版の場合は、`openspec install` で単体実行版へ切り替えられることを一度だけ案内します。未導入の場合はインストールコマンドを示し、確認を待ってから実行します。
-2. パッケージマネージャーを希望する場合や、インストーラーが失敗した場合は、パッケージマネージャーで導入します。Node.js が22.12.0未満なら停止します。
+2. パッケージマネージャーを希望する場合や、インストーラーが失敗した場合は、パッケージマネージャーで導入します。Node.js が22.20.0未満なら停止します。
 3. `openspec` が PATH に含まれることを確認します。
 4. 対象と判断したフォルダ名と、会話中の AI ツールを候補として示します。ほかに使用するツールを確認し、そのフォルダで `openspec init` を実行します（[プロジェクトのセットアップ](setup.md)）。
 5. init が作成した内容と、使用するツールで OpenSpec を呼び出す正確な表記を報告します。
@@ -59,13 +59,13 @@ curl -fsSL https://raw.githubusercontent.com/ayumuwall/OpenSpec-J/ja-docs/instal
 
 ## パッケージマネージャー
 
-Node.js パッケージとして導入するため、Node.js 22.12.0 以降が必要です（Homebrew と Nix は実行環境を含みます）。ターミナルで確認します。
+Node.js パッケージとして導入するため、Node.js 22.20.0 以降が必要です（Homebrew と Nix は実行環境を含みます）。ターミナルで確認します。
 
 ```bash
 node --version
 ```
 
-`v22.12.0` 以降なら npm でインストールします。
+`v22.20.0` 以降なら npm でインストールします。
 
 ```npm
 npm install -g @ayumuwall/openspec@latest
@@ -245,16 +245,13 @@ brew update
 brew upgrade ayumuwall/tap/openspec-j
 ```
 
-init を実行した各プロジェクトで、次のコマンドを実行します。
+ターミナルで、次のコマンドを実行します。
 
 ```bash
 openspec update
 ```
 
-新しい CLI が公開されている場合、[`openspec update`](../reference/cli.md#openspec-update)が通知し、
-そのままインストールできます。CLI の更新はマシンごとに一度だけ必要です。実行するたびに、
-自動では更新されないプロジェクトの生成済みスキルも更新します。最新状態のプロジェクトでは
-`✓ 設定済みのツール2件はすべて最新です（v2.0.0）`と表示されます（2ツールを設定した場合）。
+新しい CLI が公開されている場合、[`openspec update`](../reference/cli.md#openspec-update)が通知し、そのままインストールできます。CLI の更新はマシンごとに一度だけ必要です。実行するたびに、自動では更新されないスキルも更新します。グローバルスキルは、どのフォルダからでも一度実行すれば更新できます。最新なら `✓ このマシンのスキル6個は最新です（v2.1.0）` と表示されます。プロジェクト内にスキルを保持している場合は、各プロジェクトで実行してください。最新なら `✓ 設定済みのツール2件はすべて最新です（v2.1.0）` と表示されます（2ツールを設定した場合）。
 
 > [!WARNING]
 > 単体実行版は `openspec install` で同じ場所へ更新します。`openspec update` が新版を通知します。
@@ -288,7 +285,8 @@ Homebrew では`brew uninstall openspec-j`、Deno では`deno uninstall --global
 
 **3. 残ったファイルを削除するか、そのまま保持する。**
 
-- 生成されたエージェントファイル：プロジェクトごとの `.agents/skills/` 内の `openspec-*` スキルと `.openspec-target`、`.claude/skills/` などのツール固有フォルダ内の `openspec-*` リンクです。[対応ツール](../reference/supported-tools.md)にリンクを作成するツールを掲載しています。MiniMax Code のスキルは `~/.minimax/skills` にあります。
+- マシンにインストールしたスキル：`npx skills remove --global` で `openspec-` のスキルを選んで削除するか、`~/.agents/skills/` 内の `openspec-*` フォルダと、`~/.claude/skills/` などのツール固有フォルダ内の `openspec-*` リンクを削除します。
+- 生成されたエージェントファイル：プロジェクトごとの `.agents/skills/` 内の `openspec-*` スキルと `.openspec-target`、`.claude/skills/` などのツール固有フォルダ内の `openspec-*` リンクです。[対応ツール](../reference/supported-tools.md)にリンクを作成するツールを掲載しています。
 - 旧バージョンの残存ファイル：`CLAUDE.md`または`AGENTS.md`内のマーカーブロックと、
   `~/.codex/prompts`内の`opsx-*.md`プロンプトです。マーカーブロックだけを削除し、ファイルは残します。
 - `openspec/`フォルダ：削除する前に内容を確認してください。`specs/`と`changes/archive/`は

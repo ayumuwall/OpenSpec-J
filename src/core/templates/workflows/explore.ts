@@ -5,7 +5,6 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
@@ -31,47 +30,23 @@ CLI はすでに SQLite を使っており、リモートサービスはあり�
 SQLite の維持を推奨します。状態を共有する場合は、別途同期の設計が必要です。
 \`\`\``;
 
-/**
- * Explore's handoffs. A custom profile can install explore without propose or
- * apply, so each reference is resolved at generation time (see
- * optional-workflow.ts) instead of naming a workflow that may not exist. The
- * fallbacks point at explore's own capture path and the always-present CLI.
- */
-const IMPLEMENT_REQUEST_HANDOFF = optionalWorkflow(
-  'propose',
-  '議論を変更にまとめる `/opsx:propose` を案内します',
-  '後述の手順で議論を変更として記録することを提案します'
-);
+const IMPLEMENT_REQUEST_HANDOFF =
+  '議論を変更として記録することを提案します';
 
-const CAPTURE_PLANNING_HANDOFF = optionalWorkflow(
-  'propose',
-  '`/opsx:propose` で残りの計画アーティファクトを作成します',
-  '残りの計画アーティファクトも、ここで同じように記録できます'
-);
+const CAPTURE_PLANNING_HANDOFF =
+  '計画を終えるには、その変更の残りの計画アーティファクトを完成させます';
 
-const CAPTURE_APPLY_HANDOFF = optionalWorkflow(
-  'apply',
-  'タスクができたら `/opsx:apply` で変更を実装します',
-  '実装は explore モードを離れ、その変更のタスク（`openspec instructions apply --change "<name>" --json`）に基づいて進めます'
-);
+const CAPTURE_APPLY_HANDOFF =
+  '実装するには、explore モードを離れてからタスクを起点に進めます';
 
-const DISCOVERY_END_HANDOFF = optionalWorkflow(
-  'propose',
-  '始めますか？ `/opsx:propose` スキルを使うと、これを変更にまとめられます。',
-  '始めますか？ これを変更として記録できます。'
-);
+const DISCOVERY_END_HANDOFF =
+  'これを変更として記録しますか？';
 
-const SUMMARY_NEXT_STEP = optionalWorkflow(
-  'propose',
-  '- 変更にまとめる: `/opsx:propose`',
-  '- 変更として記録する: 記録するよう依頼してください'
-);
+const SUMMARY_NEXT_STEP =
+  '- この議論を変更として記録するよう依頼する';
 
-const GUARDRAIL_HANDOFF = optionalWorkflow(
-  'propose',
-  '`/opsx:propose` で議論を変更にまとめ、その変更で作業を進めます',
-  '議論を変更として記録することを提案し、その変更から作業を進めます'
-);
+const GUARDRAIL_HANDOFF =
+  'まず議論を変更として記録することを提案します';
 
 export function getExploreSkillTemplate(): SkillTemplate {
   return {
@@ -191,7 +166,7 @@ openspec list --specs
 3. 返された \`template\` と \`instruction\` に従い、\`dependencies\` の完了済みファイルを読み、\`context\` と \`rules\` はコピーせず制約として適用します。作成前に出力パスを選びます。\`resolvedOutputPath\` が glob なら、指示に従って \`changeRoot\` 内の具体的なパスを選び、親ディレクトリと既存ファイル自体のシンボリックリンクを解決しても \`changeRoot\` 内に収まることを確認します。外れる場合は停止してユーザーへ伝えます。glob 以外は \`resolvedOutputPath\` を使います。スキルやコマンドへ作成を委任する指示なら、そのパスへ書き込めるときだけ呼び出し、できなければ停止してユーザーへ伝えます。それ以外は自分でそのパスへ書き込みます。いずれも、選択した出力パスにファイルが存在することを確認します。
 4. アーティファクトを作成するたびに \`openspec status --change "<name>" --json\` を再実行し（登録された独立ストアの場合だけ確認済みの \`--store "<id>"\` を付けます）、要求されたすべてのアーティファクトが \`done\`、\`skipped\`、またはその \`instruction\` の条件が該当しなかったために意図的にスキップした状態になるまで続けます。意図的な条件付きスキップはユーザーに伝え、記録し、再検討しません。依存関係は作成を可能にするためのものであり、進行を拒む関門ではありません。記録済みの条件付き前提条件を意図的にスキップしたことだけが理由で要求済みアーティファクトが \`blocked\` の場合は、ブロック状態でも \`openspec instructions "<artifact-id>" --change "<name>" --json\` を実行します（登録された独立ストアの場合だけ確認済みの \`--store "<id>"\` を付けます）。記録した条件付きスキップだけが不足依存関係であるときに限り、手順 3 に従って作成します。ユーザーが記録を求めておらず、条件付きでスキップもできない前提条件によりブロックされている場合は、その依存関係を説明してから範囲を広げるか確認します。
 
-別のワークフローを実行するようユーザーへ求めず、ユーザーが求めたアーティファクトを記録します。変更の開始だけを求められた場合は、スキャフォールドの後に停止して状態を表示します。 依頼された記録が終わったらそこで停止し、その後の進め方を示します。${CAPTURE_PLANNING_HANDOFF}。${CAPTURE_APPLY_HANDOFF}。アーティファクトの記録から実装を始めてはいけません。
+別のワークフローを実行するようユーザーへ求めず、ユーザーが求めたアーティファクトを記録します。変更の開始だけを求められた場合は、ひな形の作成後に停止して状態を表示します。依頼された記録が終わったらそこで停止し、その後の進め方を示します。${CAPTURE_PLANNING_HANDOFF}。${CAPTURE_APPLY_HANDOFF}。アーティファクトの記録から実装を始めてはいけません。
 
 ### 変更が存在する場合
 
@@ -515,7 +490,7 @@ openspec list --specs
 3. 返された \`template\` と \`instruction\` に従い、\`dependencies\` の完了済みファイルを読み、\`context\` と \`rules\` はコピーせず制約として適用します。作成前に出力パスを選びます。\`resolvedOutputPath\` が glob なら、指示に従って \`changeRoot\` 内の具体的なパスを選び、親ディレクトリと既存ファイル自体のシンボリックリンクを解決しても \`changeRoot\` 内に収まることを確認します。外れる場合は停止してユーザーへ伝えます。glob 以外は \`resolvedOutputPath\` を使います。スキルやコマンドへ作成を委任する指示なら、そのパスへ書き込めるときだけ呼び出し、できなければ停止してユーザーへ伝えます。それ以外は自分でそのパスへ書き込みます。いずれも、選択した出力パスにファイルが存在することを確認します。
 4. アーティファクトを作成するたびに \`openspec status --change "<name>" --json\` を再実行し（登録された独立ストアの場合だけ確認済みの \`--store "<id>"\` を付けます）、要求されたすべてのアーティファクトが \`done\`、\`skipped\`、またはその \`instruction\` の条件が該当しなかったために意図的にスキップした状態になるまで続けます。意図的な条件付きスキップはユーザーに伝え、記録し、再検討しません。依存関係は作成を可能にするためのものであり、進行を拒む関門ではありません。記録済みの条件付き前提条件を意図的にスキップしたことだけが理由で要求済みアーティファクトが \`blocked\` の場合は、ブロック状態でも \`openspec instructions "<artifact-id>" --change "<name>" --json\` を実行します（登録された独立ストアの場合だけ確認済みの \`--store "<id>"\` を付けます）。記録した条件付きスキップだけが不足依存関係であるときに限り、手順 3 に従って作成します。ユーザーが記録を求めておらず、条件付きでスキップもできない前提条件によりブロックされている場合は、その依存関係を説明してから範囲を広げるか確認します。
 
-別のワークフローを実行するようユーザーへ求めず、ユーザーが求めたアーティファクトを記録します。変更の開始だけを求められた場合は、スキャフォールドの後に停止して状態を表示します。 依頼された記録が終わったらそこで停止し、その後の進め方を示します。${CAPTURE_PLANNING_HANDOFF}。${CAPTURE_APPLY_HANDOFF}。アーティファクトの記録から実装を始めてはいけません。
+別のワークフローを実行するようユーザーへ求めず、ユーザーが求めたアーティファクトを記録します。変更の開始だけを求められた場合は、ひな形の作成後に停止して状態を表示します。依頼された記録が終わったらそこで停止し、その後の進め方を示します。${CAPTURE_PLANNING_HANDOFF}。${CAPTURE_APPLY_HANDOFF}。アーティファクトの記録から実装を始めてはいけません。
 
 ### 変更が存在する場合
 

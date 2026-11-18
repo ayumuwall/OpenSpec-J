@@ -5,29 +5,14 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
-/**
- * The implementation handoff, resolved at generation time so a profile
- * without `apply` is not told to run it (see optional-workflow.ts).
- *
- * The two surfaces word this differently on purpose (#258): a command-only
- * tool has no conversational agent to ask, so its prompt names a command or
- * the CLI and never invites "ask me to implement".
- */
-const SKILL_APPLY_HANDOFF = optionalWorkflow(
-  'apply',
-  'タスクに着手するには、`/opsx:apply` スキルを使うか、実装を依頼してください。',
-  'タスクに着手するには、実装を依頼してください。'
-);
+const SKILL_APPLY_HANDOFF =
+  '計画のレビュー準備ができました。準備が整ったら、計画の適用を依頼してください。';
 
-const COMMAND_APPLY_HANDOFF = optionalWorkflow(
-  'apply',
-  '`/opsx:apply` を実行して実装を開始してください。',
-  '`openspec instructions apply --change "<name>" --json` でタスク一覧を取得し、実装を開始してください。'
-);
+const COMMAND_APPLY_HANDOFF =
+  '計画をレビューしてください。実装を始めるには `openspec instructions apply --change "<name>" --json` を実行します。';
 
 export function getFfChangeSkillTemplate(): SkillTemplate {
   return {

@@ -3,7 +3,6 @@ import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, promises as fs } from 'fs';
-import { AI_TOOLS, TOOL_ID_ALIASES } from '../core/config.js';
 import type { ArchiveOptions } from '../core/archive.js';
 import { registerSpecCommand } from './commands/spec.js';
 import { registerConfigCommand } from './commands/config.js';
@@ -253,25 +252,27 @@ program.hook('postAction', async (_thisCommand, actionCommand) => {
   }
 });
 
-const availableToolIds = AI_TOOLS
-  .filter((tool) => tool.skillsDir || tool.globalSkillsDir)
-  .map((tool) => tool.value);
-const toolAliasNote = Object.entries(TOOL_ID_ALIASES)
-  .map(([retired, current]) => `${retired}（現在は ${current}）`)
-  .join(', ');
-const toolsOptionDescription = `対話なしで AI ツールを設定します。"all"、"none"、または次の ID をカンマ区切りで指定してください: ${availableToolIds.join(', ')}。旧 ID も使用できます: ${toolAliasNote}`;
+function initToolsHelp(): string {
+  const require = createRequire(import.meta.url);
+  const { AI_TOOLS, TOOL_ID_ALIASES } = require('../core/config.js') as typeof import('../core/config.js');
+  const ids = AI_TOOLS.map(tool => tool.value).join(', ');
+  const aliases = Object.entries(TOOL_ID_ALIASES).map(([old, id]) => `${old}（現在は ${id}）`);
+  return `\n"all"、"none"、または次の ID をカンマ区切りで指定してください: ${ids}。旧 ID も使用できます: ${aliases.join(', ')}。`;
+}
 
 program
   .command('init [path]')
   .description('プロジェクトで OpenSpec を初期化')
-  .option('--tools <tools>', toolsOptionDescription)
+  .option('--tools <tools>', 'all、none、またはカンマ区切りのツール ID を設定')
+  .addHelpText('after', initToolsHelp)
   .option('--language <language>', '新しい OpenSpec アーティファクトを記述する言語')
   .option('--force', '確認せずに旧ファイルを自動クリーンアップ')
   .option('--profile <profile>', 'グローバル設定のプロファイルを上書き（core または custom）')
   .option('--no-animation', 'アニメーションの代わりに静的なウェルカム画面を表示')
   .option('--copilot-cloud', '確認なしで GitHub Copilot クラウドコーディングエージェント用ファイルをセットアップ')
   .option('--no-copilot-cloud', 'GitHub Copilot クラウドコーディングエージェント用ファイルの生成をスキップ')
-  .action(async (targetPath = '.', options?: { tools?: string; language?: string; force?: boolean; profile?: string; animation?: boolean; copilotCloud?: boolean }) => {
+  .option('--scope <scope>', 'スキルの保存先: global（このマシンの全プロジェクト）または project')
+  .action(async (targetPath = '.', options?: { tools?: string; language?: string; force?: boolean; profile?: string; animation?: boolean; copilotCloud?: boolean; scope?: string }) => {
     try {
       // Validate that the path is a valid directory
       const resolvedPath = path.resolve(targetPath);
@@ -300,6 +301,7 @@ program
         profile: options?.profile,
         animation: options?.animation,
         copilotCloud: options?.copilotCloud,
+        scope: options?.scope,
       });
       await initCommand.execute(targetPath);
     } catch (error) {

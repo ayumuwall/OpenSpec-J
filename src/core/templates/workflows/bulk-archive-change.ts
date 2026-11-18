@@ -5,7 +5,7 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
+import { SYNC_FALLBACK_SAFEGUARDS } from './archive-change.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
@@ -14,19 +14,14 @@ import { PROJECT_ROOT_GUARD } from './project-root.js';
  * how it normally does that. A profile that selects `archive` gets `sync`
  * injected (see getProfileWorkflows), but an install whose workflow set was
  * read back off disk can still be missing it — in which case the merge has to
- * happen inline rather than be handed to a workflow that is not there.
+ * happen inline rather than be handed to a workflow that is not there. The
+ * text is the same for every profile, so it states both paths.
  */
-const SYNC_INLINE_HANDOFF = optionalWorkflow(
-  'sync',
-  '`/opsx:sync` ワークフローをインラインで実行します（エージェントによる知的マージ）',
-  '仕様差分から本仕様へのマージを自分でインライン実行します（エージェントによる知的マージ）'
-);
+const SYNC_INLINE_HANDOFF =
+  '`/opsx:sync` が導入済みならそのワークフローをインラインで実行します。なければ自身で仕様差分を本仕様へ統合します（どちらもエージェントによる知的マージ）';
 
-const SYNC_GUARDRAIL = optionalWorkflow(
-  'sync',
-  '`/opsx:sync` ワークフローをインラインで実行する（エージェントが実施）',
-  '仕様差分から本仕様へのマージをインラインで実行する（エージェントが実施）'
-);
+const SYNC_GUARDRAIL =
+  '`/opsx:sync` が導入済みならそのワークフローをインラインで実行し、なければ自身で仕様差分を本仕様へ統合する（どちらもエージェントが実施）';
 
 export function getBulkArchiveChangeSkillTemplate(): SkillTemplate {
   return {
@@ -214,7 +209,7 @@ ${PROJECT_ROOT_GUARD}
    競合の解決順序を尊重し、決定した順序で変更を処理します:
 
    a. **対象に含めた仕様差分を同期**:
-      - \`includedDeltas\` に項目がある変更だけで ${optionalWorkflow('sync', '`openspec-sync-specs` ワークフローをインラインで実行します（エージェントによる知的マージ）', '仕様差分から本仕様へのマージを自分でインライン実行します（エージェントによる知的マージ）')}。対象に含めたデルタパスだけを渡し、
+      - \`includedDeltas\` に項目がある変更だけを処理します。\`openspec-sync-specs\` が導入済みならそのワークフローをインラインで実行し、なければ自身で仕様差分を本仕様へ統合します（どちらもエージェントによる知的マージ）。対象に含めたデルタパスだけを渡し、
         その変更の \`excludedDeltas\` を無視するよう明示して、完了を待ちます
       - 同期が停止条件やブロック条件を報告した場合は、同期失敗として扱い、その変更の処理を直ちに停止する。次の変更へ進む前に、同期のブロック条件やエラーとともに、その変更の結果をバッチ結果へ失敗として記録する
       - 同期後の内容比較は行わず、\`changeRoot\` も移動しない。変更はそのまま残す
@@ -369,7 +364,8 @@ K 件の変更に失敗しました:
 - アーカイブの対象名は手順 3d で当日の日付から 1 回だけ算出し、移動時にも再利用する: YYYY-MM-DD-<name>。すでに \`YYYY-MM-DD-\` 接頭辞がある名前はそのまま使用し、日付を二重に付けない
 - アーカイブ先が存在する場合は、その変更だけ失敗として他を継続する
 - 最初の本仕様書き込み前に、手順 3 ですべてのアーカイブ先を確認する。対象が存在する変更は同期も移動もしない
-- 同期を求められた場合、含めた仕様差分がある各変更について ${optionalWorkflow('sync', '`openspec-sync-specs` ワークフローをインラインで実行する（エージェントが実施）', '仕様差分から本仕様へのマージをインラインで実行する（エージェントが実施）')}
+- 同期を求められた場合、含めた仕様差分がある各変更について、\`openspec-sync-specs\` が導入済みならそのワークフローをインラインで実行し、なければ自身で仕様差分を本仕様へ統合する（どちらもエージェントが実施）
+${SYNC_FALLBACK_SAFEGUARDS}
 - delta ごとの \`includedDeltas\` と \`excludedDeltas\` の判断を実行へ引き継ぎ、含めた delta だけを同期・検証する
 - 除外した delta はすべて、アーカイブ自体のスキップとして扱わず \`同期をスキップ\` と報告する
 - 仕様同期の実行中にアーカイブしない。同期をインラインで実行し、\`changeRoot\` を移動する前に \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様を検証する
@@ -733,6 +729,7 @@ K 件の変更に失敗しました:
 - アーカイブ先が存在する場合は、その変更だけ失敗として他を継続する
 - 最初の本仕様書き込み前に、手順 3 ですべてのアーカイブ先を確認する。対象が存在する変更は同期も移動もしない
 - 同期を求められた場合、含めた仕様差分がある各変更について ${SYNC_GUARDRAIL}
+${SYNC_FALLBACK_SAFEGUARDS}
 - delta ごとの \`includedDeltas\` と \`excludedDeltas\` の判断を実行へ引き継ぎ、含めた delta だけを同期・検証する
 - 除外した delta はすべて、アーカイブ自体のスキップとして扱わず \`同期をスキップ\` と報告する
 - 仕様同期の実行中にアーカイブしない。同期をインラインで実行し、\`changeRoot\` を移動する前に \`<planningHome.root>/openspec/specs/<capability-path>/spec.md\` の本仕様を検証する

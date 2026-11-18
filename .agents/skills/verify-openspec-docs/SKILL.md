@@ -2,6 +2,8 @@
 name: verify-openspec-docs
 description: 新規コンテキストのサブエージェントがコマンドを再実行し、記述をソースと照合して OpenSpec の利用者向けドキュメントを検証します。手動でのみ起動し、執筆ループには含めません。利用者がドキュメントのページ、節、変更した記述の検証、ファクトチェック、正確性確認を依頼した場合に使用します。
 argument-hint: ページまたは節
+metadata:
+  internal: true
 ---
 
 # OpenSpec ドキュメントを検証する

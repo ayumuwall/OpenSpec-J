@@ -29,7 +29,7 @@ describe('日本語公開版 v1.15.0 からの移行', () => {
 
   afterEach(async () => { await fs.rm(root, { recursive: true, force: true }); });
 
-  it.each([false, true])('旧生成物を識別して移行し、編集内容を保持する（編集あり: %s）', async (edited) => {
+  it.each([false, true])('旧生成物を移行し、編集済みコマンドを保持して組み込みスキルを更新する（編集あり: %s）', async (edited) => {
     const command = path.join(project, '.claude/commands/opsx/propose.md');
     const skill = path.join(project, '.claude/skills/openspec-propose/SKILL.md');
     const suffix = edited ? '\nチーム独自の手順を実行してください。\n' : '';
@@ -46,9 +46,9 @@ describe('日本語公開版 v1.15.0 からの移行', () => {
     expect(await fs.readFile(shared, 'utf8')).toContain('name: openspec-propose');
     if (edited) {
       expect(await fs.readFile(command, 'utf8')).toBe(commandText);
-      expect(await fs.readFile(skill, 'utf8')).toBe(skillText);
+      expect(await fs.readFile(skill, 'utf8')).toBe(await fs.readFile(shared, 'utf8'));
+      expect(await fs.readFile(skill, 'utf8')).not.toContain(suffix);
       expect(result.stdout).toContain('コマンドファイル1件を保持しました');
-      expect(result.stdout).toContain('スキルフォルダ1件を保持しました');
     } else {
       await expect(fs.access(command)).rejects.toThrow();
       expect(await fs.readFile(skill, 'utf8')).toBe(await fs.readFile(shared, 'utf8'));
@@ -62,7 +62,8 @@ describe('日本語公開版 v1.15.0 からの移行', () => {
     expect(again.stdout).toContain('最新です');
     if (edited) {
       expect(await fs.readFile(command, 'utf8')).toBe(commandText);
-      expect(await fs.readFile(skill, 'utf8')).toBe(skillText);
+      expect(await fs.readFile(skill, 'utf8')).toBe(await fs.readFile(shared, 'utf8'));
+      expect(await fs.readFile(skill, 'utf8')).not.toContain(suffix);
     }
   });
 });

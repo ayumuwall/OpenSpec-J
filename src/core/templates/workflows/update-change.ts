@@ -5,75 +5,37 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
 const RESPONSE_LANGUAGE_GUIDANCE = '**応答の言語:** 利用者への説明・進捗・確認・要約は、利用者が指定した言語で統一します。指定がなければ日本語を使います。コマンド・パス・識別子と OpenSpec の構造トークンは翻訳しません。';
 
-/**
- * Passages that hand off to `/opsx:continue` or `/opsx:new`. Neither workflow
- * is in the `core` profile, so each is authored with a CLI fallback and
- * resolved at generation time (see optional-workflow.ts). Shared by both
- * surfaces below so the skill and the command cannot drift apart.
- */
-const CONTINUE_SCOPE_NOTE = optionalWorkflow(
-  'continue',
-  'このワークフローは既存のアーティファクトを修正します。まだ存在しないアーティファクトの作成は `/opsx:continue` で行います。',
-  'このワークフローは既存のアーティファクトを修正し、未作成のアーティファクトは作成しません。未作成のものがある場合は、`openspec status --change "<name>" --json` で次のアーティファクトを、`openspec instructions "<artifact-id>" --change "<name>" --json` で作成方法を確認できます。'
-);
+const CONTINUE_SCOPE_NOTE =
+  '既存のアーティファクトを修正します。不足しているアーティファクトがあれば特定し、`openspec status --change "<name>" --json` から次に作成可能なものを示します。';
 
-const CONTINUE_CREATE_THEM = optionalWorkflow(
-  'continue',
-  '作成用の `/opsx:continue` をユーザーに案内します',
-  '作成方法を確認する `openspec instructions "<artifact-id>" --change "<name>" --json` をユーザーに案内します'
-);
+const CONTINUE_CREATE_THEM =
+  '`openspec instructions "<artifact-id>" --change "<name>" --json` で次に作成可能なものを作る方法を示します';
 
-const CONTINUE_NEXT_STEP = optionalWorkflow(
-  'continue',
-  '`/opsx:continue` で作成することを提案します',
-  '`openspec status --change "<name>" --json` で次のアーティファクトを確認し、作成方法を確認する `openspec instructions "<artifact-id>" --change "<name>" --json` を案内します'
-);
+const CONTINUE_NEXT_STEP =
+  '次に作成可能なアーティファクト用の CLI コマンドを示します';
 
-const CONTINUE_DEFERRED = optionalWorkflow(
-  'continue',
-  '`/opsx:continue` に回したもの（ファイルがまだ存在せず、状態が `ready` または `blocked` のアーティファクト。`skipped` は含みません）',
-  '未作成のため見送ったもの（ファイルが存在せず、状態が `ready` または `blocked` のアーティファクト。`skipped` は含みません）'
-);
+const CONTINUE_DEFERRED =
+  '別の手順へ持ち越した不足アーティファクト（`ready` または `blocked`。`skipped` は含みません）';
 
-const CONTINUE_FRONTIER = optionalWorkflow(
-  'continue',
-  "`/opsx:continue` の役目です",
-  'このワークフローの外で別の手順として行います'
-);
+const CONTINUE_FRONTIER =
+  '別の手順で行います';
 
-/**
- * `apply` and `archive` are in the `core` profile but not guaranteed in a
- * custom one, so their handoffs are resolved the same way.
- */
-const APPLY_DELTA_HANDOFF = optionalWorkflow(
-  'apply',
-  '差分をコードに反映するために `/opsx:apply` を提案します',
-  'コードの更新が必要な可能性を伝え、差分の反映を提案します'
-);
+const APPLY_DELTA_HANDOFF =
+  '見直す必要がある実装タスクを伝えます';
 
-const APPLY_GUARDRAIL = optionalWorkflow(
-  'apply',
-  '停止し、`/opsx:apply` を案内します',
-  '停止し、修正後の計画にはコード変更が必要で、実装は別の手順で行うことを伝えます'
-);
+const APPLY_GUARDRAIL =
+  '計画の修正後に停止し、必要なコード変更を示します';
 
-const ARCHIVE_HANDOFF = optionalWorkflow(
-  'archive',
-  '`/opsx:archive` を提案します',
-  '`openspec archive "<name>"` でのアーカイブを提案します'
-);
+const ARCHIVE_HANDOFF =
+  '`openspec archive "<name>"` でのアーカイブを提案します';
 
-const INTENT_CHANGE_GUARDRAIL = optionalWorkflow(
-  'new',
-  '`/opsx:new` で新しく始めることを提案します（「更新か新規開始か」の判断）',
-  '未使用で区別できる変更名を確認し、代わりに `openspec new change "<new-change-name>"` を提案します（「更新か新規開始か」の判断）'
-);
+const INTENT_CHANGE_GUARDRAIL =
+  '他と重ならない未使用の名前を確認し、`openspec new change "<new-change-name>"` を提案します';
 
 export function getUpdateChangeSkillTemplate(): SkillTemplate {
   return {
@@ -149,10 +111,10 @@ ${CONTINUE_SCOPE_NOTE}
      openspec instructions "<artifact-id>" --change "<name>" --json
      \`\`\`
 
-6. **次のステップを指示します (ガイダンスのみ - 決して行動しないでください)**
-   - \`existingOutputPaths\` が空で、状態が \`ready\` または \`blocked\` のアーティファクト -> ${CONTINUE_NEXT_STEP}。
-   - 変更が実装済み（タスクがチェック済み / 適用済み） -> コードが修正後の計画と一致しなくなる可能性があります。${APPLY_DELTA_HANDOFF}。
-   - すべてが完了し、実装済み -> ${ARCHIVE_HANDOFF}。
+6. **次の手順を示す（案内だけを行い、実行しない）**
+   - \`existingOutputPaths\` が空で、状態が \`ready\` または \`blocked\` のアーティファクト → ${CONTINUE_NEXT_STEP}。
+   - 変更が実装済み（タスクがチェック済み / 適用済み） → コードが修正後の計画と一致しなくなる可能性があります。${APPLY_DELTA_HANDOFF}。
+   - すべてが完了し、実装済み → ${ARCHIVE_HANDOFF}。
 
 **出力**
 
@@ -251,10 +213,10 @@ ${CONTINUE_SCOPE_NOTE}
      openspec instructions "<artifact-id>" --change "<name>" --json
      \`\`\`
 
-6. **次のステップを指示します (ガイダンスのみ - 決して行動しないでください)**
-   - \`existingOutputPaths\` が空で、状態が \`ready\` または \`blocked\` のアーティファクト -> ${CONTINUE_NEXT_STEP}。
-   - 変更が実装済み（タスクがチェック済み / 適用済み） -> コードが修正後の計画と一致しなくなる可能性があります。${APPLY_DELTA_HANDOFF}。
-   - すべてが完了し、実装済み -> ${ARCHIVE_HANDOFF}。
+6. **次の手順を示す（案内だけを行い、実行しない）**
+   - \`existingOutputPaths\` が空で、状態が \`ready\` または \`blocked\` のアーティファクト → ${CONTINUE_NEXT_STEP}。
+   - 変更が実装済み（タスクがチェック済み / 適用済み） → コードが修正後の計画と一致しなくなる可能性があります。${APPLY_DELTA_HANDOFF}。
+   - すべてが完了し、実装済み → ${ARCHIVE_HANDOFF}。
 
 **出力**
 

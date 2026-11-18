@@ -77,7 +77,7 @@ openspec init --tools claude,cursor  # 指定したツールをプロンプト�
 openspec init --tools none           # openspec/ 構成だけを作成し、ツール用ファイルは作らない
 ```
 
-`--tools`を指定しない場合、対話式ターミナルではツールの選択を求められます。非対話環境では、プロジェクト内で検出したツールを設定します。ツールが見つからなければ終了コード 1 で終了し、有効な ID を表示します。
+`--tools`を指定しない場合、対話式ターミナルではツールの選択を求められます。非対話環境では、プロジェクト内で検出したツールを設定します。ツールが見つからなければ終了コード 1 で終了し、有効な ID を表示します。ただし、[グローバルスキル](../start/setup.md#install-the-skills-once-for-every-project)を導入済みなら、そのスキルを使います。
 
 **ストアのみのリポジトリ**
 
@@ -85,7 +85,7 @@ openspec init --tools none           # openspec/ 構成だけを作成し、ツ�
 
 ```bash
 # コードリポジトリに Claude Code の連携ファイルをインストール
-openspec init --tools claude
+openspec init --scope project --tools claude
 ```
 
 - **連携ファイル**：コードリポジトリに生成します。
@@ -102,17 +102,21 @@ openspec init --tools claude
 
 **オプション**
 
-| フラグ                | 動作                                                                                                                                         |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--tools <tools>`     | カンマ区切りのツール ID、`all`、`none`。選択画面を省略します。ID は[対応ツール](supported-tools.md)を参照してください。                      |
+| フラグ | 動作 |
+|---|---|
+| `--tools <tools>` | カンマ区切りのツール ID、`all`、`none`。選択画面を省略します。ID は[対応ツール](supported-tools.md)を参照してください。 |
 | `--language <language>` | 新規プロジェクト設定に言語の指示を追加します。リポジトリの `store:` 行が外部ストアを指す場合は使用できません。 |
-| `--force`             | 以前の OpenSpec 構成にあるファイルを確認せず削除します。指定しない対話実行では、削除前に確認します。                                         |
-| `--profile <profile>` | この実行だけグローバル設定のプロファイルを上書きします。`core`は標準ワークフローセット、`custom`はグローバル設定へ保存したワークフローです。 |
-| `--no-animation`      | アニメーションの代わりに静止したウェルカム画面を表示します。                                                                                 |
+| `--force` | 以前の OpenSpec 構成にあるファイルを確認せず削除します。指定しない対話実行では、削除前に確認します。 |
+| `--profile <profile>` | この実行だけグローバル設定のプロファイルを上書きします。`core` は標準ワークフローセット、`custom` はグローバル設定へ保存したワークフローです。 |
+| `--no-animation` | アニメーションの代わりに静止したウェルカム画面を表示します。 |
+| `--copilot-cloud`, `--no-copilot-cloud` | GitHub 上の Copilot エージェントが必要とするファイルを作成するかどうかを指定します。スキルをプロジェクト内に置く必要があります。[GitHub Copilot](supported-tools.md#github-copilot)を参照してください。 |
+| `--scope <scope>` | スキルをマシンにインストールする `global`、またはリポジトリとともにコミットする `project` を指定します。 |
+
+`--scope` を省略すると、既存のリポジトリ内のスキルはそのまま保持します。そのリポジトリで `--scope global` を指定すると、マシンへスキルをインストールし、確認せずにリポジトリ内のコピーを削除します。新規セットアップでは `--scope`、`OPENSPEC_SKILLS_SCOPE`、マシンの `skillsScope` 設定の順に優先します。選択したツールがプロジェクト内のスキルを必要とする場合、または GitHub 上の Copilot エージェントを指定した場合を除き、既定値は `global` です。
 
 **出力**
 
-OpenSpec は `.agents/skills/` にスキルを一度だけ書き込みます。必要なツールには固有フォルダからのリンクを作成します。MiniMax Code は例外で、`~/.minimax/skills/` にコピーを配置します。
+プロジェクト内にスキルを置く場合（`--scope project`）、OpenSpec は `.agents/skills/` に一度だけ書き込みます。必要なツールには固有フォルダからのリンクを作成します。Windows ではコピーを使います。
 
 ```
 ▌ OpenSpec 構成を作成しました
@@ -121,19 +125,21 @@ OpenSpec は `.agents/skills/` にスキルを一度だけ書き込みます。�
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-.agents/skills/ にスキル6個を作成しました（.claude/skills/ からリンク）
+.agents/skills/ にスキル6個を作成しました（.claude/skills/ にも配置）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 
 はじめに:
   最初の変更を開始: /openspec-propose "あなたのアイデア"
 ```
 
-`--tools none`は`openspec/config.yaml`だけを作成します。初期化済みのプロジェクトでは、インストール済みファイルをその場で書き直します。概要には`更新: Claude Code`と`設定: openspec/config.yaml（既存）`が表示されます。
+マシンにスキルをインストールする場合は、概要に `~/.agents/skills/ にスキル6個を作成しました（このマシンの全プロジェクトで利用可能）` と表示し、プロジェクト内には `openspec/` だけを置きます。
+
+`--tools none` は `openspec/` フォルダだけを作成し、ツールを設定しません。初期化済みのプロジェクトでは、インストール済みファイルをその場で書き直します。概要には `更新: Claude Code` と `設定: openspec/config.yaml（既存）` が表示されます。
 
 **終了コード**
 
 - `0`：セットアップが完了しました。
-- `1`：`--tools` または `--profile` の値が無効、非対話実行でツールを検出できず `--tools` も未指定、またはストアのみの構成で実行方法が不正です。
+- `1`：`--tools`、`--profile`、`--scope`（または `OPENSPEC_SKILLS_SCOPE`）の値が無効、非対話実行でツールを検出できず `--tools` も未指定、グローバルインストールが失敗または選択した全ツールが非対応、あるいはストアのみの構成で実行方法が不正です。
 
 ## openspec update
 
@@ -145,7 +151,9 @@ openspec update --force     # 最新でもファイルを書き直す
 openspec update --dry-run   # 変更するファイルを表示し、書き込まない
 ```
 
-update は init で設定したツールを検出し、生成済みファイルを現在の CLI バージョンと比較します。新しい OpenSpec リリースがある場合は、最初に CLI のアップグレードを提案し、更新後のバージョンで再実行します。確認を省くには`OPENSPEC_NO_UPDATE_CHECK=1`を設定してください。
+既存プロジェクトをグローバルスキルへ切り替えるには、ターミナルで update を実行します。Enter を押すとプロジェクト内のスキルを保持します。管理者がファイルの削除をコミットした後、他のメンバーは各自のチェックアウトで update を実行してツールを設定します。非対話実行では現在の保存先を保持します。
+
+update は、ダウングレード後も実行中の CLI に対応する指示へ更新します。グローバルスキルの更新予定は dry-run の計画に補足として表示します。CLI アップグレードの提案を省くには `OPENSPEC_NO_UPDATE_CHECK=1` を設定してください。
 
 **引数**
 
@@ -198,7 +206,7 @@ openspec update --dry-run
 | `changes[].path` | プロジェクトからの相対パス。グローバルスキルやグローバル設定などのプロジェクト外のファイルは、ホーム配下なら `~/...`、ホーム外なら絶対パスです。 |
 | `changes[].action` | `add`、`update`、`delete`。更新前後のバイト列が同じファイルは含みません。 |
 | `changes[].tool` | `claude` など、ファイルが属する設定済みツール。共有の `.agents/skills/` 内のスキル、グローバル設定、旧ファイルの削除など、特定のツールに属さないものは `openspec` です。 |
-| `notes[]` | 対話実行なら確認や警告を表示する手順の `{ code, message }`。`legacy-tool-directories` は確認が必要な移動で、`changes` には移動するものとして含みます。`legacy-artifacts` は、旧形式の `openspec-proposal.md` コマンドや `AGENTS.md` のマーカーブロックなどが見つかったことを示します。`--force` なしの非対話更新では触れないため、計画にも含みません。`--dry-run --force` では削除も表示します。`edited-skills` は、インストール済みスキル内の編集が更新で上書きされることを示し、対象ファイルをメッセージに表示します。通常の更新では空です。 |
+| `notes[]` | 対話実行なら確認や警告を表示する手順の `{ code, message }`。`legacy-tool-directories` は確認が必要な移動で、`changes` には移動するものとして含みます。`legacy-artifacts` は、旧形式の `openspec-proposal.md` コマンドや `AGENTS.md` のマーカーブロックなどが見つかったことを示します。`--force` なしの非対話更新では触れないため、計画にも含みません。`--dry-run --force` では削除も表示します。通常の更新では空です。 |
 | `failures[]` | 実際の更新で失敗するツールごとの `{ tool, error }`。ファイルの位置にディレクトリがある、ディレクトリの位置にファイルがある、書き込み権限がないなども含みます。そのツールの `changes` は実際に停止する位置までで、他のツールの計画は続けます。ディスク容量不足など、書き込み時にだけ判明する失敗は予測できません。 |
 
 OpenSpec ディレクトリがないなど、計画前の失敗でも JSON を1つだけ出力します。空の計画に `severity`、`code`（`update_error`）、`message` を持つ `status` 配列を追加し、終了コード1で終了します。

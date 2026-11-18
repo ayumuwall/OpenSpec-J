@@ -12,3 +12,15 @@
 ## DO_NOT_TRACK
 
 ## XDG_CONFIG_HOME と XDG_DATA_HOME
+
+## OPENSPEC_SKILLS_SCOPE
+
+`global` または `project` を設定し、新しいリポジトリで `openspec init` がスキルをインストールする場所を選びます。明示的な `--scope` を優先します。既存のリポジトリ内のスキルは、その保存先を保持します。
+
+チェックアウト内にエージェント用スキルが必要な CI ジョブでは、次のように指定します。
+
+```bash
+OPENSPEC_SKILLS_SCOPE=project openspec init --tools claude
+```
+
+検証だけのジョブでは、直接 `openspec validate --all` を実行できます。

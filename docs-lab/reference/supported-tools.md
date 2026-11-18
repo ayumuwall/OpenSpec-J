@@ -8,7 +8,7 @@
 
 ## スキルの配置先
 
-どのツールのスキルも `.agents/skills/` に一度だけ書き込みます。このフォルダを読み込まないツールには、固有の `skills/` フォルダ内にスキルごとのリンクを作成し、共有コピーを参照させます。
+新しいプロジェクトは、既定でマシン全体のスキルを使います。`--scope project` を指定すると、インストーラーは `.agents/skills/` に書き込み、固有フォルダが必要なツールにはスキルごとのリンクまたはコピーを配置します。
 
 Claude Code、Cursor、Codex を設定したプロジェクトの例：
 
@@ -23,19 +23,20 @@ my-project/
 
 Cursor と Codex は `.agents/skills/` を直接読み込むため、ほかのファイルは不要です。
 
-`openspec update` は `.openspec-target` で管理対象を判別します。各行は次のいずれかです。
+プロジェクト内へのインストールでは `skills-lock.json` を変更しません。
+
+`openspec update` は `.openspec-target` で設定済みツールと管理対象を判別します。各行は次のいずれかです。
 
 | 行 | 意味 |
 |---|---|
 | `<tool>` | `cursor` など、このプロジェクトに設定済みのツール。 |
 | `<tool> own-files` | `claude own-files` など、ツール固有のフォルダへリンクを作成したツール。そのフォルダを削除すると、`update` がツールを削除します。 |
-| `keep <skill>` | `keep openspec-mine` などの独自スキル。OpenSpec がフォルダを使う前から存在したため、OpenSpec は変更しません。 |
 
-- **リンクを作成するツール**：Claude Code、Continue、ForgeCode、Kiro、CodeBuddy、EasyCode、iFlow、CodeArts、Lingma、GigaCode、Veai、Rovo Dev、Code Studio、Hermes Agent。
-- **リンク不要**：それ以外のツールは `.agents/skills/` を直接読み込み、同じスキルを二重に読み込みません。
-- **リンクを作成できない場合**：通常のコピーを書き込み、`openspec update` で更新します。
+Vercel の `skills` パッケージが、各エージェントの読み込むフォルダへスキルを配置します。Windows のプロジェクト内インストールではコピーを使います。AiderDesk（`aider-desk`）などを含む完全な一覧は `openspec init --help` で確認できます。既存の OpenSpec ID も使用でき、Claude Code は `claude`、Devin Desktop は `windsurf` を指定できます。
 
-一覧にないツールを追加する方法は、[別のツールをリンクする](#link-another-tool)を参照してください。
+グローバルインストールでは、`~/.agents/skills/` を共有するか、ツール固有のグローバルスキルフォルダから読み込みます。Eve と PromptScript はプロジェクト内へのインストールが必要です。
+
+インストーラーの一覧にないツールは、`--tools agents` または既存の OpenSpec ID を指定します。Veai はどちらの保存先でも共通フォルダを読み込みます。GigaCode のドキュメントはプロジェクト内のフォルダを案内しています。EasyCode は、動作しているスキルごとのリンクを保持するか、固有フォルダへ[スキルをリンク](#link-another-tool)してください。
 
 <a id="support-matrix"></a>
 
@@ -49,48 +50,48 @@ Cursor と Codex は `.agents/skills/` を直接読み込むため、ほかの�
 | Amp | `amp` | `.agents/skills/` | `/openspec-apply-change` |
 | Antigravity | `antigravity` | `.agents/skills/` | `/openspec-apply-change` |
 | AtomCode | `atomcode` | `.agents/skills/` | `/openspec-apply-change` |
-| Auggie (Augment CLI) | `auggie` | `.agents/skills/` | `/openspec-apply-change` |
-| IBM Bob | `bob` | `.agents/skills/` | `/openspec-apply-change` |
-| Claude Code | `claude` | `.agents/skills/` （`.claude/skills/` 内にリンク） | `/openspec-apply-change` |
+| Auggie (Augment CLI) | `auggie` | `.agents/skills/` （`.augment/skills/` にも配置） | `/openspec-apply-change` |
+| IBM Bob | `bob` | `.agents/skills/` （`.bob/skills/` にも配置） | `/openspec-apply-change` |
+| Claude Code | `claude` | `.agents/skills/` （`.claude/skills/` にも配置） | `/openspec-apply-change` |
 | Cline | `cline` | `.agents/skills/` | `/openspec-apply-change` |
-| CodeArts | `codeartsagent` | `.agents/skills/` （`.codeartsdoer/skills/` 内にリンク） | `/openspec-apply-change` |
-| CodeBuddy Code (CLI) | `codebuddy` | `.agents/skills/` （`.codebuddy/skills/` 内にリンク） | `/openspec-apply-change` |
-| Code Studio | `codestudio` | `.agents/skills/` （`.codestudio/skills/` 内にリンク） | `/openspec-apply-change` |
+| CodeArts | `codeartsagent` | `.agents/skills/` （`.codeartsdoer/skills/` にも配置） | `/openspec-apply-change` |
+| CodeBuddy Code (CLI) | `codebuddy` | `.agents/skills/` （`.codebuddy/skills/` にも配置） | `/openspec-apply-change` |
+| Code Studio | `codestudio` | `.agents/skills/` （`.codestudio/skills/` にも配置） | `/openspec-apply-change` |
 | Codex | `codex` | `.agents/skills/` | `$openspec-apply-change` |
-| Continue | `continue` | `.agents/skills/` （`.continue/skills/` 内にリンク） | `/openspec-apply-change` |
+| Continue | `continue` | `.agents/skills/` （`.continue/skills/` にも配置） | `/openspec-apply-change` |
 | CoStrict | `costrict` | `.agents/skills/` | `/openspec-apply-change` |
-| Crush | `crush` | `.agents/skills/` | `/openspec-apply-change` |
+| Crush | `crush` | `.agents/skills/` （`.crush/skills/` にも配置） | `/openspec-apply-change` |
 | Cursor | `cursor` | `.agents/skills/` | `/openspec-apply-change` |
 | DeepSeek Harness | `dsh` | `.agents/skills/` | `/openspec-apply-change` |
-| Devin Desktop (formerly Windsurf) | `devin` | `.agents/skills/` | `/openspec-apply-change` |
-| EasyCode | `easycode` | `.agents/skills/` （`.easycode/skills/` 内にリンク） | `/openspec-apply-change` |
+| Devin Desktop (formerly Windsurf) | `devin` | `.agents/skills/` （`.devin/skills/` にも配置） | `/openspec-apply-change` |
+| EasyCode | `easycode` | `.agents/skills/` | `/openspec-apply-change` |
 | Factory Droid | `factory` | `.agents/skills/` | `/openspec-apply-change` |
-| ForgeCode | `forgecode` | `.agents/skills/` （`.forge/skills/` 内にリンク） | `/openspec-apply-change` |
+| ForgeCode | `forgecode` | `.agents/skills/` （`.forge/skills/` にも配置） | `/openspec-apply-change` |
 | Gemini CLI | `gemini` | `.agents/skills/` | `/openspec-apply-change` |
-| GigaCode | `gigacode` | `.agents/skills/` （`.gigacode/skills/` 内にリンク） | `/openspec-apply-change` |
+| GigaCode | `gigacode` | `.agents/skills/` | `/openspec-apply-change` |
 | GitHub Copilot | `github-copilot` | `.agents/skills/` | `/openspec-apply-change` |
-| Grok Build | `grok` | `.agents/skills/` | `/openspec-apply-change` |
+| Grok Build | `grok` | `.agents/skills/` （`.grok/skills/` にも配置） | `/openspec-apply-change` |
 | GSD | `gsd` | `.agents/skills/` | `openspec-apply-change` を依頼 |
-| Hermes Agent | `hermes` | `.agents/skills/` （`.hermes/skills/` 内にリンク） | `/openspec-apply-change` |
-| iFlow | `iflow` | `.agents/skills/` （`.iflow/skills/` 内にリンク） | `/openspec-apply-change` |
-| Junie | `junie` | `.agents/skills/` | `/openspec-apply-change` |
+| Hermes Agent | `hermes` | `.agents/skills/` （`.hermes/skills/` にも配置） | `/openspec-apply-change` |
+| iFlow | `iflow` | `.agents/skills/` （`.iflow/skills/` にも配置） | `/openspec-apply-change` |
+| Junie | `junie` | `.agents/skills/` （`.junie/skills/` にも配置） | `/openspec-apply-change` |
 | Kilo Code | `kilocode` | `.agents/skills/` | `/openspec-apply-change` |
 | Kimi Code | `kimi` | `.agents/skills/` | `/skill:openspec-apply-change` |
-| Kiro | `kiro` | `.agents/skills/` （`.kiro/skills/` 内にリンク） | `/openspec-apply-change` |
-| Lingma | `lingma` | `.agents/skills/` （`.lingma/skills/` 内にリンク） | `/openspec-apply-change` |
-| MiniMax Code | `minimax-code` | `~/.minimax/skills/` （グローバル） | `/openspec-apply-change` |
-| Mistral Vibe | `vibe` | `.agents/skills/` | `/openspec-apply-change` |
+| Kiro | `kiro` | `.agents/skills/` （`.kiro/skills/` にも配置） | `/openspec-apply-change` |
+| Lingma | `lingma` | `.agents/skills/` （`.lingma/skills/` にも配置） | `/openspec-apply-change` |
+| MiniMax Code | `minimax-code` | `.agents/skills/` （`.minimax/skills/` にも配置） | `/openspec-apply-change` |
+| Mistral Vibe | `vibe` | `.agents/skills/` （`.vibe/skills/` にも配置） | `/openspec-apply-change` |
 | Oh My Pi | `oh-my-pi` | `.agents/skills/` | `/openspec-apply-change` |
 | OpenCode | `opencode` | `.agents/skills/` | `/openspec-apply-change` |
 | Pi | `pi` | `.agents/skills/` | `/openspec-apply-change` |
-| Qoder | `qoder` | `.agents/skills/` | `/openspec-apply-change` |
-| Qwen Code | `qwen` | `.agents/skills/` | `/openspec-apply-change` |
-| Rovo Dev CLI | `rovodev` | `.agents/skills/` （`.rovodev/skills/` 内にリンク） | `openspec-apply-change` を依頼 |
-| Trae | `trae` | `.agents/skills/` | `/openspec-apply-change` |
-| [Veai](https://veai.ru/docs/veai/download) | `veai` | `.agents/skills/` （`.veai/skills/` 内にリンク） | `/openspec-apply-change` |
+| Qoder | `qoder` | `.agents/skills/` （`.qoder/skills/` にも配置） | `/openspec-apply-change` |
+| Qwen Code | `qwen` | `.agents/skills/` （`.qwen/skills/` にも配置） | `/openspec-apply-change` |
+| Rovo Dev CLI | `rovodev` | `.agents/skills/` （`.rovodev/skills/` にも配置） | `openspec-apply-change` を依頼 |
+| Trae | `trae` | `.agents/skills/` （`.trae/skills/` にも配置） | `/openspec-apply-change` |
+| [Veai](https://veai.ru/docs/veai/download) | `veai` | `.agents/skills/` | `/openspec-apply-change` |
 | Warp | `warp` | `.agents/skills/` | `/openspec-apply-change` |
-| ZCode | `zcode` | `.agents/skills/` | `/openspec-apply-change` |
-| Zoo Code | `roocode` | `.agents/skills/` | `/openspec-apply-change` |
+| ZCode | `zcode` | `.agents/skills/` （`.zcode/skills/` にも配置） | `/openspec-apply-change` |
+| Zoo Code | `roocode` | `.agents/skills/` （`.roo/skills/` にも配置） | `/openspec-apply-change` |
 | Other / Universal | `agents` | `.agents/skills/` | `/openspec-apply-change` |
 
 - **スキルの呼び出し**：ツールがスキルを入力可能な項目として登録するかどうかは、各ツール側の動作です。
@@ -115,6 +116,8 @@ mkdir .mytool
 mklink /J .mytool\skills .agents\skills
 ```
 
+グローバルスキルでは、ホームフォルダ内にリンクを作成します：`ln -s ~/.agents/skills ~/.mytool/skills`。
+
 `.mytool` は使用するツールのフォルダ名へ置き換えてください。すでに固有の `skills/` フォルダがある場合は、`ln -s ../../.agents/skills/openspec-propose .mytool/skills/openspec-propose` のようにスキルごとにリンクします。
 
 **リンクのコミット**：Git はリンクをリンクとして保存します。Windows のメンバーは `git config --global core.symlinks true` を実行するか、`git clone -c core.symlinks=true <url>` でクローンし、リンクを作成できるよう開発者モードを有効にしてください。設定しない場合は小さなテキストファイルとしてチェックアウトされ、`openspec update` がスキルの通常のコピーに置き換えます。`mklink /J` によるジャンクションはリンクとしてコミットされないため、各マシンで再作成してください。
@@ -135,6 +138,7 @@ OpenSpec 2.0 は Amazon Q Developer に対応しません。スキルを読み�
   `.agent/`から削除します。カスタムファイルと変更済みの生成ファイルは、確認できるよう
   `.agent/`に残します。
 - **共有スキル**：ほかのツールと同じ `.agents/skills/` のコピーを読み込みます。2.0 より前に OpenSpec が `.agents/workflows/` へ生成したワークフローは、更新時に削除します。
+- **グローバルスキル**：[マシン全体へのインストール](../start/setup.md#install-the-skills-once-for-every-project)では、`skills` パッケージが `~/.gemini/config/skills/` に共有コピーへのリンクまたはコピーを配置します。`openspec update` で更新します。
 
 ### Cline
 
@@ -177,7 +181,7 @@ OpenSpec は各スキルを、プロジェクトの `.hermes/skills/` フォル�
 
 ### MiniMax Code
 
-- **グローバルのみ**：スキルは `~/.minimax/skills/` へ配置され、リポジトリ内には何も書き込みません。
+プロジェクト内では `.minimax/skills/`、グローバルでは `~/.minimax/skills/` を使います。
 
 ### Warp
 
@@ -192,7 +196,5 @@ OpenSpec は各スキルを、プロジェクトの `.hermes/skills/` フォル�
   init の検索欄では`universal`、`other`、`generic`、`custom`、`proprietary`、
   `unlisted`、`unsupported`、`vendor-neutral`、`agents.md`で見つかります。
 - **他のツールとの併用**：すべてのツールが1つのスキルツリーを読み込みます。`.openspec-target` は設定済みツールを列挙します。削除するには、ツールのフォルダを削除します。固有フォルダがないツールでは、`.openspec-target` の該当行を削除します。
-- **独自の `openspec-*` スキル**：OpenSpec が `.agents/skills/` を使う前から存在したスキルは上書きせず保持し、`.openspec-target` に `keep <skill>` として記録します。そのスキルを削除すると OpenSpec が自身のスキルを書き込めるようになります。
-- **OpenSpec が管理する範囲**：`openspec-*`フォルダと`.openspec-target`一覧だけです。
-  `.agents/`配下のそれ以外の内容には手を加えません。
+- **独自スキル**：OpenSpec の組み込みスキルと異なる名前を選んでください。update は組み込みスキルを実行中の CLI の GitHub リリースタグに対応する指示へ置き換えます。別名のスキルは変更しません。
 - **`AGENTS.md`**：作成も編集もしません。ターゲットはファイルではなく`.agents/`フォルダです。

@@ -85,6 +85,13 @@ export const ProjectConfigSchema = z.object({
     })
     .optional()
     .describe('GitHub Copilot 連携設定'),
+
+  // 任意: `project` はスキルをこのリポジトリに保持するチームの選択を記録する。
+  // 記録後は `openspec update` がマシン単位のスキルへの移行を提案しなくなる。
+  skillsScope: z
+    .enum(['project', 'global'])
+    .optional()
+    .describe('このプロジェクトの OpenSpec スキルの保存先'),
 });
 
 /** Normalized in-memory shape of a referenced store declaration. */
@@ -439,6 +446,15 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         }
       } else {
         console.warn(`設定内の 'githubCopilot' フィールドが無効です（オブジェクトでなければなりません）`);
+      }
+    }
+
+    // Parse skillsScope: the team's choice of where this project's skills live.
+    if (raw.skillsScope !== undefined) {
+      if (raw.skillsScope === 'project' || raw.skillsScope === 'global') {
+        config.skillsScope = raw.skillsScope;
+      } else {
+        console.warn(`設定の 'skillsScope' フィールドが無効です（"project" または "global" を指定してください）`);
       }
     }
 

@@ -33,7 +33,13 @@ export interface UpdatePlanChange {
  * about, which the plan lists as a non-interactive run makes it. Stable
  * identifiers, for a caller that branches on them.
  */
-export type UpdatePlanNoteCode = 'legacy-tool-directories' | 'legacy-artifacts' | 'edited-skills';
+export type UpdatePlanNoteCode =
+  | 'legacy-tool-directories'
+  | 'legacy-artifacts'
+  | 'edited-skills'
+  | 'global-skills'
+  | 'removed-skills'
+  | 'left-alone-skills';
 
 export interface UpdatePlanNote {
   code: UpdatePlanNoteCode;
@@ -188,6 +194,10 @@ export class UpdatePlanRecorder implements UpdateFileOps {
     // Otherwise every file under it goes - on disk, and any the plan put there.
     // Each is cleared on its own: a file's own entry outranks its directory's.
     for (const filePath of this.filesUnder(target)) this.stage(filePath, null, tool);
+    // A prior move can have staged a directory where the installer now writes SKILL.md.
+    for (const [file, entry] of this.staged) {
+      if (entry === STAGED_DIRECTORY && file.startsWith(target + path.sep)) this.staged.set(file, null);
+    }
     this.staged.set(target, null);
   }
 
@@ -509,7 +519,9 @@ function listFilesRecursively(dirPath: string): string[] {
 export function formatUpdatePlan(plan: UpdatePlan): string {
   const lines: string[] = [];
   if (plan.changes.length === 0) {
-    lines.push('変更はありません。スキルは最新です。');
+    // 以下の注記に、このプロジェクトのファイル以外への更新内容を示す。
+    const elsewhere = plan.notes.some((note) => note.code === 'global-skills');
+    lines.push(elsewhere ? 'このフォルダ内で変更されるファイルはありません。' : '変更はありません。スキルは最新です。');
   } else {
     lines.push(`${plan.changes.length} 個のファイルを変更する予定です:`);
     const width = Math.max(...plan.changes.map((change) => change.action.length));

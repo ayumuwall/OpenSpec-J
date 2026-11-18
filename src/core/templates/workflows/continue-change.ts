@@ -5,24 +5,11 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
-/**
- * The planning-complete handoff. Neither `apply` nor `archive` is guaranteed
- * to be installed, so each half is resolved at generation time (see
- * optional-workflow.ts).
- */
-const PLANNING_COMPLETE_HANDOFF = optionalWorkflow(
-  'apply',
-  '`/opsx:apply` でこの変更を実装できます。',
-  'この変更を実装できます。`openspec instructions apply --change "<name>" --json` でタスクとその進め方を取得してください。'
-) + ' ' + optionalWorkflow(
-  'archive',
-  '実装と追跡対象の作業がすべて完了したら、`/opsx:archive` でアーカイブしてください。',
-  '実装と追跡対象の作業がすべて完了したら、`openspec archive "<name>"` でアーカイブしてください。'
-);
+const PLANNING_COMPLETE_HANDOFF =
+  '計画のレビュー準備ができました。準備が整ったら、計画の適用を依頼してください。';
 
 /**
  * A glob artifact reads `done` once one matching file exists, so a run
@@ -83,10 +70,10 @@ ${PROJECT_ROOT_GUARD}
    ---
 
    **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
-- ユーザーに祝福を与える
-- 使用されたスキーマを含む最終ステータスを表示します
-   - 提案: 「計画が完了しました。この変更を実装できます。実装と追跡対象の作業がすべて完了したらアーカイブしてください。」
-- 停止
+   - 完了を祝う
+   - 使用したスキーマを含む最終ステータスを表示する
+   - 提案: 「計画が完了しました。実装を始める前に計画をレビューしてください。」
+   - 停止する
 
    ---
 

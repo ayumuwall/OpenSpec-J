@@ -5,25 +5,14 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
-/**
- * Handoffs to `continue`, which is not guaranteed to be installed alongside
- * `new`; resolved at generation time (see optional-workflow.ts).
- */
-const FIRST_ARTIFACT_PROMPT = optionalWorkflow(
-  'continue',
-  '`/opsx:continue` スキルを使うか、この変更の内容を説明してください。下書きします。',
-  'この変更の内容を説明してください。下書きします。'
-);
+const FIRST_ARTIFACT_PROMPT =
+  'この変更で実現したいことを説明してください。最初のアーティファクトを下書きします。';
 
-const EXISTING_CHANGE_HINT = optionalWorkflow(
-  'continue',
-  '代わりに `/opsx:continue` を使うよう提案します',
-  'その旨を伝え、その変更を再開するか別の名前にするか確認します'
-);
+const EXISTING_CHANGE_HINT =
+  'その変更を再開するか、別の名前で始めるか確認します';
 
 export function getNewChangeSkillTemplate(): SkillTemplate {
   return {

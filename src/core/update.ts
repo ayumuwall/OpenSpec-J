@@ -8,24 +8,22 @@
 import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { getSkillReferenceTransformer, getTransformerForTool, transformToSharedSkillReferences, transformToSkillReferences } from '../utils/command-references.js';
+import { getSkillReferenceTransformer, transformToSkillReferences } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
 import {
   getToolSkillStatus,
   getToolVersionStatus,
-  getSkillTemplates,
-  generateSkillContent,
   getToolsWithSkillsDir,
-  hasGlobalSkillTarget,
   resolveToolSkillsDir,
   toolSupportsSkills,
   type ToolVersionStatus,
   formatIdeRestart,
 } from './shared/index.js';
 import { reconcileCommandFiles, formatKeptCommandFiles } from './shared/command-reconcile.js';
+import { keepsProjectSkills, rememberProjectSkills } from './project-skills-scope.js';
+import { expectedSkillContents, projectSkillText } from './skill-installer.js';
 import {
   detectLegacyArtifacts,
   cleanupLegacyArtifacts,
@@ -52,7 +50,6 @@ import { getProfileWorkflows, ALL_WORKFLOWS, CORE_WORKFLOWS } from './profiles.j
 import { formatOptionalWorkflowsNote, getOnboardingCommands } from './onboarding-commands.js';
 import { getAvailableTools } from './available-tools.js';
 import {
-  WORKFLOW_TO_SKILL_DIR,
   getConfiguredToolsForProfileSync,
   getToolsNeedingProfileSync,
 } from './profile-sync-drift.js';
@@ -72,15 +69,14 @@ import {
   type LegacyToolMigration,
 } from './migration.js';
 import {
-  resolveCommandSurfaceCapability,
-  resolveCommandInvocation,
   shouldReconcileCommandFilesForTool,
 } from './command-surface.js';
-import { usesSharedSkills } from './shared/skill-paths.js';
-import { isToolListed, readKeptSharedSkills } from './shared-skill-target.js';
-import { formatKeptSkills, installSharedSkills, type SharedSkillInstallResult } from './shared/shared-skill-install.js';
-import { classifyOwnSkill } from './shared/own-skill-texts.js';
+import { normalizeGeneratedFile } from './shared/generated-fingerprint.js';
+import { resolveSkillLinkDir, usesSharedSkills } from './shared/skill-paths.js';
+import { isToolListed } from './shared-skill-target.js';
+import { installSharedSkills, type SharedSkillInstallResult } from './shared/shared-skill-install.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
+import { rememberProject } from './known-projects.js';
 import {
   realFileOps,
   UpdatePlanRecorder,
@@ -118,15 +114,6 @@ function throwIfUpdateFailed(failedTools: readonly ToolFailure[]): void {
 }
 
 /**
- * Checkout artifacts that are not real content drift: a UTF-8 BOM and the CRLF
- * line endings a Windows clone with `core.autocrlf` reintroduces on every
- * checkout of committed generated files.
- */
-function normalizeGeneratedFile(content: string): string {
-  return content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
-}
-
-/**
  * Options for the update command.
  */
 export interface UpdateCommandOptions {
@@ -159,12 +146,13 @@ export function scanInstalledWorkflows(
 export class UpdateCommand {
   private readonly force: boolean;
   private readonly dryRun: boolean;
-  /** 利用者のものとして保持した専用フォルダ（MiniMax）のスキル。 */
-  private keptOwnSkills: string[] = [];
-  /** 今回更新した専用スキルの編集内容のバックアップ。 */
-  private savedOwnSkills: string[] = [];
   private editedGlobalPromptsReported = false;
   private recorder: UpdatePlanRecorder | null = null;
+  /** Whether OpenSpec's skills are installed for this machine. */
+  private hasGlobalSkills = false;
+  /** The workflows the project update settled on, for the global refresh that follows it. */
+  private settledWorkflows: readonly string[] | undefined;
+  private removedGlobalSkills: string | undefined;
   private ops: UpdateFileOps = realFileOps;
 
   constructor(options: UpdateCommandOptions = {}) {
@@ -211,6 +199,147 @@ export class UpdateCommand {
    * @param projectPath - Path to the project root containing the openspec directory
    */
   async execute(projectPath: string): Promise<void> {
+    const resolvedProjectPath = path.resolve(projectPath);
+    const { projectHasOwnSkills, isHomeFolder, readGlobalSkills } = await import('./global-skills.js');
+    let globalSkillCount = 0;
+    try {
+      globalSkillCount = (await readGlobalSkills()).skills.length;
+    } catch {
+      // No readable global install: update the project as before.
+    }
+    this.hasGlobalSkills = globalSkillCount > 0;
+    if (!this.dryRun) rememberProject(resolvedProjectPath);
+    this.settledWorkflows = undefined;
+    this.removedGlobalSkills = undefined;
+
+    // With the global skills installed, update works from anywhere; a project is optional.
+    // The home folder holds the global skills, so it is never updated as a project of its own.
+    const hasProject =
+      (await FileSystemUtils.directoryExists(path.join(resolvedProjectPath, OPENSPEC_DIR_NAME))) &&
+      !(this.hasGlobalSkills && isHomeFolder(resolvedProjectPath));
+    if (hasProject && !this.dryRun && isInteractive() && !this.force) {
+      const { select, confirm } = await import('@inquirer/prompts');
+      const { InitCommand } = await import('./init.js');
+      const hasProjectSkills = projectHasOwnSkills(resolvedProjectPath);
+      if (hasProjectSkills && !keepsProjectSkills(resolvedProjectPath)) {
+        const scope = await select({
+          message: 'このプロジェクトの OpenSpec スキルをどこに保存しますか？',
+          choices: [
+            { name: 'このプロジェクトに保持   スキルをこのリポジトリに保持します。', value: 'project' },
+            { name: 'グローバルに切り替え   このマシンの全プロジェクトで使えるようにスキルをインストールします。', value: 'global' },
+          ],
+          default: 'project',
+        });
+        if (scope === 'project') {
+          // A config that can't be written must not stop the update: the choice is asked again next time.
+          const saved = await rememberProjectSkills(resolvedProjectPath).catch(() => undefined);
+          console.log(
+            saved
+              ? `${FileSystemUtils.toPosixPath(path.relative(resolvedProjectPath, saved))} をコミットすると、チームでこの選択を共有できます。`
+              : '選択を openspec/config.yaml に保存できませんでした。再度尋ねられないようにするには、手動で "skillsScope: project" を追加してください。'
+          );
+        } else {
+          const cloud = await isCopilotCloudEnabled(resolvedProjectPath);
+          if (!cloud || await confirm({ message: 'グローバルスキルへ切り替えるため、このリポジトリのホスト型 Copilot を無効にしますか？', default: false })) {
+            await new InitCommand({ scope, tools: getConfiguredToolsForProfileSync(resolvedProjectPath).join(','), copilotCloud: cloud ? false : undefined }).execute(resolvedProjectPath);
+            return;
+          }
+        }
+      } else if (!hasProjectSkills && !this.hasGlobalSkills && process.env.OPENSPEC_SKILLS_SCOPE !== 'project' &&
+        await confirm({ message: 'このマシンのコーディングツールに OpenSpec スキルを設定しますか？', default: false })) {
+        await new InitCommand({ scope: 'global' }).execute(resolvedProjectPath);
+        return;
+      }
+    }
+    if (!this.hasGlobalSkills) {
+      await this.updateProject(projectPath);
+      return;
+    }
+
+    // A project that fails to update must not keep the global skills from being refreshed.
+    let projectError: unknown;
+    if (hasProject) {
+      try {
+        await this.updateProject(projectPath);
+      } catch (error) {
+        projectError = error;
+      }
+    }
+    try {
+      const refreshed = await this.refreshGlobalSkills(resolvedProjectPath);
+      if (this.dryRun) {
+        if (refreshed) {
+          const recorder = this.recorder ?? (this.recorder = new UpdatePlanRecorder(resolvedProjectPath));
+          recorder.addNote(
+            'global-skills',
+            '更新時には、このマシン向けに ~/.agents/skills にインストールされた OpenSpec スキルも更新します。'
+          );
+          if (this.removedGlobalSkills) recorder.addNote('removed-skills', this.removedGlobalSkills);
+
+
+        }
+      }
+    } catch (error) {
+      // Both failed: the project's error must not be lost behind this one.
+      if (projectError instanceof Error && error instanceof Error) {
+        throw new Error(`${projectError.message}\n${error.message}`);
+      }
+      throw error;
+    }
+    if (projectError) throw projectError;
+  }
+
+  /**
+   * Bring the skills kept for this machine to this CLI's version and the
+   * current profile. Returns whether anything changed, or in a dry run whether
+   * anything would.
+   */
+  private async refreshGlobalSkills(planRoot: string): Promise<boolean> {
+    const { describeRemovedSkills, describeSkillsError, installGlobalSkills } =
+      await import('./global-skills.js');
+    // The profile the project part of this run settled on, which a dry run
+    // has not saved; outside a project, the saved one.
+    const globalConfig = getGlobalConfig();
+    const workflows =
+      this.settledWorkflows ??
+      getProfileWorkflows(globalConfig.profile ?? 'core', globalConfig.workflows).filter((workflow) =>
+        (ALL_WORKFLOWS as readonly string[]).includes(workflow)
+      );
+    let changed = false;
+    try {
+      const result = await installGlobalSkills({
+        workflows,
+        version: OPENSPEC_VERSION,
+        force: this.force,
+        dryRun: this.dryRun,
+      });
+      changed = !result.unchanged;
+      const count = result.skills.length;
+      this.log(
+        result.unchanged
+          ? chalk.green(`✓ このマシンのスキル${count}個は最新です（v${OPENSPEC_VERSION}）`)
+          : count > 0
+            ? chalk.green(`✓ ~/.agents/skills にあるこのマシンのスキル${count}個を更新しました（v${OPENSPEC_VERSION}）`)
+            : chalk.yellow('プロファイルにワークフローがないため、このマシンのスキルを削除しました。')
+      );
+      // A profile with no workflows has its own line above.
+      const removed =
+        !result.unchanged && (this.dryRun || result.skills.length > 0)
+          ? describeRemovedSkills(result.removedSkills, !this.dryRun)
+          : undefined;
+      if (removed && this.dryRun) this.removedGlobalSkills = removed;
+      else if (removed) this.log(chalk.yellow(removed));
+    } catch (error) {
+      const message = `このマシンのスキルを更新できませんでした: ${describeSkillsError(error)}`;
+      // A plan reports what would fail; it does not fail itself.
+      if (!this.dryRun) throw new Error(message);
+      // Outside a project nothing has made the plan yet.
+      (this.recorder ??= new UpdatePlanRecorder(planRoot)).addFailure('global-skills', message);
+    }
+    return changed;
+  }
+
+  private async updateProject(projectPath: string): Promise<void> {
     const resolvedProjectPath = path.resolve(projectPath);
     const openspecPath = path.join(resolvedProjectPath, OPENSPEC_DIR_NAME);
     this.legacyCleanupSkipped = false;
@@ -275,6 +404,7 @@ export class UpdateCommand {
     const desiredWorkflows = profileWorkflows.filter((workflow): workflow is (typeof ALL_WORKFLOWS)[number] =>
       (ALL_WORKFLOWS as readonly string[]).includes(workflow)
     );
+    this.settledWorkflows = desiredWorkflows;
 
     // 4. Detect and handle legacy artifacts + upgrade legacy tools using effective config
     const legacyUpgrade = await this.handleLegacyCleanup(
@@ -329,6 +459,7 @@ export class UpdateCommand {
         return;
       }
       await this.syncCopilotCloudFiles(resolvedProjectPath, configuredAndNewTools);
+      if (this.hasGlobalSkills) return;
       this.log(chalk.yellow('設定済みのツールが見つかりません。'));
       this.log(chalk.dim('ツールを設定するには "openspec init" を実行してください。'));
       return;
@@ -359,7 +490,6 @@ export class UpdateCommand {
     const toolsWithDriftedSkills = this.findToolsWithDriftedSkills(
       resolvedProjectPath,
       configuredTools,
-      delivery,
       (toolId) => legacyWorkflowOverrides[toolId] ?? desiredWorkflows
     );
     const toolsToUpdateSet = new Set<string>([
@@ -418,8 +548,6 @@ export class UpdateCommand {
     const leftCommandFiles = { kept: [] as string[], unchecked: [] as string[] };
     let removedSkillCount = 0;
     let removedDeselectedSkillCount = 0;
-    this.keptOwnSkills = [];
-    this.savedOwnSkills = [];
 
     // 全ツールで共有する .agents/skills/ を1回書き込む。
     // 共有コピーを必要とする旧ルート移行より前に実行する。
@@ -442,54 +570,10 @@ export class UpdateCommand {
       const spinner = this.startSpinner(`${tool.name} を更新中...`);
 
       try {
-        const skillsDir = resolveToolSkillsDir(resolvedProjectPath, tool);
-        const skillsRoot = hasGlobalSkillTarget(tool) ? skillsDir : resolvedProjectPath;
-        // 共有フォルダのスキルは上で1回書き込み済み。
-        const writesSkills = !usesSharedSkills(tool);
         const toolWorkflows = legacyWorkflowOverrides[tool.value] ?? desiredWorkflows;
         const ownFolderError = sharedInstall.toolFailures.get(tool.value);
         if (ownFolderError) throw ownFolderError;
-        const skillTemplates = getSkillTemplates(toolWorkflows);
 
-        // 専用フォルダのスキルファイルを生成する。
-        if (writesSkills) {
-          for (const { template, dirName } of skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            const transformer = getTransformerForTool(
-              tool.value,
-              delivery,
-              resolveCommandSurfaceCapability(tool.value),
-              resolveCommandInvocation(tool.value)
-            );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-            // リンク切れも他のリンクと同じく利用者のものとして扱う。
-            if (this.view.exists(skillDir) || this.view.linkTarget?.(skillDir) !== undefined) {
-              const spot = classifyOwnSkill(skillDir, tool.value, dirName, this.view, OPENSPEC_VERSION);
-              // 利用者のリンク先や、フォルダの位置にあるファイルへは書き込まない。
-              if (spot === 'link' || (spot === 'user' && !this.view.isDirectory(skillDir))) {
-                this.keptOwnSkills.push(skillDir);
-                continue;
-              }
-              FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
-              // 1.x と同様にその場で更新するが、編集済み SKILL.md は先に隣へ保存する。
-              if (spot === 'user') {
-                const backup = this.freeBackupPath(skillFile);
-                await this.ops.writeFile(backup, this.view.read(skillFile), tool.value);
-                this.savedOwnSkills.push(backup);
-              }
-            }
-            FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
-            await this.ops.writeFile(skillFile, skillContent, tool.value);
-          }
-          removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(
-            skillsRoot,
-            skillsDir,
-            toolWorkflows,
-            tool.value
-          );
-        }
 
         // 旧生成コマンドを整理する。
         if (shouldReconcileCommandFilesForTool(tool.value)) {
@@ -563,23 +647,7 @@ export class UpdateCommand {
     if (removedSkillCount > 0) {
       this.log(chalk.dim(`削除: スキルディレクトリ ${removedSkillCount} 件`));
     }
-    if (this.keptOwnSkills.length > 0) {
-      const count = this.keptOwnSkills.length;
-      this.log(
-        chalk.yellow(
-          `OpenSpec の生成内容と異なるスキルフォルダ${count}件を保持しました（編集済み、またはリンク）: ` +
-            `${this.keptOwnSkills.join(', ')}。書き込んでいません。不要になったら削除してください。`
-        )
-      );
-    }
-    if (this.savedOwnSkills.length > 0) {
-      const count = this.savedOwnSkills.length;
-      this.log(
-        chalk.yellow(
-          `編集済みのスキル${count}件を更新しました。編集内容のコピーは ${this.savedOwnSkills.join(', ')} に保存しました。`
-        )
-      );
-    }
+
     if (removedDeselectedSkillCount > 0) {
       this.log(chalk.dim(`削除: スキルディレクトリ ${removedDeselectedSkillCount} 件（選択解除されたワークフロー）`));
     }
@@ -660,10 +728,6 @@ export class UpdateCommand {
     const empty: SharedSkillInstallResult = {
       writtenSkillCount: 0,
       removedSkillCount: 0,
-      replacedOldCopyCount: 0,
-      kept: [],
-      linkedOutside: [],
-      refreshedEdited: [],
       toolFailures: new Map(),
     };
     if (!toolOptions(toolsToRefresh).some(usesSharedSkills)) return empty;
@@ -677,23 +741,6 @@ export class UpdateCommand {
         view: this.view,
         writesToDisk: !this.dryRun,
       });
-      if (result.replacedOldCopyCount > 0) {
-        this.log(
-          chalk.dim(
-            `ツールフォルダ内の未編集スキルのコピー${result.replacedOldCopyCount}件を、` +
-              '.agents/skills の共有コピーに置き換えました。'
-          )
-        );
-      }
-      for (const line of formatKeptSkills(result.kept, result.linkedOutside, result.refreshedEdited)) this.log(chalk.yellow(line));
-      // dry-run の案内が、編集内容を保存できる最後の機会になる。
-      if (result.refreshedEdited.length > 0) {
-        this.recorder?.addNote(
-          'edited-skills',
-          `更新すると ${result.refreshedEdited.join(', ')} の編集内容を上書きし、コピーは残しません。` +
-            'OpenSpec が導入するスキルは毎回再生成されます。先に編集内容を保存し、継続して使う変更は別名の独自スキルへ移してください。'
-        );
-      }
       return result;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -841,7 +888,6 @@ export class UpdateCommand {
   private findToolsWithDriftedSkills(
     projectPath: string,
     toolIds: string[],
-    delivery: Delivery,
     workflowsForTool: (toolId: string) => readonly (typeof ALL_WORKFLOWS)[number][]
   ): string[] {
     return toolIds.filter((toolId) => {
@@ -852,35 +898,20 @@ export class UpdateCommand {
       // それまでは専用フォルダのスキルを設定同期で移行する。
       if (usesSharedSkills(tool) && !isToolListed(projectPath, tool.value, this.view)) return false;
 
-      const skillsDir = resolveToolSkillsDir(projectPath, tool);
-      // 共有コピーは全ツールで同じ文面。専用フォルダのツールだけ固有の文面を使う。
-      const transformer = usesSharedSkills(tool)
-        ? transformToSharedSkillReferences
-        : getTransformerForTool(
-          tool.value,
-          delivery,
-          resolveCommandSurfaceCapability(tool.value),
-          resolveCommandInvocation(tool.value)
-        );
-
-      const kept = usesSharedSkills(tool) ? readKeptSharedSkills(projectPath, this.view) : new Set<string>();
-      return getSkillTemplates(workflowsForTool(toolId)).some(({ template, dirName }) => {
-        // 保持した独自スキルの変更は利用者に任せる。
-        if (kept.has(dirName)) return false;
-        const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
-        if (!this.view.exists(skillFile)) return false;
-        // 専用フォルダでも利用者のリンク先へは書き込まない。
-        if (!usesSharedSkills(tool) && classifyOwnSkill(path.dirname(skillFile), tool.value, dirName, this.view) === 'link') {
-          return false;
-        }
+      const dirs = [resolveToolSkillsDir(projectPath, tool)];
+      const own = resolveSkillLinkDir(projectPath, tool);
+      if (own) dirs.push(own);
+      const contents = expectedSkillContents(OPENSPEC_VERSION, workflowsForTool(toolId));
+      return dirs.some(dir => [...contents].some(([name, generated]) => {
+        const file = path.join(dir, name, 'SKILL.md');
+        if (!this.view.exists(file)) return false;
         try {
-          const existing = this.view.read(skillFile);
-          const generated = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-          return normalizeGeneratedFile(existing) !== normalizeGeneratedFile(generated);
+          const expected = dir === own ? projectSkillText(toolId, generated) : generated;
+          return normalizeGeneratedFile(this.view.read(file)) !== expected;
         } catch {
           return true;
         }
-      });
+      }));
     });
   }
 
@@ -974,7 +1005,8 @@ export class UpdateCommand {
   ): void {
     const updates = toolsToUpdate.map((toolId) => {
       const status = statusByTool.get(toolId);
-      if (status?.needsUpdate) {
+      // 版情報がなく本文が異なるスキルは、その差分として報告する。
+      if (status?.needsUpdate && !(status.generatedByVersion === null && driftedSkills.has(toolId))) {
         const fromVersion = status.generatedByVersion ?? '不明';
         return `${status.toolId} (${fromVersion} → ${OPENSPEC_VERSION})`;
       }
@@ -1011,6 +1043,8 @@ export class UpdateCommand {
    * Detects new tool directories that aren't currently configured and displays a hint.
    */
   private detectNewTools(projectPath: string, configuredTools: string[]): void {
+    // A project that uses the global skills has no tools of its own to add.
+    if (this.hasGlobalSkills && configuredTools.length === 0) return;
     const availableTools = getAvailableTools(projectPath);
     const configuredSet = new Set(configuredTools);
 
@@ -1118,74 +1152,6 @@ export class UpdateCommand {
     }
   }
 
-  /**
-   * Removes skill directories for workflows that are no longer selected in the active profile.
-   * Returns the number of directories removed.
-   */
-  private async removeUnselectedSkillDirs(
-    skillsRoot: string,
-    skillsDir: string,
-    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][],
-    toolId: string
-  ): Promise<number> {
-    const desiredSet = new Set(desiredWorkflows);
-    let removed = 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredSet.has(workflow)) continue;
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      if (!dirName) continue;
-
-      const skillDir = path.join(skillsDir, dirName);
-      if (!this.view.exists(skillDir)) continue;
-      // OpenSpec の SKILL.md だけを削除する。リンク、フォルダ位置のファイル、
-      // 編集済み SKILL.md、隣の別ファイルは利用者のもの。
-      // リンクをたどるパス検査より前に分類する。
-      const spot = classifyOwnSkill(skillDir, toolId, dirName, this.view, OPENSPEC_VERSION);
-      if (spot === 'link' || spot === 'user') {
-        this.keptOwnSkills.push(skillDir);
-        continue;
-      }
-      if (spot === 'missing') continue;
-      FileSystemUtils.assertPathWithin(skillsRoot, skillDir);
-      try {
-        await this.ops.removeFile(path.join(skillDir, 'SKILL.md'), toolId);
-        if (!this.dryRun) {
-          try {
-            fs.rmdirSync(skillDir);
-          } catch {
-            // 利用者の別ファイルが残っている。
-          }
-        }
-        removed++;
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  /** 未使用の SKILL.md.bak、または最初の SKILL.md.bak<n>。 */
-  private freeBackupPath(skillFile: string): string {
-    for (let n = 0; ; n += 1) {
-      const candidate = `${skillFile}.bak${n === 0 ? '' : n}`;
-      // リンク切れも使用済みとし、リンク先へ書き込まない。
-      if (!this.view.exists(candidate) && this.view.linkTarget?.(candidate) === undefined) return candidate;
-    }
-  }
-
-  /**
-   * Offers to move OpenSpec content out of a renamed tool's former directory
-   * when the old location might still be the live one — today, Windsurf's
-   * `.windsurf/` after the Devin Desktop rebrand.
-   *
-   * Interactive runs are asked, because nothing on disk distinguishes a user
-   * who took the rebrand from one still on a pre-rebrand Windsurf build that
-   * reads only `.windsurf/`. `--force` and non-interactive runs migrate, which
-   * is what an unattended upgrade wants.
-   */
-  /** Surfaces files the move left behind rather than overwriting. */
   private reportKeptInPlace(migration: LegacyToolMigration): void {
     const notice = keptInPlaceNotice(migration);
     if (notice) this.log(chalk.dim(notice));
@@ -1595,35 +1561,12 @@ export class UpdateCommand {
       const spinner = this.startSpinner(`${tool.name} をセットアップ中...`);
 
       try {
-        const skillsDir = resolveToolSkillsDir(projectPath, tool);
-        const skillsRoot = hasGlobalSkillTarget(tool) ? skillsDir : projectPath;
-        // 共有フォルダのスキルは上で1回書き込み済み。
-        const writesSkills = !usesSharedSkills(tool);
         const ownFolderError = sharedInstall.toolFailures.get(tool.value);
         if (ownFolderError) throw ownFolderError;
-        const toolWorkflows = workflowsForLegacyTool(tool.value);
         if (tool.value === 'codex' && inferredCodexWorkflows.length > 0) {
           workflowOverrides[tool.value] = inferredCodexWorkflows;
         }
-        const skillTemplates = getSkillTemplates(toolWorkflows);
 
-        // 専用フォルダのスキルファイルを作成する。
-        if (writesSkills) {
-          for (const { template, dirName } of skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            const transformer = getTransformerForTool(
-              tool.value,
-              delivery,
-              resolveCommandSurfaceCapability(tool.value),
-              resolveCommandInvocation(tool.value)
-            );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-            FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
-            await this.ops.writeFile(skillFile, skillContent, tool.value);
-          }
-        }
 
         spinner.succeed(`${tool.name} のセットアップが完了しました`);
         newlyConfigured.push(toolId);

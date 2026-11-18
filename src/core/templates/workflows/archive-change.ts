@@ -5,7 +5,6 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
@@ -14,19 +13,21 @@ import { PROJECT_ROOT_GUARD } from './project-root.js';
  * how it normally does that. A profile that selects `archive` gets `sync`
  * injected (see getProfileWorkflows), but an install whose workflow set was
  * read back off disk can still be missing it — in which case the merge has to
- * happen inline rather than be handed to a workflow that is not there.
+ * happen inline rather than be handed to a workflow that is not there. The
+ * text is the same for every profile, so it states both paths.
  */
-const SYNC_INLINE_HANDOFF = optionalWorkflow(
-  'sync',
-  '`/opsx:sync` ワークフローをインラインで実行します（エージェントによる知的マージ）',
-  '仕様差分から本仕様へのマージを自分でインライン実行します（エージェントによる知的マージ）'
-);
+const SYNC_INLINE_HANDOFF =
+  '`/opsx:sync` が導入済みならそのワークフローをインラインで実行します。なければ自身で仕様差分を本仕様へ統合します（どちらもエージェントによる知的マージ）';
 
-const SYNC_GUARDRAIL = optionalWorkflow(
-  'sync',
-  '`/opsx:sync` ワークフローをインラインで実行する（エージェントが実施）',
-  '仕様差分から本仕様へのマージをインラインで実行する（エージェントが実施）'
-);
+const SYNC_GUARDRAIL =
+  '`/opsx:sync` が導入済みならそのワークフローをインラインで実行し、なければ自身で仕様差分を本仕様へ統合する（どちらもエージェントが実施）';
+
+/**
+ * What the sync workflow guarantees, for the agent that has to do the merge
+ * itself because that skill is not installed. Shared with bulk archive.
+ */
+export const SYNC_FALLBACK_SAFEGUARDS =
+  "- 同期スキルがないため自身で統合する場合も、その安全策を維持する。最後の要件を削除する仕様を削除できるのは、変更の `.openspec.yaml` に `retire_capabilities: true` があり、仕様に他の記述済みセクションがなく、パスが実際の仕様ルート内へ解決される場合だけ。それ以外は書き込み前に停止する。統合後は同じ選択済みルートのフラグで `openspec validate --specs` を実行し、失敗したら同期失敗として停止して `changeRoot` をそのまま残す";
 
 export function getArchiveChangeSkillTemplate(): SkillTemplate {
   return {
@@ -153,7 +154,7 @@ ${PROJECT_ROOT_GUARD}
    CLIの動作を変えたり、ルール本文を出力ファイルへコピーしたりしません。
 
    次に変更「<name>」について、上記の仕様差分分析と取得済みspecsルールのスナップショットを渡し、
-   ${optionalWorkflow('sync', '`openspec-sync-specs` ワークフローをインラインで実行します（エージェントによる知的マージ）', '仕様差分から本仕様へのマージを自分でインライン実行します（エージェントによる知的マージ）')}。完了を待ちます。
+   \`openspec-sync-specs\` が導入済みならそのワークフローをインラインで実行し、なければ自身で仕様差分を本仕様へ統合します（どちらもエージェントによる知的マージ）。完了を待ちます。
    インライン同期はこのスナップショットを再利用し、\`specs\` の指示を再取得してはいけません。
    バックグラウンドタスクへ委任しないでください。手順5が、まだ \`changeRoot\` を読み取っている同期処理の
    配下からそれを移動し、変更だけがarchiveされて本仕様が更新されない状態になるためです。
@@ -227,7 +228,8 @@ ${PROJECT_ROOT_GUARD}
 - 警告だけでarchiveをブロックせず、内容を伝えて確認する
 - archiveへ移動するときも \`.openspec.yaml\` を維持する（ディレクトリとともに移動する）
 - 実行内容の明確な概要を表示する
-- 同期を求められた場合は、${optionalWorkflow('sync', '`openspec-sync-specs` ワークフローをインラインで実行する（エージェントが実施）', '仕様差分から本仕様へのマージをインラインで実行する（エージェントが実施）')}
+- 同期を求められた場合は、\`openspec-sync-specs\` が導入済みならそのワークフローをインラインで実行し、なければ自身で仕様差分を本仕様へ統合する（どちらもエージェントが実施）
+${SYNC_FALLBACK_SAFEGUARDS}
 - 仕様同期の実行中にarchiveしない。同期をインライン実行し、\`changeRoot\` の移動前に本仕様を検証する
 - 仕様差分があれば必ず同期評価を実行し、選択を求める前に統合した概要を表示する
 - 関連する実行時contextを適用して競合を報告する。operation guidanceは参考情報のままとする
@@ -490,6 +492,7 @@ ${PROJECT_ROOT_GUARD}
 - archiveへ移動するときも \`.openspec.yaml\` を維持する（ディレクトリとともに移動する）
 - 実行内容の明確な概要を表示する
 - 同期を求められた場合は、${SYNC_GUARDRAIL}
+${SYNC_FALLBACK_SAFEGUARDS}
 - 仕様同期の実行中にarchiveしない。同期をインライン実行し、\`changeRoot\` の移動前に本仕様を検証する
 - 仕様差分があれば必ず同期評価を実行し、選択を求める前に統合した概要を表示する
 - 関連する実行時contextを適用して競合を報告する。operation guidanceは参考情報のままとする

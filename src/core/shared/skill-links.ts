@@ -23,7 +23,7 @@ export type SkillLinkSpot = 'missing' | 'link' | 'copy' | 'released' | 'user';
  * 利用者の内容を含まないため、独自スキルと判定する根拠にはしない。
  */
 const OS_JUNK = new Set(['.DS_Store', 'Thumbs.db', 'desktop.ini']);
-const isOsJunk = (name: string) => OS_JUNK.has(name) || name.startsWith('._');
+export const isOsJunk = (name: string) => OS_JUNK.has(name) || name.startsWith('._');
 
 /**
  * linkPath から <project>/.agents/skills/<skill> へのリンク文字列。

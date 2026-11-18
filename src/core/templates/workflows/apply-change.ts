@@ -5,27 +5,15 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
-/**
- * `/opsx:continue` is not in the `core` profile, so the blocked-state handoff
- * is authored with a CLI fallback and resolved at generation time (see
- * optional-workflow.ts).
- */
-const BLOCKED_STATE_HANDOFF = optionalWorkflow(
-  'continue',
-  '`/opsx:continue` での作成を提案する。',
-  '不足しているアーティファクトの完成を提案する。`openspec status --change "<name>" --json` を実行し、次の `ready` アーティファクト（`skipped` や `blocked` ではないもの）を選び、`openspec instructions "<artifact-id>" --change "<name>" --json` でルールとテンプレートを取得する。両コマンドで選択済みの `--store <id>` を維持する。'
-);
+const BLOCKED_STATE_HANDOFF =
+  '不足アーティファクトと、CLI の `instruction` フィールドにある復旧手順を示す。後続コマンドでも選択済みストアを維持する。';
 
 /** The archive handoff shown once every task is done. */
-const ARCHIVE_HANDOFF = optionalWorkflow(
-  'archive',
-  '`/opsx:archive` でこの変更をアーカイブできます。',
-  '`openspec archive "<name>"` を実行すると、この変更をアーカイブできます。'
-);
+const ARCHIVE_HANDOFF =
+  '完了した作業を確認し、この変更のアーカイブを依頼してください。';
 
 /**
  * The apply workflow instructions, authored once and rendered by both the
@@ -43,7 +31,7 @@ ${STORE_SELECTION_GUIDANCE}
 
 ${PROJECT_ROOT_GUARD}
 
-**入力**: 必要に応じて、変更名を指定します (例: \`/opsx:apply add-auth\`)。省略した場合は、会話の文脈から推測できるかどうかを確認します。曖昧またはあいまいな場合は、利用可能な変更を要求する必要があります。
+**入力**: 任意で変更名を指定します（例: \`/opsx:apply add-auth\`）。省略した場合は、会話の文脈から推測できるか確認します。曖昧な場合は、必ず利用可能な変更を示して選択を求めてください。
 
 **手順**
 
@@ -54,7 +42,7 @@ ${PROJECT_ROOT_GUARD}
    - アクティブな変更が1つだけなら自動選択する
    - 曖昧なら \`openspec list --json\` で利用可能な変更を取得し、ユーザーに選択してもらう
 
-常に「変更の使用: <name>」と上書き方法 (例: \`/opsx:apply <other>\`) をアナウンスします。
+   常に「変更の使用: <name>」と、変更を切り替える方法（例: \`/opsx:apply <other>\`）を伝えます。
 
 2. **ステータスを確認してスキーマを理解します**
    \`\`\`bash
