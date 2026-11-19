@@ -1,171 +1,57 @@
 # ローカライズ特有の修正メモ
 
-## 目的
+## 対象
 
-- 単なる文字列翻訳にとどまらない、日本語化に伴うコード上の注意点・修正履歴を集約する。
-- upstream 同期時に再発しやすい箇所を把握し、見落としを防ぐ。
-- 追記対象は、ローカライズに伴う判定・変換・互換処理などのロジック上の注意点とする。単なる文言修正、生成手順、作業・検証ログは追加しない。
+v2.1.0 のコードに残る、日本語版固有の判定・変換・互換処理と、その依存関係を記録する。本家と共通の仕様、翻訳方針、単なる文言修正、作業・検証履歴は含めない。
 
-## 既知の事例 / 注意点
+## 公開スキルの取得先と本文照合
 
-### v2.1.0: 公開済みスキル本文の照合
+- `src/core/skill-installer.ts` は `ayumuwall/OpenSpec-J/skills` から取得し、`RELEASE_TAG_PREFIX` は `@ayumuwall/openspec@` とする。取得したスキルは日本語テンプレートから生成した期待値と照合するため、取得先やタグ接頭辞だけを本家へ戻すと、日本語版の取得・照合が失敗する。
+- `test/helpers/skill-release.mjs` と `test/core/project-skills-vercel.test.ts` の Git URL 置換先・代替タグも、本体の日本語版リポジトリ・タグ接頭辞と対応させる。
 
-- `src/core/skill-installer.ts` は日本語版リポジトリのリリースタグから `skills/` を取得する。グローバル導入後は、取得した本文を日本語テンプレートから生成した本文と照合するため、取得先だけを本家へ戻すと照合が失敗する。
-- `test/helpers/skill-release.mjs` のローカル Git 置換先も日本語版リポジトリ名へ合わせる。公開前の検証ではこのフィクスチャを使用し、本体に未公開版用の取得先や英語へのフォールバックを追加しない。
-- 2.1 以降の本文からは `generatedBy` が除かれる。現在の公開本文との一致による判定と、旧版の刻印・公開済みハッシュによる判定を区別し、旧日本語版の識別データは保持する。
+## 旧日本語版の生成内容の識別
 
-### v2.0.0: 日本語版の公開済み生成内容の判別
+- `src/core/shared/released-generated-fingerprints.ts` の `OpenSpec-J Releases` に対応するハッシュを保持する。本家の英語出力のハッシュだけでは、未編集の旧日本語スキル・コマンドを利用者の編集と誤判定し、旧出力の整理が行われない。
+- `scripts/capture-released-fingerprints.mjs` の取得対象は `@ayumuwall/openspec` とし、既存の本家・日本語版の識別データへ追加する。本家のハッシュを日本語版のハッシュで置き換えない。
 
-- `src/core/shared/released-generated-fingerprints.ts` には、本家のハッシュに加えて公開済み `@ayumuwall/openspec` の生成内容のハッシュを保存する。本家の英語出力だけでは、未編集の日本語スキルやコマンドを利用者の編集として誤判定し、旧出力の整理や共有フォルダへの移行が行われない。
-- 正規化と完全一致の判定は本家と共通に保つ。本文全体の翻訳、部分一致、言語判定で削除対象を広げない。公開版が対応するプロファイル、過去の既定ワークフローセット、delivery ごとの実際の出力を採取する。
-- 採取スクリプトは日本語版の npm パッケージを参照し、既存の本家・日本語版の記録へ追加する。再生成時に本家の既存ハッシュや生成パスを失わないようにする。
+## 単体実行版の導入先判定と日本語インストーラー
 
-### v1.15.0: 単体実行版への切り替えとインストーラー
+- `src/commands/install-standalone.ts` の Homebrew 判定は `Cellar/openspec-j/`、削除コマンドは `brew uninstall openspec-j` とする。本家の `openspec` 判定では日本語版の導入方法を識別できない。
+- インストーラーは `ayumuwall/OpenSpec-J` の `ja-docs`、バイナリーは同リポジトリの Releases から取得する。`main` は本家のリリースコミットを保持するブランチなので、日本語インストーラーの取得元にしない。
+- `scripts/binary/install.ps1` の UTF-8 BOM を保持する。Windows PowerShell 5.1 が日本語を読み込むために必要。
+- `src/commands/install-standalone.ts` の `WINDOWS_RUNNER` は `Invoke-WebRequest -OutFile` で取得したバイト列を一時 `.ps1` ファイルとして実行し、出力を UTF-8 にする。本家の `irm | iex` に戻すと、charset のない HTTP 応答で BOM と日本語を誤読する。対応する回帰検査は `test/commands/install-standalone.test.ts`。
 
-- `src/commands/install-standalone.ts` の Homebrew 判定は日本語版の `Cellar/openspec-j/` を認識し、削除には `brew uninstall openspec-j` を案内する。本家の `openspec` 判定へ戻すと日本語版の導入方法を識別できない。
-- インストーラーの取得先は日本語版の `ja-docs` ブランチ、バイナリーの取得先は `ayumuwall/OpenSpec-J/releases` とする。`main` は本家タグと完全一致させるため、日本語版スクリプトの取得元には使わない。
-- `scripts/binary/install.ps1` は UTF-8 BOM 付きで保存する。Windows PowerShell 5.1 が日本語文字列を含むローカルスクリプトを正しく読み込めるようにするためで、BOM を除去する整形を行わない。
-- `src/commands/install-standalone.ts` の Windows ランナーは、`Invoke-WebRequest -OutFile` で取得したバイト列を一時 `.ps1` ファイルへ保存して実行し、子プロセスの出力を UTF-8 にする。`irm | iex` で HTTP 応答を文字列として実行すると、charset のない応答で BOM と日本語を誤読する。本家のスクリプトは ASCII のみ・BOM なしで、この問題は日本語化後に表面化する。
-- 回帰検査は `test/commands/install-standalone.test.ts` の Windows 限定ケースで行う。charset のない HTTP 応答から BOM 付きスクリプトを実行し、日本語出力を確認する。単体実行版の自己更新も Windows x64・arm64 の CI で検証する。文字コードの背景は [Windows PowerShell 5.1 の説明](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1)を参照する。
-- インストーラーの動作検査で成功・フォールバック・入力エラーの文言を判定する箇所は、日本語メッセージに合わせる。エラーコード、引数、ダウンロードの検証条件は本家と共通に保つ。
+## 日本語診断を使う判定
 
-### v1.13.2: 診断文を参照する判定とテンプレートの回帰検査
+- `src/core/validation/validator.ts` の `enrichTopLevelError` は、英語の診断に加え、日本語の `VALIDATION_MESSAGES`、`Requirements セクションは必須です`、`Why セクション` を認識する。英語の `includes` 判定だけに戻すと、日本語診断に補足ガイドが付かなくなる。
+- 同関数の日本語・英語判定は補足との区切り（`。` / `. `）にも使う。補足を付ける条件と表示用の言語判定を分けて保持する。
+- `src/core/templates/workflows/project-root.ts` のストアエラー判定は、`src/core/root-selection.ts` の日本語診断 `での宣言:` / `のストア宣言が不正です:` と対応させる。英語の判定文へ戻すと、ストアの解決失敗を未初期化と混同する。
+- `src/utils/nested-change.ts` の日本語 `NESTED_CHANGE_ISSUE_MARKER` は、診断の生成と `src/commands/validate.ts` の案内選択で共有する。表示文だけを別の文字列にすると案内を選べなくなる。
 
-- `src/utils/nested-change.ts` の `NESTED_CHANGE_ISSUE_MARKER` は表示文と `validate` の次の操作案内で共有する。表示文だけを変更すると、入れ子の変更に対する案内を選べなくなるため、定数を介した対応を維持する。
-- `src/core/templates/workflows/project-root.ts` のストアエラー判定は、実際の日本語診断に合わせて `での宣言:` / `のストア宣言が不正です:` を参照する。英語の接頭辞へ戻すと、宣言済みストアの問題を未初期化と混同する。`test/core/templates/project-root-guard.test.ts` で実際の診断との対応と、既定ストアの無関係なエラーを除外することを確認する。
-- `test/core/templates/explore.test.ts` / `update-change.test.ts` の語句検出は日本語も対象にする。英語の `confirm` / `write` だけでは、日本語本文に追加された不適切な承認条件や書き込み指示を検出できない。日本語の句点で文を区切り、日本語の不正な指示を挿入した場合にも検査が失敗することを確認する。
+## 旧 Codex スキルの日本語参照との互換性
 
-### Codex の共有スキル参照: 日本語化と旧形式の互換性
+- `src/utils/command-references.ts` の旧形式 `$スキル名（Codex）、/スキル名（その他の対応エージェント）` は、`src/core/shared/skill-content-equivalence.ts` の日本語参照の正規表現と対応させる。
+- 同等性判定は旧本文と現行本文の両方の参照を正規化する。本家の英語参照だけを認識する処理や、片側だけを正規化する処理へ戻すと、旧日本語版の未編集スキルを同等と判定できない。
 
-- `src/utils/command-references.ts` の `transformToCodexCompatibleSkillReferences` は `$スキル名（Codex）、/スキル名（その他の対応エージェント）` を生成する。旧 Codex 出力の再現・照合に使う表記として維持する。
-- 追加確認（v2.0.0）: 新規の共有スキルは共有導入処理（2.1 以降は `src/core/skill-installer.ts`）から `transformToSharedSkillReferences` を使い、本文中の参照を `openspec-propose` のような接頭辞なしのスキル名にする。呼び出し構文はツールごとに異なるため、共有スキル本文を旧形式の `$...` / `/...` の併記へ戻さない。
-- `src/core/shared/skill-content-equivalence.ts` は、既知の OpenSpec スキルに限り、旧単独参照・英語の併記・日本語の併記を同等と判定する。独自スキル、左右の名前が異なる参照、本文への追記は同等とみなさない。
-- 文言変更時は参照変換・同等性判定・旧 `.codex` からの移行テストを一緒に確認する。
-- 追加確認（v1.12.0）: 同等性判定では、両側の既知参照を旧単独形式へ正規化する。文書全体を翻訳して比較する処理ではなく、本文の翻訳差分やユーザーの追記は引き続き差異として扱う。BOM・CRLF・有効な `metadata.generatedBy` のバージョン差だけは従来どおり許容する。
-- 回帰テスト: `test/utils/command-references.test.ts`、`test/core/shared/skill-content-equivalence.test.ts`、`test/core/update.test.ts`。文言変更で独自ファイルを誤って削除対象にしないことを確認する。
+## 旧コマンドの日本語入力見出しの検出
 
-### v1.12.0 動作確認後の日本語修正
+- `src/core/command-generation/adapters/` の `atomcode.ts`、`command-code.ts`、`oh-my-pi.ts`、`opencode.ts`、`pi.ts` は、`Input` / `入力` と半角・全角コロンを認識する。v2.1.0 でも `src/core/shared/command-reconcile.ts` が生成内容を再現して旧コマンドを判別するため、この対応が必要。
+- Command Code の重複挿入防止は `Provided arguments` / `入力された引数` の両方を認識する。OpenCode の引数不要判定は `None required` に加え、日本語の `不要` / `指定不要` と後続の句読点などを認識する。日本語の語境界を英語用の `\b` へ置き換えない。
 
-- `verify` のシナリオ未対応条件の誤訳を修正し、「3 つの観点」「一部のアーティファクトしかない場合」などの説明に改めた。`tasks.md` の綴りとゼロ幅文字も修正した。
-- ワークフローの説明を「仕様差分」「本仕様」「機能」に統一。提案の見出し `New Capabilities` / `Modified Capabilities` はスキーマ指示との対応を保つため英語に戻した。
-- `explore` の図の説明を日本語化し、図そのものは ASCII 文字だけに保った。
-- 日本語の検証エラーと補足の区切りを句点に変更。`変更ルート`、`アーカイブ完了`、利用統計の停止案内も修正した。
-- 本家と共通のプロファイル動作、共有参照の併記、Node.js の生エラー、言語コンテキストの英語出力は変更しない。Commander の標準表示は v1.15.0 の動作確認後に日本語化した（下記参照）。
+## 日本語の Purpose プレースホルダーの検出
 
-### バリデーション: ガイド付与が英語メッセージ依存
-- ファイル: `src/core/validation/validator.ts` (`enrichTopLevelError`)
-- 症状: upstream の英語メッセージを `includes` で判定しガイド文を付加する実装だったため、日本語化後はガイドが付かないケースが発生。
-- 対応: 英語メッセージに加え、日本語化済みの定数 (`VALIDATION_MESSAGES.SPEC_PURPOSE_EMPTY`, `SPEC_NO_REQUIREMENTS`, `CHANGE_WHAT_EMPTY` など) や「Why セクション」文字列もトリガーに追加し、両言語でガイドを付与できるよう拡張。
-- 追加確認（v1.6.0 追従後）: `CHANGE_WHY_TOO_SHORT` のように「必須」ではなく「短すぎる」系の日本語メッセージでも、変更ファイルの必須セクションガイドが付く必要がある。`enrichTopLevelError` の条件を見直すときは、`CHANGE_WHAT_EMPTY` だけでなく `CHANGE_WHY_TOO_SHORT` と `Why セクション` 系メッセージも確認する。
-- 追加対応（v1.12.0）: `enrichTopLevelError` は日本語文字の有無で補足との区切りを選び、日本語は `。`、英語の互換経路は `. ` を使う。ガイド付与の条件と、この表示用の言語判定を混同しない。
-- 追加修正（v1.13.2 追従後）: 日本語の「Requirements セクションは必須です」を判定に追加した。従来の英語判定を維持し、`test/core/validation.test.ts` で Purpose / Requirements の欠落時に日本語診断と補足ガイドが両方出ることを確認する。
-- フォローアップ: upstream でメッセージ文言が増減した場合は、英語/日本語両方のトリガーを見直す。英語/日本語のガイド付与を直接確認するユニットテストを追加すると安全。
+- `src/core/validation/constants.ts` の日本語 `PURPOSE_PLACEHOLDER_PREFIX` / `PURPOSE_PLACEHOLDER_SUFFIX` は、`src/core/specs-apply.ts` の生成と `src/core/validation/purpose-placeholder.ts` の検出で共有する。生成文だけを日本語化し、検出を英語文のままにすると未記入の Purpose を見逃す。
 
-### v1.14.1: AtomCode の入力見出し検出
+## 日本語テンプレートを検査する正規表現
 
-- `src/core/command-generation/adapters/atomcode.ts` は `Input` / `入力` の両方と半角・全角コロンを認識する。日本語見出しだけを翻訳すると `args: none` になり、呼び出し引数が失われるため、英語互換を保った検出が必要。
-- `test/core/command-generation/adapters.test.ts` で両言語の見出しから `args: optional` と `$ARGUMENTS` が生成されることを確認する。全ワークフローの期待値は見出し検出の実装を複製せず、引数不要の `onboard` を明示する。
+- `test/core/templates/explore.test.ts` / `update-change.test.ts` の語句検出は、日本語の確認・書き込み表現も対象にする。英語の `confirm` / `write` だけでは、日本語で追加された不適切な指示を検出できない。explore の文分割では日本語の句点 `。` も区切りにする。
+- explore の図の検査は `UNICODE_DIAGRAM_CHARACTER` で矢印・罫線などを検出する。本家の非 ASCII 文字全般を対象にする検査へ戻すと、日本語の説明文も図として扱ってしまう。
 
-### コマンド生成: 入力見出しの検出が英語ラベル依存
-- ファイル: `src/core/command-generation/adapters/command-code.ts`, `src/core/command-generation/adapters/oh-my-pi.ts`, `src/core/command-generation/adapters/opencode.ts`, `src/core/command-generation/adapters/pi.ts`
-- 症状: upstream のコマンド生成アダプターは `**Input**:` 見出しを正規表現で検出し、その直後へ `$ARGUMENTS` または `$@` を挿入する。見出しを `**入力**:` へ翻訳するだけでは検出されず、生成コマンドへ呼び出し引数が渡らなくなる。
-- 対応（v1.9.0）: 見出し検出を `Input` / `入力` の両方に対応させる。Command Code では再生成時の重複挿入を防ぐため、既存の引数行も `Provided arguments` / `入力された引数` の両方を認識する。
-- 追加対応（v1.11.0）: 日本語の見出しで全角コロン（`**入力**：`）が使われても引数を挿入できるよう、Command Code と OpenCode の検出を半角・全角コロンの両方に対応させる。
-- 追加対応（v1.10.0）: OpenCode に追加された `$ARGUMENTS` 挿入処理も `Input` / `入力` と `None required` / `不要` の両方を認識し、日本語テンプレートでは `指定された引数` を生成する。
-- 互換性: 英語版または過去バージョンが生成したファイルを日本語版で更新する場合があるため、日本語だけに限定せず英語ラベルも維持する。
-- フォローアップ: 入力見出しや引数行の文言を変更するときは、4アダプターの検出正規表現と `test/core/command-generation/adapters.test.ts` の挿入・重複防止テストを同時に更新する。
-- 修正済み（v1.13.2 追従後）: Pi / Oh My Pi も半角・全角コロンを認識する。英語見出しと、既存の `$@` / `$ARGUMENTS` を重複挿入しない動作は維持する。
-- 修正済み（v1.13.2 追従後）: OpenCode は「不要」「指定不要」を明示的に扱い、後続が行末・空白・句読点・開き括弧の場合に引数挿入を抑止する。日本語の語境界には `\b` を使わない。「不要なファイルの名前」など、別の説明へ続く場合は引数を渡す。英語の `None required` の判定は維持する。
-- 回帰検査: `test/core/command-generation/adapters.test.ts` で日本語の見出し・不要指定・句読点・行末・英語互換・重複防止を確認する。全ワークフローの検査は生成側の正規表現を複製せず、入力不要の `bulk-archive` / `onboard` を明示して期待値を定める。
+## 日本語 FAQ のアンカー生成
 
-### Feedback: 日本語タイトルをUnicode書記素単位で短縮
-- ファイル: `src/commands/feedback.ts` (`formatTitle`, `formatBody`)
-- 症状: GitHub Issueタイトルを単純なUTF-16コード単位やバイト数で切ると、結合文字・絵文字・サロゲートペアを途中で分断する可能性がある。また英語のような空白区切りを前提にすると、空白のない日本語タイトルを適切に短縮できない。
-- 対応（v1.10.0、2026-09-06 に実装照合）: 接頭辞と省略記号を含め Unicode コードポイント数で72以内へ短縮し、切断位置は `Intl.Segmenter` の書記素境界に合わせる。「72書記素まで」ではない。空白がある場合は最後の語境界を優先し、空白がない日本語では安全な書記素境界までの本文を使う。短縮前のメッセージ全文は Issue 本文に保持する（v1.15.0 以降は「発生したこと」）。
-- 互換性: `Feedback: ` はGitHub上で既存Issueを識別する接頭辞として維持し、タイトル表示だけを理由に翻訳しない。
-- フォローアップ: タイトル上限や接頭辞を変更するときは、`test/commands/feedback.test.ts` のASCII、日本語、絵文字、本文への全文保持の期待値を同時に更新する。
+- `website/lib/remark-faq.ts` の `slugify` は Unicode プロパティエスケープ `\p{L}` / `\p{N}` で文字と数字を保持する。本家の ASCII 英数字だけを残す処理へ戻すと、日本語だけの FAQ 見出しから空のアンカーが生成される。
 
-### 単数/複数の表記を日本語で統一する扱い
-- 仕様: 日本語では単数・複数の揺れを避け、カウントは「件」や「タスク」など固定表記に寄せる。
-- 実例: `src/utils/task-progress.ts` の `formatTaskStatus` は「タスクなし」「N/M タスク」、`src/core/view.ts` は「N 件」、`src/core/list.ts` の仕様一覧は「要件 N」と表示する。いずれも英語の単複数分岐は設けない。
-- 追加実例（v1.9.0）: `src/core/migration.ts` の `keptInPlaceNotice` は、英語の `file` / `files` と `differ` / `differs` の分岐を廃止し、件数にかかわらず「N 件のファイル」に統一。
-- 追加実例（v1.13.2）: `describeScenarioBalance` は「N 件のシナリオ」、入れ子のストア削除拒否は「内部のストア」に統一する。英語の単複数分岐だけを省き、件数・対象名・拒否条件は保持する。
-- 補足: `src/core/parsers/change-parser.ts` では互換性のため `requirement`/`requirements` の両方を保持しているが、表示文言は日本語の単一表記で運用している。`ADDED` / `MODIFIED` だけでなく、`REMOVED` / `RENAMED` の `description` もユーザー向け表示に出る可能性があるため、upstream 追従時に英語へ戻っていないか確認する。
+## Commander の標準ヘルプの日本語化
 
-### CLI 結合テスト: 固定一時ディレクトリは並列実行で衝突する
-- ファイル: `test/commands/validate.test.ts`, `test/commands/spec.test.ts`
-- 症状: リポジトリ直下の固定一時ディレクトリ名を使うと、`pnpm test` の並列実行時に別テストと競合し、`spec not found` などの不安定な失敗が出る。
-- 現状（2026-09-06）: `test/commands/validate.test.ts` は `os.tmpdir()` と `randomUUID()` で毎回ユニークな一時ディレクトリを生成する。一方、`test/commands/spec.test.ts` はリポジトリ直下の固定名 `test-spec-command-tmp` のままであり、両方が対応済みという従来の記録は不正確だった。
-- 補足: 本体ロジックではなくテスト安定化のための差分。フルテスト前提で upstream 同期時に戻してしまわないよう注意。
-
-### ドキュメントサイト: FAQ アンカー生成を日本語見出しに対応
-
-- ファイル: `website/lib/remark-faq.ts`
-- 症状: upstream のスラッグ生成は ASCII 英数字だけを残すため、日本語だけの FAQ 見出しから空の `id` が生成される。
-- 対応（v1.11.0）: Unicode プロパティエスケープを使い、すべての言語の文字と数字を保持してアンカーを生成する。
-- フォローアップ: upstream のスラッグ生成ロジックを取り込むときは、日本語見出しの `id` が空にならず、同じ見出しから安定して同じアンカーが生成されることを確認する。
-
-### Purpose プレースホルダー: 生成側と検出側で翻訳を共有
-- ファイル: `src/core/validation/constants.ts`, `src/core/specs-apply.ts`, `src/core/validation/purpose-placeholder.ts`
-- 症状: archive が書き込むプレースホルダーだけを翻訳すると、検出側が英語文を探し続けて未記入の Purpose を見逃す。検出側だけを翻訳すると、生成したプレースホルダーと一致しない。
-- 対応（v1.11.0）: 日本語の前半・後半を `PURPOSE_PLACEHOLDER_PREFIX` / `PURPOSE_PLACEHOLDER_SUFFIX` として共有し、生成と検出の両方で使用する。変更名は2つの定数の間に入るため、文全体を別々に複製しない。
-- 構造上の不変条件: `## Purpose`、先頭の `TBD` / `TODO` はパーサーが認識する構造トークンとして維持する。利用者向けの診断とプレースホルダー本文だけを日本語化する。
-- フォローアップ: プレースホルダー文を変更するときは、生成した本仕様を strict 検証し、同じ行が1件の警告として報告されることを確認する。
-
-### CLI 出力: 人間向け文言と JSON 契約を分ける
-- ファイル: `src/commands/workflow/status.ts`, `src/commands/show.ts`, `src/utils/requirement-diff.ts`, `src/commands/shared-output.ts`
-- 症状: `status --all` や `show --diff` の日本語化で JSON キーや診断コードまで翻訳すると、スクリプトとエージェントが出力を解析できなくなる。反対に、テキスト表示や `message` を英語のまま残すと日本語版の利用者向け出力が混在する。
-- 対応（v1.11.0）: `changes`, `root`, `status`, `diff`, `warning`, `change_error` などの機械向けキー・コードは維持し、テキスト見出し、診断 `message`、次の操作案内を日本語化する。
-- 差分の扱い: unified diff の要件本文は利用者が記述した内容なので翻訳しない。`MODIFIED` / `ADDED` と要件名も OpenSpec の構造・利用者入力として保持する。
-- フォローアップ: JSON 対応コマンドの文言を変更するときは、stdout が単一の JSON 文書として解析でき、キー構造が upstream と一致することを確認する。
-
-### 生成スキルと仕様: 構造トークンを翻訳しない
-- ファイル: `src/core/shared/skill-generation.ts`, `src/core/templates/workflows/`, `schemas/spec-driven/schema.yaml`, `skills/`
-- 翻訳対象: `description` の値、スキル本文、質問、警告、操作案内、生成するアーティファクトの説明文。
-- 翻訳しない対象: YAML frontmatter のキー、`allowed-tools`, `metadata`, `generatedBy`, `## Why`, `## What Changes`, `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`, `### Requirement:`, `#### Scenario:`, `SHALL`, `MUST`, `GIVEN`, `WHEN`, `THEN`。
-- 理由: これらは英語表示ではなく、パーサー、ツール、検証規則が読む構造トークン。翻訳するとファイルが自然な日本語に見えても、status、validate、archive が認識できなくなる。
-- 追加確認（v2.0.0 追従時）: 本仕様・仕様差分のシナリオで、`WHEN` または `GIVEN` の条件、`THEN` の結果が欠けると `validate` が警告し、`--strict` では失敗する。ステップの説明文を日本語化するときも、これらのラベルは英語のまま保持する。
-- フォローアップ: テンプレート文面を翻訳した後は静的 `skills/` を再生成し、parity ハッシュを更新する。生成物の本文が日本語で、構造トークンだけが英語で残ることを確認する。
-
-### ドキュメントサイト: 日本語版の参照先を維持
-
-- ファイル: `website/app/layout.tsx`, `website/lib/shared.ts`, `website/docs.sync.config.mjs`, `website/scripts/sync-docs.mjs`, `website/package.json`
-- 症状: upstream 同期で `lang="en"`、`Fission-AI/OpenSpec`、upstream のブランチ名、`@fission-ai/openspec` が戻ると、表示は日本語でも編集リンク、GitHubリンク、npmリンク、同期元が本家を指す。
-- 対応（v1.11.0）: HTML の言語を `ja`、リポジトリを `ayumuwall/OpenSpec-J`、同期ブランチを `ja-docs`、npm パッケージを `@ayumuwall/openspec` に統一する。
-- フォローアップ: Webサイト同期設定を取り込んだ後は、トップページ、ドキュメントの「編集」、GitHub、npm、sitemap、redirect の参照先をまとめて確認する。
-
-### CLI ヘルプ: Commander の標準表示を日本語化
-- 対応（v1.15.0 動作確認後）: `src/cli/help.ts` の `configureJapaneseHelp` で、見出し、組み込みヘルプの説明、選択肢・既定値・引数省略時の値・環境変数のラベルを日本語化する。`src/cli/index.ts` で子コマンド登録前に適用し、バージョンオプションの説明も日本語で指定する。
-- 互換性: コマンド名、フラグ、引数シグネチャ、設定値、環境変数名、JSON 出力は変更しない。ヘルプ全体への文字列置換は行わず、説明文や選択肢に含まれる英語もそのまま表示する。
-- 注意点: `optionDescription` と `argumentDescription` は Commander と同じ条件で付加情報を表示する。Commander 更新時は、真偽値オプションの既定値を表示する条件や、新しい付加情報の有無を確認する。
-- 検証: `test/cli-help.test.ts` で子・孫コマンドへの継承、値と引数解析の維持を確認し、`test/cli-e2e/basic.test.ts` で実 CLI のヘルプを確認する。
-
-## テスト期待値の更新が必要だった事例
-
-- `v1.2.0` `test/core/templates/skill-templates-parity.test.ts`
-  テンプレート文面変更後は `EXPECTED_FUNCTION_HASHES` / `EXPECTED_GENERATED_SKILL_CONTENT_HASHES` を更新する。
-- `v1.2.0` `src/prompts/searchable-multi-select.ts` 関連テスト
-  キーバインド変更に合わせてヒント文の期待値も更新する。
-- `v1.3.0` `test/commands/artifact-workflow.test.ts`
-  `status` の日本語化では CLI 出力と JSON `message` の期待値を更新する。
-- `v1.3.0` `test/core/templates/skill-templates-parity.test.ts`
-  `onboard` などワークフローテンプレート文面変更後は parity ハッシュを再計算する。
-- `v1.12.0` `test/utils/command-references.test.ts`、`test/core/shared/skill-content-equivalence.test.ts`、`test/core/update.test.ts`
-  Codex の日本語併記へ期待値と旧形式の生成フィクスチャを更新する。互換性を確認するための旧英語フィクスチャは一括翻訳しない。
-
-### 規範文の語尾を日本語で統一（SHALL/MUST）
-- 目的: 「MUST を文中に挿入した日本語」が不自然になりやすいため、語尾と括弧表記を固定し、出力の揺れを抑える。
-- 方針: 要件本文は SHALL/MUST のみを使用し、SHOULD/MAY は避ける。
-- ルール:
-  - 語尾は「〜しなければならない。(SHALL)」の形式に揃える
-  - 文中に SHALL/MUST を挿入しない
-- 実施内容（v1.0.2 以降）:
-  - `src/core/templates/skill-templates.ts` の差分仕様フォーマット説明に規範語ルールを追記し、例文を日本語化。
-  - `schemas/spec-driven/schema.yaml` の書式ルールに同ルールを追記。
-  - `src/core/validation/constants.ts` のエラーガイド例文を日本語化。
-  - `src/core/config-prompts.ts` の config.yaml テンプレートに言語設定・規範語ルールの例示を追加。
-- 廃止されたファイル（v1.0.2）:
-  - `src/core/templates/agents-template.ts` → 削除済み（skill-templates.ts に統合）
-  - `src/core/templates/slash-command-templates.ts` → 削除済み（skill-templates.ts に統合）
-  - `schemas/tdd/schema.yaml` → 削除済み
-  - `openspec/AGENTS.md` → 廃止（スキルベースのワークフローに移行）
+- 本家にはない `src/cli/help.ts` の `configureJapaneseHelp` を、`src/cli/index.ts` で子コマンド登録前に適用する。これにより、組み込みヘルプの見出しと選択肢・既定値などの表示ラベルを子・孫コマンドにも継承させる。
+- `optionDescription` / `argumentDescription` はラベルを日本語化しつつ、付加情報を表示する条件を Commander に合わせる。Commander 更新時にこの条件を取り落とすと、日本語版だけ既定値などの表示が変わる。対応する回帰検査は `test/cli-help.test.ts`。
