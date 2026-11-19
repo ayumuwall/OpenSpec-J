@@ -232,7 +232,7 @@ describe.skipIf(!enabled)('upgrading projects from released versions', () => {
     for (const [rel, data] of Object.entries(protectedFiles)) expect(readFileSync(path.join(box.project, rel), 'utf8')).toBe(data);
     expect(readFileSync(path.join(box.project, shared, '.openspec-target'), 'utf8')).toBe('claude own-files\ncursor\n');
     const before = snapshot(box.project);
-    expect(run(currentBin, ['update'], box).output).toContain('up to date');
+    expect(run(currentBin, ['update'], box).output).toContain('最新です');
     expect(snapshot(box.project)).toEqual(before);
   }, 600_000);
 
