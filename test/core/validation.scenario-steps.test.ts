@@ -145,7 +145,7 @@ describe('validate warns about a scenario that asserts nothing', () => {
       expect(warnings).toHaveLength(1);
       expect(warnings[0].message).toContain(`${section} "Credit Notes"`);
       expect(warnings[0].message).toContain('"Invoice voided"');
-      expect(warnings[0].message).toContain('WHEN/GIVEN の手順 と THEN の手順');
+      expect(warnings[0].message).toContain('WHEN/GIVEN の手順と THEN の手順がありません');
     });
 
     it(`fails --strict for ${section}`, async () => {
@@ -166,7 +166,7 @@ describe('validate warns about a scenario that asserts nothing', () => {
     const report = await validateDelta(deltaSpec('ADDED', NO_OUTCOME.join('\n')));
     const warnings = stepWarnings(report);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0].message).toContain('THEN の手順 がありません');
+    expect(warnings[0].message).toContain('THEN の手順がありません');
     expect(warnings[0].message).not.toContain('WHEN/GIVEN');
   });
 

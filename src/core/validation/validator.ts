@@ -1133,11 +1133,11 @@ export class Validator {
       if (hasTrigger && hasOutcome) continue;
       const missing = [!hasTrigger && 'WHEN/GIVEN の手順', !hasOutcome && 'THEN の手順']
         .filter((part): part is string => part !== false)
-        .join(' と ');
+        .join('と ');
       issues.push({
         level: 'WARNING',
         path: issuePath,
-        message: `${label}: シナリオ "${scenario.name}" に ${missing} がありません。シナリオには条件と結果が必要です。例: "- **WHEN** 請求書を無効にしたとき" と "- **THEN** クレジットノートを発行する"。`,
+        message: `${label}: シナリオ "${scenario.name}" に ${missing}がありません。シナリオには条件と結果が必要です。例: "- **WHEN** 請求書を無効にしたとき" と "- **THEN** クレジットノートを発行する"。`,
       });
     }
     return issues;
