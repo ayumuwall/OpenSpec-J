@@ -210,7 +210,7 @@ description: チームのカスタムワークフロー
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: 変更提案書
+    description: 変更の理由と概要をまとめる提案
     template: proposal.md
     instruction: |
       この変更が「なぜ」必要かを説明する提案を作成する。

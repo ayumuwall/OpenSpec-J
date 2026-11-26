@@ -1,6 +1,6 @@
 # 対応するスキルが未導入の場合
 
-依頼された手順のスキルがインストールされていないときに使います。各節は 1 つのスキルに対応する CLI での手順です。プロジェクトルートで実行し、`--json` の出力を読みます。スキルを追加するには、利用者が `openspec config profile` を実行して選択し、`openspec update` を実行します。
+担当スキルが未導入の場合は、該当する節の手順に従います。CLI はプロジェクトルートで実行します。スキルを追加するには、利用者が `openspec config profile` で選び、`openspec update` を実行します。
 
 ## openspec-explore
 
@@ -8,9 +8,11 @@
 
 ## openspec-propose, openspec-new-change, openspec-continue-change, openspec-ff-change
 
-1. 短いケバブケースの名前を使い、`openspec new change "<name>"` で変更提案を開始します。
+1. 短いケバブケースの名前を使い、`openspec new change "<name>"` で変更を作成します。
 2. `openspec status --change "<name>" --json` を実行し、作成可能なアーティファクトを確認します。
-3. アーティファクトごとに `openspec instructions <artifact-id> --change "<name>" --json` を実行します。`instruction` と `template` に従って、`outputPath` にファイルを書き込みます。
+3. アーティファクトごとに `openspec instructions <artifact-id> --change "<name>" --json` を実行します。`instruction` と `template` に従って内容を作成し、`resolvedOutputPath` に保存します。
+   - `resolvedOutputPath` が glob パターンの場合は、`instruction` に従い、パターンに一致する具体的な保存先を `changeDir` 内から選びます。
+   - 保存前に、親ディレクトリと既存ファイルのシンボリックリンクを解決しても、保存先が `changeDir` 内に収まることを確認します。範囲を外れる場合は停止し、利用者に伝えます。
 4. 手順 2 と 3 を繰り返します。段階的に進める場合はアーティファクトを 1 つ作ったら停止します。計画全体を依頼された場合は、計画が完成するまで続けます。
 
 ## openspec-update-change

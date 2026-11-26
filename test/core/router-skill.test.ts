@@ -143,6 +143,29 @@ describe('the router skill and its references', { timeout: 60_000 }, () => {
       expectPublished(path.join(dir, '.agents', 'skills', ROUTER));
     });
 
+    it('directs a fallback proposal to the resolved path in its change directory', async () => {
+      const dir = await project();
+      await setWorkflows(['explore']);
+      await cli(dir, 'init', '--scope', 'project', '--tools', 'claude');
+      const skills = path.join(dir, '.agents', 'skills');
+      expect(existsSync(path.join(skills, 'openspec-propose'))).toBe(false);
+      const reference = await fs.readFile(path.join(skills, ROUTER, 'references', 'without-skills.md'), 'utf8');
+      expect(reference).toContain('`resolvedOutputPath` に保存');
+      expect(reference).toContain('具体的な保存先を `changeDir` 内から選びます');
+      expect(reference).not.toContain('`outputPath`');
+
+      const change = 'router-fallback';
+      await cli(dir, 'new', 'change', change);
+      const output = await cli(dir, 'instructions', 'proposal', '--change', change, '--json');
+      const proposal = JSON.parse(output.stdout);
+      expect(proposal.outputPath).toBe('proposal.md');
+      expect(proposal.resolvedOutputPath).toBe(path.join(proposal.changeDir, 'proposal.md'));
+      await fs.writeFile(proposal.resolvedOutputPath, proposal.template, 'utf8');
+      const status = await cli(dir, 'status', '--change', change, '--json');
+      expect(JSON.parse(status.stdout).artifacts).toContainEqual(expect.objectContaining({ id: 'proposal', status: 'done' }));
+      expect(existsSync(path.join(dir, 'proposal.md'))).toBe(false);
+    });
+
     it('removes the router with its references when the profile has no workflows', async () => {
       const dir = await project();
       await cli(dir, 'init', '--scope', 'project', '--tools', 'claude');

@@ -89,12 +89,15 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-explore');
     await writeSkill(projectDir, 'openspec-apply-change');
 
-    migrateIfNeeded(projectDir, [ensureClaudeTool()]);
+    const message = captureMigrationLogs(projectDir, [ensureClaudeTool()]).join('\n');
 
     const config = readRawConfig();
     expect(config.profile).toBe('custom');
     expect(config.delivery).toBeUndefined();
     expect(config.workflows).toEqual(['explore', 'apply']);
+    expect(message).toContain('`openspec config profile` で「変更を提案」を選ぶ');
+    expect(message).toContain('`openspec update` を実行');
+    expect(message).not.toContain('openspec-propose');
   });
 
   it('keeps dry-run legacy results aligned with migration timing', async () => {
@@ -194,7 +197,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.codex');
 
     const message = captureMigrationLogs(projectDir, [requireTool('codex')]).find((entry) =>
-      entry.includes('変更提案の作成:')
+      entry.includes('提案を作成するには')
     );
     expect(message).toBeTruthy();
     expect(message).toContain('$openspec-propose');
@@ -211,11 +214,11 @@ describe('migration', () => {
     [['claude', 'qwen']],
   ])('names the propose skill, never a command, when migrating %j', async (toolIds) => {
     for (const toolId of toolIds) {
-      await writeManagedCommand(projectDir, 'apply', toolId);
+      await writeManagedCommand(projectDir, 'propose', toolId);
     }
 
     const message = captureMigrationLogs(projectDir, toolIds.map(requireTool)).find((entry) =>
-      entry.includes('変更提案の作成:')
+      entry.includes('提案を作成するには')
     );
     expect(message).toContain('/openspec-propose');
     expect(message).not.toMatch(/[/@]opsx[:-]propose/);
@@ -225,7 +228,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.kimi-code');
 
     const message = captureMigrationLogs(projectDir, [requireTool('kimi')]).find((entry) =>
-      entry.includes('変更提案の作成:')
+      entry.includes('提案を作成するには')
     );
     expect(message).toContain('/skill:openspec-propose');
     expect(message).not.toContain('/opsx:propose');
@@ -236,7 +239,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose', '.kimi-code');
 
     const message = captureMigrationLogs(projectDir, [requireTool('codex'), requireTool('kimi')]).find((entry) =>
-      entry.includes('変更提案の作成:')
+      entry.includes('提案を作成するには')
     );
     expect(message).toContain('openspec-propose スキル');
     expect(message).not.toContain('/skill:');
@@ -244,13 +247,13 @@ describe('migration', () => {
   });
 
   it('falls back to a syntax-neutral reference when command and skill-only tools mix (claude+kimi)', async () => {
-    // Claude will get /opsx:* commands but Kimi cannot invoke them; the one
-    // shared message must not advertise a form that is wrong for either tool
+    // A legacy Claude command and a Kimi skill both select the workflow.
+    // The tools use different invocation syntax after migration.
     await writeManagedCommand(projectDir, 'propose');
     await writeSkill(projectDir, 'openspec-propose', '.kimi-code');
 
     const message = captureMigrationLogs(projectDir, [ensureClaudeTool(), requireTool('kimi')]).find((entry) =>
-      entry.includes('変更提案の作成:')
+      entry.includes('提案を作成するには')
     );
     expect(message).toContain('openspec-propose スキル');
     expect(message).not.toContain('/opsx:propose');
@@ -267,7 +270,7 @@ describe('migration', () => {
     await writeSkill(projectDir, 'openspec-propose');
 
     const message = captureMigrationLogs(projectDir, [ensureClaudeTool()]).find((entry) =>
-      entry.includes('変更提案の作成:')
+      entry.includes('提案を作成するには')
     );
     expect(message).toContain('/openspec-propose');
     expect(message).not.toContain('/opsx:propose');

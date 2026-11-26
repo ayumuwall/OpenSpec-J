@@ -7,7 +7,7 @@ compatibility: openspec CLI が必要です。
 metadata:
   author: openspec
   version: "1.0"
-  references: "7a5c92065f74"
+  references: "ffac437caccd"
 ---
 
 OpenSpec は、ソフトウェアの振る舞いを利用者とコーディングエージェントが仕様として合意し、コードの変更に合わせて仕様を更新するためのツールです。変更は仕様差分として計画し、コードを書く前にレビューします。実装を終えたら、仕様差分を本仕様へ統合します。

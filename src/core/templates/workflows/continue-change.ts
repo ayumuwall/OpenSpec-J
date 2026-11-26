@@ -9,7 +9,7 @@ import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
 const PLANNING_COMPLETE_HANDOFF =
-  '計画のレビュー準備ができました。準備が整ったら、計画の適用を依頼してください。';
+  '内容を確認し、問題がなければ計画の適用を依頼してください。';
 
 /**
  * A glob artifact reads `done` once one matching file exists, so a run
@@ -70,7 +70,6 @@ ${PROJECT_ROOT_GUARD}
    ---
 
    **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
-   - 完了を祝う
    - 使用したスキーマを含む最終ステータスを表示する
    - 提案: 「計画が完了しました。${PLANNING_COMPLETE_HANDOFF}」
    - 停止する
@@ -196,10 +195,9 @@ ${PROJECT_ROOT_GUARD}
    ---
 
    **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
-- ユーザーに祝福を与える
-- 使用されたスキーマを含む最終ステータスを表示します
+   - 使用したスキーマを含む最終ステータスを表示する
    - 提案: 「計画が完了しました。${PLANNING_COMPLETE_HANDOFF}」
-- 停止
+   - 停止する
 
    ---
 

@@ -689,12 +689,16 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   // 例: グローバル設定の作成前に2.0で初期化したプロジェクト。
   if (migration.profile === 'core') return;
   console.log(`グローバル設定にプロファイルが未指定のため、既存の ${installedWorkflows.length} 個のワークフローを custom プロファイルとして保存しました。`);
-  // 各ツールで使える propose スキルの表記を選ぶ。
-  // 表記が一致しなければ、どのツールでも使えるスキル名で案内する。
+  if (!installedWorkflows.includes('propose')) {
+    console.log('提案スキルを追加するには、`openspec config profile` で「変更を提案」を選ぶか、`openspec config profile core` で基本のワークフローに切り替えてください。設定後に `openspec update` を実行してください。');
+    return;
+  }
+
   const proposeReferences = new Set(
     tools.map((tool) => getSkillReferenceTransformer(tool.value)('/opsx:propose'))
   );
   const proposeReference =
     proposeReferences.size === 1 ? [...proposeReferences][0] : 'openspec-propose スキル';
-  console.log(`変更提案の作成: ${proposeReference}。基本のワークフロー構成に切り替えるには、'openspec config profile core' を実行してください。`);
+  console.log(`提案を作成するには、${proposeReference} を使ってください。`);
+  console.log('基本のワークフローを使うには、`openspec config profile core` で切り替え、`openspec update` を実行してください。');
 }

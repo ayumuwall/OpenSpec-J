@@ -48,7 +48,7 @@ AI チャットで次のように依頼します。
 
 ```text
 /openspec add-rate-limiting は次に何をすればいい？
-/openspec 提案書に対象外の項目を必ず列挙するには？
+/openspec 提案に対象外の項目を必ず含めるには？
 /openspec add-rate-limiting を検証してからアーカイブして
 ```
 

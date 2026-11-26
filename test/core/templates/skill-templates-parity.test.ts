@@ -64,14 +64,14 @@ function specDrivenTitles(): Record<string, string> {
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: 'd89af53e3ca9c5cc8a4f8bef9800748fabb65d1a2699d0d7a21437e8deb4c14d',
   getNewChangeSkillTemplate: '5234e9901192e5089d5d7228e89e5bfe02bfc3e2a5392e62fad8b67c7bdf4dae',
-  getContinueChangeSkillTemplate: 'd3a8ee3d82d21284d241a1b24294e87052d835b1e8859fcad612f5c6bfcc1dbb',
+  getContinueChangeSkillTemplate: '229c7e332af9fdf28e525bd5871219980b4b88b049ced1e337a061597bb896cc',
   getApplyChangeSkillTemplate: 'c64c950b481bd771a4c4f3f06d7fbaa002c816fc07c1ff0b76abb1f23ad9f3be',
   getFfChangeSkillTemplate: '4c46e8c9a1d809825ca1809bf2ff8a75fa8377b6eacb6a4eb18d522dce0cbb04',
   getSyncSpecsSkillTemplate: '51f46af9460bb2bccadd9bde1284718333b47d6ec8c93aefa8dc390ac760d44d',
   getOnboardSkillTemplate: '558467345a5042aab2dde7f8310e48b89c88f40bb9ffc544a6ccfd14050a27e5',
   getOpsxExploreCommandTemplate: 'dfd5e1d6ba9705802becd934c3e3a356a944c7baba18362a69b4d5be61811878',
   getOpsxNewCommandTemplate: '2c1e6550345dbf3572786691f53b2eedc21beb91b4aa98ee689587505fe6de5e',
-  getOpsxContinueCommandTemplate: '65eaf4e57926b4395a4b17d60b3590286eb1b40a7834fdd6b35c70fd2ab553f1',
+  getOpsxContinueCommandTemplate: '98c4f1489158f179b69808da47addcce56248dcb2a88097d1a6b1b7e301b3267',
   getOpsxApplyCommandTemplate: '1c2e8b59af5d836915c94f6f7d35dbd306df0c591cb6bdcb644680c7ccfe20dd',
   getOpsxFfCommandTemplate: 'd6d7e49c249589d78611cea199354560ea4f413d81155335a3bfecfe4d08115c',
   getArchiveChangeSkillTemplate: 'ec5dc789b809f293fce549828615722248b9e8179560358867f9148c86ae56bb',
@@ -92,7 +92,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '1ca0537e80eb6c5309de8bd778fc40d29929589b44530ea27f1352e34e55074e',
   'openspec-new-change': '262c4bad964410476b060832b7062ca1199bd74fdc0390f3baaee56838b05a5b',
-  'openspec-continue-change': '817b99b9ac66fccf6b630859d1f04cfc3c33c1f71b0a191d094877ccb13649d6',
+  'openspec-continue-change': '21f114a3855d83e7f8ab0b0c9b41e7439341c3f9efd3ffd64d2e25b2e7835296',
   'openspec-apply-change': '51ff394689f6054eac085e311576d05f419d38a81eb4445b68467b75e3aa280d',
   'openspec-ff-change': '6fe7cb946b3c080ee0d102189d1bc7e97524f70131d3cdda31456be6e4a41981',
   'openspec-sync-specs': '4d592d47e0c42de3d752d87d91ff4cbcb8e22db4e112ee6398158422821db697',
@@ -102,7 +102,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-onboard': 'f1029536cbcaa04491c89a6ca1f0947a1dce504963c8285067ec08519091746b',
   'openspec-propose': '6ebd5c887304fee6b54dfd3dce187d7197a3393afcaf50a936f04e26dbe10763',
   'openspec-update-change': '3b639815abd81463ef3b5bcf39860625fb759bc23d0c212de8295bf083124f74',
-  'openspec': '100d82507cec9f09ed6e6a23fa50a0a6df07e7ab67e7650ed390d35931908a7f',
+  'openspec': '501fe2e7f9d67a346af7d137ace5e40685baac5d3d3a7512c9ae051d23b7297c',
 };
 
 // Intentionally excludes getFeedbackSkillTemplate: this list only models templates
@@ -1204,7 +1204,7 @@ describe('skill templates split parity', () => {
   });
 
   it('hands off to apply when continue completes planning, in the skill and the command (#2271)', () => {
-    const handoff = '計画が完了しました。計画のレビュー準備ができました。準備が整ったら、計画の適用を依頼してください。';
+    const handoff = '計画が完了しました。内容を確認し、問題がなければ計画の適用を依頼してください。';
     expect(generateSkillContent(getContinueChangeSkillTemplate(), 'PARITY-BASELINE')).toContain(handoff);
     expect(getOpsxContinueCommandTemplate().content).toContain(handoff);
   });

@@ -7,6 +7,8 @@ OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履�
 - **[OpenSpec-J]** OpenSpec v2.2.0 を取り込み、`/openspec` ルーターと参照ファイル、変更された CLI の案内を日本語化
 - **[OpenSpec-J]** 同梱スキルのロックファイルに日本語版の取得元を記録し、`npx skills add ayumuwall/OpenSpec-J` で導入したスキルを更新対象に追加
 - **[OpenSpec-J]** Homebrew の `openspec-j` を識別し、日本語版の更新とアンインストールを案内
+- **[OpenSpec-J]** 提案スキルが未導入の場合は追加手順を案内し、ルーターが提案を変更ディレクトリに保存する手順を明記
+- **[OpenSpec-J]** `proposal.md` の表記を「提案」にそろえ、計画の確認から適用へ進む案内を読みやすく整理
 
 ### マイナー変更
 

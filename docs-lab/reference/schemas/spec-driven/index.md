@@ -94,7 +94,7 @@ openspec/changes/add-user-auth/
 このアーティファクトの作成時にエージェントへ送る指示（[schema.yaml](https://github.com/ayumuwall/OpenSpec-J/blob/main/schemas/spec-driven/schema.yaml)）：
 
 ```md
-この変更がなぜ必要か（WHY）を明確にする提案ドキュメントを作成する。
+この変更が必要な理由を説明する提案を作成する。
 
 セクション:
 - **Why**: 問題または機会を1〜2文で示す。どの問題を、なぜ今解決するのか。
@@ -431,7 +431,7 @@ description: OpenSpec の既定ワークフロー - proposal → specs → desig
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: 変更の概要を示す初期提案ドキュメント
+    description: 変更の理由と概要をまとめる提案
     template: proposal.md
     # instruction: 上記 proposal.md に全文を表示
     requires: []
