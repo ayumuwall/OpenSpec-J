@@ -125,14 +125,14 @@ openspec init --scope project --tools claude
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-.agents/skills/ にスキル6個を作成しました（.claude/skills/ にも配置）
+.agents/skills/ にスキル7個を作成しました（.claude/skills/ にも配置）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 
 はじめに:
   最初の変更を開始: /openspec-propose "あなたのアイデア"
 ```
 
-マシンにスキルをインストールする場合は、概要に `~/.agents/skills/ にスキル6個を作成しました（このマシンの全プロジェクトで利用可能）` と表示し、プロジェクト内には `openspec/` だけを置きます。
+マシンにスキルをインストールする場合は、概要に `~/.agents/skills/ にスキル7個を作成しました（このマシンの全プロジェクトで利用可能）` と表示し、プロジェクト内には `openspec/` だけを置きます。
 
 `--tools none` は `openspec/` フォルダだけを作成し、ツールを設定しません。初期化済みのプロジェクトでは、インストール済みファイルをその場で書き直します。概要には `更新: Claude Code` と `設定: openspec/config.yaml（既存）` が表示されます。
 

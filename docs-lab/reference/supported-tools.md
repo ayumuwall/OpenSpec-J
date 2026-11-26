@@ -196,5 +196,5 @@ OpenSpec は各スキルを、プロジェクトの `.hermes/skills/` フォル�
   init の検索欄では`universal`、`other`、`generic`、`custom`、`proprietary`、
   `unlisted`、`unsupported`、`vendor-neutral`、`agents.md`で見つかります。
 - **他のツールとの併用**：すべてのツールが1つのスキルツリーを読み込みます。`.openspec-target` は設定済みツールを列挙します。削除するには、ツールのフォルダを削除します。固有フォルダがないツールでは、`.openspec-target` の該当行を削除します。
-- **独自スキル**：OpenSpec の組み込みスキルと異なる名前を選んでください。update は組み込みスキルを実行中の CLI の GitHub リリースタグに対応する指示へ置き換えます。別名のスキルは変更しません。
+- **独自スキル**：OpenSpec の組み込みスキルと異なる名前を選んでください。`openspec update` は、組み込みスキルを実行中の CLI と同じバージョンの内容で置き換えます。別名のスキルは変更しません。
 - **`AGENTS.md`**：作成も編集もしません。ターゲットはファイルではなく`.agents/`フォルダです。

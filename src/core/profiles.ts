@@ -35,6 +35,24 @@ export type WorkflowId = (typeof ALL_WORKFLOWS)[number];
 export type CoreWorkflowId = (typeof CORE_WORKFLOWS)[number];
 
 /**
+ * ルータースキルの ID。ワークフローの共通窓口で、プロファイルの選択項目からは除外する。
+ */
+export const ROUTER_WORKFLOW = 'router';
+
+/** スキルをインストールするすべての ID。選択可能なワークフローとルーターを含める。 */
+export const SKILL_WORKFLOWS = [...ALL_WORKFLOWS, ROUTER_WORKFLOW] as const;
+export type SkillWorkflowId = (typeof SKILL_WORKFLOWS)[number];
+
+/**
+ * プロファイルで選んだワークフローにルーターを追加する。
+ * 選択が空の場合はルーターも追加しない。
+ */
+export function withRouter(workflows: readonly string[]): readonly string[] {
+  if (!workflows.length || workflows.includes(ROUTER_WORKFLOW)) return workflows;
+  return [...workflows, ROUTER_WORKFLOW];
+}
+
+/**
  * Resolves which workflows should be active for a given profile configuration.
  *
  * - 'core' profile always returns CORE_WORKFLOWS

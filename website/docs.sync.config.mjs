@@ -34,10 +34,6 @@ export const sections = [
       { source: 'start/installation.md', slug: 'installation' },
       { source: 'start/setup.md', slug: 'setup' },
       { source: 'start/quickstart.md', slug: 'quickstart' },
-      // Not `upgrade-to-2-1`: the search index names each section of a page
-      // `<url>-<n>`, so that slug collides with the first section of `upgrade-to-2`.
-      { source: 'help/upgrade-to-2-1.md', slug: 'upgrade-2-1' },
-      { source: 'help/upgrade-to-2.md', slug: 'upgrade-to-2' },
     ],
   },
   // ガイドは執筆完了まで公開しない。公開時はフォルダ構造を維持したまま項目を
@@ -140,6 +136,16 @@ export const sections = [
         ],
       },
       */
+    ],
+  },
+  // One page per release that needs action, newest first.
+  {
+    label: 'Upgrading',
+    pages: [
+      // Not `upgrade-to-2-1`: the search index names each section of a page
+      // `<url>-<n>`, so that slug collides with the first section of `upgrade-to-2`.
+      { source: 'help/upgrade-to-2-1.md', slug: 'upgrade-2-1' },
+      { source: 'help/upgrade-to-2.md', slug: 'upgrade-to-2' },
     ],
   },
   // TODO（2026-08-21から非公開）: HelpとLegacyは未完成（FAQは回答1件、

@@ -2,12 +2,12 @@
 
 ## 対象
 
-v2.1.0 のコードに残る、日本語版固有の判定・変換・互換処理と、その依存関係を記録する。本家と共通の仕様、翻訳方針、単なる文言修正、作業・検証履歴は含めない。
+v2.2.0 のコードに残る、日本語版固有の判定・変換・互換処理と、その依存関係を記録する。本家と共通の仕様、翻訳方針、単なる文言修正、作業・検証履歴は含めない。
 
-## 公開スキルの取得先と本文照合
+## 同梱スキルとロックファイルの取得元
 
-- `src/core/skill-installer.ts` は `ayumuwall/OpenSpec-J/skills` から取得し、`RELEASE_TAG_PREFIX` は `@ayumuwall/openspec@` とする。取得したスキルは日本語テンプレートから生成した期待値と照合するため、取得先やタグ接頭辞だけを本家へ戻すと、日本語版の取得・照合が失敗する。
-- `test/helpers/skill-release.mjs` と `test/core/project-skills-vercel.test.ts` の Git URL 置換先・代替タグも、本体の日本語版リポジトリ・タグ接頭辞と対応させる。
+- `src/core/skill-installer.ts` は、CLI が同梱する日本語テンプレートからスキルをインストールする。グローバルインストール時は `skills` パッケージのロックファイルに `ayumuwall/OpenSpec-J` の GitHub URL、版タグ、スキルフォルダのハッシュを記録する。`npx skills update -g` が日本語版を参照できるよう、タグ上の `skills/` も同じ内容から生成する。
+- `src/core/shared-skill-target.ts` は、`skills-lock.json` が OpenSpec-J または本家の取得元を記録している場合に共有スキルを検出する。`npx skills add ayumuwall/OpenSpec-J` で導入したスキルを更新できるよう、日本語版のリポジトリ名も認識する。
 
 ## 旧日本語版の生成内容の識別
 
@@ -16,7 +16,7 @@ v2.1.0 のコードに残る、日本語版固有の判定・変換・互換処�
 
 ## 単体実行版の導入先判定と日本語インストーラー
 
-- `src/commands/install-standalone.ts` の Homebrew 判定は `Cellar/openspec-j/`、削除コマンドは `brew uninstall openspec-j` とする。本家の `openspec` 判定では日本語版の導入方法を識別できない。
+- `src/core/version-check.ts` は `Cellar/openspec-j/` を Homebrew と判定し、`brew upgrade ayumuwall/tap/openspec-j` を案内する。`src/commands/install-standalone.ts` は同じ判定結果を使い、`brew uninstall openspec-j` を案内する。別の判定を持つと導入方法によって npm と誤認する。
 - インストーラーは `ayumuwall/OpenSpec-J` の `ja-docs`、バイナリーは同リポジトリの Releases から取得する。`main` は本家のリリースコミットを保持するブランチなので、日本語インストーラーの取得元にしない。
 - `scripts/binary/install.ps1` の UTF-8 BOM を保持する。Windows PowerShell 5.1 が日本語を読み込むために必要。
 - `src/commands/install-standalone.ts` の `WINDOWS_RUNNER` は `Invoke-WebRequest -OutFile` で取得したバイト列を一時 `.ps1` ファイルとして実行し、出力を UTF-8 にする。本家の `irm | iex` に戻すと、charset のない HTTP 応答で BOM と日本語を誤読する。対応する回帰検査は `test/commands/install-standalone.test.ts`。
@@ -35,7 +35,7 @@ v2.1.0 のコードに残る、日本語版固有の判定・変換・互換処�
 
 ## 旧コマンドの日本語入力見出しの検出
 
-- `src/core/command-generation/adapters/` の `atomcode.ts`、`command-code.ts`、`oh-my-pi.ts`、`opencode.ts`、`pi.ts` は、`Input` / `入力` と半角・全角コロンを認識する。v2.1.0 でも `src/core/shared/command-reconcile.ts` が生成内容を再現して旧コマンドを判別するため、この対応が必要。
+- `src/core/command-generation/adapters/` の `atomcode.ts`、`command-code.ts`、`oh-my-pi.ts`、`opencode.ts`、`pi.ts` は、`Input` / `入力` と半角・全角コロンを認識する。v2.2.0 でも `src/core/shared/command-reconcile.ts` が生成内容を再現して旧コマンドを判別するため、この対応が必要。
 - Command Code の重複挿入防止は `Provided arguments` / `入力された引数` の両方を認識する。OpenCode の引数不要判定は `None required` に加え、日本語の `不要` / `指定不要` と後続の句読点などを認識する。日本語の語境界を英語用の `\b` へ置き換えない。
 
 ## 日本語の Purpose プレースホルダーの検出

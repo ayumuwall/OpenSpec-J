@@ -105,6 +105,10 @@ metadata:
 
 4. **仕様差分の同期状態を評価します**
 
+   **最初にアーカイブ先を確認します。** 変更名が `YYYY-MM-DD-` で始まる場合はそのまま `<target-name>` として記録します。それ以外は現在の日付を先頭に付け、`YYYY-MM-DD-<change-name>` として記録します。`openspec archive` と同じく、日付を重ねて付けません。
+
+   `<planningHome.changesDir>/archive/<target-name>` が既に存在する場合は、本仕様に書き込む前に停止します。競合を報告し、今回すでに同期した本仕様があれば名前を示します。`changeRoot` は移動せず、既存のアーカイブか今回の変更の名前を変更するよう案内します。
+
    status JSONの `artifactPaths.specs.existingOutputPaths` だけを仕様差分の情報源として使用します。
    `specs` 項目がない、または `existingOutputPaths` が空の場合は、同期の確認なしで続行し、
    他のアーティファクトから仕様差分を推測しません。
@@ -129,6 +133,8 @@ metadata:
    - 「同期せずにarchive」または「今すぐarchive」— archiveへ進む
    - 「今すぐ同期」または「再同期してアーカイブ」— 同期してから、後述の検証を行う。同期がブロックされる機能がある間は、どの同期も開始せず、理由を説明して選択肢を再提示する
    - その他 — archiveせず、もう一度質問する
+
+   ここでアーカイブ先を再確認します。`<planningHome.changesDir>/archive/<target-name>` が存在する場合は、本仕様に書き込む前に停止し、`changeRoot` は移動しません。既存のアーカイブか今回の変更の名前を変更するよう案内します。
 
    選択された同期で本仕様へ書き込む前に、同じ選択済みルートのフラグを付けて
    `openspec instructions specs --change "<name>" --json` を1回実行します。
@@ -173,13 +179,11 @@ metadata:
    mkdir -p "<planningHome.changesDir>/archive"
    ```
 
-   対象名を生成します。変更名がすでに `YYYY-MM-DD-` で始まる場合はそのまま使用し、
-   それ以外は現在の日付を `YYYY-MM-DD-<change-name>` として先頭に付けます。
-   2つ目の日付を重ねてはいけません（`openspec archive` と同じ規則）。
+   手順 4 で記録した `<target-name>` をそのまま使います。
 
-**ターゲットが既に存在するかどうかを確認します:**
-- 「はい」の場合: エラーで失敗します。既存のアーカイブの名前を変更するか、別の日付を使用することを提案します。
-- 「いいえ」の場合: `changeRoot` をアーカイブ ディレクトリに移動します。
+   **移動の直前に、アーカイブ先を再確認します。**
+   - 存在する場合はエラーとして停止し、`changeRoot` は移動しません。手順 4 で同期した本仕様があれば報告し、既存のアーカイブか今回の変更の名前を変更するよう案内します。
+   - 存在しない場合は、`changeRoot` をアーカイブ先に移動します。
 
    ```bash
    mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"

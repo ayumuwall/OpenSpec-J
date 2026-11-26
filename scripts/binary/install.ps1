@@ -141,11 +141,17 @@
       $old = "$target.old-" + [Guid]::NewGuid().ToString('N')
       Rename-Item -Path $target -NewName (Split-Path $old -Leaf)
     }
-    try {
-      Move-Item -Path $exe -Destination $target
-    } catch {
-      if ($old) { Rename-Item -Path $old -NewName $name -ErrorAction SilentlyContinue }
-      throw "openspec install: ${target} へインストールできませんでした: $($_.Exception.Message)"
+    # バージョン確認で実行した exe を Windows が一時的にロックする場合がある。
+    # ウイルス対策ソフトのスキャンなどで移動できなければ、時間を置いて再試行する。
+    for ($attempt = 1; ; $attempt++) {
+      try {
+        Move-Item -Path $exe -Destination $target
+        break
+      } catch {
+        if ($attempt -lt 10) { Start-Sleep -Milliseconds 500; continue }
+        if ($old) { Rename-Item -Path $old -NewName $name -ErrorAction SilentlyContinue }
+        throw "openspec install: ${target} へインストールできませんでした: $($_.Exception.Message)"
+      }
     }
     if ($old) { Remove-Item -Force -Path $old -ErrorAction SilentlyContinue }
     # Clear any "downloaded from the internet" mark so Windows does not block it.

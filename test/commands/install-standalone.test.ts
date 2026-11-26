@@ -90,7 +90,12 @@ describe('openspec install', () => {
 
     it('sends the Homebrew formula to brew', () => {
       const cellar = '/opt/homebrew/Cellar/openspec-j/1.14.3/libexec/lib/node_modules/@ayumuwall/openspec';
-      expect(removeCommandFor(global('npm', cellar))).toBe('brew uninstall openspec-j');
+      expect(removeCommandFor(global('homebrew', cellar))).toBe('brew uninstall openspec-j');
+    });
+
+    it('suggests no npm command for a Nix store copy (#2186)', () => {
+      const store = '/nix/store/abc123-openspec-2.1.0/lib/node_modules/@ayumuwall/openspec';
+      expect(removeCommandFor(global('nix', store))).toBeNull();
     });
 
     it('suggests nothing for copies that are not a global install', () => {

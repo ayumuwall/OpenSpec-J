@@ -8,7 +8,7 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { AI_TOOLS, installerAgent, SKILL_LINKED_TOOL_IDS } from './config.js';
 import { CommandAdapterRegistry } from './command-generation/index.js';
-import { ALL_WORKFLOWS } from './profiles.js';
+import { SKILL_WORKFLOWS } from './profiles.js';
 import { WORKFLOW_TO_SKILL_DIR } from './profile-sync-drift.js';
 import { COMMAND_IDS } from './shared/tool-detection.js';
 import { isReleasedGeneratedContent } from './shared/generated-fingerprint.js';
@@ -18,11 +18,15 @@ import { FileSystemUtils } from '../utils/file-system.js';
 import { DISK_VIEW, type FileView } from './file-view.js';
 import { isToolListed } from './shared-skill-target.js';
 import { SHARED_SKILLS_ROOT, usesSharedSkills } from './shared/skill-paths.js';
+import { expectedSkillFiles } from './skill-installer.js';
 
 const SHARED_TARGET_MARKER = '.openspec-target';
 
 const toPosix = (p: string) => p.split(path.sep).join('/').replace(/\\/g, '/');
 const topFolder = (rel: string) => rel.split('/')[0];
+
+/** スキルフォルダからの相対パスで、SKILL.md と参照ファイルを列挙する。 */
+const skillFiles = (dirName: string) => [...(expectedSkillFiles('current').get(dirName)?.keys() ?? ['SKILL.md'])];
 
 /**
  * 現行版が特定ツールだけに書き込むプロジェクト相対パス。
@@ -35,10 +39,10 @@ function toolSpecificPathsForTool(toolId: string): string[] {
   const paths: string[] = [];
   const ownSkillsRoot = SKILL_LINKED_TOOL_IDS.has(tool.value) ? installerAgent(tool.value).projectSkillsDir : undefined;
   if (ownSkillsRoot) {
-    for (const workflow of ALL_WORKFLOWS) {
+    for (const workflow of SKILL_WORKFLOWS) {
       const skillDir = `${ownSkillsRoot}/${WORKFLOW_TO_SKILL_DIR[workflow]}`;
       // リンク、またはリンクを作成できない場合の通常コピー。
-      paths.push(skillDir, `${skillDir}/SKILL.md`);
+      paths.push(skillDir, ...skillFiles(WORKFLOW_TO_SKILL_DIR[workflow]).map((file) => `${skillDir}/${file}`));
     }
   }
   const adapter = CommandAdapterRegistry.get(tool.value);
@@ -57,8 +61,9 @@ function currentPathsForTool(toolId: string): string[] {
   if (!tool) return [];
   const paths = toolSpecificPathsForTool(toolId);
   if (usesSharedSkills(tool)) {
-    for (const workflow of ALL_WORKFLOWS) {
-      paths.push(`${SHARED_SKILLS_ROOT}/skills/${WORKFLOW_TO_SKILL_DIR[workflow]}/SKILL.md`);
+    for (const workflow of SKILL_WORKFLOWS) {
+      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+      for (const file of skillFiles(dirName)) paths.push(`${SHARED_SKILLS_ROOT}/skills/${dirName}/${file}`);
     }
   }
   return paths;

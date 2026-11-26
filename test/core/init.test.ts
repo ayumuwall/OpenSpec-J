@@ -783,7 +783,7 @@ describe('InitCommand', () => {
         .map(String);
       const summary = logCalls.find((entry) => / にスキル\d+個を作成しました/.test(entry));
       expect(summary).toBe(
-        '.agents/skills/ にスキル6個を作成しました（.claude/skills/, .minimax/skills/ にも配置）'
+        '.agents/skills/ にスキル7個を作成しました（.claude/skills/, .minimax/skills/ にも配置）'
       );
     });
 
@@ -1040,6 +1040,7 @@ describe('InitCommand', () => {
       // Grok reads the one shared copy of the skills.
       const skillsDir = path.join(testDir, '.agents', 'skills');
       const skillNames = [
+        'openspec',
         'openspec-apply-change',
         'openspec-archive-change',
         'openspec-explore',

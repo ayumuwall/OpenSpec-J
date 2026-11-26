@@ -202,6 +202,8 @@ export interface DeltaPlan {
   /** Canonical requirement blocks written outside every delta section. */
   orphanedRequirements: OrphanedRequirement[];
   unappliedContent: UnappliedContent[];
+  /** 先頭のフロントマターは、アーカイブ後も変更提案に残る。 */
+  hasFrontmatter: boolean;
   skippedHeaders: SkippedHeader[]; // non-canonical ### headers the reader skipped
   sectionPresence: {
     added: boolean;
@@ -234,6 +236,9 @@ interface SectionBody {
 export function parseDeltaSpec(content: string): DeltaPlan {
   const normalized = normalizeLineEndings(content);
   const lines = normalized.split('\n');
+  // 空行で置き換えて、診断の行番号と元ファイルの行番号を揃える。
+  const frontmatterEnd = findFrontmatterEnd(lines);
+  lines.fill('', 0, frontmatterEnd);
   const fenceMask = buildCodeFenceMask(lines);
   const sections = splitTopLevelSections(lines, fenceMask);
   const addedLookup = getSectionsCaseInsensitive(sections, 'ADDED Requirements');
@@ -277,6 +282,7 @@ export function parseDeltaSpec(content: string): DeltaPlan {
     unpairedRenames,
     orphanedRequirements: findOrphanedRequirements(lines, fenceMask),
     unappliedContent: findUnappliedContent(lines, fenceMask),
+    hasFrontmatter: frontmatterEnd > 0,
     skippedHeaders,
     sectionPresence: {
       added: addedLookup.found,
@@ -373,6 +379,35 @@ function maskHtmlComments(lines: string[], fenceMask: boolean[]): string[] {
     .replace(/<!--[\s\S]*?(?:--!?>|$)/g, (m) => m.replace(/[^\n]/g, ' '))
     .split('\n');
   return lines.map((line, i) => (fenceMask[i] ? line : comments[i]));
+}
+
+/** YAML マッピングの項目に見える行。例は `owner: a`、`"owner": a`、`owner:`。 */
+const FRONTMATTER_KEY_REGEX = /^(?:"[^"]+"|'[^']+'|[\p{L}\p{N}_.-]+)\s*:(?:\s|$)/u;
+
+/**
+ * フロントマター直後の行のインデックスを返す。該当しなければ 0。
+ * 形式はチームによって異なり、正しい YAML とは限らないため、中のフィールドは読まない。
+ * 区切り線 `---` で本文が隠れないよう、最初の項目がキーに見えるか確認する。
+ * `##` などの見出しがあれば本文のセクションとして扱う。
+ * テキストがありキーがないブロックはフロントマターとして扱わない。
+ */
+export function findFrontmatterEnd(lines: string[]): number {
+  if (lines[0].trimEnd() !== '---') return 0;
+  let sawKey = false;
+  let sawComment = false;
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^#{2,6}(?:\s|$)/.test(line) || REQUIREMENT_HEADER_REGEX.test(line)) return 0;
+    if (line.trimEnd() === '---') return sawKey || !sawComment ? i + 1 : 0;
+    if (sawKey || !line.trim()) continue;
+    if (line.trimStart().startsWith('#')) {
+      sawComment = true;
+      continue;
+    }
+    if (!FRONTMATTER_KEY_REGEX.test(line)) return 0;
+    sawKey = true;
+  }
+  return 0;
 }
 
 function findUnappliedContent(lines: string[], fenceMask: boolean[]): UnappliedContent[] {

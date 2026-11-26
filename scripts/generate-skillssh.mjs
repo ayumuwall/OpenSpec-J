@@ -1,22 +1,20 @@
 #!/usr/bin/env node
 
 /**
- * Generate the static skills.sh distribution of the OpenSpec workflow skills.
+ * skills.sh で配布する OpenSpec のスキルを生成する。
  *
- * skills.sh installs skills by reading committed `SKILL.md` files straight from
- * a GitHub repo. This script builds the committed `skills/<name>/SKILL.md`
- * files used by both `openspec init` and `npx skills add ayumuwall/OpenSpec-J`.
+ * `npx skills add ayumuwall/OpenSpec-J` が GitHub から取得する SKILL.md と参照ファイルを、
+ * CLI と同じテンプレートから `skills/<name>/` に生成する。
  *
- * The committed copies are kept honest by `test/core/templates/skillssh-parity.test.ts`,
- * which regenerates and diffs against disk. Run this after any skill-template
- * change: `pnpm build && pnpm generate:skills`.
+ * `test/core/templates/skillssh-parity.test.ts` が生成物とコミット済みの内容を比較する。
+ * テンプレートを変更したら `pnpm build && pnpm generate:skills` を実行する。
  */
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getSkillTemplates, generateSkillContent } from '../dist/core/shared/skill-generation.js';
+import { getSkillTemplates, generateSkillFiles } from '../dist/core/shared/skill-generation.js';
 import { transformToSharedSkillReferences } from '../dist/utils/command-references.js';
 import {
   cleanSkillSubdirectories,
@@ -32,13 +30,12 @@ cleanSkillSubdirectories(outDir);
 
 let count = 0;
 for (const { template, dirName } of getSkillTemplates()) {
-  // skills.sh installs SKILL.md files only — no /opsx:* commands exist in
-  // that channel, so references must point at the skills themselves.
-  const content = stripVolatileFrontmatter(
-    generateSkillContent(template, 'skills.sh', transformToSharedSkillReferences)
-  );
+  // skills.sh はスキルフォルダだけを配置するため、参照先には /opsx:* コマンドでなくスキル名を使う。
   const skillDir = prepareSkillDirectory(outDir, dirName);
-  writeFileSync(join(skillDir, 'SKILL.md'), content, 'utf8');
+  for (const [file, content] of generateSkillFiles(template, 'skills.sh', transformToSharedSkillReferences)) {
+    mkdirSync(dirname(join(skillDir, file)), { recursive: true });
+    writeFileSync(join(skillDir, file), stripVolatileFrontmatter(content), 'utf8');
+  }
   count++;
 }
 

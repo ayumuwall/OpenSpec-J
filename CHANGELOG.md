@@ -2,6 +2,44 @@
 
 OpenSpec-J（Fission-AI/OpenSpec の日本語フォーク）の公式変更履歴です。本プロジェクトで行った変更は **[OpenSpec-J]** タグで記載しています。
 
+## 2.2.0
+
+- **[OpenSpec-J]** OpenSpec v2.2.0 を取り込み、`/openspec` ルーターと参照ファイル、変更された CLI の案内を日本語化
+- **[OpenSpec-J]** 同梱スキルのロックファイルに日本語版の取得元を記録し、`npx skills add ayumuwall/OpenSpec-J` で導入したスキルを更新対象に追加
+- **[OpenSpec-J]** Homebrew の `openspec-j` を識別し、日本語版の更新とアンインストールを案内
+
+### マイナー変更
+
+- [#2287](https://github.com/Fission-AI/OpenSpec/pull/2287) [`8ad4406`](https://github.com/Fission-AI/OpenSpec/commit/8ad4406a7f47b7d66b66b3b52ed4eef1de7a2a7f) [@clay-good](https://github.com/clay-good) に感謝します！ - OpenSpec の共通窓口となるルータースキル `openspec` を追加しました。AI チャットで `/openspec`（Codex では `$openspec`）を開き、「add-auth はどこまで進んだ？」「スキーマを追加するには？」「add-auth を検証してからアーカイブして」などと依頼できます。質問にはその場で答え、操作は該当するスキルへ振り分けます。
+
+  操作方法を知りたいとき、変更の進捗を確認したいとき、複数の手順をまとめて依頼したいときに使います。ルーターは OpenSpec のフォルダ、コマンド、ワークフローをエージェントに示し、最初にプロジェクトの状態を確認します。手順に必要なスキルが未導入なら CLI で実行します。使うスキルが分かっている場合は、引き続きタブ補完で直接呼び出せます。
+
+  ルーターは `core` と `custom` の両プロファイルに含まれ、`openspec update` で追加されます。`openspec config profile` の選択項目には表示されません。
+
+  スキルの補足資料は、`SKILL.md` と同じ階層にある `references/` に置けます。エージェントは最初に `SKILL.md` を読み、必要な資料だけを開きます。OpenSpec はスキルと一緒に参照ファイルをインストール、更新、削除します。ルーターは参照ファイルを使う最初のスキルです。
+
+## 2.1.1
+
+### パッチ変更
+
+- [#2267](https://github.com/Fission-AI/OpenSpec/pull/2267) [`168a5ea`](https://github.com/Fission-AI/OpenSpec/commit/168a5eacc639f9625f6c151613bcb5c46cb2c236) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec archive` が本仕様を新規作成する際、`## Purpose` の後に空行を入れます。生成直後の仕様が Prettier と markdownlint（MD022）の検査に通ります。
+
+- [#2277](https://github.com/Fission-AI/OpenSpec/pull/2277) [`e6539de`](https://github.com/Fission-AI/OpenSpec/commit/e6539de023915e36848b351ea737ca8e192e8538) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec-archive-change` は本仕様へ書き込む前にアーカイブ先のフォルダが存在するか確認します。
+
+- [#2264](https://github.com/Fission-AI/OpenSpec/pull/2264) [`efdf531`](https://github.com/Fission-AI/OpenSpec/commit/efdf5319b58bcba3ea113528168793d2610ce5a4) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec version --check` と `openspec update` は、Homebrew や Nix で導入した環境では `npm install -g` による更新を提案しません。Homebrew は `homebrew` と表示し、日本語版では `brew upgrade ayumuwall/tap/openspec-j` を案内します。Nix は `nix` と表示します。
+
+- [#2274](https://github.com/Fission-AI/OpenSpec/pull/2274) [`ad0579d`](https://github.com/Fission-AI/OpenSpec/commit/ad0579d3ff89459154220b68a834aed125d9c1f2) [@clay-good](https://github.com/clay-good) に感謝します！ - continue スキルは、計画が完了したら変更の適用を案内します。
+
+- [#2273](https://github.com/Fission-AI/OpenSpec/pull/2273) [`e0fdff3`](https://github.com/Fission-AI/OpenSpec/commit/e0fdff34466f1adf93d90cdb0e4382bcf0b6fd3d) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec validate --strict` が先頭にフロントマターを含む仕様差分を受け付けるようになりました。アーカイブ時はフロントマターを変更ディレクトリに保持し、そのことをメッセージで明示します。
+
+- [#2283](https://github.com/Fission-AI/OpenSpec/pull/2283) [`4ff226b`](https://github.com/Fission-AI/OpenSpec/commit/4ff226bbd11645b7c6ae48332f8c87ff94212aa1) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec init` と `openspec update` は、インストール済みの npm パッケージに同梱されたスキルを使います。CLI と同じバージョンのスキルを、オフラインで Git を使わずに導入できます。
+
+- [#2266](https://github.com/Fission-AI/OpenSpec/pull/2266) [`a1213fc`](https://github.com/Fission-AI/OpenSpec/commit/a1213fcdc768948034a48d8837c9e0543d124e16) [@clay-good](https://github.com/clay-good) に感謝します！ - 機能を廃止するとき、要件やシナリオの折り返し行が `<args> are passed on` のように `<` で始まり、その後に本文が続く場合も処理できます。生の HTML やタグだけの行は引き続き要件外の内容として報告します。
+
+- [#2269](https://github.com/Fission-AI/OpenSpec/pull/2269) [`a0993e9`](https://github.com/Fission-AI/OpenSpec/commit/a0993e9d56d503148f13b10ea0e8f4eec2f8ce68) [@clay-good](https://github.com/clay-good) に感謝します！ - `openspec update` は、`npx skills add` がプロジェクトに配置したスキルも検出して更新します。
+
+- [#2265](https://github.com/Fission-AI/OpenSpec/pull/2265) [`499602e`](https://github.com/Fission-AI/OpenSpec/commit/499602e82cd2e389586a8b781f27deb8737d8537) [@clay-good](https://github.com/clay-good) に感謝します！ - `MODIFIED` の要件が本仕様の要件より長くなり、500 文字の上限を超えた場合に警告します。`openspec validate <change> --strict` でアーカイブ前に検出できます。
+
 ## 2.1.0
 
 - **[OpenSpec-J]** グローバルスキルの導入・更新、CLI の案内、アップグレード手順を日本語化し、日本語版の公開スキルを取得するよう配布先を維持。

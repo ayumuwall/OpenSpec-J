@@ -72,7 +72,7 @@ ${PROJECT_ROOT_GUARD}
    **すべての計画アーティファクトが完了している場合（\`isPlanningComplete: true\`、または旧形式の \`isComplete: true\`）**:
    - 完了を祝う
    - 使用したスキーマを含む最終ステータスを表示する
-   - 提案: 「計画が完了しました。実装を始める前に計画をレビューしてください。」
+   - 提案: 「計画が完了しました。${PLANNING_COMPLETE_HANDOFF}」
    - 停止する
 
    ---

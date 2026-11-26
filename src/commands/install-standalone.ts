@@ -53,11 +53,9 @@ export function resolveInstallTarget(
 /** The command that removes a package-manager install, or null when there is nothing to remove. */
 export function removeCommandFor(install: CliInstallInfo): string | null {
   if (install.scope !== 'global') return null;
-  // The Homebrew formula keeps its own npm tree under Cellar; brew owns it.
-  if (install.location && /[\\/]Cellar[\\/]openspec-j[\\/]/i.test(install.location)) {
-    return 'brew uninstall openspec-j';
-  }
   switch (install.packageManager) {
+    case 'homebrew':
+      return 'brew uninstall openspec-j';
     case 'npm':
       return 'npm uninstall -g @ayumuwall/openspec';
     case 'pnpm':

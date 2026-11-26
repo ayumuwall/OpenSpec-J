@@ -15,6 +15,7 @@ import { stripVolatileFrontmatter } from '../../scripts/skillssh-shared.mjs';
 // cannot stand in for two machines.
 
 const CORE_SKILLS = [
+  'openspec',
   'openspec-apply-change',
   'openspec-archive-change',
   'openspec-explore',
@@ -24,7 +25,7 @@ const CORE_SKILLS = [
 ];
 
 describe("the repository's own maintainer skills", () => {
-  // `npx skills add Fission-AI/OpenSpec` scans the whole repository. The skills
+  // `npx skills add ayumuwall/OpenSpec-J` scans the whole repository. The skills
   // in .agents/skills are for working on OpenSpec, so each is marked internal,
   // which is how the skills package knows to leave it out.
   it('are hidden from anyone installing the published skills', async () => {
@@ -123,7 +124,7 @@ describe('skills installed このマシン', { timeout: 60_000 }, () => {
     const result = await cli(dir, 'init', '--scope', 'global', '--tools', 'claude,codex');
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('~/.agents/skills/ にスキル6個を作成しました（このマシンの全プロジェクトで利用可能）');
+    expect(result.stdout).toContain('~/.agents/skills/ にスキル7個を作成しました（このマシンの全プロジェクトで利用可能）');
     expect(await entries(dir)).toEqual(['openspec']);
     expect(await globalSkills()).toEqual(CORE_SKILLS);
     // Claude Code reads its own folder, so it gets each skill there too.
@@ -133,10 +134,48 @@ describe('skills installed このマシン', { timeout: 60_000 }, () => {
     // The `skills` package tracks them in its own lock file.
     const lock = JSON.parse(readFileSync(globalLock(), 'utf8'));
     expect(Object.keys(lock.skills).sort()).toEqual(CORE_SKILLS);
-    expect(lock.skills['openspec-propose']).toMatchObject({
-      ref: `v${version}`,
-      skillPath: 'skills/openspec-propose/SKILL.md',
-    });
+    // Tracked as the release's GitHub tag, so `npx skills update -g` can check them.
+    const release = path.dirname(process.env.GIT_CONFIG_GLOBAL!);
+    for (const name of CORE_SKILLS) {
+      expect(lock.skills[name]).toMatchObject({
+        source: 'ayumuwall/OpenSpec-J',
+        sourceType: 'github',
+        sourceUrl: 'https://github.com/ayumuwall/OpenSpec-J.git',
+        ref: `v${version}`,
+        skillPath: `skills/${name}/SKILL.md`,
+        skillFolderHash: execFileSync('git', ['-C', release, 'rev-parse', `v${version}:skills/${name}`], { encoding: 'utf8' }).trim(),
+      });
+    }
+  });
+
+  it("keeps everything else in the skills package's lock file", async () => {
+    const other = { source: 'team/skills', sourceType: 'github', skillFolderHash: 'abc' };
+    await fs.mkdir(path.dirname(globalLock()), { recursive: true });
+    await fs.writeFile(globalLock(), JSON.stringify({
+      version: 3,
+      skills: { 'team-skill': other, 'openspec-propose': { source: 'old', installedAt: '2026-01-01T00:00:00.000Z' } },
+      dismissed: { findSkillsPrompt: true },
+      lastSelectedAgents: ['claude-code'],
+    }));
+
+    const result = await cli(await project('app'), 'init', '--tools', 'claude');
+
+    expect(result.exitCode, result.stdout + result.stderr).toBe(0);
+    const lock = JSON.parse(readFileSync(globalLock(), 'utf8'));
+    expect(lock.skills['team-skill']).toEqual(other);
+    expect(lock.skills['openspec-propose']).toMatchObject({ source: 'ayumuwall/OpenSpec-J', installedAt: '2026-01-01T00:00:00.000Z' });
+    expect(lock.dismissed).toEqual({ findSkillsPrompt: true });
+    expect(lock.lastSelectedAgents).toEqual(['claude-code']);
+  });
+
+  it('starts a new lock file when the saved one cannot be read', async () => {
+    await fs.mkdir(path.dirname(globalLock()), { recursive: true });
+    await fs.writeFile(globalLock(), 'not json');
+
+    const result = await cli(await project('app'), 'init', '--tools', 'claude');
+
+    expect(result.exitCode, result.stdout + result.stderr).toBe(0);
+    expect(Object.keys(JSON.parse(readFileSync(globalLock(), 'utf8')).skills).sort()).toEqual(CORE_SKILLS);
   });
 
   it('installs the same text a project install writes', async () => {
@@ -270,7 +309,7 @@ describe('skills installed このマシン', { timeout: 60_000 }, () => {
       const result = await cli(dir, 'update');
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('~/.agents/skills にあるこのマシンのスキル6個を更新しました');
+      expect(result.stdout).toContain('~/.agents/skills にあるこのマシンのスキル7個を更新しました');
       expect(result.stdout).not.toContain('設定済みのツールが見つかりません');
       expect(readFileSync(globalSkill('openspec-propose'), 'utf8')).toBe(original);
     });

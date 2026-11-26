@@ -585,7 +585,7 @@ export function isSourceCheckout(installDir: string | null): boolean {
   }
 }
 
-export type PackageManager = 'npm' | 'pnpm' | 'bun' | 'yarn' | 'volta';
+export type PackageManager = 'npm' | 'pnpm' | 'bun' | 'yarn' | 'volta' | 'homebrew' | 'nix';
 export type InstallScope = 'global' | 'project' | 'temporary' | 'source' | 'standalone';
 
 export interface CliInstallInfo {
@@ -598,6 +598,12 @@ function detectKnownPackageManager(installDir: string | null): PackageManager | 
   const segments = (installDir ?? '').split(/[\\/]/).map((segment) => segment.toLowerCase());
   const has = (...names: string[]) => names.some((name) => segments.includes(name));
 
+  // Homebrew と Nix は npm と同様に `lib/node_modules/<pkg>` と `bin` を配置する。
+  // npm のグローバルインストールと誤認しないよう先に判定する（#2186）。
+  if (segments.some((segment, index) => segment === 'cellar' && segments[index + 1] === 'openspec-j')) {
+    return 'homebrew';
+  }
+  if (segments[0] === '' && segments[1] === 'nix' && segments[2] === 'store') return 'nix';
   if (has('.volta') || (has('volta') && has('tools') && has('image'))) return 'volta';
   if (has('.bun', '_bunx', 'bun-cache')) return 'bun';
   if (has('_npx')) return 'npm';
@@ -615,15 +621,21 @@ export function detectPackageManager(installDir: string | null): PackageManager 
   return detectKnownPackageManager(installDir) ?? 'npm';
 }
 
-const GLOBAL_UPGRADE_COMMANDS: Record<PackageManager, string> = {
+// Nix は導入方法（`nix profile`、flake 入力、home-manager、システム設定）によって
+// 更新方法が異なるため、特定のコマンドは案内しない。
+const GLOBAL_UPGRADE_COMMANDS: Record<PackageManager, string | null> = {
   npm: `npm install -g ${PACKAGE_NAME}@latest`,
   pnpm: `pnpm add -g ${PACKAGE_NAME}@latest`,
   bun: `bun add -g ${PACKAGE_NAME}@latest`,
   yarn: `yarn global add ${PACKAGE_NAME}@latest`,
   volta: `volta install ${PACKAGE_NAME}@latest`,
+  homebrew: 'brew upgrade ayumuwall/tap/openspec-j',
+  nix: null,
 };
 
 function detectGlobalPackageManager(installDir: string | null): PackageManager | null {
+  const owner = detectKnownPackageManager(installDir);
+  if (owner === 'homebrew' || owner === 'nix') return owner;
   if (isNpmGlobalInstall(installDir)) return 'npm';
   if (!installDir) return null;
 
@@ -760,7 +772,8 @@ export function buildUpgradeCommandLines(
     // Its package manager owns the lockfile; naming npm could be wrong.
     lines.push(`  このプロジェクトの ${PACKAGE_NAME} 依存関係を更新してください。`);
   } else {
-    lines.push(`  ${GLOBAL_UPGRADE_COMMANDS[detectPackageManager(installDir)]}`);
+    const command = GLOBAL_UPGRADE_COMMANDS[detectPackageManager(installDir)];
+    lines.push(command ? `  ${command}` : '  導入時と同じ方法で、Nix から OpenSpec を更新してください。');
   }
 
   lines.push('  その後、"openspec update" を再実行して新しいワークフローを取り込んでください。');

@@ -17,6 +17,7 @@ import {
   foldRequirementName,
   isUnrecognizedDeltaSection,
   parseDeltaSpec,
+  findFrontmatterEnd,
   normalizeRequirementName,
   type RequirementBlock,
   type RequirementsSectionParts,
@@ -262,6 +263,9 @@ export async function buildUpdatedSpec(
   }
 
   // Archive carries requirement blocks only; name any other text it leaves behind.
+  if (plan.hasFrontmatter) {
+    warn(`${specName} - フロントマター（1 行目）は本仕様に反映されず、変更提案に残ります。`);
+  }
   for (const lost of plan.unappliedContent) {
     warn(`${specName} - ${describeUnappliedContent(lost)}（${lost.line} 行目）はメイン仕様に引き継がれません。`);
   }
@@ -720,18 +724,45 @@ function contentColumn(prefix: string): number {
 }
 
 /**
+ * CommonMark の種別 1〜6 にあたる HTML ブロックの開始行。
+ * `<script>`、`<pre>`、`<style>`、`<textarea>`、コメント、処理命令、宣言、
+ * CDATA セクション、または `<div>` や `<details>` などのブロック要素のタグ。
+ */
+const OPENS_HTML_BLOCK =
+  /^<(?:(?:script|pre|style|textarea)(?:[ \t>]|$)|!--|\?|![a-z]|!\[CDATA\[|\/?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:[ \t>]|\/>|$))/i;
+
+/** 完全な開始タグまたは終了タグだけの行。CommonMark の種別 7 の HTML ブロック。 */
+const HTML_TAG_ALONE =
+  /^(?:<[A-Za-z][A-Za-z0-9-]*(?:\s+[A-Za-z_:][\w.:-]*(?:\s*=\s*(?:[^\s"'=<>`]+|'[^']*'|"[^"]*"))?)*\s*\/?>|<\/[A-Za-z][A-Za-z0-9-]*\s*>)\s*$/;
+
+/**
+ * 監査で報告すべき生の HTML の可能性を判定する。タグだけの行は、
+ * 直前の段落が続いている場合を除き、独立したブロックになる。誤って削除しないよう、
+ * 位置にかかわらず報告対象とする。それ以外で `<` で始まる行は、
+ * `<args> are passed on` のように本文として扱う（#2211）。
+ */
+function mayBeRawHtml(line: string): boolean {
+  const text = line.trim();
+  return OPENS_HTML_BLOCK.test(text) || HTML_TAG_ALONE.test(text);
+}
+
+/**
  * 引用、水平線、箇条書き、表、HTML など、独立したブロックを開始する行。
  * 段落を中断するため、箇条書きの継続として削除せず監査で報告する。
  * 見出しは字下げにかかわらず拒否するため別途確認する。
  */
-const INTERRUPTS_PARAGRAPH =
-  /^ {0,3}(?:>|(?:[-*_][ \t]*){3,}$|(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)|[<|])/;
+function interruptsParagraph(line: string): boolean {
+  return (
+    /^ {0,3}(?:>|(?:[-*_][ \t]*){3,}$|(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)|\|)/.test(line) ||
+    (/^ {0,3}</.test(line) && mayBeRawHtml(line))
+  );
+}
 
 /**
  * CommonMark の箇条書き項目。字下げ、記号、後続の空白を捕捉し、本文の開始列を測る。
  * - と * に加え + も認識する。+ を除外するとシナリオの内容を未処理と誤認し、
  * 機能を廃止できなくなる。番号付き記号は CommonMark と同じ9桁を上限とし、
- * INTERRUPTS_PARAGRAPH と判定をそろえる。記号の後に本文がない項目も認識する。
+ * interruptsParagraph と判定をそろえる。記号の後に本文がない項目も認識する。
  */
 const LIST_ITEM = /^(\s*(?:[-*+]|\d{1,9}[.)])\s+)/;
 
@@ -871,7 +902,7 @@ function contentTheMergeCannotName(parts: RequirementsSectionParts): string[] {
       // シナリオ内の途切れていない箇条書きでは、字下げのない折り返しも
       // 直前の段落の継続として扱う。それ以外では字下げを必須とし、独立した注記を保護する。
       const lazilyContinuesBullet =
-        paragraphOpen && inScenarioBullets && !INTERRUPTS_PARAGRAPH.test(withinItem);
+        paragraphOpen && inScenarioBullets && !interruptsParagraph(withinItem);
       // 見出しは字下げによらず継続に含めない。ATX は firstForeignTail、
       // HTML は before の走査で検出する。箇条書きの下に置いても監査を通過させない。
       const continuesListItem = (insideItem || lazilyContinuesBullet) && !isHeadingLine(withinItem);
@@ -903,7 +934,7 @@ function contentTheMergeCannotName(parts: RequirementsSectionParts): string[] {
       if (continuesListItem) {
         // 入れ子のリストや引用は項目内でも段落を閉じるため、
         // 後続の字下げのない行をその段落の継続として扱わない。
-        paragraphOpen = !INTERRUPTS_PARAGRAPH.test(withinItem);
+        paragraphOpen = !interruptsParagraph(withinItem);
         continue;
       }
       // それ以外の行は項目を閉じる。箇条書きなら次の項目を開始し、
@@ -929,7 +960,7 @@ function contentTheMergeCannotName(parts: RequirementsSectionParts): string[] {
         continue;
       }
       // Free prose above the first scenario is the requirement statement.
-      if (!seenScenario && !/^\s*[|<]/.test(line)) continue;
+      if (!seenScenario && !/^\s*\|/.test(line) && !mayBeRawHtml(line)) continue;
       leftovers.push(line.trim());
     }
   }
@@ -1293,8 +1324,10 @@ function maskHtmlComments(content: string): string {
  * section is absent or its body is empty.
  */
 function extractPurposeSection(content: string): string | undefined {
-  const normalized = content.replace(/\r\n?/g, '\n');
-  const lines = normalized.split('\n');
+  const lines = content.replace(/^﻿/, '').replace(/\r\n?/g, '\n').split('\n');
+  // フロントマターを除外し、その中の `<!--` やフェンスで Purpose が隠れないようにする。
+  lines.fill('', 0, findFrontmatterEnd(lines));
+  const normalized = lines.join('\n');
   // Structure is read from the masked copy so a commented-out or fenced
   // `## Purpose` is not mistaken for the real one; the body is returned from
   // the original lines so an author's own comments and fences survive intact.
@@ -1370,5 +1403,5 @@ export function buildSpecSkeleton(specFolderName: string, changeName: string, pu
   const purposeBody =
     purpose?.trim() ||
     `${PURPOSE_PLACEHOLDER_PREFIX}${changeName}${PURPOSE_PLACEHOLDER_SUFFIX}`;
-  return `# ${titleBase} Specification\n\n## Purpose\n${purposeBody}\n\n## Requirements\n`;
+  return `# ${titleBase} Specification\n\n## Purpose\n\n${purposeBody}\n\n## Requirements\n`;
 }

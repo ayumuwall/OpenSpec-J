@@ -432,9 +432,10 @@ describe('UpdateCommand', () => {
         const expectedSkills = ['my-custom-skill', 'openspec-user-notes'];
         const expectedShared = ['shared-custom-skill', '.openspec-target'];
         if (setting === 'profile') {
-          expectedShared.push('openspec-explore');
+          expectedShared.push('openspec', 'openspec-explore');
         } else {
           expectedShared.push(
+            'openspec',
             'openspec-apply-change',
             'openspec-archive-change',
             'openspec-explore',
@@ -902,6 +903,25 @@ metadata:
       expect(updated).toContain('name: openspec-propose');
       expect(updated).toContain('計画の適用を依頼してください');
       expect(updated).not.toContain('stale Amp skill');
+    });
+
+    it('refreshes the skills `npx skills add` put in the project, like any other install', async () => {
+      await new InitCommand({ tools: 'agents', force: true }).execute(testDir);
+      const skillsDir = path.join(testDir, '.agents', 'skills');
+      // `npx skills add Fission-AI/OpenSpec` leaves no list file, only its lock.
+      await fs.rm(path.join(skillsDir, '.openspec-target'));
+      await fs.writeFile(path.join(testDir, 'skills-lock.json'), JSON.stringify({
+        version: 1,
+        skills: { 'openspec-propose': { source: 'Fission-AI/OpenSpec', sourceType: 'github' } },
+      }));
+      const skillFile = path.join(skillsDir, 'openspec-propose', 'SKILL.md');
+      await fs.writeFile(skillFile, 'stale package skill');
+
+      await new UpdateCommand().execute(testDir);
+
+      const updated = await fs.readFile(skillFile, 'utf-8');
+      expect(updated).toContain('name: openspec-propose');
+      expect(updated).not.toContain('stale package skill');
     });
 
     it('should refresh Antigravity workflows beside Codex in the one shared skills folder', async () => {
@@ -3909,8 +3929,8 @@ More user content after markers.
       const skillsDir = path.join(grokDir, 'skills');
       const sharedDir = path.join(testDir, '.agents', 'skills');
       const openspecSkills = async () =>
-        (await fs.readdir(sharedDir)).filter((name) => name.startsWith('openspec-')).sort();
-      expect(await openspecSkills()).toEqual(['openspec-explore', 'openspec-new-change']);
+        (await fs.readdir(sharedDir)).filter((name) => name === 'openspec' || name.startsWith('openspec-')).sort();
+      expect(await openspecSkills()).toEqual(['openspec', 'openspec-explore', 'openspec-new-change']);
       const customSkill = path.join(skillsDir, 'openspec-custom', 'SKILL.md');
       await fs.mkdir(path.dirname(customSkill), { recursive: true });
       await fs.writeFile(customSkill, 'my custom skill');
@@ -3920,6 +3940,7 @@ More user content after markers.
       await updateCommand.execute(testDir);
 
       expect(await openspecSkills()).toEqual([
+        'openspec',
         'openspec-apply-change',
         'openspec-archive-change',
         'openspec-explore',

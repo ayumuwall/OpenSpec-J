@@ -164,8 +164,8 @@ export class Validator {
    * - No duplicates within sections; no cross-section conflicts per spec
    *
    * `options.mainSpecsDir` を指定すると、MODIFIED ブロックについて現在の本仕様からの
-   * シナリオ消失も検査し（#1477）、マージ競合は判定を変えない INFO として報告する
-   *（#1112）。`options.projectRoot` を指定すると、スキーマが追跡するタスクファイルの
+   * シナリオ消失（#1477）と、文字数の上限を超える加筆（#2216）を検査する。
+   * マージ競合は判定を変えない INFO として報告する（#1112）。`options.projectRoot` を指定すると、スキーマが追跡するタスクファイルの
    * 番号付けが曖昧でないか検査する（#1520）。どちらかを省略した場合は、既存の
    * ライブラリおよびアーカイブ呼び出し元の動作を維持する。
    */
@@ -323,10 +323,9 @@ export class Validator {
               ),
             });
           }
-          // Same limit the main spec enforces after archive (#1976), so
-          // `validate <change> --strict` catches a new overlong requirement
-          // before it lands. MODIFIED is left alone: its text is the existing
-          // requirement, which the specs instruction says to keep whole.
+          // 本仕様と同じ上限（#1976）を使い、長すぎる新規要件をアーカイブ前に
+          // `validate <change> --strict` で検出する。MODIFIED は後で本仕様と比較し、
+          // 既存の要件より長くなり上限を超えた場合だけ警告する（#2216）。
           if (requirementText && requirementText.length > MAX_REQUIREMENT_TEXT_LENGTH) {
             issues.push({
               level: 'WARNING',
@@ -377,8 +376,8 @@ export class Validator {
           issues.push(...this.findScenarioStepIssues(block.raw, `MODIFIED "${block.name}"`, entryPath));
         }
 
-        // Run archive's scenario-loss check here too, so the change fails at
-        // authoring time instead of days later at archive time (#1477).
+        // シナリオの欠落（#1477）と MODIFIED の文字数超過（#2216）は、
+        // 検証の時点で確認する。
         if (options.mainSpecsDir && plan.modified.length > 0) {
           const mainSpecFile = path.join(
             options.mainSpecsDir,
@@ -386,7 +385,7 @@ export class Validator {
             'spec.md'
           );
           issues.push(
-            ...(await this.findScenarioLossIssues(
+            ...(await this.findMainSpecModifiedIssues(
               plan.modified,
               plan.renamed,
               mainSpecFile,
@@ -698,9 +697,8 @@ export class Validator {
   }
 
   /**
-   * Report MODIFIED requirements whose block omits a scenario the main spec
-   * still carries. Uses the same comparison archive applies, so validate can
-   * only report what archive would refuse.
+   * MODIFIED の要件を本仕様と比較し、シナリオの欠落（#1477）と、
+   * 文字数の上限を超える加筆（#2216）を確認する。
    *
    * Silent when the main spec or the requirement header is absent: applying a
    * MODIFIED against a base that is not there yet is a different failure (a
@@ -708,7 +706,7 @@ export class Validator {
    * gate for it. A spec that exists but cannot be read is not absent, though —
    * archive aborts on it, so reporting it beats calling the change valid.
    */
-  private async findScenarioLossIssues(
+  private async findMainSpecModifiedIssues(
     modified: RequirementBlock[],
     renamed: Array<{ from: string; to: string }>,
     mainSpecFile: string,
@@ -780,6 +778,19 @@ export class Validator {
       if (renamedAway.has(key)) continue;
       const current = currentBlockFor(key);
       if (!current) continue;
+      const nextText = this.extractRequirementText(block.raw);
+      const currentTextLength = this.extractRequirementText(current.raw)?.length ?? 0;
+      if (
+        nextText &&
+        nextText.length > MAX_REQUIREMENT_TEXT_LENGTH &&
+        nextText.length > currentTextLength
+      ) {
+        issues.push({
+          level: 'WARNING',
+          path: entryPath,
+          message: `MODIFIED "${block.name}": ${VALIDATION_MESSAGES.REQUIREMENT_TOO_LONG}`,
+        });
+      }
       const diff = diffScenarioNames(current, block);
       if (diff.missing.length === 0) continue;
       issues.push({

@@ -105,8 +105,40 @@ export function readSkillToolList(projectPath: string, view: FileView = DISK_VIE
   const listed = readListFileTools(projectPath, view);
   // 空または認識できない一覧は根拠にせず、従来どおりフォルダ内の文面で判定する。
   if (listed.length > 0) return listed;
-  const inferred = inferPreListTool(projectPath, view);
+  const inferred = inferPreListTool(projectPath, view) ?? inferSkillsLockTool(projectPath, view);
   return inferred ? [inferred] : [];
+}
+
+/**
+ * `npx skills add ayumuwall/OpenSpec-J` は `.agents/skills` にスキルを配置し、
+ * 取得元を `skills-lock.json` に記録する。ツール一覧は作成しない。
+ * スキル本文に依存せず、この取得元から OpenSpec の共有スキルを判定する。
+ */
+function inferSkillsLockTool(projectPath: string, view: FileView): string | undefined {
+  try {
+    const lockFile = path.join(projectPath, 'skills-lock.json');
+    FileSystemUtils.assertProjectArtifactPath(projectPath, lockFile);
+    if (!view.exists(lockFile)) return undefined;
+    const skills = (JSON.parse(view.read(lockFile)) as { skills?: Record<string, { source?: unknown }> }).skills ?? {};
+    const fromOpenSpec = OPENSPEC_SKILL_NAMES.filter((name) => isOpenSpecSource(skills[name]?.source));
+    const sharedDir = path.join(projectPath, SHARED_SKILLS_ROOT, 'skills');
+    return fromOpenSpec.length > 0 && hasOpenSpecSkillIn(projectPath, sharedDir, view, fromOpenSpec) ? 'agents' : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** OpenSpec-J と本家のリポジトリ名や GitHub URL を認識する。末尾の skills/ も許容する。 */
+function isOpenSpecSource(source: unknown): boolean {
+  if (typeof source !== 'string') return false;
+  const repo = source
+    .trim()
+    .toLowerCase()
+    .replace(/^(?:https?:\/\/|git@)github\.com[/:]/, '')
+    .replace(/\/+$/, '')
+    .replace(/\/skills$/, '')
+    .replace(/\.git$/, '');
+  return repo === 'ayumuwall/openspec-j' || repo === 'fission-ai/openspec';
 }
 
 /** ツールがプロジェクトの設定済み一覧にあるか。 */
@@ -114,8 +146,13 @@ export function isToolListed(projectPath: string, toolId: string, view: FileView
   return readSkillToolList(projectPath, view).includes(toolId);
 }
 
-function hasOpenSpecSkillIn(projectPath: string, skillsDir: string, view: FileView): boolean {
-  return OPENSPEC_SKILL_NAMES.some((skillName) => {
+function hasOpenSpecSkillIn(
+  projectPath: string,
+  skillsDir: string,
+  view: FileView,
+  names: readonly string[] = OPENSPEC_SKILL_NAMES
+): boolean {
+  return names.some((skillName) => {
     try {
       const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
       FileSystemUtils.assertProjectArtifactPath(projectPath, skillFile);

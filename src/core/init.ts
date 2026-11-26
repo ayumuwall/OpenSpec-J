@@ -75,7 +75,7 @@ import {
   supportsGlobalSkills,
   type SkillScope,
 } from './global-skills.js';
-import { getProfileWorkflows } from './profiles.js';
+import { getProfileWorkflows, withRouter } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
 import { formatOptionalWorkflowsNote } from './onboarding-commands.js';
 import { usesSharedSkills } from './shared/skill-paths.js';
@@ -1110,7 +1110,7 @@ export class InitCommand {
     // グローバル設定からプロファイル・デリバリー設定を読み込む（--profile オーバーライドを優先）
     const globalConfig = getGlobalConfig();
     const profile: Profile = this.resolveProfileOverride() ?? globalConfig.profile ?? 'core';
-    const workflows = getProfileWorkflows(profile, globalConfig.workflows);
+    const workflows = withRouter(getProfileWorkflows(profile, globalConfig.workflows));
 
     // プロジェクトのスキルは `.agents/skills/` に一度だけ書く。
     // 選択したツールと既存の設定済みツールを含め、再 init で他のツールを外さない。
@@ -1371,7 +1371,7 @@ export class InitCommand {
     } else if (successfulTools.length > 0) {
       const globalConfig = getGlobalConfig();
       const profile: Profile = (this.profileOverride as Profile) ?? globalConfig.profile ?? 'core';
-      const workflows = getProfileWorkflows(profile, globalConfig.workflows);
+      const workflows = withRouter(getProfileWorkflows(profile, globalConfig.workflows));
 
       const toolFolders = new Set(successfulTools
         .filter(tool => SKILL_LINKED_TOOL_IDS.has(tool.value))

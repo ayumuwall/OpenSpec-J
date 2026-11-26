@@ -27,7 +27,7 @@ openspec init
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-~/.agents/skills/ にスキル6個を作成しました（このマシンの全プロジェクトで利用可能）
+~/.agents/skills/ にスキル7個を作成しました（このマシンの全プロジェクトで利用可能）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 ```
 
@@ -37,7 +37,7 @@ OpenSpec のセットアップが完了しました
 OpenSpec のセットアップが完了しました
 
 新規作成: Claude Code
-.agents/skills/ にスキル6個を作成しました（.claude/skills/ にも配置）
+.agents/skills/ にスキル7個を作成しました（.claude/skills/ にも配置）
 設定: openspec/config.yaml（スキーマ: spec-driven）
 ```
 
@@ -77,8 +77,6 @@ apply または archive の進め方は、該当する operations の項目へ�
 
 この節の以降の説明は、プロジェクト内へのインストールを扱います。マシン全体への導入は[全プロジェクト用のスキルを一度だけインストールする](#install-the-skills-once-for-every-project)を参照してください。
 
-Vercel のインストーラーは、CLI のバージョンに対応する OpenSpec の GitHub タグからスキルを取得します。スキルのインストールと更新には Git と GitHub へのアクセスが必要です。プロジェクト内へのインストールでは `skills-lock.json` を変更しません。
-
 init は旧版が生成したコマンドファイルも削除しますが、編集済みのものは保持します。1.0 より前に初期化したプロジェクトには、`.claude/commands/openspec/` などのフォルダや、`CLAUDE.md`・`AGENTS.md` 内の OpenSpec マーカーブロックも残っています。対話実行の init は削除前に確認します。`--force` や `--tools` を指定した場合、または非対話実行では、ブロック内の編集も含めて確認なしで削除するため、先にバックアップしてください。
 
 ### `openspec/`フォルダ
@@ -103,6 +101,7 @@ openspec/
 
 ```
 .agents/skills/
+├── openspec/                      質問に答えるか、依頼を対応するスキルへ振り分ける
 ├── openspec-explore/              先にアイデアを検討する
 ├── openspec-propose/              変更提案を作成する
 ├── openspec-apply-change/         変更提案のタスクを実装する
@@ -113,7 +112,7 @@ openspec/
 └── openspec-bulk-archive-change/  複数の変更提案を一度にアーカイブする（既定では含まれない）
 ```
 
-これは既定のセットに、任意のワークフローを 2 つ加えたものです。
+上の構成は、既定のセットに任意のワークフロー 2 つとルーターの `openspec` を加えたものです。`openspec` は、ワークフローを 1 つ以上選んだプロファイルに自動で追加されます。
 [プロファイル](../customize/profiles.md)に全 12 ワークフローを掲載しています。
 
 設定したツールの数にかかわらず、各スキルはここに一度だけ書き込みます。Claude Code や Kiro など `.agents/skills/` を読まないツールには、`.claude/skills/openspec-propose` など固有フォルダ内にスキルごとのリンクを作成します。Windows のプロジェクト内インストールでは、Git で別のチェックアウトへ渡せるコピーを使います。配置とリンクを作成するツールは[対応ツール](../reference/supported-tools.md#where-skills-go)を参照してください。

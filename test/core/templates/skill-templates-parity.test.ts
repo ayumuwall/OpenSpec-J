@@ -27,6 +27,7 @@ import {
   getOpsxProposeCommandTemplate,
   getOpsxProposeSkillTemplate,
   getOpsxUpdateCommandTemplate,
+  getRouterSkillTemplate,
   getOpsxVerifyCommandTemplate,
   getSyncSpecsSkillTemplate,
   getUpdateChangeSkillTemplate,
@@ -34,6 +35,7 @@ import {
 } from '../../../src/core/templates/skill-templates.js';
 import {
   generateSkillContent,
+  generateSkillFiles,
   getCommandContents,
   getSkillTemplates,
 } from '../../../src/core/shared/skill-generation.js';
@@ -62,7 +64,7 @@ function specDrivenTitles(): Record<string, string> {
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: 'd89af53e3ca9c5cc8a4f8bef9800748fabb65d1a2699d0d7a21437e8deb4c14d',
   getNewChangeSkillTemplate: '5234e9901192e5089d5d7228e89e5bfe02bfc3e2a5392e62fad8b67c7bdf4dae',
-  getContinueChangeSkillTemplate: 'cde38a9c52803063b6e6ec0e73234599c74d3690f23a4e37ed1349a78083ee3f',
+  getContinueChangeSkillTemplate: 'd3a8ee3d82d21284d241a1b24294e87052d835b1e8859fcad612f5c6bfcc1dbb',
   getApplyChangeSkillTemplate: 'c64c950b481bd771a4c4f3f06d7fbaa002c816fc07c1ff0b76abb1f23ad9f3be',
   getFfChangeSkillTemplate: '4c46e8c9a1d809825ca1809bf2ff8a75fa8377b6eacb6a4eb18d522dce0cbb04',
   getSyncSpecsSkillTemplate: '51f46af9460bb2bccadd9bde1284718333b47d6ec8c93aefa8dc390ac760d44d',
@@ -72,11 +74,11 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxContinueCommandTemplate: '65eaf4e57926b4395a4b17d60b3590286eb1b40a7834fdd6b35c70fd2ab553f1',
   getOpsxApplyCommandTemplate: '1c2e8b59af5d836915c94f6f7d35dbd306df0c591cb6bdcb644680c7ccfe20dd',
   getOpsxFfCommandTemplate: 'd6d7e49c249589d78611cea199354560ea4f413d81155335a3bfecfe4d08115c',
-  getArchiveChangeSkillTemplate: '843eb4712d3b30976f93cba0a6b798ec2a315449a6e4d3d7760bdca709d1ca4e',
+  getArchiveChangeSkillTemplate: 'ec5dc789b809f293fce549828615722248b9e8179560358867f9148c86ae56bb',
   getBulkArchiveChangeSkillTemplate: '39df6b954dcf7e2147ca0e8a59dc69127d8bffd23fd14738d04f864c7374abf2',
   getOpsxSyncCommandTemplate: '73efa68585199c045188655299159445d7786d6cc803b3ff20e1afe0d73f8568',
   getVerifyChangeSkillTemplate: 'f295bd06f9ad0f4de465609d5d8a7b76ebc121d513b9bca754a03cdf1f149391',
-  getOpsxArchiveCommandTemplate: 'b10b463b88673bf8b94ddc11dcf526aa886df815909a9126de4c14a178554a1b',
+  getOpsxArchiveCommandTemplate: '9af4fbd302b921bebe2dd9a01422bc990f7cc543e06fa03092f29157d3c1e305',
   getOpsxOnboardCommandTemplate: 'f386bebd809dc138836298eeebc4cce4fc1ef7800f6ef4b6739407d8cc5e411c',
   getOpsxBulkArchiveCommandTemplate: '27fe7bdab8ef6ea1b306016e2c34b6b899f2b528909801a706c27a73a01bd61d',
   getOpsxVerifyCommandTemplate: '194ab167f222e32beefa69b28d41f27730c0d19ee7e2bc01c6193233575fc116',
@@ -90,16 +92,17 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '1ca0537e80eb6c5309de8bd778fc40d29929589b44530ea27f1352e34e55074e',
   'openspec-new-change': '262c4bad964410476b060832b7062ca1199bd74fdc0390f3baaee56838b05a5b',
-  'openspec-continue-change': 'd00ea050d8a753f7d3d6bf62c11bc627d6608dc295e3c40d266f618fe08bc7fc',
+  'openspec-continue-change': '817b99b9ac66fccf6b630859d1f04cfc3c33c1f71b0a191d094877ccb13649d6',
   'openspec-apply-change': '51ff394689f6054eac085e311576d05f419d38a81eb4445b68467b75e3aa280d',
   'openspec-ff-change': '6fe7cb946b3c080ee0d102189d1bc7e97524f70131d3cdda31456be6e4a41981',
   'openspec-sync-specs': '4d592d47e0c42de3d752d87d91ff4cbcb8e22db4e112ee6398158422821db697',
-  'openspec-archive-change': '0f691ada4703534c3e09e688c7ed04600996c2892fe161a0bc5f7c8a93666a54',
+  'openspec-archive-change': '3b165d722e49927983ad7afefe16c8b296d6ed0e4f310e6d7b05e481d0b28afb',
   'openspec-bulk-archive-change': 'c54b83bbfb630730617fd38509d8e72e860a922aeaad2162edb88b7c0f815090',
   'openspec-verify-change': '8969c9f53d672c643c1ff962fae32b0ba2b40336a7fc5435f4d76eb7b65890c0',
   'openspec-onboard': 'f1029536cbcaa04491c89a6ca1f0947a1dce504963c8285067ec08519091746b',
   'openspec-propose': '6ebd5c887304fee6b54dfd3dce187d7197a3393afcaf50a936f04e26dbe10763',
   'openspec-update-change': '3b639815abd81463ef3b5bcf39860625fb759bc23d0c212de8295bf083124f74',
+  'openspec': '100d82507cec9f09ed6e6a23fa50a0a6df07e7ab67e7650ed390d35931908a7f',
 };
 
 // Intentionally excludes getFeedbackSkillTemplate: this list only models templates
@@ -117,6 +120,7 @@ const GENERATED_SKILL_FACTORIES: Array<[string, () => SkillTemplate]> = [
   ['openspec-onboard', getOnboardSkillTemplate],
   ['openspec-propose', getOpsxProposeSkillTemplate],
   ['openspec-update-change', getUpdateChangeSkillTemplate],
+  ['openspec', getRouterSkillTemplate],
 ];
 
 function stableStringify(value: unknown): string {
@@ -239,7 +243,8 @@ describe('skill templates split parity', () => {
     const actualHashes = Object.fromEntries(
       GENERATED_SKILL_FACTORIES.map(([dirName, createTemplate]) => [
         dirName,
-        hash(generateSkillContent(createTemplate(), 'PARITY-BASELINE')),
+        // SKILL.md records a digest of the skill's references, so this covers them too.
+        hash(generateSkillFiles(createTemplate(), 'PARITY-BASELINE').get('SKILL.md')!),
       ])
     );
 
@@ -260,7 +265,8 @@ describe('skill templates split parity', () => {
   // added workflow is covered automatically; the full-constant containment
   // check fails if any template's interpolation drifts.
   it('teaches store selection in every deployed skill template', () => {
-    for (const { template, dirName } of getSkillTemplates()) {
+    // The router only reads, and names `--store` on the commands it runs.
+    for (const { template, dirName } of getSkillTemplates().filter(({ workflowId }) => workflowId !== 'router')) {
       const content = generateSkillContent(template, 'PARITY-BASELINE');
       expect(content, dirName).toContain(STORE_SELECTION_GUIDANCE);
     }
@@ -1074,7 +1080,7 @@ describe('skill templates split parity', () => {
     ];
 
     for (const [id, text] of archiveInstructions) {
-      expect(text, id).toContain('すでに `YYYY-MM-DD-` で始まる');
+      expect(text, id).toContain('`YYYY-MM-DD-` で始まる');
 
       // Every archive path an agent reproduces must name the derived target,
       // never a hardcoded date.
@@ -1195,6 +1201,12 @@ describe('skill templates split parity', () => {
         'ユーザーが確認をキャンセルした後は決してアーカイブしない'
       );
     }
+  });
+
+  it('hands off to apply when continue completes planning, in the skill and the command (#2271)', () => {
+    const handoff = '計画が完了しました。計画のレビュー準備ができました。準備が整ったら、計画の適用を依頼してください。';
+    expect(generateSkillContent(getContinueChangeSkillTemplate(), 'PARITY-BASELINE')).toContain(handoff);
+    expect(getOpsxContinueCommandTemplate().content).toContain(handoff);
   });
 
   it('makes the schema instruction field authoritative for artifact creation (#777)', () => {

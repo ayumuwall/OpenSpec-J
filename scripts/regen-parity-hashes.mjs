@@ -77,7 +77,7 @@ if (srcMtime > distMtime) {
 }
 
 const templates = await import(distUrl('core/templates/skill-templates.js'));
-const { getSkillTemplates, generateSkillContent } = await import(
+const { getSkillTemplates, generateSkillFiles } = await import(
   distUrl('core/shared/skill-generation.js')
 );
 
@@ -92,7 +92,8 @@ const PARITY_BASELINE = 'PARITY-BASELINE';
 const contentByDir = new Map(
   getSkillTemplates().map(({ dirName, template }) => [
     dirName,
-    sha256(generateSkillContent(template, PARITY_BASELINE)),
+    // SKILL.md に参照ファイルのハッシュが入るため、参照ファイルの変更も検出できる。
+    sha256(generateSkillFiles(template, PARITY_BASELINE).get('SKILL.md')),
   ])
 );
 
